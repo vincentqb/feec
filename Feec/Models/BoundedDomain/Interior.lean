@@ -6,47 +6,19 @@ public import Feec.Domain.FiniteSpeed
 /-!
 # Interior TSD propagation for the grad–curl complex (finite speed of propagation)
 
-On a bounded open `Ω ⊆ ℝ³`, TSD propagation (the conclusion of thesis Prop 4.17) fails for the
-Hodge wave equation of the grad–curl complex `H̊¹ → H̊(curl) → L²`
-(`Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`): the electric boundary condition
-creates a TSD violation at `∂Ω`. This file proves that the violation cannot enter the **domain
-of dependence**: for TSD data the solution stays symmetric and trace-free at time `t` at every
-point whose Euclidean distance to `ℝ³ \ Ω` exceeds `t`.
-
-## The mathematics
-
-1. *Interior equations* (`WeakEB`): `Ė = -curl B`, `Ḃ = curl E` tested against `C_c^∞(Ω; ℝ³ˣ³)`,
-   `div E = div B = 0` at `t = 0`; divergence-freeness is conserved (`WeakEB.divE`,
-   `WeakEB.divB`). Strong solutions of the Hodge wave equation of the grad–curl complex with TSD
-   data satisfy them (`weakEB_of_isStrongSolution`): `σ ≡ 0`, `div E ≡ 0` from
-   `Feec.ShortHilbertComplex.divFree_propagates`, and the wave components `wave_apply_*`.
-2. *The violation system* (`viol`): `W = (a(E), τ(E), a(B), τ(B))`, `a(X)_k = X_{k+1,k+2} -
-   X_{k+2,k+1}` (twice the axial vector of `skw X`), `τ(X) = tr X`, is a weak solution of the
-   symmetric hyperbolic system `∂ₜ W = Σ ∂_{β j i} Wᵢ` with the coefficients `violDir`
-   (`WeakEB.isWeakSolution_viol`, from the distributional Lemma 3.5 identities
-   `sum_integral_curlM_cTr`, `sum_integral_curlM_cAx`), of unit speed for the Euclidean norm
-   (`isSymmHyperbolic_violDir`: `|2 ξ · F(W)| ≤ |ξ| |W|²`, `abs_two_flux_le`).
-3. *Finite speed* (`Feec.Domain.FiniteSpeed.IsWeakSolution.ae_eq_zero_of_preimage_ball`, through
-   `WithLp.toLp 2 : ℝ³ → EuclideanSpace ℝ (Fin 3)`, since `R3` carries the sup norm): the
-   violation vanishes on the cone `{|y - x| < r - t}` of every Euclidean ball `{|z - x| < r} ⊆ Ω`
-   (`WeakEB.ae_viol_eq_zero`), hence on the domain of dependence `depDomain Ω t`
-   (`WeakEB.ae_viol_eq_zero_depDomain`).
+For the Hodge wave equation of the grad–curl complex on an open `Ω ⊆ ℝ³`, solutions from TSD data
+stay symmetric and trace-free at time `t` on the domain of dependence `depDomain Ω t`, the points at
+Euclidean distance `> t` from `ℝ³ \ Ω`.
 
 ## Main results
 
-* `WeakEB.mem_tsd_univ`: on `Ω = ℝ³` the weak equations propagate `L²(TSD)`.
-* `tsd_depDomain`: strong solutions of the Hodge wave equation of the grad–curl complex with TSD
-  data are symmetric and trace-free a.e. on `depDomain Ω t`.
-* The explicit datum `(0, 0, β)` violates TSD in the boundary layer
-  (`Feec.Counterexamples.BoundedDomainTSD.beta_violation_boundary_layer`).
+* `WeakEB.mem_tsd_univ`: on `Ω = ℝ³` the interior equations propagate `L²(TSD)`.
+* `tsd_depDomain`: strong solutions from TSD data are symmetric and trace-free on `depDomain Ω t`.
+* `existsUnique_tsd_depDomain`: the same for the unique strong solution from TSD data in `D(L)`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Lemma 3.5, Prop 3.6), §4.10 (Props 4.17, 4.18, (4.14))
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (domain of dependence)
-* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
-  (the Einstein–Bianchi system)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -68,7 +40,6 @@ def dens (aE aB : Fin 3 → ℝ) (τE τB : ℝ) : ℝ :=
 def vflux (aE aB : Fin 3 → ℝ) (τE τB : ℝ) (c : Fin 3) : ℝ :=
   aE (c + 1) * aB (c + 2) - aE (c + 2) * aB (c + 1) - τB * aE c + τE * aB c
 
-/-- Cauchy–Schwarz in `ℝ⁴`. -/
 theorem sq_dot4_le (u0 u1 u2 u3 v0 v1 v2 v3 : ℝ) :
     (u0 * v0 + u1 * v1 + u2 * v2 + u3 * v3) ^ 2 ≤
       (u0 ^ 2 + u1 ^ 2 + u2 ^ 2 + u3 ^ 2) * (v0 ^ 2 + v1 ^ 2 + v2 ^ 2 + v3 ^ 2) := by
@@ -81,7 +52,6 @@ theorem sq_dot4_le (u0 u1 u2 u3 v0 v1 v2 v3 : ℝ) :
     positivity
   linarith
 
-/-- From `P² ≤ U (s V)`, `s ≤ c²`: `|2P| ≤ c (U + V)`. -/
 theorem abs_two_le_of_sq_le {P U V s c : ℝ} (h : P ^ 2 ≤ U * (s * V)) (hs : s ≤ c ^ 2)
     (hU : 0 ≤ U) (hV : 0 ≤ V) (hc : 0 ≤ c) : |2 * P| ≤ c * (U + V) := by
   have h1 : P ^ 2 ≤ c ^ 2 * (U * V) := by
@@ -94,8 +64,6 @@ theorem abs_two_le_of_sq_le {P U V s c : ℝ} (h : P ^ 2 ≤ U * (s * V)) (hs : 
     nlinarith
   exact abs_le_of_sq_le_sq' h2 (by positivity) |> fun h => abs_le.2 ⟨h.1, h.2⟩
 
-/-- **Unit propagation speed** of the violation system: `|2 ξ · F(W)| ≤ c |W|²` whenever
-`|ξ| ≤ c`. -/
 theorem abs_two_flux_le (ξ aE aB : Fin 3 → ℝ) (τE τB c : ℝ) (hc : 0 ≤ c)
     (hξ : ∑ k, ξ k ^ 2 ≤ c ^ 2) :
     |2 * ∑ k, ξ k * vflux aE aB τE τB k| ≤ c * dens aE aB τE τB := by
@@ -130,8 +98,7 @@ abbrev VIdx := (Fin 3 ⊕ Unit) ⊕ (Fin 3 ⊕ Unit)
 def crossDir (k m : Fin 3) : R3 :=
   if m = k + 1 then Pi.single (k + 2) 1 else if m = k + 2 then -Pi.single (k + 1) 1 else 0
 
-/-- The coefficients `β j i` of the violation system `∂ₜ Wⱼ = Σᵢ ∂_{β j i} Wᵢ`:
-`∂ₜ a_E = -∇τ_B - curl a_B`, `∂ₜ τ_E = div a_B`, `∂ₜ a_B = ∇τ_E + curl a_E`, `∂ₜ τ_B = -div a_E`. -/
+/-- The coefficients `β j i` of the violation system `∂ₜ Wⱼ = Σᵢ ∂_{β j i} Wᵢ`. -/
 def violDir : VIdx → VIdx → R3
   | .inl (.inl k), .inr (.inl m) => crossDir k m
   | .inr (.inl m), .inl (.inl k) => crossDir k m
@@ -147,7 +114,6 @@ theorem violDir_symm (j i : VIdx) : violDir j i = violDir i j := by
 /-- The Euclidean structure on `ℝ³`: `toLp : R3 ≃ EuclideanSpace ℝ (Fin 3)`. -/
 abbrev euc : R3 ≃L[ℝ] EuclideanSpace ℝ (Fin 3) := (EuclideanSpace.equiv (Fin 3) ℝ).symm
 
-/-- `‖x‖_{EuclideanSpace}² = Σ xᵢ²`. -/
 theorem sum_sq_le_opNorm_sq (L : EuclideanSpace ℝ (Fin 3) →L[ℝ] ℝ) :
     ∑ c, L (euc (Pi.single c 1)) ^ 2 ≤ ‖L‖ ^ 2 := by
   set ξ : Fin 3 → ℝ := fun c => L (euc (Pi.single c 1))
@@ -175,7 +141,6 @@ theorem sum_sq_le_opNorm_sq (L : EuclideanSpace ℝ (Fin 3) →L[ℝ] ℝ) :
   calc ∑ c, ξ c ^ 2 = Real.sqrt (∑ c, ξ c ^ 2) ^ 2 := hsq.symm
     _ ≤ ‖L‖ ^ 2 := pow_le_pow_left₀ (Real.sqrt_nonneg _) h2 2
 
-/-- **The violation system is symmetric hyperbolic of unit speed** for the Euclidean norm. -/
 theorem isSymmHyperbolic_violDir :
     FiniteSpeed.IsSymmHyperbolic (fun j i => euc (violDir j i)) 1 := by
   refine ⟨fun j i => by rw [violDir_symm], zero_le_one, fun L w => ?_⟩
@@ -212,7 +177,6 @@ def axV (X : L2F ℝ Ω Ix) (k : Fin 3) : L2 ℝ Ω := X (k + 1, k + 2) - X (k +
 /-- The trace `τ(X) = Σᵢ X_{ii}`. -/
 def trV (X : L2F ℝ Ω Ix) : L2 ℝ Ω := ∑ i, X (i, i)
 
-/-- `X` is symmetric and trace-free iff `a(X) = 0` and `τ(X) = 0`. -/
 theorem symm_trace_iff (X : L2F ℝ Ω Ix) :
     ((∀ i j, X (i, j) = X (j, i)) ∧ ∑ i, X (i, i) = 0) ↔ (∀ k, axV X k = 0) ∧ trV X = 0 := by
   refine ⟨fun ⟨h1, h2⟩ => ⟨fun k => by simp [axV, h1 (k + 1)], h2⟩, fun ⟨h1, h2⟩ => ⟨?_, h2⟩⟩
@@ -248,7 +212,6 @@ theorem curlM_cT (c : Ix → ℝ) {ψ : R3 → ℝ} (hψ : Differentiable ℝ ψ
   unfold curlM cT
   rw [partialDeriv_const_mul (hψ _), partialDeriv_const_mul (hψ _)]
 
-/-- `∫ Y (c f - d g) = c ∫ Y f - d ∫ Y g`. -/
 theorem integral_mul_sub_mul (Y : L2 ℝ Ω) {f g : R3 → ℝ} (hf : MemLp f 2 (volume.restrict Ω))
     (hg : MemLp g 2 (volume.restrict Ω)) (c d : ℝ) :
     ∫ x, Y x * (c * f x - d * g x) ∂volume.restrict Ω =
@@ -264,7 +227,6 @@ theorem sum_integral_cT (X : L2F ℝ Ω Ix) (c : Ix → ℝ) (ψ : R3 → ℝ) :
   rw [← integral_const_mul]
   congr 1; ext x; simp only [cT]; ring
 
-/-- `∫ τ(X) ψ = ⟨X, ψ I⟩`. -/
 theorem integral_trV (X : L2F ℝ Ω Ix) {ψ : R3 → ℝ} (hψ : MemLp ψ 2 (volume.restrict Ω)) :
     ∫ x, trV X x * ψ x ∂volume.restrict Ω =
       ∑ ij, ∫ x, X ij x * cT cTr ψ ij x ∂volume.restrict Ω := by
@@ -272,7 +234,6 @@ theorem integral_trV (X : L2F ℝ Ω Ix) {ψ : R3 → ℝ} (hψ : MemLp ψ 2 (vo
   simp only [← integral_mul_eq_inner _ hψ, cTr, Fintype.sum_prod_type, ite_mul, one_mul,
     zero_mul, Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
-/-- `∫ a(X)_k ψ = ⟨X, ψ ε_{k··}⟩`. -/
 theorem integral_axV (X : L2F ℝ Ω Ix) (k : Fin 3) {ψ : R3 → ℝ}
     (hψ : MemLp ψ 2 (volume.restrict Ω)) :
     ∫ x, axV X k x * ψ x ∂volume.restrict Ω =
@@ -293,7 +254,6 @@ theorem integral_trV_mul (Y : L2F ℝ Ω Ix) {f : R3 → ℝ} (hf : MemLp f 2 (v
   rw [integral_mul_eq_inner _ hf, trV, sum_inner]
   simp only [← integral_mul_eq_inner _ hf]
 
-/-- `⟨Y, curl (ψ I)⟩ = ⟨a(Y), ∇ψ⟩` (no condition on `Y`). -/
 theorem sum_integral_curlM_cTr (Y : L2F ℝ Ω Ix) {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) :
     ∑ ab, ∫ x, Y ab x * curlM (cT cTr ψ) ab x ∂volume.restrict Ω =
       ∑ c, ∫ x, axV Y c x * partialDeriv c ψ x ∂volume.restrict Ω := by
@@ -304,9 +264,6 @@ theorem sum_integral_curlM_cTr (Y : L2F ℝ Ω Ix) {ψ : R3 → ℝ} (hψ : IsTe
   simp [Fintype.sum_prod_type, Fin.sum_univ_three, cTr]
   ring
 
-/-- For weakly divergence-free `Y`: `⟨Y, curl (ψ ε_{k··})⟩ = -⟨τ(Y), ∂_k ψ⟩ +
-⟨a(Y)_{k+1}, ∂_{k+2} ψ⟩ - ⟨a(Y)_{k+2}, ∂_{k+1} ψ⟩` (the distributional form of
-`a(curl Y) = ∇ τ(Y) + curl a(Y)`, Lemma 3.5). -/
 theorem sum_integral_curlM_cAx (Y : L2F ℝ Ω Ix)
     (hdiv : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
       ∑ ij : Ix, ∫ x, Y ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0)
@@ -336,9 +293,7 @@ section Weak
 
 variable {Ω : Set R3}
 
-/-- The weak (interior, distributional) content of the reduced system (4.15) on `[0, T]`:
-`E, B` continuous, weakly divergence-free **at `t = 0`**, and `Ė = -curl B`, `Ḃ = curl E` tested
-against `C_c^∞(Ω; ℝ³ˣ³)`. No boundary condition enters. -/
+/-- `Ė = -curl B`, `Ḃ = curl E` weakly in `Ω` on `[0, T]`, for continuous `E, B` div-free at `0`. -/
 structure WeakEB (Ω : Set R3) (T : ℝ) (E B : ℝ → L2F ℝ Ω Ix) : Prop where
   contE : ContinuousOn E (Icc 0 T)
   contB : ContinuousOn B (Icc 0 T)
@@ -353,13 +308,11 @@ structure WeakEB (Ω : Set R3) (T : ℝ) (E B : ℝ → L2F ℝ Ω Ix) : Prop wh
     HasDerivWithinAt (fun s => ∑ ij, ∫ x, B s ij x * Φ ij x ∂volume.restrict Ω)
       (∑ ij, ∫ x, E t ij x * curlM Φ ij x ∂volume.restrict Ω) (Icc 0 T) t
 
-/-- A function on `[0, T]` with zero derivative is constant. -/
 theorem eq_zero_sub_of_hasDerivWithinAt_zero {f : ℝ → ℝ} {T : ℝ}
     (hd : ∀ s ∈ Icc 0 T, HasDerivWithinAt f 0 (Icc 0 T) s) : ∀ t ∈ Icc 0 T, f t = f 0 :=
   constant_of_has_deriv_right_zero (fun s hs => (hd s hs).continuousWithinAt) fun s hs =>
     (hd s (Ico_subset_Icc_self hs)).mono_of_mem_nhdsWithin (Icc_mem_nhdsGE_of_mem hs)
 
-/-- `div E` is conserved: testing `Ė = -curl B` against `∇φ` and `curl ∇φ = 0`. -/
 theorem WeakEB.divE {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : WeakEB Ω T E B) :
     ∀ t ∈ Icc 0 T, ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
       ∑ ij : Ix, ∫ x, E t ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
@@ -374,7 +327,6 @@ theorem WeakEB.divE {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : WeakEB Ω T E B
   rw [hc]
   exact h.divE0 φ hφ
 
-/-- `div B` is conserved: `∂ₜ ⟨B, ∇φ⟩ = ⟨E, curl ∇φ⟩ = 0`. -/
 theorem WeakEB.divB {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : WeakEB Ω T E B) :
     ∀ t ∈ Icc 0 T, ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
       ∑ ij : Ix, ∫ x, B t ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
@@ -464,7 +416,6 @@ theorem continuous_viol : Continuous fun p : L2F ℝ Ω Ix × L2F ℝ Ω Ix => v
   · exact (continuous_axV k).comp continuous_snd
   · exact continuous_trV.comp continuous_snd
 
-/-- Directional derivatives in the pairing: `∫ u ∂_v g = Σ_c v_c ∫ u ∂_c g`. -/
 theorem integral_mul_fderiv (u : L2 ℝ Ω) {g : R3 → ℝ} (hg : IsTest Ω g) (v : R3) :
     ∫ x, u x * fderiv ℝ g x v ∂volume.restrict Ω =
       ∑ c, v c * ∫ x, u x * partialDeriv c g x ∂volume.restrict Ω := by
@@ -494,8 +445,6 @@ def violDeriv (E B : L2F ℝ Ω Ix) (ψ : VIdx → R3 → ℝ) : VIdx → ℝ
   | Sum.inr (Sum.inr u) => ∑ c, ∫ x, axV E c x * partialDeriv c
     (ψ (.inr (.inr u))) x ∂volume.restrict Ω
 
-/-- **The violation solves the violation system weakly** (any open `Ω`, no boundary
-condition). -/
 theorem WeakEB.isWeakSolution_viol {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : WeakEB Ω T E B) :
     FiniteSpeed.IsWeakSolution violDir Ω T (fun s => viol (E s) (B s)) := by
   refine ⟨continuous_viol.comp_continuousOn (h.contE.prodMk h.contB), fun t ht ψ hψ => ?_⟩
@@ -533,10 +482,6 @@ section Cone
 
 variable {Ω : Set R3} {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix}
 
-/-- **Interior TSD propagation in the `L²` setting of `WeakEB`** (any open `Ω`, no boundary
-condition, no boundedness): if the violation vanishes at `t = 0` and the Euclidean ball
-`{|z - x| < r}` lies in `Ω`, then at time `t ∈ [0, T]` the violation vanishes a.e. on
-`{|y - x| < r - t}`. -/
 theorem WeakEB.ae_viol_eq_zero (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (h0 : viol (E 0) (B 0) = 0) {x : R3} {r : ℝ} (hr : ∀ z, dist (euc z) (euc x) < r → z ∈ Ω)
     {t : ℝ} (ht : t ∈ Icc 0 T) (j : VIdx) :
@@ -551,8 +496,7 @@ theorem WeakEB.ae_viol_eq_zero (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (fun z hz => hr z hz) hz ht j
   simpa [Metric.ball, one_mul] using this
 
-/-- The **domain of dependence** of `Ω` at time `t`: the points whose Euclidean distance to
-`ℝ³ \ Ω` exceeds `t`. -/
+/-- The domain of dependence: the points at Euclidean distance `> t` from `ℝ³ \ Ω`. -/
 def depDomain (Ω : Set R3) (t : ℝ) : Set R3 :=
   {y | ∃ r, t < r ∧ ∀ z, dist (euc z) (euc y) < r → z ∈ Ω}
 
@@ -562,8 +506,6 @@ theorem depDomain_subset {t : ℝ} (ht : 0 ≤ t) : depDomain Ω t ⊆ Ω := fun
 theorem isOpen_ball_euc (x : R3) (r : ℝ) : IsOpen {y | dist (euc y) (euc x) < r} :=
   isOpen_lt (euc.continuous.dist continuous_const) continuous_const
 
-/-- `depDomain Ω t` is the union of the cones `{|y - x| < r - t}` of the Euclidean balls
-`{|z - x| < r} ⊆ Ω`. -/
 theorem depDomain_eq_iUnion (t : ℝ) :
     depDomain Ω t = ⋃ p : {p : R3 × ℝ // ∀ z, dist (euc z) (euc p.1) < p.2 → z ∈ Ω},
       {y | dist (euc y) (euc p.1.1) < p.1.2 - t} := by
@@ -576,8 +518,6 @@ theorem depDomain_eq_iUnion (t : ℝ) :
     refine ⟨r - dist (euc y) (euc q), by linarith, fun z hz => h z ?_⟩
     linarith [dist_triangle (euc z) (euc y) (euc q)]
 
-/-- **Interior finite speed of propagation on an arbitrary open `Ω ⊆ ℝ³`**: under `WeakEB` with
-vanishing initial violation, the violation vanishes a.e. on `depDomain Ω t`. -/
 theorem WeakEB.ae_viol_eq_zero_depDomain (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (h0 : viol (E 0) (B 0) = 0) {t : ℝ} (ht : t ∈ Icc 0 T) (j : VIdx) :
     ∀ᵐ y ∂volume.restrict (depDomain Ω t), viol (E t) (B t) j y = 0 := by
@@ -622,7 +562,6 @@ theorem ae_symTF_of_viol (X : L2F ℝ Ω Ix) {S : Set R3} (hSΩ : S ⊆ Ω)
   · fin_cases i <;> fin_cases j <;> simp <;> linarith
   · rw [Fin.sum_univ_three, ← h4, h2]
 
-/-- A.e. symmetric and trace-free on `Ω` plus weakly divergence-free gives `L²(TSD)`. -/
 theorem mem_tsd_of_ae_symTF {X : L2F ℝ Ω Ix} (hX : ∀ᵐ y ∂volume.restrict Ω, SymTF X y)
     (hd : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
       ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) :
@@ -646,8 +585,6 @@ theorem viol_eq_zero_of_mem_tsd {E B : L2F ℝ Ω Ix} (hE : E ∈ tsd Ω) (hB : 
 
 variable {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix}
 
-/-- Under `WeakEB` with TSD-violation-free data, `E(t)`, `B(t)` are symmetric and trace-free a.e.
-on the domain of dependence. -/
 theorem WeakEB.ae_symTF_depDomain (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
     (h0 : viol (E 0) (B 0) = 0) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ∀ᵐ y ∂volume.restrict (depDomain Ω t), SymTF (E t) y ∧ SymTF (B t) y := by
@@ -664,10 +601,8 @@ theorem WeakEB.ae_symTF_depDomain (hΩ : IsOpen Ω) (h : WeakEB Ω T E B)
 theorem depDomain_univ (t : ℝ) : depDomain (univ : Set R3) t = univ :=
   eq_univ_of_forall fun _ => ⟨t + 1, by linarith, fun _ _ => mem_univ _⟩
 
-/-- **TSD propagation on `ℝ³`**: if `E, B` satisfy the weak equations `WeakEB` on `Ω = ℝ³` and
-`E(0), B(0) ∈ L²(TSD)`, then `E(t), B(t) ∈ L²(TSD)` for all `t ∈ [0, T]`: divergence-freeness is
-conserved, symmetry and trace-freeness propagate by finite speed (the domain of dependence of
-`ℝ³` is `ℝ³`). The solution is assumed, not constructed. [QuennevilleBelair2015], Prop 4.17 -/
+/-- If `E, B` satisfy `WeakEB` on `ℝ³` with `E(0), B(0) ∈ L²(TSD)`, then `E(t), B(t) ∈ L²(TSD)`
+on `[0, T]`. [QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem WeakEB.mem_tsd_univ {E B : ℝ → L2F ℝ (univ : Set R3) Ix} (h : WeakEB univ T E B)
     (hE₀ : E 0 ∈ tsd univ) (hB₀ : B 0 ∈ tsd univ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     E t ∈ tsd univ ∧ B t ∈ tsd univ := by
@@ -688,7 +623,6 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 variable {Ω : Set R3}
 
-/-- Weakly divergence-free fields are the kernel of `d₀†`. -/
 theorem weakDiv_eq_zero_of_mem_ker (hΩ : IsOpen Ω) {X : L2F ℝ Ω Ix}
     (hX : X ∈ (gradCurl ℝ hΩ).d₀†.ker) (φ : Fin 3 → R3 → ℝ) (hφ : IsTestField Ω φ) :
     ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
@@ -698,7 +632,6 @@ theorem weakDiv_eq_zero_of_mem_ker (hΩ : IsOpen Ω) {X : L2F ℝ Ω Ix}
   erw [hy]
   exact inner_zero_left _
 
-/-- Conversely, weakly divergence-free fields lie in `N(d₀†)`. -/
 theorem mem_ker_of_weakDiv_eq_zero (hΩ : IsOpen Ω) {X : L2F ℝ Ω Ix}
     (hX : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
       ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) :
@@ -725,11 +658,6 @@ def winE (u : Win Ω) : L2F ℝ Ω Ix := u 1
 /-- The magnetic field `B` of `(σ, E, B)`. -/
 def winB (u : Win Ω) : L2F ℝ Ω Ix := u 2
 
-/-- **Strong solutions with divergence-free data satisfy the interior equations.** For a strong
-solution of `U' = L U` of the grad–curl complex from `(0, E₀, B₀)` with `E₀, B₀` weakly
-divergence-free: `σ ≡ 0` and `E ∈ N(d₀†)` (Prop 4.16, `divFree_propagates`), and `(E, B)`
-satisfies `WeakEB` (`wave_apply_one`, `wave_apply_two`; test fields lie in `D(d₁) = H̊(curl)` and
-`d₁†` extends the classical curl). No boundedness of `Ω` is needed. -/
 theorem weakEB_of_isStrongSolution (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
     (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U)
     (h0 : winσ (U 0) = 0)
@@ -805,11 +733,6 @@ theorem weakEB_of_isStrongSolution (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win 
     rw [inner_testField_eq]
     simp only [← curlM_eq_formalAdj_apply]
 
-/-- **Interior TSD propagation (finite speed) for the Hodge wave equation of the grad–curl
-complex** on an open `Ω ⊆ ℝ³` (bounded or not): for a strong solution from TSD data
-`(0, E₀, B₀)` and every Euclidean ball `{|z - x| < r} ⊆ Ω`, at time `t ∈ [0, T]`: `σ(t) = 0`,
-`E(t)`, `B(t)` are weakly divergence-free in `Ω`, and symmetric and trace-free a.e. on
-`{|y - x| < r - t}`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_cone (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
     (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U)
     (h0 : winσ (U 0) = 0)
@@ -837,11 +760,8 @@ theorem tsd_cone (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
     mem_ker_of_weakDiv_eq_zero hΩ (hW.divB t ht)
   exact ⟨(hσ t ht).1, (hσ t ht).2, hB, by filter_upwards [h1, h2] with y h1 h2 using ⟨h1, h2⟩⟩
 
-/-- **TSD on the domain of dependence.** For a strong solution of the Hodge wave equation of the
-grad–curl complex on an open `Ω ⊆ ℝ³` (bounded or not) with TSD data `(0, E₀, B₀)`, at every
-`t ∈ [0, T]`, `E(t)` and `B(t)` are symmetric and trace-free a.e. on `depDomain Ω t`, the points
-at Euclidean distance `> t` from `ℝ³ \ Ω`: the boundary violation travels inward at most at unit
-speed. [QuennevilleBelair2015], Prop 4.17 -/
+/-- Strong solutions from TSD data are symmetric and trace-free a.e. on `depDomain Ω t`.
+[QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem tsd_depDomain (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
     (hU : Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U) (h0 : winσ (U 0) = 0)
     (hE₀ : winE (U 0) ∈ tsd Ω) (hB₀ : winB (U 0) ∈ tsd Ω) {t : ℝ} (ht : t ∈ Icc 0 T) :
@@ -854,9 +774,8 @@ theorem tsd_depDomain (hΩ : IsOpen Ω) {T : ℝ} {U : ℝ → Win Ω}
   intro p _
   exact (tsd_cone hΩ hU h0 hE₀ hB₀ p.2 ht).2.2.2
 
-/-- **Existence form.** For TSD data `U₀ = (0, E₀, B₀) ∈ D(L)` and every `T`, the orbit
-`t ↦ e^{tL} U₀` is a strong solution on `[0, T]`, every strong solution from `U₀` equals it, and
-it is TSD on `depDomain Ω t` for every `t ∈ [0, T]`. -/
+/-- For TSD data in `D(L)`, the orbit `t ↦ e^{tL} U₀` is the unique strong solution, and it is
+symmetric and trace-free a.e. on `depDomain Ω t`. -/
 theorem existsUnique_tsd_depDomain (hΩ : IsOpen Ω) {U₀ : Win Ω}
     (hD : U₀ ∈ (gradCurl ℝ hΩ).wave.domain) (h0 : winσ U₀ = 0) (hE₀ : winE U₀ ∈ tsd Ω)
     (hB₀ : winB U₀ ∈ tsd Ω) (T : ℝ) :

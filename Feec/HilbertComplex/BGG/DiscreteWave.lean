@@ -5,45 +5,19 @@ public import Feec.HilbertComplex.BGG.EllipticProjection
 /-!
 # Convergence of the semi-discrete BGG wave system (6.3) through the elliptic projection (6.4)
 
-The Ch. 6 convergence theorems of `Feec.HilbertComplex.BGG.TimeDependent`
-(`norm_sub_le_of_ellipticProjection`, `exists_discreteSolution_norm_sub_le`) take an elliptic
-projection *without* the `L²` term as a hypothesis. The thesis' (6.4) has the `L²` (mass) term.
-Here the convergence theorems are proved for the projection with the `L²` term: the error bound
-gains `∫₀ᵗ ‖Pξ − ξ‖`; the projected trajectory may be any differentiable trajectory (not
-necessarily a fixed linear map of `ξ`). For the projection `Feec.BGG.ellipticProjection` of (6.4)
-the projection hypotheses are discharged (`exists_discreteSolution_norm_sub_le_ellipticProjection`).
+Convergence of the semi-discrete system (6.3) of [QuennevilleBelair2015], §6.2 through an elliptic
+projection with the `L²` term, as in (6.4); for the projection of (6.4) all projection hypotheses
+are proved, and for a discretization the convergence is `O(h)`.
 
 ## Main results
 
-* `Feec.BGG.norm_sub_le_of_ellipticProjection_L2`: the abstract energy estimate
-  `‖ξ(t) − ξₕ(t)‖ ≤ ‖ξ(t) − p(t)‖ + ‖p(0) − ξₕ(0)‖ + ∫₀ᵗ (‖p' − ξ'‖ + ‖p − ξ‖)`.
-* `Feec.BGG.DiscreteSolution.norm_sub_le_of_ellipticProjection_L2`: the same with the discrete
-  side discharged by a solution of (6.3).
-* `Feec.BGG.projected_compatible_u_L2`: the projected dynamic datum satisfies (C2).
-* `Feec.BGG.exists_discreteSolution_norm_sub_le_L2`: existence of the discrete solution from
-  the projected initial data and the estimate with no initial error.
-* `Feec.BGG.exists_discreteSolution_norm_sub_le_ellipticProjection`: the same for the elliptic
-  projection (6.4) itself, all projection hypotheses proved.
-* `Feec.BGG.norm_sub_le_mul_of_ellipticProjection_L2`: the rate form
-  `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + 2t)`, e.g. `ε = C h` from `Discrete.strang_rate_of_regularPotential`.
-* `Feec.BGG.Discrete.ellipticData_embedH`: for a discretization `Q : Discrete D` and an energy
-  embedding `ιc` (`Discrete.IsEnergyEmbedding`),
-  the data of the Ch. 6 theorems are the data `Discrete.ellipticDataH` of the Strang bound.
-* `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate`: end-to-end `O(h)` convergence of
-  (6.3) on `Q`, `‖ξ(t) − ξₕ(t)‖ ≤ √(2(strangConst C_p + 1)) |c| |h| (2 + 2t)`, assuming in
-  addition that `S₀,ₕ` is onto `Vₕ¹`; proved under `HarmonicStability`
-  (`HarmonicStability.exists_discreteSolution_norm_sub_le_rate`).
+* `Feec.BGG.norm_sub_le_of_ellipticProjection_L2`: the energy estimate.
+* `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate`: `O(h)` convergence of (6.3).
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), (6.4), Prop 6.2, Prop 6.3), Thm 4.14
-* [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
-  (elliptic projections in evolution problems)
-* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
-* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
-* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
-* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+  §6.2, Thm 4.14
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -57,15 +31,8 @@ namespace Feec.BGG
 
 /-! ## The abstract energy estimate with the `L²` term -/
 
-/-- **Ch. 6 convergence through an elliptic projection with `L²` term** (thesis (6.4); the
-thesis states no convergence theorem). Abstract setting of `norm_sub_le_of_ellipticProjection`,
-with the projected trajectory `p` (derivative `p'`) and the shifted projection equation
-`hproj`: `⟪p, η₁⟫ + Aₕ((p, Q), η) − ⟪λₚ, Bₕη⟫ = ⟪ξ, η₁⟫ + A((ξ, χ), η) − ℓη` on `Xₕ`. Then
-`‖ξ(t) − ξₕ(t)‖ ≤ ‖ξ(t) − p(t)‖ + ‖p(0) − ξₕ(0)‖ + ∫₀ᵗ (‖p' − ξ'‖ + ‖p − ξ‖)`.
-Proof: the error `e = p − ξₕ` satisfies `⟪e', e⟫ = ⟪p' − ξ', e⟫ − ⟪p − ξ, e⟫` (the `L²` term of
-the projection is the second summand), then the energy argument.
-See [QuennevilleBelair2015], §6.2, (6.4), and Thm 4.14; cf. [Wheeler1973], [Baker1976],
-[Dupont1973], [Geveci1988], [GilletteHolstZhu2017]. -/
+/-- For a projected trajectory `p` satisfying the shifted projection equation on `Xₕ`,
+`‖ξ(t) − ξₕ(t)‖ ≤ ‖ξ(t) − p(t)‖ + ‖p(0) − ξₕ(0)‖ + ∫₀ᵗ (‖p' − ξ'‖ + ‖p − ξ‖)`. -/
 theorem norm_sub_le_of_ellipticProjection_L2 {X Z Y : Type*} [NormedAddCommGroup X]
     [InnerProductSpace ℝ X]
     [AddCommGroup Z] [Module ℝ Z] [NormedAddCommGroup Y] [InnerProductSpace ℝ Y]
@@ -129,10 +96,6 @@ theorem norm_sub_le_of_ellipticProjection_L2 {X Z Y : Type*} [NormedAddCommGroup
       change _ ≤ (‖p' t - ξ' t‖ + ‖p t - ξ t‖) * ‖e t‖
       linarith
 
-/-- **Rate form** of `norm_sub_le_of_ellipticProjection_L2`: if the projection errors
-`‖ξ − p‖`, `‖p' − ξ'‖` and the initial discrete error are `≤ ε` on `[0,T]` (e.g. `ε = C h` from
-`Discrete.strang_rate_of_regularPotential` applied to `ξ` and to `ξ'`), then `‖ξ(t) − ξₕ(t)‖ ≤ ε (2 + 2t)`.
-Cf. [QuennevilleBelair2015], Thm 4.14. -/
 theorem norm_sub_le_mul_of_ellipticProjection_L2 {X : Type*} [NormedAddCommGroup X]
     [InnerProductSpace ℝ X]
     {ξ ξ' ξh p p' : ℝ → X} {T ε : ℝ} (hξc : ContinuousOn ξ (Icc 0 T))
@@ -168,11 +131,7 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
   [NormedAddCommGroup Pt2] [InnerProductSpace ℝ Pt2]
   {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [AddCommGroup Z] [Module ℝ Z]
 
-/-- **Ch. 6 convergence for (6.3) with the elliptic projection (6.4) (`L²` term included).**
-`norm_sub_le_of_ellipticProjection_L2` with its discrete hypotheses discharged by a solution
-`s` of (6.3), in the setting of `DiscreteSolution.norm_sub_le_of_ellipticProjection`
-(energy-preserving embedding `ι`, `Xₕ = range (ι × j)`, discrete forms `hAh`, `hBh`).
-See [QuennevilleBelair2015], §6.2, (6.3), (6.4). -/
+/-- The energy estimate through an elliptic projection with `L²` term, for a solution of (6.3). -/
 theorem DiscreteSolution.norm_sub_le_of_ellipticProjection_L2
     {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
     (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X)
@@ -221,10 +180,6 @@ theorem DiscreteSolution.norm_sub_le_of_ellipticProjection_L2
   · obtain ⟨b, ψ, rfl⟩ := hrange η hη
     rw [hAh]; exact discreteSkewForm_self D _
 
-/-- **The projected dynamic datum satisfies (C2)** for the elliptic projection with `L²` term
-(as `projected_compatible_u` for the projection without it): if `(ι a, j q) = (p(0), Q(0))`
-then `a_u ⊥ d(ker S₀,ₕ)`. Test with `η = (ι 0, j ψ)`, `ψ ∈ ker S₀,ₕ`: the `L²` term
-`⟪p(0), ι 0⟫` vanishes. See [QuennevilleBelair2015], §6.2, Prop 6.2. -/
 theorem projected_compatible_u_L2 {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
     (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X) (j : Pt0 →ₗ[ℝ] Z)
     (A Ah : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ) (Bh : (X × Z) →ₗ[ℝ] P1)
@@ -250,13 +205,6 @@ theorem projected_compatible_u_L2 {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
   simp [discreteSkewForm] at h2
   linarith
 
-/-- **Ch. 6 convergence from projected initial data, `L²` projection (no solution assumed).**
-Hypotheses of `DiscreteSolution.norm_sub_le_of_ellipticProjection_L2` without `s`, plus `T > 0`,
-`f` continuous, finite-dimensional FE spaces, `d` injective on `Ṽₕ⁰`, `S₀,ₕ` onto. Then (6.3)
-has a solution whose dynamic initial datum is `p(0)` (admissible by
-`projected_compatible_u_L2`) and whose algebraic datum is the forced `Φ(σₕ(0), f(0))`, and
-`‖ξ(t) − ξₕ(t)‖ ≤ ‖ξ(t) − p(t)‖ + ∫₀ᵗ (‖p' − ξ'‖ + ‖p − ξ‖)`.
-See [QuennevilleBelair2015], §6.2, Prop 6.2, (6.4). -/
 theorem exists_discreteSolution_norm_sub_le_L2 [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P1]
     [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt0] [FiniteDimensional ℝ Pt1]
     [FiniteDimensional ℝ Pt2] {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
@@ -305,23 +253,15 @@ theorem exists_discreteSolution_norm_sub_le_L2 [FiniteDimensional ℝ P0] [Finit
 variable [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P1] [FiniteDimensional ℝ P2]
   [FiniteDimensional ℝ Pt0] [FiniteDimensional ℝ Pt1] [FiniteDimensional ℝ Pt2]
 
-/-- The projected trajectory `p(t) = ι(Πₕ(ξ(t), χ(t), ℓ(t)))₁`: the dynamic part of the elliptic
-projection (6.4) of the exact state at time `t`, embedded in `X`. -/
+/-- The embedded dynamic part of the elliptic projection (6.4) with data `G t`. -/
 def projectedTrajectory {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
     (hdinj : Function.Injective D.dt0) (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ)
     (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X) (G : ℝ → Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0))
     (t : ℝ) : X :=
   ι (ellipticProjection D hdinj hB (ellipticRhs (G t) 0)).1.1
 
-/-- **Ch. 6 convergence through the elliptic projection (6.4), all projection hypotheses
-proved.** Assume the setting of `exists_discreteSolution_norm_sub_le_L2` without any projection
-hypothesis, and that the data functional `G(t) = ellipticData ι j A (ξ t) (χ t) (ℓ t)` of the
-exact solution is differentiable (`hGd`, derivative `G'`, continuous) on every discrete test
-function. Let `p(t) = projectedTrajectory … G t` (the elliptic projection `Πₕ`) and
-`p'(t) = projectedTrajectory … G' t`. Then (6.3) has a solution with initial datum `p(0)` (and
-the forced `φₕ(0)`), and `‖ξ(t) − ξₕ(t)‖ ≤ ‖ξ(t) − p(t)‖ + ∫₀ᵗ (‖p' − ξ'‖ + ‖p − ξ‖)`.
-The thesis defines (6.4) but proves neither its solvability nor any convergence.
-See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2. -/
+/-- If the data functional of the exact solution is differentiable on discrete tests, (6.3) has a
+solution from (6.4) at `t = 0`, with the estimate of `norm_sub_le_of_ellipticProjection_L2`. -/
 theorem exists_discreteSolution_norm_sub_le_ellipticProjection
     {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
     (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
@@ -401,9 +341,7 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Discrete D}
   {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [AddCommGroup Z] [Module ℝ Z]
 
-/-- An *energy embedding* of the continuous dynamic state space `V⁰ × Ṽ¹ × V² × Ṽ²` into an inner
-product space `X`: `⟪ιc a, ιc b⟫ = (a₁,b₁) + (a₂,b₂) + (a₃,b₃) + (a₄,b₄)`. (The Mathlib product
-carries the sup norm, so `X` is typically an `L²` product.) -/
+/-- An embedding `ιc` of `V⁰ × Ṽ¹ × V² × Ṽ²` into `X` preserving the energy inner product. -/
 def IsEnergyEmbedding (ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X) : Prop :=
   ∀ a b, ⟪ιc a, ιc b⟫ = ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ + ⟪a.2.2.2, b.2.2.2⟫
 
@@ -417,14 +355,12 @@ theorem embedH_apply (ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X)
     (b : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) :
     Q.embedH ιc b = ιc ((b.1 : V0), (b.2.1 : Vt1), (b.2.2.1 : W2), (b.2.2.2 : Wt2)) := rfl
 
-/-- The discrete embedding is energy preserving (the hypothesis `hι` of the Ch. 6 theorems). -/
 theorem embedH_inner {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X} (hιc : IsEnergyEmbedding ιc)
     (a b : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) :
     ⟪Q.embedH ιc a, Q.embedH ιc b⟫ = ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ +
       ⟪a.2.2.2, b.2.2.2⟫ := by
   rw [embedH_apply, embedH_apply, hιc]; simp only [Submodule.coe_inner]
 
-/-- An energy embedding is an isometry for the energy norm. -/
 theorem norm_sub_of_isEnergyEmbedding {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X}
     (hιc : IsEnergyEmbedding ιc) (a b : V0 × Vt1 × W2 × Wt2) :
     ‖ιc a - ιc b‖ = √(‖a.1 - b.1‖ ^ 2 + ‖a.2.1 - b.2.1‖ ^ 2 + ‖a.2.2.1 - b.2.2.1‖ ^ 2 +
@@ -432,11 +368,6 @@ theorem norm_sub_of_isEnergyEmbedding {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] 
   rw [← map_sub, ← Real.sqrt_sq (norm_nonneg _), ← real_inner_self_eq_norm_sq, hιc]
   simp only [Prod.fst_sub, Prod.snd_sub, real_inner_self_eq_norm_sq]
 
-/-- **The bridge between the two forms of the data of (6.4)**: if the continuous forms `A`, `ℓ`
-on `X × Z` restrict on (embedded exact state) × (embedded discrete test) to the continuous skew
-form `discreteSkewForm D` (with `S₁`) and to `ℓ₁(dτ − S₀ψ)`, then the data functional
-`ellipticData` of the Ch. 6 convergence theorems is `ellipticDataH`, the data of the Strang
-bound. -/
 theorem ellipticData_embedH {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X} (hιc : IsEnergyEmbedding ιc)
     (jc : Vt0 →ₗ[ℝ] Z) (A : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ)
     (hA : ∀ a φ (b : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) (ψ : Q.Vt0h),
@@ -478,8 +409,6 @@ variable {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [AddComm
 
 open Discrete
 
-/-- **Rate of the elliptic projection, embedded**, modulo harmonic forms
-(`Feec.BGG.Discrete.norm_sub_embedH_ellipticProjection_le`). -/
 theorem norm_sub_embedH_ellipticProjection_le (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
     [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
     [FiniteDimensional ℝ Q.Wt2h] {ιc : (V0 × Vt1 × W2 × Wt2) →L[ℝ] X}
@@ -501,12 +430,7 @@ theorem norm_sub_embedH_ellipticProjection_le (h54 : Q.Compatible) [FiniteDimens
     ← Real.sqrt_sq_eq_abs, ← Real.sqrt_mul hC]
   exact Real.sqrt_le_sqrt (hS.trans (mul_le_mul_of_nonneg_left hdata hC))
 
-/-- **End-to-end `O(h)` convergence of the semi-discrete BGG wave system (6.3) modulo harmonic
-forms**: `Feec.BGG.Discrete.exists_discreteSolution_norm_sub_le_rate` with `Stability` replaced by
-`HarmonicStability` (no hypothesis on the top row; harmonic forms `𝔥` on the bottom row). The
-discrete solution starts from the elliptic projection (6.4) of the exact initial state, and
-`‖ιc a(t) − ι ξₕ(t)‖ ≤ √(2(strangConst C_p + 1)) |c| |h| (2 + 2t)`.
-See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2, and Thm 4.14. -/
+/-- `O(h)` convergence of (6.3) from the elliptic projection (6.4), under `HarmonicStability`. -/
 theorem exists_discreteSolution_norm_sub_le_rate (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
     [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
     [FiniteDimensional ℝ Q.Wt2h] (hS : Function.Surjective Q.toSegmentH.S0)
@@ -625,9 +549,6 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Discrete D}
   {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [AddCommGroup Z] [Module ℝ Z]
 
-/-- **Rate of the elliptic projection, embedded**: if the Strang data are `≤ (c h)²` (`hdata`),
-the embedded projection `ι Πₕ` of an exact state `a` is within `√(2(strangConst C_p + 1))|c||h|`
-of `ιc a` in `X`. -/
 theorem norm_sub_embedH_ellipticProjection_le {Cp CR CS : ℝ} (H : Stability D Cp CR CS)
     (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
     [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]
@@ -644,26 +565,8 @@ theorem norm_sub_embedH_ellipticProjection_le {Cp CR CS : ℝ} (H : Stability D 
       √(2 * (strangConst Cp + 1)) * |c| * |h| :=
   H.toHarmonicStability.norm_sub_embedH_ellipticProjection_le h54 hιc hdinj hB c3 ℓ₁ hK0 hK1 hdata
 
-/-- **End-to-end `O(h)` convergence of the semi-discrete BGG wave system (6.3)** for a
-discretization `Q : Discrete D` (new: the thesis states no convergence rate for (6.3)).
-
-Setting: an energy embedding `ιc` of the continuous dynamic state into `X`, `jc : Ṽ⁰ → Z`, the continuous forms `A`, `ℓ(t)` on `X × Z` that
-restrict to `discreteSkewForm D` and `ℓ₁(t)(dτ − S₀ψ)` (`hA`, `hℓ`), the discrete forms `Ah`,
-`Bh` of `toSegmentH Q` (`hAh`, `hBh`), and an exact solution: dynamic state `a(t)`, algebraic
-state `φ(t)`, multiplier functional `ℓ₁(t)`, satisfying the exact equation on discrete tests
-(`hcont`) with time derivatives `a'(t)`, `φ'(t)`, `ℓ₁'(t)` in the weak sense of the data of
-(6.4) (`hGc`, `hGd`, `hG'c`).
-
-Hypotheses on `Q`: `Stability`, `Compatible`, finite-dimensional FE spaces, and `S₀,ₕ` onto
-`Vₕ¹` (`hS`, needed for the existence of the discrete solution; not derived from
-`Compatible`, which only gives `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹`). Rate hypotheses, uniform on `[0,T]`
-for both the state and its derivative: `dσ = S₀φ`, the consistency bounds `K₀`, `K₁` and
-`strangData ≤ (c h)²` (e.g. from `strang_rate_of_regularPotential`'s inputs,
-`consistency_S0_of_approx`, `consistency_S1_of_regularPotential`).
-
-Conclusion: (6.3) has a solution starting from the elliptic projection (6.4) of the initial
-data, and `‖ιc a(t) − ι ξₕ(t)‖ ≤ √(2(strangConst C_p + 1)) |c| |h| (2 + 2t)`.
-See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2, and Thm 4.14. -/
+/-- Under `Stability`, (5.4), `S₀,ₕ` onto and `strangData ≤ (c h)²` for `a` and `a'`, (6.3) has a
+solution from (6.4) with an `O(h)` error on `[0,T]`. Cf. [QuennevilleBelair2015], Thm 4.14 -/
 theorem exists_discreteSolution_norm_sub_le_rate {Cp CR CS : ℝ} (H : Stability D Cp CR CS)
     (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h]
     [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h]

@@ -6,66 +6,22 @@ public import Feec.Semigroup.DissipativeInvariance
 /-!
 # θ-schemes through resolvents, and products of them
 
-For the evolution `u' = A u`, `A : E →ₗ.[𝕜] E` on a Hilbert space, a time step `τ` and `θ : 𝕜`,
-a **θ-step** `u ↦ u'` is `u' - u = τ A (θ u' + (1 - θ) u)` with `θ u' + (1 - θ) u ∈ D(A)`
-(`IsThetaStep`): the one-step scheme of the rational function
-`r_θ(z) = (1 + (1 - θ) z) / (1 - θ z)`, `r_θ(τ A) = θ⁻¹ (1 - θ τ A)⁻¹ - (1 - θ) / θ`, defined
-through the resolvent `R(z) = (z - A)⁻¹` at `z = (θ τ)⁻¹` (`thetaStep`) for every possibly
-unbounded `A`. `θ = 1` is implicit Euler, `r_1(τ A) = (1 - τ A)⁻¹`; `θ = 1/2` is Crank–Nicolson:
-**`cayley_eq_thetaStep`**: the Cayley transform `cayley A s` of `Feec.TimeStepping.Cayley` is
-`thetaStep A (1/2) (2 s)` (`cayley_half_eq_thetaStep`: Crank–Nicolson with step `τ` is
-`r_{1/2}(τ A)`), and `isCNStep_iff_isThetaStep`; the `fem4gr` step without boundary degrees of
-freedom is the CN step (`isDirichletCNStep_top_iff`). The Crank–Nicolson results of
-`Feec.TimeStepping.Cayley` (`IsCNStep.norm_le`, `IsCNStep.norm_eq`, `IsCNStep.mem_of_isReducing`,
-`norm_cayley_apply`) are the `θ = 1/2` cases of `IsThetaStep.norm_le`, `IsThetaStep.norm_eq`,
-`thetaStep_mem_of_isReducing` and `norm_thetaStep_apply_eq` through these bridges; they stay in
-`Cayley`, which this file imports (and which the `fem4gr` three-field schemes use).
+The θ-scheme `r_θ(τ A) = (1 + (1 - θ) τ A)(1 - θ τ A)⁻¹` through the resolvent: energy identity,
+stability for m-dissipative `A`, `re θ ≥ 1/2`, constraint propagation and products of substeps.
 
 ## Main results
 
-* `IsThetaStep.norm_sq_eq`: the **discrete energy identity**
-  `‖u'‖² = ‖u‖² + 2 τ re ⟪A w, w⟫ - (2 re θ - 1) ‖u' - u‖²`, `w = θ u' + (1 - θ) u`;
-* `IsThetaStep.norm_le`: **unconditional stability**, `‖u'‖ ≤ ‖u‖` for dissipative `A`,
-  `re θ ≥ 1/2` (A-stability of `r_θ`), `τ ≥ 0`; `IsThetaStep.norm_eq`: energy conservation for
-  skew-symmetric `A` and `re θ = 1/2`;
-* `LinearPMap.IsMDissipative.isResolvent_of_re_pos`: an m-dissipative operator has a resolvent
-  at every `z` with `re z > 0` (so `thetaStep` is a θ-step for every `re θ > 0`, `τ > 0`,
-  `isThetaStep_thetaStep_of_isMDissipative`);
-* `norm_thetaStep_le`: `‖r_θ(τ A)‖ ≤ 1` for m-dissipative `A`, `re θ ≥ 1/2`, `τ > 0`, **uniformly
-  in `A`**: the constant does not see `A`, so it applies to every discrete generator `Lₕ` at
-  once; `norm_thetaStep_apply_eq`: `r_θ(τ A)` is an isometry for skew-adjoint `A`, `re θ = 1/2`
-  and every `τ ≠ 0` (generalizing `norm_cayley_apply`);
-* **discrete constraint propagation**: `thetaStep_mem` (a subspace invariant under the resolvent
-  `R((θ τ)⁻¹)` is invariant under the step), `IsResolvent.apply_mem_of_isReducing` and
-  `thetaStep_mem_of_isReducing` (reducing subspaces, every `re θ > 0`), and
-  `thetaStep_mem_of_keeps` (real `θ > 0`: a closed subspace kept by the exact semigroup is kept
-  by the scheme, through the resolvent criterion `IsMDissipative.invariant_iff_resolvent`);
-* **products of θ-substeps** `splitStep σ τ = ∏ᵢ r_{θᵢ}(cᵢ τ Aᵢ)`: with one operator these are the
-  rational schemes `r = ∏ᵢ r_{θᵢ}(cᵢ ·)` (for instance the order-four Padé scheme
-  `(1 + z/2 + z²/12)/(1 - z/2 + z²/12) = r_θ(z/2) r_θ̄(z/2)`, `θ = (1 + i/√3)/2`, over `ℂ`); with
-  several, operator splittings (Lie, Strang). `norm_splitStep_le`: they are contractions when every
-  `Aᵢ` is m-dissipative, `re θᵢ ≥ 1/2` and `cᵢ > 0`; `splitStep_mem_of_isReducing`: they keep a
-  subspace reducing every `Aᵢ`.
-
-On a Hilbert space, A-stability of a real rational `r` (`|r| ≤ 1` on `re z ≤ 0`) gives
-`‖r(τ A)‖ ≤ 1` for every m-dissipative `A` by von Neumann's inequality for the contraction
-`(1 + A)(1 - A)⁻¹` ([VonNeumann1951]; [HairerWanner1996], §IV.11): this is
-`Feec.TimeStepping.RationalScheme.norm_step_le` (`Feec.TimeStepping.Rational`); the product form
-above is the part of it obtained from the energy identity of each factor.
+* `IsThetaStep.norm_sq_eq`: the discrete energy identity.
+* `norm_thetaStep_le`: `‖r_θ(τ A)‖ ≤ 1` for every m-dissipative `A`, `re θ ≥ 1/2`, `τ > 0`.
+* `thetaStep_mem_of_isReducing`: discrete constraint propagation.
+* `norm_splitStep_le`: `‖∏ᵢ r_{θᵢ}(cᵢ τ Aᵢ)‖ ≤ 1` for m-dissipative `Aᵢ`, `re θᵢ ≥ 1/2`, `cᵢ > 0`,
+  `τ > 0`.
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
-  (single step methods, `A`-stability), Ch. 9 (rational approximations through resolvents)
-* [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
-  (von Neumann's inequality)
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (A-stability, Padé approximations of the exponential), §IV.11 (von Neumann's theorem:
-  contractivity for dissipative problems)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.4 (resolvents of m-dissipative operators)
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 9
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 4.18 (constraint propagation, here at the discrete level)
+  Prop 4.18
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -82,11 +38,8 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-! ### Resolvents off the real axis -/
+/-! ### Resolvents in the right half-plane -/
 
-/-- **Resolvents in the right half-plane**: an m-dissipative `A` has a resolvent at every `z`
-with `re z > 0`: `z - A = (1 - (μ - z) R(μ)) (μ - A)` with `μ = |z|² / re z`, and
-`‖(μ - z) R(μ)‖ ≤ |μ - z| / μ < 1`. [Pazy1983], §1.4 -/
 theorem _root_.LinearPMap.IsMDissipative.isResolvent_of_re_pos [CompleteSpace E]
     (hA : A.IsMDissipative) {z : 𝕜} (hz : 0 < RCLike.re z) :
     IsResolvent A z (resolvent A z) := by
@@ -138,19 +91,14 @@ theorem _root_.LinearPMap.IsMDissipative.isResolvent_of_re_pos [CompleteSpace E]
 
 /-! ### θ-steps -/
 
-/-- `u'` is a **θ-step** from `u` for `u' = A u` with time step `τ`: `θ u' + (1 - θ) u ∈ D(A)`
-and `u' - u = τ A (θ u' + (1 - θ) u)`. [Thomee2006], Ch. 7 -/
+/-- `u'` is a θ-step from `u`: `u' - u = τ A (θ u' + (1 - θ) u)` with `θ u' + (1 - θ) u ∈ D(A)`. -/
 def IsThetaStep (A : E →ₗ.[𝕜] E) (θ : 𝕜) (τ : ℝ) (u u' : E) : Prop :=
   ∃ h : θ • u' + (1 - θ) • u ∈ A.domain, u' - u = (τ : 𝕜) • A ⟨θ • u' + (1 - θ) • u, h⟩
 
-/-- The **θ-scheme** `r_θ(τ A) = (1 + (1 - θ) τ A)(1 - θ τ A)⁻¹ = (θ² τ)⁻¹ R((θ τ)⁻¹) - (1 - θ)/θ`
-of `r_θ(z) = (1 + (1 - θ) z) / (1 - θ z)`, through the resolvent `R(z) = (z - A)⁻¹`.
-[Thomee2006], Ch. 7 -/
+/-- The θ-scheme `r_θ(τ A) = (1 + (1 - θ) τ A)(1 - θ τ A)⁻¹`, through the resolvent of `A`. -/
 def thetaStep (A : E →ₗ.[𝕜] E) (θ : 𝕜) (τ : ℝ) : E →L[𝕜] E :=
   (θ ^ 2 * (τ : 𝕜))⁻¹ • resolvent A (θ * (τ : 𝕜))⁻¹ - ((1 - θ) / θ) • 1
 
-/-- **Crank–Nicolson is the θ-scheme with `θ = 1/2`**: the Cayley transform with half step `s`
-is `r_{1/2}(2 s A)`. -/
 theorem cayley_eq_thetaStep (A : E →ₗ.[𝕜] E) (s : ℝ) :
     cayley A s = thetaStep A (1 / 2) (2 * s) := by
   unfold cayley thetaStep
@@ -160,13 +108,11 @@ theorem cayley_eq_thetaStep (A : E →ₗ.[𝕜] E) (s : ℝ) :
   · ring_nf
   · norm_num
 
-/-- Crank–Nicolson with time step `τ` (half step `τ/2`) is `r_{1/2}(τ A)`. -/
 theorem cayley_half_eq_thetaStep (A : E →ₗ.[𝕜] E) (τ : ℝ) :
     cayley A (τ / 2) = thetaStep A ((1 / 2 : ℝ) : 𝕜) τ := by
   rw [cayley_eq_thetaStep, show 2 * (τ / 2) = τ by ring]
   congr 1; push_cast; ring
 
-/-- A CN step with half step `s` is a θ-step with `θ = 1/2`, `τ = 2 s`. -/
 theorem isCNStep_iff_isThetaStep :
     IsCNStep A s u u' ↔ IsThetaStep A (1 / 2) (2 * s) u u' := by
   have hw : (1 / 2 : 𝕜) • u' + (1 - 1 / 2 : 𝕜) • u = (1 / 2 : 𝕜) • (u' + u) := by module
@@ -188,9 +134,6 @@ theorem isCNStep_iff_isThetaStep :
 
 omit [InnerProductSpace 𝕜 E] in
 open scoped RealInnerProductSpace in
-/-- **The `fem4gr` step without boundary degrees of freedom is Crank–Nicolson**: with `V₀ = ⊤`
-and no load, the Dirichlet CN step `IsDirichletCNStep` is the CN step of `A` (hence the θ-step
-with `θ = 1/2`, `isCNStep_iff_isThetaStep`). -/
 theorem isDirichletCNStep_top_iff {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     [FiniteDimensional ℝ V] {A : V →ₗ[ℝ] V} {g' w w' : V} :
     IsDirichletCNStep ⊤ A s 0 g' w w' ↔ IsCNStep (A.toPMap ⊤) s w w' := by
@@ -204,8 +147,6 @@ theorem isDirichletCNStep_top_iff {V : Type*} [NormedAddCommGroup V] [InnerProdu
     rw [h, inner_zero_left, add_zero, RCLike.ofReal_real_eq_id, id, real_inner_smul_left]
     rfl
 
-/-- `r_θ(τ A) u` is a θ-step from `u` whenever `R((θ τ)⁻¹)` exists (`θ ≠ 0`, `τ ≠ 0`).
-[Thomee2006], Ch. 7 -/
 theorem isThetaStep_thetaStep {R : E →L[𝕜] E} (hR : IsResolvent A (θ * (τ : 𝕜))⁻¹ R)
     (hθ : θ ≠ 0) (hτ : τ ≠ 0) (u : E) : IsThetaStep A θ τ u (thetaStep A θ τ u) := by
   have hτ' : (τ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hτ
@@ -232,7 +173,6 @@ theorem isThetaStep_thetaStep {R : E →L[𝕜] E} (hR : IsResolvent A (θ * (τ
     congr 1; field_simp; ring
   rw [← this]; abel
 
-/-- `‖w + (1 - θ) d‖² = ‖w - θ d‖² + 2 re ⟪w, d⟫ - (2 re θ - 1) ‖d‖²`. -/
 private theorem norm_sq_add_smul (w d : E) (θ : 𝕜) :
     ‖w + (1 - θ) • d‖ ^ 2 =
       ‖w - θ • d‖ ^ 2 + 2 * RCLike.re ⟪w, d⟫ - (2 * RCLike.re θ - 1) * ‖d‖ ^ 2 := by
@@ -248,8 +188,7 @@ private theorem norm_sq_add_smul (w d : E) (θ : 𝕜) :
   ring
 
 /-- **The discrete energy identity of a θ-step**: with `w = θ u' + (1 - θ) u`,
-`‖u'‖² = ‖u‖² + 2 τ re ⟪A w, w⟫ - (2 re θ - 1) ‖u' - u‖²`: the dissipation of `A` plus the
-numerical dissipation `(2 re θ - 1) ‖u' - u‖²` of the scheme. [Thomee2006], Ch. 7 -/
+`‖u'‖² = ‖u‖² + 2 τ re ⟪A w, w⟫ - (2 re θ - 1) ‖u' - u‖²`. [Thomee2006], Ch. 7 -/
 theorem IsThetaStep.norm_sq_eq (h : IsThetaStep A θ τ u u') :
     ‖u'‖ ^ 2 = ‖u‖ ^ 2 + 2 * τ * RCLike.re ⟪A ⟨_, h.1⟩, θ • u' + (1 - θ) • u⟫ -
       (2 * RCLike.re θ - 1) * ‖u' - u‖ ^ 2 := by
@@ -264,8 +203,6 @@ theorem IsThetaStep.norm_sq_eq (h : IsThetaStep A θ τ u u') :
     rw [e, inner_smul_right, RCLike.re_ofReal_mul, inner_re_symm]
   rw [this]; ring
 
-/-- **Unconditional stability of the θ-scheme** (A-stability, `re θ ≥ 1/2`): a θ-step of a
-dissipative operator with `τ ≥ 0` does not increase the norm. [Thomee2006], Ch. 7 -/
 theorem IsThetaStep.norm_le (hA : A.IsDissipative) (hθ : 1 / 2 ≤ RCLike.re θ) (hτ : 0 ≤ τ)
     (h : IsThetaStep A θ τ u u') : ‖u'‖ ≤ ‖u‖ := by
   have e := h.norm_sq_eq
@@ -275,8 +212,6 @@ theorem IsThetaStep.norm_le (hA : A.IsDissipative) (hθ : 1 / 2 ≤ RCLike.re θ
     apply mul_nonneg <;> [linarith; positivity]
   exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 (by linarith)
 
-/-- **Energy conservation of the θ-scheme** for skew-symmetric `A` and `re θ = 1/2` (every
-`τ`). [Thomee2006], Ch. 7 -/
 theorem IsThetaStep.norm_eq (hA : A.IsSkewSymmetric) (hθ : RCLike.re θ = 1 / 2)
     (h : IsThetaStep A θ τ u u') : ‖u'‖ = ‖u‖ := by
   have e := h.norm_sq_eq
@@ -284,7 +219,6 @@ theorem IsThetaStep.norm_eq (hA : A.IsSkewSymmetric) (hθ : RCLike.re θ = 1 / 2
   have : ‖u'‖ ^ 2 = ‖u‖ ^ 2 := by linarith
   exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 this
 
-/-- `re (θ τ)⁻¹ > 0` for `re θ > 0`, `τ > 0`. -/
 theorem re_inv_mul_pos (hθ : 0 < RCLike.re θ) (hτ : 0 < τ) :
     0 < RCLike.re (θ * (τ : 𝕜))⁻¹ := by
   have hne : θ * (τ : 𝕜) ≠ 0 :=
@@ -294,14 +228,11 @@ theorem re_inv_mul_pos (hθ : 0 < RCLike.re θ) (hτ : 0 < τ) :
 
 variable [CompleteSpace E]
 
-/-- For m-dissipative `A`, `re θ > 0` and `τ > 0`, `r_θ(τ A) u` is a θ-step. -/
 theorem isThetaStep_thetaStep_of_isMDissipative (hA : A.IsMDissipative) (hθ : 0 < RCLike.re θ)
     (hτ : 0 < τ) (u : E) : IsThetaStep A θ τ u (thetaStep A θ τ u) :=
   isThetaStep_thetaStep (hA.isResolvent_of_re_pos (re_inv_mul_pos hθ hτ))
     (fun h => by simp [h] at hθ) hτ.ne' u
 
-/-- **Stability uniformly in the generator**: `‖r_θ(τ A) u‖ ≤ ‖u‖` for every m-dissipative `A`,
-`re θ ≥ 1/2` and `τ > 0`. [Thomee2006], Ch. 7 -/
 theorem norm_thetaStep_apply_le (hA : A.IsMDissipative) (hθ : 1 / 2 ≤ RCLike.re θ)
     (hτ : 0 < τ) (u : E) : ‖thetaStep A θ τ u‖ ≤ ‖u‖ :=
   (isThetaStep_thetaStep_of_isMDissipative hA (by linarith) hτ u).norm_le hA.dissipative hθ
@@ -318,19 +249,15 @@ theorem norm_thetaStep_le (hA : A.IsMDissipative) (hθ : 1 / 2 ≤ RCLike.re θ)
 private theorem re_half : RCLike.re (1 / 2 : 𝕜) = 1 / 2 := by
   rw [show (1 / 2 : 𝕜) = ((1 / 2 : ℝ) : 𝕜) by push_cast; ring, RCLike.ofReal_re]
 
-/-- For m-dissipative `A` and `s > 0`, `cayley A s u` is the CN step from `u`. -/
 theorem _root_.LinearPMap.IsMDissipative.isCNStep_cayley (hA : A.IsMDissipative) (hs : 0 < s)
     (u : E) : IsCNStep A s u (cayley A s u) := by
   rw [isCNStep_iff_isThetaStep, cayley_eq_thetaStep]
   exact isThetaStep_thetaStep_of_isMDissipative hA (by rw [re_half]; norm_num) (by linarith) u
 
-/-- **The Cayley transform of an m-dissipative operator is a contraction**: `‖cayley A s‖ ≤ 1`
-for `s > 0`. -/
 theorem norm_cayley_le (hA : A.IsMDissipative) (hs : 0 < s) : ‖cayley A s‖ ≤ 1 := by
   rw [cayley_eq_thetaStep]
   exact norm_thetaStep_le hA (by rw [re_half]) (by linarith)
 
-/-- **The Cayley transform maps `x - s A x` to `x + s A x`** for m-dissipative `A`, `s > 0`. -/
 theorem cayley_sub_smul (hA : A.IsMDissipative) (hs : 0 < s) (x : A.domain) :
     cayley A s ((x : E) - (s : 𝕜) • A x) = x + (s : 𝕜) • A x := by
   have h2 : (x : E) + (s : 𝕜) • A x + ((x : E) - (s : 𝕜) • A x) = (2 : 𝕜) • (x : E) := by
@@ -344,8 +271,6 @@ theorem cayley_sub_smul (hA : A.IsMDissipative) (hs : 0 < s) (x : A.domain) :
     rw [this]; module
   exact (hA.isCNStep_cayley hs _).unique hA.dissipative hs.le hstep
 
-/-- **The Cayley transform is the only operator mapping `x - s A x` to `x + s A x`**, for
-m-dissipative `A` and `s > 0` (`1 - s A` is onto). -/
 theorem eq_cayley_of_apply_sub_smul (hA : A.IsMDissipative) (hs : 0 < s) {T : E →L[𝕜] E}
     (hT : ∀ x : A.domain, T ((x : E) - (s : 𝕜) • A x) = x + (s : 𝕜) • A x) : T = cayley A s := by
   ext u
@@ -359,9 +284,6 @@ theorem eq_cayley_of_apply_sub_smul (hA : A.IsMDissipative) (hs : 0 < s) {T : E 
     rw [hAx, hx, smul_comm, ← e]; module
   rw [← h1, hT, h2, h1]
 
-/-- **Implicit Euler is the only operator mapping `x - τ A x` to `x`**: for m-dissipative `A`
-and `τ > 0`, `T (x - τ A x) = x` on `D(A)` iff `T = (1 - τ A)⁻¹ = τ⁻¹ R(τ⁻¹)` (`1 - τ A` is
-onto). -/
 theorem apply_sub_smul_eq_iff (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) (T : E →L[𝕜] E) :
     (∀ x : A.domain, T ((x : E) - (τ : 𝕜) • A x) = x) ↔
       T = (τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹ := by
@@ -381,8 +303,6 @@ theorem apply_sub_smul_eq_iff (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) 
     rw [e, hR.coe_toDomain, hR.sub_apply_toDomain, smul_smul, mul_inv_cancel₀ hτ', one_smul]
   rw [hy, hT, hS]
 
-/-- **The θ-scheme with `re θ = 1/2` is an isometry** for skew-adjoint `A` and every `τ ≠ 0`
-(both time directions); for `θ = 1/2` this is `norm_cayley_apply`. -/
 theorem norm_thetaStep_apply_eq (hA : A.IsSkewAdjoint) (hθ : RCLike.re θ = 1 / 2) (hτ : τ ≠ 0)
     (u : E) : ‖thetaStep A θ τ u‖ = ‖u‖ := by
   have hθ0 : θ ≠ 0 := fun h => by simp [h] at hθ
@@ -396,7 +316,6 @@ theorem norm_thetaStep_apply_eq (hA : A.IsSkewAdjoint) (hθ : RCLike.re θ = 1 /
 /-! ### Discrete constraint propagation -/
 
 omit [CompleteSpace E] in
-/-- **A subspace invariant under the resolvent is invariant under the θ-scheme.** -/
 theorem thetaStep_mem {K : Submodule 𝕜 E} (hK : ∀ y ∈ K, resolvent A (θ * (τ : 𝕜))⁻¹ y ∈ K)
     (hu : u ∈ K) : thetaStep A θ τ u ∈ K := by
   simp only [thetaStep, _root_.sub_apply, _root_.smul_apply,
@@ -404,8 +323,6 @@ theorem thetaStep_mem {K : Submodule 𝕜 E} (hK : ∀ y ∈ K, resolvent A (θ 
   exact K.sub_mem (K.smul_mem _ (hK u hu)) (K.smul_mem _ hu)
 
 omit [CompleteSpace E] in
-/-- **Resolvents keep reducing subspaces**: if `K` reduces `A`, `R K ⊆ K` for every resolvent
-`R` of `A` (`P_K R y` solves `(z - A) x = P_K y`). -/
 theorem _root_.Feec.Operator.IsResolvent.apply_mem_of_isReducing {z : 𝕜} {R : E →L[𝕜] E}
     (hR : IsResolvent A z R) {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
     (hK : A.IsReducing K) {y : E} (hy : y ∈ K) : R y ∈ K := by
@@ -421,8 +338,7 @@ theorem _root_.Feec.Operator.IsResolvent.apply_mem_of_isReducing {z : 𝕜} {R :
   exact K.starProjection_apply_mem _
 
 /-- **Discrete constraint propagation for reducing subspaces**: if `K` reduces the m-dissipative
-`A`, `r_θ(τ A) K ⊆ K` (`re θ > 0`, `τ > 0`); for `θ = 1/2` cf. `IsCNStep.mem_of_isReducing`.
-[QuennevilleBelair2015], Prop 4.18 -/
+`A`, `r_θ(τ A) K ⊆ K` (`re θ > 0`, `τ > 0`). [QuennevilleBelair2015], Prop 4.18 (adapted) -/
 theorem thetaStep_mem_of_isReducing (hA : A.IsMDissipative) (hθ : 0 < RCLike.re θ) (hτ : 0 < τ)
     {K : Submodule 𝕜 E} [K.HasOrthogonalProjection] (hK : A.IsReducing K) (hu : u ∈ K) :
     thetaStep A θ τ u ∈ K :=
@@ -431,10 +347,6 @@ theorem thetaStep_mem_of_isReducing (hA : A.IsMDissipative) (hθ : 0 < RCLike.re
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **Discrete constraint propagation for kept subspaces** (real `θ > 0`, `τ > 0`): a closed
-subspace kept by the exact semigroup, `S(t) K ⊆ K` for `t ≥ 0`, is kept by the θ-scheme (the
-resolvents keep `K`, `IsMDissipative.invariant_iff_resolvent`). [QuennevilleBelair2015],
-Prop 4.18 -/
 theorem thetaStep_mem_of_keeps (hA : A.IsMDissipative) {K : Submodule 𝕜 E}
     (hKc : IsClosed (K : Set E)) (hK : ∀ t, 0 ≤ t → ∀ x ∈ K, hA.semigroup.S t x ∈ K) {θ : ℝ}
     (hθ : 0 < θ) (hτ : 0 < τ) (hu : u ∈ K) : thetaStep A (θ : 𝕜) τ u ∈ K := by
@@ -445,11 +357,7 @@ theorem thetaStep_mem_of_keeps (hA : A.IsMDissipative) {K : Submodule 𝕜 E}
 /-! ### Products of θ-substeps: composite rational schemes and splittings -/
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] in
-/-- A **product of θ-substeps** `∏ᵢ r_{θᵢ}(cᵢ τ Aᵢ)` for a list `σ` of triples `(Aᵢ, θᵢ, cᵢ)`
-(the first entry is applied last): with one operator, the rational scheme
-`r(z) = ∏ᵢ r_{θᵢ}(cᵢ z)`; with several, an operator splitting (Lie: `[(A₂, 1, 1), (A₁, 1, 1)]`;
-Strang–Crank–Nicolson: `[(A₁, 1/2, 1/2), (A₂, 1/2, 1), (A₁, 1/2, 1/2)]`). [HairerWanner1996],
-§IV.3; [Thomee2006], Ch. 9 -/
+/-- A product `∏ᵢ r_{θᵢ}(cᵢ τ Aᵢ)` of θ-substeps, the first applied last. [Thomee2006], Ch. 9 -/
 def splitStep (σ : List ((E →ₗ.[𝕜] E) × 𝕜 × ℝ)) (τ : ℝ) : E →L[𝕜] E :=
   (σ.map fun p => thetaStep p.1 p.2.1 (p.2.2 * τ)).prod
 
@@ -471,7 +379,6 @@ theorem norm_splitStep_le {σ : List ((E →ₗ.[𝕜] E) × 𝕜 × ℝ)}
       norm_nonneg (σ.map fun p => thetaStep p.1 p.2.1 (p.2.2 * τ)).prod]
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **Products of θ-substeps keep a subspace reducing every substep's operator**. -/
 theorem splitStep_mem_of_isReducing {σ : List ((E →ₗ.[𝕜] E) × 𝕜 × ℝ)}
     {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
     (hσ : ∀ p ∈ σ, p.1.IsMDissipative ∧ 0 < RCLike.re p.2.1 ∧ 0 < p.2.2 ∧ p.1.IsReducing K)

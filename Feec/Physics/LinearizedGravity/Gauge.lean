@@ -6,37 +6,13 @@ public import Feec.ForMathlib.Calculus.Partial
 /-!
 # Linearized gravity for fields: gauge invariance, Bianchi identity, Lorentz gauge
 
-Genuine fields `h : ℝ^ι → Sym(ι)` (any dimension, any constant metric `g` with inverse `gi`),
-with coordinate derivatives `partialDeriv`. The jet identities of
-`Feec.Physics.LinearizedGravity.Einstein` apply through `jet2_isSymJet2` (Schwarz).
-
-Scope: the thesis' gauge freedom is not formalized as such (§2.5: diffeomorphisms and
-diffeomorphic manifolds, after [Wald1984]; §2.6: the Lie derivative as the derivative of the
-pullback by a flow, after [Stewart1991], p. 20 and [Wald1984], p. 439). Only its first-order
-outcome, the gauge term `2∂_(a ξ_b)` (`gaugeTR`, `Hfun_gauge`), enters, as a definition.
-
-## Main definitions
-
-* `jet2 h x`: the genuine 2-jet `∂_i ∂_j h_ab (x)`; `Hfun g gi h x = Hjet g gi (jet2 h x)`.
-* `box gi u` (`□u = gi^{ij} ∂_i ∂_j u`), `divF gi h` (`∂^a h_ab`), `gaugeTR g gi ξ`
-  (`2∂_(a ξ_b) - g_ab ∂·ξ`), `WaveSolvable gi`.
-
-## Main results
-
-* `Hfun_eq_bar` (Thm 2.3), `Hfun_lorentz` and `Hfun_lorentz_eq_iff` (Prop 2.4(b) corrected,
-  (2.11)), `Hfun_gauge` (`H(h + 2∂_(a ξ_b)) = H(h)`), `Hfun_bianchi` (`∂^b H_bd = 0`).
-* `divF_gaugeTR` (`∂^a (2∂_(a ξ_b) - g_ab ∂·ξ) = □ξ_b`) and `exists_lorentz_gauge`
-  (Prop 2.4(a), with the wave solver as the explicit hypothesis `WaveSolvable`).
+The linearized Einstein tensor of [QuennevilleBelair2015], Thm 2.3 for fields `h : ℝ^ι → Sym(ι)`,
+for any constant metric in any dimension: gauge invariance, the linearized Bianchi identity and
+the Lorentz gauge ([QuennevilleBelair2015], §2.7–§2.8).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §2.7 (Thm 2.3, (2.5), (2.10)–(2.11)), §2.8 (Prop 2.4)
-* [R. M. Wald, *General Relativity*][Wald1984], §4.4; pp. 75, 183, 439, 441
-* [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004],
-  p. 277
-* [J. Stewart, *Advanced General Relativity*][Stewart1991], pp. 20, 24
-* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], p. 39
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -50,16 +26,13 @@ namespace Feec.LinearizedGravity
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
-/-! ### Genuine jets -/
-
 /-- The 2-jet `∂_i ∂_j h_ab (x)` of a field `h : ℝ^ι → Sym(ι)`. -/
 def jet2 (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : Jet2 ι ℝ := fun i j => Matrix.of fun a b =>
   partialDeriv i (partialDeriv j (fun y => h y a b)) x
 
 variable (g gi : Matrix ι ι ℝ)
 
-/-- The linearized Einstein tensor `H(h)(x)` (Thm 2.3) of a `C²` field. [QuennevilleBelair2015], Thm 2.3; the
-linearization follows [Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
+/-- The linearized Einstein tensor `H(h)(x)` of a `C²` field. [QuennevilleBelair2015], Thm 2.3 -/
 def Hfun (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) (b d : ι) : ℝ := Hjet g gi (jet2 h x) b d
 
 /-- d'Alembertian `□u = gi^{ij} ∂_i ∂_j u`. -/
@@ -71,14 +44,12 @@ def divF (h : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) (b : ι) : ℝ
 
 variable {g gi}
 
-/-- Schwarz: the 2-jet of a `C²` symmetric field satisfies `IsSymJet2`. [QuennevilleBelair2015], §2.7 -/
 theorem jet2_isSymJet2 {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (x : ι → ℝ) : IsSymJet2 (jet2 h x) where
   deriv_symm i j a b := partialDeriv_comm (hC a b) i j x
   tensor_symm i j a b := by
     simp only [jet2, of_apply]; congr 2; funext y; rw [hs]
 
-/-- `∂_i` commutes with trace reversal. -/
 theorem partialDeriv_trRev {F : (ι → ℝ) → Matrix ι ι ℝ} {x : ι → ℝ}
     (hF : ∀ a b, DifferentiableAt ℝ (fun y => F y a b) x) (i a b : ι) :
     partialDeriv i (fun y => Metric.trRev g gi (F y) a b) x =
@@ -108,7 +79,6 @@ theorem partialDeriv_trRev {F : (ι → ℝ) → Matrix ι ι ℝ} {x : ι → �
     partialDeriv_const_smul hT, e2, Metric.trRev_apply]
   simp only [of_apply, smul_eq_mul]; ring
 
-/-- The 2-jet of `h̄ = trRev h` is the trace reversal of the 2-jet of `h`. -/
 theorem jet2_trRev {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b)
     (x : ι → ℝ) : jet2 (fun y => Metric.trRev g gi (h y)) x = barJ g gi (jet2 h x) := by
   funext i j; ext a b
@@ -121,9 +91,8 @@ theorem jet2_trRev {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDi
   exact partialDeriv_trRev
     (fun a' b' => by simpa using (hC a' b').differentiable_partialDeriv le_rfl j x) i a b
 
-/-- **Thm 2.3** for a genuine `C²` symmetric field, any constant metric, any dimension: both
-forms of `H` agree, with the genuine 2-jet of `h̄`. [QuennevilleBelair2015], Thm 2.3, whose proof
-follows [Alcubierre2008], p. 39. -/
+/-- For a `C²` symmetric field, any constant metric and any dimension, the two forms of `H` agree,
+with the 2-jet of `h̄`. [QuennevilleBelair2015], Thm 2.3 -/
 theorem Hfun_eq_bar (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) (hs : ∀ y a b, h y a b = h y b a) (x : ι → ℝ)
     (b d : ι) :
@@ -131,7 +100,6 @@ theorem Hfun_eq_bar (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Ma
   rw [Hfun, Hjet_eq_bar hg hinv (jet2_isSymJet2 hC hs x), jet2_trRev hC]
 
 omit [DecidableEq ι] in
-/-- Trace reversal of a `C²` field is `C²`. -/
 theorem contDiff_trRev {h : (ι → ℝ) → Matrix ι ι ℝ} {k : WithTop ℕ∞}
     (hC : ∀ a b, ContDiff ℝ k fun y => h y a b) (a b : ι) :
     ContDiff ℝ k fun y => Metric.trRev g gi (h y) a b := by
@@ -139,9 +107,8 @@ theorem contDiff_trRev {h : (ι → ℝ) → Matrix ι ι ℝ} {k : WithTop ℕ�
   exact (hC a b).sub ((contDiff_const.mul (ContDiff.sum fun j _ => ContDiff.sum fun l _ =>
     contDiff_const.mul (hC j l))).mul contDiff_const)
 
-/-- **Prop 2.4(b), corrected**, for a genuine `C²` symmetric field (any constant metric, any
-dimension): if `h̄ = trRev h` is in Lorentz gauge everywhere, then `H(h) = -½ □h̄`.
-(The thesis states `H = -□h̄`.) [QuennevilleBelair2015], Prop 2.4 (corrected) -/
+/-- For a `C²` symmetric field, any constant metric and any dimension: if `h̄ = trRev h` is in
+Lorentz gauge everywhere, then `H(h) = -½ □h̄`. [QuennevilleBelair2015], Prop 2.4 (adapted) -/
 theorem Hfun_lorentz (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) (hs : ∀ y a b, h y a b = h y b a)
     (hL : ∀ y b, divF gi (fun z => Metric.trRev g gi (h z)) y b = 0) (x : ι → ℝ) (b d : ι) :
@@ -169,8 +136,8 @@ theorem Hfun_lorentz (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → M
   rw [Hfun, Hjet_lorentz hg hinv (jet2_isSymJet2 hC hs x) hJ, ← jet2_trRev hC]
   rfl
 
-/-- **(2.11)** for genuine fields: in Lorentz gauge, `H(h) = c T ⟺ □h̄ = -2 c T` (the thesis
-has `c = 8π`). [QuennevilleBelair2015], (2.11) -/
+/-- For a `C²` symmetric field with `h̄` in Lorentz gauge, `H(h) = c T ⟺ □h̄ = -2 c T`.
+[QuennevilleBelair2015], (2.11) -/
 theorem Hfun_lorentz_eq_iff (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) (hs : ∀ y a b, h y a b = h y b a)
     (hL : ∀ y b, divF gi (fun z => Metric.trRev g gi (h z)) y b = 0) (c : ℝ)
@@ -182,9 +149,8 @@ theorem Hfun_lorentz_eq_iff (hg : g.IsSymm) (hinv : gi * g = 1) {h : (ι → ℝ
 
 /-! ### Gauge invariance for fields -/
 
-/-- **Gauge invariance** for genuine fields: `H(h + 2∂_(a ξ_b)) = H(h)` for `h ∈ C²`,
-`ξ ∈ C³`, any constant metric, any dimension. [QuennevilleBelair2015], §2.7; see
-[Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
+/-- Gauge invariance: `H(h + 2∂_(a ξ_b)) = H(h)` for `h ∈ C²`, `ξ ∈ C³`, any constant metric and
+any dimension. [QuennevilleBelair2015], §2.7 -/
 theorem Hfun_gauge (hgi : gi.IsSymm) {h : (ι → ℝ) → Matrix ι ι ℝ}
     (hC : ∀ a b, ContDiff ℝ 2 fun y => h y a b) {ξ : ι → (ι → ℝ) → ℝ}
     (hξ : ∀ a, ContDiff ℝ 3 (ξ a)) (x : ι → ℝ) (b d : ι) :
@@ -234,8 +200,8 @@ def evalJet (i j a b : ι) : (ι → ι → ι → ι → ℝ) →L[ℝ] ℝ :=
       map_add' := fun _ _ => rfl
       map_smul' := fun _ _ => rfl }
 
-/-- **Linearized Bianchi identity** for genuine fields: `∂^b H_bd(h) = 0` for every `C³`
-symmetric `h`, any constant metric, any dimension. Not stated in the thesis. [QuennevilleBelair2015], §2.7 -/
+/-- The linearized Bianchi identity `∂^b H_bd(h) = 0` for every `C³` symmetric `h`, any constant
+metric and any dimension. -/
 theorem Hfun_bianchi (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1)
     {h : (ι → ℝ) → Matrix ι ι ℝ} (hC : ∀ a b, ContDiff ℝ 3 fun y => h y a b)
     (hs : ∀ y a b, h y a b = h y b a) (x : ι → ℝ) (d : ι) :
@@ -273,19 +239,16 @@ theorem Hfun_bianchi (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1)
 /-! ### Prop 2.4(a): existence of the Lorentz gauge -/
 
 variable (g gi) in
-/-- The trace-reversed pure-gauge field `2∂_(a ξ_b) - g_ab ∂·ξ`, `∂·ξ = gi^{cc'} ∂_c ξ_c'`
-(cf. (2.5)). -/
+/-- The trace-reversed pure-gauge field `2∂_(a ξ_b) - g_ab ∂·ξ`, `∂·ξ = gi^{cc'} ∂_c ξ_c'`. -/
 def gaugeTR (ξ : ι → (ι → ℝ) → ℝ) (y : ι → ℝ) : Matrix ι ι ℝ := Matrix.of fun a b =>
   partialDeriv a (ξ b) y + partialDeriv b (ξ a) y -
     g a b * ∑ c, ∑ c', gi c c' * partialDeriv c (ξ c') y
 
 variable (gi) in
-/-- **Hypothesis** (classical, absent from Mathlib): `□u = S` has a smooth solution for every
-smooth source `S`. This is the solver Prop 2.4(a) uses without citation. -/
+/-- `□u = S` has a smooth solution for every smooth source `S`. -/
 def WaveSolvable : Prop :=
   ∀ S : (ι → ℝ) → ℝ, ContDiff ℝ ∞ S → ∃ u : (ι → ℝ) → ℝ, ContDiff ℝ ∞ u ∧ ∀ x, box gi u x = S x
 
-/-- `∂^a (2∂_(a ξ_b) - g_ab ∂·ξ) = □ξ_b` (Schwarz and `gi g = 1`). -/
 theorem divF_gaugeTR (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1) {ξ : ι → (ι → ℝ) → ℝ}
     (hξ : ∀ a, ContDiff ℝ ∞ (ξ a)) (x : ι → ℝ) (b : ι) :
     divF gi (gaugeTR g gi ξ) x b = box gi (ξ b) x := by
@@ -325,11 +288,8 @@ theorem divF_gaugeTR (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1) {ξ :
   rw [eQ, eC, sum_sum_symm hgi (fun a' a => partialDeriv a' (partialDeriv a (ξ b)) x), box]
   ring
 
-/-- **Prop 2.4(a)** (any constant metric, any dimension): assuming the wave solver
-`WaveSolvable`, every smooth `h̄` is gauge-equivalent to one in Lorentz gauge: there is a
-smooth `ξ` with `∂^a (h̄ - (2∂_(a ξ_b) - g_ab ∂·ξ))_ab = 0`. By (2.5) the new `h̄` is the trace
-reversal of `h - 2∂_(a ξ_b)`. The thesis uses the solver without citation, and produces only the
-infinitesimal gauge vector `ξ` (not a diffeomorphism). [QuennevilleBelair2015], Prop 2.4 -/
+/-- Under `WaveSolvable`, for any constant metric and any dimension, every smooth `h̄` is
+gauge-equivalent to one in Lorentz gauge. [QuennevilleBelair2015], Prop 2.4 -/
 theorem exists_lorentz_gauge (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1)
     (hW : WaveSolvable gi) {hb : (ι → ℝ) → Matrix ι ι ℝ}
     (hsm : ∀ a b, ContDiff ℝ ∞ fun y => hb y a b) :

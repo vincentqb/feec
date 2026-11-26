@@ -7,24 +7,8 @@ public import Mathlib.Analysis.Normed.Lp.ProdLp
 /-!
 # The complexification of an inner product space
 
-For an inner product space `V` over `𝕜 = ℝ` or `ℂ`, the complexification `V_ℂ = V × V`
-(`Complexification .hilbert 𝕜 V`, the pair `(x, y)` read as `x + i y`) is a complex inner product
-space for `⟪(x, y), (x', y')⟫ = re ⟪x, x'⟫ + re ⟪y, y'⟫ + i (re ⟪x, y'⟫ - re ⟪y, x'⟫)`, whose
-norm is the `L²` norm of the pair, `‖(x, y)‖² = ‖x‖² + ‖y‖²` (`Complexification.norm_sq`). It is a
-`Complexification.NormCore`, so it is complete when `V` is, and a bounded operator `T` has
-`‖T_ℂ‖ = ‖T‖`, `p(T)_ℂ = p(T_ℂ)` for real polynomials `p`, and is invertible when `T_ℂ` is
-(`Feec.ForMathlib.Analysis.Complexification`). Moreover
-`re ⟪T_ℂ (x, y), (x, y)⟫ = re ⟪T x, x⟫ + re ⟪T y, y⟫` (`Complexification.re_inner_map`), so `T_ℂ`
-is dissipative when `T` is.
-
-This is how statements about complex Hilbert spaces (von Neumann's inequality,
-`ContinuousLinearMap.norm_aeval_le_of_norm_le_one`) reach real ones.
-
-## References
-
-* [P. R. Halmos, *Finite-Dimensional Vector Spaces*][Halmos1974], §77 (complexification)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+For an inner product space `V` over `𝕜 = ℝ` or `ℂ`, the complexification `V × V` is a complex inner
+product space for `⟪(x, y), (x', y')⟫ = re ⟪x, x'⟫ + re ⟪y, y'⟫ + i (re ⟪x, y'⟫ - re ⟪y, x'⟫)`.
 -/
 
 @[expose] public noncomputable section
@@ -38,7 +22,6 @@ variable {𝕜 V : Type*} [NormedAddCommGroup V]
 /-- The Hilbert norm `‖x + i y‖ = (‖x‖² + ‖y‖²)^{1/2}`, the `L²` norm of the pair. -/
 instance : Norm (Complexification .hilbert 𝕜 V) := ⟨fun p => ‖WithLp.toLp 2 (p.re, p.im)‖⟩
 
-/-- `‖x + i y‖² = ‖x‖² + ‖y‖²`. -/
 theorem norm_sq (p : Complexification .hilbert 𝕜 V) : ‖p‖ ^ 2 = ‖p.re‖ ^ 2 + ‖p.im‖ ^ 2 :=
   WithLp.prod_norm_sq_eq_of_L2 _
 
@@ -90,7 +73,6 @@ instance : InnerProductSpace ℂ (Complexification .hilbert 𝕜 V) where
 theorem re_inner (p q : Complexification .hilbert 𝕜 V) :
     RCLike.re ⟪p, q⟫_ℂ = RCLike.re ⟪p.re, q.re⟫_𝕜 + RCLike.re ⟪p.im, q.im⟫_𝕜 := rfl
 
-/-- `re ⟪T_ℂ (x + i y), x + i y⟫ = re ⟪T x, x⟫ + re ⟪T y, y⟫`. -/
 theorem re_inner_map (T : V →L[𝕜] V) (p : Complexification .hilbert 𝕜 V) :
     (⟪map T p, p⟫_ℂ).re = RCLike.re ⟪T p.re, p.re⟫_𝕜 + RCLike.re ⟪T p.im, p.im⟫_𝕜 :=
   rfl

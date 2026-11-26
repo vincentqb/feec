@@ -5,27 +5,9 @@ public import Feec.Evolution.Solution
 /-!
 # Derivatives of curves staying in a closed subspace
 
-If a curve `f : ℝ → E` stays in a closed subspace `K` near `t` (within a set `s` accumulating
-at `t`), its derivative within `s` at `t` lies in `K`: the difference quotients
-`(r - t)⁻¹ • (f r - f t)` lie in `K` and converge to `f'`. This is the tangent argument behind
-every "necessity" statement for constraint propagation: a solution of `U' = A U + F` that stays
-in `K` has `A U + F ∈ K`.
-
-## Main results
-
-* `deriv_mem_of_eventually_mem_closed`: the general statement, for a derivative within any set
-  `s` with `(𝓝[s \ {t}] t).NeBot`;
-* `IsStrongSolution.deriv_mem_of_mem`: a strong solution on `[a,b]` (`a < b`) with values in a
-  closed subspace `K` has `A (U t) + F t ∈ K` for every `t ∈ [a,b]`.
-
-The subspace may be a submodule over any scalar ring `R` acting compatibly with `ℝ`, e.g. `ℝ`,
-`ℂ` or `RCLike 𝕜`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
-
-Bibliography: [references.bib](../../docs/references.bib)
+A curve staying in a closed subspace `K` has its derivatives within sets accumulating at the point
+in `K`; hence a strong solution of `U' = A U + F` on `[a,b]`, `a < b`, with values in `K` has
+`A U + F ∈ K`.
 -/
 
 open Set Filter Topology
@@ -37,9 +19,8 @@ namespace Feec.Evolution
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
   {R : Type*} [Ring R] [Module R E] [SMul ℝ R] [IsScalarTower ℝ R E]
 
-/-- **Tangent lemma**: if `f` has derivative `f'` within `s` at `t`, `t` is an accumulation
-point of `s`, and `f r ∈ K` for `r ∈ s` near `t` (and `f t ∈ K`), with `K` a closed subspace,
-then `f' ∈ K`. -/
+/-- **Tangent lemma**: the derivative within `s` at an accumulation point `t` of `s` of a curve
+staying in a closed subspace `K` near `t` lies in `K`. -/
 theorem deriv_mem_of_eventually_mem_closed {f : ℝ → E} {f' : E} {s : Set ℝ} {t : ℝ}
     {K : Submodule R E} (hK : IsClosed (K : Set E)) (hf : HasDerivWithinAt f f' s t)
     (hs : (𝓝[s \ {t}] t).NeBot) (hev : ∀ᶠ r in 𝓝[s] t, f r ∈ K) (ht : f t ∈ K) : f' ∈ K := by
@@ -49,7 +30,6 @@ theorem deriv_mem_of_eventually_mem_closed {f : ℝ → E} {f' : E} {s : Set ℝ
   rw [slope_def_module]
   exact K.smul_of_tower_mem _ (K.sub_mem hr ht)
 
-/-- In `[a,b]` with `a < b`, every point is an accumulation point. -/
 theorem neBot_nhdsWithin_Icc_diff {a b t : ℝ} (hab : a < b) (ht : t ∈ Icc a b) :
     (𝓝[Icc a b \ {t}] t).NeBot := by
   rcases ht.2.lt_or_eq with htb | rfl
@@ -65,8 +45,8 @@ namespace IsStrongSolution
 variable {𝕜 : Type*} [RCLike 𝕜] [InnerProductSpace 𝕜 E] [IsScalarTower ℝ 𝕜 E]
   {A : E →ₗ.[𝕜] E} {F U : ℝ → E} {a b : ℝ}
 
-/-- A strong solution on `[a,b]` (`a < b`) with values in a closed subspace `K` has
-`A (U t) + F t ∈ K` for every `t ∈ [a,b]` (tangent lemma). -/
+/-- A strong solution on `[a,b]`, `a < b`, with values in a closed subspace `K` has
+`A U + F ∈ K`. -/
 theorem deriv_mem_of_mem (hab : a < b) {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E))
     (hU : IsStrongSolution A (Icc a b) F U) (hmem : ∀ t ∈ Icc a b, U t ∈ K) {t : ℝ}
     (ht : t ∈ Icc a b) : A ⟨U t, hU.mem_domain ht⟩ + F t ∈ K :=

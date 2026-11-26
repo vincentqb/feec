@@ -5,43 +5,14 @@ public import Feec.Domain.HessianComplex
 /-!
 # The div-div complex on an open set of `ℝ³`, and its duality with the Hessian complex
 
-The div-div complex `𝕜³ --dev grad--> 𝕜^{3×3}_dev --sym curl--> 𝕜^{3×3}_sym --div div--> 𝕜`
-on `ℝ³` (`devGradOp`, `Feec.Domain.symCurlOp`, `Feec.Domain.divdivOp`), as a complex of
-constrained realizations on every open `Ω ⊆ ℝ³` (`divDivComplex`):
+The div-div complex `𝕜³ --dev grad--> T --sym curl--> Sym --div div--> 𝕜` is a complex of
+constrained realizations on every open `Ω ⊆ ℝ³`, and the dual of the minimal Hessian (div-div)
+complex is the maximal div-div (Hessian) complex read backwards, up to the sign of one differential.
 
-* the complex identities `sym curl ∘ dev grad = 0` (`isComplexPair_devGrad_symCurl`) and
-  `div div ∘ sym curl = 0` (`Feec.Domain.isComplexPair_symCurl_divdiv`);
-* the minimal complex `H̊(dev grad, Ω; 𝕜³) → H̊(sym curl, Ω; T) → H̊(div div, Ω; Sym) → L²(Ω)`
-  and the maximal complex `H(dev grad) → H(sym curl, T) → H(div div, Sym) → L²`, where
-  `H(dev grad) = {u ∈ L² : dev ∇u ∈ L²}` (weakly) and `H̊(dev grad)` is the closure of the test
-  fields in its graph norm (these are `H̊¹` and, for regular `Ω`, `H¹`; not proved here)
-  (`divDivComplex.minimalComplex`, `divDivComplex.maximalComplex`);
-* **duality with the Hessian complex** (`Feec.Domain.hessianComplex`): the dual of the minimal
-  Hessian complex is the maximal div-div complex read backwards (`hessian_dual_minimalComplex_d₀`,
-  …), and symmetrically the dual of the minimal div-div complex is the maximal Hessian complex
-  (`divDiv_dual_minimalComplex_d₀`, …); the duals of the maximal complexes are the minimal ones
-  by taking adjoints. The formal adjoint of `div ∘ dev` is `-dev grad`, so in degree `2` the dual
-  differential is the realization of `-dev grad` (`ConstCoeffOp.negOp`).
+## Main results
 
-No closed-range statement is made (it needs the regularity of `Ω`).
-
-**As a BGG complex.** The div-div complex is the output of the BGG construction
-(`Feec.BGG.Data.bgg`, `J = 2`) applied to the de Rham complex tensored with `ℝ³`,
-`ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, stacked over the de Rham complex `ℝ → ℝ³ → ℝ³ → ℝ`, linked by
-`ι` (scalar matrices), `-mskw` and `id`: the last two rows of [ArnoldHu2021], (32). On smooth
-fields this is formalized in `Feec.Domain.DivDivBGG`: the diagram satisfies the
-injectivity/surjectivity condition at `J = 2` and its BGG complex is the smooth version of
-`divDivComplex` (same operators, same constraints). The identification of the `L²` realizations is
-not formalized.
-
-## References
-
-* [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
-  (the div-div complex on general domains and its duality with the Hessian complex)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the div-div complex as the
-  BGG output of the last two rows of (32), `J = 2`), (7)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `hessian_dual_minimalComplex_d₀` and its analogues: the dual of the minimal Hessian complex.
+* `divDiv_dual_minimalComplex_d₀` and its analogues: the dual of the minimal div-div complex.
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate LinearPMap
@@ -57,7 +28,6 @@ variable {𝕜 : Type*} [RCLike 𝕜]
 
 /-! ## The complex identities -/
 
-/-- `dev f = f - ⅓ (tr f) I`. -/
 theorem matMulField_deviatoricMat_three (f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     matMulField (deviatoricMat 3) f =
       f + (-(3 : 𝕜)⁻¹) • fun ij => if ij.1 = ij.2 then fun x => ∑ k, f (k, k) x else 0 := by
@@ -66,7 +36,6 @@ theorem matMulField_deviatoricMat_three (f : Fin 3 × Fin 3 → (Fin 3 → ℝ) 
   simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul]
   split_ifs <;> simp [sub_eq_add_neg]
 
-/-- The curl of a multiple of the identity is skew: `sym (curl (g I)) = 0`. -/
 theorem matMulField_symMat_curlOp_smul_id (g : (Fin 3 → ℝ) → 𝕜) :
     matMulField (symMat 3) ((curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
       fun ij => if ij.1 = ij.2 then g else 0) = 0 := by
@@ -75,7 +44,6 @@ theorem matMulField_symMat_curlOp_smul_id (g : (Fin 3 → ℝ) → 𝕜) :
   rw [matMulField_symMat, curlOp_apply, curlOp_apply]
   fin_cases i <;> fin_cases k <;> simp
 
-/-- **`sym curl ∘ dev grad = 0`.** -/
 theorem isComplexPair_devGrad_symCurl :
     (devGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair symCurlOp := by
   intro u hu
@@ -112,7 +80,6 @@ theorem symCurlOp_formalAdj :
       (curlOp 3).formalAdj.preComp (symMat 3) := by
   rw [symCurlOp, formalAdj_postComp, symMat_conjTranspose (𝕜 := 𝕜)]
 
-/-- **`(sym curl)ᵗ = curl ∘ sym`.** -/
 theorem symCurlOp_formalAdj_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply f = curlSymOp.apply f := by
@@ -264,9 +231,7 @@ def divDivConstCoeffComplex : ConstCoeffComplex (Fin 3 → ℝ) 𝕜 where
   comp := divDivOp_comp
 
 variable (𝕜) in
-/-- **The div-div complex on an open `Ω ⊆ ℝ³`**:
-`L²(Ω; 𝕜³) --dev grad--> L²(Ω; T) --sym curl--> L²(Ω; Sym) --div div--> L²(Ω)`, a complex of
-constrained realizations (scalars as `𝕜^{Unit}`). -/
+/-- **The div-div complex on an open `Ω ⊆ ℝ³`**, a complex of constrained realizations. -/
 def divDivComplex {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) : ConstrainedComplex (Fin 3 → ℝ) 𝕜 Ω :=
   ConstrainedComplex.ofMatrices hΩ (divDivConstCoeffComplex 𝕜) (divDivMat 𝕜)
     isProjMat_divDivMat divDivOp_matMapsTo divDivOp_formalAdj_matMapsTo
@@ -309,8 +274,7 @@ theorem devGradOp_formalAdj_formalAdj_apply (ψ : Fin 3 → (Fin 3 → ℝ) → 
       divDevOp.negOp.formalAdj.apply ψ := by
   rw [formalAdj_formalAdj, formalAdj_negOp, negOp_apply, divDevOp_formalAdj_apply, neg_neg]
 
-/-- **The dual of the minimal Hessian complex is the maximal div-div complex**, degree `0`:
-`(hess_min)† = (div div)_max`. -/
+/-- **The dual of the minimal Hessian complex is the maximal div-div complex**, degree `0`. -/
 theorem hessian_dual_minimalComplex_d₀ :
     (hessianComplex 𝕜 hΩ).minimalComplex.dual.d 1 0 =
       ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).d 2 3 :=
@@ -319,7 +283,6 @@ theorem hessian_dual_minimalComplex_d₀ :
       testField_congr _ _ (hessOp_formalAdj_formalAdj_apply ψ)).trans
       ((divDivComplex 𝕜 hΩ).maximalComplex_d hΩ 2).symm)
 
-/-- Degree `1`: `(curl_min on Sym)† = (sym curl)_max on T`. -/
 theorem hessian_dual_minimalComplex_d₁ :
     (hessianComplex 𝕜 hΩ).minimalComplex.dual.d 2 1 =
       ((divDivComplex 𝕜 hΩ).maximalComplex hΩ).d 1 2 :=
@@ -328,7 +291,6 @@ theorem hessian_dual_minimalComplex_d₁ :
       testField_congr _ _ (curlSymOp_formalAdj_formalAdj_apply fun i => (hψ i).contDiff)).trans
       ((divDivComplex 𝕜 hΩ).maximalComplex_d hΩ 1).symm)
 
-/-- Degree `2`: `(div_min on T)†` is the maximal realization of `-dev grad`. -/
 theorem hessian_dual_minimalComplex_d₂ :
     (hessianComplex 𝕜 hΩ).minimalComplex.dual.d 3 2 =
       devGradOp.negOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (traceFreeEmb 𝕜 Ω 3) :=
@@ -336,8 +298,7 @@ theorem hessian_dual_minimalComplex_d₂ :
     (maximalVia_congr _ _ _ fun _ hψ _ _ =>
       testField_congr _ _ (divDevOp_formalAdj_formalAdj_apply fun i => (hψ i).contDiff))
 
-/-- **The dual of the minimal div-div complex is the maximal Hessian complex**, degree `0`:
-`((dev grad)_min)†` is the maximal realization of `-div` on `T`. -/
+/-- **The dual of the minimal div-div complex**, degree `0`: `((dev grad)_min)† = (-div)_max`. -/
 theorem divDiv_dual_minimalComplex_d₀ :
     (divDivComplex 𝕜 hΩ).minimalComplex.dual.d 1 0 =
       divDevOp.negOp.maximalVia (traceFreeEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) :=
@@ -345,7 +306,6 @@ theorem divDiv_dual_minimalComplex_d₀ :
     (maximalVia_congr _ _ _ fun ψ _ _ _ =>
       testField_congr _ _ (devGradOp_formalAdj_formalAdj_apply ψ))
 
-/-- Degree `1`: `((sym curl)_min on T)† = curl_max on Sym`. -/
 theorem divDiv_dual_minimalComplex_d₁ :
     (divDivComplex 𝕜 hΩ).minimalComplex.dual.d 2 1 =
       ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).d 1 2 :=
@@ -354,7 +314,6 @@ theorem divDiv_dual_minimalComplex_d₁ :
       testField_congr _ _ (symCurlOp_formalAdj_formalAdj_apply ψ)).trans
       ((hessianComplex 𝕜 hΩ).maximalComplex_d hΩ 1).symm)
 
-/-- Degree `2`: `((div div)_min)† = hess_max`. -/
 theorem divDiv_dual_minimalComplex_d₂ :
     (divDivComplex 𝕜 hΩ).minimalComplex.dual.d 3 2 =
       ((hessianComplex 𝕜 hΩ).maximalComplex hΩ).d 0 1 :=

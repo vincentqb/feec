@@ -6,31 +6,9 @@ public import Feec.HilbertComplex.InvariantCoreSpectral
 /-!
 # Bounded domains: when does `K*` contain a moving datum?
 
-For the thesis' complex `H̊¹(Ω; ℝ³) --grad--> H̊(curl, Ω; ℝ³ˣ³) --curl--> L²(Ω; ℝ³ˣ³)`
-(`Feec.Models.BoundedDomain.gradCurl`) on a bounded open `Ω ⊆ ℝ³` and
-`K = {0} × L²(TSD) × L²(TSD)`, the invariant core `K* = {0} × S₁* × S₂*` of `K` under the wave
-group is the largest propagating constraint space (`Feec.ShortHilbertComplex.coreSub`). This file
-specializes `Feec.ShortHilbertComplex.coreSub_spectral` to it: `K*` is stationary iff its electric
-fields are curl-free, and, under a complete set of eigenvectors of `L²`, it contains a moving
-datum iff the curl–curl eigenproblem `curl† curl u = ω² u`, `ω > 0`, has a nonzero solution
-`u ∈ L²(TSD) ∩ H̊(curl)`; every such `u` lies in `S₁* ⊆ L²(TSD₀)` and moves.
-
-The eigenvector hypothesis (`Feec.C0Group.EigenDense`) stands for the spectral consequence of
-the compactness of the complex (Rellich for `H̊¹`, a Weber–Weck selection theorem for
-`H̊(curl) ∩ H(div)`, known under boundary regularity such as Lipschitz `Ω`); it is not proved here
-for any `Ω`. Whether such eigenfields exist is not decided here.
-
-## Main results
-
-* `tsd_le_ker_gradCurl`: `L²(TSD) ⊆ N(d₀†)`.
-* **`gradCurl_coreSub_spectral`**.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Lemma 3.5, §4.10 (Prop 4.17)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+For the grad–curl complex on a bounded open `Ω ⊆ ℝ³` and `K = {0} × L²(TSD) × L²(TSD)`, under a
+complete set of eigenvectors, `K*` contains a moving datum iff some nonzero `u ∈ L²(TSD)` solves
+`curl† curl u = ω² u`, `ω > 0`.
 -/
 
 @[expose] public noncomputable section
@@ -46,19 +24,11 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 variable {Ω : Set R3}
 
-/-- `L²(TSD) ⊆ N(d₀†)` for the grad–curl complex (the divergence condition). -/
 theorem tsd_le_ker_gradCurl (hΩ : IsOpen Ω) : tsd Ω ≤ (gradCurl ℝ hΩ).d₀†.ker := fun _ hB =>
   ((mem_tsd_iff_ker hΩ).1 hB).2.2
 
-/-- **`K*` on a bounded domain for the thesis' complex** `H̊¹(V) → H̊(curl, M) → L²(M)` and
-`K = {0} × L²(TSD) × L²(TSD)`, under a complete set of eigenvectors of `L²` (`hD`):
-1. a datum whose forward orbit (`t ≥ 0`) stays in `K` lies in `K*`;
-2. `K*` is stationary iff every `E ∈ S₁*` lies in `H̊(curl)` with `curl E = 0` (no hypothesis);
-3. `K*` contains a non-stationary datum iff there are `ω > 0` and a nonzero
-   `u ∈ L²(TSD) ∩ H̊(curl)` with `curl u ∈ D(curl†)` and `curl† curl u = ω² u` (then
-   `curl u ∈ L²(TSD)` automatically, `minimal_curl_mem_tsd`);
-4. every such `u` lies in `S₁* ⊆ L²(TSD₀)`, and `(0, u, 0)` moves: its orbit is
-   `(0, cos(ωt) u, (sin(ωt)/ω) curl u)` (`Feec.C0Group.IsIsometric.S_eq_of_isEigenSq`). -/
+/-- Under a complete set of eigenvectors, `K*` for `K = {0} × L²(TSD) × L²(TSD)` is not stationary
+iff some nonzero `u ∈ L²(TSD)` is a curl–curl eigenfield; such `u` lie in `L²(TSD₀)` and move. -/
 theorem gradCurl_coreSub_spectral (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hD : (gradCurl ℝ hΩ).EigenDense) :
     (∀ x, (∀ t, 0 ≤ t → (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S t x ∈

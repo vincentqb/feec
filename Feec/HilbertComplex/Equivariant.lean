@@ -5,34 +5,9 @@ public import Feec.HilbertComplex.Transport
 /-!
 # Symmetries of Hilbert complexes: equivariance and the method of images
 
-A unitary action of a group `Γ` on a Hilbert complex (`HilbertComplex.Action`) commutes with
-the differentials, hence with their adjoints, the wave operator and the wave group. For a
-finite group, the fixed vectors form a **reducing subcomplex**: the orthogonal projection is the
-group average, which commutes with every `d`. Its compression (`Action.fixedComplex`) is the
-complex of `Γ`-symmetric fields, e.g. the fields on a cube obtained from periodic fields by
-reflection (the **method of images**); constraint propagation holds there as soon as it holds
-for the symmetric complex (`Action.propagates`).
-
-## Main definitions
-
-* `Feec.HilbertComplex.Action H Γ`, `Action.fixed`, `Action.avg`, `Action.fixedComplex`.
-* `Feec.HilbertComplex.Involutions H κ`: commuting unitary involutions `R k` commuting with the
-  differentials (reflections of a torus in its coordinates); **`Involutions.toAction`**: the
-  induced action of `(ℤ/2)^κ`, `g ↦ ∏_k R_k^{g_k}`, whose fixed vectors are the vectors fixed by
-  every `R k` (`Involutions.mem_fixed_toAction`).
-
-## Main results
-
-* `Action.starProjection_fixed`: `P_{Fix} = |Γ|⁻¹ ∑_g act g` (finite `Γ`).
-* **`Action.reducingSubcomplex_fixed`**; `Action.propagates`.
-* `Action.adjoint_comm`: the action commutes with the adjoints of the differentials.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17 on the cube)
-
-Bibliography: [references.bib](../../docs/references.bib)
+A unitary action of a group on a Hilbert complex commutes with the differentials and their
+adjoints; for a finite group the fixed vectors form a reducing subcomplex, the complex of symmetric
+fields of the method of images.
 -/
 
 open scoped InnerProductSpace
@@ -46,8 +21,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- A **unitary action** of a group `Γ` on a Hilbert complex: unitaries `act g i` of each `W i`,
-a group action in `g`, preserving the domains and commuting with the differentials. -/
+/-- A unitary action of a group `Γ` on a Hilbert complex, commuting with the differentials. -/
 structure Action (Γ : Type*) [Group Γ] where
   /-- the unitaries -/
   act : Γ → ∀ i, W i ≃ₗᵢ[𝕜] W i
@@ -80,7 +54,6 @@ theorem isClosed_fixed (i : ι) : IsClosed (A.fixed i : Set (W i)) := by
 
 instance (i : ι) : CompleteSpace (A.fixed i) := (A.isClosed_fixed i).completeSpace_coe
 
-/-- The adjoints commute with the action: `act g D(d†) ⊆ D(d†)` and `d† act g = act g d†`. -/
 theorem adjoint_comm (g : Γ) {i j : ι} (y : ((H.d i j)†).domain) :
     ∃ h : A.act g j y ∈ ((H.d i j)†).domain, (H.d i j)† ⟨_, h⟩ = A.act g i ((H.d i j)† y) := by
   have key : ∀ x : (H.d i j).domain,
@@ -124,7 +97,6 @@ theorem sub_avg_mem_orthogonal (i : ι) (x : W i) : x - A.avg i x ∈ (A.fixed i
     Finset.sum_const, Finset.card_univ, ← Nat.cast_smul_eq_nsmul 𝕜, smul_eq_mul, ← mul_assoc,
     inv_mul_cancel₀ hn, one_mul, sub_self]
 
-/-- **The projection onto the fixed vectors is the group average.** -/
 theorem starProjection_fixed (i : ι) (x : W i) : (A.fixed i).starProjection x = A.avg i x :=
   Submodule.eq_starProjection_of_mem_orthogonal (fun h => A.act_avg h i x)
     (A.sub_avg_mem_orthogonal i x)
@@ -144,12 +116,11 @@ theorem reducingSubcomplex_fixed : H.ReducingSubcomplex A.fixed := by
       ∑ g, H.d i j ⟨_, hm g⟩ from map_sum (H.d i j).toFun _ _, starProjection_fixed, avg]
     simp only [A.comm]
 
-/-- **The method of images**: the complex of `Γ`-fixed fields, with the restricted
-differentials. -/
+/-- **The method of images**: the complex of `Γ`-fixed fields. -/
 abbrev fixedComplex : HilbertComplex 𝕜 c fun i => A.fixed i :=
   A.reducingSubcomplex_fixed.toHilbertComplex
 
-/-- A closed subspace `K` seen inside a complete subspace `S`. -/
+/-- `K ∩ Fix i`, as a subspace of `Fix i`, has an orthogonal projection when `K` has one. -/
 instance comap_subtype_hasOrthogonalProjection (i : ι) (K : Submodule 𝕜 (W i))
     [K.HasOrthogonalProjection] : (K.comap (A.fixed i).subtype).HasOrthogonalProjection := by
   have hc : IsClosed (K.comap (A.fixed i).subtype : Set (A.fixed i)) :=
@@ -157,8 +128,6 @@ instance comap_subtype_hasOrthogonalProjection (i : ι) (K : Submodule 𝕜 (W i
   have : CompleteSpace (K.comap (A.fixed i).subtype) := hc.completeSpace_coe
   infer_instance
 
-/-- **Invariant reducing subcomplexes descend to the fixed complex**: if `K` reduces `H` and every
-`K i` is invariant under the action, then `K ∩ Fix` reduces the fixed (method-of-images) complex. -/
 theorem reducingSubcomplex_comap_fixed {K : ∀ i, Submodule 𝕜 (W i)}
     [∀ i, (K i).HasOrthogonalProjection] (hK : H.ReducingSubcomplex K)
     (hA : ∀ g i, ∀ x ∈ K i, A.act g i x ∈ K i) :
@@ -201,10 +170,7 @@ end Action
 
 /-! ### Actions generated by commuting involutions -/
 
-/-- **Commuting unitary involutions** of a Hilbert complex: for each `k : κ` unitaries `R k i` of
-every `W i` with `R k² = 1`, pairwise commuting, preserving the domains and commuting with the
-differentials (the reflections `x_k ↦ -x_k` of a torus acting on fields with prescribed
-parities). -/
+/-- Commuting unitary involutions of a Hilbert complex, commuting with the differentials. -/
 structure Involutions (κ : Type*) where
   /-- the involutions -/
   R : κ → ∀ i, W i ≃ₗᵢ[𝕜] W i
@@ -302,7 +268,6 @@ def toAction : H.Action (Multiplicative (κ → ZMod 2)) where
 @[simp] theorem toAction_act (g : Multiplicative (κ → ZMod 2)) (i : ι) :
     I.toAction.act g i = I.prod g i := rfl
 
-/-- **The fixed vectors of the generated action are the vectors fixed by every involution.** -/
 theorem mem_fixed_toAction [DecidableEq κ] {i : ι} {x : W i} :
     x ∈ I.toAction.fixed i ↔ ∀ k, I.R k i x = x := by
   constructor

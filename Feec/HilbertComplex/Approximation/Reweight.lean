@@ -6,43 +6,14 @@ public import Feec.HilbertComplex.Reweight
 /-!
 # Conforming families of a reweighted complex
 
-For bounded isomorphisms `a i : W i ≃L[𝕜] W' i` (the **weights**) the conjugated complex
-`H.conj a` (`Feec.HilbertComplex.Reweight`, `d' = a d a⁻¹`) realizes a weighted `L²` structure
-on the standard spaces: for `W' = W` and `G = a† a` (e.g. `a = ε^{1/2}`, `G = ε` the permittivity
-of a medium) the standard inner product of `a x` is the weighted inner product `⟪G x, x⟫`. A
-Galerkin method on `Vₕ` with the weighted inner product is therefore the Galerkin method on
-`a Vₕ` for `H.conj a` ([AFW2010], §6.1: variable coefficients, the same finite element
-subcomplexes and bounded cochain projections; [Monk2003] for Maxwell's equations with variable
-coefficients).
-
-**A conforming family of `H` is one of `H.conj a`** (`ConformingFamily.conj`): the images
-`a Vₕ` are finite-dimensional subcomplexes of `H.conj a`, the conjugated projections
-`a πₕ a⁻¹` commute with `d'` and are bounded in degree `i` by `‖a i‖ ‖(a i)⁻¹‖ C`, the condition
-number of the weight times the bound `C` of `πₕ` (`ConformingFamily.norm_conj_π_le`), and the
-approximation property transfers degreewise. A Jackson estimate transfers
-with the constants multiplied by `max ‖a i‖ ‖a (i + 1)‖` (`SubcomplexFamily.Jackson.conj`), on the
-classes of forms `x'` whose unweighted form `a⁻¹ x'` is regular. Hence the FEEC theorem
-(`ConformingFamily.feec`, `ConformingFamily.feec_rated`) holds for every reweighted complex.
+For weights `a i : W i ≃L[𝕜] W' i` with uniformly bounded condition numbers, a conforming family
+`Vₕ` of `H` gives the conforming family `a Vₕ` of `H.conj a`, with the projections `a πₕ a⁻¹`.
 
 ## Main definitions
 
-* `Subcomplex.conj`, `Subcomplex.CochainProjection.conj`: the image subcomplex `a Vₕ` and the
-  conjugated projection `a π a⁻¹`.
+* `Subcomplex.conj`, `Subcomplex.CochainProjection.conj`: the subcomplex `a Vₕ` and `a π a⁻¹`.
 * `ConformingFamily.conj`: the conforming family `a Vₕ` of `H.conj a`.
 * `SubcomplexFamily.Jackson.conj`: its Jackson estimate.
-
-## Main statements
-
-* `ConformingFamily.norm_conj_π_le`: the bound of the conjugated projections.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (bounded cochain projections), §6.1 (variable coefficients)
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003] (variable coefficients
-  `ε`, `μ`)
-
-Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Filter Topology Metric
@@ -85,8 +56,6 @@ theorem Subcomplex.CochainProjection.conj_π_apply {S : H.Subcomplex}
     (P : S.CochainProjection) (i : ι) (x : W' i) :
     (P.conj a).π i x = a i (P.π i ((a i).symm x)) := rfl
 
-/-- **The bound of the conjugated projection**: if `‖π x‖ ≤ C ‖x‖` in degree `i`, then
-`‖a π a⁻¹ x‖ ≤ ‖a i‖ ‖(a i)⁻¹‖ C ‖x‖`. -/
 theorem Subcomplex.CochainProjection.norm_conj_π_le {S : H.Subcomplex} (P : S.CochainProjection)
     {i : ι} {C : ℝ} (hC : 0 ≤ C) (hP : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) (x : W' i) :
     ‖(P.conj a).π i x‖ ≤
@@ -102,10 +71,7 @@ namespace ConformingFamily
 
 variable {κ : Type*}
 
-/-- **A conforming family of the reweighted complex**: the images `a Vₕ` with the conjugated
-projections `a πₕ a⁻¹`, a conforming family of `H.conj a` whenever the condition numbers
-`‖a i‖ ‖(a i)⁻¹‖` of the weights are bounded uniformly in `i` (`ha`); the projections are bounded
-by that bound times the bound of `πₕ` (`norm_conj_π_le`; [AFW2010], §3.3, §6.1). -/
+/-- The conforming family `a Vₕ` of `H.conj a`, for weights with bounded condition numbers. -/
 def conj (F : ConformingFamily H κ)
     (ha : ∃ M, ∀ i, ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ ≤ M) :
     ConformingFamily (H.conj a) κ where
@@ -133,16 +99,12 @@ def conj (F : ConformingFamily H κ)
 
 variable {a} {ha : ∃ M, ∀ i, ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ ≤ M}
 
-/-- **The projections of the reweighted family** are bounded in degree `i` by the condition number
-`‖a i‖ ‖(a i)⁻¹‖` of the weight times the bound `projBound` of the projections of `F`. -/
 theorem norm_conj_π_le (F : ConformingFamily H κ) (h : κ) (i : ι) (x : W' i) :
     ‖((F.conj a ha).π h).π i x‖ ≤
       ‖(a i : W i →L[𝕜] W' i)‖ * ‖((a i).symm : W' i →L[𝕜] W i)‖ * F.projBound * ‖x‖ :=
   (F.π h).norm_conj_π_le a (zero_le_one.trans F.one_le_projBound) (F.norm_π_le h i) x
 
-/-- **The Jackson estimate of the reweighted family**: a Jackson estimate of `F`, on the classes
-of the forms `x'` whose unweighted form `a⁻¹ x'` is regular, with the constants multiplied by
-`max ‖a i‖ ‖a (i + 1)‖` (the weights of the form and of its differential). -/
+/-- The Jackson estimate of the reweighted family, with the constants scaled by the weights. -/
 def _root_.Feec.HilbertComplex.SubcomplexFamily.Jackson.conj {F : ConformingFamily H κ} {ρ : Type*} (J : F.Jackson ρ) :
     (F.conj a ha).Jackson ρ where
   meshSize := J.meshSize

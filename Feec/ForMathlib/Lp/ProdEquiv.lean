@@ -8,25 +8,8 @@ public import Mathlib.MeasureTheory.SpecificCodomains.WithLp
 /-!
 # `Lᵖ` of a finite `ℓᵖ` product is the `ℓᵖ` product of the `Lᵖ` spaces
 
-For `1 ≤ p < ∞`:
-
-* `MeasureTheory.Lp.piEquiv`: `Lᵖ(μ; PiLp p E) ≃ₗᵢ[𝕜] PiLp p (fun i => Lᵖ(μ; E i))` for a finite
-  family `E`, acting componentwise;
-* `MeasureTheory.Lp.prodEquiv`: `Lᵖ(μ; WithLp p (E × F)) ≃ₗᵢ[𝕜] WithLp p (Lᵖ(μ; E) × Lᵖ(μ; F))`
-  (`coeFn_prodEquiv_fst`, `coeFn_prodEquiv_snd`, `coeFn_prodEquiv_symm`).
-
-Membership: `memLp_piLp_iff`, `memLp_prodLp_iff` (a field is `Lᵖ` iff all its components
-are), and the identities behind the isometries `eLpNorm_piLp_rpow`, `eLpNorm_withLp_prod_rpow`
-(`‖f‖ₚᵖ = Σᵢ ‖fᵢ‖ₚᵖ`).
-
-For `p = 2` these are unitary. They identify the total space `L²(μ; W₀ ⊕ W₁ ⊕ …)` of a
-multiplication-operator complex with the orthogonal sum of the `L²(μ; Wᵢ)`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+For `1 ≤ p < ∞`, `Lᵖ(μ; PiLp p E) ≃ₗᵢ PiLp p (Lᵖ(μ; E i))` for a finite family and
+`Lᵖ(μ; WithLp p (E × F)) ≃ₗᵢ WithLp p (Lᵖ(μ; E) × Lᵖ(μ; F))`, componentwise.
 -/
 
 open scoped ENNReal NNReal
@@ -45,7 +28,6 @@ variable {ι : Type*} [Fintype ι] {E : ι → Type*} [∀ i, NormedAddCommGroup
   [∀ i, NormedSpace 𝕜 (E i)]
 
 omit [Fact (1 ≤ p)] in
-/-- `‖x‖ₑ ^ p = Σᵢ ‖xᵢ‖ₑ ^ p` in `PiLp p E` (`p ≠ 0, ∞`). -/
 theorem PiLp.enorm_rpow_eq_sum [Fact (1 ≤ p)] (hpt : p ≠ ∞) (x : PiLp p E) :
     ‖x‖ₑ ^ p.toReal = ∑ i, ‖x i‖ₑ ^ p.toReal := by
   have hp : 0 < p.toReal :=
@@ -54,7 +36,6 @@ theorem PiLp.enorm_rpow_eq_sum [Fact (1 ≤ p)] (hpt : p ≠ ∞) (x : PiLp p E)
     rw [PiLp.nnnorm_eq_sum hpt, one_div, NNReal.rpow_inv_rpow hp.ne']
   simp only [enorm_eq_nnnorm, ← ENNReal.coe_rpow_of_nonneg _ hp.le, h, ENNReal.ofNNReal_finsetSum]
 
-/-- `‖f‖ₚᵖ = Σᵢ ‖fᵢ‖ₚᵖ` for a `PiLp p E`-valued field (`1 ≤ p < ∞`). -/
 theorem eLpNorm_piLp_rpow (hpt : p ≠ ∞) {f : α → PiLp p E} (hf : AEStronglyMeasurable f μ) :
     eLpNorm f p μ ^ p.toReal = ∑ i, eLpNorm (fun a => f a i) p μ ^ p.toReal := by
   have hp0 : p ≠ 0 := (zero_lt_one.trans_le (Fact.out : 1 ≤ p)).ne'
@@ -77,7 +58,7 @@ theorem memLp_toLp_pi (g : PiLp p fun i => Lp (E i) p μ) :
     Lp.memLp (g i)
 
 variable (𝕜) in
-/-- **`Lᵖ(μ; PiLp p E) ≃ₗᵢ PiLp p (Lᵖ(μ; E i))`** for a finite family and `1 ≤ p < ∞`. -/
+/-- The isometry `Lᵖ(μ; PiLp p E) ≃ₗᵢ PiLp p (Lᵖ(μ; E i))`, componentwise. -/
 def piEquiv (hpt : p ≠ ∞) : Lp (PiLp p E) p μ ≃ₗᵢ[𝕜] PiLp p fun i => Lp (E i) p μ where
   toFun f := WithLp.toLp p fun i => (PiLp.proj (𝕜 := 𝕜) p E i).compLp f
   invFun g := (memLp_toLp_pi g).toLp _
@@ -135,7 +116,6 @@ variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedAddCom
   [NormedSpace 𝕜 F]
 
 omit [Fact (1 ≤ p)] in
-/-- `‖x‖ₑ ^ p = ‖x.1‖ₑ ^ p + ‖x.2‖ₑ ^ p` in `WithLp p (E × F)` (`p ≠ 0, ∞`). -/
 theorem WithLp.prod_enorm_rpow_eq_add [Fact (1 ≤ p)] (hpt : p ≠ ∞) (x : WithLp p (E × F)) :
     ‖x‖ₑ ^ p.toReal = ‖x.fst‖ₑ ^ p.toReal + ‖x.snd‖ₑ ^ p.toReal := by
   have hp : 0 < p.toReal :=
@@ -144,7 +124,6 @@ theorem WithLp.prod_enorm_rpow_eq_add [Fact (1 ≤ p)] (hpt : p ≠ ∞) (x : Wi
     rw [WithLp.prod_nnnorm_eq_add hpt, one_div, NNReal.rpow_inv_rpow hp.ne']
   simp only [enorm_eq_nnnorm, ← ENNReal.coe_rpow_of_nonneg _ hp.le, h, ENNReal.coe_add]
 
-/-- `‖f‖ₚᵖ = ‖f₁‖ₚᵖ + ‖f₂‖ₚᵖ` for a `WithLp p (E × F)`-valued field (`1 ≤ p < ∞`). -/
 theorem eLpNorm_withLp_prod_rpow (hpt : p ≠ ∞) {f : α → WithLp p (E × F)}
     (hf : AEStronglyMeasurable f μ) :
     eLpNorm f p μ ^ p.toReal = eLpNorm (fun a => (f a).fst) p μ ^ p.toReal +
@@ -169,7 +148,7 @@ theorem memLp_toLp_prod (g : WithLp p (Lp E p μ × Lp F p μ)) :
   memLp_prodLp_iff.2 ⟨Lp.memLp g.fst, Lp.memLp g.snd⟩
 
 variable (𝕜) in
-/-- **`Lᵖ(μ; WithLp p (E × F)) ≃ₗᵢ WithLp p (Lᵖ(μ; E) × Lᵖ(μ; F))`** for `1 ≤ p < ∞`. -/
+/-- The isometry `Lᵖ(μ; WithLp p (E × F)) ≃ₗᵢ WithLp p (Lᵖ(μ; E) × Lᵖ(μ; F))`, componentwise. -/
 def prodEquiv (hpt : p ≠ ∞) :
     Lp (WithLp p (E × F)) p μ ≃ₗᵢ[𝕜] WithLp p (Lp E p μ × Lp F p μ) where
   toFun f := WithLp.toLp p ((WithLp.fstL p 𝕜 E F).compLp f, (WithLp.sndL p 𝕜 E F).compLp f)

@@ -7,25 +7,7 @@ public import Mathlib.RingTheory.Localization.FractionRing
 /-!
 # The matrix determinant lemma over a commutative ring
 
-Mathlib's `Matrix.det_add_replicateCol_mul_replicateRow` is the matrix determinant lemma
-`det(A + u vᵀ) = det A (1 + vᵀ A⁻¹ u)` for `det A` invertible. Over every commutative ring,
-
-`det(A + u vᵀ) = det A + vᵀ adj(A) u`
-
-(`Matrix.det_add_replicateCol_mul_replicateRow_eq_det_add`; the general form that the docstring of
-`Matrix.det_add_replicateCol_mul_replicateRow` leaves to do). When `det A ≠ 0` in a domain, it is
-the invertible case in the fraction field, with `det A • A⁻¹ = adj A`; in general it is the image
-of its generic instance, the matrix and vectors of indeterminates over `ℤ`, whose matrix has a
-nonzero determinant (its value at the identity matrix is `1`). Over `ℝ[X]` it gives the stability
-function of a Runge–Kutta method, `det(1 - X A + X 𝟙 bᵀ) = det(1 - X A) + X bᵀ adj(1 - X A) 𝟙`
-(`Feec.TimeStepping.ButcherTableau.stabilityNum_eq_stabilityDen_add`).
-
-## References
-
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3, Prop 3.2 (the stability function of a Runge–Kutta method)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+Over every commutative ring, `det(A + u vᵀ) = det A + vᵀ adj(A) u`.
 -/
 
 open MvPolynomial
@@ -36,8 +18,6 @@ namespace Matrix
 
 variable {n : Type*} [Fintype n] [DecidableEq n] {ι : Type*} [Unique ι]
 
-/-- The matrix determinant lemma in a domain, for `det A ≠ 0`:
-`det(A + u vᵀ) = det A + vᵀ adj(A) u`, from the invertible case in the fraction field. -/
 private theorem det_add_replicateCol_mul_replicateRow_eq_det_add_of_ne_zero {R : Type*} [CommRing R]
     [IsDomain R] {A : Matrix n n R} (hA : A.det ≠ 0) (u v : n → R) :
     (A + replicateCol ι u * replicateRow ι v).det = A.det + v ⬝ᵥ (A.adjugate *ᵥ u) := by
@@ -60,10 +40,6 @@ private theorem det_add_replicateCol_mul_replicateRow_eq_det_add_of_ne_zero {R :
     replicateRow_mul_replicateCol_apply, map_add, RingHom.map_det, RingHom.map_dotProduct, hadj,
     smul_eq_mul, mul_add, mul_one, ← mul_assoc, Ring.mul_inverse_cancel _ hdet, one_mul]
 
-/-- **The matrix determinant lemma** over every commutative ring:
-`det(A + u vᵀ) = det A + vᵀ adj(A) u`. The generic matrix over `ℤ` has a nonzero determinant (its
-value at the identity is `1`), so the identity holds for it and the generic vectors, in the
-fraction field, and its image under the evaluation at `A`, `u`, `v` is this one. -/
 theorem det_add_replicateCol_mul_replicateRow_eq_det_add {R : Type*} [CommRing R]
     (A : Matrix n n R) (u v : n → R) :
     (A + replicateCol ι u * replicateRow ι v).det = A.det + v ⬝ᵥ (A.adjugate *ᵥ u) := by

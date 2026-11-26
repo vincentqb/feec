@@ -7,44 +7,13 @@ public import Mathlib.Algebra.MvPolynomial.Division
 /-!
 # The dimension of the serendipity forms
 
-The shape functions `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ` of [ArnoldAwanou2014]
-(`Feec.Koszul.serendipityForm`) have the dimension of `M_rΛᵏ`, the span of the monomial `k`-forms
-of superlinear degree `≤ r` ([ArnoldAwanou2014], Thm 3.6 (1) and (24)): the dimension is the
-number of these monomials.
-
-With `H_rΛᵏ` the part of `M_rΛᵏ` of polynomial degree `> r` (`Feec.Koszul.highForm`),
-`M_rΛᵏ = P_rΛᵏ ⊕ H_rΛᵏ` and `S_rΛᵏ = P_rΛᵏ ⊕ κ H_{r-1}Λ^{k+1} ⊕ d κ H_rΛᵏ`. The key is the
-**exactness of the Koszul complex at bounded superlinear degree**, `ker κ ∩ H_rΛᵏ = κ H_{r-1}Λ^{k+1}`
-([ArnoldAwanou2014], Thm 2.3, due to Adams and Reiner), so that, `d` being injective on the range
-of `κ`, `dim S_rΛᵏ = dim P_rΛᵏ + dim κ H_{r-1}Λ^{k+1} + dim κ H_rΛᵏ = dim P_rΛᵏ + dim H_rΛᵏ`.
-
-## Main definitions
-
-* `Feec.Koszul.monomialFilter P`, `Feec.Koszul.formFilter P`: the parts of a polynomial and of a
-  polynomial form supported on the monomials satisfying `P`;
-* `Feec.Koszul.formWeight s α`: the weight `α + 1_s` of `x^α dx_s`, preserved by `κ` and `d`;
-* `Feec.Koszul.highForm R d r k`: `H_rΛᵏ`, the monomial `k`-forms of superlinear degree `≤ r` and
-  degree `> r`.
-
-## Main results
-
-* `koszul_wedge_divMonomial`: a `κ`-closed form all of whose monomials contain `x_j` or `dx_j` is
-  `κ (dx_j ∧ ω / x_j)` (Cartan's identity twice);
-* `mem_map_koszul_highForm`: **`ker κ ∩ H_rΛᵏ = κ H_{r-1}Λ^{k+1}`** (`r ≥ 1`), over any commutative
-  ring ([ArnoldAwanou2014], Thm 2.3): splitting along the weights, the superlinear variables first;
-* `finrank_serendipityForm`: **`dim S_rΛᵏ = dim M_rΛᵏ`** (`r ≥ 1`) ([ArnoldAwanou2014], Thm 3.6).
-
-## Implementation notes
-
-The proof of exactness differs from [ArnoldAwanou2014], Lemma 2.4 (a canonical form of the forms
-of linear degree `l - 1`): `κ` preserves the weight `α + 1_s`, so the part of a `κ`-closed form
-whose weights are `≥ 2` (respectively `≥ 1`) in a direction `j` is again `κ`-closed, and is
-`κ (dx_j ∧ ω / x_j)`, which lowers the superlinear degree (respectively keeps it `0`).
+In characteristic zero and for `r ≥ 1`, `dim S_rΛᵏ = dim M_rΛᵏ`, the number of monomial
+`k`-forms of superlinear degree `≤ r` ([ArnoldAwanou2014], Thm 3.6 (1)), through the exactness of
+the Koszul complex at bounded superlinear degree ([ArnoldAwanou2014], Thm 2.3).
 
 ## References
 
-* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
-  §2 (Thm 2.3), §3 (Thm 3.6, (24))
+* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -159,8 +128,7 @@ theorem formFilter_mem_supportForm [DecidableEq d] (P : Finset d → (d →₀ �
     formFilter P ω ∈ supportForm R d k (fun s => {α | α ∈ S s ∧ P s α}) :=
   ⟨fun s hs => by simp [formFilter, h.1 s hs], fun s => monomialFilter_mem_restrictSupport (h.2 s)⟩
 
-/-- The weight `α + 1_s` of the monomial form `x^α dx_s`: `κ` and `d` move a unit between `α` and
-`1_s`. -/
+/-- The weight `α + 1_s` of the monomial form `x^α dx_s`. -/
 def formWeight (s : Finset d) (α : d →₀ ℕ) (i : d) : ℕ := α i + if i ∈ s then 1 else 0
 
 omit [Fintype d] in
@@ -177,7 +145,6 @@ theorem formWeight_sub_single {s : Finset d} {j : d} (hj : j ∈ s) {α : d →�
   · subst hi; simp [formWeight, hj]; omega
   · simp [formWeight, hi]
 
-/-- **The filters by weight commute with `κ`**. -/
 theorem koszul_formFilter_formWeight (Q : (d → ℕ) → Prop) (ω : PolyForm R d) :
     koszul (formFilter (fun s α => Q (formWeight s α)) ω) =
       formFilter (fun s α => Q (formWeight s α)) (koszul ω) := by
@@ -223,7 +190,6 @@ theorem sum_divMonomial {ι : Type*} (t : Finset ι) (f : ι → MvPolynomial d 
     (∑ i ∈ t, f i) /ᵐ s = ∑ i ∈ t, f i /ᵐ s := by
   ext α; simp
 
-/-- Dividing `κω` by `x_u`: `(κω) / x_u = κ (ω / x_u) + ι_{e_u} (ω mod x_u)`. -/
 theorem divMonomial_koszul (u : d) (ω : PolyForm R d) :
     (fun s => koszul ω s /ᵐ Finsupp.single u 1) =
       koszul (fun s => ω s /ᵐ Finsupp.single u 1) +
@@ -239,11 +205,6 @@ theorem divMonomial_koszul (u : d) (ω : PolyForm R d) :
   · rw [mul_assoc, hsgn, divMonomial_C_mul, divMonomial_X_mul_of_ne hju, Pi.single_eq_of_ne hju,
       mul_zero, zero_mul, add_zero, mul_assoc]
 
-/-- **Contraction along `x_u`**: a `κ`-closed form `θ` whose coefficients `θ_t`, `u ∉ t`, are
-divisible by `x_u` (every monomial form contains `x_u` or `dx_u`) is `κ (dx_u ∧ θ / x_u)`:
-Cartan's identity `κ (dx_u ∧ η) + dx_u ∧ κη = x_u η` for `η = θ / x_u`, and
-`dx_u ∧ ι_{e_u} ρ = ρ` for the remainder `ρ = θ mod x_u`, `κ η = -ι_{e_u} ρ` by
-`divMonomial_koszul`. -/
 theorem koszul_wedge_divMonomial (u : d) {θ : PolyForm R d} (hκ : koszul θ = 0)
     (hθ : ∀ t, u ∉ t → θ t %ᵐ Finsupp.single u 1 = 0) :
     koszul (wedge (Pi.single u 1) (fun s => θ s /ᵐ Finsupp.single u 1)) = θ := by
@@ -289,14 +250,12 @@ def highSupport (r : ℕ) (s : Finset d) : Set (d →₀ ℕ) :=
   {α | superlinDeg s α ≤ r ∧ r < α.degree}
 
 variable (R d) in
-/-- `H_rΛᵏ`: the span of the monomial `k`-forms of superlinear degree `≤ r` and degree `> r`, the
-part of `M_rΛᵏ` beyond `P_rΛᵏ` ([ArnoldAwanou2014], Prop 3.1: `Σ_{l ≥ 1} H_{r+l,l}Λᵏ`). -/
+/-- `H_rΛᵏ`: the span of the monomial `k`-forms of superlinear degree `≤ r` and degree `> r`. -/
 def highForm (r k : ℕ) : Submodule R (PolyForm R d) := supportForm R d k (highSupport r)
 
 theorem highForm_le_superlinForm (r k : ℕ) : highForm R d r k ≤ superlinForm R d r k :=
   supportForm_mono (S := highSupport r) (T := superlinSupport r) (fun _ _ hα => hα.1) k
 
-/-- `κ H_{r-1}Λ^{k+1} ⊆ H_rΛᵏ` (`r ≥ 1`). -/
 theorem koszul_mem_highForm {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm R d}
     (h : ω ∈ highForm R d (r - 1) (k + 1)) : koszul ω ∈ highForm R d r k := by
   refine ⟨IsDeg.koszul h.1, fun s => Submodule.sum_mem _ fun j hj => ?_⟩
@@ -307,7 +266,6 @@ theorem koszul_mem_highForm {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm R d}
   · rw [map_add, Finsupp.degree_single]; have := hα.2; omega
 
 omit [LinearOrder d] [Fintype d] in
-/-- A polynomial all of whose monomials contain `x_u` is divisible by `x_u`. -/
 theorem modMonomial_eq_zero {p : MvPolynomial d R} {u : d} {S : Set (d →₀ ℕ)}
     (hp : p ∈ restrictSupport R S) (hS : ∀ α ∈ S, 1 ≤ α u) : p %ᵐ Finsupp.single u 1 = 0 := by
   ext α
@@ -319,7 +277,6 @@ theorem modMonomial_eq_zero {p : MvPolynomial d R} {u : d} {S : Set (d →₀ �
     exact h (Finsupp.single_le_iff.2 (hS α ((mem_restrictSupport_iff R).1 hp (mem_support_iff.2 h0))))
 
 omit [Fintype d] in
-/-- The support of `dx_u ∧ θ / x_u`. -/
 theorem wedge_divMonomial_mem_supportForm (u : d) {k : ℕ} {S T : Finset d → Set (d →₀ ℕ)}
     {θ : PolyForm R d} (h : θ ∈ supportForm R d k S)
     (hST : ∀ t, u ∈ t → ∀ α ∈ S (t.erase u), 1 ≤ α u → α - Finsupp.single u 1 ∈ T t) :
@@ -337,7 +294,6 @@ theorem wedge_divMonomial_mem_supportForm (u : d) {k : ℕ} {S T : Finset d → 
     simpa using hST t hj _ hα h1
   · rw [Pi.single_eq_of_ne hju, mul_zero, zero_mul]; exact Submodule.zero_mem _
 
-/-- The second phase of the exactness proof: weights `≤ 1`, vanishing outside `T`. -/
 theorem mem_map_koszul_highForm_of_formWeight_le_one {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (T : Finset d) :
     ∀ θ ∈ supportForm R d k (fun s => {α | α ∈ highSupport r s ∧ (∀ i, formWeight s α i ≤ 1) ∧
         ∀ i ∉ T, formWeight s α i = 0}), koszul θ = 0 →
@@ -383,7 +339,6 @@ theorem mem_map_koszul_highForm_of_formWeight_le_one {r : ℕ} (hr : 1 ≤ r) {k
       · exact hα.1.2.2 i (by simp [hiu, hi])
     · exact koszul_formFilter_formWeight_eq_zero (fun w => ¬1 ≤ w u) hκ
 
-/-- The first phase of the exactness proof: weights `≤ 1` outside `T`. -/
 theorem mem_map_koszul_highForm_of_formWeight {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (T : Finset d) :
     ∀ θ ∈ supportForm R d k (fun s => {α | α ∈ highSupport r s ∧ ∀ i ∉ T, formWeight s α i ≤ 1}),
       koszul θ = 0 → θ ∈ (highForm R d (r - 1) (k + 1)).map (koszulₗ R d) := by
@@ -416,9 +371,8 @@ theorem mem_map_koszul_highForm_of_formWeight {r : ℕ} (hr : 1 ≤ r) {k : ℕ}
       · exact hα.1.2 i (by simp [hiu, hi])
     · exact koszul_formFilter_formWeight_eq_zero (fun w => ¬2 ≤ w u) hκ
 
-/-- **Exactness of the Koszul complex at bounded superlinear degree**: for `r ≥ 1`, a `κ`-closed
-form of `H_rΛᵏ` is `κ` of a form of `H_{r-1}Λ^{k+1}`, over any commutative ring.
-[ArnoldAwanou2014], Thm 2.3 -/
+/-- For `r ≥ 1`, a `κ`-closed form of `H_rΛᵏ` is `κ` of a form of `H_{r-1}Λ^{k+1}`
+([ArnoldAwanou2014], Thm 2.3). -/
 theorem mem_map_koszul_highForm {r k : ℕ} (hr : 1 ≤ r) {θ : PolyForm R d}
     (h : θ ∈ highForm R d r k) (hκ : koszul θ = 0) :
     θ ∈ (highForm R d (r - 1) (k + 1)).map (koszulₗ R d) :=
@@ -445,7 +399,6 @@ theorem supportForm_inf (k : ℕ) (S T : Finset d → Set (d →₀ ℕ)) :
   · exact restrictSupport_mono R Set.inter_subset_right (h.2 s)
 
 omit [DecidableEq d] in
-/-- Monomial spaces on disjoint supports are independent. -/
 theorem disjoint_supportForm {k : ℕ} {S T : Finset d → Set (d →₀ ℕ)}
     (h : ∀ s, Disjoint (S s) (T s)) : Disjoint (supportForm R d k S) (supportForm R d k T) := by
   rw [disjoint_iff, supportForm_inf, eq_bot_iff]
@@ -455,7 +408,6 @@ theorem disjoint_supportForm {k : ℕ} {S T : Finset d → Set (d →₀ ℕ)}
   rw [(h s).inter_eq] at this
   exact support_eq_empty.1 (Finset.coe_eq_empty.1 (Set.subset_empty_iff.1 this))
 
-/-- The monomial space on a union is the sum. -/
 theorem supportForm_union (k : ℕ) (S T : Finset d → Set (d →₀ ℕ)) :
     supportForm R d k (fun s => S s ∪ T s) = supportForm R d k S ⊔ supportForm R d k T := by
   refine le_antisymm (fun ω hω => ?_) (sup_le (supportForm_mono (fun _ => Set.subset_union_left) k)
@@ -471,7 +423,6 @@ theorem supportForm_union (k : ℕ) (S T : Finset d → Set (d →₀ ℕ)) :
 end Sums
 
 omit [LinearOrder d] [Fintype d] in
-/-- `P_rΛᵏ` is the monomial space of the exponents of degree `≤ r`. -/
 theorem polyForm_eq_supportForm (r k : ℕ) :
     polyForm R d r k = supportForm R d k (fun _ => {α | α.degree ≤ r}) := by
   ext ω
@@ -481,7 +432,6 @@ theorem polyForm_eq_supportForm (r k : ℕ) :
 
 /-! ### The decompositions of `M_rΛᵏ` and `S_rΛᵏ` -/
 
-/-- **`M_rΛᵏ = P_rΛᵏ ⊕ H_rΛᵏ`** (with `disjoint_polyForm_highForm`). -/
 theorem polyForm_sup_highForm (r k : ℕ) :
     polyForm R d r k ⊔ highForm R d r k = superlinForm R d r k := by
   rw [polyForm_eq_supportForm, highForm, ← supportForm_union, superlinForm]
@@ -503,7 +453,6 @@ theorem disjoint_polyForm_highForm (r k : ℕ) :
   exact disjoint_supportForm fun s => Set.disjoint_left.2 fun α h h' => by
     have := h'.2; simp only [Set.mem_ofPred_eq] at h; omega
 
-/-- The forms all of whose monomials have degree `> m`. -/
 theorem koszul_mem_supportForm_degree {m k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ supportForm R d (k + 1) (fun _ => {α | m < α.degree})) :
     koszul ω ∈ supportForm R d k (fun _ => {α | m + 1 < α.degree}) := by
@@ -522,8 +471,6 @@ theorem extDeriv_mem_supportForm_degree {m k : ℕ} {ω : PolyForm R d}
     (pderiv_mem_restrictSupport j (fun α (hα : m + 1 < α.degree) hj => show m < _ by
       have := degree_sub_single_add_one (Nat.one_le_iff_ne_zero.2 hj); omega) (h.2 _))⟩
 
-/-- **`S_rΛᵏ = P_rΛᵏ + κ H_{r-1}Λ^{k+1} + d κ H_rΛᵏ`** (`r ≥ 1`): the parts of degree `≤ r` of
-`κ M_{r-1}Λ^{k+1}` and `d κ M_rΛᵏ` lie in `P_rΛᵏ`. -/
 theorem serendipityForm_eq_sup {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     serendipityForm R d r k = polyForm R d r k ⊔
       ((highForm R d (r - 1) (k + 1)).map (koszulₗ R d) ⊔
@@ -553,7 +500,6 @@ theorem serendipityForm_eq_sup {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     · rintro _ ⟨_, ⟨b, hb, rfl⟩, rfl⟩
       exact extDeriv_koszul_mem_serendipityForm (highForm_le_superlinForm _ _ hb)
 
-/-- The forms of `κ H_{r-1}Λ^{k+1} + d κ H_rΛᵏ` have only monomials of degree `> r`. -/
 theorem sup_le_supportForm_degree {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     (highForm R d (r - 1) (k + 1)).map (koszulₗ R d) ⊔
         ((highForm R d r k).map (koszulₗ R d)).map (extDerivₗ R d) ≤
@@ -580,8 +526,6 @@ instance (r k : ℕ) : FiniteDimensional K (highForm K d r k) :=
   Submodule.finiteDimensional_of_le (highForm_le_superlinForm r k)
 
 omit [CharZero K] in
-/-- Rank–nullity for `κ` on `H_rΛᵏ`, with the kernel given by exactness:
-`dim H_rΛᵏ = dim κ H_rΛᵏ + dim κ H_{r-1}Λ^{k+1}`. -/
 theorem finrank_highForm {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     Module.finrank K (highForm K d r k) =
       Module.finrank K ((highForm K d r k).map (koszulₗ K d)) +
@@ -600,9 +544,7 @@ theorem finrank_highForm {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
   rw [← LinearMap.finrank_range_add_finrank_ker f, hrange, ← hker,
     Submodule.finrank_map_subtype_eq]
 
-/-- **The dimension of the serendipity forms** ([ArnoldAwanou2014], Thm 3.6 (1)): for `r ≥ 1`,
-`dim S_rΛᵏ = dim M_rΛᵏ`, the number of monomial `k`-forms of superlinear degree `≤ r`
-(`finrank_superlinForm`). -/
+/-- `dim S_rΛᵏ = dim M_rΛᵏ` for `r ≥ 1` ([ArnoldAwanou2014], Thm 3.6 (1)). -/
 theorem finrank_serendipityForm {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     Module.finrank K (serendipityForm K d r k) = Module.finrank K (superlinForm K d r k) := by
   set A := (highForm K d (r - 1) (k + 1)).map (koszulₗ K d)

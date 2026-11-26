@@ -7,82 +7,21 @@ public import Feec.HilbertComplex.BGG.WeakConsistency
 /-!
 # The elliptic projection (6.4) of the discrete BGG wave system
 
-The thesis defines (§6.2, (6.4)) an elliptic projection of the exact solution of (6.2) onto the
-finite element spaces of (6.3): the shifted form "mass + skew form `a` + multiplier `b`",
-including the `L²` (mass) term, tested on the discrete spaces. The thesis states (6.4) as a
-single error equation in which the discrete forms `a`, `b` (built with `Sₕ`) are applied to
-`Π − I`, and never shows the projection to exist or to approximate. This file defines a
-corrected version for finite-dimensional discrete BGG data (`Feec.BGG.Segment` on the FE spaces,
-as in `Feec.BGG.DiscreteSolution`), proves unique solvability, Galerkin orthogonality and, for
-discretizations `Feec.BGG.Discrete` of a continuous complex, a uniform (in `h`) inf-sup
-condition on the constrained space `Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²` and a Strang bound. The multiplier
-block has no uniform inf-sup here, and the discrete multiplier `λₕ` is not estimated.
-
-Corrections to the thesis' (6.4):
-
-1. *Homogeneous constraint.* (6.4b) as printed, `b(Π − I; ζ) = 0`, prescribes
-   `dΠσ − Sₕ Π̃φ = P_{Vₕ¹}(S − Sₕ)φ`, which is nonzero in general, so the projected pair would
-   not lie in `Γₕ`. The energy argument of the convergence proof
-   (`Feec.BGG.norm_sub_le_of_ellipticProjection_L2`) needs it in `Γₕ`; we impose the
-   homogeneous constraint `dΠσ = Sₕ Π̃φ` (`IsEllipticProjection` allows any right-hand side
-   `g`).
-2. *Continuous forms on the exact solution.* (6.4a) applies the discrete skew form `a` (with
-   `S₁,ₕ`) and the discrete multiplier term `(λ, dτ − S₀,ₕψ)` to the exact state as well. Our
-   data functionals `ellipticData` / `Discrete.ellipticDataH` instead evaluate the exact state
-   in the *continuous* forms: `A` (with `S₁`) and `ℓ(dτ − S₀ψ)` (with `S₀`). The two
-   projections differ by the consistency functionals `⟪M, (S₁ − S₁,ₕ)v⟫`,
-   `⟪(S₁ − S₁,ₕ)u, N⟫` and `ℓ((S₀ − S₀,ₕ)ψ)`. This choice is what gives Galerkin
-   orthogonality against the exact equation (`IsEllipticProjection.galerkin`, the hypothesis
-   `hproj` of the Ch. 6 convergence theorems); the consistency functionals reappear in the
-   Strang bound (`Discrete.strangData`).
-
-## Main definitions
-
-* `Feec.BGG.energyInner`: the energy inner product `(σ,τ) + (u,v) + (M,N) + (ρ,μ)`.
-* `Feec.BGG.IsEllipticProjection D G g x`: `x = ((σ,u,M,ρ), φ, λ)` solves the shifted system
-  with right-hand side `G` and constraint `dσ − S₀φ = g`.
-* `Feec.BGG.ellipticForm`, `Feec.BGG.ellipticRhs`, `Feec.BGG.ellipticProjection`: the system
-  operator, its right-hand side, and its inverse.
-* `Feec.BGG.ellipticData`: the data functional of the exact solution, `⟪ξ, ·⟫ + A(ξ,χ) − ℓ`.
-* `Feec.BGG.Discrete.toSegmentH`: the discrete BGG data of a discretization `Q : Discrete D`.
-* `Feec.BGG.Discrete.shiftedFormH`, `Feec.BGG.Discrete.shiftedNormSq`: the discrete shifted
-  form and the `h`-dependent graph norm `‖σ‖² + ‖u‖² + ‖M‖² + ‖ρ‖² + ‖dφ‖² + ‖Sₕu‖² + ‖du‖²`.
+An elliptic projection (6.4) of an exact state onto the spaces of (6.3)
+([QuennevilleBelair2015], §6.2), with the homogeneous constraint and the exact state in the
+continuous forms: it is uniquely solvable for `d` injective on `Ṽₕ⁰` and `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹`,
+satisfies Galerkin orthogonality, and for discretizations a Strang bound and an `O(h)` rate.
 
 ## Main results
 
-* `Feec.BGG.existsUnique_isEllipticProjection`: unique solvability of (6.4) when `d` is
-  injective on `Ṽₕ⁰` and `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹` (energy argument); in particular under the
-  hypotheses `Function.Injective D.dt0`, `Function.Surjective D.S0` of corrected Prop 6.2.
-* `Feec.BGG.IsEllipticProjection.galerkin`: Galerkin orthogonality, in the form of the
-  hypothesis `hproj` (with `L²` term) of the Ch. 6 convergence theorems.
-* `Feec.BGG.hasDerivWithinAt_ellipticProjection`: the projection of time-dependent data is
-  differentiable when the data are (weakly) differentiable.
-* `Feec.BGG.Discrete.infSup_shiftedForm_h`: the uniform (in `h`) inf-sup condition of the
-  discrete shifted form on `Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²`, constant `(1/2)/√3`, via the test map
-  `x ↦ x + (0, 0, dφ, −Sₕu, −du)`.
-* `Feec.BGG.Discrete.strang_shiftedForm_h`, `Feec.BGG.Discrete.strang_energy`,
-  `Feec.BGG.Discrete.strang_of_isEllipticProjection`: the Strang bound
-  `‖e‖² ≤ C (interpolation errors + consistency functionals)`, `C` depending on the Poincaré
-  constant only; proved under `HarmonicStability` (`HarmonicStability.strang_shiftedForm_h`,
-  `HarmonicStability.strang_energy`, `HarmonicStability.strang_of_isEllipticProjection`).
-* `Feec.BGG.Discrete.consistency_S0_of_approx`,
-  `Feec.BGG.Discrete.consistency_S1_of_regularPotential`: the consistency constants
-  `K₀ = Λ C_app h`, `K₁ = C_app h K_w` of the Strang bound from thesis Prop 5.9(1) and regular
-  potentials (`Feec.BGG.Discrete.RegularPotential`), without Prop 5.9(2);
-  `Feec.BGG.Discrete.strang_rate_of_regularPotential`: the resulting `O(h)` rate of (6.4) from
-  `O(h)` interpolation errors.
+* `Feec.BGG.existsUnique_isEllipticProjection`: unique solvability of (6.4).
+* `Feec.BGG.Discrete.strang_of_isEllipticProjection`: the Strang bound.
+* `Feec.BGG.Discrete.strang_rate_of_regularPotential`: the `O(h)` rate.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), (6.4), Prop 6.2, Prop 6.3), Prop 4.13 (inf-sup by a test map), Thm 5.5
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
-  (stability of discrete Hodge Laplacians)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002] (Strang lemma)
-* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
-  (saddle-point problems)
-* [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
-  (elliptic projections in evolution problems)
+  §6.2, Prop 4.13
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -106,17 +45,14 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
   [NormedAddCommGroup Pt1] [InnerProductSpace ℝ Pt1]
   [NormedAddCommGroup Pt2] [InnerProductSpace ℝ Pt2]
 
-/-- The energy inner product `(σ,τ) + (u,v) + (M,N) + (ρ,μ)` on `Vₕ⁰ × Ṽₕ¹ × Vₕ² × Ṽₕ²` (the
-form `(·;·)` of thesis §6.2). -/
+/-- The energy inner product `(σ,τ) + (u,v) + (M,N) + (ρ,μ)` on `Vₕ⁰ × Ṽₕ¹ × Vₕ² × Ṽₕ²`. -/
 def energyInner (a b : P0 × Pt1 × P2 × Pt2) : ℝ :=
   ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ + ⟪a.2.2.2, b.2.2.2⟫
 
-/-- `energyInner a a` is the squared energy norm. -/
 theorem energyInner_self (a : P0 × Pt1 × P2 × Pt2) :
     energyInner a a = ‖a.1‖ ^ 2 + ‖a.2.1‖ ^ 2 + ‖a.2.2.1‖ ^ 2 + ‖a.2.2.2‖ ^ 2 := by
   simp only [energyInner, real_inner_self_eq_norm_sq]
 
-/-- The energy inner product is definite. -/
 theorem eq_zero_of_energyInner_self {a : P0 × Pt1 × P2 × Pt2} (h : energyInner a a = 0) :
     a = 0 := by
   rw [energyInner_self] at h
@@ -129,23 +65,13 @@ theorem eq_zero_of_energyInner_self {a : P0 × Pt1 × P2 × Pt2} (h : energyInne
 
 variable (D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2)
 
-/-- **The elliptic projection (6.4)**, corrected: `x = ((σ, u, M, ρ), φ, λ)` solves
-`(ξₓ, η) + aₕ(x, y) − (λ, dτ − S₀,ₕψ) = G(y)` for all `y = ((τ, v, N, μ), ψ)`, and
-`dσ − S₀,ₕφ = g`. For the projection of an exact solution, `G` is `ellipticData` and `g = 0`.
-Two corrections to the thesis' (6.4) (see the module docstring): (i) its constraint (6.4b)
-gives a nonzero `g`, which takes `(σ, φ)` out of `Γₕ`, so we take `g = 0`; (ii) its (6.4a)
-evaluates the exact state in the discrete forms (with `S₁,ₕ` and `(λ, dτ − S₀,ₕψ)`), whereas the
-data `ellipticData` use the continuous forms (with `S₁` and `ℓ(dτ − S₀ψ)`), so the two
-projections differ by the consistency functionals `⟪M, (S₁ − S₁,ₕ)v⟫`, `⟪(S₁ − S₁,ₕ)u, N⟫`,
-`ℓ((S₀ − S₀,ₕ)ψ)`; this is what makes Galerkin orthogonality hold against the exact equation.
-See [QuennevilleBelair2015], §6.2, (6.4). -/
+/-- The system (6.4), with right-hand side `G` and constraint `dσ − S₀,ₕφ = g`. -/
 def IsEllipticProjection (G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)) (g : P1)
     (x : ((P0 × Pt1 × P2 × Pt2) × Pt0) × P1) : Prop :=
   (∀ y, energyInner x.1.1 y.1 + discreteSkewForm D x.1 y - ⟪x.2, D.d0 y.1.1 - D.S0 y.2⟫ = G y) ∧
     D.d0 x.1.1.1 - D.S0 x.1.2 = g
 
-/-- The system operator of (6.4), as a map to the dual (the last component tests the
-constraint). -/
+/-- The system operator of (6.4), as a map to the dual. -/
 def ellipticForm :
     (((P0 × Pt1 × P2 × Pt2) × Pt0) × P1) →ₗ[ℝ] Module.Dual ℝ (((P0 × Pt1 × P2 × Pt2) × Pt0) × P1) :=
   LinearMap.mk₂ ℝ (fun x y => energyInner x.1.1 y.1.1 + discreteSkewForm D x.1 y.1
@@ -173,7 +99,6 @@ def ellipticRhs (G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)) (g : P1)
 theorem ellipticRhs_apply (G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)) (g : P1)
     (y : ((P0 × Pt1 × P2 × Pt2) × Pt0) × P1) : ellipticRhs G g y = G y.1 + ⟪g, y.2⟫ := rfl
 
-/-- (6.4) holds iff the system operator maps `x` to the right-hand side. -/
 theorem isEllipticProjection_iff {G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)} {g : P1}
     {x : ((P0 × Pt1 × P2 × Pt2) × Pt0) × P1} :
     IsEllipticProjection D G g x ↔ ellipticForm D x = ellipticRhs G g := by
@@ -190,11 +115,6 @@ theorem isEllipticProjection_iff {G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) 
       have := key (0, ζ)
       simpa [energyInner, discreteSkewForm] using this
 
-/-- **Uniqueness for (6.4)** (energy argument, as for the uniqueness in Prop 6.2): with `d`
-injective on `Ṽₕ⁰` and `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹`, the homogeneous system has only the trivial
-solution. Testing with `x` itself gives `(σ, u, M, ρ) = 0` (the skew form vanishes on the
-diagonal and the constraint is homogeneous); testing with `v = dφ` gives `dφ = 0`; the
-multiplier is then orthogonal to `dVₕ⁰ + S₀,ₕṼₕ⁰`. See [QuennevilleBelair2015], §6.2, Prop 6.2. -/
 theorem eq_zero_of_isEllipticProjection (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ)
     {x : ((P0 × Pt1 × P2 × Pt2) × Pt0) × P1} (hx : IsEllipticProjection D 0 0 x) : x = 0 := by
@@ -222,7 +142,6 @@ theorem eq_zero_of_isEllipticProjection (hdinj : Function.Injective D.dt0)
   subst hμ
   rfl
 
-/-- `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹` holds when `S₀,ₕ` is onto (thesis hypothesis (5.4)). -/
 theorem exists_sub_eq_of_surjective (hS : Function.Surjective D.S0) (μ : P1) :
     ∃ τ ψ, D.d0 τ - D.S0 ψ = μ := by
   obtain ⟨ψ, hψ⟩ := hS (-μ)
@@ -232,7 +151,6 @@ variable [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P1] [FiniteDimensiona
   [FiniteDimensional ℝ Pt0] [FiniteDimensional ℝ Pt1] [FiniteDimensional ℝ Pt2]
 
 variable (D) in
-/-- The system (6.4) is square: its operator is bijective onto the dual. -/
 theorem ellipticForm_bijective (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ) : Function.Bijective (ellipticForm D) := by
   have hinj : Function.Injective (ellipticForm D) := by
@@ -244,15 +162,13 @@ theorem ellipticForm_bijective (hdinj : Function.Injective D.dt0)
     Subspace.dual_finrank_eq.symm).1 hinj⟩
 
 variable (D) in
-/-- **The elliptic projection** `Π : (Eₕ × Vₕ¹)* → Eₕ × Vₕ¹`, the inverse of the system
-operator of (6.4). See [QuennevilleBelair2015], §6.2, (6.4). -/
+/-- The elliptic projection, the inverse of the system operator of (6.4). -/
 def ellipticProjection (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ) :
     Module.Dual ℝ (((P0 × Pt1 × P2 × Pt2) × Pt0) × P1) ≃ₗ[ℝ]
       (((P0 × Pt1 × P2 × Pt2) × Pt0) × P1) :=
   (LinearEquiv.ofBijective (ellipticForm D) (ellipticForm_bijective D hdinj hB)).symm
 
-/-- The elliptic projection solves (6.4). -/
 theorem isEllipticProjection_ellipticProjection (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ)
     (G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)) (g : P1) :
@@ -260,7 +176,6 @@ theorem isEllipticProjection_ellipticProjection (hdinj : Function.Injective D.dt
   rw [isEllipticProjection_iff]
   exact (LinearEquiv.ofBijective (ellipticForm D) (ellipticForm_bijective D hdinj hB)).apply_symm_apply _
 
-/-- Every solution of (6.4) is the elliptic projection. -/
 theorem IsEllipticProjection.eq_ellipticProjection (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ)
     {G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)} {g : P1}
@@ -271,10 +186,8 @@ theorem IsEllipticProjection.eq_ellipticProjection (hdinj : Function.Injective D
   exact ((LinearEquiv.ofBijective (ellipticForm D)
     (ellipticForm_bijective D hdinj hB)).symm_apply_apply x).symm
 
-/-- **Unique solvability of the elliptic projection (6.4)** (new: the thesis never shows it
-well posed). For finite-dimensional discrete data with `d` injective on `Ṽₕ⁰` and
-`dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹`, (6.4) has exactly one solution `((σ, u, M, ρ), φ, λ)` for every
-right-hand side `(G, g)`. See [QuennevilleBelair2015], §6.2, (6.4). -/
+/-- With `d` injective on `Ṽₕ⁰` and `dVₕ⁰ + S₀,ₕṼₕ⁰ = Vₕ¹`, (6.4) has exactly one solution for
+every right-hand side `(G, g)`. -/
 theorem existsUnique_isEllipticProjection (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ)
     (G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)) (g : P1) :
@@ -282,9 +195,6 @@ theorem existsUnique_isEllipticProjection (hdinj : Function.Injective D.dt0)
   ⟨_, isEllipticProjection_ellipticProjection hdinj hB G g,
     fun _ hx => hx.eq_ellipticProjection hdinj hB⟩
 
-/-- Time derivative of the elliptic projection: if the data `G(s)` are differentiable when
-evaluated on every test function, then so is `Π(G(s), 0)`, with derivative `Π(G'(t), 0)`
-(finite dimensions: expand `G(s)` in a dual basis). -/
 theorem hasDerivWithinAt_ellipticProjection (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ)
     {G G' : ℝ → Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)} {s : Set ℝ} {t : ℝ}
@@ -303,7 +213,6 @@ theorem hasDerivWithinAt_ellipticProjection (hdinj : Function.Injective D.dt0)
   refine HasDerivWithinAt.fun_sum fun i _ => (HasDerivWithinAt.smul_const ?_ _)
   simpa [ellipticRhs_apply] using hG (b i).1
 
-/-- Continuity of the elliptic projection of continuous data. -/
 theorem continuousOn_ellipticProjection (hdinj : Function.Injective D.dt0)
     (hB : ∀ μ : P1, ∃ τ ψ, D.d0 τ - D.S0 ψ = μ)
     {G : ℝ → Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)} {s : Set ℝ}
@@ -323,7 +232,7 @@ theorem continuousOn_ellipticProjection (hdinj : Function.Injective D.dt0)
 
 end Projection
 
-/-! ## Galerkin orthogonality in the setting of the Ch. 6 convergence theorems -/
+/-! ## Galerkin orthogonality -/
 
 section Galerkin
 
@@ -336,11 +245,7 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
   [NormedAddCommGroup Pt2] [InnerProductSpace ℝ Pt2]
   {X Z : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [AddCommGroup Z] [Module ℝ Z]
 
-/-- **The data functional of the elliptic projection of an exact state** `(ξ, χ)` with
-multiplier functional `ℓ`: `G(b, ψ) = ⟪ξ, ι b⟫ + A(ξ, χ)(ι b, j ψ) − ℓ(ι b, j ψ)`, i.e. the
-continuous shifted form (mass + skew + multiplier) tested on discrete functions, in the setting
-of `DiscreteSolution.norm_sub_le_of_ellipticProjection`. This differs from the thesis' (6.4a),
-which uses the discrete forms on the exact state (correction (2) of the module docstring). -/
+/-- The data functional of an exact state: the continuous shifted form on discrete tests. -/
 def ellipticData (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X) (j : Pt0 →ₗ[ℝ] Z)
     (A : (X × Z) →ₗ[ℝ] (X × Z) →ₗ[ℝ] ℝ) (ξ : X) (χ : Z) (ℓ : (X × Z) →ₗ[ℝ] ℝ) :
     Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0) :=
@@ -353,13 +258,8 @@ theorem ellipticData_apply (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X) (j : Pt0 
     ellipticData ι j A ξ χ ℓ y = ⟪ξ, ι y.1⟫ + A (ξ, χ) (ι y.1, j y.2) - ℓ (ι y.1, j y.2) := by
   simp [ellipticData]; ring
 
-/-- **Galerkin orthogonality of the elliptic projection (6.4).** In the setting of
-`DiscreteSolution.norm_sub_le_of_ellipticProjection` (energy-preserving embedding `ι`, discrete
-forms `hAh`, `hBh`), a solution `((a, q), μ)` of (6.4) with data `ellipticData … ξ χ ℓ` and
-homogeneous constraint satisfies `Bₕ(ι a, j q) = 0` and, for every discrete `η`,
-`⟪ι a, η₁⟫ + Aₕ((ι a, j q), η) − ⟪μ, Bₕη⟫ = ⟪ξ, η₁⟫ + A((ξ, χ), η) − ℓ η`
-(the shifted error form vanishes on the discrete space): these are the hypotheses `hPB`, `hproj`
-of `norm_sub_le_of_ellipticProjection_L2`. See [QuennevilleBelair2015], §6.2, (6.4). -/
+/-- A solution of (6.4) with data `ellipticData` and homogeneous constraint makes the shifted
+error form vanish on the discrete space. -/
 theorem IsEllipticProjection.galerkin {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
     (ι : (P0 × Pt1 × P2 × Pt2) →L[ℝ] X)
     (hι : ∀ a b, ⟪ι a, ι b⟫ = ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ +
@@ -395,22 +295,20 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D)
 
-/-- The discrete shifted form of (6.4) on `Γₕ`-tests (the multiplier term drops out):
-mass `(σ,τ) + (u,v) + (M,N) + (ρ,μ)` plus the skew form `aₕ` of §6.2 with `S₁,ₕ`. -/
+/-- The discrete shifted form of (6.4) on `Γₕ`-tests: mass plus the skew form `aₕ`. -/
 def shiftedFormH (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2)
     (τ : V0) (ψ : Vt0) (v : Vt1) (N : W2) (μ : Wt2) : ℝ :=
   ⟪σ, τ⟫ + ⟪u, v⟫ + ⟪M, N⟫ + ⟪ρ, μ⟫ - ⟪u, D.dt0 ψ⟫ + ⟪D.dt0 φ, v⟫ + ⟪M, Q.S1h v⟫
     + ⟪ρ, D.dt1 v⟫ - ⟪Q.S1h u, N⟫ - ⟪D.dt1 u, μ⟫
 
 variable (D) in
-/-- The continuous shifted form (mass plus the skew form `a` of §6.2, with `S₁`). -/
+/-- The continuous shifted form (mass plus the skew form `a`, with `S₁`). -/
 def shiftedFormC (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2)
     (τ : V0) (ψ : Vt0) (v : Vt1) (N : W2) (μ : Wt2) : ℝ :=
   ⟪σ, τ⟫ + ⟪u, v⟫ + ⟪M, N⟫ + ⟪ρ, μ⟫ - ⟪u, D.dt0 ψ⟫ + ⟪D.dt0 φ, v⟫ + ⟪M, D.S1 v⟫
     + ⟪ρ, D.dt1 v⟫ - ⟪D.S1 u, N⟫ - ⟪D.dt1 u, μ⟫
 
-/-- The `h`-dependent graph norm (squared) of the discrete shifted form:
-`‖σ‖² + ‖u‖² + ‖M‖² + ‖ρ‖² + ‖dφ‖² + ‖S₁,ₕu‖² + ‖du‖²`. -/
+/-- The `h`-dependent graph norm (squared) of the discrete shifted form. -/
 def shiftedNormSq (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) : ℝ :=
   ‖σ‖ ^ 2 + ‖u‖ ^ 2 + ‖M‖ ^ 2 + ‖ρ‖ ^ 2 + ‖D.dt0 φ‖ ^ 2 + ‖Q.S1h u‖ ^ 2 + ‖D.dt1 u‖ ^ 2
 
@@ -419,13 +317,11 @@ theorem shiftedNormSq_nonneg (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) 
 
 variable {Q}
 
-/-- `S₁,ₕ dφ = 0` on `Γₕ`. -/
 theorem S1h_dt0_eq_zero {σ : V0} {φ : Vt0} (hΓ : D.d0 σ = Q.S0h φ) : Q.S1h (D.dt0 φ) = 0 := by
   have := Q.anticomm_h φ
   rw [← hΓ, D.d1_d0] at this
   exact neg_eq_zero.1 this.symm
 
-/-- The coercivity identity of the test map `x ↦ x + (0, 0, dφ, −S₁,ₕu, −du)` on `Γₕ`. -/
 theorem shiftedFormH_test {σ : V0} {φ : Vt0} (u : Vt1) (M : W2) (ρ : Wt2)
     (hΓ : D.d0 σ = Q.S0h φ) :
     Q.shiftedFormH σ φ u M ρ σ φ (u + D.dt0 φ) (M - Q.S1h u) (ρ - D.dt1 u) =
@@ -438,7 +334,6 @@ theorem shiftedFormH_test {σ : V0} {φ : Vt0} (u : Vt1) (M : W2) (ρ : Wt2)
   have c3 := real_inner_comm ρ (D.dt1 u)
   linarith
 
-/-- The test map is bounded: `‖x + (0, 0, dφ, −S₁,ₕu, −du)‖² ≤ 3 ‖x‖²` (shifted norm). -/
 theorem shiftedNormSq_test_le {σ : V0} {φ : Vt0} (u : Vt1) (M : W2) (ρ : Wt2)
     (hΓ : D.d0 σ = Q.S0h φ) :
     Q.shiftedNormSq σ φ (u + D.dt0 φ) (M - Q.S1h u) (ρ - D.dt1 u) ≤
@@ -449,7 +344,6 @@ theorem shiftedNormSq_test_le {σ : V0} {φ : Vt0} (u : Vt1) (M : W2) (ρ : Wt2)
     norm_sub_sq_le_two_mul ρ (D.dt1 u), sq_nonneg ‖σ‖, sq_nonneg ‖u‖, sq_nonneg ‖M‖,
     sq_nonneg ‖ρ‖, sq_nonneg ‖D.dt0 φ‖, sq_nonneg ‖Q.S1h u‖, sq_nonneg ‖D.dt1 u‖]
 
-/-- The coercivity bound `‖x‖²/2 ≤ Aₕ(x, x + (0, 0, dφ, −S₁,ₕu, −du))` on `Γₕ`. -/
 theorem shiftedNormSq_le_shiftedFormH_test {σ : V0} {φ : Vt0} (u : Vt1) (M : W2) (ρ : Wt2)
     (hΓ : D.d0 σ = Q.S0h φ) :
     Q.shiftedNormSq σ φ u M ρ / 2 ≤
@@ -462,13 +356,8 @@ theorem shiftedNormSq_le_shiftedFormH_test {σ : V0} {φ : Vt0} (u : Vt1) (M : W
   nlinarith [sq_nonneg (‖D.dt0 φ‖ - ‖u‖), sq_nonneg (‖Q.S1h u‖ - ‖M‖),
     sq_nonneg (‖D.dt1 u‖ - ‖ρ‖), sq_nonneg ‖σ‖]
 
-/-- **Uniform (in `h`) inf-sup condition of the discrete shifted form** on
-`Kₕ = Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²` in the `h`-dependent graph norm `shiftedNormSq`: every
-`x ∈ Kₕ` has a test `y ∈ Kₕ` with `‖y‖ ≤ √3 ‖x‖` and `Aₕ(x, y) ≥ ((1/2)/√3) ‖x‖ ‖y‖`
-(and `Aₕ(x, y) ≥ ‖x‖²/2`). The constant `(1/2)/√3` is that of `HodgeWave.infSup_shiftedForm`
-(thesis Prop 4.13); the test map `x ↦ x + (0, 0, dφ, −S₁,ₕu, −du)` stays in `Kₕ` because `Kₕ` is
-a subcomplex and `S₁,ₕ dφ = 0` on `Γₕ`. No uniform bound on the projections is needed.
-See [QuennevilleBelair2015], Prop 4.13 and §6.2; cf. [AFW2010]. -/
+/-- Every `x ∈ Kₕ = Γₕ × Ṽₕ¹ × Vₕ² × Ṽₕ²` has a test `y ∈ Kₕ` with `‖y‖ ≤ √3 ‖x‖` and
+`Aₕ(x, y) ≥ ((1/2)/√3) ‖x‖ ‖y‖`, uniformly in `h`. Cf. [QuennevilleBelair2015], Prop 4.13 -/
 theorem infSup_shiftedForm_h {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
     (hσ : σ ∈ Q.V0h) (hφ : φ ∈ Q.Vt0h) (hΓ : D.d0 σ = Q.S0h φ) (hu : u ∈ Q.Vt1h)
     (hM : M ∈ Q.W2h) (hρ : ρ ∈ Q.Wt2h) :
@@ -496,10 +385,7 @@ theorem infSup_shiftedForm_h {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
 /-- The constant of the Strang bound, depending on the Poincaré constant only. -/
 def strangConst (Cp : ℝ) : ℝ := 112 * (2 + Cp ^ 2)
 
-/-- The data of the Strang bound: interpolation errors of the exact state by the cochain
-projections (in the graph norms that the shifted form sees), the consistency constants
-`K₀, K₁` of the functionals `ψ ↦ ℓ((S₀ − S₀,ₕ)ψ)`, `v ↦ ⟪M, (S₁ − S₁,ₕ)v⟫`, and
-`‖(S₁ − S₁,ₕ)u‖`. -/
+/-- The data of the Strang bound: interpolation errors and consistency constants `K₀`, `K₁`. -/
 def strangData (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (K0 K1 : ℝ) : ℝ :=
   ‖Q.P0 σ - σ‖ ^ 2 + ‖D.dt0 (Q.Pt0 φ - φ)‖ ^ 2 + Q.gnSq (Q.Pt1 u - u) + ‖Q.P2 M - M‖ ^ 2
     + ‖Q.Pt2 ρ - ρ‖ ^ 2 + K0 ^ 2 + K1 ^ 2 + ‖D.S1 u - Q.S1h u‖ ^ 2
@@ -507,9 +393,7 @@ def strangData (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (K0 K1 : ℝ) 
 /-! ### The elliptic projection of a discretization -/
 
 variable (Q) in
-/-- The discrete BGG data of a discretization `Q`: the FE spaces with `d`, `S₀,ₕ = Π¹S₀`,
-`S₁,ₕ = Π²S₁` (anticommutation from the commuting projections). This is the data `D` of
-`DiscreteSolution` and of the elliptic projection (6.4) for `Q`. -/
+/-- The discrete BGG data of a discretization `Q`, with `S₀,ₕ = Π¹S₀` and `S₁,ₕ = Π²S₁`. -/
 def toSegmentH : Segment ℝ Q.V0h Q.V1h Q.W2h Q.Vt0h Q.Vt1h Q.Wt2h where
   d0 := D.d0.restrict Q.d0_mem
   d1 := D.d1.restrict Q.d1_mem
@@ -521,12 +405,10 @@ def toSegmentH : Segment ℝ Q.V0h Q.V1h Q.W2h Q.Vt0h Q.Vt1h Q.Wt2h where
   dt1_dt0 x := Subtype.ext (by simp [D.dt1_dt0])
   anticomm x := Subtype.ext (by simp [Q.anticomm_h])
 
-/-- `d` is injective on `Ṽₕ⁰`. -/
 theorem toSegmentH_dt0_injective {Cp CR CS : ℝ} (H : Stability D Cp CR CS) :
     Function.Injective Q.toSegmentH.dt0 := fun a b hab =>
   Subtype.ext (dt0_injective H (by simpa [toSegmentH, Subtype.ext_iff] using hab))
 
-/-- The left side of (6.4) for `toSegmentH` is the discrete shifted form. -/
 theorem energyInner_add_discreteSkewForm_toSegmentH
     (a b : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) (q ψ : Q.Vt0h) :
     energyInner a b + discreteSkewForm Q.toSegmentH (a, q) (b, ψ) =
@@ -535,10 +417,7 @@ theorem energyInner_add_discreteSkewForm_toSegmentH
     LinearMap.coe_restrict_apply]
   ring
 
-/-- The data functional of the elliptic projection (6.4) of an exact state `(σ, φ, u, M, ρ)`
-with multiplier functional `ℓ`: the continuous shifted form `A(x, y) − ℓ(dτ − S₀ψ)` (with
-`S₁`, `S₀`, not `S₁,ₕ`, `S₀,ₕ` as in the thesis' (6.4a); correction (2) of the module
-docstring) tested on discrete `y`. -/
+/-- The data functional of the elliptic projection (6.4) of an exact state, for `toSegmentH`. -/
 def ellipticDataH (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (ℓ : V1 →ₗ[ℝ] ℝ) :
     Module.Dual ℝ ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) where
   toFun y := shiftedFormC D σ φ u M ρ y.1.1 y.2 y.1.2.1 y.1.2.2.1 y.1.2.2.2
@@ -550,7 +429,6 @@ def ellipticDataH (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (ℓ : V1 �
     simp only [shiftedFormC, Prod.smul_fst, Prod.smul_snd, Submodule.coe_smul, map_smul, map_sub,
       real_inner_smul_right, smul_eq_mul, RingHom.id_apply]; ring
 
-/-- `‖x − xₚ‖² ≤ 2‖xₚ − Πx‖² + 2‖Πx − x‖²`. -/
 theorem norm_sub_sq_le_split {E : Type*} [SeminormedAddCommGroup E] (x xP Px : E) :
     ‖x - xP‖ ^ 2 ≤ 2 * ‖xP - Px‖ ^ 2 + 2 * ‖Px - x‖ ^ 2 := by
   have : x - xP = -((xP - Px) + (Px - x)) := by abel
@@ -576,10 +454,6 @@ variable {Q : Discrete D}
 
 open Discrete
 
-/-- **Strang bound for the elliptic projection (6.4) modulo harmonic forms**: the bound of
-`Feec.BGG.Discrete.strang_shiftedForm_h`, whose proof only uses the Poincaré inequality on `Ṽ⁰`
-(through `‖ψ‖_V ≤ √(1 + C_p²) ‖dψ‖`): no exactness of the top row, none of the bottom row at
-`Ṽ¹`. See [QuennevilleBelair2015], §6.2, (6.4); cf. [Ciarlet2002]. -/
 theorem strang_shiftedForm_h (h54 : Q.Compatible)
     {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2} (c3 : D.d0 σ = D.S0 φ)
     (ℓ : V1 →ₗ[ℝ] ℝ) {K0 K1 : ℝ}
@@ -743,8 +617,6 @@ theorem strang_shiftedForm_h (h54 : Q.Compatible)
   rw [this] at hNb hKD
   nlinarith only [hNb, hKD]
 
-/-- **Strang bound in the energy norm** modulo harmonic forms
-(`Feec.BGG.Discrete.strang_energy`). -/
 theorem strang_energy (h54 : Q.Compatible)
     {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2} (c3 : D.d0 σ = D.S0 φ)
     (ℓ : V1 →ₗ[ℝ] ℝ) {K0 K1 : ℝ}
@@ -779,12 +651,11 @@ theorem strang_energy (h54 : Q.Compatible)
       sq_nonneg ‖D.dt1 (uP - Q.Pt1 u)‖]
   nlinarith only [hS, hD, hn, e1, e2, e3, e4]
 
-/-- `d` is injective on `Ṽₕ⁰`. -/
 theorem toSegmentH_dt0_injective : Function.Injective Q.toSegmentH.dt0 := fun a b hab =>
   Subtype.ext (HS.dt0_injective (by simpa [Discrete.toSegmentH, Subtype.ext_iff] using hab))
 
-/-- **Strang bound for the elliptic projection (6.4) of a discretization**, modulo harmonic
-forms (`Feec.BGG.Discrete.strang_of_isEllipticProjection`). -/
+/-- The Strang bound for the elliptic projection (6.4) of a discretization, under
+`HarmonicStability`. -/
 theorem strang_of_isEllipticProjection (h54 : Q.Compatible) {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
     (c3 : D.d0 σ = D.S0 φ) (ℓ : V1 →ₗ[ℝ] ℝ) {K0 K1 : ℝ}
     (hK0 : ∀ ψ ∈ Q.Vt0h, |ℓ ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
@@ -826,16 +697,6 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Discrete D}
 
-/-- **Strang bound for the elliptic projection (6.4)** of a discretization `Q : Discrete D`
-(new: the thesis states no approximation property of (6.4)). Let `(σ, φ, u, M, ρ)` be an exact
-state with `dσ = S₀φ`, `ℓ` its multiplier functional, and `(σₚ, φₚ, uₚ, Mₚ, ρₚ)` discrete with
-`dσₚ = S₀,ₕφₚ` and `Aₕ(xₚ, y) = A(x, y) − ℓ(dτ − S₀ψ)` for all `y ∈ Kₕ` (this is what (6.4)
-gives on `Γₕ`-tests, where the discrete multiplier drops out). With the consistency bounds
-`|ℓ((S₀ − S₀,ₕ)ψ)| ≤ K₀ ‖ψ‖_V`, `|⟪M, (S₁ − S₁,ₕ)v⟫| ≤ K₁ ‖v‖_{Γₕ}`, the discrete error
-`e = xₚ − Πx` satisfies `‖e‖²_shifted ≤ strangConst C_p · strangData`, with a constant that
-depends on the Poincaré constant only. Uses the inf-sup test map of `infSup_shiftedForm_h`
-and (5.4) (`Compatible`) to place `Πx` in `Kₕ`.
-See [QuennevilleBelair2015], §6.2, (6.4), Prop 6.3; cf. Strang's lemma [Ciarlet2002]. -/
 theorem strang_shiftedForm_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compatible)
     {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2} (c3 : D.d0 σ = D.S0 φ)
     (ℓ : V1 →ₗ[ℝ] ℝ) {K0 K1 : ℝ}
@@ -851,9 +712,6 @@ theorem strang_shiftedForm_h {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : 
       ≤ strangConst Cp * Q.strangData σ φ u M ρ K0 K1 :=
   H.toHarmonicStability.strang_shiftedForm_h h54 c3 ℓ hK0 hK1 hσP hφP huP hMP hρP hcons heq
 
-/-- **Strang bound in the energy norm**: `‖σ − σₚ‖² + ‖u − uₚ‖² + ‖M − Mₚ‖² + ‖ρ − ρₚ‖² ≤
-2 (strangConst C_p + 1) · strangData` (the quantity `‖Pξ − ξ‖²` of the Ch. 6 convergence
-theorems), under the hypotheses of `strang_shiftedForm_h`. -/
 theorem strang_energy {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compatible)
     {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2} (c3 : D.d0 σ = D.S0 φ)
     (ℓ : V1 →ₗ[ℝ] ℝ) {K0 K1 : ℝ}
@@ -869,12 +727,8 @@ theorem strang_energy {Cp CR CS : ℝ} (H : Stability D Cp CR CS) (h54 : Q.Compa
       2 * (strangConst Cp + 1) * Q.strangData σ φ u M ρ K0 K1 :=
   H.toHarmonicStability.strang_energy h54 c3 ℓ hK0 hK1 hσP hφP huP hMP hρP hcons heq
 
-/-- **Strang bound for the elliptic projection (6.4) of a discretization.** Every solution
-`x = ((σₚ, uₚ, Mₚ, ρₚ), φₚ, λₚ)` of (6.4) for the discrete data `toSegmentH` with the data
-`ellipticDataH` of an exact state (`dσ = S₀φ`) satisfies the bounds of `strang_shiftedForm_h`
-and `strang_energy`; such a solution exists and is unique
-(`existsUnique_isEllipticProjection` with `toSegmentH_dt0_injective`).
-See [QuennevilleBelair2015], §6.2, (6.4); cf. [Ciarlet2002]. -/
+/-- Every solution of (6.4) for `toSegmentH` with the data of an exact state satisfies the Strang
+bounds `strang_shiftedForm_h` and `strang_energy`. -/
 theorem strang_of_isEllipticProjection {Cp CR CS : ℝ} (H : Stability D Cp CR CS)
     (h54 : Q.Compatible) {σ : V0} {φ : Vt0} {u : Vt1} {M : W2} {ρ : Wt2}
     (c3 : D.d0 σ = D.S0 φ) (ℓ : V1 →ₗ[ℝ] ℝ) {K0 K1 : ℝ}
@@ -889,11 +743,8 @@ theorem strang_of_isEllipticProjection {Cp CR CS : ℝ} (H : Stability D Cp CR C
         2 * (strangConst Cp + 1) * Q.strangData σ φ u M ρ K0 K1 :=
   H.toHarmonicStability.strang_of_isEllipticProjection h54 c3 ℓ hK0 hK1 hx
 
-/-! ### The consistency constants from Prop 5.9(1) and regular potentials -/
+/-! ### The consistency constants from regular potentials -/
 
-/-- **`K₀` from the consistency of `S₀,ₕ`** (thesis Prop 5.9(1)): if `|ℓ μ| ≤ Λ‖μ‖` and
-`‖(S₀ − S₀,ₕ)ψ‖ ≤ C_app h ‖ψ‖_V` on `Ṽₕ⁰`, then the hypothesis `hK0` of the Strang bound holds
-with `K₀ = Λ C_app h`. See [QuennevilleBelair2015], Prop 5.9. -/
 theorem consistency_S0_of_approx {h Capp Λ : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp) (hΛ : 0 ≤ Λ)
     (ℓ : V1 →ₗ[ℝ] ℝ) (hℓ : ∀ μ, |ℓ μ| ≤ Λ * ‖μ‖)
     (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ) :
@@ -914,10 +765,6 @@ theorem weakConsistencyConst_nonneg {Cp CS CP Cinc Creg nz nz' : ℝ} (hp : 0 �
 theorem sqrt_graphSq_le_sqrt_gnSq (v : Vt1) : √(graphSq D.dt1 v) ≤ √(Q.gnSq v) :=
   Real.sqrt_le_sqrt (by unfold graphSq gnSq; nlinarith [sq_nonneg ‖Q.S1h v‖])
 
-/-- **`K₁` from regular potentials**: if `M ∈ D(d¹*)` (`⟪M, dw⟫ = ⟪M', w⟫`), then
-`weakConsistency_of_regularPotential` gives the hypothesis `hK1` of the Strang bound with
-`K₁ = C_app h · weakConsistencyConst … ‖M‖ ‖M'‖` (the graph norm is `≤` the `h`-dependent one).
-No Prop 5.9(2) is used. See [QuennevilleBelair2015], Prop 5.9. -/
 theorem consistency_S1_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
     (B : Q.Bounded CP) {Xr : Type*} [NormedAddCommGroup Xr] [NormedSpace ℝ Xr]
     {Cinc Creg h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
@@ -933,8 +780,7 @@ theorem consistency_S1_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D 
     (mul_le_mul_of_nonneg_left (sqrt_graphSq_le_sqrt_gnSq v) (by positivity))
 
 variable (Q) in
-/-- The interpolation part of `strangData`: the errors of the cochain projections in the graph
-norms seen by the shifted form, and `‖(S₁ − S₁,ₕ)u‖`. -/
+/-- The interpolation part of `strangData`. -/
 def interpErrSq (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) : ℝ :=
   ‖Q.P0 σ - σ‖ ^ 2 + ‖D.dt0 (Q.Pt0 φ - φ)‖ ^ 2 + Q.gnSq (Q.Pt1 u - u) + ‖Q.P2 M - M‖ ^ 2
     + ‖Q.Pt2 ρ - ρ‖ ^ 2 + ‖D.S1 u - Q.S1h u‖ ^ 2
@@ -947,15 +793,8 @@ theorem strangData_eq (σ : V0) (φ : Vt0) (u : Vt1) (M : W2) (ρ : Wt2) (K0 K1 
 def strangRateConst (Cp cI Λ Capp Kw : ℝ) : ℝ :=
   √(2 * (strangConst Cp + 1)) * √(cI ^ 2 + (Λ * Capp) ^ 2 + (Capp * Kw) ^ 2)
 
-/-- **`O(h)` rate of the elliptic projection (6.4) from interpolation rates** (new; combines
-(b) and (e)). Let `x` solve (6.4) for `toSegmentH Q` with the data `ellipticDataH` of an exact
-state with `dσ = S₀φ`, `|ℓ μ| ≤ Λ‖μ‖`, `M ∈ D(d¹*)` (`⟪M, dw⟫ = ⟪M', w⟫`). Assume `Stability`,
-`Bounded`, `Compatible`, regular potentials `Rg`, the consistency of `S₀,ₕ` (`happ0`, thesis
-Prop 5.9(1)), and interpolation errors `interpErrSq ≤ (c_I h)²`. Then the energy error is
-`≤ strangRateConst … · h`, with `K_w = weakConsistencyConst … ‖M‖ ‖M'‖`. The consistency
-constants `K₀ = Λ C_app h`, `K₁ = C_app h K_w` come from `consistency_S0_of_approx` and
-`consistency_S1_of_regularPotential`, so Prop 5.9(2) is not used.
-See [QuennevilleBelair2015], §6.2, (6.4), Prop 5.9. -/
+/-- Under `Stability`, `Bounded`, `Compatible`, regular potentials, `|ℓ| ≤ Λ‖·‖`, `M ∈ D(d¹*)`,
+`O(h)` consistency of `S₀,ₕ` and `interpErrSq ≤ (c_I h)²`, the energy error of (6.4) is `O(h)`. -/
 theorem strang_rate_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
     (B : Q.Bounded CP) (h54 : Q.Compatible) {Xr : Type*} [NormedAddCommGroup Xr]
     [NormedSpace ℝ Xr] {Cinc Creg h Capp Λ cI : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)

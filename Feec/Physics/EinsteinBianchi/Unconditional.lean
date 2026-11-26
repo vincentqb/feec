@@ -7,32 +7,13 @@ public import Feec.Physics.EinsteinBianchi.WaveFEM
 /-!
 # The Einstein–Bianchi system with weak symmetries on the cube, unconditionally
 
-The regularity hypothesis `curl H̊(curl, Q) = curl S⁰ H̊¹(Q; ℝ³)`
-(`Feec.Models.Cube.WeakSymmetry.CurlPotential`) is a theorem
-(`Feec.Models.Cube.WeakSymmetry.curlPotential`, `Feec.Models.Cube.RegularDecomposition`), so
-the main theorems of `Feec.Physics.EinsteinBianchi.StaticFEM` and
-`Feec.Physics.EinsteinBianchi.WaveFEM` hold without it. This file states them with the
-hypothesis discharged.
-
-## Main results
-
-* `StaticFEM.staticFEM_cube`: [QuennevilleBelair2015], §5.3, Props 5.2, 5.4, Thm 5.5 on the cube
-  with the elements of Table 5.1 (well-posedness, (5.4), discrete well-posedness, `O(h)` rates);
-* `StaticFEM.staticFEM_nonvacuous_cube`, `StaticFEM.staticFEM_nonvacuous_coupled_cube`: the
-  manufactured solutions and the convergence of their discrete solutions;
-* `WaveFEM.bgg_wave_existsUnique_cube`: existence and uniqueness for the Hodge wave equation of
-  (5.1) on the cube (Thm 4.6 for (4.16));
-* `WaveFEM.waveFEM_cube`: the semi-discrete method (6.5) of Table 6.1 ((5.4), well-posedness,
-  energy stability, `O(h)` convergence), and `WaveFEM.waveFEM_nonvacuous_cube`.
+The main theorems of `Feec.Physics.EinsteinBianchi.StaticFEM` and
+`Feec.Physics.EinsteinBianchi.WaveFEM` ([QuennevilleBelair2015], §5.3, §6.3) with the regularity
+hypothesis `CurlPotential` discharged by `Feec.Models.Cube.WeakSymmetry.curlPotential`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3 (Props 5.2, 5.4, Thm 5.5), §6.3 ((6.5), Table 6.1), Thm 4.6
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
-  §3 (regular decomposition)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -48,10 +29,8 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
 
 set_option maxHeartbeats 1000000 in
-/-- **The time-independent Einstein–Bianchi system with weak symmetries on the cube: well-posedness
-and convergence of the finite element method of Table 5.1, unconditionally**
-([QuennevilleBelair2015], §5.3, Props 5.2, 5.4, Thm 5.5): `staticFEM` with the regularity
-hypothesis discharged by `curlPotential`. -/
+/-- `staticFEM` without its hypothesis: well-posedness of (5.3) and convergence of the method of
+Table 5.1 on the cube. [QuennevilleBelair2015], Props 5.2, 5.4, Thm 5.5 (adapted) -/
 theorem staticFEM_cube :
     ((∀ f : Wv W1, ∃! xl : Feec.BGG.Xsp V0 Vt0 Vt1 × bggHilb.Wcheck,
         bggHilb.IsSaddle f xl.1 xl.2) ∧
@@ -118,9 +97,7 @@ theorem staticFEM_cube :
             (K * L * meshSize N) ^ 2 :=
   staticFEM curlPotential
 
-/-- **Non-vacuity of `staticFEM_cube`**: `staticFEM_nonvacuous` with the regularity hypothesis
-discharged; the discrete solutions of the manufactured problem converge at rate `h_N` and are
-nonzero for all large `N`. -/
+/-- `staticFEM_nonvacuous` without the regularity hypothesis. -/
 theorem staticFEM_nonvacuous_cube {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
@@ -153,8 +130,7 @@ theorem staticFEM_nonvacuous_cube {p : ℕ → Feec.Domain.SmoothingParam (Fin 3
   ⟨h.1, h.2.1, h.2.2.1, h.2.2.2.1, h.2.2.2.2.1, h.2.2.2.2.2.1, h.2.2.2.2.2.2 curlPotential⟩
 
 set_option maxHeartbeats 1000000 in
-/-- **Non-vacuity of `staticFEM_cube` with every unknown coupled**: `staticFEM_nonvacuous_coupled`
-with the regularity hypothesis discharged. -/
+/-- The conclusions of `staticFEM_nonvacuous_coupled` without the regularity hypothesis. -/
 theorem staticFEM_nonvacuous_coupled_cube {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
@@ -198,9 +174,8 @@ section Stone
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-/-- **Existence and uniqueness for the Hodge wave equation of (5.1) on the cube, unconditionally**
-([QuennevilleBelair2015], Thm 4.6 for the complex (4.16); Stone's theorem):
-`bgg_wave_existsUnique` with the regularity hypothesis discharged. -/
+/-- Existence and uniqueness for the Hodge wave equation of (5.1) on the cube: the conclusions of
+`bgg_wave_existsUnique` without the regularity hypothesis. [QuennevilleBelair2015], Thm 4.6 -/
 theorem bgg_wave_existsUnique_cube
     {U₀ : PiLp 2 (ShortHilbertComplex.W3 bggHilb.Γbar (Wv W1) (WithLp 2 (W2 × Wv W2)))}
     (hU₀ : U₀ ∈ (bggHilb.toHilbertComplex bggHilb_hyps bggS0_injective).wave.domain) {a b : ℝ}
@@ -217,9 +192,8 @@ theorem bgg_wave_existsUnique_cube
 end Stone
 
 set_option maxHeartbeats 4000000 in
-/-- **The Einstein–Bianchi wave system with weak symmetries on the cube: the semi-discrete method
-(6.5) of Table 6.1, unconditionally** ([QuennevilleBelair2015], §6.3): `waveFEM` with the
-regularity hypothesis discharged. -/
+/-- The semi-discrete method (6.5) of Table 6.1 on the cube: the conclusions of `waveFEM` without
+the regularity hypothesis. [QuennevilleBelair2015], §6.3 -/
 theorem waveFEM_cube :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -254,8 +228,7 @@ theorem waveFEM_cube :
   waveFEM curlPotential
 
 set_option maxHeartbeats 4000000 in
-/-- **Non-vacuity of `waveFEM_cube`**: `waveFEM_nonvacuous` with the regularity hypothesis
-discharged. -/
+/-- The conclusions of `waveFEM_nonvacuous` without the regularity hypothesis. -/
 theorem waveFEM_nonvacuous_cube {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ}

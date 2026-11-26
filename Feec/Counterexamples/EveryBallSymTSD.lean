@@ -4,59 +4,16 @@ public import Feec.Counterexamples.BallSymTSD
 public import Feec.Models.BoundedDomain.SymDualGeneral
 
 /-!
-# Prop 4.19 with the boundary conditions as printed fails on every ball
+# The Hessian–curl complex on balls: TSD data leave the constraint
 
-`Feec.Counterexamples.BallSymTSD` refutes the conclusion of Prop 4.19, read with its printed data
-space `H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)` (the complex
-`Feec.Models.BoundedDomain.hessCurlMax`), on the Euclidean unit ball. This file carries the
-refutation to **every Euclidean ball** `{|x - c| < R}` of `ℝ³`
-(`Feec.Models.BoundedDomain.euclBall`), and more generally to every affine image `T⁻¹ Ω'`
-(`T x = a x + b`, `a ≠ 0`) of a domain `Ω'` on which it holds.
-
-The wave operator of `hessCurlMax` is not conjugate to a rescaling of itself under dilations
-(its differentials have orders `2` and `1`), so the evolution is not transported. What is
-transported is the obstruction, which only involves the individual operators:
-
-* a **witness** (`Witness`) on `Ω` is a pair `(E, C)` with `E ∈ L²(TSD) ∩ H(curl, S) ∩
-  H̊(div div, S)`, `C ∈ L²(T)` orthogonal to `H̊(sym curl, T) ∩ L²(TSD)`, and
-  `⟪curl E, C⟫ ≠ 0`;
-* a witness gives the failure of Prop 4.19 (`Witness.not_propagates`): from `x₀ = (0, E, 0) ∈
-  D(L) ∩ K`, `K = {0} × L²(TSD) × L²(TSD)`, the unique strong solution on every `[0, T]` leaves
-  `K` (the criterion `Feec.Counterexamples.BallSymTSD.not_propagate_of_inner` with
-  `N = (0, 0, C)`);
-* witnesses pull back along affine maps (`Witness.pull`), by the transport of `curl`, `div div`,
-  `sym curl` and `L²(TSD)` (`Feec.Models.BoundedDomain.hessCurlMax_d₁_pull`,
-  `adjoint_hessCurlMax_d₀_pull`, `adjoint_hessCurlMax_d₁_pull`, `pullF_mem_tsd_iff`): the factors
-  `a` and `|a|⁻³` multiply `⟪curl E, C⟫`;
-* the unit ball carries the witness `(E₀, curl Q)` of `Feec.Counterexamples.BallSymTSD`
-  (`witness_ball3`), and `{|x - c| < R}` is the preimage of the unit ball under
-  `x ↦ (x - c)/R` (`preimage_ball3`).
-
-## Main results
-
-* `Witness`, `Witness.not_propagates`, `Witness.curl_not_mem_closure`, `Witness.pull`,
-  `witness_ball3`.
-* **`not_dense_tsdT`**: on every ball, `L²(TSD) ∩ H̊(sym curl, T)` is not dense in `L²(TSD)`.
-* **`tsd_not_propagates`**: on every ball `{|x - c| < R}`, `R > 0`, the TSD datum
-  `x₀ = (0, E₀ ∘ T, 0)` lies in `D(L) ∩ K`, the Hodge wave equation of `hessCurlMax` has a unique
-  strong solution from it on every `[0, T]`, and it leaves `K`.
-
-## Scope
-
-The obstruction is carried by affine maps only. For other domains (e.g. bounded sets of
-revolution about an axis) the same mechanism is expected: `div div (χ E₀) = 0` holds for every
-cut-off `χ` invariant under the rotations about the axis (`∇χ` and `∇²χ` are orthogonal to the
-generator `e₃ × x`), so `E₀ ∈ H̊(div div, S)`; but the test field `Q = sym ∇v`, `v ∈ H̊¹(Ω)`, and
-the sign of the boundary pairing `⟪curl E₀, curl Q⟫` (a boundary integral of the tangential trace
-of `curl v`) depend on the boundary, and are not formalized. Whether the conclusion fails on
-every bounded domain is not decided.
+On every Euclidean ball of `ℝ³`, for the complex `hessCurlMax` of [QuennevilleBelair2015], §4.11,
+the strong solution from the TSD datum `(0, E₀((x - c)/R), 0)` leaves `{0} × L²(TSD) × L²(TSD)`.
+The obstruction, a `Witness`, pulls back along affine maps.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Lemma 3.5), §4.11 ((4.16)–(4.18), Prop 4.19)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (change of variables in Sobolev spaces)
+  §3.4, §4.11
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -76,9 +33,7 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 /-! ### Witnesses of non-propagation -/
 
-/-- A **witness** that Prop 4.19 with its printed boundary conditions fails on `Ω`: an electric
-field `E ∈ L²(TSD) ∩ H(curl, S) ∩ H̊(div div, S)` and a magnetic test field `C ∈ L²(T)`
-orthogonal to `H̊(sym curl, T) ∩ L²(TSD)`, with `⟪curl E, C⟫ ≠ 0`. -/
+/-- TSD `E` with `(0, E, 0) ∈ D(L)` and `C ⊥ H̊(sym curl, T) ∩ L²(TSD)` with `⟪curl E, C⟫ ≠ 0`. -/
 structure Witness {Ω : Set R3} (hΩ : IsOpen Ω) (E : symSub ℝ Ω) (C : trSub ℝ Ω) : Prop where
   mem_tsd : E ∈ tsdS Ω
   mem_d₁ : E ∈ (hessCurlMax ℝ hΩ).d₁.domain
@@ -99,7 +54,6 @@ theorem Witness.mem_K (h : Witness hΩ E C) :
       (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ Ω)) (tsdS Ω) (tsdT Ω)) :=
   ShortHilbertComplex.mem_totalSub_family3.2 ⟨Submodule.zero_mem _, h.mem_tsd, Submodule.zero_mem _⟩
 
-/-- `N = (0, 0, C)` is orthogonal to `D(L) ∩ K`. -/
 theorem Witness.inner_eq_zero (h : Witness hΩ E C)
     (y : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ Ω) (symSub ℝ Ω) (trSub ℝ Ω)))
     (hy : y ∈ (hessCurlMax ℝ hΩ).wave.domain)
@@ -114,9 +68,8 @@ theorem Witness.inner_eq_zero (h : Witness hΩ E C)
   erw [inner_zero_right, inner_zero_right, zero_add, zero_add]
   exact h.orth ⟨_, hD.2.2.2⟩ hK.2.2
 
-/-- **A witness refutes Prop 4.19**: from `x₀ = (0, E, 0) ∈ D(L) ∩ K` the Hodge wave equation of
-`hessCurlMax` has, on every `[0, T]`, `T > 0`, a unique strong solution (the wave group orbit),
-and it leaves `K = {0} × L²(TSD) × L²(TSD)`; every strong solution from `x₀` leaves `K`. -/
+/-- From `(0, E, 0)`, the Hodge wave equation of `hessCurlMax` has a unique strong solution on
+every `[0, T]`, `T > 0`, and it leaves `K = {0} × L²(TSD) × L²(TSD)`. -/
 theorem Witness.not_propagates (h : Witness hΩ E C) :
     ∀ T > 0, Evolution.IsStrongSolution (hessCurlMax ℝ hΩ).wave (Icc 0 T) 0
         (fun t => (hessCurlMax ℝ hΩ).toHilbertComplex.waveGroup.S t
@@ -140,9 +93,6 @@ theorem Witness.not_propagates (h : Witness hΩ E C) :
   rw [inner_negL_ini _ hx h.mem_d₁]
   exact h.pair
 
-/-- **A witness refutes the density hypothesis in the magnetic slot**: `curl E ∈ L²(TSD)`
-(Lemma 3.5) but `curl E` is not in the closure of `L²(TSD) ∩ H̊(sym curl, T)`, which `C` annihilates
-while `⟪curl E, C⟫ ≠ 0`. -/
 theorem Witness.curl_not_mem_closure (h : Witness hΩ E C) :
     (hessCurlMax ℝ hΩ).d₁ ⟨E, h.mem_d₁⟩ ∈ tsdT Ω ∧
       (hessCurlMax ℝ hΩ).d₁ ⟨E, h.mem_d₁⟩ ∉
@@ -162,8 +112,7 @@ section Pull
 variable {a : ℝ} (ha : a ≠ 0) (b : R3) {Ω' : Set R3} (hΩ' : IsOpen Ω')
   (hT : aff a b ⁻¹' Ω' = Ω)
 
-/-- **Witnesses pull back along affine maps**: a witness `(E, C)` on `Ω'` gives the witness
-`(E ∘ T, C ∘ T)` on `Ω = T⁻¹ Ω'`, `T x = a x + b`; the pairing is multiplied by `a |a|⁻³`. -/
+/-- A witness `(E, C)` on `Ω'` gives the witness `(E ∘ T, C ∘ T)` on `T⁻¹ Ω'`, `T x = a x + b`. -/
 theorem Witness.pull {E : symSub ℝ Ω'} {C : trSub ℝ Ω'} (h : Witness hΩ' E C) :
     Witness (isOpen_of_aff b hΩ' hT) (pullSym ha b hΩ' hT E) (pullTr ha b hΩ' hT C) := by
   have hd₁ := hessCurlMax_d₁_pull (𝕜 := ℝ) ha b hΩ' hT
@@ -203,7 +152,7 @@ end Pull
 
 /-! ### Every ball -/
 
-/-- **The unit ball carries a witness**: `(E₀, curl Q)` of `Feec.Counterexamples.BallSymTSD`. -/
+/-- The unit ball carries the witness `(E₀, curl Q)` of `Feec.Counterexamples.BallSymTSD`. -/
 theorem witness_ball3 : Witness isOpen_ball3 E0 ((hessCurlMax ℝ isOpen_ball3).d₁ ⟨Qs, Qs_mem_d1.1⟩) where
   mem_tsd := E0_mem_TSDS
   mem_d₁ := E0_mem_d1.1
@@ -218,7 +167,6 @@ theorem witness_ball3 : Witness isOpen_ball3 E0 ((hessCurlMax ℝ isOpen_ball3).
     have h := inner_negL_x0_ne_zero
     rwa [inner_negL_x0] at h
 
-/-- `{|x - c| < R}` is the preimage of the unit ball under `x ↦ (x - c)/R`. -/
 theorem preimage_ball3 (c : R3) {R : ℝ} (hR : 0 < R) :
     aff R⁻¹ (-(R⁻¹ • c)) ⁻¹' ball3 = euclBall c R := by
   ext x
@@ -232,7 +180,6 @@ theorem preimage_ball3 (c : R3) {R : ℝ} (hR : 0 < R) :
   rw [e, div_lt_one (by positivity)]
   rfl
 
-/-- The witness on `{|x - c| < R}`: the pull-back of `(E₀, curl Q)` along `x ↦ (x - c)/R`. -/
 theorem witness_ballE (c : R3) {R : ℝ} (hR : 0 < R) :
     Witness (isOpen_euclBall c R)
       (pullSym (inv_ne_zero hR.ne') (-(R⁻¹ • c)) isOpen_ball3 (preimage_ball3 c hR) E0)
@@ -244,11 +191,8 @@ theorem witness_ballE (c : R3) {R : ℝ} (hR : 0 < R) :
 def E0R (c : R3) {R : ℝ} (hR : 0 < R) : symSub ℝ (euclBall c R) :=
   pullSym (inv_ne_zero hR.ne') (-(R⁻¹ • c)) isOpen_ball3 (preimage_ball3 c hR) E0
 
-/-- **The conclusion of Prop 4.19 fails for the boundary conditions as printed, on every ball**
-`{|x - c| < R}` of `ℝ³` (`hessCurlMax`, `D(L) = H² × (H(curl, S) ∩ H̊(div div, S)) ×
-H̊(sym curl, T)`): the datum `x₀ = (0, E₀((x - c)/R), 0)` lies in `D(L) ∩ K`,
-`K = {0} × L²(TSD) × L²(TSD)`, and for every `T > 0` the Hodge wave equation has a unique strong
-solution on `[0, T]` from `x₀`, which leaves `K`. [QuennevilleBelair2015], Prop. 4.19 (§4.11) -/
+/-- On every ball of `ℝ³`, the TSD datum `(0, E₀((x - c)/R), 0) ∈ D(L) ∩ K` of `hessCurlMax` has a
+unique strong solution on every `[0, T]`, `T > 0`, and it leaves `K`. -/
 theorem tsd_not_propagates (c : R3) {R : ℝ} (hR : 0 < R) :
     E0R c hR ∈ tsdS (euclBall c R) ∧
       mk3 (0 : L2 ℝ (euclBall c R)) (E0R c hR) (0 : trSub ℝ (euclBall c R)) ∈
@@ -268,11 +212,7 @@ theorem tsd_not_propagates (c : R3) {R : ℝ} (hR : 0 < R) :
   ⟨(witness_ballE c hR).mem_tsd, (witness_ballE c hR).mem_domain, (witness_ballE c hR).mem_K,
     (witness_ballE c hR).not_propagates⟩
 
-/-- **The density hypothesis of Prop 4.19 fails on every ball**, read with the boundary condition
-of the printed data space `H̊(sym curl, T)` (as in `BoundedSymTSD.not_dense_hessCurlMax`; the
-printed hypothesis names `H(sym curl, T) ∩ L²(TSD)`): on `{|x - c| < R}` the field
-`curl (E₀ ∘ T) ∈ L²(TSD)` is not in the closure of `L²(TSD) ∩ H̊(sym curl, T)`, so that
-intersection is not dense in `L²(TSD)`. -/
+/-- On every ball, `L²(TSD) ∩ H̊(sym curl, T)` is not dense in `L²(TSD)`. -/
 theorem not_dense_tsdT (c : R3) {R : ℝ} (hR : 0 < R) :
     closure ((tsdT (euclBall c R) : Set (trSub ℝ (euclBall c R))) ∩
       (hessCurlMax ℝ (isOpen_euclBall c R)).d₁†.domain) ≠ (tsdT (euclBall c R) : Set _) := by

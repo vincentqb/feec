@@ -5,27 +5,13 @@ public import Feec.Variational.SaddlePoint
 /-!
 # Fortin operators and the discrete inf-sup condition
 
-A Fortin operator for a constraint form `b : X →L[𝕜] Y →SL[σ] 𝕜` and discrete spaces
-`Xₕ ⊆ X`, `Yₕ ⊆ Y` is a map `P : X → Xₕ` with `b (P v) q = b v q` for `q ∈ Yₕ` and
-`‖P v‖ ≤ C ‖v‖`. It transfers the continuous inf-sup condition of `b` (inf over `q ∈ Yₕ`) to
-the discrete one with constant `β / C`.
-
-## Main results
-
-* `IsFortinOperator.discrete_infSup`: Fortin's lemma (any normed spaces, bilinear or
-  sesquilinear `b`; `P` need not be linear).
-* `existsUnique_discrete_isSaddleSolution`: discrete Brezzi: with a Fortin operator and the
-  inf-sup property of `a` on the discrete kernel, the discrete saddle point problem on closed
-  `Xₕ × Yₕ` is uniquely solvable.
+A Fortin operator `P : X → Xₕ` for a constraint form `b`, with `b (P v) q = b v q` for `q ∈ Yₕ` and
+`‖P v‖ ≤ C ‖v‖`, transfers the inf-sup condition of `b` to `Xₕ` with constant `β / C`, which gives
+the discrete well-posedness of saddle point problems.
 
 ## References
 
-* [M. Fortin, *An analysis of the convergence of mixed finite element methods*][Fortin1977]
-* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
-  §5.4
 * [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
-  (approximation of saddle point problems)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -53,7 +39,7 @@ variable {b : X →L[𝕜] Y →SL[σ] 𝕜} {Xh : Submodule 𝕜 X} {Yh : Submo
   {C β : ℝ}
 
 /-- **Fortin's lemma**: a Fortin operator with bound `C` transfers the inf-sup condition
-`β ‖q‖ ≤ sup_v |b v q| / ‖v‖`, needed on `Yₕ` only, to the sup over `Xₕ` with constant `β / C`. -/
+`β ‖q‖ ≤ sup_v |b v q| / ‖v‖` on `Yₕ` to the sup over `Xₕ`, with constant `β / C`. -/
 theorem IsFortinOperator.discrete_infSup (hP : IsFortinOperator b Xh Yh P C) (hC : 0 < C)
     (hb : ∀ q ∈ Yh, β * ‖q‖ ≤ ‖b.flip q‖) :
     ∀ q ∈ Yh, β / C * ‖q‖ ≤ ‖(b.flip q).comp Xh.subtypeL‖ := by
@@ -78,13 +64,9 @@ variable {𝕜 X Y : Type*} [RCLike 𝕜]
   {a : X →L[𝕜] X →L⋆[𝕜] 𝕜} {b : X →L[𝕜] Y →L⋆[𝕜] 𝕜} {Xh : Submodule 𝕜 X}
   {Yh : Submodule 𝕜 Y} {P : X → X} {C β γ : ℝ}
 
-/-- **Discrete Brezzi via Fortin.** On complete (e.g. closed or finite-dimensional) discrete
-spaces `Xₕ`, `Yₕ`, let `Bₕ` be the discrete constraint operator of `b` (`b vₕ qₕ = ⟪qₕ, Bₕ vₕ⟫`).
-If `b` has the continuous inf-sup property (inf over `q ∈ Yₕ`), a Fortin operator with bound `C`
-exists, and `a` has the inf-sup property and separates on the discrete kernel `ker Bₕ`, then the
-discrete saddle point problem is uniquely solvable for all discrete data.
-[QuennevilleBelair2015], Thm 4.11 (discrete form); the discrete conditions go back to
-[Brezzi1974]. -/
+/-- **Discrete well-posedness via Fortin**: with a Fortin operator, the inf-sup property of `b`,
+and the inf-sup property and separation of `a` on the discrete kernel, the discrete saddle point
+problem is uniquely solvable. [QuennevilleBelair2015], Thm 4.11 (adapted); [Brezzi1974] -/
 theorem existsUnique_discrete_isSaddleSolution [CompleteSpace Xh] [CompleteSpace Yh]
     (hP : IsFortinOperator b Xh Yh P C) (hC : 0 < C) (hβ : 0 < β)
     (hb : ∀ q ∈ Yh, β * ‖q‖ ≤ ‖b.flip q‖)

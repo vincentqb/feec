@@ -8,59 +8,21 @@ public import Feec.Semigroup.Invariance
 /-!
 # Reducing subcomplexes and constraint propagation for the Hodge wave equation
 
-A family of closed subspaces `S i ⊆ W i` is a **reducing subcomplex** of a Hilbert complex if
-every differential is reduced by it: `P_{S i} D(d i j) ⊆ D(d i j)` and
-`d i j P_{S i} = P_{S j} d i j`. Then the total subspace `∏ S i` reduces the total differential,
-its adjoint, the Dirac operator and the wave operator, so it is invariant under the wave group
-and under every strong solution of the Hodge wave equation with data and forcing in it.
-
-Conversely a closed subspace `K` of the total space reduces the wave operator `L` iff it is
-invariant under the wave group `e^{tL}` (Stone), and, when the complex has a grading (a parity
-flipping along the arrows, e.g. `i` odd on a window), forward invariance suffices: the grading
-`R` reverses time, `L R = -R L`.
-
-## Main definitions
-
-* `Feec.HilbertComplex.totalSub S`: the subspace `∏ S i` of `PiLp 2 W`, with
-  `totalSub_starProjection_apply` (`P = ∏ P_{S i}`).
-* `Feec.HilbertComplex.ReducingSubcomplex H S`.
-* `Feec.HilbertComplex.waveGroup H`: the isometric group `e^{tL}` of the wave operator.
-* `Feec.HilbertComplex.reversal 𝕜 p`: the grading operator `(R x) i = ± x i` of a parity
-  `p : ι → Bool` flipping along every arrow (`ComplexShape.window_parity`).
-* `Feec.ShortHilbertComplex.divFreeSub S Y`: the constraint family `{0} × N(d₀†) × Y`.
+A reducing subcomplex is a family of closed subspaces `S i ⊆ W i` reducing every differential; its
+total subspace reduces the wave operator `L`, so solutions with data and forcing in it stay in it.
+A closed subspace reduces `L` iff the wave group leaves it invariant; for a graded complex and a
+grading-invariant `K` with `D(L) ∩ K` dense, forward invariance suffices.
 
 ## Main results
 
-* `LinearPMap.isReducingPair_of_orthogonal_le_ker` (`Kᗮ ⊆ N(T)`, `R(T) ⊆ L`) and
-  `LinearPMap.isReducingPair_of_le_ker` (`K ⊆ N(T)`, `R(T) ⊥ L`): the two ways a constraint
-  pair reduces one differential; `IsReducingPair.add`, `.sub`, `.neg`, `isReducingPair_zero`.
-* `ReducingSubcomplex.dual`, `.orthogonal`, `ReducingSubcomplex.of_rel`.
-* `ReducingSubcomplex.isReducing_totalD`, `.isReducing_wave`.
-* **`ReducingSubcomplex.propagates`**: strong solutions of `U' = L U + F` with `U a` and `F` in
-  `∏ S i` stay in `∏ S i` (Thesis Props 4.16, 4.17, 4.19, any length, any `S₀`).
-  `ReducingSubcomplex.existsUnique_mem`: with existence and uniqueness.
-* **`HilbertComplex.isReducing_iff_waveGroup_invariant`**: `K` reduces `L` iff `e^{tL} K ⊆ K`
-  for all `t`; `ReducingSubcomplex.invariantCore_eq`.
-* `HilbertComplex.wave_reversal`, `HilbertComplex.reversal_waveGroup`: `L R = -R L` and
-  `R e^{tL} = e^{-tL} R`.
-* **`HilbertComplex.isReducing_iff_forall_isStrongSolution`**: for a graded complex and a closed
-  `R`-invariant `K` with `D(L) ∩ K` dense in `K`, `K` reduces `L` iff every strong solution of
-  `U' = L U` on `[0, T]` starting in `D(L) ∩ K` stays in `K` (the projection hypothesis of
-  Thesis Prop 4.17 is necessary as well as sufficient).
-* `C0Group.IsIsometric.intertwines_S`, `C0Group.IsIsometric.antiIntertwines_S`: a bounded map
-  intertwining two generators (resp. a generator with minus itself) intertwines the groups;
-  `C0Group.IsIsometric.isReducing_of_forward_invariant`: under a time reversal, forward
-  invariance of a closed subspace implies that it reduces the generator.
-* `ShortHilbertComplex.reducingSubcomplex_divFreeSub`, `ShortHilbertComplex.divFree_propagates`:
-  Thesis Prop 4.16 for every short complex and every closed `Y ⊇ R(d₁)`.
+* `HilbertComplex.ReducingSubcomplex.propagates`: constraint propagation.
+* `HilbertComplex.isReducing_iff_waveGroup_invariant`: reducing iff invariant under `e^{tL}`.
+* `HilbertComplex.isReducing_iff_forall_isStrongSolution`: the converse for graded complexes.
+* `ShortHilbertComplex.divFree_propagates`: the constraint `{0} × N(d₀†) × Y` propagates.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (Thm 4.4, Cor 4.5), §4.9 (Prop 4.16), §4.10 (Props 4.17, 4.18), §4.11 (Prop 4.19)
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reducing subspaces)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.10
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -79,18 +41,14 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
   {K : Submodule 𝕜 E} {L : Submodule 𝕜 F} [K.HasOrthogonalProjection]
   [L.HasOrthogonalProjection]
 
-/-- The zero operator (domain `⊤`) is reduced by every pair. -/
 theorem isReducingPair_zero (K : Submodule 𝕜 E) (L : Submodule 𝕜 F) [K.HasOrthogonalProjection]
     [L.HasOrthogonalProjection] : (0 : E →ₗ.[𝕜] F).IsReducingPair K L :=
   ⟨fun _ => Submodule.mem_top, fun x => by
     rw [apply_eq_zero_of_eq_zero rfl, apply_eq_zero_of_eq_zero rfl x]; exact (_root_.map_zero L.starProjection).symm⟩
 
-/-- A partial map equal to `0` is reduced by every pair. -/
 theorem isReducingPair_of_eq_zero {T : E →ₗ.[𝕜] F} (hT : T = 0) : T.IsReducingPair K L := by
   subst hT; exact isReducingPair_zero K L
 
-/-- **Constraints containing the coexact part**: if `Kᗮ ⊆ N(T)` and `R(T) ⊆ L`, then `(K, L)`
-reduces `T` (`T P_K = T = P_L T`). -/
 theorem isReducingPair_of_orthogonal_le_ker {T : E →ₗ.[𝕜] F} (hK : Kᗮ ≤ T.ker)
     (hL : ∀ x : T.domain, T x ∈ L) : T.IsReducingPair K L := by
   have hz : ∀ x : T.domain, (x : E) - K.starProjection x ∈ T.ker := fun x =>
@@ -104,8 +62,6 @@ theorem isReducingPair_of_orthogonal_le_ker {T : E →ₗ.[𝕜] F} (hK : Kᗮ �
   rw [e, LinearPMap.map_sub, (coe_mem_ker_iff (x := ⟨_, T.ker_le_domain (hz x)⟩)).1 (hz x),
     sub_zero, (L.starProjection_eq_self_iff).2 (hL x)]
 
-/-- **Constraints inside the kernel**: if `K ⊆ N(T)` and `R(T) ⊥ L`, then `(K, L)` reduces `T`
-(`T P_K = 0 = P_L T`). -/
 theorem isReducingPair_of_le_ker {T : E →ₗ.[𝕜] F} (hK : K ≤ T.ker)
     (hL : ∀ x : T.domain, T x ∈ Lᗮ) : T.IsReducingPair K L := by
   have hk : ∀ x : T.domain, K.starProjection (x : E) ∈ T.ker := fun x =>
@@ -156,9 +112,6 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
   [CompleteSpace F]
   {G : C0Group 𝕜 E} {G' : C0Group 𝕜 F}
 
-/-- **Intertwining generators intertwine groups**: if `J D(A) ⊆ D(B)` and `B J = J A` on `D(A)`
-for the generators `A`, `B` of groups `G`, `G'` with `G'` isometric, then
-`J (S t x) = S' t (J x)` for all `t`, `x`. Energy argument on `e(s) = J S s x - S' s J x`. -/
 theorem IsIsometric.intertwines_S (hG' : G'.IsIsometric) (J : E →L[𝕜] F)
     (hJ : Intertwines J G.generator G'.generator) (t : ℝ) (x : E) :
     J (G.S t x) = G'.S t (J x) := by
@@ -184,8 +137,6 @@ theorem IsIsometric.intertwines_S (hG' : G'.IsIsometric) (J : E →L[𝕜] F)
     ((G'.S t).continuous.comp J.continuous) (fun x hx => hD ⟨x, hx⟩)
   exact congrFun this x
 
-/-- **Anti-intertwining reverses time**: if `J D(A) ⊆ D(A)` and `A J = -J A` on `D(A)` for the
-generator `A` of an isometric group, then `J (S t x) = S (-t) (J x)`. -/
 theorem IsIsometric.antiIntertwines_S (hG : G.IsIsometric) (J : E →L[𝕜] E)
     (hJ : Intertwines J G.generator (-G.generator)) (t : ℝ) (x : E) :
     J (G.S t x) = G.S (-t) (J x) := by
@@ -214,9 +165,6 @@ theorem IsIsometric.antiIntertwines_S (hG : G.IsIsometric) (J : E →L[𝕜] E)
     ((G.S (-t)).continuous.comp J.continuous) (fun x hx => hD ⟨x, hx⟩)
   exact congrFun this x
 
-/-- **Forward invariance suffices under a time reversal**: let `R` be an involution with
-`R D(A) ⊆ D(A)` and `A R = -R A` (so `R S t = S (-t) R`), and `K` a closed `R`-invariant subspace
-with `D(A) ∩ K` dense in `K`. If `S t (D(A) ∩ K) ⊆ K` for all `t ≥ 0`, then `K` reduces `A`. -/
 theorem IsIsometric.isReducing_of_forward_invariant (hG : G.IsIsometric) (R : E →L[𝕜] E)
     (hR : Intertwines R G.generator (-G.generator)) (hRR : ∀ x, R (R x) = x)
     (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] (hRK : ∀ x ∈ K, R x ∈ K)
@@ -290,7 +238,6 @@ theorem sub_totalProj_mem_orthogonal (x : PiLp 2 W) : x - totalProj S x ∈ (tot
 instance : (totalSub S).HasOrthogonalProjection :=
   ⟨fun x => ⟨_, totalProj_mem x, sub_totalProj_mem_orthogonal x⟩⟩
 
-/-- `P_{∏ S i} = ∏ P_{S i}`. -/
 theorem totalSub_starProjection_apply (x : PiLp 2 W) (i : ι) :
     (totalSub S).starProjection x i = (S i).starProjection (x i) := by
   rw [Submodule.eq_starProjection_of_mem_orthogonal (totalProj_mem x)
@@ -309,9 +256,7 @@ variable [∀ i, CompleteSpace (W i)]
 
 variable (H : HilbertComplex 𝕜 c W)
 
-/-- A **reducing subcomplex** of `H`: closed subspaces `S i ⊆ W i` reducing every differential,
-`P_{S i} D(d i j) ⊆ D(d i j)` and `d i j P_{S i} = P_{S j} d i j`. The constraint subspaces of
-the Hodge wave equation (Thesis Props 4.16, 4.17, 4.19). -/
+/-- A reducing subcomplex: closed subspaces `S i ⊆ W i` reducing every differential. -/
 structure ReducingSubcomplex (S : ∀ i, Submodule 𝕜 (W i)) [∀ i, (S i).HasOrthogonalProjection] :
     Prop where
   reduces : ∀ i j, (H.d i j).IsReducingPair (S i) (S j)
@@ -320,7 +265,6 @@ namespace ReducingSubcomplex
 
 variable {H} {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, (S i).HasOrthogonalProjection]
 
-/-- Only the arrows of the shape need checking. -/
 theorem of_rel (h : ∀ i j, c.Rel i j → (H.d i j).IsReducingPair (S i) (S j)) :
     H.ReducingSubcomplex S :=
   ⟨fun i j => by
@@ -330,22 +274,18 @@ theorem of_rel (h : ∀ i j, c.Rel i j → (H.d i j).IsReducingPair (S i) (S j))
 theorem top : H.ReducingSubcomplex fun i => (⊤ : Submodule 𝕜 (W i)) :=
   ⟨fun _ _ => isReducingPair_top _⟩
 
-/-- The orthogonal complements of a reducing subcomplex form a reducing subcomplex. -/
 theorem orthogonal (h : H.ReducingSubcomplex S) : H.ReducingSubcomplex fun i => (S i)ᗮ :=
   ⟨fun i j => (h.reduces i j).orthogonal⟩
 
-/-- A reducing subcomplex of `H` is a reducing subcomplex of the dual complex. -/
 theorem dual (h : H.ReducingSubcomplex S) : H.dual.ReducingSubcomplex S :=
   ⟨fun i j => (h.reduces j i).adjoint (H.dense j i)⟩
 
-/-- A reducing subcomplex maps `D(d i j) ∩ S i` into `S j`. -/
 theorem mapsTo (h : H.ReducingSubcomplex S) {i j : ι} (x : (H.d i j).domain)
     (hx : (x : W i) ∈ S i) : H.d i j x ∈ S j :=
   (h.reduces i j).mapsTo x hx
 
 variable [Fintype ι]
 
-/-- A reducing subcomplex reduces the total differential. -/
 theorem isReducing_totalD (h : H.ReducingSubcomplex S) : H.totalD.IsReducing (totalSub S) := by
   have hmem : ∀ x : H.totalD.domain, (totalSub S).starProjection (x : PiLp 2 W) ∈
       H.totalD.domain := fun x i j => by
@@ -361,35 +301,26 @@ theorem isReducing_dual_totalD (h : H.ReducingSubcomplex S) :
     H.dual.totalD.IsReducing (totalSub S) :=
   h.dual.isReducing_totalD
 
-/-- **A reducing subcomplex reduces the wave operator** `L = 𝐝 − 𝐝*`. -/
 theorem isReducing_wave (h : H.ReducingSubcomplex S) : H.wave.IsReducing (totalSub S) :=
   h.isReducing_totalD.sub h.isReducing_dual_totalD
 
-/-- A reducing subcomplex reduces `-L` (the sign convention `ξ' = -L ξ` of Thesis (4.4)). -/
 theorem isReducing_neg_wave (h : H.ReducingSubcomplex S) : (-H.wave).IsReducing (totalSub S) :=
   h.isReducing_wave.neg
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **Constraint propagation for the Hodge wave equation**: if `S` is a reducing subcomplex, every
-strong solution of `U' = L U + F` on `[a, b]` with `U a ∈ ∏ S i` and `F` valued in `∏ S i` stays
-in `∏ S i`. Any length, any shape, any `S₀`; no density or closed range.
-[QuennevilleBelair2015], Prop 4.16, Prop 4.17, Prop 4.19, Cor 4.5 -/
+/-- **Constraint propagation**: strong solutions of `U' = L U + F` with `U a`, `F` in `∏ S i` stay
+in `∏ S i`. [QuennevilleBelair2015], Props 4.16, 4.17, 4.19 (adapted) -/
 theorem propagates (h : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ → PiLp 2 W}
     (hU : Evolution.IsStrongSolution H.wave (Icc a b) F U) (h0 : U a ∈ totalSub S)
     (hF : ∀ t ∈ Icc a b, F t ∈ totalSub S) : ∀ t ∈ Icc a b, U t ∈ totalSub S :=
   hU.mem_of_isReducing H.isSkewAdjoint_wave.isDissipative h.isReducing_wave h0 hF
 
-/-- Constraint propagation for `U' = -L U + F` (Thesis (4.4)). -/
 theorem propagates_neg (h : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ → PiLp 2 W}
     (hU : Evolution.IsStrongSolution (-H.wave) (Icc a b) F U) (h0 : U a ∈ totalSub S)
     (hF : ∀ t ∈ Icc a b, F t ∈ totalSub S) : ∀ t ∈ Icc a b, U t ∈ totalSub S :=
   hU.mem_of_isReducing H.isSkewAdjoint_wave.neg.isDissipative h.isReducing_neg_wave h0 hF
 
-/-- **Constraint propagation with existence and uniqueness**: for `U₀ ∈ D(L) ∩ ∏ S i` and
-admissible forcing valued in `∏ S i`, `U' = L U + F`, `U a = U₀` has a classical solution on
-`[a, b]`, unique among strong solutions, and it stays in `∏ S i`.
-[QuennevilleBelair2015], Prop 4.16, Prop 4.17, Prop 4.19 -/
 theorem existsUnique_mem (h : H.ReducingSubcomplex S) {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.wave.domain)
     (hU₀S : U₀ ∈ totalSub S) {F : ℝ → PiLp 2 W} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible H.wave a b F) (hFS : ∀ t ∈ Icc a b, F t ∈ totalSub S) :
@@ -407,8 +338,7 @@ section WaveGroup
 
 variable [Fintype ι] [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- The **wave group** `e^{tL}` of a finite Hilbert complex: the isometric group generated by
-the skew-adjoint wave operator (Stone). -/
+/-- The wave group `e^{tL}` of a finite Hilbert complex. -/
 def waveGroup : C0Group 𝕜 (PiLp 2 W) := H.isSkewAdjoint_wave.group
 
 theorem isIsometric_waveGroup : H.waveGroup.IsIsometric := H.isSkewAdjoint_wave.isIsometric_group
@@ -416,16 +346,13 @@ theorem isIsometric_waveGroup : H.waveGroup.IsIsometric := H.isSkewAdjoint_wave.
 @[simp] theorem generator_waveGroup : H.waveGroup.generator = H.wave :=
   H.isSkewAdjoint_wave.generator_group
 
-/-- **Reducing subspaces of the wave operator are the invariant subspaces of the wave group**:
-a closed `K ⊆ PiLp 2 W` reduces `L` iff `e^{tL} K ⊆ K` for every `t ∈ ℝ`.
-[QuennevilleBelair2015], Prop 4.17 -/
+/-- **Reducing subspaces of `L` are the invariant subspaces of the wave group**: a closed `K`
+reduces `L` iff `e^{tL} K ⊆ K` for every `t`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem isReducing_iff_waveGroup_invariant (K : Submodule 𝕜 (PiLp 2 W))
     [K.HasOrthogonalProjection] :
     H.wave.IsReducing K ↔ ∀ t, K.map (H.waveGroup.S t : PiLp 2 W →ₗ[𝕜] PiLp 2 W) ≤ K := by
   rw [← (H.isIsometric_waveGroup).isReducing_iff_invariant, generator_waveGroup]
 
-/-- The invariant core of a closed `K` under the wave group is the largest reducing subspace of
-`L` contained in `K`. -/
 theorem isReducing_invariantCore_waveGroup (K : Submodule 𝕜 (PiLp 2 W))
     [K.HasOrthogonalProjection] : H.wave.IsReducing (H.waveGroup.invariantCore K) := by
   have := H.isIsometric_waveGroup.isReducing_invariantCore (K := K)
@@ -439,13 +366,11 @@ namespace ReducingSubcomplex
 
 variable {H} {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, (S i).HasOrthogonalProjection]
 
-/-- The wave group preserves `∏ S i`. -/
 theorem waveGroup_mem (h : H.ReducingSubcomplex S) (t : ℝ) {x : PiLp 2 W}
     (hx : x ∈ totalSub S) : H.waveGroup.S t x ∈ totalSub S :=
   C0Group.map_le_iff_forall.1 ((H.isReducing_iff_waveGroup_invariant _).1 h.isReducing_wave)
     t x hx
 
-/-- `∏ S i` is its own invariant core. -/
 theorem invariantCore_eq (h : H.ReducingSubcomplex S) :
     H.waveGroup.invariantCore (totalSub S) = totalSub S :=
   C0Group.invariantCore_eq_self_iff.2 ((H.isReducing_iff_waveGroup_invariant _).1
@@ -490,9 +415,6 @@ theorem reversal_reversal (p : ι → Bool) (x : PiLp 2 W) :
     reversal 𝕜 p (reversal 𝕜 p x) = x :=
   PiLp.ext fun i => by rw [reversal_apply, reversal_apply, smul_smul, paritySign_mul_self, one_smul]
 
-/-- **A grading reverses the wave operator**: if the parity `p` flips along every arrow of the
-shape, `R D(L) ⊆ D(L)` and `L R = -R L`. On a window `p i = (i odd)`; for the short complex
-this is the time reversal `(σ, u, ρ) ↦ (-σ, u, -ρ)` of Thesis (4.14). -/
 theorem wave_reversal {p : ι → Bool} (hp : ∀ i j, c.Rel i j → p j ≠ p i) :
     Intertwines ((reversal 𝕜 p : PiLp 2 W ≃ₗᵢ[𝕜] PiLp 2 W) : PiLp 2 W →L[𝕜] PiLp 2 W) H.wave
       (-H.wave) := by
@@ -530,16 +452,12 @@ theorem wave_reversal {p : ι → Bool} (hp : ∀ i j, c.Rel i j → p j ≠ p i
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **Time reversal**: `R e^{tL} = e^{-tL} R` for a grading `R`. -/
 theorem reversal_waveGroup {p : ι → Bool} (hp : ∀ i j, c.Rel i j → p j ≠ p i) (t : ℝ)
     (x : PiLp 2 W) : reversal 𝕜 p (H.waveGroup.S t x) = H.waveGroup.S (-t) (reversal 𝕜 p x) := by
   have h := H.wave_reversal hp
   rw [← generator_waveGroup] at h
   exact H.isIsometric_waveGroup.antiIntertwines_S _ h t x
 
-/-- **Forward invariance suffices for a graded complex**: if the closed subspace `K` is
-invariant under the grading `R` and `D(L) ∩ K` is dense in `K`, then `K` reduces `L` iff
-`e^{tL} x ∈ K` for all `t ≥ 0` and `x ∈ D(L) ∩ K`. -/
 theorem isReducing_iff_forall_nonneg {p : ι → Bool} (hp : ∀ i j, c.Rel i j → p j ≠ p i)
     (K : Submodule 𝕜 (PiLp 2 W)) [K.HasOrthogonalProjection]
     (hRK : ∀ x ∈ K, reversal 𝕜 p x ∈ K)
@@ -553,11 +471,8 @@ theorem isReducing_iff_forall_nonneg {p : ι → Bool} (hp : ∀ i j, c.Rel i j 
   exact H.isIsometric_waveGroup.isReducing_of_forward_invariant _ hR (reversal_reversal p) K hRK
     (by rwa [generator_waveGroup]) (by rwa [generator_waveGroup])
 
-/-- **Constraint propagation characterizes reducing subspaces** (Thesis Prop 4.17, necessity
-and sufficiency, general `S₀`): for a graded complex, a closed `R`-invariant `K` with
-`D(L) ∩ K` dense in `K` reduces `L` iff every strong solution of `U' = L U` on `[0, T]` with
-`U 0 ∈ K` stays in `K`. By `LinearPMap.IsSkewAdjoint.isReducing_iff`, reducing means
-`P_K D(L) ⊆ D(L)` and `L (D(L) ∩ K) ⊆ K`. [QuennevilleBelair2015], Prop 4.17 -/
+/-- For a graded complex and a closed `R`-invariant `K` with `D(L) ∩ K` dense, `K` reduces `L` iff
+solutions from `K` stay in `K`. [QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem isReducing_iff_forall_isStrongSolution {p : ι → Bool}
     (hp : ∀ i j, c.Rel i j → p j ≠ p i) (K : Submodule 𝕜 (PiLp 2 W)) [K.HasOrthogonalProjection]
     (hRK : ∀ x ∈ K, reversal 𝕜 p x ∈ K)
@@ -579,7 +494,6 @@ end Feec.HilbertComplex
 
 /-! ### Gradings of windows and of `ℤ` -/
 
-/-- The parity `i ↦ (i odd)` grades every window: it flips along every arrow. -/
 theorem ComplexShape.window_parity {n : ℕ} {i j : Fin n} (h : (ComplexShape.window n).Rel i j) :
     decide (Odd j.val) ≠ decide (Odd i.val) := by
   rw [ComplexShape.window_rel] at h
@@ -598,8 +512,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] [CompleteSpace W₂]
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂) (Y : Submodule 𝕜 W₂) [Y.HasOrthogonalProjection]
 
-/-- The constraint family `{0} × N(d₀†) × Y` of Thesis Prop 4.16 ("`σ = 0`, `div u = 0`,
-`ρ ∈ Y`"). [QuennevilleBelair2015], Prop 4.16 -/
+/-- The constraint family `{0} × N(d₀†) × Y`. [QuennevilleBelair2015], Prop 4.16 -/
 def divFreeSub : ∀ i : Fin 3, Submodule 𝕜 (W3 W₀ W₁ W₂ i)
   | 0 => (⊥ : Submodule 𝕜 W₀)
   | 1 => ((S.d₀†).ker : Submodule 𝕜 W₁)
@@ -612,10 +525,6 @@ instance instHasOrthogonalProjectionDivFreeSub :
       (S.d₀†).ker.HasOrthogonalProjection)
   | 2 => inferInstanceAs Y.HasOrthogonalProjection
 
-/-- **`{0} × N(d₀†) × Y` is a reducing subcomplex** of every short complex, for every closed
-`Y ⊇ R(d₁)`: `(⊥, N(d₀†))` reduces `d₀` because `R(d₀) ⊥ N(d₀†)`, and `(N(d₀†), Y)` reduces
-`d₁` because `N(d₀†)ᗮ ⊆ N(d₁)` and `R(d₁) ⊆ Y`. No closed range, density or exactness.
-[QuennevilleBelair2015], Prop 4.16 -/
 theorem reducingSubcomplex_divFreeSub (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) :
     S.toHilbertComplex.ReducingSubcomplex (S.divFreeSub Y) := by
   have := hasOrthogonalProjection_ker S.d₀† (adjoint_isClosed S.dense₀)
@@ -646,10 +555,8 @@ instance instIsScalarTowerRealW3 : ∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W
   | 1 => inferInstanceAs (IsScalarTower ℝ 𝕜 W₁)
   | 2 => inferInstanceAs (IsScalarTower ℝ 𝕜 W₂)
 
-/-- **Thesis Prop 4.16** (both boundary conditions, no density conjectures): strong solutions of
-the Hodge wave equation `x' = L x + F` of a short complex with data and forcing in
-`{0} × N(d₀†) × Y`, `Y ⊇ R(d₁)` closed, stay there: `x₀ ≡ 0`, `x₁` stays divergence-free and
-`x₂` stays in `Y`. [QuennevilleBelair2015], Prop 4.16 -/
+/-- **Propagation of the divergence constraint**: for closed `Y ⊇ R(d₁)`, strong solutions with data
+and forcing in `{0} × N(d₀†) × Y` stay there. [QuennevilleBelair2015], Prop 4.16 (adapted) -/
 theorem divFree_propagates (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {a b : ℝ}
     {F U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)} (hU : Evolution.IsStrongSolution S.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub (S.divFreeSub Y))
@@ -657,7 +564,6 @@ theorem divFree_propagates (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {a b : �
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub (S.divFreeSub Y) :=
   (S.reducingSubcomplex_divFreeSub Y hY).propagates hU h0 hF
 
-/-- Prop 4.16 for the sign convention `ξ' = -L ξ` of Thesis (4.4). [QuennevilleBelair2015], Prop 4.16 -/
 theorem divFree_propagates_neg (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {a b : ℝ}
     {F U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)} (hU : Evolution.IsStrongSolution (-S.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub (S.divFreeSub Y))

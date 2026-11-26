@@ -5,31 +5,9 @@ public import Feec.Fourier.SymbolComplex
 /-!
 # Closed range of symbol complexes
 
-A multiplication operator `mulOp μ m` has closed range as soon as its fibres have a *uniform
-spectral gap*: `‖v‖ ≤ C ‖m a v‖` on `N(m a)ᗮ` for a.e. `a` (`isClosed_range_mulOp_of_gap`). On
-the torus the gap comes from `|2πk| ≥ 2π` for `k ≠ 0`; it fails on `ℝⁿ`, where the symbols
-degenerate at low frequency, and then the range is not closed (`not_isClosed_range_mulOp`).
-
-## Main results
-
-* `Operator.isClosed_range_mulOp_of_gap`: a uniform fibre gap gives closed range (the fibrewise
-  Poincaré inequality, assembled through the measurable kernel projections
-  `Feec.Fourier.aestronglyMeasurable_starProjection_ker`).
-* `Operator.not_isClosed_range_mulOp`: if for every `ε > 0` the symbol has norm `≤ ε` on a set
-  of positive finite measure where it does not vanish on a fixed vector, the range is not
-  closed.
-* `SymbolComplex.closedRangeAt_of_gap`, `SymbolComplex.not_closedRangeAt`: the same statements
-  for the boundaries of a symbol complex; `SymbolComplex.dual_closedRangeAt_of_gap` for the dual.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (closed range and the Poincaré inequality, Thm 4.2)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
-
-Bibliography: [references.bib](../../docs/references.bib)
+For finite-dimensional `E`, a multiplication operator `mulOp μ m` on `L²(μ; E)` has closed range
+when its fibres have a uniform gap `‖v‖ ≤ C ‖m a v‖` on `N(m a)ᗮ` for a.e. `a`, and not when the
+symbol degenerates; likewise for the boundaries of a symbol complex.
 -/
 
 @[expose] public noncomputable section
@@ -40,8 +18,6 @@ open MeasureTheory LinearPMap Set Filter
 namespace Feec
 
 variable {𝕜 : Type*} [RCLike 𝕜]
-
-/-! ### A bounded-preimage criterion -/
 
 namespace Operator
 
@@ -72,8 +48,6 @@ theorem apply_sub_starProjection_ker (T : E →L[𝕜] F) (v : E) :
   rw [ContinuousLinearMap.coe_coe] at h
   rw [_root_.map_sub, h, sub_zero]
 
-/-- **A uniform fibre gap gives closed range.** If `‖v‖ ≤ C ‖m a v‖` for `v ⊥ N(m a)`, for a.e.
-`a`, then `R(mulOp μ m)` is closed, with Poincaré constant `C`. -/
 theorem norm_le_of_gap (hm : AEStronglyMeasurable m μ) {C : ℝ}
     (hgap : ∀ᵐ a ∂μ, ∀ v ∈ (LinearMap.ker (m a : E →ₗ[𝕜] F))ᗮ, ‖v‖ ≤ C * ‖m a v‖)
     (x : (mulOp μ m).domain) (hx : (x : Lp E 2 μ) ∈ (mulOp μ m).kerᗮ) :
@@ -104,15 +78,11 @@ theorem norm_le_of_gap (hm : AEStronglyMeasurable m μ) {C : ℝ}
   · have : ‖u‖ ≤ ‖v‖ := by nlinarith
     exact this.trans hv
 
-/-- **Closed range from a uniform fibre gap.** -/
 theorem isClosed_range_mulOp_of_gap (hm : AEStronglyMeasurable m μ) {C : ℝ}
     (hgap : ∀ᵐ a ∂μ, ∀ v ∈ (LinearMap.ker (m a : E →ₗ[𝕜] F))ᗮ, ‖v‖ ≤ C * ‖m a v‖) :
     _root_.IsClosed (LinearMap.range (mulOp μ m).toFun : Set (Lp F 2 μ)) :=
   isClosed_range_of_norm_le (isClosed_mulOp hm) (norm_le_of_gap hm hgap)
 
-/-- **Non-closed range from degeneration of the symbol.** If for every `ε > 0` there are a
-measurable set `s` of positive finite measure and a vector `v` with `m a v ≠ 0` and `‖m a‖ ≤ ε`
-on `s`, then the range of `mulOp μ m` is not closed (no Poincaré inequality). -/
 theorem not_isClosed_range_mulOp (hm : AEStronglyMeasurable m μ)
     (h : ∀ ε > 0, ∃ s, MeasurableSet s ∧ μ s ≠ 0 ∧ μ s ≠ ∞ ∧
       ∃ v : E, ∀ a ∈ s, m a v ≠ 0 ∧ ‖m a‖ ≤ ε) :
@@ -182,16 +152,12 @@ end Operator
 
 namespace Fourier
 
-/-! ### Fibre gaps from homotopies -/
-
-/-- The orthogonal complement of the kernel of the zero map is `0`. -/
 theorem eq_zero_of_mem_orthogonal_ker_zero {E F : Type*} [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {v : E}
     (hv : v ∈ (LinearMap.ker ((0 : E →L[𝕜] F) : E →ₗ[𝕜] F))ᗮ) : v = 0 := by
   have : LinearMap.ker ((0 : E →L[𝕜] F) : E →ₗ[𝕜] F) = ⊤ := by ext; simp
   rwa [this, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at hv
 
-/-- A gap `|ξ| ‖v‖ ≤ ‖m v‖` gives the uniform gap `‖v‖ ≤ R⁻¹ ‖m v‖` on `|ξ| ≥ R > 0`. -/
 theorem le_inv_mul_of_mul_le {R s x y : ℝ} (hR : 0 < R) (hs : R ≤ s) (hx : 0 ≤ x)
     (h : s * x ≤ y) : x ≤ R⁻¹ * y := by
   rw [inv_mul_eq_div, le_div_iff₀ hR]
@@ -205,22 +171,19 @@ variable {E₀ E₁ E₂ : Type*} [NormedAddCommGroup E₀] [InnerProductSpace �
 
 end Homotopy
 
-/-! ### Symbol complexes -/
-
 namespace SymbolComplex
 
 variable {α : Type*} [MeasurableSpace α] {μ : Measure α} {ι : Type*} {c : ComplexShape ι}
   {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace 𝕜 (E i)]
   [∀ i, CompleteSpace (E i)] (S : SymbolComplex 𝕜 μ c E)
 
-/-- **Closed range of a symbol complex from a uniform fibre gap** of the incoming symbol. -/
+/-- A uniform fibre gap of the incoming symbol gives closed range of a symbol complex at `i`. -/
 theorem closedRangeAt_of_gap {i : ι} [FiniteDimensional 𝕜 (E (c.prev i))] {C : ℝ}
     (hgap : ∀ᵐ a ∂μ, ∀ v ∈ (LinearMap.ker (S.m (c.prev i) i a : E (c.prev i) →ₗ[𝕜] E i))ᗮ,
       ‖v‖ ≤ C * ‖S.m (c.prev i) i a v‖) :
     S.toHilbertComplex.ClosedRangeAt i :=
   Operator.isClosed_range_mulOp_of_gap (S.meas _ _) hgap
 
-/-- The Poincaré inequality of a symbol complex, with the fibre constant. -/
 theorem norm_le_of_gap {i j : ι} [FiniteDimensional 𝕜 (E i)] {C : ℝ}
     (hgap : ∀ᵐ a ∂μ, ∀ v ∈ (LinearMap.ker (S.m i j a : E i →ₗ[𝕜] E j))ᗮ,
       ‖v‖ ≤ C * ‖S.m i j a v‖)
@@ -229,7 +192,6 @@ theorem norm_le_of_gap {i j : ι} [FiniteDimensional 𝕜 (E i)] {C : ℝ}
     ‖(x : Lp (E i) 2 μ)‖ ≤ C * ‖S.toHilbertComplex.d i j x‖ :=
   Operator.norm_le_of_gap (S.meas i j) hgap x hx
 
-/-- Closed range of the dual complex from a fibre gap of the outgoing symbol. -/
 theorem dual_closedRangeAt_of_gap {i j : ι} (hij : c.Rel i j) [FiniteDimensional 𝕜 (E i)]
     {C : ℝ} (hgap : ∀ᵐ a ∂μ, ∀ v ∈ (LinearMap.ker (S.m i j a : E i →ₗ[𝕜] E j))ᗮ,
       ‖v‖ ≤ C * ‖S.m i j a v‖) :
@@ -239,7 +201,7 @@ theorem dual_closedRangeAt_of_gap {i j : ι} (hij : c.Rel i j) [FiniteDimensiona
     rwa [HilbertComplex.ClosedRangeAt, S.toHilbertComplex.boundaries_eq hij]
   exact (S.toHilbertComplex.dual_closedRangeAt_iff hij).2 hj
 
-/-- **Non-closed range of a symbol complex** when the incoming symbol degenerates. -/
+/-- A symbol complex does not have closed range when the incoming symbol degenerates. -/
 theorem not_closedRangeAt {i : ι} [FiniteDimensional 𝕜 (E (c.prev i))]
     (h : ∀ ε > 0, ∃ s, MeasurableSet s ∧ μ s ≠ 0 ∧ μ s ≠ ∞ ∧
       ∃ v : E (c.prev i), ∀ a ∈ s, S.m (c.prev i) i a v ≠ 0 ∧ ‖S.m (c.prev i) i a‖ ≤ ε) :
@@ -249,15 +211,12 @@ theorem not_closedRangeAt {i : ι} [FiniteDimensional 𝕜 (E (c.prev i))]
 end SymbolComplex
 
 
-/-! ### Homogeneous families of fibre complexes -/
-
 namespace FibreComplex
 
 variable {V : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V] {ι : Type*} {c : ComplexShape ι}
   {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace 𝕜 (E i)]
 
-/-- The arrow `i → j` of a family of fibre complexes is **homogeneous of degree `r`**:
-`m (t ξ) = tʳ m ξ` for `t > 0` (an order-`r` constant-coefficient operator). -/
+/-- The arrow `i → j` is homogeneous of degree `r`: `m (t ξ) = tʳ m ξ` for `t > 0`. -/
 def IsHomogeneous (S : FibreComplex 𝕜 V c E) (i j : ι) (r : ℕ) : Prop :=
   ∀ (t : ℝ) (ξ : V), 0 < t → S.m i j (t • ξ) = ((t ^ r : ℝ) : 𝕜) • S.m i j ξ
 
@@ -270,8 +229,6 @@ theorem IsHomogeneous.ker_eq (h : S.IsHomogeneous i j r) {t : ℝ} (ht : 0 < t) 
     _root_.smul_apply, smul_eq_zero, RCLike.ofReal_eq_zero,
     pow_eq_zero_iff', ht.ne', false_and, false_or]
 
-/-- **Scaling of a fibre gap**: a gap `‖v‖ ≤ C ‖m ω v‖` on the unit sphere gives
-`|ξ|ʳ ‖v‖ ≤ C ‖m ξ v‖` at every `ξ ≠ 0`. -/
 theorem IsHomogeneous.gap (h : S.IsHomogeneous i j r) {C : ℝ}
     (hgap : ∀ ω : V, ‖ω‖ = 1 → ∀ v ∈ (LinearMap.ker (S.m i j ω : E i →ₗ[𝕜] E j))ᗮ,
       ‖v‖ ≤ C * ‖S.m i j ω v‖) {ξ : V} (hξ : ξ ≠ 0) :

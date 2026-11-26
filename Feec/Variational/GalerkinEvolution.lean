@@ -5,22 +5,9 @@ public import Feec.Evolution.Energy
 /-!
 # Error bound skeleton for Galerkin approximations of evolution problems
 
-The energy-method error estimate for a semi-discrete Galerkin scheme splits the error
-`u − uₕ = (u − p) + (p − uₕ)` with `p` a projection of the exact solution `u` (elliptic,
-orthogonal, …) onto the discrete space. The first term is a pure approximation error; the
-second, the *projected error* `ε = p − uₕ`, lies in the discrete space, and testing the error
-equation with `ε` (the spatial form being accretive, or skew, on the discrete space) gives
-`re ⟪ε', ε⟫ ≤ -λ ‖ε‖² + g ‖ε‖`, where `g` collects the consistency errors (typically
-`‖(p − u)'‖`, plus `‖p − u‖` for an elliptic projection with a zero-order term).
-
-* `norm_sub_le_of_projected_error_decay`: the resulting bound with decay rate `λ`;
-* `norm_sub_le_of_projected_error`: the case `λ = 0`,
-  `‖u t − uₕ t‖ ≤ ‖u t − p t‖ + ‖p a − uₕ a‖ + ∫ₐᵗ g`.
-* `GalerkinEvolution.error_bound`, `GalerkinEvolution.error_bound_refined`: the error estimate of
-  a semi-discrete Galerkin scheme `⟪J ψ, J ξ'⟫ + a(ξ, ψ) = 0` with an accretive form `a` on the
-  discrete space and an elliptic projection `P` for `⟪J ·, J ·⟫ + a`, over `ℝ` and `ℂ`.
-
-[QuennevilleBelair2015], Thm 4.14.
+The energy-method error estimate of a semi-discrete Galerkin scheme: a bound
+`re ⟪ε', ε⟫ ≤ -λ ‖ε‖² + g ‖ε‖` on the projected error `ε = p − uₕ` bounds `u − uₕ`, and for an
+accretive form and an elliptic projection this gives the error estimate of the scheme.
 
 ## References
 
@@ -40,12 +27,9 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- **Galerkin error bound with decay rate `λ`.** Let `u` be the exact solution, `uₕ` the
-discrete one and `p` a projection of `u`. If the projected error `ε = p − uₕ` is continuous on
-`[a,b]` with right derivative `ε'` on `[a,b)`, and the error equation tested with `ε` gives
-`re ⟪ε', ε⟫ ≤ -λ ‖ε‖² + g ‖ε‖` for a continuous `g ≥ 0`, then on `[a,b]`
-`‖u t − uₕ t‖ ≤ ‖u t − p t‖ + e^{-λ(t-a)} ‖p a − uₕ a‖ + ∫ₐᵗ e^{-λ(t-s)} g s`.
-[QuennevilleBelair2015], Thm 4.14. -/
+/-- **Galerkin error bound with decay rate `λ`**: `re ⟪ε', ε⟫ ≤ -λ ‖ε‖² + g ‖ε‖` for `ε = p − uₕ`
+gives `‖u t − uₕ t‖ ≤ ‖u t − p t‖ + e^{-λ(t-a)} ‖p a − uₕ a‖ + ∫ₐᵗ e^{-λ(t-s)} g s`.
+[QuennevilleBelair2015], Thm 4.14 -/
 theorem norm_sub_le_of_projected_error_decay {u p uh ε' : ℝ → E} {g : ℝ → ℝ} {a b lam : ℝ}
     (hεc : ContinuousOn (fun t => p t - uh t) (Icc a b))
     (hε : ∀ t ∈ Ico a b, HasDerivWithinAt (fun t => p t - uh t) (ε' t) (Ici t) t)
@@ -60,10 +44,6 @@ theorem norm_sub_le_of_projected_error_decay {u p uh ε' : ℝ → E} {g : ℝ �
     _ ≤ ‖u t - p t‖ + ‖p t - uh t‖ := norm_add_le _ _
     _ ≤ _ := by linarith
 
-/-- **Galerkin error bound.** With the notation of `norm_sub_le_of_projected_error_decay`, if
-`re ⟪ε', ε⟫ ≤ g ‖ε‖` (the spatial form is accretive on the discrete space) then
-`‖u t − uₕ t‖ ≤ ‖u t − p t‖ + ‖p a − uₕ a‖ + ∫ₐᵗ g` on `[a,b]`.
-[QuennevilleBelair2015], Thm 4.14. -/
 theorem norm_sub_le_of_projected_error {u p uh ε' : ℝ → E} {g : ℝ → ℝ} {a b : ℝ}
     (hεc : ContinuousOn (fun t => p t - uh t) (Icc a b))
     (hε : ∀ t ∈ Ico a b, HasDerivWithinAt (fun t => p t - uh t) (ε' t) (Ici t) t)
@@ -83,8 +63,6 @@ variable {V : Type*} [NormedAddCommGroup V] [NormedSpace 𝕜 V] [NormedSpace �
 omit [IsScalarTower ℝ 𝕜 E] in
 variable (𝕜) in
 include 𝕜 in
-/-- `∫ₐᵗ ‖e‖ ≤ (t - a) (‖e a‖ + ∫ₐᵗ ‖e'‖)` for `e` continuous on `[a,b]` with right derivative
-`e'` (continuous) on `[a,b)`. -/
 theorem integral_norm_le {e e' : ℝ → E} {a b : ℝ} (hec : ContinuousOn e (Icc a b))
     (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
     (he'c : ContinuousOn e' (Icc a b)) {t : ℝ} (ht : t ∈ Icc a b) :
@@ -107,17 +85,9 @@ theorem integral_norm_le {e e' : ℝ → E} {a b : ℝ} (hec : ContinuousOn e (I
   have := intervalIntegral.integral_mono_on ht.1 hI2 intervalIntegrable_const hmono
   simpa only [intervalIntegral.integral_const, smul_eq_mul] using this
 
-/-- **Error bound for semi-discrete Galerkin approximations of evolution problems.**
-
-Let `J : V → E` be the bounded "pivot" inclusion (the `W` inner product is `⟪J ·, J ·⟫`), `a` a
-form on `V` additive in its first argument, `K ⊆ V` the discrete space on which `a` is
-accretive (`re a ψ ψ ≥ 0`), and `P` an elliptic projection onto `K` for the shifted form
-`A(x, ψ) = ⟪J ψ, J x⟫ + a x ψ` (`A(P ζ - ζ, ψ) = 0` for `ψ ∈ K`). If `ξ` (with `ξ ∈ C¹(V)`)
-and `ξₕ ∈ K` satisfy `⟪J ψ, J ξ'⟫ + a ξ ψ = 0` for `ψ ∈ K`, then on `[a,b]`, with
-`e = J (P ξ - ξ)`,
-`‖J (ξ t - ξₕ t)‖ ≤ ‖e t‖ + ‖J (P ξ(a) - ξₕ(a))‖ + ∫ₐᵗ (‖e'‖ + ‖e‖)`.
-This covers the semi-discrete Hodge wave equation (`a` skew) and dissipative
-perturbations of it, over `ℝ` and `ℂ`. [QuennevilleBelair2015], Thm 4.14 -/
+/-- **Error bound for semi-discrete Galerkin schemes** `⟪J ψ, J ξ'⟫ + a ξ ψ = 0`, `a` accretive on
+`K`, `P` an elliptic projection: `‖J (ξ − ξₕ)‖ ≤ ‖e‖ + ‖J (P ξ(t₀) − ξₕ(t₀))‖ + ∫ (‖e'‖ + ‖e‖)`,
+`e = J (P ξ − ξ)`. [QuennevilleBelair2015], Thm 4.14 -/
 theorem error_bound (J : V →L[𝕜] E) (a : V → V → 𝕜)
     (ha_sub : ∀ x y ψ, a (x - y) ψ = a x ψ - a y ψ) (K : Submodule 𝕜 V)
     (ha : ∀ ψ ∈ K, 0 ≤ RCLike.re (a ψ ψ)) (P : V →L[𝕜] V) (hPK : ∀ ζ, P ζ ∈ K)
@@ -178,9 +148,6 @@ theorem error_bound (J : V →L[𝕜] E) (a : V → V → 𝕜)
   rw [norm_sub_rev (J (P (ξ t))) (J (ξ t))]
   exact this
 
-/-- **Error bound, refined form**: under the hypotheses of `error_bound`,
-`‖J (ξ t - ξₕ t)‖ ≤ ‖J (Pξ(a) - ξₕ(a))‖ + ‖e t‖ + (t - a) ‖e a‖ + (1 + (t - a)) ∫ₐᵗ ‖e'‖`,
-`e = J (P ξ - ξ)`. [QuennevilleBelair2015], Thm 4.14 -/
 theorem error_bound_refined (J : V →L[𝕜] E) (a : V → V → 𝕜)
     (ha_sub : ∀ x y ψ, a (x - y) ψ = a x ψ - a y ψ) (K : Submodule 𝕜 V)
     (ha : ∀ ψ ∈ K, 0 ≤ RCLike.re (a ψ ψ)) (P : V →L[𝕜] V) (hPK : ∀ ζ, P ζ ∈ K)

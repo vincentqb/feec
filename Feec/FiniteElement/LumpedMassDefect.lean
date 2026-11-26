@@ -6,84 +6,20 @@ public import Feec.ForMathlib.InnerProductSpace.IsometryDefect
 /-!
 # The consistent and the lumped mass of `P₁` elements
 
-On a simplex `T` of `ℝⁿ` with vertices `p₀, …, pₙ` and barycentric coordinates `λ₀, …, λₙ`, the
-`P₁` interpolant of the nodal values `u` is `Πₜu = Σⱼ uⱼ λⱼ`, `uⱼ = u(pⱼ)`. Its **consistent
-element mass** `∫_T Πₜu Πₜw` is computed exactly, and the **lumped element mass**
-`|T| / (n + 1) Σⱼ uⱼ wⱼ` is its vertex quadrature ([Thomee2006], Ch. 15). On a simplicial mesh
-`M` they assemble to the **consistent mass** `⟨u, w⟩ = Σ_T ∫_T Πₜu Πₜw = ∫ u_h w_h` over the
-meshed region (`p1Mass`; the `L²(Ω)` inner product of the global `P₁` functions when the open
-simplices lie in `Ω`, `inner_glue_p1Global`) and the
-**lumped inner product** `⟨u, w⟩_L = Σ_T |T| / (n + 1) Σⱼ uⱼ wⱼ = Σₓ m(x) u(x) w(x)`
-(`lumpedInner`, `lumpedInner_nodalFun`), with the lumped masses `m(x)` of
-`Feec.FiniteElement.lumpedMass`. Mass lumping is an inner-product crime ([HolstStern2012], §3):
-read through `iₕ : u ↦ u_h` from `(Xₕ, ⟨·, ·⟩_L)` into `L²`,
-`⟨(1 - iₕ* iₕ) u, w⟩_L = ⟨u, w⟩_L - ⟨u, w⟩`. On every mesh the defect `1 - iₕ* iₕ` has
-operator norm at least `n / (n + 2)` as soon as `Xₕ` contains a hat function, whatever the mesh
-size, while it is `O(h)` from the discrete graph norm.
+Mass lumping ([Thomee2006], Ch. 15), an inner-product crime ([HolstStern2012], §3), has a defect
+`1 - iₕ* iₕ` of norm at least `n / (n + 2)` but `O(h)` from the discrete graph norm.
 
 ## Main results
 
-* Element level. `integral_baryCoord_mul`: `∫_T λᵢ λⱼ = |T| (1 + δᵢⱼ) / ((n + 1) (n + 2))`, from
-  the change of variables to the reference simplex (`integral_baryCoord_mul_eq`), its invariance
-  under the permutations of the vertices (`integral_baryCoord_mul_perm`, from
-  `Feec.FiniteElement.integral_comp_baryCoord_perm`),
-  `∫_T λⱼ² = 2 |T| / ((n + 1) (n + 2))` (`integral_baryCoord_mul_self`) and `Σₖ λₖ = 1`; so
-  (`integral_p1Interp_mul`) `∫_T Πₜu Πₜw = |T| (Σⱼ uⱼ wⱼ + (Σⱼ uⱼ) (Σⱼ wⱼ)) / ((n + 1) (n + 2))`,
-  and (`lumped_sub_integral_p1Interp_mul`) the lumped minus the consistent element mass is
-  `|T| / (2 (n + 1) (n + 2)) Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ)` (`sum_sum_sub_mul_sub`). With
-  Cauchy–Schwarz over the pairs of vertices (`abs_lumped_sub_integral_p1Interp_mul_le`), the edge
-  differences `uᵢ - uⱼ = ∇Πₜu · (pᵢ - pⱼ)` (`sub_eq_p1Grad_dotProduct`), their bound
-  `Σᵢ Σⱼ (uᵢ - uⱼ)² ≤ n (n + 1) δ² |∇Πₜu|²` by the edge length `δ` (`sum_sum_sq_sub_le_p1Grad`)
-  and `Σᵢ Σⱼ (wᵢ - wⱼ)² ≤ 2 (n + 1) Σⱼ wⱼ²` (`sum_sum_sq_sub_le`): the defect of an element is at
-  most `c_n δ ‖∇Πₜu‖_{L²(T)}` times the lumped norm of `w` on `T`,
-  `c_n = √(n (n + 1) / 2) / (n + 2)` (`abs_lumped_sub_integral_p1Interp_mul_le_p1Grad`), with no
-  shape regularity.
-* **Mass equivalence** on every mesh: `⟨u, u⟩ ≤ ⟨u, u⟩_L ≤ (n + 2) ⟨u, u⟩`
-  (`p1Mass_le_lumpedInner`, `lumpedInner_le_mul_p1Mass`); the defect form `⟨·, ·⟩_L - ⟨·, ·⟩`, a
-  sum over the edges (`lumpedInner_sub_p1Mass`), is positive semidefinite
-  (`p1Mass_le_lumpedInner`) and at most `(n + 1) / (n + 2)` times the lumped
-  norms (`abs_lumpedInner_sub_p1Mass_le_lumpedInner`, by Cauchy–Schwarz for it,
-  `abs_lumpedInner_sub_p1Mass_le_sqrt`).
-* **The hat functions**: `⟨φₓ, φₓ⟩_L = m(x) > 0` at every vertex `x` and
-  `⟨φₓ, φₓ⟩ = 2 m(x) / (n + 2)` (`lumpedInner_nodalIndicator`, `lumpedMass_pos`,
-  `p1Mass_nodalIndicator`); a nodal function with zero sum on every simplex has
-  `⟨u, w⟩ = ⟨u, w⟩_L / (n + 2)` (`p1Mass_eq_of_sum_eq_zero`).
-* **The defect from the graph norm** (`abs_lumpedInner_sub_p1Mass_le`): if every edge has length
-  at most `h`, `|⟨u, w⟩_L - ⟨u, w⟩| ≤ c_n h ‖∇u_h‖ ‖w‖_L` (Cauchy–Schwarz over the simplices): a
-  quadrature error estimate of the lumped mass method ([Thomee2006], Ch. 15) with an explicit
-  constant.
-* **Lumped readings** (`IsLumpedReading M ν i`): a space `X` of nodal values `ν v` with the
-  lumped inner product, read by `i` with the consistent mass. Then `‖i v‖ ≤ ‖v‖ ≤ √(n + 2) ‖i v‖`
-  (`IsLumpedReading.norm_apply_le`, `IsLumpedReading.norm_le_sqrt_mul_norm_apply`);
-  **`‖1 - i* i‖ ≥ n / (n + 2)` as soon as `X` contains a hat function**
-  (`IsLumpedReading.le_opNorm_one_sub_adjoint_comp_self`), `‖1 - i* i‖ ≤ (n + 1) / (n + 2)`
-  always (`IsLumpedReading.opNorm_one_sub_adjoint_comp_self_le`), with equality when `X` contains
-  a nonzero nodal function with zero sum on every simplex
-  (`IsLumpedReading.opNorm_one_sub_adjoint_comp_self_eq_of_sum_eq_zero`); and
-  **`‖(1 - i* i) v‖ ≤ c_n h ‖∇(ν v)_h‖`**
-  (`IsLumpedReading.norm_one_sub_adjoint_comp_self_apply_le`), so the defect measured from the
-  discrete graph norm is `O(h)`.
-* **The lumped-mass method** on the nodes `x` of `M` (`lumpedReading`, in the mass-weighted
-  coordinates `ξ_q = m(x_q)^{1/2} U_q` of `lumpedNodal`, in which the lumped inner product is the
-  Euclidean one; the gradient `lumpedGrad`) is a lumped reading when the open simplices lie in `Ω`
-  (`isLumpedReading_lumpedReading`). On such a mesh with a node, `‖1 - iₕ* iₕ‖ ≥ n / (n + 2)`
-  (`le_opNorm_one_sub_adjoint_comp_self_lumpedReading`), while `‖(1 - iₕ* iₕ) ξ‖ ≤ c_n h ‖∇ξ_h‖`
-  (`norm_one_sub_adjoint_comp_self_lumpedReading_apply_le`); for `n ≥ 1`, on the Freudenthal
-  meshes of a box with every vertex a node, `‖1 - iₕ* iₕ‖ = (n + 1) / (n + 2)` at every level
-  (`opNorm_one_sub_adjoint_comp_self_lumpedReading_freudenthalMesh`: the vertices `b + h q`
-  colored by `Σₗ qₗ mod (n + 1)` carry each color once on every simplex,
-  `sum_freudenthalColor_points`, so a function of the color with zero sum has zero sum on every
-  simplex, `exists_sum_points_eq_zero_freudenthalMesh`). Every mesh has a lumped reading with
-  every hat function: the lumped-mass method on all its vertices, read in `L²` of the meshed
-  region (`exists_isLumpedReading`).
+* `p1Mass_le_lumpedInner`, `lumpedInner_le_mul_p1Mass`: `⟨u, u⟩ ≤ ⟨u, u⟩_L ≤ (n + 2) ⟨u, u⟩`.
+* `IsLumpedReading.le_opNorm_one_sub_adjoint_comp_self`: `‖1 - i* i‖ ≥ n / (n + 2)`.
+* `IsLumpedReading.norm_one_sub_adjoint_comp_self_apply_le`: `‖(1 - i* i) v‖ ≤ c_n h ‖∇(ν v)_h‖`.
+* `opNorm_one_sub_adjoint_comp_self_lumpedReading_freudenthalMesh`: `(n + 1) / (n + 2)`.
 
 ## References
 
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (the lumped mass method)
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (inner-product crimes)
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012], §3
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -101,8 +37,6 @@ variable {n : ℕ}
 
 /-! ### The element masses -/
 
-/-- **Change of variables for products of barycentric coordinates**:
-`∫_T λᵢ λⱼ = |det B_T| ∫_{T̂} λ̂ᵢ λ̂ⱼ`. -/
 theorem integral_baryCoord_mul_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i j : Fin (n + 1)) :
     ∫ x in T.closedInterior, baryCoord T.points x i * baryCoord T.points x j =
       |LinearMap.det T.linearPart| *
@@ -110,15 +44,12 @@ theorem integral_baryCoord_mul_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i 
   rw [integral_closedInterior_eq, refSimplex_closedInterior_eq]
   simp only [baryCoord_refMap]
 
-/-- **Permutation invariance**: `∫_T λ_{π i} λ_{π j} = ∫_T λᵢ λⱼ`
-(`integral_comp_baryCoord_perm`). -/
 theorem integral_baryCoord_mul_perm (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (π : Equiv.Perm (Fin (n + 1))) (i j : Fin (n + 1)) :
     ∫ x in T.closedInterior, baryCoord T.points x (π i) * baryCoord T.points x (π j) =
       ∫ x in T.closedInterior, baryCoord T.points x i * baryCoord T.points x j :=
   integral_comp_baryCoord_perm T π fun l => l i * l j
 
-/-- `∫_T λⱼ² = 2 |T| / ((n + 1) (n + 2))`. -/
 theorem integral_baryCoord_mul_self (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (n + 1)) :
     ∫ x in T.closedInterior, baryCoord T.points x j * baryCoord T.points x j =
       2 * volume.real T.closedInterior / ((n + 1) * (n + 2)) := by
@@ -132,10 +63,6 @@ theorem integral_baryCoord_mul_self (T : Affine.Simplex ℝ (Fin n → ℝ) n) (
   field_simp
   ring
 
-/-- **The integral of a product of two barycentric coordinates**:
-`∫_T λᵢ λⱼ = |T| (1 + δᵢⱼ) / ((n + 1) (n + 2))`. For `i ≠ j`: by permutation invariance the
-`n` integrals `∫_T λᵢ λₖ`, `k ≠ i`, are equal, and they sum to `∫_T λᵢ - ∫_T λᵢ²`
-(`Σₖ λₖ = 1`). -/
 theorem integral_baryCoord_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i j : Fin (n + 1)) :
     ∫ x in T.closedInterior, baryCoord T.points x i * baryCoord T.points x j =
       (if i = j then 2 else 1) * volume.real T.closedInterior / ((n + 1) * (n + 2)) := by
@@ -182,8 +109,6 @@ theorem integral_baryCoord_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i j :
   rw [one_mul]
   exact mul_left_cancel₀ hn e3
 
-/-- **The consistent element mass** of `P₁` interpolants:
-`∫_T Πₜu Πₜw = |T| (Σⱼ uⱼ wⱼ + (Σⱼ uⱼ) (Σⱼ wⱼ)) / ((n + 1) (n + 2))`, `uⱼ = u(pⱼ)`. -/
 theorem integral_p1Interp_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u w : (Fin n → ℝ) → ℝ) :
     ∫ x in T.closedInterior, p1Interp T.points u x * p1Interp T.points w x =
       volume.real T.closedInterior * (∑ j, u (T.points j) * w (T.points j) +
@@ -225,8 +150,6 @@ theorem integral_p1Interp_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u w : 
   simp_rw [e3, ← Finset.mul_sum, Finset.sum_add_distrib, ← Finset.sum_mul]
   ring
 
-/-- **The sum over the pairs of vertices**:
-`Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ) = 2 ((n + 1) Σⱼ uⱼ wⱼ - (Σⱼ uⱼ) (Σⱼ wⱼ))` over the `n + 1` vertices. -/
 theorem sum_sum_sub_mul_sub (u w : Fin (n + 1) → ℝ) :
     ∑ i, ∑ j, (u i - u j) * (w i - w j) =
       2 * ((n + 1) * ∑ j, u j * w j - (∑ j, u j) * ∑ j, w j) := by
@@ -235,9 +158,6 @@ theorem sum_sum_sub_mul_sub (u w : Fin (n + 1) → ℝ) :
   push_cast
   ring
 
-/-- **The lumped minus the consistent element mass**:
-`|T| / (n + 1) Σⱼ uⱼ wⱼ - ∫_T Πₜu Πₜw = |T| / (2 (n + 1) (n + 2)) Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ)`
-(so the lumped element mass dominates the consistent one, `u = w`). -/
 theorem lumped_sub_integral_p1Interp_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (u w : (Fin n → ℝ) → ℝ) :
     volume.real T.closedInterior / (n + 1) * ∑ j, u (T.points j) * w (T.points j) -
@@ -248,14 +168,11 @@ theorem lumped_sub_integral_p1Interp_mul (T : Affine.Simplex ℝ (Fin n → ℝ)
   field_simp
   ring
 
-/-- **The edge differences of a `P₁` interpolant** are its gradient against the edges:
-`u(pᵢ) - u(pⱼ) = ∇Πₜu · (pᵢ - pⱼ)`. -/
 theorem sub_eq_p1Grad_dotProduct {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (u : (Fin n → ℝ) → ℝ) (i j : Fin (n + 1)) :
     u (p i) - u (p j) = p1Grad p u ⬝ᵥ (p i - p j) := by
   rw [← p1Interp_vertex hp u i, ← p1Interp_vertex hp u j, p1Interp_sub]
 
-/-- `Σᵢ Σⱼ (wᵢ - wⱼ)² ≤ 2 (n + 1) Σⱼ wⱼ²` over the `n + 1` vertices. -/
 theorem sum_sum_sq_sub_le (w : Fin (n + 1) → ℝ) :
     ∑ i, ∑ j, (w i - w j) ^ 2 ≤ 2 * (n + 1) * ∑ j, w j ^ 2 := by
   have e := sum_sum_sub_mul_sub w w
@@ -263,9 +180,6 @@ theorem sum_sum_sq_sub_le (w : Fin (n + 1) → ℝ) :
   rw [e]
   nlinarith [sq_nonneg (∑ j, w j)]
 
-/-- **The lumped-mass defect of an element**, by Cauchy–Schwarz over the pairs of vertices:
-`|(|T| / (n + 1)) Σⱼ uⱼ wⱼ - ∫_T Πₜu Πₜw| ≤
-|T| / (2 (n + 1) (n + 2)) √(Σᵢ Σⱼ (uᵢ - uⱼ)²) √(Σᵢ Σⱼ (wᵢ - wⱼ)²)`. -/
 theorem abs_lumped_sub_integral_p1Interp_mul_le (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (u w : (Fin n → ℝ) → ℝ) :
     |volume.real T.closedInterior / (n + 1) * ∑ j, u (T.points j) * w (T.points j) -
@@ -280,9 +194,6 @@ theorem abs_lumped_sub_integral_p1Interp_mul_le (T : Affine.Simplex ℝ (Fin n �
   simp only [← Fintype.sum_prod_type']
   exact Finset.sum_mul_sq_le_sq_mul_sq _ _ _
 
-/-- **The edge differences are bounded by the gradient**: if every edge of `p` has Euclidean length
-at most `δ`, `Σᵢ Σⱼ (u(pᵢ) - u(pⱼ))² ≤ n (n + 1) δ² |∇Πₜu|²` (`sub_eq_p1Grad_dotProduct`,
-Cauchy–Schwarz; the `n (n + 1)` ordered pairs of distinct vertices). -/
 theorem sum_sum_sq_sub_le_p1Grad {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     {δ : ℝ} (hδ : ∀ i j, (p i - p j) ⬝ᵥ (p i - p j) ≤ δ ^ 2) (u : (Fin n → ℝ) → ℝ) :
     ∑ i, ∑ j, (u (p i) - u (p j)) ^ 2 ≤ n * (n + 1) * δ ^ 2 * (p1Grad p u ⬝ᵥ p1Grad p u) := by
@@ -306,11 +217,6 @@ theorem sum_sum_sq_sub_le_p1Grad {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUni
           Fintype.card_fin, nsmul_eq_mul, Nat.add_sub_cancel]
         push_cast; ring
 
-/-- **The lumped-mass defect of an element in the graph norm**: if every edge of `T` has Euclidean
-length at most `δ`, then
-`|(|T| / (n + 1)) Σⱼ uⱼ wⱼ - ∫_T Πₜu Πₜw| ≤ c_n δ ‖∇Πₜu‖_{L²(T)} (|T| / (n + 1) Σⱼ wⱼ²)^{1/2}`,
-`c_n = √(n (n + 1) / 2) / (n + 2)`: a constant times `δ`, the gradient of `Πₜu` and the lumped
-norm of `w` on `T`. -/
 theorem abs_lumped_sub_integral_p1Interp_mul_le_p1Grad (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     {δ : ℝ} (hδ0 : 0 ≤ δ)
     (hδ : ∀ i j, (T.points i - T.points j) ⬝ᵥ (T.points i - T.points j) ≤ δ ^ 2)
@@ -348,24 +254,15 @@ theorem abs_lumped_sub_integral_p1Interp_mul_le_p1Grad (T : Affine.Simplex ℝ (
 
 /-! ### The consistent and the lumped mass of a mesh -/
 
-/-- **The consistent mass** `⟨u, w⟩ = Σ_T ∫_T Πₜu Πₜw` of the mesh `M` on nodal values `u, w`
-(only their values at the vertices enter), assembled elementwise: the `L²(Ω)` inner product
-`∫_Ω u_h w_h` of the global `P₁` functions with these vertex values when the open simplices lie in
-`Ω` (`inner_glue_p1Global`). -/
+/-- The consistent mass `⟨u, w⟩ = Σ_T ∫_T Πₜu Πₜw` of the mesh `M` on nodal values `u, w`. -/
 def p1Mass (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, ∫ x in T.closedInterior, p1Interp T.points u x * p1Interp T.points w x
 
-/-- **The lumped inner product** `⟨u, w⟩_L = Σ_T |T| / (n + 1) Σⱼ u(pⱼ) w(pⱼ)` of the mesh `M`:
-the consistent mass computed with the vertex quadrature rule on each simplex ([Thomee2006],
-Ch. 15), that is `Σₓ m(x) u(x) w(x)` over the vertices `x` with the lumped masses `m(x)`
-(`lumpedInner_nodalFun`). -/
+/-- The lumped inner product `⟨u, w⟩_L = Σ_T |T| / (n + 1) Σⱼ u(pⱼ) w(pⱼ)` of the mesh `M`. -/
 def lumpedInner (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, volume.real T.closedInterior / (n + 1) *
     ∑ j, u (T.points j) * w (T.points j)
 
-/-- **The defect form**
-`⟨u, w⟩_L - ⟨u, w⟩ = Σ_T |T| / (2 (n + 1) (n + 2)) Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ)`
-(`lumped_sub_integral_p1Interp_mul`): a sum over the edges, positive semidefinite. -/
 theorem lumpedInner_sub_p1Mass (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
     lumpedInner M u w - p1Mass M u w = ∑ T ∈ M.simplices,
       volume.real T.closedInterior / (2 * (n + 1) * (n + 2)) *
@@ -373,15 +270,14 @@ theorem lumpedInner_sub_p1Mass (M : SimplicialMesh n) (u w : (Fin n → ℝ) →
   rw [lumpedInner, p1Mass, ← Finset.sum_sub_distrib]
   exact Finset.sum_congr rfl fun T _ => lumped_sub_integral_p1Interp_mul T u w
 
-/-- **The lumped norm dominates the consistent one**: `⟨u, u⟩ ≤ ⟨u, u⟩_L`. -/
+/-- The lumped norm dominates the consistent one: `⟨u, u⟩ ≤ ⟨u, u⟩_L`. -/
 theorem p1Mass_le_lumpedInner (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) :
     p1Mass M u u ≤ lumpedInner M u u := by
   rw [← sub_nonneg, lumpedInner_sub_p1Mass]
   exact Finset.sum_nonneg fun T _ => mul_nonneg (by positivity)
     (Finset.sum_nonneg fun i _ => Finset.sum_nonneg fun j _ => mul_self_nonneg _)
 
-/-- **The consistent norm dominates the lumped one up to `n + 2`**: `⟨u, u⟩_L ≤ (n + 2) ⟨u, u⟩`,
-since `∫_T (Πₜu)² ≥ |T| Σⱼ uⱼ² / ((n + 1) (n + 2))` (`integral_p1Interp_mul`). -/
+/-- `⟨u, u⟩_L ≤ (n + 2) ⟨u, u⟩`. -/
 theorem lumpedInner_le_mul_p1Mass (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) :
     lumpedInner M u u ≤ (n + 2) * p1Mass M u u := by
   rw [p1Mass, Finset.mul_sum, lumpedInner]
@@ -396,15 +292,12 @@ theorem lumpedInner_le_mul_p1Mass (M : SimplicialMesh n) (u : (Fin n → ℝ) �
   rw [e]
   exact mul_le_mul_of_nonneg_left (le_add_of_nonneg_right hS) (by positivity)
 
-/-- `⟨u, u⟩_L - ⟨u, u⟩ ≤ (n + 1) / (n + 2) ⟨u, u⟩_L` (`lumpedInner_le_mul_p1Mass`). -/
 theorem lumpedInner_sub_p1Mass_le (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) :
     lumpedInner M u u - p1Mass M u u ≤ (n + 1) / (n + 2) * lumpedInner M u u := by
   have h := lumpedInner_le_mul_p1Mass M u
   rw [div_mul_eq_mul_div, le_div_iff₀ (by positivity)]
   nlinarith
 
-/-- **Cauchy–Schwarz for the defect form**, positive semidefinite (`p1Mass_le_lumpedInner`):
-`|⟨u, w⟩_L - ⟨u, w⟩| ≤ (⟨u, u⟩_L - ⟨u, u⟩)^{1/2} (⟨w, w⟩_L - ⟨w, w⟩)^{1/2}`. -/
 theorem abs_lumpedInner_sub_p1Mass_le_sqrt (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
     |lumpedInner M u w - p1Mass M u w| ≤
       √(lumpedInner M u u - p1Mass M u u) * √(lumpedInner M w w - p1Mass M w w) := by
@@ -427,8 +320,6 @@ theorem abs_lumpedInner_sub_p1Mass_le_sqrt (M : SimplicialMesh n) (u w : (Fin n 
   · rw [hd]; positivity
   · rw [hd]; positivity
 
-/-- **The defect form is at most `(n + 1) / (n + 2)` in the lumped norm**:
-`|⟨u, w⟩_L - ⟨u, w⟩| ≤ (n + 1) / (n + 2) ‖u‖_L ‖w‖_L`. -/
 theorem abs_lumpedInner_sub_p1Mass_le_lumpedInner (M : SimplicialMesh n)
     (u w : (Fin n → ℝ) → ℝ) :
     |lumpedInner M u w - p1Mass M u w| ≤
@@ -445,10 +336,6 @@ theorem abs_lumpedInner_sub_p1Mass_le_lumpedInner (M : SimplicialMesh n)
           show ∀ a b c : ℝ, a * b * (a * c) = a * a * (b * c) from fun a b c => by ring,
           Real.mul_self_sqrt hc]
 
-/-- **The lumped-mass defect in the graph norm**: if every edge of `M` has Euclidean length at
-most `h`, `|⟨u, w⟩_L - ⟨u, w⟩| ≤ c_n h ‖∇u_h‖ ‖w‖_L`, `c_n = √(n (n + 1) / 2) / (n + 2)`,
-`‖∇u_h‖² = a(u, u)` the stiffness form (`abs_lumped_sub_integral_p1Interp_mul_le_p1Grad`, and
-Cauchy–Schwarz over the simplices). -/
 theorem abs_lumpedInner_sub_p1Mass_le (M : SimplicialMesh n) {h : ℝ} (hh : 0 ≤ h)
     (hM : ∀ T ∈ M.simplices, ∀ i j,
       (T.points i - T.points j) ⬝ᵥ (T.points i - T.points j) ≤ h ^ 2)
@@ -476,7 +363,6 @@ theorem abs_lumpedInner_sub_p1Mass_le (M : SimplicialMesh n) {h : ℝ} (hh : 0 �
 
 /-! ### The hat functions and the nodal functions with zero sums -/
 
-/-- The vertices of a simplex are distinct: at most one is `x`. -/
 theorem card_filter_points_eq_le_one (T : Affine.Simplex ℝ (Fin n → ℝ) n) (x : Fin n → ℝ) :
     #{j | T.points j = x} ≤ 1 :=
   Finset.card_le_one.2 fun _ ha _ hb => T.independent.injective
@@ -490,14 +376,11 @@ theorem sum_nodalIndicator_points (T : Affine.Simplex ℝ (Fin n → ℝ) n) (x 
     ∑ j, nodalIndicator x (T.points j) = (#{j | T.points j = x} : ℝ) := by
   simp [nodalIndicator, Finset.sum_boole]
 
-/-- **The lumped norm of the hat function** `φₓ` is the lumped mass: `⟨φₓ, φₓ⟩_L = m(x)`. -/
 theorem lumpedInner_nodalIndicator (M : SimplicialMesh n) (x : Fin n → ℝ) :
     lumpedInner M (nodalIndicator x) (nodalIndicator x) = lumpedMass M x := by
   refine Finset.sum_congr rfl fun T _ => ?_
   simp only [nodalIndicator_mul_self, sum_nodalIndicator_points]
 
-/-- **The consistent norm of the hat function**: `⟨φₓ, φₓ⟩ = ∫_Ω φₓ² = 2 m(x) / (n + 2)`, from
-`∫_T λⱼ² = 2 |T| / ((n + 1) (n + 2))`. -/
 theorem p1Mass_nodalIndicator (M : SimplicialMesh n) (x : Fin n → ℝ) :
     p1Mass M (nodalIndicator x) (nodalIndicator x) = 2 / (n + 2) * lumpedMass M x := by
   rw [p1Mass, lumpedMass, Finset.mul_sum]
@@ -510,8 +393,6 @@ theorem p1Mass_nodalIndicator (M : SimplicialMesh n) (x : Fin n → ℝ) :
   field_simp
   ring
 
-/-- **The lumped mass is positive at the vertices**: `m(x) ≥ |T| / (n + 1) > 0` for a vertex `x`
-of a simplex `T` of `M`. -/
 theorem lumpedMass_pos (M : SimplicialMesh n) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ M.simplices) {x : Fin n → ℝ} (hx : x ∈ vertexSet T) : 0 < lumpedMass M x := by
   obtain ⟨j, rfl⟩ := mem_vertexSet.1 hx
@@ -521,9 +402,6 @@ theorem lumpedMass_pos (M : SimplicialMesh n) {T : Affine.Simplex ℝ (Fin n →
   refine mul_pos (div_pos (volume_real_closedInterior_pos T) (by positivity)) ?_
   exact_mod_cast (Finset.card_pos.2 ⟨j, by simp⟩ : 0 < #{i | T.points i = T.points j})
 
-/-- **A nodal function with zero sum on every simplex**, `Σⱼ u(pⱼ) = 0`, has
-`⟨u, w⟩ = ⟨u, w⟩_L / (n + 2)` for every `w` (`integral_p1Interp_mul`): `1 - iₕ* iₕ` is
-`(n + 1) / (n + 2)` on it. -/
 theorem p1Mass_eq_of_sum_eq_zero (M : SimplicialMesh n) {u : (Fin n → ℝ) → ℝ}
     (hu : ∀ T ∈ M.simplices, ∑ j, u (T.points j) = 0) (w : (Fin n → ℝ) → ℝ) :
     p1Mass M u w = lumpedInner M u w / (n + 2) := by
@@ -539,12 +417,7 @@ section Reading
 variable {X E : Type*} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [NormedAddCommGroup E]
   [InnerProductSpace ℝ E]
 
-/-- `(ν, i)` is a **lumped `P₁` reading** of the mesh `M`: the vectors `v` of the inner product
-space `X` are discrete functions with nodal values `ν v` and the lumped inner product,
-`⟪v, w⟫ = ⟨ν v, ν w⟩_L`, and the reading map `i : X → E` reproduces the consistent mass,
-`⟪i v, i w⟫ = ⟨ν v, ν w⟩` (for instance `i v = (ν v)_h` in `E = L²(Ω)`, `lumpedReading`). Then
-`1 - i* i` is the inner-product defect of the lumped mass method,
-`⟪(1 - i* i) v, w⟫ = ⟨ν v, ν w⟩_L - ⟨ν v, ν w⟩`. -/
+/-- A lumped `P₁` reading: `⟪v, w⟫ = ⟨ν v, ν w⟩_L` on `X`, and `⟪i v, i w⟫ = ⟨ν v, ν w⟩`. -/
 structure IsLumpedReading (M : SimplicialMesh n) (ν : X → (Fin n → ℝ) → ℝ) (i : X →L[ℝ] E) :
     Prop where
   inner_eq : ∀ v w, ⟪v, w⟫_ℝ = lumpedInner M (ν v) (ν w)
@@ -562,14 +435,11 @@ theorem norm_sq (v : X) : ‖v‖ ^ 2 = lumpedInner M (ν v) (ν v) := by
 theorem norm_apply_sq (v : X) : ‖i v‖ ^ 2 = p1Mass M (ν v) (ν v) := by
   rw [← real_inner_self_eq_norm_sq, hr.inner_apply_eq]
 
-/-- **The reading map is a contraction**: `‖i v‖ ≤ ‖v‖` (`p1Mass_le_lumpedInner`). -/
 theorem norm_apply_le (v : X) : ‖i v‖ ≤ ‖v‖ := by
   have := p1Mass_le_lumpedInner M (ν v)
   rw [← hr.norm_sq, ← hr.norm_apply_sq] at this
   exact (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 this
 
-/-- **The reading map is uniformly injective**: `‖v‖ ≤ √(n + 2) ‖i v‖`
-(`lumpedInner_le_mul_p1Mass`). -/
 theorem norm_le_sqrt_mul_norm_apply (v : X) : ‖v‖ ≤ √(n + 2) * ‖i v‖ := by
   have := lumpedInner_le_mul_p1Mass M (ν v)
   rw [← hr.norm_sq, ← hr.norm_apply_sq] at this
@@ -579,9 +449,7 @@ theorem norm_le_sqrt_mul_norm_apply (v : X) : ‖v‖ ≤ √(n + 2) * ‖i v‖
 
 variable [CompleteSpace X] [CompleteSpace E]
 
-/-- **The operator-norm defect is at least `n / (n + 2)` on every mesh**, as soon as `X` contains
-the hat function `φₓ` of a vertex `x`: `‖φₓ‖² - ‖i φₓ‖² = m(x) - 2 m(x) / (n + 2)`
-(`lumpedInner_nodalIndicator`, `p1Mass_nodalIndicator`). -/
+/-- `‖1 - i* i‖ ≥ n / (n + 2)` as soon as `X` contains the hat function `φₓ` of a vertex `x`. -/
 theorem le_opNorm_one_sub_adjoint_comp_self {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ M.simplices)
     {x : Fin n → ℝ} (hx : x ∈ vertexSet T) {v : X} (hv : ν v = nodalIndicator x) :
@@ -599,17 +467,12 @@ theorem le_opNorm_one_sub_adjoint_comp_self {T : Affine.Simplex ℝ (Fin n → �
   field_simp
   ring
 
-/-- **The operator-norm defect is at most `(n + 1) / (n + 2)`**
-(`abs_lumpedInner_sub_p1Mass_le_lumpedInner`). -/
 theorem opNorm_one_sub_adjoint_comp_self_le : ‖1 - i.adjoint ∘L i‖ ≤ (n + 1) / (n + 2) :=
   i.opNorm_one_sub_adjoint_comp_self_le (by positivity) fun v w => by
     rw [Real.norm_eq_abs, hr.inner_eq, hr.inner_apply_eq, ← Real.sqrt_sq (norm_nonneg v),
       ← Real.sqrt_sq (norm_nonneg w), hr.norm_sq, hr.norm_sq]
     exact abs_lumpedInner_sub_p1Mass_le_lumpedInner M (ν v) (ν w)
 
-/-- **The operator-norm defect is `(n + 1) / (n + 2)`** when `X` contains a nonzero nodal
-function with zero sum on every simplex (`p1Mass_eq_of_sum_eq_zero`,
-`opNorm_one_sub_adjoint_comp_self_le`). -/
 theorem opNorm_one_sub_adjoint_comp_self_eq_of_sum_eq_zero {v : X} (hv : v ≠ 0)
     (hu : ∀ T ∈ M.simplices, ∑ j, ν v (T.points j) = 0) :
     ‖1 - i.adjoint ∘L i‖ = (n + 1) / (n + 2) := by
@@ -619,9 +482,8 @@ theorem opNorm_one_sub_adjoint_comp_self_eq_of_sum_eq_zero {v : X} (hv : v ≠ 0
   field_simp
   ring
 
-/-- **The defect from the graph norm is `O(h)`**: if every edge of `M` has Euclidean length at
-most `h`, `‖(1 - i* i) v‖ ≤ c_n h ‖∇(ν v)_h‖`, `c_n = √(n (n + 1) / 2) / (n + 2)`
-(`abs_lumpedInner_sub_p1Mass_le`). -/
+/-- The defect from the graph norm is `O(h)`: if every edge of `M` has Euclidean length at most
+`h`, then `‖(1 - i* i) v‖ ≤ c_n h ‖∇(ν v)_h‖`, `c_n = √(n (n + 1) / 2) / (n + 2)`. -/
 theorem norm_one_sub_adjoint_comp_self_apply_le {h : ℝ} (hh : 0 ≤ h)
     (hM : ∀ T ∈ M.simplices, ∀ i j,
       (T.points i - T.points j) ⬝ᵥ (T.points i - T.points j) ≤ h ^ 2) (v : X) :
@@ -664,8 +526,6 @@ theorem sum_nodalFun_mul_nodalFun_points {x : ι → Fin n → ℝ} (hx : Functi
   refine Finset.sum_congr rfl fun j _ => ?_
   simp only [eq_comm (a := x q), one_mul]
 
-/-- **The lumped inner product of nodal functions** with values `U`, `V` at the distinct nodes `x`
-(`0` at the other vertices): `⟨U_h, V_h⟩_L = Σ_q m(x_q) U_q V_q`. -/
 theorem lumpedInner_nodalFun (M : SimplicialMesh n) {x : ι → Fin n → ℝ}
     (hx : Function.Injective x) (U V : ι → ℝ) :
     lumpedInner M (nodalFun x U) (nodalFun x V) = ∑ q, lumpedMass M (x q) * (U q * V q) := by
@@ -676,9 +536,7 @@ theorem lumpedInner_nodalFun (M : SimplicialMesh n) {x : ι → Fin n → ℝ}
 
 variable (M : SimplicialMesh n) (x : ι → Fin n → ℝ)
 
-/-- **The nodal values in the mass-weighted coordinates**: the coordinates `ξ_q = m(x_q)^{1/2} U_q`
-of the nodal function with the values `U` at the nodes `x` (`0` at the other vertices), in which
-the lumped inner product is the Euclidean one (`isLumpedReading_lumpedReading`). -/
+/-- The nodal function with the values `m(x_q)^{-1/2} ξ_q` at the nodes `x` and `0` elsewhere. -/
 def lumpedNodal : EuclideanSpace ℝ ι →ₗ[ℝ] (Fin n → ℝ) → ℝ where
   toFun ξ := ∑ q, (ξ q / √(lumpedMass M (x q))) • nodalIndicator (x q)
   map_add' ξ η := by simp [add_div, add_smul, Finset.sum_add_distrib]
@@ -688,16 +546,12 @@ theorem lumpedNodal_apply (ξ : EuclideanSpace ℝ ι) :
     lumpedNodal M x ξ = nodalFun x fun q => ξ q / √(lumpedMass M (x q)) :=
   (nodalFun_eq_sum x _).symm
 
-/-- **The reading map of the lumped-mass method** on the nodes `x` of `M`: the space `Xₕ` of the
-`P₁` functions with values at the nodes (`0` at the other vertices) and the lumped inner product,
-in the mass-weighted coordinates of `lumpedNodal`, read in `L²(Ω)` by `iₕ ξ = ξ_h`, the glued
-global `P₁` function. -/
+/-- The reading map `iₕ ξ = ξ_h ∈ L²(Ω)` of the lumped-mass method on the nodes `x`. -/
 def lumpedReading : EuclideanSpace ℝ ι →L[ℝ] L2F ℝ M.domain (formIdx n ((0 : ℕ) : ℤ)) :=
   LinearMap.toContinuousLinearMap ((whitneyElement n).glue M (0 : ℕ) ∘ₗ
     ((whitneyElement n).globalSpace M 0).subtype ∘ₗ p1Global M ∘ₗ lumpedNodal M x)
 
-/-- **The discrete gradient** `ξ ↦ d ξ_h = ∇ξ_h ∈ L²(Ω; Λ¹)` of the lumped-mass method on the
-nodes `x` (`norm_lumpedGrad_sq`). -/
+/-- The discrete gradient `ξ ↦ ∇ξ_h ∈ L²(Ω; Λ¹)` of the lumped-mass method on the nodes `x`. -/
 def lumpedGrad : EuclideanSpace ℝ ι →L[ℝ] L2F ℝ M.domain (formIdx n (((0 : ℕ) : ℤ) + 1)) :=
   LinearMap.toContinuousLinearMap ((whitneyElement n).glue M (((0 : ℕ) : ℤ) + 1) ∘ₗ
     (whitneyElement n).dPiecewise M 0 ∘ₗ ((whitneyElement n).globalSpace M 0).subtype ∘ₗ
@@ -705,8 +559,6 @@ def lumpedGrad : EuclideanSpace ℝ ι →L[ℝ] L2F ℝ M.domain (formIdx n (((
 
 variable {M x}
 
-/-- **The lumped-mass method is a lumped reading**, on distinct nodes that are vertices of a mesh
-whose simplices have their interiors in `Ω` (`inner_glue_p1Global`). -/
 theorem isLumpedReading_lumpedReading
     (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) (hx : Function.Injective x)
     (hxv : ∀ q, ∃ T ∈ M.simplices, x q ∈ vertexSet T) :
@@ -721,14 +573,12 @@ theorem isLumpedReading_lumpedReading
     exact mul_comm _ _
   inner_apply_eq ξ η := inner_glue_p1Global M hM _ _
 
-/-- `‖∇ξ_h‖² = a(ξ, ξ)`, the stiffness form (`inner_glue_dPiecewise_p1Global`). -/
 theorem norm_lumpedGrad_sq (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
     (ξ : EuclideanSpace ℝ ι) :
     ‖lumpedGrad M x ξ‖ ^ 2 = p1Stiffness M (lumpedNodal M x ξ) (lumpedNodal M x ξ) := by
   rw [← real_inner_self_eq_norm_sq]
   exact inner_glue_dPiecewise_p1Global M hM _ _
 
-/-- The hat function `φ_{x_q}` in the mass-weighted coordinates: `m(x_q)^{1/2} e_q`. -/
 theorem lumpedNodal_single [DecidableEq ι] (hxv : ∀ q, ∃ T ∈ M.simplices, x q ∈ vertexSet T)
     (q : ι) :
     lumpedNodal M x (EuclideanSpace.single q √(lumpedMass M (x q))) = nodalIndicator (x q) := by
@@ -738,10 +588,6 @@ theorem lumpedNodal_single [DecidableEq ι] (hxv : ∀ q, ∃ T ∈ M.simplices,
   rw [Finset.sum_eq_single q (fun r _ hr => by simp [hr]) (by simp)]
   simp [hs]
 
-/-- **Mass lumping on every mesh with a node: the operator-norm defect is at least
-`n / (n + 2)`**, `‖1 - iₕ* iₕ‖ ≥ n / (n + 2)`
-(`IsLumpedReading.le_opNorm_one_sub_adjoint_comp_self` at a hat function),
-whatever the mesh size. -/
 theorem le_opNorm_one_sub_adjoint_comp_self_lumpedReading
     (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) (hx : Function.Injective x)
     (hxv : ∀ q, ∃ T ∈ M.simplices, x q ∈ vertexSet T) (q : ι) :
@@ -751,9 +597,6 @@ theorem le_opNorm_one_sub_adjoint_comp_self_lumpedReading
   exact (isLumpedReading_lumpedReading hM hx hxv).le_opNorm_one_sub_adjoint_comp_self hT hq
     (lumpedNodal_single hxv q)
 
-/-- **Mass lumping: the defect from the graph norm is `O(h)`**: if every edge of `M` has
-Euclidean length at most `h`, `‖(1 - iₕ* iₕ) ξ‖ ≤ c_n h ‖∇ξ_h‖`,
-`c_n = √(n (n + 1) / 2) / (n + 2)` (`IsLumpedReading.norm_one_sub_adjoint_comp_self_apply_le`). -/
 theorem norm_one_sub_adjoint_comp_self_lumpedReading_apply_le
     (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) (hx : Function.Injective x)
     (hxv : ∀ q, ∃ T ∈ M.simplices, x q ∈ vertexSet T) {h : ℝ} (hh : 0 ≤ h)
@@ -767,9 +610,6 @@ theorem norm_one_sub_adjoint_comp_self_lumpedReading_apply_le
 
 end Nodes
 
-/-- **Every mesh has a lumped reading with every hat function**: the lumped-mass method on all
-the vertices of `M`, read in `L²` of the meshed region `closure Ω`, in which the open simplices
-lie (`isLumpedReading_lumpedReading`, `lumpedNodal_single`). -/
 theorem exists_isLumpedReading (M : SimplicialMesh n) :
     ∃ (ι : Type) (_ : Fintype ι) (x : ι → Fin n → ℝ)
       (i : EuclideanSpace ℝ ι →L[ℝ] L2F ℝ (closure M.domain) (formIdx n ((0 : ℕ) : ℤ))),
@@ -794,7 +634,6 @@ theorem exists_isLumpedReading (M : SimplicialMesh n) :
 
 /-! ### Freudenthal meshes: the exact operator-norm defect -/
 
-/-- `Σₗ (vⱼ)ₗ = j`: the vertex `vⱼ = e_{σ 0} + ⋯ + e_{σ (j - 1)}` of the Kuhn simplex `K_σ`. -/
 theorem sum_kuhnLattice (σ : Equiv.Perm (Fin n)) (j : Fin (n + 1)) :
     ∑ l, kuhnLattice σ j l = j := by
   induction j using Fin.induction with
@@ -808,8 +647,7 @@ section Color
 
 open Fin.CommRing
 
-/-- **The color** `Σₗ qₗ mod (n + 1)` of the lattice node `b + h q`, read off a point `x` as the
-rounded `Σₗ (xₗ - bₗ) / h` (`freudenthalColor_node`). -/
+/-- The color `Σₗ qₗ mod (n + 1)` of the lattice node `b + h q`, read off a point. -/
 def freudenthalColor (b : Fin n → ℝ) (h : ℝ) (x : Fin n → ℝ) : Fin (n + 1) :=
   ((round ((∑ l, (x l - b l)) / h) : ℤ) : Fin (n + 1))
 
@@ -820,9 +658,6 @@ theorem freudenthalColor_node (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (q : 
     field_simp
   rw [freudenthalColor, e, round_intCast]
 
-/-- **Every simplex of a Freudenthal mesh carries each color once**: the vertices
-`b + h (m + vⱼ)` of `b + h (m + K_σ)` have the colors `Σ m + j` (`sum_kuhnLattice`), so
-`Σⱼ g(color(pⱼ)) = Σ_c g(c)` for every `g`. -/
 theorem sum_freudenthalColor_points (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     (g : Fin (n + 1) → ℝ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (freudenthalMesh b s hs N).simplices) :
@@ -839,9 +674,6 @@ theorem sum_freudenthalColor_points (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (
   simp only [e]
   exact Equiv.sum_comp (Equiv.addLeft ((∑ l, finLattice m l : ℤ) : Fin (n + 1))) g
 
-/-- **A nodal function with zero sum on every simplex of a Freudenthal mesh** (`n ≥ 1`): the
-function `1` on the color `0`, `-1` on the color `1`, `0` elsewhere
-(`sum_freudenthalColor_points`), which is `1` at the corner `b`. -/
 theorem exists_sum_points_eq_zero_freudenthalMesh (hn : n ≠ 0) (b : Fin n → ℝ) {s : ℝ}
     (hs : 0 < s) (N : ℕ) [NeZero N] :
     ∃ u : (Fin n → ℝ) → ℝ, u b = 1 ∧
@@ -857,7 +689,6 @@ theorem exists_sum_points_eq_zero_freudenthalMesh (hn : n ≠ 0) (b : Fin n → 
 
 end Color
 
-/-- The corner `b` is a vertex of the Freudenthal mesh of the box `∏ (bᵢ, bᵢ + s)`. -/
 theorem exists_mem_vertexSet_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ)
     [NeZero N] : ∃ T ∈ (freudenthalMesh b s hs N).simplices, b ∈ vertexSet T :=
   ⟨_, mem_freudenthalMesh_simplices.2 ⟨0, 1, rfl⟩, mem_vertexSet.2 ⟨0, by
@@ -865,11 +696,8 @@ theorem exists_mem_vertexSet_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs :
     funext i
     simp [freudenthalPoints, latticePoint_apply, finLattice]⟩⟩
 
-/-- **Mass lumping on the Freudenthal meshes: the operator-norm defect is `(n + 1) / (n + 2)` at
-every level** (`n ≥ 1`), with every vertex a node (the natural boundary condition): the nodal
-function of `exists_sum_points_eq_zero_freudenthalMesh` gives equality in
-`IsLumpedReading.opNorm_one_sub_adjoint_comp_self_le`
-(`IsLumpedReading.opNorm_one_sub_adjoint_comp_self_eq_of_sum_eq_zero`). -/
+/-- Mass lumping on the Freudenthal meshes, `n ≥ 1`, with every vertex a node:
+`‖1 - iₕ* iₕ‖ = (n + 1) / (n + 2)` at every level. -/
 theorem opNorm_one_sub_adjoint_comp_self_lumpedReading_freudenthalMesh {ι : Type*} [Fintype ι]
     (hn : n ≠ 0) (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N] {x : ι → Fin n → ℝ}
     (hx : Function.Injective x)

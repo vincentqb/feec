@@ -7,44 +7,15 @@ public import Mathlib.LinearAlgebra.Prod
 /-!
 # BGG data: two complexes linked by connecting maps
 
-The Bernstein–Gelfand–Gelfand (BGG) construction starts from two complexes `(V, d)` and
-`(Ṽ, d̃)` linked by connecting maps `S : Ṽⁱ → Vʲ` (`i → j` in the complex shape) that
-anticommute with the differentials, `d S = -S d̃`. Everything here is algebraic: modules over a
-ring `R`, any complex shape, any length.
-
-## Main definitions
-
-* `Feec.BGG.Segment R V0 V1 V2 Vt0 Vt1 Vt2`: one segment `V⁰ → V¹ → V²`, `Ṽ⁰ → Ṽ¹ → Ṽ²`
-  with `S₀ : Ṽ⁰ → V¹`, `S₁ : Ṽ¹ → V²`, `d¹S₀ = -S₁d̃⁰`. This is the input of the complex with
-  weak symmetries (5.1).
-* `Segment.Γ = {(σ, φ) | d⁰σ = S₀φ}`, `Segment.D0 = (0 d̃) : Γ → Ṽ¹`,
-  `Segment.D1 = (S₁, d̃¹) : Ṽ¹ → V² × Ṽ²`: the complex (5.1).
-* `Feec.BGG.Data R c V Vt`: BGG data of any length, on any `ComplexShape c`.
-* `Data.segment i j k`: its segment at `i → j → k`.
-* `Data.twist i j : Vⁱ × Ṽⁱ → Vʲ × Ṽʲ`, `(σ, φ) ↦ (dσ - Sφ, d̃φ)`, the twisted differential, and
-  `Data.twistComplex`, the twisted complex as a `HomologicalComplex (ModuleCat R) c`.
-
-## Main results
-
-* `Segment.D1_D0`: (5.1) is a complex; `Segment.ker_D1_eq_range_D0`: it is exact at `Ṽ¹`
-  when both rows are exact at the middle; `Segment.range_D0`, `Segment.D0_injective`,
-  `Segment.range_D1`.
-* `Data.twist_twist`: the twisted differential squares to zero, for any length.
-* `Data.ofSucc`: BGG data on `ComplexShape.up α` from successive maps.
-
-The derived (BGG) complex of `Data`, of any length, and its cohomology are in
-`Feec.HilbertComplex.BGG.Derived` (`Feec.BGG.Data.derived`, `Feec.BGG.Data.bgg`).
+Two complexes `(V, d)` and `(Ṽ, d̃)` of modules on any complex shape, linked by connecting maps
+`S` with `d S = -S d̃` ([ArnoldHu2021], (19)–(22)): one segment gives the complex (5.1) of
+[QuennevilleBelair2015], §5.1, and data of any length the twisted complex.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (BGG data, complex (5.1), Prop 5.1)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (19)–(22) (BGG data),
-  §5.1, (58)–(59) (the twisted complex)
-* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
-  §3 (regularity hypothesis of `Segment.range_D1`)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regularity hypothesis of `Segment.range_D1`)
+  §5.1
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (19)–(22), §5.1
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -57,11 +28,7 @@ namespace Feec.BGG
 
 /-! ## One segment: the input of the complex (5.1) -/
 
-/-- **BGG data on one segment**: the top complex `V⁰ → V¹ → V²` and the bottom complex
-`Ṽ⁰ → Ṽ¹ → Ṽ²`, linked by `S₀ : Ṽ⁰ → V¹` and `S₁ : Ṽ¹ → V²` with `d¹S₀ = -S₁d̃⁰`. Algebraic
-core only; analytic hypotheses are added per theorem. [QuennevilleBelair2015], §5.1
-
-See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
+/-- One segment of BGG data: `V⁰ → V¹ → V²`, `Ṽ⁰ → Ṽ¹ → Ṽ²` and `S₀`, `S₁` with `d¹S₀ = -S₁d̃⁰`. -/
 structure Segment (R : Type*) [Ring R] (V0 V1 V2 Vt0 Vt1 Vt2 : Type*)
     [AddCommGroup V0] [Module R V0] [AddCommGroup V1] [Module R V1]
     [AddCommGroup V2] [Module R V2] [AddCommGroup Vt0] [Module R Vt0]
@@ -84,52 +51,43 @@ variable {R : Type*} [Ring R] {V0 V1 V2 Vt0 Vt1 Vt2 : Type*}
   [AddCommGroup Vt1] [Module R Vt1] [AddCommGroup Vt2] [Module R Vt2]
   (D : Segment R V0 V1 V2 Vt0 Vt1 Vt2)
 
-/-- Exactness of the top complex at `V¹`. See [QuennevilleBelair2015], §5.1. -/
+/-- Exactness of the top complex at `V¹`. -/
 def ExactTop : Prop := LinearMap.ker D.d1 = LinearMap.range D.d0
 
-/-- Exactness of the bottom complex at `Ṽ¹`. See [QuennevilleBelair2015], §5.1. -/
+/-- Exactness of the bottom complex at `Ṽ¹`. -/
 def ExactBot : Prop := LinearMap.ker D.dt1 = LinearMap.range D.dt0
 
-/-- `Γ = {(σ, φ) | d⁰σ = S₀φ}`. See [QuennevilleBelair2015], §5.1, (5.1). -/
+/-- `Γ = {(σ, φ) | d⁰σ = S₀φ}`. -/
 def Γ : Submodule R (V0 × Vt0) :=
   LinearMap.ker (D.d0.comp (LinearMap.fst R V0 Vt0) - D.S0.comp (LinearMap.snd R V0 Vt0))
 
 theorem mem_Γ {x : V0 × Vt0} : x ∈ D.Γ ↔ D.d0 x.1 = D.S0 x.2 := by
   simp [Γ, sub_eq_zero]
 
-/-- The first operator `(0 d̃) : Γ → Ṽ¹` of the complex (5.1).
-See [QuennevilleBelair2015], §5.1, (5.1). -/
+/-- The first operator `(0 d̃) : Γ → Ṽ¹` of the complex (5.1). -/
 def D0 : D.Γ →ₗ[R] Vt1 := D.dt0.comp ((LinearMap.snd R V0 Vt0).comp D.Γ.subtype)
 
-/-- The second operator `(S₁, d̃¹) : Ṽ¹ → V² × Ṽ²` of the complex (5.1).
-See [QuennevilleBelair2015], §5.1, (5.1). -/
+/-- The second operator `(S₁, d̃¹) : Ṽ¹ → V² × Ṽ²` of the complex (5.1). -/
 def D1 : Vt1 →ₗ[R] V2 × Vt2 := D.S1.prod D.dt1
 
 @[simp] lemma D1_apply (u : Vt1) : D.D1 u = (D.S1 u, D.dt1 u) := rfl
 
-/-- `S₁ d̃ φ = 0` for `(σ, φ) ∈ Γ`. -/
 lemma S1_dt0_of_mem {x : V0 × Vt0} (hx : x ∈ D.Γ) : D.S1 (D.dt0 x.2) = 0 := by
   have h := D.d1_d0 x.1
   rw [D.mem_Γ.1 hx, D.anticomm] at h
   simpa using h
 
-/-- `S₁ d̃ ψ = 0` for `ψ ∈ ker S₀`. -/
 lemma S1_dt0_eq_zero {ψ : Vt0} (hψ : D.S0 ψ = 0) : D.S1 (D.dt0 ψ) = 0 := by
   have := D.anticomm ψ; rw [hψ, map_zero] at this; exact neg_eq_zero.mp this.symm
 
-/-- **(5.1) is a complex**: `(S₁, d̃¹) ∘ (0 d̃) = 0`. [QuennevilleBelair2015], Prop 5.1
-
-See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
+/-- (5.1) is a complex: `(S₁, d̃¹) ∘ (0 d̃) = 0`. [QuennevilleBelair2015], Prop 5.1 -/
 theorem D1_D0 (x : D.Γ) : D.D1 (D.D0 x) = 0 := by
   obtain ⟨⟨σ, φ⟩, hx⟩ := x
   have h := D.d1_d0 σ
   rw [(D.mem_Γ).1 hx, D.anticomm] at h
   simp [D0, D1, neg_eq_zero.mp h, D.dt1_dt0]
 
-/-- **Range of `(0 d̃)`**: `R(0 d̃) = R(d̃⁰) ∩ N(S₁)`, using exactness of the top complex at `V¹`.
-[QuennevilleBelair2015], Prop 5.1 (closed range of `(0 d)`, algebraic part)
-
-See [QuennevilleBelair2015], Prop 5.1. -/
+/-- `R(0 d̃) = R(d̃⁰) ∩ N(S₁)` when the top complex is exact at `V¹`. -/
 theorem range_D0 (hT : D.ExactTop) :
     LinearMap.range D.D0 = LinearMap.range D.dt0 ⊓ LinearMap.ker D.S1 := by
   ext y
@@ -143,17 +101,14 @@ theorem range_D0 (hT : D.ExactTop) :
     obtain ⟨σ, hσ⟩ := this
     exact ⟨⟨(σ, φ), D.mem_Γ.2 hσ⟩, rfl⟩
 
-/-- **Exactness of (5.1) at `Ṽ¹`** (missing in the thesis): `N(S₁) ∩ N(d̃¹) = R(0 d̃)` when the
-top complex is exact at `V¹` and the bottom complex at `Ṽ¹`. [QuennevilleBelair2015], Prop 5.1 (exactness, added)
-
-Cf. [QuennevilleBelair2015], §5.1, (5.1); cf. [ArnoldHu2021]. -/
+/-- (5.1) is exact at `Ṽ¹` when the top complex is exact at `V¹` and the bottom one at `Ṽ¹`.
+Cf. [QuennevilleBelair2015], Prop 5.1 -/
 theorem ker_D1_eq_range_D0 (hT : D.ExactTop) (hB : D.ExactBot) :
     LinearMap.ker D.D1 = LinearMap.range D.D0 := by
   rw [range_D0 D hT, ← hB]
   ext u
   simp [and_comm]
 
-/-- Exactness of (5.1) at `Γ`: `(0 d̃)` is injective when `d⁰` and `d̃⁰` are. -/
 theorem D0_injective (hd0 : Function.Injective D.d0) (hdt0 : Function.Injective D.dt0) :
     Function.Injective D.D0 := by
   rintro ⟨⟨σ, φ⟩, hx⟩ ⟨⟨τ, ψ⟩, hy⟩ e
@@ -165,10 +120,7 @@ theorem D0_injective (hd0 : Function.Injective D.d0) (hdt0 : Function.Injective 
   subst this
   rfl
 
-/-- **Range of `(S₁, d̃¹)`** under the regularity hypothesis `d¹V¹ ⊆ d¹S₀Ṽ⁰`:
-`R(S₁, d̃¹) = {(ρ, μ) | ∃ w, d̃¹w = μ, ρ - S₁w ∈ R(d¹)}`. [QuennevilleBelair2015], Prop 5.1 (proof).
-For `H̊(curl)` the thesis obtains the hypothesis from the regular decomposition
-[HiptmairXu2007], §3 and [Hiptmair2002], Lemma 2.4 (not formalized; `hreg` is assumed). -/
+/-- If `d¹V¹ ⊆ d¹S₀Ṽ⁰`, then `R(S₁, d̃¹) = {(ρ, μ) | ∃ w, d̃¹w = μ, ρ - S₁w ∈ R(d¹)}`. -/
 theorem range_D1 (hreg : LinearMap.range D.d1 ≤ LinearMap.range (D.d1 ∘ₗ D.S0)) :
     (LinearMap.range D.D1 : Set (V2 × Vt2)) =
       {p | ∃ w, D.dt1 w = p.2 ∧ p.1 - D.S1 w ∈ LinearMap.range D.d1} := by
@@ -188,11 +140,7 @@ end Segment
 
 /-! ## BGG data of any length -/
 
-/-- **BGG data on a complex shape `c`**: two complexes `(V, d)`, `(Ṽ, d̃)` on `c` and connecting
-maps `S i j : Ṽⁱ → Vʲ`, all zero off the relation of `c`, with `d d = 0`, `d̃ d̃ = 0` and
-`d S = -S d̃`. Any length: `c = ComplexShape.up ℤ`, a finite window, etc.
-
-See [QuennevilleBelair2015], §5.1 (the case of one segment); [ArnoldHu2021]. -/
+/-- BGG data on a complex shape: complexes `V`, `Ṽ` and maps `S i j : Ṽⁱ → Vʲ`, `d S = -S d̃`. -/
 structure Data (R : Type*) [Ring R] {ι : Type*} (c : ComplexShape ι) (V Vt : ι → Type*)
     [∀ i, AddCommGroup (V i)] [∀ i, Module R (V i)] [∀ i, AddCommGroup (Vt i)]
     [∀ i, Module R (Vt i)] where
@@ -235,15 +183,13 @@ def twist (i j : ι) : V i × Vt i →ₗ[R] V j × Vt j :=
 theorem twist_eq_zero {i j : ι} (h : ¬ c.Rel i j) : D.twist i j = 0 := by
   ext x <;> simp [D.shape_d i j h, D.shape_S i j h, D.shape_dt i j h]
 
-/-- **The twisted differential squares to zero**, for BGG data of any length:
-`d(dσ - Sφ) - S d̃φ = -(dS + S d̃)φ = 0`. [ArnoldHu2021], §5.1 -/
+/-- The twisted differential squares to zero. [ArnoldHu2021], §5.1 -/
 theorem twist_twist (i j k : ι) (x : V i × Vt i) : D.twist j k (D.twist i j x) = 0 := by
   simp [D.d_comp_d, D.dt_comp_dt, D.anticomm]
 
 section Complex
 
-/-- **The twisted complex** `(V × Ṽ, (σ, φ) ↦ (dσ - Sφ, d̃φ))` of BGG data of any length, as a
-homological complex of `R`-modules. [ArnoldHu2021], (59) -/
+/-- The twisted complex `(V × Ṽ, (σ, φ) ↦ (dσ - Sφ, d̃φ))` of `R`-modules. [ArnoldHu2021], (59) -/
 def twistComplex : HomologicalComplex (ModuleCat.{v} R) c where
   X i := ModuleCat.of R (V i × Vt i)
   d i j := ModuleCat.ofHom (D.twist i j)
@@ -274,9 +220,7 @@ theorem succMap_of_ne {i j : α} (h : i + 1 ≠ j) : succMap f i j = 0 := by sim
 variable {V Vt : α → Type*} [∀ i, AddCommGroup (V i)] [∀ i, Module R (V i)]
   [∀ i, AddCommGroup (Vt i)] [∀ i, Module R (Vt i)]
 
-/-- **BGG data on `ComplexShape.up α`** (`α = ℕ, ℤ, …`) from the successive maps
-`d i : Vⁱ → Vⁱ⁺¹`, `d̃ i : Ṽⁱ → Ṽⁱ⁺¹`, `S i : Ṽⁱ → Vⁱ⁺¹` with `d d = 0`, `d̃ d̃ = 0`,
-`d S = -S d̃`. -/
+/-- BGG data on `ComplexShape.up α` from successive maps `d i`, `d̃ i`, `S i`. -/
 def ofSucc [IsRightCancelAdd α] (d : ∀ i, V i →ₗ[R] V (i + 1)) (dt : ∀ i, Vt i →ₗ[R] Vt (i + 1))
     (S : ∀ i, Vt i →ₗ[R] V (i + 1)) (d_comp_d : ∀ i x, d (i + 1) (d i x) = 0)
     (dt_comp_dt : ∀ i x, dt (i + 1) (dt i x) = 0)

@@ -8,37 +8,21 @@ public import Feec.Variational.InfSup
 /-!
 # Petrov–Galerkin approximation: stability and quasi-optimality
 
-Let `B : X →L[𝕜] Y →SL[σ] 𝕜` be bounded, `K ⊆ X` a trial subspace and `L ⊆ Y` a test subspace,
-with the discrete inf-sup condition `InfSup (restrict B K L) γ`. A Galerkin approximation of
-`u ∈ X` is `uₕ ∈ K` with `B (u - uₕ) v = 0` for every `v ∈ L` (Galerkin orthogonality).
+Under the discrete inf-sup condition, Galerkin orthogonality gives discrete stability and the
+quasi-optimality `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) dist(u, K)`, with the constant `‖B‖/γ` in inner product
+spaces.
 
 ## Main results
 
-* `InfSup.norm_le_of_restrict_eq`: discrete stability `‖uₕ‖ ≤ (‖B‖/γ) ‖u‖`.
-* `InfSup.norm_sub_le_of_orthogonal`, `InfSup.norm_sub_le_infDist`: Babuška's
-  quasi-optimality `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) dist(u, K)` in normed spaces.
-* `InfSup.norm_sub_le_of_orthogonal_sharp`, `InfSup.norm_sub_le_infDist_sharp`: the sharp
-  constant `‖B‖/γ` of Xu–Zikatanov when `X` is an inner product space and `K ≠ 0`. The proof
-  is Kato's identity `‖1 - P‖ = ‖P‖` for an idempotent `P`, applied to the Galerkin projection
-  only along the plane spanned by `uₕ - w` and `u - uₕ`; no global projection is needed, so
-  neither existence of Galerkin solutions nor completeness is assumed.
-* `existsUnique_galerkin`: unique solvability of the discrete problem when `K`, `L` are
-  finite-dimensional of the same dimension (bilinear forms).
+* `InfSup.norm_sub_le_infDist`: quasi-optimality.
+* `InfSup.norm_sub_le_infDist_sharp`: the constant `‖B‖/γ`.
+* `existsUnique_galerkin`: unique solvability on finite-dimensional spaces of equal dimension.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.10 (quasi-optimality with constant `1 + ‖B‖/γ`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 * [D. N. Arnold, *Lecture notes on Numerical Analysis of Partial Differential Equations*][ArnoldNotes2011]
-  (source of Thm 4.10 of the thesis)
-* [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
-* [J. Xu, L. Zikatanov, *Some observations on Babuška and Brezzi theories*][XuZikatanov2003] (the
-  sharp constant `‖B‖/γ`)
-* [T. Kato, *Estimation of iterated matrices, with application to the von Neumann condition*][Kato1960]
-  (`‖1 - P‖ = ‖P‖`)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
+* [J. Xu, L. Zikatanov, *Some observations on Babuška and Brezzi theories*][XuZikatanov2003]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -57,30 +41,23 @@ section Normed
 variable [NormedAddCommGroup X] [NormedSpace 𝕜 X]
   {B : X →L[𝕜] Y →SL[σ] 𝕜} {K : Submodule 𝕜 X} {L : Submodule 𝕜 Y} {γ : ℝ}
 
-/-- `‖B|_{K×L}‖ ≤ ‖B‖`. -/
 theorem norm_restrict_le : ‖restrict B K L‖ ≤ ‖B‖ :=
   ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun x =>
     norm_restrict_apply_le_of_eq K L x fun _ _ => rfl
 
 namespace InfSup
 
-/-- **Discrete stability.** If `p ∈ K` and `B p = B z` on the test space `L`, then
-`‖p‖ ≤ (‖B‖/γ) ‖z‖`. [QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_le_of_restrict_eq (h : InfSup (restrict B K L) γ) {p : X} (hp : p ∈ K) {z : X}
     (hpz : ∀ v ∈ L, B p v = B z v) : ‖p‖ ≤ ‖B‖ / γ * ‖z‖ := by
   have h1 := (h.le ⟨p, hp⟩).trans (norm_restrict_apply_le_of_eq K L ⟨p, hp⟩ hpz)
   rw [div_mul_eq_mul_div, le_div_iff₀ h.pos, mul_comm]
   exact h1
 
-/-- On a nonzero trial space, `γ ≤ ‖B‖`. -/
 theorem le_opNorm_of_ne_bot (h : InfSup (restrict B K L) γ) (hK : K ≠ ⊥) : γ ≤ ‖B‖ := by
   obtain ⟨k, hk, hk0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot hK
   have : Nontrivial K := ⟨⟨⟨k, hk⟩, 0, fun h0 => hk0 (congrArg Subtype.val h0)⟩⟩
   exact h.le_opNorm.trans norm_restrict_le
 
-/-- **Quasi-optimality** (Babuška): under the discrete inf-sup condition, Galerkin orthogonality
-`B (u - uₕ) = 0` on `L` gives `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) ‖u - w‖` for every `w ∈ K`. No
-completeness or finite dimension is needed. [QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_sub_le_of_orthogonal (h : InfSup (restrict B K L) γ) {u uh : X} (huh : uh ∈ K)
     (horth : ∀ v ∈ L, B (u - uh) v = 0) {w : X} (hw : w ∈ K) :
     ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * ‖u - w‖ := by
@@ -94,8 +71,7 @@ theorem norm_sub_le_of_orthogonal (h : InfSup (restrict B K L) γ) {u uh : X} (h
     _ ≤ _ := by linarith
 
 /-- **Quasi-optimality**, best-approximation form: `‖u - uₕ‖ ≤ (1 + ‖B‖/γ) dist(u, K)`.
-[QuennevilleBelair2015], Thm 4.10, taken from [ArnoldNotes2011]. The thesis' proof goes through the
-orthogonal projection onto `K`; this one does not, so `K` need not be closed or complete. -/
+[QuennevilleBelair2015], Thm 4.10 (adapted) -/
 theorem norm_sub_le_infDist (h : InfSup (restrict B K L) γ) {u uh : X} (huh : uh ∈ K)
     (horth : ∀ v ∈ L, B (u - uh) v = 0) :
     ‖u - uh‖ ≤ (1 + ‖B‖ / γ) * Metric.infDist u K := by
@@ -114,8 +90,6 @@ section Inner
 variable [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
   {B : X →L[𝕜] Y →SL[σ] 𝕜} {K : Submodule 𝕜 X} {L : Submodule 𝕜 Y} {γ : ℝ}
 
-/-- The norm identity behind Kato's `‖1 - P‖ = ‖P‖`:
-`‖ ‖b‖² a + ‖a‖² b ‖ = ‖a‖ ‖b‖ ‖a + b‖` in an inner product space. -/
 theorem norm_smul_add_smul_eq (a b : X) :
     ‖((‖b‖ ^ 2 : ℝ) : 𝕜) • a + ((‖a‖ ^ 2 : ℝ) : 𝕜) • b‖ = ‖a‖ * ‖b‖ * ‖a + b‖ := by
   have hsq : ‖((‖b‖ ^ 2 : ℝ) : 𝕜) • a + ((‖a‖ ^ 2 : ℝ) : 𝕜) • b‖ ^ 2
@@ -132,9 +106,6 @@ theorem norm_smul_add_smul_eq (a b : X) :
 
 namespace InfSup
 
-/-- **Sharp quasi-optimality** (Xu–Zikatanov): in an inner product space `X`, under the discrete
-inf-sup condition on `K ≠ 0`, Galerkin orthogonality gives `‖u - uₕ‖ ≤ (‖B‖/γ) ‖u - w‖` for every
-`w ∈ K`. This improves Babuška's `1 + ‖B‖/γ` and is optimal in general. [QuennevilleBelair2015], Thm 4.10 -/
 theorem norm_sub_le_of_orthogonal_sharp (h : InfSup (restrict B K L) γ) (hK : K ≠ ⊥)
     {u uh : X} (huh : uh ∈ K) (horth : ∀ v ∈ L, B (u - uh) v = 0) {w : X} (hw : w ∈ K) :
     ‖u - uh‖ ≤ ‖B‖ / γ * ‖u - w‖ := by
@@ -160,8 +131,7 @@ theorem norm_sub_le_of_orthogonal_sharp (h : InfSup (restrict B K L) γ) (hK : K
   exact le_of_mul_le_mul_right this (by positivity)
 
 /-- **Sharp quasi-optimality**, best-approximation form: `‖u - uₕ‖ ≤ (‖B‖/γ) dist(u, K)`.
-[QuennevilleBelair2015], Thm 4.10 (from [ArnoldNotes2011], with constant `1 + ‖B‖/γ`), sharpened
-as in [XuZikatanov2003]. -/
+[QuennevilleBelair2015], Thm 4.10 (adapted); [XuZikatanov2003] -/
 theorem norm_sub_le_infDist_sharp (h : InfSup (restrict B K L) γ) (hK : K ≠ ⊥) {u uh : X}
     (huh : uh ∈ K) (horth : ∀ v ∈ L, B (u - uh) v = 0) :
     ‖u - uh‖ ≤ ‖B‖ / γ * Metric.infDist u K := by
@@ -180,10 +150,8 @@ section Existence
 variable [NormedAddCommGroup X] [NormedSpace 𝕜 X]
   {K : Submodule 𝕜 X} {L : Submodule 𝕜 Y} {γ : ℝ}
 
-/-- **Discrete well-posedness.** For a bounded bilinear form with the discrete inf-sup condition
-on finite-dimensional `K`, `L` of equal dimension, the Galerkin problem `uₕ ∈ K`,
-`B uₕ v = F v` (`v ∈ L`) has a unique solution for every bounded functional `F`.
-[QuennevilleBelair2015], Thm 4.10, after [ArnoldNotes2011]. -/
+/-- **Discrete well-posedness** on finite-dimensional `K`, `L` of equal dimension under the
+discrete inf-sup condition. [QuennevilleBelair2015], Thm 4.10; [ArnoldNotes2011] -/
 theorem existsUnique_galerkin [FiniteDimensional 𝕜 K] [FiniteDimensional 𝕜 L]
     (hdim : finrank 𝕜 K = finrank 𝕜 L) {B : X →L[𝕜] Y →L[𝕜] 𝕜}
     (h : InfSup (restrict B K L) γ) (F : Y →L[𝕜] 𝕜) :

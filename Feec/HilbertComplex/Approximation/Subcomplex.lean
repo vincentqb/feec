@@ -5,33 +5,17 @@ public import Feec.HilbertComplex.Hodge
 /-!
 # Subcomplexes of a Hilbert complex
 
-A subcomplex of a Hilbert complex `H` is a family of subspaces `Vₕⁱ ⊆ D(d i j)` with
-`d (Vₕⁱ) ⊆ Vₕʲ` (the finite element spaces of a stable discretization). When the `Vₕⁱ` are
-finite-dimensional, the restricted differentials are bounded and the subcomplex is itself a
-Hilbert complex `S.toHilbertComplex` on the spaces `Vₕⁱ` with the `W` inner products. Every
-result of `Feec.HilbertComplex.Hodge` then applies verbatim to the discrete complex: discrete
-cycles, boundaries and harmonic forms, the discrete Hodge decomposition and discrete cohomology.
+Subcomplexes `Vₕⁱ ⊆ D(d)` with `d Vₕⁱ ⊆ Vₕʲ`. A finite-dimensional subcomplex is a Hilbert complex,
+with its discrete cycles, boundaries and harmonic forms.
 
 ## Main definitions
 
-* `Feec.HilbertComplex.Subcomplex H`; `Subcomplex.dh` (the discrete differential);
-  `Subcomplex.toHilbertComplex`.
-* `Subcomplex.cyclesW`, `Subcomplex.boundariesW`, `Subcomplex.harmonicW`: the discrete cycles,
-  boundaries and harmonic forms as subspaces of `Wⁱ`.
-
-## Main results
-
-* `Subcomplex.mem_cycles_iff`: discrete cycles are the cycles lying in `Vₕ`.
-* `Subcomplex.boundariesW_le`: discrete boundaries are boundaries.
-* `Subcomplex.mem_harmonic_iff`: `ℌₕ = 𝔷ₕ ∩ 𝔅ₕᗮ`.
+* `Subcomplex`, `Subcomplex.toHilbertComplex`: subcomplexes, and the discrete complex.
+* `Subcomplex.cyclesW`, `boundariesW`, `harmonicW`: discrete cycles, boundaries, harmonic forms.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (subcomplexes and the discrete Hodge decomposition)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 (subcomplexes `Vₕ`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -47,7 +31,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- A **subcomplex** of `H`: subspaces `Vₕⁱ ⊆ D(d i j)` with `d (Vₕⁱ) ⊆ Vₕʲ`. [QuennevilleBelair2015], §4.6 -/
+/-- A subcomplex: subspaces `Vₕⁱ ⊆ D(d i j)` with `d Vₕⁱ ⊆ Vₕʲ`. [QuennevilleBelair2015], §4.6 -/
 structure Subcomplex where
   /-- the discrete spaces -/
   V : ∀ i, Submodule 𝕜 (W i)
@@ -85,7 +69,6 @@ def dLin (i j : ι) : S.V i →ₗ[𝕜] S.V j where
 theorem dLin_eq_zero_of_not_rel {i j : ι} (h : ¬ c.Rel i j) : S.dLin i j = 0 :=
   LinearMap.ext fun _ => Subtype.ext (H.apply_eq_zero_of_not_rel h _)
 
-/-- `dₕ dₕ = 0`. -/
 theorem dLin_comp_dLin (i j k : ι) (x : S.V i) : S.dLin j k (S.dLin i j x) = 0 :=
   Subtype.ext (by
     rw [coe_dLin_apply, ZeroMemClass.coe_zero]
@@ -108,18 +91,15 @@ theorem mem_cyclesW_iff {i : ι} {x : W i} : x ∈ S.cyclesW i ↔ x ∈ S.V i �
 
 theorem cyclesW_le (i : ι) : S.cyclesW i ≤ S.V i := inf_le_left
 
-/-- Discrete cycles are cycles. -/
 theorem cyclesW_le_cycles (i : ι) : S.cyclesW i ≤ H.cycles i := inf_le_right
 
 theorem boundariesW_le_V (i : ι) : S.boundariesW i ≤ S.V i := by
   rintro _ ⟨y, rfl⟩; exact (S.dLin _ i y).2
 
-/-- **Discrete boundaries are boundaries.** -/
 theorem boundariesW_le (i : ι) : S.boundariesW i ≤ H.boundaries i := by
   rintro _ ⟨y, rfl⟩
   exact ⟨S.toDomain _ i y, rfl⟩
 
-/-- Discrete boundaries are discrete cycles. -/
 theorem boundariesW_le_cyclesW (i : ι) : S.boundariesW i ≤ S.cyclesW i := fun _ hx =>
   ⟨S.boundariesW_le_V i hx, H.boundaries_le_cycles i (S.boundariesW_le i hx)⟩
 
@@ -134,12 +114,11 @@ theorem mem_harmonicW_iff {i : ι} {x : W i} :
 
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
-/-- The discrete differential `dₕ : Vₕⁱ → Vₕʲ`, bounded since `Vₕⁱ` is finite-dimensional. -/
+/-- The discrete differential `dₕ : Vₕⁱ → Vₕʲ`, a bounded operator. -/
 def dh (i j : ι) : S.V i →L[𝕜] S.V j :=
   ⟨S.dLin i j, LinearMap.continuous_of_finiteDimensional _⟩
 
-/-- **The discrete complex**: a finite-dimensional subcomplex is a Hilbert complex with the
-restricted (bounded) differentials. [QuennevilleBelair2015], §4.6 -/
+/-- A finite-dimensional subcomplex as a Hilbert complex. [QuennevilleBelair2015], §4.6 -/
 def toHilbertComplex : HilbertComplex 𝕜 c (fun i => S.V i) where
   d i j := (S.dh i j : S.V i →ₗ[𝕜] S.V j).toPMap ⊤
   shape i j h := by
@@ -150,7 +129,6 @@ def toHilbertComplex : HilbertComplex 𝕜 c (fun i => S.V i) where
   mapsTo _ _ _ _ := Submodule.mem_top
   d_comp_d i j k x := S.dLin_comp_dLin i j k x
 
-/-- `x ∈ Vₕⁱ` is a discrete cycle iff it is a cycle. -/
 theorem mem_cycles_iff {i : ι} {x : S.V i} :
     x ∈ S.toHilbertComplex.cycles i ↔ (x : W i) ∈ H.cycles i := by
   rw [cycles, cycles, mem_ker_iff, mem_ker_iff]
@@ -166,7 +144,6 @@ theorem mem_cycles_iff {i : ι} {x : S.V i} :
     rw [show S.toDomain i (c.next i) x = y from Subtype.ext hy]
     exact hy0
 
-/-- `x ∈ Vₕⁱ` is a discrete boundary iff it is in `boundariesW`. -/
 theorem mem_boundaries_iff {i : ι} {x : S.V i} :
     x ∈ S.toHilbertComplex.boundaries i ↔ (x : W i) ∈ S.boundariesW i := by
   constructor
@@ -174,7 +151,6 @@ theorem mem_boundaries_iff {i : ι} {x : S.V i} :
   · rintro ⟨y, hy⟩
     exact ⟨⟨y, Submodule.mem_top⟩, Subtype.ext hy⟩
 
-/-- The discrete harmonic forms are the harmonic forms of the discrete complex. -/
 theorem mem_harmonic_iff {i : ι} {x : S.V i} :
     x ∈ S.toHilbertComplex.harmonic i ↔ (x : W i) ∈ S.harmonicW i := by
   rw [S.toHilbertComplex.mem_harmonic_iff, S.mem_cycles_iff, Submodule.mem_orthogonal,

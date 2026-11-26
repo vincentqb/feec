@@ -7,67 +7,24 @@ public import Mathlib.Analysis.PSeries
 /-!
 # Sobolev spaces on the cube `Q = (0, ½)ⁿ`
 
-Fractional Sobolev spaces of `k`-forms on `Q = (0, ½)ⁿ` (`Geometry.Q (Fin n)`), for real `s`,
-defined on the Fourier side of the period-`1` torus `𝕋ⁿ = ℝⁿ/ℤⁿ` (normalised Haar measure,
-frequencies `ξ_m = 2πm`, `m ∈ ℤⁿ`, weight `⟨ξ_m⟩^{2s} = (1 + |2πm|²)^s`, `weight`). A coefficient
-sequence `x ∈ ℓ²(ℤⁿ; Λᵏ)` (`Seq n k`) is in `Hˢ(𝕋ⁿ)` if `Σ_m ⟨ξ_m⟩^{2s} |x(m)|² < ∞` (`MemSob`,
-`sobSum`); `x|_Q` is the restriction to `Q` of the real part of its inverse Fourier transform
-(`Feec.Models.Cube.DeRhamIdent.Jinvf`).
+Sobolev spaces `Hˢ`, `s ∈ ℝ`, of `k`-forms on `Q = (0, ½)ⁿ` from the period-`1` torus: the
+restrictions of `Hˢ(𝕋ⁿ)` and the parity classes `Hˢ_J(Q)`, which for `s = 1` are described by the
+`H¹(Q)` coefficients ([Brezis2011], §9.1).
 
-* **Without boundary condition** (`sobolevQ n k s`, `qNorm`): the restrictions to `Q` of the
-  forms of `Hˢ(𝕋ⁿ)`, with the quotient norm `‖u‖_{Hˢ(Q)} = inf {‖x‖_{Hˢ(𝕋ⁿ)} : x|_Q = u}`
-  (the Fourier definition of fractional Sobolev spaces by restriction, with periodic extensions
-  in place of extensions to `ℝⁿ`; for `s = 1` it is the space `H¹(Q)` of [Brezis2011], §9.1, by
-  `mem_sobolevQ_one_iff` and `qNorm_one_sq_equiv`).
-* **The parity classes** (`sobolevPar J k s`, `parNorm`): the forms whose parity extension in the
-  class `J` (`Feec.Models.Cube.DeRhamIdent.JfJ`: odd in `x_j` for the components that vanish on
-  the faces normal to `e_j`, i.e. the tangential components for `j ∈ J`, the normal ones for
-  `j ∉ J`) lies in `Hˢ(𝕋ⁿ)`, `‖u‖²_{s,J} = 2⁻ⁿ Σ_m ⟨ξ_m⟩^{2s} |(JfJ u)(m)|²`. `J = ∅` is the
-  absolute class (`Jf false`), `J = univ` the relative class (`Jf true`, vanishing tangential
-  trace), the other `J` the partial boundary conditions of `HΛ_J(Q)`.
+## Main definitions
+
+* `sobolevQ`, `qNorm`: the space `Hˢ(Q; Λᵏ)` and its quotient norm.
+* `sobolevPar`, `parNorm`: the parity class `Hˢ_J(Q; Λᵏ)` and its norm.
 
 ## Main results
 
-* **`L²` and monotonicity**: `sobolevPar_zero`, **`parNorm_zero`**, `sobolevQ_zero`,
-  **`qNorm_zero`** (`H⁰ = L²` isometrically; for `sobolevQ` through the contraction
-  `norm_Jinvf_le` and the extension by zero `zeroExt`, the average of the `2ⁿ` parity extensions,
-  orthogonal by `inner_JfJ_eq_zero`); `sobolevPar_anti`, `parNorm_mono`, `norm_le_parNorm`;
-  `sobolevPar_le_sobolevQ`.
-* **`H¹` is the weak-derivative space**: **`mem_sobolevPar_one_iff`** (`u ∈ H¹_J` iff every
-  coefficient `u_t` lies in `D(d_{J ∆ t})`, i.e. is `H¹(Q)` with vanishing trace on the faces
-  normal to `J ∆ t`) with the norm identity **`parNorm_one_sq`**
-  (`‖u‖²_{1,J} = ‖u‖² + Σ_t ‖∇_{J ∆ t} u_t‖²`), and **`mem_sobolevQ_one_iff`** (`u ∈ H¹(Q)` iff
-  every coefficient lies in `D(grad_max) = H¹(Q)`: forward by graph-norm convergence of the
-  truncations, `coeff_mem_maximal_of_mem_sobolevQ_one`; backward by the even reflection of each
-  coefficient), with equivalent norms, **`qNorm_one_sq_equiv`**:
-  `‖u‖² + Σ_t ‖∇ u_t‖² ≤ ‖u‖²_{H¹(Q)} ≤ 2ⁿ (‖u‖² + Σ_t ‖∇ u_t‖²)`
-  (`norm_sq_add_sum_grad_sq_le_qNorm`; `qNorm_one_sq_le` through the coefficientwise even
-  extension `evenExt`, `sobSum_evenExt`).
-* **Fourier truncation** `u_M` (frequencies `|m|_∞ ≤ M`, a real trigonometric polynomial
-  restricted to `Q`; `truncPar` in the class `J`, `truncPar_mem`, and `Jinvf k (trunc M k x)` for
-  an extension `x`):
-  - `‖u - u_M‖ ≤ (2π(M + 1))^{-s} ‖u‖` (**`norm_sub_truncPar_le`**, **`norm_sub_Jinvf_trunc_le`**),
-    in every weaker norm `‖u - u_M‖_t² ≤ (1 + (2π(M + 1))²)^{t - s} ‖u‖_s²`
-    (`parNorm_sub_truncPar_sq_le`, `sobSum_sub_trunc_le`);
-  - the inverse estimates `‖u_M‖_t² ≤ (1 + n(2πM)²)^{t - s} ‖u‖_s²` for `t ≥ s`
-    (`parNorm_truncPar_sq_le`); for the gradient,
-    `Σ_t ‖∇ (u_M)_t‖² ≤ (1 + n(2πM)²)^{1 - s} ‖x‖²_{Hˢ(𝕋ⁿ)}` for `s ≤ 1` (`grad_truncQ_le`, from
-    `grad_Jinvf_sum_le`: `Σ_t ‖∇ (x|_Q)_t‖² ≤ ‖x‖²_{H¹(𝕋ⁿ)}` for trigonometric polynomials), and
-    `‖u_M‖²_{1,J} ≤ (1 + n(2πM)²)^{1 - s} ‖u‖²_{s,J}` with `parNorm_one_sq` in the classes; the
-    derivatives `Dᵐ`, `m ≥ 2`, enter only through the `Hᵐ` norm.
-
-No hypothesis is assumed. Not formalized: the identification of `Hᵐ`, `m ≥ 2`, with the spaces of
-`m` weak derivatives in `L²(Q)`, the Slobodeckij form of the fractional norms, and the equality
-`Hˢ(Q) = Hˢ_∅(Q)` (with equivalent norms) for `s < 3/2`.
+* `mem_sobolevQ_one_iff`, `mem_sobolevPar_one_iff`: `H¹(Q)` and `H¹_J(Q)` by the coefficients.
+* `norm_sub_Jinvf_trunc_le`, `norm_sub_truncPar_le`: the `L²` error of the Fourier truncation.
+* `grad_truncQ_le`: the gradient of the truncation of `Hˢ(Q)` data, `s ≤ 1`.
 
 ## References
 
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.1 (the space `H¹`), §9.2 (extension by reflection)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (relative and absolute boundary conditions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the cube by the method of images)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -112,7 +69,6 @@ theorem weight_add (s t : ℝ) (m : Fin n → ℤ) : weight (s + t) m = weight s
 theorem weight_mono {s t : ℝ} (h : s ≤ t) (m : Fin n → ℤ) : weight s m ≤ weight t m :=
   Real.rpow_le_rpow_of_exponent_le (one_le_base m) h
 
-/-- Inside the band `|m|_∞ ≤ M` the frequencies are at most `2π √n M`. -/
 theorem norm_freq_sq_le_of_mem {M : ℕ} {m : Fin n → ℤ} (hm : m ∈ bandN M) :
     ‖freq m‖ ^ 2 ≤ n * (2 * Real.pi * M) ^ 2 := by
   rw [norm_freq_sq]
@@ -124,7 +80,6 @@ theorem norm_freq_sq_le_of_mem {M : ℕ} {m : Fin n → ℤ} (hm : m ∈ bandN M
         mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun i _ => h i) (by positivity)
     _ = n * (2 * Real.pi * M) ^ 2 := by simp; ring
 
-/-- **The weight inside the band**: `⟨ξ_m⟩^{2s} ≤ (1 + n (2πM)²)^s` for `s ≥ 0`. -/
 theorem weight_le_of_mem {s : ℝ} (hs : 0 ≤ s) {M : ℕ} {m : Fin n → ℤ} (hm : m ∈ bandN M) :
     weight s m ≤ (1 + n * (2 * Real.pi * M) ^ 2) ^ s :=
   Real.rpow_le_rpow (base_pos m).le (by linarith [norm_freq_sq_le_of_mem hm]) hs
@@ -165,7 +120,6 @@ theorem cf_smul (c : ℂ) (x : Seq n k) (m : Fin n → ℤ) : cf (c • x) m = c
 theorem cf_zero (m : Fin n → ℤ) : cf (0 : Seq n k) m = 0 :=
   Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 _) m
 
-/-- A function with summable squares is a coefficient sequence. -/
 theorem memLp_of_summable {f : (Fin n → ℤ) → Form ℂ (Fin n) k}
     (hf : Summable fun m => ‖f m‖ ^ 2) : MemLp f 2 (Measure.count : Measure (Fin n → ℤ)) :=
   (memLp_count_iff (by norm_num)).2 (memℓp_gen (by simpa using hf))
@@ -234,7 +188,6 @@ theorem MemSob.sum {s : ℝ} {ι : Type*} (t : Finset ι) {x : ι → Seq n k}
     exact (hx a (Finset.mem_insert_self a t)).add
       (ih fun i hi => hx i (Finset.mem_insert_of_mem hi))
 
-/-- Finitely supported sequences have every Sobolev regularity. -/
 theorem memSob_of_finite {s : ℝ} {x : Seq n k} (S : Finset (Fin n → ℤ))
     (hS : ∀ m ∉ S, cf x m = 0) : MemSob s x :=
   summable_of_ne_finset_zero (s := S) fun m hm => by simp [hS m hm]
@@ -273,16 +226,11 @@ theorem cf_sub_trunc_of_notMem {M : ℕ} (x : Seq n k) {m : Fin n → ℤ} (hm :
 theorem memSob_trunc (t : ℝ) (M : ℕ) (x : Seq n k) : MemSob t (trunc M k x) :=
   memSob_of_finite (bandS M) fun _ hm => trunc_eq_zero_of_notMem x hm
 
-/-- **The truncation error in every weaker norm**: for `t ≤ s`,
-`Σ ⟨ξ⟩^{2t} |x - x_M|² ≤ (1 + (2π(M+1))²)^{t-s} Σ ⟨ξ⟩^{2s} |x|²`
-(`Feec.Fourier.Torus.sobolev_sub_starProjection_band_le`). -/
 theorem sobSum_sub_trunc_le {s t : ℝ} (hts : t ≤ s) {x : Seq n k} (hx : MemSob s x) (M : ℕ) :
     MemSob t (x - trunc M k x) ∧
       sobSum t (x - trunc M k x) ≤ (1 + (2 * Real.pi * (M + 1)) ^ 2) ^ (t - s) * sobSum s x :=
   Feec.Fourier.Torus.sobolev_sub_starProjection_band_le (TS n) hts M hx
 
-/-- **The inverse estimate for the truncation**: for `s ≤ t`,
-`Σ ⟨ξ⟩^{2t} |x_M|² ≤ (1 + n (2πM)²)^{t-s} Σ ⟨ξ⟩^{2s} |x|²`. -/
 theorem sobSum_trunc_le {s t : ℝ} (hst : s ≤ t) {x : Seq n k} (hx : MemSob s x) (M : ℕ) :
     sobSum t (trunc M k x) ≤ (1 + n * (2 * Real.pi * M) ^ 2) ^ (t - s) * sobSum s x := by
   set A : ℝ := (1 + n * (2 * Real.pi * M) ^ 2) ^ (t - s)
@@ -305,8 +253,6 @@ theorem sobSum_trunc_le {s t : ℝ} (hst : s ≤ t) {x : Seq n k} (hx : MemSob s
         Summable.tsum_le_tsum hle (memSob_trunc t M x) (hx.mul_left A)
     _ = A * sobSum s x := tsum_mul_left
 
-/-- **The `L²` truncation error**: `‖x - x_M‖² ≤ (1 + (2π(M+1))²)^{-s} Σ ⟨ξ⟩^{2s} |x|²` for
-`s ≥ 0`. -/
 theorem norm_sub_trunc_sq_le {s : ℝ} (hs : 0 ≤ s) {x : Seq n k} (hx : MemSob s x) (M : ℕ) :
     ‖x - trunc M k x‖ ^ 2 ≤ (1 + (2 * Real.pi * (M + 1)) ^ 2) ^ (-s) * sobSum s x := by
   have h := (sobSum_sub_trunc_le hs hx M).2
@@ -318,7 +264,7 @@ end Trunc
 
 section Contraction
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 theorem norm_resQ_le {d : Type*} [Fintype d]
@@ -335,7 +281,6 @@ theorem norm_piLp_le_of_le {ι : Type*} [Fintype ι] {E F : ι → Type*}
   exact Real.sqrt_le_sqrt (Finset.sum_le_sum fun i _ =>
     pow_le_pow_left₀ (norm_nonneg _) (h i) 2)
 
-/-- **Restriction to `Q` (real part) is a contraction**: `‖x|_Q‖_{L²(Q)} ≤ ‖x‖_{ℓ²}`. -/
 theorem norm_Jinvf_le (k : ℕ) (x : Seq n k) : ‖Jinvf k x‖ ≤ ‖x‖ := by
   set F := (Fourier.Torus.fieldFourier (Fin n) (formIdx n (k : ℤ))).symm x
   change ‖Jinv (Fin n) (formIdx n (k : ℤ)) x‖ ≤ ‖x‖
@@ -357,11 +302,7 @@ theorem norm_JfJ_sq (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     ‖JfJ J k u‖ ^ 2 = 2 ^ n * ‖u‖ ^ 2 := by
   rw [← real_inner_self_eq_norm_sq, inner_JfJ, real_inner_self_eq_norm_sq]
 
-/-- **The Sobolev space of the parity class `J`**: the `k`-forms `u` on `Q = (0, ½)ⁿ` whose
-parity extension `JfJ J k u` (odd in `x_j` for the components vanishing on the faces normal to
-`e_j`: tangential components for `j ∈ J`, normal ones for `j ∉ J`) lies in `Hˢ(𝕋ⁿ)`:
-`Σ_m (1 + |2πm|²)^s |(JfJ u)(m)|² < ∞`. `J = ∅` is the absolute class (`Jf false`), `J = univ`
-the relative class (`Jf true`, vanishing tangential trace). -/
+/-- The parity class `Hˢ_J(Q; Λᵏ)`: the forms whose parity extension `JfJ J k u` is in `Hˢ(𝕋ⁿ)`. -/
 def sobolevPar (s : ℝ) : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) where
   carrier := {u | MemSob s (JfJ J k u)}
   add_mem' {u v} hu hv := by
@@ -373,8 +314,7 @@ def sobolevPar (s : ℝ) : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : �
 theorem mem_sobolevPar {s : ℝ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} :
     u ∈ sobolevPar J k s ↔ MemSob s (JfJ J k u) := Iff.rfl
 
-/-- The norm of `Hˢ_J(Q; Λᵏ)`: `‖u‖²_{s,J} = 2⁻ⁿ Σ_m (1 + |2πm|²)^s |(JfJ u)(m)|²` (the factor
-`2⁻ⁿ` makes it the `L²(Q)` norm for `s = 0`). -/
+/-- The norm of `Hˢ_J(Q; Λᵏ)`: `‖u‖²_{s,J} = 2⁻ⁿ Σ_m (1 + |2πm|²)^s |(JfJ u)(m)|²`. -/
 def parNorm (s : ℝ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : ℝ :=
   √((2 ^ n)⁻¹ * sobSum s (JfJ J k u))
 
@@ -385,7 +325,6 @@ theorem parNorm_sq (s : ℝ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     parNorm J k s u ^ 2 = (2 ^ n)⁻¹ * sobSum s (JfJ J k u) :=
   Real.sq_sqrt (mul_nonneg (by positivity) (sobSum_nonneg s _))
 
-/-- **`H⁰_J = L²` isometrically.** -/
 theorem sobolevPar_zero : sobolevPar J k 0 = ⊤ :=
   eq_top_iff.2 fun u _ => memSob_zero (JfJ J k u)
 
@@ -393,7 +332,6 @@ theorem parNorm_zero (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : parNorm J
   rw [parNorm, sobSum_zero, norm_JfJ_sq, ← mul_assoc, inv_mul_cancel₀ (by positivity), one_mul,
     Real.sqrt_sq (norm_nonneg u)]
 
-/-- **Monotonicity**: `Hᵗ_J ⊆ Hˢ_J` and `‖u‖_{s,J} ≤ ‖u‖_{t,J}` for `s ≤ t`. -/
 theorem sobolevPar_anti {s t : ℝ} (h : s ≤ t) : sobolevPar J k t ≤ sobolevPar J k s :=
   fun _ hu => MemSob.mono h hu
 
@@ -405,9 +343,7 @@ theorem norm_le_parNorm {s : ℝ} (hs : 0 ≤ s) {u : L2F ℝ (Q (Fin n)) (formI
     (hu : u ∈ sobolevPar J k s) : ‖u‖ ≤ parNorm J k s u := by
   rw [← parNorm_zero J k u]; exact parNorm_mono J k hs hu
 
-/-- **The Fourier truncation in the parity class** `u_M = (x_M)|_Q`, `x = JfJ J k u`: the
-restriction to `Q` of a real trigonometric polynomial of the class `J` (frequencies
-`|m|_∞ ≤ M`), smooth on `cl Q`. -/
+/-- The Fourier truncation `(x_M)|_Q` of `u` in its parity class, `x = JfJ J k u`. -/
 def truncPar (M : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)) :=
   Jinvf k (trunc M k (JfJ J k u))
@@ -420,13 +356,10 @@ theorem JfJ_sub_truncPar (M : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)
     JfJ J k (u - truncPar J k M u) = JfJ J k u - trunc M k (JfJ J k u) := by
   rw [map_sub, JfJ_truncPar]
 
-/-- The truncation is in every Sobolev class. -/
 theorem truncPar_mem (t : ℝ) (M : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     truncPar J k M u ∈ sobolevPar J k t := by
   rw [mem_sobolevPar, JfJ_truncPar]; exact memSob_trunc t M _
 
-/-- **Truncation error in the parity class, in every weaker norm** (`t ≤ s`):
-`‖u - u_M‖²_{t,J} ≤ (1 + (2π(M+1))²)^{t-s} ‖u‖²_{s,J}`. -/
 theorem parNorm_sub_truncPar_sq_le {s t : ℝ} (hts : t ≤ s)
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k s) (M : ℕ) :
     parNorm J k t (u - truncPar J k M u) ^ 2 ≤
@@ -438,8 +371,6 @@ theorem parNorm_sub_truncPar_sq_le {s t : ℝ} (hts : t ≤ s)
         mul_le_mul_of_nonneg_left h (by positivity)
     _ = _ := by ring
 
-/-- **Inverse estimate for the truncation in the parity class** (`s ≤ t`):
-`‖u_M‖²_{t,J} ≤ (1 + n (2πM)²)^{t-s} ‖u‖²_{s,J}`. -/
 theorem parNorm_truncPar_sq_le {s t : ℝ} (hst : s ≤ t)
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k s) (M : ℕ) :
     parNorm J k t (truncPar J k M u) ^ 2 ≤
@@ -499,8 +430,6 @@ theorem pcJ_symmDiff_empty (s : Finset (Fin n)) : pcJ (symmDiff J s) ∅ = pcJ J
   by_cases hJ : j ∈ J <;> by_cases hs : j ∈ s <;>
     simp [pcJ, DeRham.mixedSign, DeRham.reflSign, Finset.mem_symmDiff, hJ, hs]
 
-/-- **The coefficients of the extension**: the extension of the coefficient `u_t` (a `0`-form,
-class `J ∆ t`) is the `t`-component of the extension of `u` (class `J`). -/
 theorem cf_JfJ_zeroF (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) (t : formIdx n (k : ℤ))
     (m : Fin n → ℤ) :
     cf (JfJ (symmDiff J t.1) 0 (zeroF (u t))) m t₀ = cf (JfJ J k u) m t := by
@@ -518,8 +447,6 @@ theorem norm_deRham_zero_sq (ξ : EuclideanSpace ℝ (Fin n)) (a : Form ℂ (Fin
   rw [h0, norm_zero, zero_pow two_ne_zero, add_zero] at h
   exact h
 
-/-- **`H¹_J` for `0`-forms, forward**: `v ∈ D(d_J)` gives
-`Σ_m |2πm|² |(JfJ v)(m)|² = 2ⁿ ‖d_J v‖²`. -/
 theorem dPart_zero_spec {v : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))}
     (hv : v ∈ (dPart (Q (Fin n)) J ((0 : ℕ) : ℤ)).domain) :
     Summable (fun m => ‖freq m‖ ^ 2 * ‖cf (JfJ J 0 v) m‖ ^ 2) ∧
@@ -534,7 +461,6 @@ theorem dPart_zero_spec {v : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))}
   rw [e]
   exact ⟨summable_norm_sq _, by rw [← norm_sq_eq_tsum, norm_JfJ_sq]⟩
 
-/-- **`H¹_J` for `0`-forms, backward**: `Σ_m |2πm|² |(JfJ v)(m)|² < ∞` gives `v ∈ D(d_J)`. -/
 theorem mem_dPart_zero_of_summable {v : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))}
     (h : Summable fun m => ‖freq m‖ ^ 2 * ‖cf (JfJ J 0 v) m‖ ^ 2) :
     v ∈ (dPart (Q (Fin n)) J ((0 : ℕ) : ℤ)).domain := by
@@ -576,9 +502,8 @@ theorem summable_one_iff (x : Seq n k) :
   · intro h
     exact ((summable_norm_sq x).add (summable_sum fun t _ => h t)).congr fun m => (e m).symm
 
-/-- **`H¹` of the parity class `J` is the space of `k`-forms whose coefficients `u_t` lie in
-`H¹(Q)` with vanishing trace on the faces normal to `J ∆ t`** (i.e. whose parity extension has
-`H¹` coefficients): `u ∈ H¹_J(Q; Λᵏ)` iff every `u_t ∈ D(d_{J ∆ t})` in degree `0`. -/
+/-- **`H¹_J(Q; Λᵏ)` by the coefficients**: `u ∈ H¹_J(Q; Λᵏ)` iff every coefficient `u_t` lies in
+`H¹(Q)` with vanishing trace on the faces normal to `J ∆ t`. -/
 theorem mem_sobolevPar_one_iff {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} :
     u ∈ sobolevPar J k 1 ↔ ∀ t : formIdx n (k : ℤ),
       zeroF (u t) ∈ (dPart (Q (Fin n)) (symmDiff J t.1) ((0 : ℕ) : ℤ)).domain := by
@@ -588,8 +513,6 @@ theorem mem_sobolevPar_one_iff {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} :
     exact h.congr fun m => (grad_term_eq J k u t m).symm
   · exact (dPart_zero_spec _ h).1.congr fun m => grad_term_eq J k u t m
 
-/-- **The `H¹_J` norm is the graph norm of the coefficients**:
-`‖u‖²_{1,J} = ‖u‖² + Σ_t ‖∇_{J ∆ t} u_t‖²`. -/
 theorem parNorm_one_sq {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k 1) :
     parNorm J k 1 u ^ 2 = ‖u‖ ^ 2 + ∑ t : formIdx n (k : ℤ),
       ‖dPart (Q (Fin n)) (symmDiff J t.1) ((0 : ℕ) : ℤ)
@@ -628,8 +551,6 @@ theorem inner_eq_tsum (x y : Seq n k) : ⟪x, y⟫_ℂ = ∑' m, ⟪cf x m, cf y
   rw [← e.symm.inner_map_map x y, lp.inner_eq_tsum]
   rfl
 
-/-- **Different parity classes are orthogonal**: if `J ≠ J'`, `⟪JfJ J u, JfJ J' v⟫ = 0` (pair the
-frequencies `m` and `flip_j m` for `j ∈ J ∆ J'`). -/
 theorem inner_JfJ_eq_zero {J J' : Finset (Fin n)} (h : J ≠ J')
     (u v : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : ⟪JfJ J k u, JfJ J' k v⟫_ℂ = 0 := by
   obtain ⟨j, hj⟩ : ∃ j, ¬ (j ∈ J ↔ j ∈ J') := by
@@ -661,8 +582,7 @@ theorem inner_JfJ_eq_zero {J J' : Finset (Fin n)} (h : J ≠ J')
   change ∑' m, F m = 0
   linear_combination hsum / 2
 
-/-- **The extension by zero**, `2⁻ⁿ Σ_J JfJ J u`: the average of the parity extensions over all
-`2ⁿ` classes vanishes off the box `(0, ½)ⁿ ⊂ 𝕋ⁿ`, restricts to `u` and has the norm of `u`. -/
+/-- The extension by zero `2⁻ⁿ Σ_J JfJ J u` of `u` to `𝕋ⁿ`. -/
 def zeroExt (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : Seq n k :=
   ((2 : ℝ) ^ n)⁻¹ • ∑ J : Finset (Fin n), JfJ J k u
 
@@ -698,10 +618,7 @@ section NoBC
 variable (k : ℕ)
 
 variable (n) in
-/-- **The Sobolev space `Hˢ(Q; Λᵏ)`** of `Q = (0, ½)ⁿ`: the restrictions to `Q` (real parts) of
-the `k`-forms of `Hˢ(𝕋ⁿ)` on the period-`1` torus, `{x|_Q : Σ_m (1 + |2πm|²)^s |x(m)|² < ∞}`
-(the restriction definition of fractional Sobolev spaces, with periodic extensions in place of
-extensions to `ℝⁿ`; for `s = 1` the space `H¹(Q)` of [Brezis2011], §9.1, `mem_sobolevQ_one_iff`). -/
+/-- The space `Hˢ(Q; Λᵏ)` of the restrictions to `Q` (real parts) of the forms of `Hˢ(𝕋ⁿ)`. -/
 def sobolevQ (s : ℝ) : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) where
   carrier := {u | ∃ x : Seq n k, MemSob s x ∧ Jinvf k x = u}
   add_mem' := by
@@ -712,7 +629,7 @@ def sobolevQ (s : ℝ) : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)
     rintro c _ ⟨x, hx, rfl⟩
     exact ⟨c • x, hx.real_smul c, map_smul _ _ _⟩
 
-/-- **The quotient norm** of `Hˢ(Q; Λᵏ)`: `‖u‖_{Hˢ(Q)} = inf {‖x‖_{Hˢ(𝕋ⁿ)} : x|_Q = u}`. -/
+/-- The quotient norm `‖u‖_{Hˢ(Q)} = inf {‖x‖_{Hˢ(𝕋ⁿ)} : x|_Q = u}` of `Hˢ(Q; Λᵏ)`. -/
 def qNorm (s : ℝ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : ℝ :=
   sInf ((fun x => √(sobSum s x)) '' {x : Seq n k | MemSob s x ∧ Jinvf k x = u})
 
@@ -721,20 +638,16 @@ variable {k}
 theorem qNorm_nonneg (s : ℝ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : 0 ≤ qNorm k s u :=
   Real.sInf_nonneg (by rintro _ ⟨x, -, rfl⟩; exact Real.sqrt_nonneg _)
 
-/-- Every extension bounds the quotient norm. -/
 theorem qNorm_le {s : ℝ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} {x : Seq n k}
     (hx : MemSob s x) (hxu : Jinvf k x = u) : qNorm k s u ≤ √(sobSum s x) :=
   csInf_le ⟨0, by rintro _ ⟨y, -, rfl⟩; exact Real.sqrt_nonneg _⟩ ⟨x, ⟨hx, hxu⟩, rfl⟩
 
-/-- A lower bound for all extensions is a lower bound for the quotient norm. -/
 theorem le_qNorm {s : ℝ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevQ n k s)
     {c : ℝ} (h : ∀ x : Seq n k, MemSob s x → Jinvf k x = u → c ≤ √(sobSum s x)) :
     c ≤ qNorm k s u := by
   obtain ⟨x, hx, hxu⟩ := hu
   exact le_csInf ⟨_, x, ⟨hx, hxu⟩, rfl⟩ (by rintro _ ⟨y, ⟨hy, hyu⟩, rfl⟩; exact h y hy hyu)
 
-/-- **Passing an estimate valid for every extension to the quotient norm**: if
-`a ≤ b ‖x‖_{Hˢ(𝕋ⁿ)}` for every extension `x` of `u` (`b ≥ 0`), then `a ≤ b ‖u‖_{Hˢ(Q)}`. -/
 theorem le_mul_qNorm {s : ℝ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevQ n k s)
     {a b : ℝ} (hb : 0 ≤ b) (h : ∀ x : Seq n k, MemSob s x → Jinvf k x = u → a ≤ b * √(sobSum s x)) :
     a ≤ b * qNorm k s u := by
@@ -744,13 +657,9 @@ theorem le_mul_qNorm {s : ℝ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (
   · rw [← div_le_iff₀' hb]
     exact le_qNorm hu fun x hx hxu => (div_le_iff₀' hb).2 (h x hx hxu)
 
-/-- **`H⁰(Q) = L²(Q)`**: every `L²` form is the restriction of an `L²(𝕋ⁿ)` form. -/
 theorem sobolevQ_zero : sobolevQ n k 0 = ⊤ :=
   eq_top_iff.2 fun u _ => ⟨zeroExt u, memSob_zero _, Jinvf_zeroExt u⟩
 
-/-- **`H⁰(Q) = L²(Q)` isometrically**: the quotient norm of `L²(𝕋ⁿ)` is the norm of `L²(Q)`
-(restriction is a contraction, `norm_Jinvf_le`, and the extension by zero is isometric,
-`norm_zeroExt`). -/
 theorem qNorm_zero (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : qNorm k 0 u = ‖u‖ := by
   refine le_antisymm ?_ ?_
   · refine (qNorm_le (memSob_zero (zeroExt u)) (Jinvf_zeroExt u)).trans (le_of_eq ?_)
@@ -759,12 +668,10 @@ theorem qNorm_zero (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : qNorm k 0 u
     rw [sobSum_zero, Real.sqrt_sq (norm_nonneg _), ← hxu]
     exact norm_Jinvf_le k x
 
-/-- **The parity classes lie in `Hˢ(Q)`**: `Hˢ_J(Q) ⊆ Hˢ(Q)` with
-`‖u‖_{Hˢ(Q)} ≤ 2^{n/2} ‖u‖_{s,J}`. -/
 theorem sobolevPar_le_sobolevQ (J : Finset (Fin n)) (s : ℝ) :
     sobolevPar J k s ≤ sobolevQ n k s := fun u hu => ⟨JfJ J k u, hu, Jinvf_JfJ J k u⟩
 
-/-- **The truncation error in `Hˢ(Q)`**: for every extension `x` of `u`,
+/-- **The `L²` truncation error for `Hˢ(Q)` data**: for every extension `x` of `u`,
 `‖u - (x_M)|_Q‖ ≤ (2π(M + 1))^{-s} ‖x‖_{Hˢ(𝕋ⁿ)}` (`s ≥ 0`). -/
 theorem norm_sub_Jinvf_trunc_le {s : ℝ} (hs : 0 ≤ s) {x : Seq n k} (hx : MemSob s x) (M : ℕ) :
     ‖Jinvf k x - Jinvf k (trunc M k x)‖ ≤ (2 * Real.pi * (M + 1)) ^ (-s) * √(sobSum s x) := by
@@ -784,7 +691,7 @@ section Gradient
 
 open UnitAddTorus Feec.Fourier.TorusWeak
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 /-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
@@ -793,7 +700,6 @@ local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
 
 variable {k : ℕ}
 
-/-- **Parseval**: `‖f‖²_{L²(𝕋ⁿ)} = Σ_m |f̂(m)|²`. -/
 theorem norm_sq_eq_tsum_mFourierCoeff (f : Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin n)))) :
     ‖f‖ ^ 2 = ∑' m, ‖mFourierCoeff f m‖ ^ 2 := by
   have h := lp.norm_rpow_eq_tsum (p := 2) (by norm_num) (mFourierBasis.repr f)
@@ -801,8 +707,6 @@ theorem norm_sq_eq_tsum_mFourierCoeff (f : Lp ℂ 2 (volume : Measure (UnitAddTo
   simp only [ENNReal.toReal_ofNat, Real.rpow_two, mFourierBasis_repr] at h
   exact h
 
-/-- The restriction to `Q` of the real part of a continuous function on `𝕋ⁿ` has `L²(Q)` norm at
-most its `L²(𝕋ⁿ)` norm. -/
 theorem norm_toLp_re_le (g : C(UnitAddTorus (Fin n), ℂ))
     (hF : MemLp (fun y => (g (proj y)).re) 2 (volume.restrict (Q (Fin n)))) :
     ‖hF.toLp (fun y => (g (proj y)).re)‖ ≤
@@ -825,8 +729,6 @@ def single1 : Fin n ≃ formIdx n (((0 : ℕ) : ℤ) + 1) :=
     obtain ⟨j, hj⟩ := Finset.card_eq_one.1 (by exact_mod_cast s.2)
     exact ⟨j, Subtype.ext hj.symm⟩⟩
 
-/-- **The derivative of a real trigonometric polynomial**: for `x` supported in `S`,
-`‖∂_j Re P_t‖²_{L²(Q)} ≤ Σ_m (2π m_j)² |x(m)_t|²`. -/
 theorem norm_sq_fderiv_trigLift_le (x : Seq n k) {S : Finset (Fin n → ℤ)}
     (hS : ∀ m ∉ S, cf x m = 0) (t : formIdx n (k : ℤ)) (j : Fin n)
     (hF : MemLp (fun y => fderiv ℝ (trigLift k x S t) y (Pi.single j 1)) 2
@@ -869,9 +771,6 @@ theorem norm_sq_fderiv_trigLift_le (x : Seq n k) {S : Finset (Fin n → ℤ)}
   rw [← h2]
   exact pow_le_pow_left₀ (norm_nonneg _) h1 2
 
-/-- **Restrictions of trigonometric polynomials are in `H¹(Q)`, with the torus bound**: for `x`
-supported in a finite set, every coefficient `(x|_Q)_t` lies in `D(grad_max)` and
-`‖∇ (x|_Q)_t‖² ≤ Σ_m |2πm|² |x(m)_t|²`. -/
 theorem grad_Jinvf_of_finite (x : Seq n k) {S : Finset (Fin n → ℤ)}
     (hS : ∀ m ∉ S, cf x m = 0) (t : formIdx n (k : ℤ)) :
     ∃ h : zeroF (Jinvf k x t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain,
@@ -925,7 +824,6 @@ section H1Q
 
 variable {k : ℕ}
 
-/-- `Σ_t Σ_m |2πm|² |x(m)_t|² ≤ Σ_m ⟨ξ⟩² |x(m)|²` for finitely supported `x`. -/
 theorem sum_tsum_freq_le (x : Seq n k) {S : Finset (Fin n → ℤ)} (hS : ∀ m ∉ S, cf x m = 0) :
     ∑ t : formIdx n (k : ℤ), ∑' m, ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 ≤ sobSum 1 x := by
   have hsum : ∀ t : formIdx n (k : ℤ),
@@ -940,8 +838,6 @@ theorem sum_tsum_freq_le (x : Seq n k) {S : Finset (Fin n → ℤ)} (hS : ∀ m 
   rw [← Finset.mul_sum, ← norm_cf_sq_eq_sum, weight_one]
   exact mul_le_mul_of_nonneg_right (by linarith) (sq_nonneg _)
 
-/-- **The gradients of the coefficients of a restricted trigonometric polynomial**: for `x`
-supported in a finite set, every `(x|_Q)_t ∈ H¹(Q)` and `Σ_t ‖∇ (x|_Q)_t‖² ≤ ‖x‖²_{H¹(𝕋ⁿ)}`. -/
 theorem grad_Jinvf_sum_le (x : Seq n k) {S : Finset (Fin n → ℤ)} (hS : ∀ m ∉ S, cf x m = 0) :
     ∃ h : ∀ t : formIdx n (k : ℤ),
         zeroF (Jinvf k x t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain,
@@ -950,9 +846,8 @@ theorem grad_Jinvf_sum_le (x : Seq n k) {S : Finset (Fin n → ℤ)} (hS : ∀ m
   refine (Finset.sum_le_sum fun t _ => (grad_Jinvf_of_finite x hS t).2).trans ?_
   exact sum_tsum_freq_le x hS
 
-/-- **The gradient of the truncation, for `Hˢ(Q)` data** (`0 ≤ s ≤ 1`): for an extension `x` of
-`u` with `‖x‖_{Hˢ(𝕋ⁿ)} < ∞`, the coefficients of `u_M = (x_M)|_Q` lie in `H¹(Q)` and
-`Σ_t ‖∇ (u_M)_t‖² ≤ (1 + n (2πM)²)^{1-s} ‖x‖²_{Hˢ(𝕋ⁿ)}`. -/
+/-- **The gradient of the truncation** (`s ≤ 1`): the coefficients of `(x_M)|_Q` lie in `H¹(Q)`
+and `Σ_t ‖∇ (x_M|_Q)_t‖² ≤ (1 + n (2πM)²)^{1-s} ‖x‖²_{Hˢ(𝕋ⁿ)}`. -/
 theorem grad_truncQ_le {s : ℝ} (hs1 : s ≤ 1) {x : Seq n k} (hx : MemSob s x) (M : ℕ) :
     ∃ h : ∀ t : formIdx n (k : ℤ), zeroF (Jinvf k (trunc M k x) t) ∈
         ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain,
@@ -962,7 +857,6 @@ theorem grad_truncQ_le {s : ℝ} (hs1 : s ≤ 1) {x : Seq n k} (hx : MemSob s x)
     fun _ hm => trunc_eq_zero_of_notMem x hm
   exact ⟨h, hle.trans (sobSum_trunc_le hs1 hx M)⟩
 
-/-- **The truncations converge in `Hᵗ`**: `‖x - x_N‖_{Hᵗ(𝕋ⁿ)} → 0`. -/
 theorem tendsto_sobSum_sub_trunc {t : ℝ} {x : Seq n k} (hx : MemSob t x) :
     Tendsto (fun N => sobSum t (x - trunc N k x)) atTop (𝓝 0) := by
   have h := tendsto_tsum_of_dominated_convergence (𝓕 := atTop)
@@ -1015,9 +909,6 @@ theorem zeroF_sub {Ω : Set (Fin n → ℝ)} (f g : L2 ℝ Ω) : zeroF (f - g) =
 theorem continuous_zeroF {Ω : Set (Fin n → ℝ)} : Continuous (zeroF (n := n) (Ω := Ω)) :=
   (PiLp.continuous_toLp 2 _).comp (continuous_pi fun _ => continuous_id)
 
-/-- **The gradients of the truncations converge**: for `‖x‖_{H¹(𝕋ⁿ)} < ∞`, every coefficient of
-`x|_Q` lies in `D(grad_max) = H¹(Q)` and `∇ (x_N|_Q)_t → ∇ (x|_Q)_t` in `L²(Q)` (the
-truncations are Cauchy in the graph norm, and `grad_max` is closed). -/
 theorem exists_tendsto_grad_trunc {x : Seq n k} (hx : MemSob 1 x) (t : formIdx n (k : ℤ)) :
     ∃ h : zeroF (Jinvf k x t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain,
       Tendsto (fun N => (extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
@@ -1085,8 +976,6 @@ theorem exists_tendsto_grad_trunc {x : Seq n k} (hx : MemSob 1 x) (t : formIdx n
   rw [e, hGw']
   exact hG
 
-/-- **`H¹(Q)` restrictions have `H¹(Q)` coefficients**: if `u = x|_Q` with
-`‖x‖_{H¹(𝕋ⁿ)} < ∞`, then every coefficient `u_t` lies in `D(grad_max) = H¹(Q)`. -/
 theorem coeff_mem_maximal_of_mem_sobolevQ_one {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hu : u ∈ sobolevQ n k 1) (t : formIdx n (k : ℤ)) :
     zeroF (u t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain := by
@@ -1104,10 +993,8 @@ theorem sum_singleCoeff (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
   rw [WithLp.ofLp_sum]
   simp [singleCoeff, Pi.single_apply]
 
-/-- **`H¹(Q)` is the space of forms with `H¹(Q)` coefficients** (the weak-derivative space):
-`u ∈ H¹(Q; Λᵏ)` iff every coefficient `u_t` lies in `D(grad_max)`. The forward direction is
-`coeff_mem_maximal_of_mem_sobolevQ_one`; conversely each `u_t dx_t` is the restriction of its
-even reflection, the parity extension of the class `J = t` (`mem_sobolevPar_one_iff`). -/
+/-- **`H¹(Q)` is the space of forms with `H¹(Q)` coefficients**: `u ∈ H¹(Q; Λᵏ)` iff every
+coefficient `u_t` lies in `D(grad_max)`. -/
 theorem mem_sobolevQ_one_iff {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} :
     u ∈ sobolevQ n k 1 ↔ ∀ t : formIdx n (k : ℤ),
       zeroF (u t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain := by
@@ -1125,12 +1012,10 @@ theorem mem_sobolevQ_one_iff {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} :
   rw [← sum_singleCoeff u]
   exact Submodule.sum_mem _ fun t _ => sobolevPar_le_sobolevQ t.1 1 (hpar t)
 
-/-- `Λ⁰` has a single index. -/
 theorem card_formIdx_zero : Fintype.card (formIdx n 0) = 1 :=
   Fintype.card_eq_one_iff.2 ⟨⟨∅, by simp⟩, fun s =>
     Subtype.ext (Finset.card_eq_zero.1 (by exact_mod_cast s.2))⟩
 
-/-- The `0`-form with coefficient `f` has the norm of `f`. -/
 theorem norm_zeroF {Ω : Set (Fin n → ℝ)} (f : L2 ℝ Ω) : ‖zeroF (n := n) f‖ = ‖f‖ := by
   rw [PiLp.norm_eq_of_L2]
   simp [zeroF, card_formIdx_zero]
@@ -1142,15 +1027,12 @@ theorem cf_sum {ι : Type*} (s : Finset ι) (y : ι → Seq n k) (m : Fin n → 
   | empty => rw [Finset.sum_empty, Finset.sum_empty, cf_zero]
   | insert a s ha ih => rw [Finset.sum_insert ha, Finset.sum_insert ha, cf_add, ih]
 
-/-- Equal partial maps agree on common points of their domains. -/
 theorem pmap_apply_eq_of_eq {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
     [Module ℝ F] {f g : E →ₗ.[ℝ] F} (h : f = g) (x : E) (hf : x ∈ f.domain)
     (hg : x ∈ g.domain) : f ⟨x, hf⟩ = g ⟨x, hg⟩ := by
   subst h; rfl
 
-/-- **The coefficientwise even extension** of `u` to `𝕋ⁿ`: the sum over `t` of the parity
-extensions of `u_t dx_t` in the class `J = t`, so that every coefficient `u_t` is extended evenly
-in all variables (`cf_evenExt_apply`). -/
+/-- The coefficientwise even extension `Σ_t JfJ t (u_t dx_t)` of `u` to `𝕋ⁿ`. -/
 noncomputable def evenExt (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : Seq n k :=
   ∑ t : formIdx n (k : ℤ), JfJ t.1 k (singleCoeff t u)
 
@@ -1159,7 +1041,6 @@ theorem Jinvf_evenExt (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : Jinvf k 
   simp_rw [Jinvf_JfJ]
   exact sum_singleCoeff u
 
-/-- The `t`-component of `evenExt u` is the even extension of the coefficient `u_t`. -/
 theorem cf_evenExt_apply (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) (m : Fin n → ℤ)
     (t' : formIdx n (k : ℤ)) :
     cf (evenExt u) m t' = cf (JfJ ∅ 0 (zeroF (u t'))) m t₀ := by
@@ -1177,8 +1058,6 @@ theorem cf_evenExt_apply (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) (m : Fi
     rfl
   · intro h; exact absurd (Finset.mem_univ t') h
 
-/-- **The `H¹(𝕋ⁿ)` norm of an even extension**: for `v ∈ H¹(Q)` (a `0`-form),
-`‖JfJ ∅ v‖²_{H¹(𝕋ⁿ)} = 2ⁿ (‖v‖² + ‖∇ v‖²)`. -/
 theorem sobSum_JfJ_empty {v : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))}
     (hv : v ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain) :
     Summable (fun m => weight 1 m * ‖cf (JfJ ∅ 0 v) m‖ ^ 2) ∧
@@ -1196,8 +1075,6 @@ theorem sobSum_JfJ_empty {v : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))}
     pmap_apply_eq_of_eq (dPart_empty isOpen_Q _) v hv' hv]
   ring
 
-/-- **The `H¹(𝕋ⁿ)` norm of the coefficientwise even extension**: if every `u_t ∈ H¹(Q)`, then
-`‖evenExt u‖²_{H¹(𝕋ⁿ)} = 2ⁿ (‖u‖² + Σ_t ‖∇ u_t‖²)`. -/
 theorem sobSum_evenExt {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (h : ∀ t, zeroF (u t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain) :
     MemSob 1 (evenExt u) ∧ sobSum 1 (evenExt u) =
@@ -1219,7 +1096,6 @@ theorem sobSum_evenExt {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
   simp_rw [norm_zeroF]
   rw [← Finset.mul_sum, Finset.sum_add_distrib, PiLp.norm_sq_eq_of_L2]
 
-/-- `‖x‖²_{H¹(𝕋ⁿ)} = ‖x‖² + Σ_t Σ_m |2πm|² |x(m)_t|²`. -/
 theorem sobSum_one_eq {x : Seq n k} (hx : MemSob 1 x) :
     sobSum 1 x = ‖x‖ ^ 2 + ∑ t : formIdx n (k : ℤ),
       ∑' m, ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
@@ -1233,9 +1109,6 @@ theorem sobSum_one_eq {x : Seq n k} (hx : MemSob 1 x) :
   rw [Summable.tsum_add (summable_norm_sq x) (summable_sum fun t _ => hs t),
     Summable.tsum_finsetSum fun t _ => hs t, ← norm_sq_eq_tsum]
 
-/-- **Restriction is a contraction `H¹(𝕋ⁿ) → H¹(Q)`**:
-`‖x|_Q‖² + Σ_t ‖∇ (x|_Q)_t‖² ≤ ‖x‖²_{H¹(𝕋ⁿ)}` (by the trigonometric case,
-`grad_Jinvf_of_finite`, and the graph-norm convergence of the truncations). -/
 theorem norm_sq_add_sum_grad_sq_le_sobSum {x : Seq n k} (hx : MemSob 1 x) :
     ‖Jinvf k x‖ ^ 2 + ∑ t, ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
       ⟨zeroF (Jinvf k x t), (exists_tendsto_grad_trunc hx t).1⟩‖ ^ 2 ≤ sobSum 1 x := by
@@ -1261,8 +1134,6 @@ theorem norm_sq_add_sum_grad_sq_le_sobSum {x : Seq n k} (hx : MemSob 1 x) :
     simpa using sobSum_trunc_le le_rfl hx N
   linarith
 
-/-- **The `H¹(Q)` graph norm is bounded by the quotient norm**:
-`‖u‖² + Σ_t ‖∇ u_t‖² ≤ ‖u‖²_{H¹(Q)}`. -/
 theorem norm_sq_add_sum_grad_sq_le_qNorm {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hu : u ∈ sobolevQ n k 1) :
     ‖u‖ ^ 2 + ∑ t, ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
@@ -1274,9 +1145,6 @@ theorem norm_sq_add_sum_grad_sq_le_qNorm {u : L2F ℝ (Q (Fin n)) (formIdx n (k 
   subst hxu
   exact Real.sqrt_le_sqrt (norm_sq_add_sum_grad_sq_le_sobSum hx)
 
-/-- **The quotient norm is bounded by the `H¹(Q)` graph norm**: if every coefficient `u_t` lies
-in `H¹(Q)`, then `‖u‖²_{H¹(Q)} ≤ 2ⁿ (‖u‖² + Σ_t ‖∇ u_t‖²)` (extend every coefficient evenly,
-`sobSum_evenExt`). -/
 theorem qNorm_one_sq_le {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (h : ∀ t, zeroF (u t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain) :
     qNorm k 1 u ^ 2 ≤ 2 ^ n * (‖u‖ ^ 2 + ∑ t, ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
@@ -1285,8 +1153,6 @@ theorem qNorm_one_sq_le {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
   rw [← he, ← Real.sq_sqrt (sobSum_nonneg 1 _)]
   exact pow_le_pow_left₀ (qNorm_nonneg 1 u) (qNorm_le hm (Jinvf_evenExt u)) 2
 
-/-- **The norm of `H¹(Q)` is equivalent to the graph norm of the coefficients**:
-`‖u‖² + Σ_t ‖∇ u_t‖² ≤ ‖u‖²_{H¹(Q)} ≤ 2ⁿ (‖u‖² + Σ_t ‖∇ u_t‖²)` for `u ∈ H¹(Q)`. -/
 theorem qNorm_one_sq_equiv {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hu : u ∈ sobolevQ n k 1) :
     ‖u‖ ^ 2 + ∑ t, ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
@@ -1327,8 +1193,7 @@ theorem norm_freq_axis_sq (c : ℤ) : ‖freq (axis (n := n) c)‖ ^ 2 = (2 * Re
   simp [axis]; ring
 
 open scoped Classical in
-/-- **The coefficients of the logarithmic series**: `1/|c|` at the frequencies `±c e₀`, `c ≠ 0`
-(the function `Σ_{c ≠ 0} e^{2πi c y₀}/|c| = -2 log |2 sin π y₀|`). -/
+/-- The coefficients `1/|c|` at `±c e₀`, `c ≠ 0`, of the logarithmic series, `0` elsewhere. -/
 def logCoeff (m : Fin n → ℤ) : Form ℂ (Fin n) 0 :=
   WithLp.toLp 2 fun _ => if OnAxis m ∧ m 0 ≠ 0 then (((|(m 0 : ℝ)|)⁻¹ : ℝ) : ℂ) else 0
 
@@ -1365,7 +1230,6 @@ theorem summable_weight_logCoeff_iff (s : ℝ) :
 theorem axisTerm_nonneg (s : ℝ) (c : ℤ) : 0 ≤ axisTerm (n := n) s c :=
   mul_nonneg (weight_nonneg s _) (sq_nonneg _)
 
-/-- **The logarithmic series is in `Hˢ` for `s < ½`**: `Σ_c (1 + 4π²c²)^s c⁻² < ∞`. -/
 theorem summable_axisTerm {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
     Summable (axisTerm (n := n) s) := by
   refine Summable.of_nonneg_of_le (axisTerm_nonneg s) (fun c => ?_)
@@ -1394,7 +1258,6 @@ theorem summable_axisTerm {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
       _ = (1 + (2 * Real.pi) ^ 2) ^ s * |(c : ℝ)| ^ (-(2 - 2 * s)) := by
           rw [mul_assoc, ← Real.rpow_add hcpos]; push_cast; ring_nf
 
-/-- **The logarithmic series is not in `H^{1/2}`**: `Σ_c (1 + 4π²c²)^{1/2} c⁻² ≥ 2π Σ 1/|c| = ∞`. -/
 theorem not_summable_axisTerm_half : ¬ Summable (axisTerm (n := n) (1 / 2)) := by
   intro h
   have hle : ∀ c : ℤ,

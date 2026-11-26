@@ -9,78 +9,26 @@ public import Feec.Models.Cube.SobolevRateHigh
 /-!
 # Corollaries of the FEEC theorem: acoustics, slip Stokes, time stepping, rates, magnetostatics
 
-Short corollaries of the FEEC theorem (`Feec.HilbertComplex.ConformingFamily.feec`) for every
-conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`, and their instances on the finite
-element families of the models (every admissible sequence `S` of the periodic table on the
-Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-shaped domains,
-`Feec.Models.ConformingFamilies`):
+Corollaries of the FEEC theorem for every conforming family of a Hilbert complex, and their
+instances on the cube, on parallelepipeds and on domains star-shaped with respect to a ball.
 
-* **acoustic waves** (`acoustic`): the Hodge wave equation of the window `Vᵃ → V^{a+1}` with no
-  constraint (`acousticFEEC`). On the de Rham complex, `a = 0` is the pressure–velocity system
-  `p' = div u`, `u' = grad p` (`p` a `0`-form, `u` a `1`-form) and `a = n - 1` its mixed form with
-  `u` an `(n - 1)`-form and `p` an `n`-form; the natural boundary condition of `HΛ` is a rigid wall
-  (`u · ν = 0`) at `a = 0` and a pressure release (`p = 0`) at `a = n - 1`, and the essential one
-  of `H̊Λ` the other way round. The constrained FEEC verdict holds: well-posedness, energy
-  conservation, convergence from every datum in `L²`, the rates (`Cube.FEM.acoustic`,
-  `Parallelepiped.acoustic`, `StarShaped.MeshFamily.acoustic`);
-* **unsteady Stokes flow with slip boundary conditions** (`slipStokes`): the Hodge heat equation
-  of a window with the constraint `ker 𝐝†` (`slipStokesFEEC`). In degree `1` of `HΛ(Ω)` a
-  velocity `u` orthogonal to the gradients (`div u = 0` and `u · ν = 0`) is a datum
-  `single 1 u ∈ ker 𝐝†` (`HilbertComplex.single_mem_ker_adjoint_totalD_of_mem_orthogonal`).
-  `ker 𝐝†` reduces the Hodge Laplacian (`HilbertComplex.isReducing_hodgeLaplacian_ker_adjoint`),
-  so on these fields `Δ` is the Stokes operator: the pressure gradient, the part of `Δ u` along
-  the gradients, vanishes, and the Hodge heat flow is `∂ₜ u + d†d u = 0` (`curl curl u` in `ℝ³`),
-  `div u = 0`, with the slip conditions `u · ν = 0`, `curl u × ν = 0` ([GiraultRaviart1986],
-  Ch. I; [Arnold2018], Ch. 4, Ch. 6). The heat verdict has a kept constraint: the discrete heat
-  flows from every convergent family of discrete data of a datum in `ker 𝐝†` have constraint
-  residuals tending to `0`. On the cube, `n ≥ 2` (`Cube.FEM.slipStokes`), a nonzero velocity `u ∈ HΛ¹ ∩ (𝔷¹)ᗮ` lies
-  in the constraint (`HilbertComplex.exists_mem_orthogonal_cycles_inf_domain`, since `x₀ dx₁` is
-  not closed), and the residuals of the discrete flows from its projections tend to `0`;
-* **Crank–Nicolson and the θ-schemes** for Maxwell's equations (`maxwell_fullyDiscrete`: the
-  fully discrete verdicts, exact energy conservation of Crank–Nicolson, Gauss-law residuals
-  tending to `0` as `h, τ → 0`; on the cube at every polynomial order,
-  `Cube.FEM.maxwell_crankNicolson`; the reading through the discrete complex of the Whitney
-  scheme is `Feec.Instances.FullyDiscrete.maxwell_cubePMC_crankNicolson`) and for the Hodge heat equation (`heat_fullyDiscrete`; on the
-  cube with a nonzero datum, `Cube.FEM.heat_crankNicolson`), read from the field `full` of the
-  FEEC theorem;
-* **Sobolev data at the optimal order** (`Cube.FEM.feec_sobolev`): on the cube, in every dimension,
-  for every admissible sequence `S` reproducing `P_p`, the rated FEEC theorem at the Jackson
-  estimate of `Hˢ(Q)` data (`Feec.Models.Cube.FEM.sobolevHighJackson`, `s ≥ 0`, order
-  `h^{min(s, p + 1)}`): the mixed method, the semidiscrete wave and heat equations on every window
-  and the fully discrete schemes converge at that order for Sobolev data ([Arnold2018], Ch. 7);
-* **affinely invariant shape spaces** (`Cube.FEM.feec_affineInvariant`): the FEEC verdict of the
-  family of every admissible sequence, whose shape spaces are in every degree `k ≥ 1` affinely
-  invariant spaces `dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Thm 3.5), the classified
-  affinely invariant spaces ([AFW2006], Thm 3.6);
-* **the polynomial complexes of the periodic table** (`Cube.FEM.feec_polyComplex`): the FEEC
-  verdict of the family of every admissible sequence, whose shape spaces are the evaluations of
-  polynomial forms that over every field of characteristic `0` form a resolution of the constants
-  with the dimensions of the degrees of freedom of a simplex ([AFW2006], §3, Thms 4.9, 4.13;
-  [ArnoldLogg2014]);
-* **magnetostatics** (`Cube.FEM.magnetostatic`, `Parallelepiped.magnetostatic`): the static FEEC
-  verdict of `HΛ` and `H̊Λ` in degrees `1` and `2` in dimension `3`, the mixed formulations of
-  `curl curl u - grad div u = f` with natural and essential boundary conditions
-  ([Monk2003]; [Hiptmair2002]); for every conforming family, the discrete mixed
-  solutions of every source `f` converge (`mixed_converges`).
+## Main results
+
+* `acoustic`, `slipStokes`: acoustic waves and unsteady Stokes flow with slip conditions.
+* `maxwell_fullyDiscrete`, `heat_fullyDiscrete`: Crank–Nicolson and the θ-schemes.
+* `Cube.FEM.feec_sobolev`: the rates `h^{min(s, p + 1)}` for `Hˢ(Q)` data.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2 (the Hodge Laplacian), Thms 3.4–3.9
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.4, Thms 3.5–3.6 (affinely invariant spaces of polynomial forms), Thms 4.9, 4.13 (the
-  dimension counts)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 * [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thms 4.6, 4.7, 4.14, Prop. 4.17
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
-* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
-  Ch. I (the Stokes problem)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4 (the Hodge Laplacian),
-  Ch. 6 (the de Rham complex with boundary conditions)
+* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 * [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–9
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -102,31 +50,24 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [Is
   [∀ i, CompleteSpace (V i)] [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
   {H : HilbertComplex 𝕜 (ComplexShape.up α) V} {κ : Type*} (F : ConformingFamily H κ)
 
-/-- **The acoustic discretization** in degrees `a, a + 1`: the window `Vₕᵃ → Vₕ^{a+1}` of `F` with
-no constraint. -/
+/-- The acoustic discretization: the window `Vₕᵃ → Vₕ^{a+1}` of `F` with no constraint. -/
 abbrev acousticFEEC (a : α) : ConstrainedFEEC (H.window a 2) κ :=
   F.windowFEEC a 2 ⊤ isClosed_univ
 
-/-- **Acoustic waves**: the constrained and the approximating FEEC verdicts of the Hodge wave
-equation of the window `Vᵃ → V^{a+1}` (fields `constrained` and `wave` of the FEEC theorem).
+/-- **Acoustic waves**: the FEEC verdicts of the Hodge wave equation of the window `Vᵃ → V^{a+1}`.
 [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14; [Joly2003] -/
 theorem acoustic (a : α) :
     (acousticFEEC F a).Verdict ∧ (acousticFEEC F a).toApprox.Verdict (acousticFEEC F a).toCore :=
   ⟨F.feec.constrained a 2 _ _, F.feec.wave a 2 _ _⟩
 
-/-- **The slip Stokes discretization**: the window `Vₕᵃ → ⋯ → Vₕ^{a+m-1}` of `F` with the
-constraint `ker 𝐝†` (closed: `𝐝†` is closed). -/
+/-- The slip Stokes discretization: the window `Vₕᵃ → ⋯ → Vₕ^{a+m-1}` with constraint `ker 𝐝†`. -/
 abbrev slipStokesFEEC (a : α) (m : ℕ) : ConstrainedFEEC (H.window a m) κ :=
   F.windowFEEC a m ((H.window a m).totalD†).ker
     (isClosed_ker (adjoint_isClosed (H.window a m).dense_totalD_domain))
 
-/-- **Unsteady Stokes flow with slip boundary conditions**, the Hodge heat equation on `ker 𝐝†`:
-the heat FEEC verdict of the window with the constraint `ker 𝐝†`, the constraint is kept by the
-heat flow (it reduces `-Δ`, `isReducing_hodgeLaplacian_ker_adjoint`, so the pressure is
-eliminated), and for every datum `x ∈ ker 𝐝†` (in degree `1` of `HΛ(Ω)`, a velocity with
-`div u = 0`, `u · ν = 0`) and every family of discrete data with `ιₕ vₕ → x` the constraint
-residuals of the discrete heat flows tend to `0` uniformly on `[0, T]`. [AFW2010], §3.2;
-[GiraultRaviart1986], Ch. I; [Arnold2018], Ch. 4, Ch. 6 -/
+/-- **Unsteady Stokes flow with slip boundary conditions**: on a window with closed ranges, the heat
+verdict on `ker 𝐝†`, which the flow keeps, with residuals tending to `0`.
+[GiraultRaviart1986], Ch. I; [Arnold2018], Ch. 4 -/
 theorem slipStokes (a : α) (m : ℕ) (hcr : ∀ i, (H.window a m).ClosedRangeAt i) :
     (slipStokesFEEC F a m).toHeat.Verdict ((slipStokesFEEC F a m).heatCore hcr (F.isGraphBounded_windowFEEC a m _ _)) ∧
       (slipStokesFEEC F a m).toHeat.Keeps (slipStokesFEEC F a m).toHeat.K ∧
@@ -143,12 +84,9 @@ theorem slipStokes (a : α) (m : ℕ) (hcr : ∀ i, (H.window a m).ClosedRangeAt
   rw [ConstrainedFEEC.dense_heatCore_data]
   exact Submodule.mem_top
 
-/-- **Crank–Nicolson and the θ-schemes for Maxwell's equations** in the window
-`V a → V (a+1) → V (a+2)` with the Gauss laws (`Feec.Instances.Maxwell.feec`): the fully discrete
-verdicts (field `full` of the FEEC theorem), exact energy conservation of the Crank–Nicolson
-iterates, and for every datum satisfying the Gauss laws and every family of discrete data with
-`ιₕ vₕ → x`, the Gauss-law residuals of the Crank–Nicolson iterates on `[0, T]` tend to `0` as
-`τₕ → 0`. [QuennevilleBelair2015], Ch. 7; [Thomee2006], Ch. 7 -/
+/-- **Crank–Nicolson and the θ-schemes (`θ ≥ 1/2`) for Maxwell's equations**: the fully discrete
+verdicts, and for Crank–Nicolson exact energy conservation and Gauss-law residuals tending to `0`
+as `h, τ → 0`. [QuennevilleBelair2015], Ch. 7 -/
 theorem maxwell_fullyDiscrete (a : α) (θ : ℝ) (hθ : 1 / 2 ≤ θ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) :
     ((Maxwell.feec F a).toApprox.crankNicolson τ hτ).Verdict (Maxwell.feec F a).toCore ∧
       ((Maxwell.feec F a).toApprox.thetaScheme θ hθ τ hτ).Verdict (Maxwell.feec F a).toCore ∧
@@ -165,9 +103,8 @@ theorem maxwell_fullyDiscrete (a : α) (θ : ℝ) (hθ : 1 / 2 ≤ θ) {τ : κ 
     fun hx _ hv hτ0 T _ hε =>
       V.residual_tendsto_iterates hK hx ((Maxwell.feec F a).mem_toCore_closure _) hv hτ0 T hε⟩
 
-/-- **Crank–Nicolson and the θ-schemes for the Hodge heat equation** on every window with closed
-range, with every closed constraint: the fully discrete
-verdicts (field `full` of the FEEC theorem). [Thomee2006], Ch. 7–9 -/
+/-- **Crank–Nicolson and the θ-schemes (`θ ≥ 1/2`) for the Hodge heat equation**: the fully
+discrete verdicts on every window with closed ranges. [Thomee2006], Ch. 7–9 -/
 theorem heat_fullyDiscrete (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
     (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (θ : ℝ) (hθ : 1 / 2 ≤ θ)
@@ -179,10 +116,8 @@ theorem heat_fullyDiscrete (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i 
   ⟨(F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _,
     (F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _⟩
 
-/-- **The mixed method converges for every source**: in a degree `j` with closed range around it
-and finite-dimensional harmonic forms, the discrete mixed solutions of every `f ∈ Wʲ` converge to
-the mixed solution (field `static` of the FEEC theorem at the solution of `f`). [AFW2010],
-Thm 3.9 -/
+/-- **The mixed method converges for every source**, with closed ranges and finite-dimensional
+harmonic forms. [AFW2010], Thm 3.9 -/
 theorem mixed_converges (hcr : ∀ i, H.ClosedRangeAt i) {i j k : α}
     [FiniteDimensional 𝕜 (H.harmonic j)] (hij : (ComplexShape.up α).Rel i j)
     (hjk : (ComplexShape.up α).Rel j k) (f : V j) :
@@ -203,9 +138,8 @@ open Feec.Domain (L2F formIdx)
 
 variable (n : ℕ) [NeZero n]
 
-/-- **Acoustic waves on the cube** for every admissible sequence `S`: the constrained FEEC verdict
-of the pressure–velocity window `HΛ⁰(Q) → HΛ¹(Q)` and of the mixed window
-`HΛⁿ⁻¹(Q) → HΛⁿ(Q)`, with natural (`HΛ`) and essential (`H̊Λ`) boundary conditions. -/
+/-- **Acoustic waves on the cube**: the constrained FEEC verdicts of the windows in degrees `0, 1`
+and `n - 1, n`, with natural and essential boundary conditions. -/
 theorem acoustic (S : PolySeq) :
     (acousticFEEC (polyFamily n S) 0).Verdict ∧
       (acousticFEEC (polyFamily n S) ((n : ℤ) - 1)).Verdict ∧
@@ -214,18 +148,8 @@ theorem acoustic (S : PolySeq) :
   ⟨(Corollaries.acoustic (polyFamily n S) 0).1, (Corollaries.acoustic (polyFamily n S) _).1,
     (Corollaries.acoustic (polyFamilyMin n S) 0).1, (Corollaries.acoustic (polyFamilyMin n S) _).1⟩
 
-/-- **Unsteady Stokes flow with slip boundary conditions on the cube** `Q = (0, ½)ⁿ`, `n ≥ 2`, for
-every admissible sequence `S`: the conclusions of `slipStokes` for the window
-`HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` (`heatWindow`), and a nonzero velocity field `u ∈ HΛ¹(Q)` (`H(curl)` in
-`ℝ³`) orthogonal to the closed `1`-forms, hence to the gradients of `H¹(Q)` (`div u = 0`,
-`u · ν = 0`), whose datum `single 1 u` lies in the constraint `ker 𝐝†`
-(`exists_mem_orthogonal_cycles_inf_domain`: `x₀ dx₁` is not closed,
-`Feec.Domain.maximalComplex_cycles_one_ne_top`); the discrete heat flows from its projections
-`Πₕ (single 1 u)` have constraint residuals tending to `0` uniformly on every `[0, T]`. The
-field `u` is not given in closed form, and `u ∈ D(Δ)` is not claimed: the slip condition
-`curl u × ν = 0` is the natural boundary condition of `Δ`, not a condition on the datum. For
-`n = 1`, `HΛ¹(Q)` has no nonzero divergence-free field with `u · ν = 0`; the heat verdict of the
-window still holds (`Corollaries.slipStokes`). [GiraultRaviart1986], Ch. I; [Arnold2018], Ch. 4, Ch. 6 -/
+/-- **Slip Stokes flow on the cube**, `n ≥ 2`: the heat verdict, and a nonzero datum
+`single 1 u ∈ ker 𝐝†` with residuals tending to `0`. [GiraultRaviart1986], Ch. I -/
 theorem slipStokes (S : PolySeq) (hn : 2 ≤ n) :
     ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Verdict
         ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)
@@ -259,9 +183,7 @@ theorem slipStokes (S : PolySeq) (hn : 2 ≤ n) :
   rw [ConstrainedFEEC.dense_heatCore_data]
   exact Submodule.mem_top
 
-/-- **Crank–Nicolson for Maxwell's equations on the cube at every polynomial order**
-(`Feec.Instances.Maxwell.cubePolyPMC`, `cubePolyPEC`): the conclusions of
-`maxwell_fullyDiscrete`. -/
+/-- **Crank–Nicolson for Maxwell's equations on the cube at every polynomial order.** -/
 theorem maxwell_crankNicolson (S : PolySeq) (a : ℤ) {τ : ℕ → ℝ} (hτ : ∀ N, 0 < τ N) :
     ((Maxwell.cubePolyPMC n S a).toApprox.crankNicolson τ hτ).Verdict
         (Maxwell.cubePolyPMC n S a).toCore ∧
@@ -270,9 +192,8 @@ theorem maxwell_crankNicolson (S : PolySeq) (a : ℤ) {τ : ℕ → ℝ} (hτ : 
   ⟨(maxwell_fullyDiscrete (polyFamily n S) a 1 (by norm_num) hτ).1,
     (maxwell_fullyDiscrete (polyFamilyMin n S) a 1 (by norm_num) hτ).1⟩
 
-/-- **Crank–Nicolson and the θ-schemes for the Hodge heat equation on the cube**
-(`heatFamily`, every admissible sequence `S`): the fully discrete verdicts, with a nonzero datum
-in the core (`crown_heat_nonvacuous`). -/
+/-- **Crank–Nicolson and the θ-schemes (`θ ≥ 1/2`) for the Hodge heat equation on the cube**,
+with a nonzero datum in the core. -/
 theorem heat_crankNicolson (S : PolySeq) (θ : ℝ) (hθ : 1 / 2 ≤ θ) {τ : ℕ → ℝ}
     (hτ : ∀ N, 0 < τ N) :
     ((heatFamily n S).toHeat.crankNicolson τ hτ).Verdict
@@ -284,10 +205,8 @@ theorem heat_crankNicolson (S : PolySeq) (θ : ℝ) (hθ : 1 / 2 ≤ θ) {τ : �
     (heat_fullyDiscrete (polyFamily n S) 0 (n + 1) ⊤ _ _ θ hθ hτ).2,
     (crown_heat_nonvacuous n S).2⟩
 
-/-- **Magnetostatics on the cube** `(0, ½)³` for every admissible sequence `S`: the static FEEC
-verdict of `HΛ` and `H̊Λ` in degrees `1` and `2`, the mixed formulations of
-`curl curl u - grad div u = f` with natural and essential boundary conditions. [AFW2010],
-Thms 3.4–3.9; [Monk2003] -/
+/-- **Magnetostatics on the cube** `(0, ½)³`: the static FEEC verdicts of `HΛ` and `H̊Λ` in degrees
+`1` and `2`. [AFW2010], Thms 3.4–3.9; [Monk2003] -/
 theorem magnetostatic (S : PolySeq) :
     (polyFamily 3 S).StaticVerdict 1 ∧ (polyFamily 3 S).StaticVerdict 2 ∧
       (polyFamilyMin 3 S).StaticVerdict 1 ∧ (polyFamilyMin 3 S).StaticVerdict 2 :=
@@ -295,39 +214,21 @@ theorem magnetostatic (S : PolySeq) :
     (polyFamilyMin 3 S).feec.static closedRangeAt_min 1,
     (polyFamilyMin 3 S).feec.static closedRangeAt_min 2⟩
 
-/-- **The FEEC theorem for Sobolev data on the cube at the optimal order** `h^{min(s, p + 1)}`:
-for every admissible sequence `S` reproducing `P_p` in the degrees of the problem, in every
-dimension, the rated verdict (`ConformingFamily.feec_rated`) at the Jackson estimate of `Hˢ(Q)` data
-(`sobolevHighJackson`, every real `s ≥ 0`): rates `O(L h^{min(s, p + 1)})` of the mixed method, of
-the semidiscrete wave and heat equations on every window and of the fully discrete schemes for
-data with `Hˢ(Q)` components bounded by `L`. [AFW2010], Thm 3.9; [QuennevilleBelair2015],
-Thm 4.14; [Arnold2018], Ch. 7 -/
+/-- **The FEEC theorem for `Hˢ(Q)` data on the cube**: rates `h^{min(s, p + 1)}` where `S`
+reproduces `P_p`. [AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7 -/
 theorem feec_sobolev (S : PolySeq) (p : ℕ) :
     ConformingFamily.Verdict.Rated (polyFamily n S) (sobolevHighJackson n S p) :=
   (polyFamily n S).feec_rated _
 
-/-- **The FEEC theorem on affinely invariant shape spaces**: for every admissible sequence `S`, the
-FEEC verdict of its family on the cube, whose shape spaces `S.space n k`, the polynomial forms
-`S.form ℝ k` (`P_rΛᵏ` or `P_r⁻Λᵏ`), are in every degree `k ≥ 1` affinely
-invariant ([AFW2006], Theorem 3.5, `PolySeq.isAffineInvariant_form`): spaces
-`dP_{r'+1}Λ^{k-1} + κP_{r-1}Λ^{k+1}` (`PolyKind.form_eq_sup`), which with the spaces
-`dP_{r+1}Λ^{k-1}` are for `0 < k < n` all the nonzero finite-dimensional affinely invariant spaces of
-polynomial `k`-forms ([AFW2006], Theorem 3.6, `Feec.FiniteElement.IsAffineInvariant.eq_sup`). -/
+/-- **The FEEC theorem on affinely invariant shape spaces**, for every admissible sequence on the
+cube. [AFW2006], Thm 3.5 -/
 theorem feec_affineInvariant (S : PolySeq) :
     (polyFamily n S).Verdict ∧ ∀ k, 1 ≤ k →
       S.space n k = (S.form ℝ k).map (evalForm n) ∧ IsAffineInvariant (S.form ℝ (n := n) k) :=
   ⟨(polyFamily n S).feec, fun k hk => ⟨S.space_eq_map_form k, S.isAffineInvariant_form hk⟩⟩
 
-/-- **The FEEC theorem on the polynomial complexes of the periodic table**: for every admissible
-sequence `S`, the FEEC verdict of its family on the cube, whose shape spaces `S.space n k` are the
-evaluations of the polynomial forms `S.form ℝ k`; over every field `K` of characteristic `0` the
-spaces `S.form K k` form a complex (`PolySeq.extDeriv_mem_form`), exact in every positive degree
-(`PolySeq.exists_extDeriv_eq`) with the constants as closed `0`-forms
-(`PolySeq.mem_polyForm_zero_of_extDeriv_eq_zero`), whose dimensions are the numbers of degrees of
-freedom of a simplex, `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`
-(`PolySeq.finrank_form_eq_sum`), and so are those of the shape spaces `S.space n k` over `ℝ`
-(`PolyKind.finrank_space_eq_sum`, the same count at `K = ℝ`). [AFW2006], §3, Thms 4.9, 4.13;
-[AFW2010], §5.1.4; [ArnoldLogg2014] -/
+/-- **The FEEC theorem on the polynomial complexes of the periodic table**, with their exactness
+and dimension counts. [AFW2006], §3, Thms 4.9, 4.13; [ArnoldLogg2014] -/
 theorem feec_polyComplex (K : Type*) [Field K] [CharZero K] (S : PolySeq) :
     (polyFamily n S).Verdict ∧ (∀ k, S.space n k = (S.form ℝ k).map (evalForm n)) ∧
       (∀ k, ∀ ω ∈ S.form K (n := n) k, Koszul.extDeriv ω ∈ S.form K (k + 1)) ∧
@@ -352,8 +253,8 @@ open Feec.Models.Parallelepiped Feec.FiniteElement
 
 variable {n : ℕ} [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
 
-/-- **Acoustic waves on a parallelepiped** `Ω = A · Q + b`: the constrained FEEC verdicts of the
-windows in degrees `0, 1` and `n - 1, n`, natural and essential boundary conditions. -/
+/-- **Acoustic waves on a parallelepiped** `Ω = A · Q + b`, with natural and essential boundary
+conditions. -/
 theorem acoustic (S : PolySeq) :
     (acousticFEEC (polyFamily A hA b S) 0).Verdict ∧
       (acousticFEEC (polyFamily A hA b S) ((n : ℤ) - 1)).Verdict ∧
@@ -364,8 +265,7 @@ theorem acoustic (S : PolySeq) :
     (Corollaries.acoustic (polyFamilyMin A hA b S) 0).1,
     (Corollaries.acoustic (polyFamilyMin A hA b S) _).1⟩
 
-/-- **Magnetostatics on a parallelepiped** in dimension `3`: the static FEEC verdict of `HΛ(Ω)` and
-`H̊Λ(Ω)` in degrees `1` and `2`. -/
+/-- **Magnetostatics on a parallelepiped** in dimension `3`. -/
 theorem magnetostatic (A : Matrix (Fin 3) (Fin 3) ℝ) (hA : IsUnit A.det) (b : Fin 3 → ℝ)
     (S : PolySeq) :
     (polyFamily A hA b S).StaticVerdict 1 ∧ (polyFamily A hA b S).StaticVerdict 2 ∧
@@ -389,9 +289,7 @@ open Feec.Models.StarShaped Feec.FiniteElement
 
 variable {n : ℕ} [NeZero n] {D : StarDomain n} (M : MeshFamily D)
 
-/-- **Acoustic waves on a star-shaped domain**, for every shape-regular quasi-uniform mesh family
-and every admissible sequence `S`: the constrained FEEC verdicts of the windows in degrees `0, 1`
-and `n - 1, n`, natural (`HΛ(Ω)`) and essential (`H̊Λ(Ω)`) boundary conditions. -/
+/-- **Acoustic waves on a star-shaped domain**, for every mesh family and admissible sequence. -/
 theorem acoustic (S : PolySeq) :
     (acousticFEEC (M.polyFamily S) 0).Verdict ∧
       (acousticFEEC (M.polyFamily S) ((n : ℤ) - 1)).Verdict ∧

@@ -13,10 +13,10 @@ public import FeecCheck.Util
 2. no citation carries its location inside the brackets (`[Key, Prop 4.17]`): doc-gen4 reads the
    whole bracket as the key, so the location goes outside, `[Key], Prop 4.17`;
 3. no `Thesis:` tag (retired; thesis traceability is `[QuennevilleBelair2015], Prop 4.17`);
-4. every module docstring has a `## References` section, and every key cited anywhere in the file
-   has an entry there of the form `* [Author(s), *Title*][Key]` (optionally followed by a
+4. in a file that cites a key, the module docstring has a `## References` section, and every key
+   cited anywhere in the file has an entry there of the form `* [Author(s), *Title*][Key]` (optionally followed by a
    location), with the authors (initials and last names) and the title of `docs/references.bib`;
-5. every module docstring declares its bibliography on a line of its own,
+5. in a file that cites a key, the module docstring declares its bibliography on a line of its own,
    `Bibliography: [references.bib](<path>)`, with `<path>` the relative path from the file to
    `docs/references.bib`, so that leantex (and doc-gen4) resolve the citations.
 
@@ -176,6 +176,8 @@ def run : IO Report := do
     for m in thesis.findAll s do
       rep := rep.addError s!"{f}:{lineOf s m.start}: `Thesis:` tag; write \
         [QuennevilleBelair2015], ..."
+    -- a file without citations needs neither `## References` nor the bibliography line
+    if (cite.findAll s).isEmpty then continue
     -- Python: i = s.find('/-!'); j = s.find('-/', i) (or -1); k = s.find('## References', i, j)
     let i? := findFrom s "/-!" 0
     let j? := i?.bind fun i => findFrom s "-/" i

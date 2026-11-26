@@ -8,61 +8,20 @@ public import Feec.HilbertComplex.BGG.Harmonic
 /-!
 # The continuous BGG data of the mirror scheme on the cube
 
-The BGG data (4.16) of [QuennevilleBelair2015], §5.3, on `Q = (0, ½)³` with the **mirror
-boundary conditions** of `Feec.Models.Cube.MirrorBGG` (the boundary conditions of the scheme
-(6.5) in `Feec.Models.Cube.MirrorWeakSymmetryFEM`), in the `W`-normed domain model of
-`Feec.BGG.Segment`:
-
-* top row `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)` (no boundary condition, `d_∅ = d_max`);
-* bottom row `∏ₐ H_{a}Λ⁰(Q) → ∏ₐ H_{a}Λ¹(Q) → (L²Λ²(Q))³`, the component `a` with vanishing
-  tangential traces on the faces normal to `eₐ` (`HΛ_{a}(Q)` of
-  `Feec.Models.Cube.DeRhamPartialIdent`);
-* `S⁰ = I`, `S¹ = 2 vskw` (`Feec.FiniteElement.wsL2`), with `d S⁰ = −S¹ d`
-  (`wsL2_bIncl0_mem`: the bottom row lies in `HΛ⁰(Q)³` and `S` maps `D(d_max)³` into `D(d_max)`).
-
-The rows carry harmonic forms: the constants on the top row in degree `0`
-(`ℌ⁰(HΛ(Q)) = ℝ`) and `ℝ dxₐ` in the component `a` of the bottom
-row in degree `1` (`harmonic_one_part`, from `Feec.Models.Cube.FEM.harmonic_card_eq_span_part`).
-So `Feec.BGG.Stability` fails (not stated here), and the data satisfy instead
-**`Feec.BGG.HarmonicStability` modulo `𝔥 = {Σₐ cₐ dxₐ ⊗ eₐ}`** (`mirror_harmonicStability`):
-Poincaré on the bottom `0`-forms, the Hodge decomposition `v = dψ + w + k` with `k ∈ 𝔥`,
-`𝔥 ⊥ dṼ⁰`, and `S¹ 𝔥 = 0` (diagonal matrices are symmetric).
-
-**Regular potentials in the parity model.** For every class `J` and degree `k`, every
-`u ∈ D(d_J)` has a coexact companion `w` with `d_J w = d_J u`, `‖w‖ ≤ (2π)⁻¹ ‖d_J u‖`, whose
-coefficients `w_s` are `H¹` with vanishing traces on the faces normal to `J ∆ s` and
-`Σ_s ‖∇w_s‖² = ‖d_J u‖²` (`Feec.Models.Cube.DeRhamIdent.exists_coexact_potential`): on the Fourier
-side of the parity extension, `ŵ(m)` is the projection of `û(m)` onto `N(d_{ξ_m})ᗮ`
-(`coexactProj`, equivariant under the reflections and the conjugation, so the parity class is
-kept), and Gaffney's identity `|ξ|²|ŵ|² = |d_ξ û|²` holds frequency by frequency. Conversely,
-forms with `H¹` coefficients of the classes `J ∆ s` lie in `D(d_J)` (`mem_dPart_of_coeff`). For
-`J = ∅`, `k = 1` this is **`mirrorCurlPotential`**, the regularity hypothesis of Prop 5.3 for the
-mirror data, proved with constant `C_R = 1`: `curl S⁰φ = curl u`, `‖∇φ‖ = ‖curl u‖`.
-
-## Main definitions
-
-* `TD0`, `TD1`, `BD0`, `BD1`, `TU0`, `TU1`, `BU0`, `BU1`; `tD0`, `tD1`, `bD0`, `bD1`, `mS0`,
-  `mS1`; **`mirrorBGGSegment`**.
-* `harmBot` (`𝔥`).
-* `Feec.Models.Cube.DeRhamIdent.coexactProj`, `coexactLp`.
+The BGG data of [QuennevilleBelair2015], §5.3 on `Q = (0, ½)³` with mirror boundary conditions
+satisfy the stability hypotheses modulo harmonic forms and the regularity hypothesis.
 
 ## Main results
 
-* **`mirror_harmonicStability`**, `hodge_one_part`, `bpoincare0`.
-* **`Feec.Models.Cube.DeRhamIdent.exists_coexact_potential`**,
-  `Feec.Models.Cube.DeRhamIdent.mem_dPart_of_coeff`, `exists_coexact_potential_cube`,
-  **`mirrorCurlPotential`**.
+* `mirror_harmonicStability`: `Feec.BGG.HarmonicStability` modulo the harmonic forms `𝔥`.
+* `mirrorCurlPotential`: the regularity hypothesis, with constant `1`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (Prop 5.3), §5.3 ((4.16)), §6.3 ((6.5))
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3 (Hodge decomposition, harmonic forms), §4.3 (boundary conditions)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -93,8 +52,7 @@ abbrev symKer : Submodule ℂ (Form ℂ (Fin n) k) :=
   LinearMap.ker ((Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ :
     Form ℂ (Fin n) k →ₗ[ℂ] Form ℂ (Fin n) (k + 1))
 
-/-- **The coexact projection at one frequency**: the orthogonal projection of `Λᵏ` onto
-`N(d_ξ)ᗮ`. -/
+/-- **The coexact projection at one frequency**, the orthogonal projection onto `N(d_ξ)ᗮ`. -/
 def coexactProj : Form ℂ (Fin n) k →L[ℂ] Form ℂ (Fin n) k := (symKer k ξ)ᗮ.starProjection
 
 variable {k ξ}
@@ -102,7 +60,6 @@ variable {k ξ}
 theorem coexactProj_mem (v : Form ℂ (Fin n) k) : coexactProj k ξ v ∈ (symKer k ξ)ᗮ :=
   Submodule.starProjection_apply_mem _ v
 
-/-- `d_ξ` does not see the projection: `d_ξ (P v) = d_ξ v`. -/
 theorem deRham_coexactProj (v : Form ℂ (Fin n) k) :
     (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ (coexactProj k ξ v) =
       (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ v := by
@@ -113,7 +70,6 @@ theorem deRham_coexactProj (v : Form ℂ (Fin n) k) :
 theorem norm_coexactProj_le (v : Form ℂ (Fin n) k) : ‖coexactProj k ξ v‖ ≤ ‖v‖ :=
   Submodule.norm_starProjection_apply_le _ v
 
-/-- **Gaffney's identity at one frequency**: `‖d_ξ v‖ = |ξ| ‖P v‖`. -/
 theorem norm_deRham_eq (v : Form ℂ (Fin n) k) :
     ‖(Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ v‖ = ‖ξ‖ * ‖coexactProj k ξ v‖ := by
   rw [← deRham_coexactProj]
@@ -154,8 +110,6 @@ theorem reflForm_mem_orth (j : Fin n) {w : Form ℂ (Fin n) k} (hw : w ∈ (symK
   rw [← inner_reflForm j k, reflForm_reflForm]
   exact hw _ hz'
 
-/-- **The coexact projection is reflection-equivariant**:
-`P_{R_j ξ} (R_j^* v) = R_j^* (P_ξ v)`. -/
 theorem coexactProj_reflForm (j : Fin n) (v : Form ℂ (Fin n) k) :
     coexactProj k (reflFreq j ξ) (reflForm j k v) = reflForm j k (coexactProj k ξ v) := by
   refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero
@@ -185,7 +139,6 @@ theorem inner_cjForm (v w : Form ℂ (Fin n) k) : ⟪cjForm v, cjForm w⟫_ℂ =
 theorem cjForm_cjForm (v : Form ℂ (Fin n) k) : cjForm (cjForm v) = v := by
   ext t; simp
 
-/-- The de Rham symbol has real coefficients up to the factor `i`: `d_ξ (v̄) = -(d_ξ v)‾`. -/
 theorem deRham_cjForm (v : Form ℂ (Fin n) k) :
     (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ (cjForm v) =
       -cjForm ((Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ v) := by
@@ -224,7 +177,6 @@ theorem cjForm_mem_orth {w : Form ℂ (Fin n) k} (hw : w ∈ (symKer k ξ)ᗮ) :
   have h := hw _ (cjForm_mem_symKer hz)
   rw [← cjForm_cjForm z, inner_cjForm, h, map_zero]
 
-/-- **The coexact projection commutes with conjugation.** -/
 theorem coexactProj_cjForm (v : Form ℂ (Fin n) k) :
     coexactProj k ξ (cjForm v) = cjForm (coexactProj k ξ v) := by
   refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero (cjForm_mem_orth (coexactProj_mem v))
@@ -299,7 +251,6 @@ theorem coexactLp_apply (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure 
     (coexactLp x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = coexactProj k (freq m) (x m) := by
   rw [coexactLp, MemLp.coeFn_toLp_count]; rfl
 
-/-- **The coexact part stays in the real mixed parity class `J`.** -/
 theorem realParJ_coexactLp {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))}
     (hx : RealParJ J k x) : RealParJ J k (coexactLp x) := by
   refine ⟨fun m t => ?_, fun j m t => ?_⟩
@@ -314,16 +265,12 @@ theorem realParJ_coexactLp {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measu
     rw [this, map_smul, coexactProj_reflForm, PiLp.smul_apply, reflForm_apply, smul_eq_mul]
     ring
 
-/-- The parity vector of the coefficient of `dx_s` in the class `J` is that of the `0`-form in
-the class `J ∆ s`. -/
 theorem pcJ_symmDiff_empty (J s : Finset (Fin n)) : pcJ (symmDiff J s) ∅ = pcJ J s := by
   funext j
   simp only [pcJ, DeRham.mixedSign, DeRham.reflSign, Finset.mem_symmDiff, Finset.notMem_empty,
     ite_false, mul_one]
   by_cases hJ : j ∈ J <;> by_cases hs : j ∈ s <;> simp [hJ, hs]
 
-/-- **The coefficients of a component as a `0`-form**: the extension of `w_s` in the class
-`J ∆ s` has the coefficients of the component `s` of the extension of `w` in the class `J`. -/
 theorem coeff_JfJ_zeroForm (J : Finset (Fin n)) (k : ℕ) (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (s : formIdx n (k : ℤ)) (m : Fin n → ℤ) (t₀ : {r : Finset (Fin n) // (#r : ℤ) = 0}) :
     (JfJ (symmDiff J s.1) 0 (zeroForm (w s)) : (Fin n → ℤ) → Form ℂ (Fin n) 0) m t₀ =
@@ -332,7 +279,6 @@ theorem coeff_JfJ_zeroForm (J : Finset (Fin n)) (k : ℕ) (w : L2F ℝ (Q (Fin n
   have ht : t₀.1 = ∅ := Finset.card_eq_zero.1 (by exact_mod_cast t₀.2)
   rw [ht, pcJ_symmDiff_empty, zeroForm_apply]
 
-/-- `‖d_ξ c‖ = |ξ| ‖c‖` on `0`-forms. -/
 theorem norm_deRham_zero (ξ : EuclideanSpace ℝ (Fin n)) (c : Form ℂ (Fin n) 0) :
     ‖(Feec.Fourier.Exterior.deRham (Fin n)).m 0 (0 + 1) ξ c‖ = ‖ξ‖ * ‖c‖ := by
   rw [Feec.Fourier.Exterior.norm_deRham_apply]
@@ -349,7 +295,6 @@ theorem norm_form_zero (c : Form ℂ (Fin n) 0) (t₀ : {r : Finset (Fin n) // (
       (Finset.card_eq_zero.1 (by exact_mod_cast b.2)).symm)⟩
   rw [EuclideanSpace.norm_eq, Fintype.sum_subsingleton _ t₀, Real.sqrt_sq (norm_nonneg _)]
 
-/-- **A criterion for `D(d_J)` by summability**, with the norm of `d_J u` as an `ℓ²` sum. -/
 theorem exists_mem_dPart_of_summable {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (h : Summable fun m => ‖(Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (freq m)
       ((JfJ J k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m)‖ ^ 2) :
@@ -372,14 +317,8 @@ section Potential
 
 variable (J : Finset (Fin n)) (k : ℕ)
 
-/-- **Regular potentials of `HΛ_J(Q)`** (all `J`, all degrees): every `u ∈ D(d_J)` has a
-coexact companion `w ∈ D(d_J)` with `d_J w = d_J u`, `‖w‖ ≤ (2π)⁻¹ ‖d_J u‖`, whose coefficients
-`w_s` are `H¹` with vanishing traces on the faces normal to `J ∆ s` (`w_s ∈ D(d_{J ∆ s})` as
-`0`-forms, i.e. the parity extension of `w` has `H¹` coefficients) and
-`Σ_s ‖∇ w_s‖² = ‖d_J u‖²`. The companion is the coexact part of `u` in the parity model, `ŵ(m)`
-the projection of `û(m)` onto `N(d_{ξ_m})ᗮ`; the identity is **Gaffney's identity** on the torus,
-`|ξ|² |ŵ(m)|² = |d_ξ û(m)|²` frequency by frequency (`norm_deRham_eq`; in degree `1` of `ℝ³`,
-`|ξ|²|v|² = |ξ × v|² + |ξ · v|²`). See [AFW2010], §4.3, and [Brezis2011], §9.2 (reflection). -/
+/-- **Regular potentials of `HΛ_J(Q)`** ([AFW2010], §4.3; [Brezis2011], §9.2): every `u ∈ D(d_J)`
+has `w ∈ D(d_J)` with `d_J w = d_J u`, `‖w‖ ≤ (2π)⁻¹ ‖d_J u‖` and `H¹` coefficients. -/
 theorem exists_coexact_potential (u : (dPart (Q (Fin n)) J (k : ℤ)).domain) :
     ∃ w : (dPart (Q (Fin n)) J (k : ℤ)).domain,
       dPart (Q (Fin n)) J (k : ℤ) w = dPart (Q (Fin n)) J (k : ℤ) u ∧
@@ -482,15 +421,12 @@ theorem exists_coexact_potential (u : (dPart (Q (Fin n)) J (k : ℤ)).domain) :
     field_simp
 
 
-/-- `‖d_ξ v‖ ≤ |ξ| ‖v‖`. -/
 theorem norm_deRham_le (ξ : EuclideanSpace ℝ (Fin n)) (v : Form ℂ (Fin n) k) :
     ‖(Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ v‖ ≤ ‖ξ‖ * ‖v‖ := by
   rw [norm_deRham_eq]
   exact mul_le_mul_of_nonneg_left (norm_coexactProj_le v) (norm_nonneg _)
 
-/-- **Forms whose coefficients are `H¹` in the classes `J ∆ s` lie in `D(d_J)`**, with
-`‖d_J w‖² ≤ Σ_s ‖∇ w_s‖²` (the converse of the coefficient part of `exists_coexact_potential`;
-on the Fourier side `|d_ξ x|² ≤ |ξ|² |x|² = Σ_s |ξ|² |x_s|²`). -/
+/-- **Forms whose coefficients are `H¹` in the classes `J ∆ s` lie in `D(d_J)`.** -/
 theorem mem_dPart_of_coeff (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (g : formIdx n (k : ℤ) → L2F ℝ (Q (Fin n)) (formIdx n (((0 : ℕ) : ℤ) + 1)))
     (hg : ∀ s : formIdx n (k : ℤ), (zeroForm (w s), g s) ∈ (dPart (Q (Fin n)) (symmDiff J s.1) ((0 : ℕ) : ℤ)).graph) :
@@ -562,8 +498,6 @@ open Feec.Models.Cube.DeRhamIdent (dPart mapsTo_dPart dPart_comp dPart_le_maxima
   dPart_empty)
 open Feec.Models.Cube.ParitySmoother (zeroForm zeroForm_apply)
 
-/-- **Regular potentials of `HΛ_J(Q)` on the cube domain** (`exists_coexact_potential`
-transported to `cubeDomain 3 = Q`). -/
 theorem exists_coexact_potential_cube (J : Finset (Fin 3)) (k : ℕ)
     (u : (dPart (cubeDomain 3) J (k : ℤ)).domain) :
     ∃ w : (dPart (cubeDomain 3) J (k : ℤ)).domain,
@@ -592,11 +526,9 @@ theorem exists_coexact_potential_cube (J : Finset (Fin 3)) (k : ℕ)
 abbrev TD0 : W0 →ₗ.[ℝ] W1 := dPart (cubeDomain 3) ∅ 0
 /-- The top row `d_∅ = d_max` in degree `1` (`curl` on `H(curl, Q)`). -/
 abbrev TD1 : W1 →ₗ.[ℝ] W2 := dPart (cubeDomain 3) ∅ 1
-/-- The component `a` of the bottom row in degree `0`: `grad` on `H¹(Q)` with vanishing trace on
-the faces normal to `eₐ`. -/
+/-- Component `a` of the bottom row in degree `0`, vanishing trace on the faces normal to `eₐ`. -/
 abbrev BD0 (a : Fin 3) : W0 →ₗ.[ℝ] W1 := dPart (cubeDomain 3) {a} 0
-/-- The component `a` of the bottom row in degree `1`: `curl` with vanishing tangential trace on
-the faces normal to `eₐ`. -/
+/-- The component `a` of the bottom row in degree `1`, vanishing tangential trace there. -/
 abbrev BD1 (a : Fin 3) : W1 →ₗ.[ℝ] W2 := dPart (cubeDomain 3) {a} 1
 
 /-- `HΛ⁰(Q)` with the `L²` norm. -/
@@ -667,8 +599,6 @@ theorem norm_bIncl1 (v : BU1) : ‖bIncl1 v‖ = ‖v‖ := by
     PiLp.norm_sq_eq_of_L2]
   rfl
 
-/-- **`S⁰` maps `∏ₐ H_{a}Λ⁰(Q)` into `HΛ¹(Q)` with `d S⁰ = −S¹ d`**: the bottom row lies in
-`HΛ⁰(Q)³` (`d_{a} ≤ d_max`) and `S` maps `D(d_max)³` into `D(d_max) = D(d_∅)`. -/
 theorem wsL2_bIncl0_mem (φ : BU0) :
     ∃ h : wsL2 (Ω := cubeDomain 3) 0 (bIncl0 φ) ∈ TD1.domain,
       TD1 ⟨_, h⟩ = -wsL2 (Ω := cubeDomain 3) 1 (bIncl1 (bD0 φ)) := by
@@ -700,10 +630,7 @@ def mS1 : BU1 →ₗ[ℝ] W2 where
 
 theorem mS1_apply (v : BU1) : mS1 v = wsL2 (Ω := cubeDomain 3) 1 (bIncl1 v) := rfl
 
-/-- **The continuous BGG data of the mirror scheme (6.5)** in the `W`-normed domain model of
-`Feec.BGG.Segment`: top row `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)` (no boundary condition), bottom row
-`∏ₐ H_{a}Λ⁰(Q) → ∏ₐ H_{a}Λ¹(Q) → (L²Λ²(Q))³` (component `a` with vanishing tangential traces on
-the faces normal to `eₐ`), `S⁰ = I`, `S¹ = 2 vskw`. -/
+/-- **The continuous BGG data of the mirror scheme** in the domain model of `Feec.BGG.Segment`. -/
 def mirrorBGGSegment : Feec.BGG.Segment ℝ TU0 TU1 W2 BU0 BU1 (Wv W2) where
   d0 := tD0
   d1 := tD1
@@ -729,8 +656,6 @@ theorem cycles_zero_part (a : Fin 3) : (complexPart 3 {a}).cycles 0 = ⊥ := by
   rw [← hy, hy0]
   exact LinearPMap.map_zero _
 
-/-- **Poincaré on the bottom row in degree `0`**: `‖φ‖ ≤ (2π)⁻¹ ‖∇φ‖` on `H¹(Q)` with vanishing
-trace on the faces normal to `eₐ`. -/
 theorem bpoincare0 (a : Fin 3) (x : (BD0 a).domain) :
     ‖(x : W0)‖ ≤ (2 * Real.pi)⁻¹ * ‖BD0 a x‖ := by
   have h := norm_le_of_mem_orthogonal_cycles_part (n := 3) {a} rel_01
@@ -748,8 +673,6 @@ theorem boundaries_one_part (J : Finset (Fin 3)) :
     (complexPart 3 J).boundaries 1 = LinearMap.range (dPart (cubeDomain 3) J 0).toFun := by
   rw [(complexPart 3 J).boundaries_eq rel_01, complexPart_d01]
 
-/-- **The Hodge decomposition of `HΛ_J¹(Q)` with harmonic part**:
-`x = dψ + w + h`, `h ∈ ℌ¹`, `d w = d x`, `‖w‖ ≤ (2π)⁻¹ ‖d x‖`. -/
 theorem hodge_one_part (J : Finset (Fin 3)) (x : (dPart (cubeDomain 3) J 1).domain) :
     ∃ ψ : (dQ0 J).domain, ∃ w : (dPart (cubeDomain 3) J 1).domain,
       ∃ h ∈ (complexPart 3 J).harmonic 1,
@@ -807,12 +730,9 @@ theorem constForm_apply_of_ne {Ω : Set (Fin 3 → ℝ)} (hm : MeasurableSet Ω)
 /-- The constant `1`-form `dxₐ` on `Q`. -/
 abbrev dxForm (a : Fin 3) : W1 := formPart 3 {a}
 
-/-- **The harmonic `1`-forms of the bottom component `a` are `ℝ dxₐ`.** -/
 theorem harmonic_one_part (a : Fin 3) : (complexPart 3 {a}).harmonic 1 = ℝ ∙ dxForm a :=
   harmonic_card_eq_span_part {a}
 
-/-- **`S¹` kills the harmonic forms of the bottom row**: `S¹ (Σₐ cₐ dxₐ ⊗ eₐ) = Σₐ cₐ dxₐ ∧ dxₐ = 0`
-(diagonal matrices are symmetric). -/
 theorem wsL2_harmonic_eq_zero {v : Wv W1} (hv : ∀ a, v a ∈ (complexPart 3 {a}).harmonic 1) :
     wsL2 (Ω := cubeDomain 3) 1 v = 0 := by
   have hc : ∀ a, ∃ c : ℝ, v a = c • dxForm a := fun a => by
@@ -843,8 +763,7 @@ theorem wsL2_harmonic_eq_zero {v : Wv W1} (hv : ∀ a, v a ∈ (complexPart 3 {a
 
 /-! #### The hypotheses modulo harmonic forms -/
 
-/-- **The harmonic forms of the bottom row**, `𝔥 = {Σₐ cₐ dxₐ ⊗ eₐ}` (componentwise
-`ℌ¹(HΛ_{a}(Q)) = ℝ dxₐ`, `harmonic_one_part`). -/
+/-- **The harmonic forms of the bottom row**, `𝔥 = {Σₐ cₐ dxₐ ⊗ eₐ}`. -/
 def harmBot : Submodule ℝ BU1 where
   carrier := {v | ∀ a, (v a : W1) ∈ (complexPart 3 {a}).harmonic 1}
   add_mem' hu hv a := Submodule.add_mem _ (hu a) (hv a)
@@ -861,7 +780,6 @@ theorem norm_sq_bD1 (v : BU1) : ‖bD1 v‖ ^ 2 = ∑ a, ‖BD1 a (v a)‖ ^ 2 :
 theorem le_of_sq_le_sq' {x y : ℝ} (hy : 0 ≤ y) (h : x ^ 2 ≤ y ^ 2) : x ≤ y :=
   abs_le_of_sq_le_sq' h hy |>.2
 
-/-- **Poincaré on `∏ₐ H_{a}Λ⁰(Q)`**: `‖φ‖ ≤ (2π)⁻¹ ‖dφ‖`. -/
 theorem mirror_poinct0 (φ : BU0) : ‖φ‖ ≤ (2 * Real.pi)⁻¹ * ‖bD0 φ‖ := by
   refine le_of_sq_le_sq' (by positivity) ?_
   rw [mul_pow, norm_sq_BU0, norm_sq_bD0, Finset.mul_sum]
@@ -869,7 +787,6 @@ theorem mirror_poinct0 (φ : BU0) : ‖φ‖ ≤ (2 * Real.pi)⁻¹ * ‖bD0 φ�
   rw [← mul_pow]
   exact pow_le_pow_left₀ (norm_nonneg _) (bpoincare0 a (φ a)) 2
 
-/-- **The Hodge decomposition of `∏ₐ H_{a}Λ¹(Q)` modulo `𝔥`.** -/
 theorem mirror_hodget1 (v : BU1) : ∃ ψ w, ∃ k ∈ harmBot, v = bD0 ψ + w + k ∧
     ‖w‖ ≤ (2 * Real.pi)⁻¹ * ‖bD1 v‖ := by
   choose ψ w h hh hv hdw hnw using fun a => hodge_one_part {a} (v a)
@@ -901,10 +818,7 @@ theorem mirror_boundS1 (v : BU1) :
   rw [hsq2, Feec.BGG.graphSq, mS1_apply]
   nlinarith [sq_nonneg ‖bD1 v‖]
 
-/-- **The continuous hypotheses of the Ch. 6 convergence theory for the mirror data, modulo the
-harmonic forms of the bottom row** (`Feec.BGG.HarmonicStability`), with `C_p = (2π)⁻¹` and
-`C_S = √2`. The top row has the constant mode, the bottom row the harmonic forms `dxₐ ⊗ eₐ`
-(`harmBot`), so `Feec.BGG.Stability` fails. -/
+/-- **The stability hypotheses of the mirror data modulo the harmonic forms of the bottom row.** -/
 theorem mirror_harmonicStability :
     Feec.BGG.HarmonicStability mirrorBGGSegment harmBot (2 * Real.pi)⁻¹ (Real.sqrt 2) where
   Cp_nonneg := by positivity
@@ -915,16 +829,10 @@ theorem mirror_harmonicStability :
   S1_harmonic := mirror_S1_harmonic
   boundS1 := mirror_boundS1
 
-/-! #### The top row: exactness at `HΛ¹`, the constant mode, and the regularity -/
+/-! #### The regularity of the top row -/
 
-/-- **`mirrorCurlPotential`, the mirror regularity hypothesis, proved**: for every
-`u ∈ HΛ¹(Q)` (no boundary condition) there is `φ` with `φₐ ∈ H¹(Q)`, `φₐ = 0` on the faces
-normal to `eₐ` (`φ ∈ ∏ₐ H_{a}Λ⁰(Q)`), `curl S⁰φ = curl u` and `‖∇φ‖ = ‖curl u‖` (constant
-`C_R = 1`). `S⁰φ` is the coexact part of `u` in the absolute parity model; Gaffney's identity
-`|ξ|²|v|² = |ξ × v|² + |ξ · v|²` puts the parity extensions of its components in `H¹(𝕋³)`
-(`exists_coexact_potential`). This is the field `reg` of `Feec.BGG.Stability` for the mirror
-data, without hypothesis (compare `Feec.Models.Cube.WeakSymmetry.CurlPotential`, a different
-parity class). See [Hiptmair2002], Lemma 2.4 (regular decomposition), [Brezis2011], §9.2. -/
+/-- **The mirror regularity hypothesis**: every `u ∈ HΛ¹(Q)` has `φ ∈ ∏ₐ H_{a}Λ⁰(Q)` with
+`curl S⁰φ = curl u` and `‖∇φ‖ ≤ ‖curl u‖` ([Hiptmair2002], Lemma 2.4; [Brezis2011], §9.2). -/
 theorem mirrorCurlPotential (u : TU1) :
     ∃ φ : BU0, mirrorBGGSegment.d1 (mirrorBGGSegment.S0 φ) = mirrorBGGSegment.d1 u ∧
       ‖mirrorBGGSegment.dt0 φ‖ ≤ 1 * ‖mirrorBGGSegment.d1 u‖ := by

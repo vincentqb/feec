@@ -7,38 +7,13 @@ public import Feec.HilbertComplex.Transport
 /-!
 # Affine changes of variables
 
-Let `T x = a • x + b` with `a ≠ 0` be an affine map of `E` (`ℝⁿ`), `Ω' ⊆ E` measurable (open
-for the realizations) and `Ω = T⁻¹(Ω')`. The pull-back `f ↦ f ∘ T` is a **scaled unitary**
-`L²(Ω'; 𝕜^ι) ≃ L²(Ω; 𝕜^ι)`:
-`⟪f ∘ T, g ∘ T⟫ = |a|^{-n} ⟪f, g⟫` (`pullF`, `inner_pullF`). A constant-coefficient operator `A`
-homogeneous of order `r` satisfies the chain rule `A (f ∘ T) = a^r (A f) ∘ T`
-(`apply_comp_aff`), so the pull-back carries its realizations to each other with the chain-rule
-factor `a^r`:
+For `T x = a • x + b`, `a ≠ 0`, the pull-back `P u = u ∘ T` carries the realizations of a
+homogeneous constant-coefficient operator of order `r` on `Ω'` to those on `T⁻¹(Ω')`.
 
-* `minimal_pull`: `A_min,Ω = a^r · P A_min,Ω' P⁻¹` (closures of the test graphs correspond);
-* `maximal_pull`: `A_max,Ω = a^r · P A_max,Ω' P⁻¹` (by duality,
-  `LinearPMap.adjoint_conjScaled`).
+## Main results
 
-For a complex of homogeneous operators the minimal (and maximal) complex on `Ω` is the transport
-of the one on `Ω'` (`minimalComplex_pull`, `maximalComplex_pull`), and the pull-back is a
-`Feec.HilbertComplex.ScaledEmbedding` between them, with scale `|a|^{-n}` and chain-rule factors
-`a^{r_k}`. This transports every reducing subcomplex, hence
-constraint propagation, from one domain to its affine images (e.g. from `(0, ½)³` to every open
-cube).
-
-The same holds for the constrained realizations `A_via` of `Feec.Domain.Constrained` (values in
-closed subspaces such as symmetric or trace-free matrices), given isomorphisms of the subspaces
-compatible with the pull-back (`ConstCoeffOp.minimalVia_pull`); the kernel of a scaled
-conjugation is the image of the kernel (`LinearPMap.mem_ker_conjScaled`).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the cube complexes under dilations and translations)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (change of variables in Sobolev spaces)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.minimal_pull`, `ConstCoeffOp.maximal_pull`: `A_Ω = a^r · P A_Ω' P⁻¹`.
+* `ConstCoeffComplex.minimalComplex_pull`: the minimal complex on `T⁻¹(Ω')` is a transport.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap
@@ -89,7 +64,6 @@ theorem mem_graph_conjScaled (hκ : κ ≠ 0) {p : E₂ × F₂} :
     change κ • e₂ (T ⟨e₁.symm p.1, hp⟩) = p.2
     rw [e2, _root_.map_smul, ContinuousLinearEquiv.apply_symm_apply, smul_inv_smul₀ hκ]
 
-/-- The kernel of a scaled conjugation is the image of the kernel. -/
 theorem mem_ker_conjScaled (hκ : κ ≠ 0) {y : E₂} :
     y ∈ (T.conjScaled e₁ e₂ κ).ker ↔ e₁.symm y ∈ T.ker := by
   rw [LinearPMap.mem_ker_iff, LinearPMap.mem_ker_iff]
@@ -112,8 +86,6 @@ theorem dense_conjScaled_domain (hd : Dense (T.domain : Set E₁)) :
 
 variable [CompleteSpace E₁] [CompleteSpace E₂]
 
-/-- **Adjoints of scaled conjugations** by isometries scaling the inner products by the same
-`s > 0`: `(κ e₂ T e₁⁻¹)† = conj κ · e₁ T† e₂⁻¹`. -/
 theorem adjoint_conjScaled {s : ℝ} (hs : 0 < s)
     (he₁ : ∀ x y : E₁, ⟪e₁ x, e₁ y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (he₂ : ∀ x y : F₁, ⟪e₂ x, e₂ y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (hκ : κ ≠ 0)
@@ -184,7 +156,6 @@ omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
 theorem jac_pos {a : ℝ} (ha : a ≠ 0) : 0 < jac (E := E) a := pow_pos (abs_pos.2 ha) _
 
-/-- **`aff a b` is measure preserving from `|a|ⁿ · volume` to `volume`.** -/
 theorem measurePreserving_aff {a : ℝ} (ha : a ≠ 0) (b : E) :
     MeasurePreserving (aff a b) (ENNReal.ofReal (jac (E := E) a) • volume) volume := by
   refine ⟨(continuous_aff a b).measurable, ?_⟩
@@ -290,7 +261,6 @@ theorem coeFn_pullₗ (f : L2 𝕜 Ω') :
     (pullₗ ha b hΩ' hT f : E → 𝕜) =ᵐ[volume.restrict Ω] fun x => (f : E → 𝕜) (aff a b x) :=
   (memLp_comp_aff ha b hΩ' hT f).coeFn_toLp
 
-/-- **The pull-back scales inner products by `|a|^{-n}`.** -/
 theorem inner_pullₗ (f g : L2 𝕜 Ω') :
     ⟪pullₗ ha b hΩ' hT f, pullₗ ha b hΩ' hT g⟫_𝕜 =
       (((jac (E := E) a)⁻¹ : ℝ) : 𝕜) * ⟪f, g⟫_𝕜 := by
@@ -331,8 +301,6 @@ def pull : L2 𝕜 Ω' →L[𝕜] L2 𝕜 Ω :=
 
 theorem pull_apply (f : L2 𝕜 Ω') : pull ha b hΩ' hT f = pullₗ ha b hΩ' hT f := rfl
 
-/-- **Change of variables in pairings with the pull-back**: for `T = aff a b` mapping `Ω` onto
-`Ω'`, `∫_Ω (f ∘ T) (h ∘ T) = |a|^{-n} ∫_{Ω'} f h`. -/
 theorem setIntegral_pull_mul (f : L2 𝕜 Ω') (h : E → 𝕜) :
     ∫ x in Ω, (pull ha b hΩ' hT f : E → 𝕜) x * h (aff a b x) =
       (((jac (E := E) a)⁻¹ : ℝ) : 𝕜) * ∫ y in Ω', (f : E → 𝕜) y * h y := by
@@ -358,7 +326,6 @@ theorem setIntegral_pull_mul (f : L2 𝕜 Ω') (h : E → 𝕜) :
 
 end Pull
 
-/-- Pulling back along `T` and then along a right inverse `T'` of `T` is the identity. -/
 theorem pull_pull {a a' : ℝ} (ha : a ≠ 0) (ha' : a' ≠ 0) {b b' : E} {Ω Ω' : Set E}
     (hΩ' : MeasurableSet Ω') (hΩ : MeasurableSet Ω) (hT : aff a b ⁻¹' Ω' = Ω)
     (hT' : aff a' b' ⁻¹' Ω = Ω') (hcomp : ∀ y, aff a b (aff a' b' y) = y) (f : L2 𝕜 Ω') :
@@ -383,8 +350,7 @@ theorem preimage_inv_of_aff : aff a⁻¹ (-(a⁻¹ • b)) ⁻¹' Ω = Ω' := hT
 
 variable (ι : Type*) [Fintype ι]
 
-/-- **The pull-back of `L²` fields** `u ↦ u ∘ T`, `L²(Ω'; 𝕜^ι) ≃ L²(Ω; 𝕜^ι)`, `Ω = T⁻¹ Ω'`;
-a scaled unitary (`inner_pullF`), with inverse the pull-back along `T⁻¹` (`pullF_symm_apply`). -/
+/-- **The pull-back of `L²` fields** `u ↦ u ∘ T`, `L²(Ω'; 𝕜^ι) ≃ L²(Ω; 𝕜^ι)`, `Ω = T⁻¹ Ω'`. -/
 def pullF : L2F 𝕜 Ω' ι ≃L[𝕜] L2F 𝕜 Ω ι :=
   (PiLp.continuousLinearEquiv 2 𝕜 _).trans
     ((ContinuousLinearEquiv.piCongrRight fun _ : ι =>
@@ -412,7 +378,6 @@ theorem pullF_symm_apply (u : L2F 𝕜 Ω ι) :
     (preimage_inv_of_aff ha b hT) (u i))
   rw [pull_pull (inv_ne_zero ha) ha _ hΩ' _ hT (aff_inv ha b)]
 
-/-- **The pull-back scales the inner products of fields by `|a|^{-n}`.** -/
 theorem inner_pullF (u v : L2F 𝕜 Ω' ι) :
     ⟪pullF ha b hΩ' hT ι u, pullF ha b hΩ' hT ι v⟫_𝕜 =
       (((jac (E := E) a)⁻¹ : ℝ) : 𝕜) * ⟪u, v⟫_𝕜 := by
@@ -421,7 +386,6 @@ theorem inner_pullF (u v : L2F 𝕜 Ω' ι) :
 
 omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] hΩ' [Fintype ι] in
-/-- Test fields pull back to test fields. -/
 theorem _root_.Feec.Domain.IsTest.comp_aff' {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     {f : E → F} (hf : IsTest Ω' f) : IsTest Ω (fun x => f (aff a b x)) := by
   subst hT
@@ -438,7 +402,6 @@ theorem _root_.Feec.Domain.IsTestField.comp_aff {φ : ι → E → 𝕜} (hφ : 
   IsTest.comp_aff' ha b hT (hφ i)
 
 omit [Fintype ι] in
-/-- The pull-back of a test field is the composed test field. -/
 theorem pullF_testField {φ : ι → E → 𝕜} (hφ : IsTestField Ω' φ) :
     pullF ha b hΩ' hT ι (testField hφ) = testField (hφ.comp_aff ha b hT) := by
   refine WithLp.ofLp_injective 2 (funext fun i => ?_)
@@ -455,8 +418,6 @@ end PullE
 
 omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- **Chain rule** for iterated directional derivatives along `T x = a • x + b`:
-`∂^{vs} (f ∘ T) = a^{#vs} (∂^{vs} f) ∘ T`. -/
 theorem iterDeriv_comp_aff {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] {f : E → F}
     (hf : ContDiff ℝ ∞ f) (a : ℝ) (b : E) (vs : List E) :
     iterDeriv vs (fun x => f (aff a b x)) =
@@ -500,7 +461,6 @@ theorem applyEntry_comp_aff {P : List (List E × 𝕜)} {r : ℕ} (hP : ∀ t �
 
 omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- **Chain rule** for a homogeneous operator of order `r`: `A (f ∘ T) = a^r (A f) ∘ T`. -/
 theorem apply_comp_aff [Fintype ι] {A : ConstCoeffOp E 𝕜 ι κ} {r : ℕ} (hA : A.IsHomogeneous r)
     {f : ι → E → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i)) (a : ℝ) (b : E) :
     A.apply (fun i x => f i (aff a b x)) =
@@ -552,7 +512,6 @@ theorem pullF_mem_testGraph {ψ : ι → E → 𝕜} (hψ : IsTestField Ω' ψ) 
   rw [apply_comp_aff hA (fun i => (hψ i).contDiff)]
   rfl
 
-/-- **Test graphs correspond** under the pull-back. -/
 theorem testGraph_eq_preimage :
     (A.testGraph Ω : Set (L2F 𝕜 Ω ι × L2F 𝕜 Ω κ)) =
       graphHomeomorph (𝕜 := 𝕜) ι κ r ha b hΩ' hT ⁻¹' (A.testGraph Ω' : Set _) := by
@@ -579,8 +538,7 @@ theorem testGraph_eq_preimage :
     rw [show p = (p.1, p.2) from rfl, h1, h2]
     exact pullF_mem_testGraph hA ha b hΩ' hT hψ
 
-/-- **The minimal realization under an affine change of variables**:
-`A_min,Ω = a^r · P A_min,Ω' P⁻¹`, `P u = u ∘ T`. -/
+/-- **The minimal realization under `T x = a • x + b`**: `A_min,Ω = a^r · P A_min,Ω' P⁻¹`. -/
 theorem minimal_pull (hΩo' : IsOpen Ω') :
     A.minimal Ω = (A.minimal Ω').conjScaled (pullF ha b hΩ' hT ι) (pullF ha b hΩ' hT κ)
       ((a ^ r : ℝ) : 𝕜) := by
@@ -593,8 +551,7 @@ theorem minimal_pull (hΩo' : IsOpen Ω') :
     ← Homeomorph.preimage_closure]
   rfl
 
-/-- **The maximal realization under an affine change of variables**:
-`A_max,Ω = a^r · P A_max,Ω' P⁻¹` (by duality from `minimal_pull`). -/
+/-- **The maximal realization under `T x = a • x + b`**: `A_max,Ω = a^r · P A_max,Ω' P⁻¹`. -/
 theorem maximal_pull (hΩo' : IsOpen Ω') :
     A.maximal Ω = (A.maximal Ω').conjScaled (pullF ha b hΩ' hT ι) (pullF ha b hΩ' hT κ)
       ((a ^ r : ℝ) : 𝕜) := by
@@ -635,8 +592,7 @@ variable (C : ConstCoeffComplex E 𝕜) {r : ℤ → ℕ} (hC : ∀ k, (C.A k).I
   (hT : aff a b ⁻¹' Ω' = Ω)
 include hC ha hT
 
-/-- **The minimal complex on `Ω = T⁻¹ Ω'` is the transport of the one on `Ω'`** along the
-pull-back, with the chain-rule factors `a^{r k}`. -/
+/-- **The minimal complex on `Ω = T⁻¹ Ω'` is the transport of the one on `Ω'`.** -/
 theorem minimalComplex_pull :
     C.minimalComplex hΩ = (C.minimalComplex hΩ').transport
       (fun k => pullF (𝕜 := 𝕜) ha b hΩ'.measurableSet hT (C.ι k)) (chainFactor a r)
@@ -650,7 +606,6 @@ theorem minimalComplex_pull :
   · rw [(C.minimalComplex hΩ).shape i j h, HilbertComplex.transport_d,
       HilbertComplex.transportD_eq_zero ((C.minimalComplex hΩ').shape i j h)]
 
-/-- **The maximal complex on `Ω = T⁻¹ Ω'` is the transport of the one on `Ω'`.** -/
 theorem maximalComplex_pull :
     C.maximalComplex hΩ = (C.maximalComplex hΩ').transport
       (fun k => pullF (𝕜 := 𝕜) ha b hΩ'.measurableSet hT (C.ι k)) (chainFactor a r)
@@ -681,10 +636,6 @@ variable {ι κ : Type*} [Fintype ι] [Fintype κ] {A : ConstCoeffOp E 𝕜 ι �
   {Jx' : X' →ₗᵢ[𝕜] L2F 𝕜 Ω' ι} {Jy' : Y' →ₗᵢ[𝕜] L2F 𝕜 Ω' κ}
   {eX : X' ≃L[𝕜] X} {eY : Y' ≃L[𝕜] Y}
 
-/-- **Constrained test graphs correspond** under the pull-back `P u = u ∘ T`, for isomorphisms
-`eX : X' ≃ X`, `eY : Y' ≃ Y` of the constrained spaces compatible with `P`
-(`Jx (eX x) = P (Jx' x)`): `(x, y)` is a constrained test pair on `Ω = T⁻¹ Ω'` iff
-`(eX⁻¹ x, a^{-r} eY⁻¹ y)` is one on `Ω'`. -/
 theorem mem_testGraphVia_pull_iff (hA : A.IsHomogeneous r) (ha : a ≠ 0)
     (hΩ' : MeasurableSet Ω') (hT : aff a b ⁻¹' Ω' = Ω)
     (hX : ∀ x, Jx (eX x) = pullF ha b hΩ' hT ι (Jx' x))
@@ -725,9 +676,6 @@ theorem mem_testGraphVia_pull_iff (hA : A.IsHomogeneous r) (ha : a ≠ 0)
       rw [apply_comp_aff hA (fun i => (hψ i).contDiff) a b]
       rfl
 
-/-- **The constrained minimal realization under an affine change of variables**:
-`A_via,Ω = a^r · eY A_via,Ω' eX⁻¹` for isomorphisms of the constrained spaces compatible with
-the pull-back. -/
 theorem minimalVia_pull (hA : A.IsHomogeneous r) (ha : a ≠ 0)
     (hΩ' : MeasurableSet Ω') (hT : aff a b ⁻¹' Ω' = Ω)
     (hX : ∀ x, Jx (eX x) = pullF ha b hΩ' hT ι (Jx' x))

@@ -7,70 +7,22 @@ public import Feec.HilbertComplex.Approximation.StaticFEEC
 /-!
 # The finite element method on domains star-shaped with respect to a ball
 
-Let `Ω ⊆ ℝⁿ` be a bounded open domain star-shaped with respect to every point of a ball
-`B(x₀, s₀)`, with `cl Ω ⊆ B̄(x₀, R)` (`StarDomain`), and let `M_N` be conforming simplicial meshes
-of `Ω` that are uniformly **shape regular** (`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T`,
-`c h_Tⁿ ≤ |det B_T|`) and **quasi-uniform** (`q h_N ≤ h_T`), with `h_N → 0` (`MeshFamily`). The
-finite element theory of the Freudenthal meshes of the cube (`Feec.Models.Cube.SmoothingEstimates`,
-`Feec.Models.Cube.FiniteElementConvergence`) holds for the lowest-order Whitney complexes of
-`M_N`, with both boundary conditions.
+On a bounded domain star-shaped with respect to a ball (`StarDomain`) with uniformly shape-regular,
+quasi-uniform meshes (`MeshFamily`), the Whitney complexes, with both boundary conditions, are
+conforming families with Jackson estimates of order `h_N` (`MeshFamily.whitneyFamily`).
 
-**The smoothed-projection estimates, unconditionally** ([AFW2010], §5.5;
-[ChristiansenWinther2008]; `Feec.Models.StarShaped.Smoothing`): uniformly bounded smoothed
-cochain projections onto `Vₕ ⊆ HΛ(Ω)` and `V̊ₕ ⊆ H̊Λ(Ω)`, in `L²` and every graph norm
-(`exists_uniform_cochainProjection`, `exists_uniform_cochainProjectionMin`; for the family,
-`MeshFamily.exists_uniform_proj`, `MeshFamily.exists_uniform_projMin`).
+## Main results
 
-**Approximation, unconditionally.** The Whitney interpolation error on shape-regular meshes
-(`Feec.FiniteElement.norm_formL2_sub_glue_le_of_isShapeRegular`) gives the rate `h_N` for `C²`
-forms (`MeshFamily.exists_mem_whitney_le`, `MeshFamily.exists_mem_whitney_le_of_isC2Form`, and
-the `Min` versions for forms vanishing outside `Ω`), and with the density of smooth forms
-(`Feec.FiniteElement.exists_smooth_near_of_starBall`, `_min_of_starBall`) graph-norm
-density of the Whitney spaces (`MeshFamily.eventually_exists_whitney_near`, `..._whitneyMin_near`).
-
-**The finite element families** (`MeshFamily`, both families, `Min` for `H̊Λ(Ω)`): the Whitney
-complexes with the smoothed projections are **conforming families** (`MeshFamily.whitneyFamily`,
-`MeshFamily.whitneyFamilyMin`) with the **Jackson estimates** of order `h_N` for `C²` forms
-(`MeshFamily.whitneyJackson`, `MeshFamily.whitneyJacksonMin`; `StarDomain.IsC2Form`), so the
-static FEEC theorem (`Feec.HilbertComplex.ConformingFamily.staticFEEC`: uniform discrete
-Poincaré inequality, well-posedness and stability, harmonic gap, cohomology, quasi-optimality,
-convergence) and its rates hold for them; the semi-discrete Hodge wave equation converges on
-every window with no hypothesis (`exists_tendstoUniformlyOn_window`; [QuennevilleBelair2015],
-Thm 4.14).
-
-**Remaining hypotheses.** The cochain projections, the approximation results and the wave
-convergence are proved with no hypothesis. The Poincaré inequality of `HΛ(Ω)`, resp. `H̊Λ(Ω)`
-(`HasPoincare`, equivalently closed range), is the hypothesis of the static theorems
-(`ConformingFamily.quasiOptimal` and `ConformingFamily.rate` need it only in the degrees of the
-problem); it holds on every bounded Lipschitz domain (regularized Poincaré and Bogovskiĭ
-operators, [CostabelMcIntosh2010]), a theory absent from Mathlib, and is a theorem on the cube
-and on every parallelepiped (`Feec.Models.Parallelepiped.StarShaped`). The finite-dimensionality
-of the harmonic forms is used only for the harmonic gap and the cohomology.
-**Affine images**: shape regularity, quasi-uniformity and star-shapedness with respect to a ball
-are preserved by affine equivalences (`StarDomain.map`, `MeshFamily.map`; `isShapeRegular_image`,
-`MeshData.map`). **Non-vacuity**: the cube with its Freudenthal meshes and every parallelepiped
-`A · Q + b` (every box) with its image Freudenthal meshes are `StarDomain`s with a `MeshFamily`
-satisfying all these hypotheses (`Feec.Models.Parallelepiped.StarShaped`:
-`CubeWitness.meshFamily`, `CubeWitness.hasPoincare`, `ParallelepipedWitness.meshFamily`). The
-higher-order families `P_rΛᵏ`, `P_r⁻Λᵏ` (whose inverse and DOF estimates on shape-regular simplices
-are
-`Feec.FiniteElement.exists_inverse_bound_polySpace` and
-`Feec.FiniteElement.exists_dof_bound_of_le_polySpace`) are in
-`Feec.Models.StarShaped.PolyFiniteElement`.
+* `MeshFamily.exists_uniform_proj`: uniformly bounded smoothed cochain projections.
+* `MeshFamily.exists_mem_whitney_le`: the interpolation error of order `h_N`.
+* `MeshFamily.exists_tendstoUniformlyOn_window`: convergence of the semi-discrete wave equation.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (Thm 3.6), Thm 3.8, Thm 3.9, §5.5 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-  (shape-regular and quasi-uniform families)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
-  solutions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
-* [M. Costabel, A. McIntosh, *On Bogovskiĭ and Regularized Poincaré Integral Operators for de Rham Complexes on Lipschitz Domains*][CostabelMcIntosh2010]
-  (the Poincaré inequality on bounded Lipschitz domains)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -88,8 +40,7 @@ variable {n : ℕ}
 
 /-! ## The finite element method on a domain star-shaped with respect to a ball -/
 
-/-- **A bounded open domain `Ω ⊆ ℝⁿ` star-shaped with respect to the ball `B(x₀, s₀)`**, with
-`cl Ω ⊆ B̄(x₀, R)`. -/
+/-- A bounded open domain `Ω ⊆ ℝⁿ` star-shaped with respect to a ball, `cl Ω ⊆ B̄(x₀, R)`. -/
 structure StarDomain (n : ℕ) where
   /-- the domain -/
   Ω : Set (Fin n → ℝ)
@@ -126,8 +77,7 @@ abbrev complexMin : HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ D.
 
 end StarDomain
 
-/-- **A family of conforming simplicial meshes of `Ω`**, uniformly shape regular (constants
-`C, c`) and quasi-uniform (`q h ≤ h_T`), with mesh sizes tending to `0`. -/
+/-- A family of uniformly shape-regular, quasi-uniform conforming meshes of `Ω`, `h_N → 0`. -/
 structure MeshFamily (D : StarDomain n) where
   /-- the meshes -/
   mesh : ℕ → SimplicialMesh n
@@ -162,7 +112,7 @@ theorem strict_mesh (N : ℕ) : ∀ x ∈ closure (F.mesh N).domain, ∀ t : ℝ
 
 variable [NeZero n]
 
-/-- **The Whitney complex of `M_N`** as a subcomplex of `HΛ(Ω)`. -/
+/-- The Whitney complex of `M_N`, a subcomplex of `HΛ(Ω)`. -/
 def whitney (N : ℕ) : D.complex.Subcomplex :=
   (deRham ℝ n).maximalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
     (whitneySubcomplex (F.mesh N) (F.isOpen_domain N))
@@ -170,7 +120,7 @@ def whitney (N : ℕ) : D.complex.Subcomplex :=
 instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.whitney N).V k) :=
   (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
 
-/-- **The Whitney complex of `M_N` with vanishing boundary DOFs** as a subcomplex of `H̊Λ(Ω)`. -/
+/-- The Whitney complex of `M_N` with vanishing boundary DOFs, a subcomplex of `H̊Λ(Ω)`. -/
 def whitneyMin (N : ℕ) : D.complexMin.Subcomplex :=
   (deRham ℝ n).minimalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
     (whitneySubcomplexMin (F.mesh N) (F.isOpen_domain N) D.x₀ (F.strict_mesh N))
@@ -178,9 +128,8 @@ def whitneyMin (N : ℕ) : D.complexMin.Subcomplex :=
 instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.whitneyMin N).V k) :=
   (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
 
-/-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes of the family**
-in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.5; [ChristiansenWinther2008]), with no
-hypothesis beyond shape regularity and quasi-uniformity. -/
+/-- Uniformly bounded smoothed cochain projections onto the Whitney complexes of the family, in `L²`
+and in every graph norm. [AFW2010], §5.5; [ChristiansenWinther2008] -/
 theorem exists_uniform_proj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N, ∃ π : (F.whitney N).CochainProjection,
     (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
   obtain ⟨K, hK1, hK⟩ := exists_uniform_cochainProjection (x₀ := D.x₀) F.C_nonneg F.c_pos
@@ -193,8 +142,6 @@ theorem exists_uniform_proj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N, ∃ π : (F.whitne
     (fun Θ hΘ S => ∃ π : S.CochainProjection, (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧
       ∀ i j, π.IsGraphBounded i j K) ⟨π, h1, h2⟩
 
-/-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes with vanishing
-boundary DOFs** in `L²` and in every graph norm of `H̊Λ(Ω)`. -/
 theorem exists_uniform_projMin : ∃ K : ℝ, 1 ≤ K ∧ ∀ N, ∃ π : (F.whitneyMin N).CochainProjection,
     (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
   obtain ⟨K, hK1, hK⟩ := exists_uniform_cochainProjectionMin (x₀ := D.x₀) F.C_nonneg F.c_pos
@@ -209,8 +156,7 @@ theorem exists_uniform_projMin : ∃ K : ℝ, 1 ≤ K ∧ ∀ N, ∃ π : (F.whi
 
 /-! ### Interpolation of smooth forms and density of the Whitney complexes -/
 
-/-- The constant of the `L²` interpolation estimate of degree `k`:
-`#Λᵏ |Ω|^{1/2} C_{n,k} Cᵏ`. -/
+/-- The constant `#Λᵏ |Ω|^{1/2} C_{n,k} Cᵏ` of the `L²` interpolation estimate of degree `k`. -/
 def interpConst (k : ℕ) : ℝ :=
   Fintype.card (formIdx n k) * (volume.real D.Ω ^ (1 / 2 : ℝ) * (whitneyConst n k * F.C ^ k))
 
@@ -225,9 +171,8 @@ omit [NeZero n] in
 theorem diam_le (N : ℕ) : ∀ T ∈ (F.mesh N).simplices, diam T ≤ (F.mesh N).meshSize :=
   fun _ hT => (F.mesh N).diam_le_meshSize hT
 
-/-- **Interpolation error on the meshes of the family** ([Arnold2018], Ch. 7, classical form):
-for a `C²` form `w` with `‖Dw‖ ≤ L` and `‖D(dw)‖ ≤ L'` on `cl Ω`, the canonical interpolant
-`v = Π_N w ∈ Vₕᵏ` satisfies `‖w - v‖ ≤ A_k h_N L` and `‖dw - dv‖ ≤ A_{k+1} h_N L'`. -/
+/-- For a `C²` form `w` with `‖Dw‖ ≤ L`, `‖D(dw)‖ ≤ L'` on `cl Ω`, some `v ∈ Vₕᵏ` has
+`‖w - v‖ ≤ A_k h_N L` and `‖dw - dv‖ ≤ A_{k+1} h_N L'`. [Arnold2018], Ch. 7 -/
 theorem exists_mem_whitney_le (N k : ℕ) {w : FormField n} (hw : ContDiff ℝ 2 w)
     {L L' : ℝ} (hL0 : 0 ≤ L) (hL'0 : 0 ≤ L')
     (hL : ∀ y ∈ closure D.Ω, ‖fderiv ℝ w y‖ ≤ L)
@@ -254,9 +199,6 @@ theorem exists_mem_whitney_le (N k : ℕ) {w : FormField n} (hw : ContDiff ℝ 2
       (F.diam_le N)).trans_eq ?_) <;>
   · rw [F.domain_eq N, interpConst]; push_cast; ring
 
-/-- **Interpolation error with vanishing boundary DOFs**: for a `C²` form `w` vanishing outside
-`Ω`, the canonical interpolant lies in `V̊ₕᵏ ⊆ H̊Λᵏ(Ω)`, with the estimates of
-`exists_mem_whitney_le`. -/
 theorem exists_mem_whitneyMin_le (N k : ℕ) {w : FormField n} (hw : ContDiff ℝ 2 w)
     (hsupp : ∀ x ∉ D.Ω, w x = 0) {L L' : ℝ} (hL0 : 0 ≤ L) (hL'0 : 0 ≤ L')
     (hL : ∀ y ∈ closure D.Ω, ‖fderiv ℝ w y‖ ≤ L)
@@ -292,7 +234,6 @@ variable (D : StarDomain n)
 theorem isCompact_closure : IsCompact (closure D.Ω) :=
   Metric.isCompact_of_isClosed_isBounded isClosed_closure D.isBounded.closure
 
-/-- A `C¹` form has a bounded derivative on the compact `cl Ω`. -/
 theorem exists_bound_fderiv {w : FormField n} (hw : ContDiff ℝ 1 w) :
     ∃ L, 0 ≤ L ∧ ∀ y ∈ closure D.Ω, ‖fderiv ℝ w y‖ ≤ L := by
   obtain ⟨L, hL⟩ := D.isCompact_closure.exists_bound_of_continuousOn
@@ -305,9 +246,6 @@ namespace MeshFamily
 
 variable {D : StarDomain n} (F : MeshFamily D) [NeZero n]
 
-/-- **Graph-norm density of the Whitney spaces in `HΛᵏ(Ω)`**: the canonical interpolants of
-smooth forms converge at rate `h_N` (`exists_mem_whitney_le`,
-`eventually_exists_graph_of_smooth`). -/
 theorem eventually_exists_whitney_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complex.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitney N).V k, ‖x - v‖ < ε ∧
@@ -329,13 +267,11 @@ theorem eventually_exists_whitney_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hdv,
     hv2.trans (le_add_of_nonneg_left hb0)⟩
 
-/-- **`L²` density of the Whitney spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitney_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitney N).V k, ‖x - v‖ < ε :=
   Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) k x hε
 
-/-- **Degreewise approximation in every graph norm of `HΛ(Ω)`**. -/
 theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitney N).V i, ‖x - v‖ < ε ∧
@@ -345,16 +281,12 @@ theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i)
   Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) i x hε
 
-/-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitney (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.whitney N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
   Subcomplex.tendsto_infDist_of_lt (S := fun N => F.whitney N) q fun _ ha =>
     F.eventually_exists_whitney_lt j q ha
 
-/-- **Graph-norm density of the Whitney spaces in `H̊Λᵏ(Ω)`**: the canonical interpolants of
-smooth forms vanishing outside `Ω` converge at rate `h_N` (`exists_mem_whitneyMin_le`,
-`eventually_exists_graph_of_smooth_min`). -/
 theorem eventually_exists_whitneyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complexMin.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitneyMin N).V k, ‖x - v‖ < ε ∧
@@ -376,13 +308,11 @@ theorem eventually_exists_whitneyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx 
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hdv,
     hv2.trans (le_add_of_nonneg_left hb0)⟩
 
-/-- **`L²` density of the Whitney spaces with vanishing boundary DOFs** `V̊ₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitneyMin_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitneyMin N).V k, ‖x - v‖ < ε :=
   Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) k x hε
 
-/-- **Degreewise approximation in every graph norm of `H̊Λ(Ω)`**. -/
 theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitneyMin N).V i, ‖x - v‖ < ε ∧
@@ -392,7 +322,6 @@ theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n
   Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) i x hε
 
-/-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitneyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.whitneyMin N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
@@ -400,7 +329,6 @@ theorem tendsto_infDist_whitneyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     F.eventually_exists_whitneyMin_lt j q ha
 
 include F in
-/-- **Smooth `k`-forms lie in `HΛᵏ(Ω)`**, with `d (w|_Ω) = (dw)|_Ω`. -/
 theorem formL2_mem_domain (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
     (hdeg : ∀ x, IsDeg k (w x)) :
     ∃ h : formL2 D.isOpen.measurableSet D.isBounded k ⟨w, hw.continuous⟩ ∈
@@ -425,8 +353,6 @@ theorem formL2_mem_domain (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
   exact ⟨hd ▸ h, (LinearPMap.apply_eq_of_eq' hd _).trans hval⟩
 
 include F in
-/-- **`d_min` of a smooth form**: if `x ∈ H̊Λᵏ(Ω)` is the class of a `C¹` form `w`, then
-`d x = (dw)|_Ω`. -/
 theorem complexMin_d_formL2 (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
     (hdeg : ∀ y, IsDeg k (w y)) (x : (D.complexMin.d k (k + 1)).domain)
     (hx : (x : L2F ℝ D.Ω (formIdx n k)) =
@@ -451,8 +377,7 @@ namespace StarDomain
 
 variable (D : StarDomain n)
 
-/-- `x ∈ L²(Ω; Λʲ)` is a `C²` form of degree `j` whose derivative and the derivative of its
-exterior derivative are bounded by `L` on `cl Ω` (trivially true in negative degrees). -/
+/-- `x` is a `C²` form of degree `j` with derivative bounds `L` on `cl Ω`. -/
 def IsC2Form (j : ℤ) (L : ℝ) (x : L2F ℝ D.Ω (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n, ∃ hw : ContDiff ℝ 2 w, (∀ y, IsDeg k (w y)) ∧
     (∀ y ∈ closure D.Ω, ‖fderiv ℝ w y‖ ≤ L) ∧
@@ -481,8 +406,6 @@ theorem interpBound_nonneg (j : ℤ) : 0 ≤ F.interpBound j :=
 
 variable [NeZero n]
 
-/-- **Degreewise interpolation error for `C²` forms**: `‖x - v‖, ‖d (x - v)‖ ≤ B_j L h_N` for the
-Whitney interpolant `v ∈ Vₕʲ`. -/
 theorem exists_mem_whitney_le_of_isC2Form {j : ℤ} {L : ℝ} {x : L2F ℝ D.Ω (formIdx n j)}
     (hx : D.IsC2Form j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (F.whitney N).V j, ‖x - v‖ ≤ F.interpBound j * L * (F.mesh N).meshSize ∧
@@ -507,7 +430,6 @@ theorem exists_mem_whitney_le_of_isC2Form {j : ℤ} {L : ℝ} {x : L2F ℝ D.Ω 
   rw [hval, e]
   linarith
 
-/-- **Degreewise interpolation error for `C²` forms vanishing outside `Ω`**, in `H̊Λ(Ω)`. -/
 theorem exists_mem_whitneyMin_le_of_isC2FormMin {j : ℤ} {L : ℝ} {x : L2F ℝ D.Ω (formIdx n j)}
     (hx : D.IsC2FormMin j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (F.whitneyMin N).V j,
@@ -537,14 +459,12 @@ end MeshFamily
 
 /-! ### The finite element theorems on `Ω` -/
 
-/-- **The Poincaré inequality of a Hilbert complex** with constant `c_P`:
-`‖z‖ ≤ c_P ‖d z‖` on `D(d) ∩ 𝔷⊥`, in every degree (equivalently, closed range). -/
+/-- The Poincaré inequality `‖z‖ ≤ c_P ‖d z‖` on `D(d) ∩ 𝔷⊥`, in every degree. -/
 def HasPoincare {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
     [∀ i, CompleteSpace (W i)] (H : HilbertComplex ℝ (ComplexShape.up ℤ) W) (cP : ℝ) : Prop :=
   ∀ i j, (ComplexShape.up ℤ).Rel i j → ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ →
     ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖
 
-/-- A larger constant also works. -/
 theorem HasPoincare.mono {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
     {H : HilbertComplex ℝ (ComplexShape.up ℤ) W} {cP cP' : ℝ} (h : HasPoincare H cP)
@@ -563,9 +483,7 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((F.whitneyMin N).window a m).V i) :=
   inferInstanceAs (FiniteDimensional ℝ ((F.whitneyMin N).V (a + i)))
 
-/-- **The Whitney forms of a shape-regular, quasi-uniform mesh family** of a domain star-shaped
-with respect to a ball, with the smoothed projections (`exists_uniform_proj`), a conforming
-family of `HΛ(Ω)`. -/
+/-- The Whitney forms of the mesh family, a conforming family of `HΛ(Ω)`. -/
 def whitneyFamily : ConformingFamily D.complex ℕ :=
   .ofExists atTop F.whitney
     (by
@@ -574,8 +492,7 @@ def whitneyFamily : ConformingFamily D.complex ℕ :=
       exact ⟨K, π, hb⟩)
     F.tendsto_infDist_whitney
 
-/-- **The Whitney forms with vanishing boundary DOFs of the mesh family**, a conforming family of
-`H̊Λ(Ω)`. -/
+/-- The Whitney forms with vanishing boundary DOFs, a conforming family of `H̊Λ(Ω)`. -/
 def whitneyFamilyMin : ConformingFamily D.complexMin ℕ :=
   .ofExists atTop F.whitneyMin
     (by
@@ -588,9 +505,7 @@ def whitneyFamilyMin : ConformingFamily D.complexMin ℕ :=
 
 @[simp] theorem whitneyFamilyMin_V : F.whitneyFamilyMin.V = F.whitneyMin := rfl
 
-/-- **The Jackson estimate of the Whitney forms of the mesh family**: `C²` forms on `cl Ω`
-(`StarDomain.IsC2Form`) at the order `h_N` with the constants `interpBound`
-(`exists_mem_whitney_le_of_isC2Form`). -/
+/-- The Jackson estimate of order `h_N` of the Whitney forms, for `C²` forms on `cl Ω`. -/
 def whitneyJackson : F.whitneyFamily.Jackson Unit where
   meshSize N := (F.mesh N).meshSize
   meshSize_nonneg N := (F.meshSize_pos N).le
@@ -602,8 +517,7 @@ def whitneyJackson : F.whitneyFamily.Jackson Unit where
   jackson _ N _ _ _ hL hx := by
     rw [Real.rpow_one, ← mul_assoc]; exact F.exists_mem_whitney_le_of_isC2Form hx hL N
 
-/-- **The Jackson estimate of the Whitney forms with vanishing boundary DOFs**: `C²` forms
-vanishing outside `Ω` (`StarDomain.IsC2FormMin`) at the order `h_N`. -/
+/-- The Jackson estimate of order `h_N` of the Whitney forms with vanishing boundary DOFs. -/
 def whitneyJacksonMin : F.whitneyFamilyMin.Jackson Unit where
   meshSize N := (F.mesh N).meshSize
   meshSize_nonneg N := (F.meshSize_pos N).le
@@ -615,9 +529,8 @@ def whitneyJacksonMin : F.whitneyFamilyMin.Jackson Unit where
   jackson _ N _ _ _ hL hx := by
     rw [Real.rpow_one, ← mul_assoc]; exact F.exists_mem_whitneyMin_le_of_isC2FormMin hx hL N
 
-/-- **Convergence of the semi-discrete Hodge wave equation** on every window of `HΛ(Ω)`
-([QuennevilleBelair2015], Thm 4.14), with no hypothesis: the Whitney windows approximate every
-point of the graph space (`eventually_exists_whitney_near`). -/
+/-- Convergence of the semi-discrete Hodge wave equation on every window of `HΛ(Ω)`, for data in
+`D(L)`. [QuennevilleBelair2015], Thm 4.14 -/
 theorem exists_tendstoUniformlyOn_window (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
     (x : (D.complex.window a m).wave.domain) :
     ∃ ξh ξh' : ℕ → ℝ → (D.complex.window a m).totalD.GraphSpace,
@@ -631,9 +544,6 @@ theorem exists_tendstoUniformlyOn_window (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
   Subcomplex.exists_tendstoUniformlyOn_window_of
     (fun i x _ hε => F.eventually_exists_whitney_near i x hε) a m t₀ t₁ x
 
-/-- **Convergence of the semi-discrete Hodge wave equation** on every window of `H̊Λ(Ω)`
-([QuennevilleBelair2015], Thm 4.14), with no hypothesis: the Whitney windows approximate every
-point of the graph space (`eventually_exists_whitney_near`). -/
 theorem exists_tendstoUniformlyOn_windowMin (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
     (x : (D.complexMin.window a m).wave.domain) :
     ∃ ξh ξh' : ℕ → ℝ → (D.complexMin.window a m).totalD.GraphSpace,
@@ -649,7 +559,7 @@ theorem exists_tendstoUniformlyOn_windowMin (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ
 
 end MeshFamily
 
-/-! ### Images under affine equivalences; non-vacuity on parallelepipeds -/
+/-! ### Images under affine equivalences -/
 
 section AffineImage
 
@@ -704,7 +614,6 @@ theorem dist_symm_apply_le (x y : Fin n → ℝ) :
   exact (((linCLE e).symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)).le_opNorm _).trans
     (mul_le_mul_of_nonneg_right (norm_linCLE_symm_le e) (norm_nonneg _))
 
-/-- `h_{e(K)} ≤ (‖e⃗‖ + 1) h_K`. -/
 theorem diam_mapEquiv_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
     diam (mapEquiv e K) ≤ lipConst e * diam K := by
   rw [diam, closedInterior_mapEquiv]
@@ -713,7 +622,6 @@ theorem diam_mapEquiv_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
   exact (dist_apply_le e x y).trans (mul_le_mul_of_nonneg_left
     (Metric.dist_le_diam_of_mem K.isCompact_closedInterior.isBounded hx hy) (lipConst_pos e).le)
 
-/-- `h_K ≤ (‖e⃗⁻¹‖ + 1) h_{e(K)}`. -/
 theorem diam_le_diam_mapEquiv (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
     diam K ≤ lipConstInv e * diam (mapEquiv e K) := by
   refine Metric.diam_le_of_forall_dist_le
@@ -733,7 +641,6 @@ theorem linearPart_mapEquiv_apply (K : Affine.Simplex ℝ (Fin n → ℝ) n) (x 
   simp only [Affine.Simplex.linearPart_apply, mapEquiv_points, map_sum, map_smul]
   exact Finset.sum_congr rfl fun i _ => by rw [sub_eq_linCLE]
 
-/-- `B_{e(K)} = e⃗ B_K`. -/
 theorem linearPart_mapEquiv (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
     (mapEquiv e K).linearPart = (e.linear : (Fin n → ℝ) →ₗ[ℝ] (Fin n → ℝ)) ∘ₗ K.linearPart :=
   LinearMap.ext fun x => linearPart_mapEquiv_apply e K x
@@ -769,9 +676,6 @@ theorem abs_det_linearPart_mapEquiv (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
     |LinearMap.det (mapEquiv e K).linearPart| = jacAbs e * |LinearMap.det K.linearPart| := by
   rw [linearPart_mapEquiv, LinearMap.det_comp, abs_mul, jacAbs]
 
-/-- **Shape regularity is preserved by affine equivalences**: the images of a shape-regular set
-of simplices with constants `C, c` are shape regular with constants `L L' C` and
-`|det e⃗| c / Lⁿ`, `L = ‖e⃗‖ + 1`, `L' = ‖e⃗⁻¹‖ + 1` ([Ciarlet2002], §3.1). -/
 theorem isShapeRegular_image {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C c : ℝ}
     (hC : 0 ≤ C) (hc : 0 ≤ c) (hS : IsShapeRegular S C c) :
     IsShapeRegular (mapEquiv e '' S) (lipConst e * lipConstInv e * C)
@@ -842,8 +746,6 @@ theorem simplices_map_eq (M : SimplicialMesh n) :
   ext T
   simp only [Finset.mem_coe, M.mem_map_simplices, Set.mem_image]
 
-/-- **Mesh data are preserved by affine equivalences**, with constants depending only on
-`C, c, q` and `‖e⃗‖, ‖e⃗⁻¹‖, |det e⃗|`. -/
 theorem MeshData.map {M : SimplicialMesh n} {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 ≤ c) (hq : 0 < q)
     (h : MeshData M C c q) :
     MeshData (M.map e) (lipConst e * lipConstInv e * C) (jacAbs e * c / lipConst e ^ n)
@@ -874,9 +776,7 @@ namespace StarDomain
 
 variable (D : StarDomain n) (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
 
-/-- **The image of a star-shaped domain under an affine equivalence** `e`, given as any set
-`Ω' = e(Ω)`: it is star-shaped with respect to `B(e x₀, s₀ / (‖e⃗⁻¹‖ + 1))`, with
-`cl Ω' ⊆ B̄(e x₀, (‖e⃗‖ + 1) R)`. -/
+/-- The image of a star-shaped domain under an affine equivalence `e`. -/
 def map (Ω' : Set (Fin n → ℝ)) (hΩ' : Ω' = e '' D.Ω) : StarDomain n where
   Ω := Ω'
   isOpen := hΩ' ▸ (AffineEquiv.toContinuousAffineEquiv e).toHomeomorph.isOpenMap _ D.isOpen
@@ -917,8 +817,7 @@ namespace MeshFamily
 
 variable {D : StarDomain n} (F : MeshFamily D) (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
 
-/-- **The image of a mesh family under an affine equivalence** `e`: the meshes `e(M_N)` of
-`e(Ω)` are again uniformly shape regular and quasi-uniform with `h_N → 0`. -/
+/-- The image of a mesh family under an affine equivalence `e`. -/
 def map (Ω' : Set (Fin n → ℝ)) (hΩ' : Ω' = e '' D.Ω) : MeshFamily (D.map e Ω' hΩ') where
   mesh N := (F.mesh N).map e
   C := lipConst e * lipConstInv e * F.C

@@ -6,38 +6,13 @@ public import Feec.TimeStepping.RungeKutta
 /-!
 # Runge–Kutta methods of bounded operators
 
-The `s`-stage Runge–Kutta method with Butcher tableau `T = (A, b)`
-(`Feec.TimeStepping.ButcherTableau`) applied to `u' = L u`, for a bounded operator `L` of a normed
-space `E` over `𝕜` and a time step `τ`, computes `u₁ = u₀ + τ ∑ᵢ bᵢ kᵢ` from the **stages**
-`kᵢ = L (u₀ + τ ∑ⱼ aᵢⱼ kⱼ)` (`ButcherTableau.IsStage`). For every tableau, whenever `d(τL)` is
-invertible, the stages exist and are unique and the step is `u₁ = n(τL) d(τL)⁻¹ u₀`, with the
-stability function `n/d`, `n = det(1 - X A + X 𝟙 bᵀ)`, `d = det(1 - X A)`
-(`ButcherTableau.stabilityNum`, `ButcherTableau.stabilityDen`): the operator form of
-`ButcherTableau.stabilityFunction_eq`, which is the scalar test equation `u' = λ u`.
-
-## Main results
-
-* `ButcherTableau.stabilityNum_eq_stabilityDen_add`: `n = d + X bᵀ adj(1 - X A) 𝟙`, the matrix
-  determinant lemma over a commutative ring
-  (`Matrix.det_add_replicateCol_mul_replicateRow_eq_det_add`);
-* `ButcherTableau.existsUnique_isStage`: if `d(τL)` is invertible, the stage equations have
-  exactly one solution;
-* `ButcherTableau.IsStage.add_smul_sum_eq`: then `u₀ + τ ∑ᵢ bᵢ kᵢ = n(τL) d(τL)⁻¹ u₀`.
-
-The stage equations are `M k = (L u₀, …, L u₀)` for the `s × s` matrix of operators
-`M = 1 - τ L A`, the image of `1 - X A` under `f ↦ f(τL)`, whose entries commute: with
-`adj(M) M = M adj(M) = d(τL)`, every solution is `kᵢ = d(τL)⁻¹ ∑ⱼ adj(M)ᵢⱼ L u₀`, and this is one.
-When `d` has no zero in the closed left half-plane and `deg n ≤ deg d`
-(`ButcherTableau.toRationalScheme`), `d(τL)` is invertible for `τ > 0` whenever `‖e^{tL}‖` is
-bounded for `t ≥ 0` on a Banach space: at the resolvent `R = (1 - τL)⁻¹`, `Q(R) = Rᴺ d(τL)`
-(`resolventEval_eq_mul_aeval`) is invertible
-(`RationalScheme.isUnit_resolventEval_den_of_resolvent`); in particular for every dissipative `L`
-of a Hilbert space (`RationalScheme.isUnit_aeval_den`).
+For bounded `L` with `d(τL)` invertible, the Runge–Kutta stages exist and are unique, and the step
+is the rational scheme `n(τL) d(τL)⁻¹` of the stability function.
 
 ## References
 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (the stability function, Prop 3.2)
+  §IV.3
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -50,15 +25,11 @@ namespace Feec.TimeStepping.ButcherTableau
 
 variable {s : ℕ} (T : ButcherTableau s)
 
-/-- The matrix `1 - X A` over `ℝ[X]`, whose determinant is the denominator `d` of the stability
-function. -/
+/-- The matrix `1 - X A` over `ℝ[X]`; its determinant is the stability denominator. -/
 def stageMatrix : Matrix (Fin s) (Fin s) ℝ[X] := 1 - (X : ℝ[X]) • T.A.map C
 
 theorem det_stageMatrix : T.stageMatrix.det = T.stabilityDen := rfl
 
-/-- **The stability function by the matrix determinant lemma** ([HairerWanner1996], §IV.3,
-Prop 3.2): `det(1 - X A + X 𝟙 bᵀ) = det(1 - X A) + X bᵀ adj(1 - X A) 𝟙`
-(`Matrix.det_add_replicateCol_mul_replicateRow_eq_det_add`). -/
 theorem stabilityNum_eq_stabilityDen_add : T.stabilityNum = T.stabilityDen +
     X * ((fun i => C (T.b i)) ⬝ᵥ (T.stageMatrix.adjugate *ᵥ fun _ => 1)) := by
   have e : (1 : Matrix (Fin s) (Fin s) ℝ[X]) -
@@ -79,8 +50,7 @@ section Stages
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
-/-- `k` are the **stages** of the method for `u' = L u` with time step `τ` from `u`:
-`kᵢ = L (u + τ ∑ⱼ aᵢⱼ kⱼ)`. -/
+/-- The stages `kᵢ = L (u + τ ∑ⱼ aᵢⱼ kⱼ)` of the method for `u' = L u` with step `τ` from `u`. -/
 def IsStage (L : E →L[𝕜] E) (τ : ℝ) (u : E) (k : Fin s → E) : Prop :=
   ∀ i, k i = L (u + (τ : 𝕜) • ∑ j, (T.A i j : 𝕜) • k j)
 
@@ -113,7 +83,6 @@ private theorem ev_C (a : ℝ) (x : E) : ev L τ (C a) x = (a : 𝕜) • x := b
 private theorem ev_X (x : E) : ev L τ X x = (τ : 𝕜) • L x := by
   simp [ev_apply]
 
-/-- `c(τL) • 1` acts entrywise. -/
 private theorem act_smul_one (c : ℝ[X]) (k : Fin s → E) :
     act ((c • (1 : Matrix (Fin s) (Fin s) ℝ[X])).map (ev L τ)) k = fun i => ev L τ c (k i) := by
   funext i
@@ -138,13 +107,11 @@ private theorem isStage_iff_act (u : E) (k : Fin s → E) :
   refine forall_congr' fun i => ?_
   rw [act_stageMatrix, map_add, sub_eq_iff_eq_add, add_comm]
 
-/-- Polynomials in `τ L` commute with `L`. -/
 private theorem ev_apply_apply (f : ℝ[X]) (x : E) : ev L τ f (L x) = L (ev L τ f x) :=
   DFunLike.congr_fun (commute_aeval ((Commute.refl L).smul_left (τ : 𝕜)) _).eq x
 
 variable {L τ}
 
-/-- Every solution of the stage equations solves `d(τL) kᵢ = ∑ⱼ adj(M)ᵢⱼ L u`. -/
 private theorem ev_den_apply_of_isStage {u : E} {k : Fin s → E} (hk : T.IsStage L τ u k)
     (i : Fin s) :
     ev L τ T.stabilityDen (k i) = ∑ j, ev L τ (T.stageMatrix.adjugate i j) (L u) := by
@@ -153,8 +120,8 @@ private theorem ev_den_apply_of_isStage {u : E} {k : Fin s → E} (hk : T.IsStag
   rw [← Matrix.map_mul, adjugate_mul, act_smul_one, (T.isStage_iff_act L τ u k).1 hk] at h
   exact h
 
-/-- **The stages exist and are unique** when `d(τL)` is invertible, `d = det(1 - X A)`:
-`kᵢ = d(τL)⁻¹ ∑ⱼ adj(1 - τ L A)ᵢⱼ L u`. [HairerWanner1996], §IV.3 -/
+/-- **The stages exist and are unique** when `d(τL)` is invertible, `d = det(1 - X A)`.
+[HairerWanner1996], §IV.3 -/
 theorem existsUnique_isStage
     (h : IsUnit (aeval ((τ : 𝕜) • L) (T.stabilityDen.map (algebraMap ℝ 𝕜)))) (u : E) :
     ∃! k, T.IsStage L τ u k := by
@@ -183,9 +150,7 @@ theorem existsUnique_isStage
 
 variable {T} in
 /-- **The Runge–Kutta step is the rational scheme of its stability function**: if `d(τL)` is
-invertible, then for the stages `k` from `u`, `u + τ ∑ᵢ bᵢ kᵢ = n(τL) d(τL)⁻¹ u`, `n/d` the
-stability function. For `L = λ` this is `r(τλ) u`, `r(z) = 1 + z bᵀ (1 - z A)⁻¹ 𝟙` where
-`d(z) ≠ 0` (`stabilityFunction_eq`). [HairerWanner1996], §IV.3 -/
+invertible, `u + τ ∑ᵢ bᵢ kᵢ = n(τL) d(τL)⁻¹ u` for the stages `k`. [HairerWanner1996], §IV.3 -/
 theorem IsStage.add_smul_sum_eq {u : E} {k : Fin s → E} (hk : T.IsStage L τ u k)
     (h : IsUnit (aeval ((τ : 𝕜) • L) (T.stabilityDen.map (algebraMap ℝ 𝕜)))) :
     u + (τ : 𝕜) • ∑ i, (T.b i : 𝕜) • k i =

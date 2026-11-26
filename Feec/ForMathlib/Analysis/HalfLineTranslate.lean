@@ -6,31 +6,14 @@ public import Feec.ForMathlib.Analysis.Fourier.GeomSumMultiplier
 /-!
 # Translations, the Taylor kernel, and Brenner–Thomée's error kernel
 
-Three additions to the half-line algebra (`Feec.HalfLineAlgebra`), with `z = -2πiξ`
-(`Feec.GeomSum.symb`):
-
-* **translation** by `s ≥ 0`, `(δ_s ⋆ f)(t) = f(t - s)` (`HalfLineKernel.translate`), the action
-  of the point mass `δ_s` on kernels, with Fourier transform `e^{sz} f̂`;
-* **the Taylor kernel** `eₚ(t) = (1 - t)ᵖ/p!` on `[0, 1]` (`HalfLineKernel.taylor`), the remainder
-  of the exponential, `z^{p+1} êₚ = e^z - Σ_{j≤p} zʲ/j!` (`symb_pow_mul_fourier_taylor`), from
-  **Taylor's formula with integral remainder along a chain of derivatives**
-  (`eq_sum_add_integral_of_hasDerivAt`), which applies verbatim to semigroup orbits;
-* **Brenner–Thomée's error kernel** (`HalfLineAlgebra.errorKernel`): for a measure `μ` and a
-  kernel `h`, `kₙ = Σ_{j<n} δ_{n-1-j} ⋆ μʲ ⋆ h`. If `z^{p+1} ĥ = μ̂ - e^z` (consistency of
-  order `p`) and `|μ̂| ≤ 1` (stability), then `kₙ̂ = (μ̂ⁿ - e^{nz})/z^{p+1}` and
-  **`∫ |kₙ| ≤ K n`** (`HalfLineAlgebra.integral_norm_errorKernel_le`), `K` depending only on
-  `p`, `∫ |h|`, `∫ |t h|` and `∫ |t g|` for `μ = a δ₀ + g`: the shifted kernel `kₙ(· + n)` has
-  Fourier transform `w Σ_{j<n} qʲ` with `w = e^{-z} ĥ`, `q = e^{-z} μ̂ = 1 + z^{p+1} w`
-  (`MeasureTheory.Integrable.integral_norm_le_of_fourier_eq_geom_sum`).
-
-The point masses themselves are not in the algebra; `kₙ` is, and `r(τA)ⁿ - S(nτ)` is
-`τ^{p+1} Φ(kₙ) A^{p+1}` on `D(A^{p+1})` (`Feec.TimeStepping.RationalSharp`).
+Translations `(δ_s ⋆ f)(t) = f(t - s)` of kernels on the half-line, the Taylor kernel
+`eₚ(t) = (1 - t)ᵖ/p!` on `[0, 1]`, and the error kernel `kₙ = Σ_{j<n} δ_{n-1-j} ⋆ μʲ ⋆ h` of
+[BrennerThomee1979], with `∫ |kₙ| ≤ K n` when `|μ̂| ≤ 1` and `z^{p+1} ĥ = μ̂ - e^z`
+(`z = -2πiξ`).
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
-  (the operational calculus of a semigroup)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -42,11 +25,6 @@ open scoped Real
 
 namespace Feec
 
-/-! ### Taylor's formula along a chain of derivatives -/
-
-/-- **Taylor's formula with integral remainder along a chain of derivatives**: if `f₀, …, f_{p+1}`
-are continuous on `[0, 1]` and `f_j' = f_{j+1}` on `(0, 1)`, then
-`f₀(1) = Σ_{j≤p} f_j(0)/j! + ∫₀¹ (1 - s)ᵖ/p! f_{p+1}(s) ds`. -/
 theorem eq_sum_add_integral_of_hasDerivAt {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     [CompleteSpace F] (p : ℕ) {f : ℕ → ℝ → F} (hc : ∀ j ≤ p + 1, ContinuousOn (f j) (Icc 0 1))
     (hd : ∀ j ≤ p, ∀ s ∈ Ioo (0 : ℝ) 1, HasDerivAt (f j) (f (j + 1) s) s) :
@@ -94,9 +72,7 @@ theorem eq_sum_add_integral_of_hasDerivAt {F : Type*} [NormedAddCommGroup F] [No
 
 namespace HalfLineKernel
 
-/-! ### Translation -/
-
-/-- **Translation by `s ≥ 0`**, the action of the point mass `δ_s`: `(δ_s ⋆ f)(t) = f(t - s)`. -/
+/-- Translation by `s ≥ 0`, the action of `δ_s`: `(δ_s ⋆ f)(t) = f(t - s)`. -/
 def translate (s : ℝ) (hs : 0 ≤ s) (f : HalfLineKernel) : HalfLineKernel where
   toFun t := f (t - s)
   memLp_one := f.memLp_one.comp_measurePreserving (measurePreserving_sub_right volume s)
@@ -120,7 +96,6 @@ def translate (s : ℝ) (hs : 0 ≤ s) (f : HalfLineKernel) : HalfLineKernel whe
 @[simp] theorem translate_apply {s : ℝ} (hs : 0 ≤ s) (f : HalfLineKernel) (t : ℝ) :
     translate s hs f t = f (t - s) := rfl
 
-/-- `𝓕 (f(· + c)) = e^{-cz} 𝓕 f`. -/
 theorem fourier_comp_add_right (f : ℝ → ℂ) (c ξ : ℝ) :
     𝓕 (fun t => f (t + c)) ξ = Complex.exp (-(GeomSum.symb ξ * c)) * 𝓕 f ξ := by
   rw [Real.fourier_real_eq_integral_exp_smul, Real.fourier_real_eq_integral_exp_smul,
@@ -142,8 +117,6 @@ theorem fourier_translate {s : ℝ} (hs : 0 ≤ s) (f : HalfLineKernel) (ξ : �
 theorem integral_norm_translate {s : ℝ} (hs : 0 ≤ s) (f : HalfLineKernel) :
     ∫ t, ‖translate s hs f t‖ = ∫ t, ‖f t‖ :=
   integral_sub_right_eq_self (fun t => ‖f t‖) s
-
-/-! ### The Taylor kernel -/
 
 /-- `(1 - t)ᵖ/p!` on `[0, 1]`, zero elsewhere. -/
 def taylorFun (p : ℕ) : ℝ → ℂ :=
@@ -172,7 +145,7 @@ theorem aestronglyMeasurable_taylorFun (p : ℕ) : AEStronglyMeasurable (taylorF
 theorem integrable_indicator_Icc : Integrable ((Icc (0 : ℝ) 1).indicator (1 : ℝ → ℝ)) :=
   (integrable_indicator_iff measurableSet_Icc).2 (integrableOn_const (by simp))
 
-/-- **The Taylor kernel** `eₚ(t) = (1 - t)ᵖ/p!` on `[0, 1]`. -/
+/-- The Taylor kernel `eₚ(t) = (1 - t)ᵖ/p!` on `[0, 1]`. -/
 def taylor (p : ℕ) : HalfLineKernel where
   toFun := taylorFun p
   memLp_one := memLp_one_iff_integrable.2 (integrable_indicator_Icc.mono'
@@ -195,7 +168,6 @@ def taylor (p : ℕ) : HalfLineKernel where
 
 theorem taylor_apply (p : ℕ) (t : ℝ) : taylor p t = taylorFun p t := rfl
 
-/-- `∫ g(t) eₚ(t) dt = ∫₀¹ (1 - s)ᵖ/p! g(s) ds`. -/
 theorem integral_smul_taylor {F : Type*} [NormedAddCommGroup F] [NormedSpace ℂ F] (p : ℕ)
     (g : ℝ → F) :
     ∫ t, taylor p t • g t = ∫ s in (0 : ℝ)..1, ((1 - s) ^ p / p.factorial : ℝ) • g s := by
@@ -206,7 +178,6 @@ theorem integral_smul_taylor {F : Type*} [NormedAddCommGroup F] [NormedSpace ℂ
   · simp only [taylor_apply, taylorFun, indicator_of_mem ht, Complex.coe_smul]
   · simp [taylor_apply, taylorFun, indicator_of_notMem ht]
 
-/-- **The Fourier transform of the Taylor kernel**: `z^{p+1} êₚ = e^z - Σ_{j≤p} zʲ/j!`. -/
 theorem symb_pow_mul_fourier_taylor (p : ℕ) (ξ : ℝ) :
     GeomSum.symb ξ ^ (p + 1) * 𝓕 (taylor p : ℝ → ℂ) ξ =
       Complex.exp (GeomSum.symb ξ) -
@@ -237,12 +208,9 @@ theorem symb_pow_mul_fourier_taylor (p : ℕ) (ξ : ℝ) :
 
 end HalfLineKernel
 
-/-! ### Brenner–Thomée's error kernel -/
-
 namespace HalfLineAlgebra
 
-/-- **Brenner–Thomée's error kernel** `kₙ = Σ_{j<n} δ_{n-1-j} ⋆ μʲ ⋆ h`: for `μ` the measure of
-`r` and `h` its consistency kernel, `r(τA)ⁿ - S(nτ) = τ^{p+1} Φ(kₙ) A^{p+1}` on `D(A^{p+1})`. -/
+/-- Brenner–Thomée's error kernel `kₙ = Σ_{j<n} δ_{n-1-j} ⋆ μʲ ⋆ h`. -/
 def errorKernel (μ : HalfLineAlgebra) (h : HalfLineKernel) (n : ℕ) : HalfLineKernel :=
   ∑ j ∈ range n, HalfLineKernel.translate ((n - 1 - j : ℕ) : ℝ) (Nat.cast_nonneg _)
     (μ ^ j * inr h).snd
@@ -272,7 +240,6 @@ theorem fourier_errorKernel (μ : HalfLineAlgebra) (h : HalfLineKernel) (n : ℕ
   rw [← hfc, HalfLineKernel.fourier_translate, fourier_snd_mul_inr, map_pow,
     Complex.ofReal_natCast]
 
-/-- `∫ |kₙ| = ∫ |kₙ(· + n)|`, and the shifted kernel has `ψ`, `t ψ` in `L¹ ∩ L²`. -/
 theorem memLp_comp_add (f : HalfLineKernel) (c : ℝ) :
     Integrable (fun t => f (t + c)) ∧ MemLp (fun t => f (t + c)) 2 ∧
       Integrable (fun t : ℝ => t • f (t + c)) ∧ MemLp (fun t : ℝ => t • f (t + c)) 2 := by
@@ -290,8 +257,7 @@ theorem memLp_comp_add (f : HalfLineKernel) (c : ℝ) :
       (h1.smul (c : ℂ))
   · rw [e]; exact (f.memLp_two_smul.comp_measurePreserving hm).sub (h2.const_smul _)
 
-/-- **The constant of Brenner–Thomée's error kernel**, `K = geomSumConst p W₀ W₁ Q₁` with
-`W₀ = ∫ |h|`, `W₁ = 2π (∫ |h| + ∫ |t h|)`, `Q₁ = 2π (1 + ∫ |t g|)` for `μ = a δ₀ + g`. -/
+/-- The constant `K = geomSumConst p W₀ W₁ Q₁` of the error kernel bound. -/
 def errorConst (μ : HalfLineAlgebra) (h : HalfLineKernel) (p : ℕ) : ℝ :=
   geomSumConst p (∫ t, ‖h t‖) (2 * π * ((∫ t, ‖h t‖) + ∫ t, ‖t • h t‖))
     (2 * π * (1 + ∫ t, ‖t • μ.snd t‖))
@@ -306,8 +272,8 @@ theorem norm_fourier_smul_le (f : HalfLineKernel) (ξ : ℝ) :
     norm_mul]
   ring
 
-/-- **Brenner–Thomée's bound on the error kernel**: if `|μ̂| ≤ 1` and `z^{p+1} ĥ = μ̂ - e^z`,
-then `∫ |kₙ| ≤ K n` for every `n`, `K = errorConst μ h p`. [BrennerThomee1979] -/
+/-- If `|μ̂| ≤ 1` and `z^{p+1} ĥ = μ̂ - e^z`, then `∫ |kₙ| ≤ K n`, `K = errorConst μ h p`
+([BrennerThomee1979]). -/
 theorem integral_norm_errorKernel_le (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourier ξ μ‖ ≤ 1)
     (h : HalfLineKernel) {p : ℕ}
     (hh : ∀ ξ, GeomSum.symb ξ ^ (p + 1) * 𝓕 (h : ℝ → ℂ) ξ =

@@ -5,73 +5,19 @@ public import Feec.Domain.VectorProxy
 /-!
 # `H¹`-regular decompositions of maximal complexes and the BGG hypothesis
 
-A field `u ∈ L²(Ω; 𝕜^ι)` on an open `Ω ⊆ ℝⁿ` is **`H¹`** when every component has its weak
-gradient in `L²` (`fieldH1`, the domain of the maximal componentwise gradient `fieldGradOp`).
-`H¹` fields lie in the maximal domain of every homogeneous first-order operator
-(`fieldH1_le_maximal_domain`: such an operator is a constant matrix applied to the gradient) and
-constant matrices preserve them (`ofMatrixCLM_mem_fieldH1`).
-
-A complex of constant-coefficient operators has the **`H¹`-regular decompositions from `J` on**
-(`ConstCoeffComplex.HasRegularDecomposition`) when every `u ∈ D(Aⁱ⁺¹_max)`, `i ≥ J`, is
-`Aⁱ p + w` with `p ∈ D(Aⁱ_max)` and `w ∈ H¹`: for the `L²` de Rham complex these are the
-regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [ArnoldHu2021], §2, Theorem 3
-(`H(curl) = grad H¹ + H¹`, `H(div) = curl H(curl) + H¹`, `L² = div H(div) + H¹`).
-
-* They pass from the de Rham complex of `ℝ³` in forms to the vector-proxy complexes
-  `deRhamVec ℝ m`, row by row (`deRhamVec_hasRegularDecomposition`; the proxies of
-  `Feec.Domain.VectorProxy` and the row matrices `rowMat`).
-* **They give the regular decompositions of BGG data** (`Feec.BGG.HilbertData.RegularDecomposition`,
-  the hypothesis of the analytic BGG theorem): if the top row has the `H¹`-regular decompositions
-  from `J` on, the connecting matrices `M k`, `k ≥ J`, have right inverses and the operators of
-  the bottom row are homogeneous of order `1`, then `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` for `j > J`
-  (`ConstCoeffBGG.maximalData_regularDecomposition`): the `H¹` part `w` is `Sʲ⁻¹ (N w)`, and
-  `N w ∈ H¹` lies in the bottom domain. For the Hessian, elasticity and div-div diagrams the
-  matrices have right inverses from `J` on (`hessianSMat_rightInv`, …), so their regular
-  decompositions follow from those of the rows (`hessianMaximalData_regularDecomposition`, …).
-  On the cube `Q = (0, ½)³` the rows have them (`Feec.Models.Cube.MaximalRegularDecomposition`;
-  over `𝕜` from `ℝ`, `Feec.Domain.OfReal`), which removes the hypothesis from the FEEC theorems
-  there (`Feec.Models.Cube.BGGFEEC`).
-* **Finite-dimensional cohomology passes from forms to vector proxies**, row by row
-  (`deRhamVec_finiteDimensional_cohomology`): the rows and the row embeddings are cochain maps
-  and a field is the sum of its rows.
-* **Both are invariant under invertible affine maps** `T x = A x + b` of `ℝⁿ`: the chain rule
-  `∇ (T^* u) = T^* (∇ u)` (`isPullIntertwining_fieldGradOp`) makes the field pullbacks map `H¹`
-  to `H¹` (`fieldPull_mem_fieldH1`), and with the pullback of forms (`Feec.Domain.FormPullData`)
-  the regular decompositions and the finite-dimensional cohomology of `HΛ(Ω')` pass to
-  `HΛ(T⁻¹ Ω')` (`FormPullData.hasRegularDecomposition`,
-  `FormPullData.finiteDimensional_cohomology`); on the affine images of the cube this removes the
-  hypotheses of the FEEC theorems (`Feec.Models.Parallelepiped.BGGFEEC`).
-
-## Main definitions
-
-* `fieldGradOp`, `fieldH1`; `ConstCoeffComplex.HasRegularDecomposition`; `gradPullMat`;
-  `rowMat`, `rowFormMat`, `formRowMat`.
+The `H¹`-regular decompositions `u = Aⁱ p + w`, `w ∈ H¹`, of maximal domains ([ArnoldHu2021], §2,
+Theorem 3, for the de Rham complex) pass to vector proxies and along invertible affine maps, and
+give those of BGG data of maximal realizations.
 
 ## Main results
 
-* `ConstCoeffOp.maximal_domain_le_of_apply_eq`, **`fieldH1_le_maximal_domain`**
-  (`fieldH1_le_extDerivOp_maximal` for the exterior derivative),
-  `ofMatrixCLM_mem_fieldH1`; `isPullIntertwining_fieldGradOp`, **`fieldPull_mem_fieldH1`**.
-* `vecOp_rowMat`, `vecOp_rowMat_transpose`, `sum_rowMat_transpose_mul`;
-  `extDerivOp_rowFormMat`, `vecOp_formRowMat`, `sum_formRowMat_mul_rowFormMat`.
-* **`deRhamVec_hasRegularDecomposition`**, **`deRhamVec_finiteDimensional_cohomology`**.
-* **`FormPullData.hasRegularDecomposition`**, **`FormPullData.finiteDimensional_cohomology`**.
-* **`ConstCoeffBGG.maximalData_regularDecomposition`** (through
-  `Feec.BGG.HilbertData.regularDecomposition_of_forall_exists`).
-* `hessianSMat_rightInv`, `elasticitySMat_rightInv`, `divDivSMat_rightInv`;
-  **`hessianMaximalData_regularDecomposition`**, `elasticityMaximalData_regularDecomposition`,
-  `divDivMaximalData_regularDecomposition`.
+* `deRhamVec_hasRegularDecomposition`: from forms to vector proxies.
+* `FormPullData.hasRegularDecomposition`: invariance under invertible affine maps.
+* `ConstCoeffBGG.maximalData_regularDecomposition`: the regular decompositions of BGG data.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (regular decompositions,
-  Theorem 3), §4 (the BGG construction)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (change of variables in Sobolev spaces)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (vector proxies)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -92,8 +38,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {n : ℕ} {Ω : Set (Fin n → ℝ)} {ι �
 
 open scoped Classical in
 variable (𝕜 n ι) in
-/-- The componentwise gradient `𝕜^ι → 𝕜^{ι × n}` on `ℝⁿ`, `(∇u)_{(i, j)} = ∂ⱼ uᵢ` (the row-wise
-gradient `gradOp n m` for `ι = Fin m`). -/
+/-- The componentwise gradient `𝕜^ι → 𝕜^{ι × n}` on `ℝⁿ`, `(∇u)_{(i, j)} = ∂ⱼ uᵢ`. -/
 def fieldGradOp : ConstCoeffOp (Fin n → ℝ) 𝕜 ι (ι × Fin n) where
   coeff ij i := if i = ij.1 then [([coordDir ij.2], 1)] else []
 
@@ -103,12 +48,9 @@ theorem fieldGradOp_apply (f : ι → (Fin n → ℝ) → 𝕜) (ij : ι × Fin 
   simp [ConstCoeffOp.apply, fieldGradOp, applyEntry_ite, iterDeriv_singleton]
 
 variable (𝕜 Ω ι) in
-/-- **The `H¹` fields** of `L²(Ω; 𝕜^ι)`: every component has its weak gradient in `L²(Ω)` (the
-domain of the maximal componentwise gradient). -/
+/-- **The `H¹` fields** of `L²(Ω; 𝕜^ι)`: every component has its weak gradient in `L²(Ω)`. -/
 def fieldH1 : Submodule 𝕜 (L2F 𝕜 Ω ι) := ((fieldGradOp 𝕜 n ι).maximal Ω).domain
 
-/-- **A constant matrix after `B` bounds `A` on the maximal domains**: if `A = L B` on smooth
-fields, then `D(B_max) ⊆ D(A_max)`. -/
 theorem ConstCoeffOp.maximal_domain_le_of_apply_eq {E : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
     [(volume : Measure E).IsAddHaarMeasure] {Ω : Set E} (hΩ : IsOpen Ω) {κ' : Type*}
@@ -122,7 +64,6 @@ theorem ConstCoeffOp.maximal_domain_le_of_apply_eq {E : Type*} [NormedAddCommGro
     (fun f hf => by rw [ofMatrix_one_apply]; exact h f hf) ⟨u, hu⟩
   simpa [L2F.ofMatrixCLM_one] using h'
 
-/-- A first-order entry `Σ c ∂_v` is `Σ_l (Σ c v_l) ∂_l`. -/
 theorem applyEntry_eq_sum_of_length_eq_one {P : List (List (Fin n → ℝ) × 𝕜)}
     (hP : ∀ t ∈ P, t.1.length = 1) (f : (Fin n → ℝ) → 𝕜) (x : Fin n → ℝ) :
     applyEntry P f x =
@@ -146,12 +87,11 @@ theorem applyEntry_eq_sum_of_length_eq_one {P : List (List (Fin n → ℝ) × �
     simp only [e, hv, List.map_cons, List.sum_cons, List.headD_cons, Finset.mul_sum, add_mul,
       Finset.sum_add_distrib, mul_assoc]
 
-/-- The matrix `L` of a homogeneous first-order operator, `A = L ∇` (`apply_eq_ofMatrix_grad`). -/
+/-- The matrix `L` of a homogeneous first-order operator, `A = L ∇`. -/
 def ConstCoeffOp.gradMatrix (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) : Matrix κ (ι × Fin n) 𝕜 :=
   fun j il => ((A.coeff j il.1).map fun t => t.2 * ((t.1.headD 0) il.2 : 𝕜)).sum
 
 omit [Fintype κ] in
-/-- **A homogeneous first-order operator is a constant matrix applied to the gradient.** -/
 theorem ConstCoeffOp.apply_eq_ofMatrix_grad {A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ}
     (hA : A.IsHomogeneous 1) (f : ι → (Fin n → ℝ) → 𝕜) :
     A.apply f = (ofMatrix A.gradMatrix).apply ((fieldGradOp 𝕜 n ι).apply f) := by
@@ -163,17 +103,14 @@ theorem ConstCoeffOp.apply_eq_ofMatrix_grad {A : ConstCoeffOp (Fin n → ℝ) �
   simp only [fieldGradOp_apply]
   rfl
 
-/-- **`H¹` fields lie in the maximal domain of every homogeneous first-order operator.** -/
 theorem fieldH1_le_maximal_domain (hΩ : IsOpen Ω) {A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ}
     (hA : A.IsHomogeneous 1) : fieldH1 𝕜 Ω ι ≤ (A.maximal Ω).domain :=
   maximal_domain_le_of_apply_eq hΩ fun f _ => A.apply_eq_ofMatrix_grad hA f
 
-/-- **`H¹` forms lie in the maximal domain of the exterior derivative**, `H¹Λᵏ(Ω) ⊆ HΛᵏ(Ω)`. -/
 theorem fieldH1_le_extDerivOp_maximal (hΩ : IsOpen Ω) (k : ℤ) :
     fieldH1 𝕜 Ω (formIdx n k) ≤ ((extDerivOp 𝕜 n k).maximal Ω).domain :=
   fieldH1_le_maximal_domain hΩ (isHomogeneous_extDerivOp k)
 
-/-- **Constant matrices preserve `H¹` fields**: `∇ (N u) = (N ⊗ 1) ∇u`. -/
 theorem ofMatrixCLM_mem_fieldH1 (hΩ : IsOpen Ω) (N : Matrix κ ι 𝕜) {u : L2F 𝕜 Ω ι}
     (hu : u ∈ fieldH1 𝕜 Ω ι) : L2F.ofMatrixCLM N u ∈ fieldH1 𝕜 Ω κ := by
   classical
@@ -187,7 +124,6 @@ theorem ofMatrixCLM_mem_fieldH1 (hΩ : IsOpen Ω) (N : Matrix κ ι 𝕜) {u : L
   refine Finset.sum_congr rfl fun i _ => ?_
   simp [Matrix.kroneckerMap_apply, Matrix.one_apply, fieldGradOp_apply]
 
-/-- Every field of `L²(Ω; 𝕜^ι)` with `ι` empty is `H¹`. -/
 theorem mem_fieldH1_of_isEmpty [IsEmpty ι] (u : L2F 𝕜 Ω ι) : u ∈ fieldH1 𝕜 Ω ι := by
   rw [Subsingleton.elim u 0]; exact Submodule.zero_mem _
 
@@ -197,12 +133,9 @@ section AffinePull
 
 variable (A : Matrix (Fin n) (Fin n) ℝ) (C : κ → ι → ℝ)
 
-/-- The fibre matrix of the pullback of gradients, `((s, j), (t, i)) ↦ C_{st} A_{ij}`: for
-`T x = A x + b`, `∂ⱼ (Σ_t C_{st} u_t ∘ T) = Σ_{t,i} C_{st} A_{ij} (∂ᵢ u_t) ∘ T`. -/
+/-- The fibre matrix `((s, j), (t, i)) ↦ C_{st} A_{ij}` of the pullback of gradients. -/
 def gradPullMat : κ × Fin n → ι × Fin n → ℝ := fun sj ti => C sj.1 ti.1 * A ti.2 sj.2
 
-/-- **The chain rule for the componentwise gradient**: `∇ (T^* u) = T^* (∇ u)` with the fibre
-matrix `gradPullMat A C` on the gradients. -/
 theorem isPullIntertwining_fieldGradOp :
     IsPullIntertwining A (fieldGradOp ℝ n κ) (fieldGradOp ℝ n ι) C (gradPullMat A C) := by
   intro b φ hφ
@@ -230,10 +163,6 @@ variable {A} (hA : IsUnit A.det) (b : Fin n → ℝ) {Ω' : Set (Fin n → ℝ)}
   (hΩo' : IsOpen Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
 
 include hΩo in
-/-- **`H¹` is invariant under affine changes of variables**: for `T x = A x + b`, `A`
-invertible, and every constant fibre matrix `C`, the field pullback
-`(T^* u)_s = Σ_t C_{st} u_t ∘ T` maps `H¹(Ω'; ℝ^ι)` into `H¹(T⁻¹ Ω'; ℝ^κ)` ([Brezis2011],
-§9.2). -/
 theorem fieldPull_mem_fieldH1 {u : L2F ℝ Ω' ι} (hu : u ∈ fieldH1 ℝ Ω' ι) :
     fieldPull hA b hΩo'.measurableSet hT C u ∈ fieldH1 ℝ Ω κ :=
   (fieldPull_mem_maximal_domain (isPullIntertwining_fieldGradOp A C) hA b hΩo hΩo' hT
@@ -245,9 +174,7 @@ end AffinePull
 
 namespace ConstCoeffComplex
 
-/-- **The `H¹`-regular decompositions from `J` on**: every `u ∈ D(Aⁱ⁺¹_max)`, `i ≥ J`, is
-`Aⁱ p + w` with `p ∈ D(Aⁱ_max)` and `w` an `H¹` field. For the `L²` de Rham complex these are
-the regular decompositions of [ArnoldHu2021], §2, Theorem 3. -/
+/-- **The `H¹`-regular decompositions from `J` on**: `u = Aⁱ p + w`, `w ∈ H¹`, on `D(Aⁱ⁺¹_max)`. -/
 def HasRegularDecomposition (C : ConstCoeffComplex (Fin n → ℝ) 𝕜) (Ω : Set (Fin n → ℝ))
     (J : ℤ) : Prop :=
   ∀ i, J ≤ i → ∀ u ∈ ((C.A (i + 1)).maximal Ω).domain, ∃ p : ((C.A i).maximal Ω).domain,
@@ -264,8 +191,7 @@ end ConstCoeffComplex
 variable {m : ℕ}
 
 variable (𝕜) in
-/-- **The `r`-th row** `𝕜^{vecIdx m k} → 𝕜^{vecIdx 1 k}` of a field of the de Rham complex with
-values in `𝕜ᵐ`. -/
+/-- **The `r`-th row** `𝕜^{vecIdx m k} → 𝕜^{vecIdx 1 k}` of a field with values in `𝕜ᵐ`. -/
 def rowMat (r : Fin m) : ∀ k : ℤ, Matrix (vecIdx 1 k) (vecIdx m k) 𝕜
   | .ofNat 0 => Matrix.of fun _ i => if i = r then 1 else 0
   | .ofNat 1 => Matrix.of fun a b => if b = (r, a.2) then 1 else 0
@@ -323,7 +249,6 @@ theorem ofMatrix_rowMat_transpose_three (r : Fin m) (f : Fin 1 → E → 𝕜) :
 
 end Rows
 
-/-- **Rows commute with the operators**: `A (r-th row of f) = r-th row of A f`. -/
 theorem vecOp_rowMat (r : Fin m) (k : ℤ) (f : vecIdx m k → (Fin 3 → ℝ) → 𝕜) :
     (vecOp 𝕜 1 k).apply ((ofMatrix (rowMat 𝕜 r k)).apply f) =
       (ofMatrix (rowMat 𝕜 r (k + 1))).apply ((vecOp 𝕜 m k).apply f) := by
@@ -356,7 +281,6 @@ theorem vecOp_rowMat (r : Fin m) (k : ℤ) (f : vecIdx m k → (Fin 3 → ℝ) �
     rw [apply_eq_zero_of_isEmpty _ _ (Or.inl h1), apply_eq_zero_of_isEmpty (vecOp 𝕜 m _) _
       (Or.inl hm), apply_zero]
 
-/-- **Row embeddings commute with the operators.** -/
 theorem vecOp_rowMat_transpose (r : Fin m) (k : ℤ) (f : vecIdx 1 k → (Fin 3 → ℝ) → 𝕜) :
     (vecOp 𝕜 m k).apply ((ofMatrix (rowMat 𝕜 r k).transpose).apply f) =
       (ofMatrix (rowMat 𝕜 r (k + 1)).transpose).apply ((vecOp 𝕜 1 k).apply f) := by
@@ -394,7 +318,6 @@ theorem vecOp_rowMat_transpose (r : Fin m) (k : ℤ) (f : vecIdx 1 k → (Fin 3 
     rw [apply_eq_zero_of_isEmpty _ _ (Or.inl hm), apply_eq_zero_of_isEmpty (vecOp 𝕜 1 _) _
       (Or.inl h1), apply_zero]
 
-/-- **The rows split a field**: `Σ_r rowᵣᵀ rowᵣ = 1`. -/
 theorem sum_rowMat_transpose_mul (k : ℤ) :
     ∑ r : Fin m, (rowMat 𝕜 r k).transpose * rowMat 𝕜 r k = 1 := by
   match k with
@@ -418,7 +341,6 @@ theorem sum_rowMat_transpose_mul (k : ℤ) :
   | .negSucc _ => ext a; exact isEmptyElim (α := Empty) a
 
 omit [Fintype κ] in
-/-- A constant matrix sum acts as the sum of the actions. -/
 theorem L2F.ofMatrixCLM_sum {α : Type*} (s : Finset α)
     (M : α → Matrix κ ι 𝕜) (u : L2F 𝕜 Ω ι) :
     L2F.ofMatrixCLM (∑ a ∈ s, M a) u = ∑ a ∈ s, L2F.ofMatrixCLM (M a) u := by
@@ -428,8 +350,7 @@ theorem L2F.ofMatrixCLM_sum {α : Type*} (s : Finset α)
   simp only [L2F.ofMatrixCLM_apply, Matrix.sum_apply, Finset.sum_smul]
   exact Finset.sum_comm
 
-/-- **The `r`-th row of a field of `deRhamVec ℝ m` as a form**: `P_k⁻¹ rowᵣ`, through the
-proxies `proxyMat`. -/
+/-- **The `r`-th row of a field of `deRhamVec ℝ m` as a form**: `P_k⁻¹ rowᵣ`. -/
 def rowFormMat (r : Fin m) (k : ℤ) : Matrix (formIdx 3 k) (vecIdx m k) ℝ :=
   (proxyMat k).transpose * rowMat ℝ r k
 
@@ -437,7 +358,6 @@ def rowFormMat (r : Fin m) (k : ℤ) : Matrix (formIdx 3 k) (vecIdx m k) ℝ :=
 def formRowMat (r : Fin m) (k : ℤ) : Matrix (vecIdx m k) (formIdx 3 k) ℝ :=
   (rowMat ℝ r k).transpose * proxyMat k
 
-/-- The rows of smooth fields commute with `d`. -/
 theorem extDerivOp_rowFormMat (r : Fin m) (k : ℤ) (f : vecIdx m k → (Fin 3 → ℝ) → ℝ)
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (extDerivOp ℝ 3 k).apply ((ofMatrix (rowFormMat r k)).apply f) =
@@ -446,23 +366,19 @@ theorem extDerivOp_rowFormMat (r : Fin m) (k : ℤ) (f : vecIdx m k → (Fin 3 �
     (proxyMat_mul_transpose k) (transpose_mul_proxyMat (k + 1)) (fun g _ => vecOp_proxyMat k g) _
     ((ofMatrix (rowMat ℝ r k)).contDiff_apply hf), vecOp_rowMat, ofMatrix_apply_ofMatrix]
 
-/-- Forms placed in a row commute with `d`. -/
 theorem vecOp_formRowMat (r : Fin m) (k : ℤ) (f : formIdx 3 k → (Fin 3 → ℝ) → ℝ) :
     (vecOp ℝ m k).apply ((ofMatrix (formRowMat r k)).apply f) =
       (ofMatrix (formRowMat r (k + 1))).apply ((extDerivOp ℝ 3 k).apply f) := by
   rw [formRowMat, formRowMat, ← ofMatrix_apply_ofMatrix, vecOp_rowMat_transpose, vecOp_proxyMat,
     ofMatrix_apply_ofMatrix]
 
-/-- **A field is the sum of its rows**: `Σ_r (rowᵣᵀ P_k) (P_k⁻¹ rowᵣ) = 1`. -/
 theorem sum_formRowMat_mul_rowFormMat (k : ℤ) :
     ∑ r : Fin m, formRowMat r k * rowFormMat r k = 1 := by
   simp only [formRowMat, rowFormMat, Matrix.mul_assoc]
   simp only [← Matrix.mul_assoc (proxyMat k), proxyMat_mul_transpose, Matrix.one_mul]
   exact sum_rowMat_transpose_mul k
 
-/-- **The `H¹`-regular decompositions pass from forms to vector proxies**: if the `L²` de Rham
-complex of `Ω ⊆ ℝ³` in forms has them from `J` on, so has the de Rham complex with values in
-`ℝᵐ` (row by row: the `r`-th row of a field is a form, `rowFormMat`, `formRowMat`). -/
+/-- **The `H¹`-regular decompositions pass from forms to vector proxies.** -/
 theorem deRhamVec_hasRegularDecomposition {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) {J : ℤ}
     (h : (deRham ℝ 3).HasRegularDecomposition Ω J) (m : ℕ) :
     (deRhamVec ℝ m).HasRegularDecomposition Ω J := by
@@ -493,12 +409,6 @@ theorem deRhamVec_hasRegularDecomposition {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOp
 
 /-! ### Finite-dimensional cohomology, row by row -/
 
-/-- **Finite-dimensional cohomology passes from forms to vector proxies**: if the maximal `L²`
-de Rham complex of `Ω ⊆ ℝ³` in forms has finite-dimensional cohomology in degree `i`, so has the
-de Rham complex with values in `ℝᵐ`. The rows `rowFormMat r` and the embeddings `formRowMat r`
-are cochain maps (`ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm`) and a field is the sum of
-its rows, so `[u] ↦ ([rowᵣ u])_r` is one-to-one
-(`HilbertComplex.finiteDimensional_cohomology_of_sum_eq_id`). -/
 theorem deRhamVec_finiteDimensional_cohomology {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) (m : ℕ)
     (i : ℤ) [FiniteDimensional ℝ (((deRham ℝ 3).maximalComplex hΩ).cohomology i)] :
     FiniteDimensional ℝ (((deRhamVec ℝ m).maximalComplex hΩ).cohomology i) := by
@@ -531,10 +441,7 @@ variable {A : Matrix (Fin n) (Fin n) ℝ} (D : FormPullData A) (hA : IsUnit A.de
   (hT : affMap A b ⁻¹' Ω' = Ω)
 include D hA hΩo hΩo' hT
 
-/-- **The `H¹`-regular decompositions are invariant under invertible affine maps**: if `HΛ(Ω')`
-has them from `J` on, so has `HΛ(T⁻¹ Ω')`, `T x = A x + b`. For `u ∈ HΛⁱ⁺¹(Ω)` split
-`(T^*)⁻¹ u = d p + w` on `Ω'`; then `u = d (T^* p) + T^* w`, and `T^* w ∈ H¹`
-(`fieldPull_mem_fieldH1`). [ArnoldHu2021], §2, Theorem 3 -/
+/-- **The `H¹`-regular decompositions are invariant under invertible affine maps.** -/
 theorem hasRegularDecomposition {J : ℤ} (h : (deRham ℝ n).HasRegularDecomposition Ω' J) :
     (deRham ℝ n).HasRegularDecomposition Ω J := by
   have h' : ∀ i, J ≤ i → ∀ u ∈ ((extDerivOp ℝ n (i + 1)).maximal Ω').domain,
@@ -553,9 +460,6 @@ theorem hasRegularDecomposition {J : ℤ} (h : (deRham ℝ n).HasRegularDecompos
   have hw := fieldPull_mem_fieldH1 (D.C (i + 1)) hA b hΩo hΩo' hT hp
   rwa [map_sub, ← coe_equiv, ContinuousLinearEquiv.apply_symm_apply, coe_equiv, ← hqe] at hw
 
-/-- **Finite-dimensional cohomology is invariant under invertible affine maps**: `T^*` and
-`(T^*)⁻¹` are mutually inverse cochain maps between `HΛ(Ω')` and `HΛ(T⁻¹ Ω')`
-(`fieldPull_mem_maximal_domain`). -/
 theorem finiteDimensional_cohomology (i : ℤ)
     [FiniteDimensional ℝ (((deRham ℝ n).maximalComplex hΩo').cohomology i)] :
     FiniteDimensional ℝ (((deRham ℝ n).maximalComplex hΩo).cohomology i) := by
@@ -582,13 +486,9 @@ end FormPullData
 
 /-! ### The regular decompositions of BGG data -/
 
-/-- **The regular decompositions of BGG data of maximal realizations**
-(`Feec.BGG.HilbertData.RegularDecomposition`, the hypothesis of the analytic BGG theorem for
-`bgg J`): `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` for `j > J` when the top row has the `H¹`-regular
-decompositions from `J` on, the operators of the bottom row from `J` on are homogeneous of
-order `1` and the connecting matrices `M k`, `k ≥ J`, have right inverses `N`: the `H¹` part
-`w` of `u = dʲ⁻¹ p + w` is `Sʲ⁻¹ (N w)`, and `N w`, an `H¹` field, lies in the bottom domain
-(`fieldH1_le_maximal_domain`). [ArnoldHu2021], §2, Theorem 3 and §4 -/
+/-- **The regular decompositions of BGG data** of maximal realizations, from those of the top row,
+given right inverses of the `M k` and bottom operators homogeneous of order `1` from `J` on
+([ArnoldHu2021], §2, Theorem 3 and §4). -/
 theorem ConstCoeffBGG.maximalData_regularDecomposition (B : ConstCoeffBGG (Fin n → ℝ) 𝕜)
     [∀ k, DecidableEq (B.top.ι k)] (M : ∀ k, Matrix (B.top.ι (k + 1)) (B.bot.ι k) 𝕜)
     (hM : ∀ k f, (B.S k).apply f = (ConstCoeffOp.ofMatrix (M k)).apply f) (hΩ : IsOpen Ω)
@@ -621,8 +521,6 @@ section Instances
 
 variable {Ω : Set (Fin 3 → ℝ)}
 
-/-- `I`, `2 vskw` and `tr` have right inverses (from `0` on; the later matrices map into the
-zero space). -/
 theorem hessianSMat_rightInv :
     ∀ k : ℤ, 0 ≤ k → ∃ N : Matrix (vecIdx 3 k) (vecIdx 1 (k + 1)) 𝕜,
       (hessianSMat k : Matrix _ _ 𝕜) * N = 1
@@ -635,7 +533,6 @@ theorem hessianSMat_rightInv :
       ext i; exact isEmptyElim i⟩
   | .negSucc j, h => absurd h (by have := Int.negSucc_lt_zero j; omega)
 
-/-- `T - tr` and `2 vskw` have right inverses (from `1` on). -/
 theorem elasticitySMat_rightInv :
     ∀ k : ℤ, 1 ≤ k → ∃ N : Matrix (vecIdx 3 k) (vecIdx 3 (k + 1)) 𝕜,
       (elasticitySMat k : Matrix _ _ 𝕜) * N = 1
@@ -648,7 +545,6 @@ theorem elasticitySMat_rightInv :
       ext i; exact isEmptyElim i⟩
   | .negSucc j, h => absurd h (by have := Int.negSucc_lt_zero j; omega)
 
-/-- `I` has a right inverse (from `2` on). -/
 theorem divDivSMat_rightInv :
     ∀ k : ℤ, 2 ≤ k → ∃ N : Matrix (vecIdx 1 k) (vecIdx 3 (k + 1)) 𝕜,
       (divDivSMat k : Matrix _ _ 𝕜) * N = 1
@@ -661,25 +557,18 @@ theorem divDivSMat_rightInv :
       ext i; exact isEmptyElim i⟩
   | .negSucc j, h => absurd h (by have := Int.negSucc_lt_zero j; omega)
 
-/-- **The regular decompositions of the Hessian diagram** after `0` from the `H¹`-regular
-decompositions of the scalar de Rham complex (`H(curl) = grad H¹ + H¹`, `H(div) = curl H(curl) +
-H¹`, `L² = div H(div) + H¹`). -/
 theorem hessianMaximalData_regularDecomposition (hΩ : IsOpen Ω)
     (h : (deRhamVec 𝕜 1).HasRegularDecomposition Ω 0) :
     (hessianMaximalData 𝕜 hΩ).RegularDecomposition 0 :=
   (hessianBGG 𝕜).maximalData_regularDecomposition hessianSMat hessianS_apply_eq hΩ
     (fun k _ => isHomogeneous_vecOp 3 k) hessianSMat_rightInv h
 
-/-- **The regular decompositions of the elasticity diagram** after `1` from the `H¹`-regular
-decompositions of the `𝕜³`-valued de Rham complex from `1` on. -/
 theorem elasticityMaximalData_regularDecomposition (hΩ : IsOpen Ω)
     (h : (deRhamVec 𝕜 3).HasRegularDecomposition Ω 1) :
     (elasticityMaximalData 𝕜 hΩ).RegularDecomposition 1 :=
   (elasticityBGG 𝕜).maximalData_regularDecomposition elasticitySMat elasticityS_apply_eq hΩ
     (fun k _ => isHomogeneous_vecOp 3 k) elasticitySMat_rightInv h
 
-/-- **The regular decompositions of the div-div diagram** after `2` from the `H¹`-regular
-decompositions of the `𝕜³`-valued de Rham complex from `2` on. -/
 theorem divDivMaximalData_regularDecomposition (hΩ : IsOpen Ω)
     (h : (deRhamVec 𝕜 3).HasRegularDecomposition Ω 2) :
     (divDivMaximalData 𝕜 hΩ).RegularDecomposition 2 :=

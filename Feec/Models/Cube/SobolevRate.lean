@@ -7,78 +7,22 @@ public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 /-!
 # Finite element rates in Sobolev norms on the cube
 
-Rates of the finite element methods of every admissible sequence `S` (`Feec.FiniteElement.PolySeq`)
-on the Freudenthal meshes of `Q = (0, ½)ⁿ` (mesh size `h_N = meshSize N`) for data in the Sobolev
-spaces of `Feec.Models.Cube.Sobolev`, `0 ≤ s ≤ 1`. The forms of the finite element method live on
-`cubeDomain n`; `toQ k` identifies them with the forms on `Geometry.Q (Fin n)` of the Sobolev
-spaces.
-
-**Method.** Truncate the Fourier series (of an extension, or of the parity extension) at
-`M = N + 1 ≈ 1/(2h_N)`: `‖u - u_M‖ ≤ (2π(N + 2))^{-s} ‖u‖_s ≤ h_N^s ‖u‖_s`, and
-`‖∇ u_M‖ ≲ M^{1-s} ‖u‖_s`; the `H¹` estimates of the smoothed interpolants
-(`exists_mem_poly_near_grad`, `exists_mem_polyPartial_near_grad`) give
-`dist(u_M, Vₕ) ≲ h_N ‖∇ u_M‖ ≲ h_N^s ‖u‖_s` (`meshSize_mul_rpow_le`). Through a uniformly bounded
-cochain projection `π` this passes to the graph norm (`infDist_domainSub_le_proj`), to the mixed
-Hodge Laplacian by quasi-optimality ([AFW2010], Thm 3.9) and to the semi-discrete Hodge wave
-equation ([QuennevilleBelair2015], Thm 4.14).
+Rates `h^s`, `0 ≤ s ≤ 1`, of the finite element methods of every admissible sequence on the
+Freudenthal meshes of `Q = (0, ½)ⁿ`, for `Hˢ(Q)` and `Hˢ_J(Q)` data: best approximation, the
+mixed Hodge Laplacian ([AFW2010], Thm 3.9) and the semi-discrete Hodge wave equation
+([QuennevilleBelair2015], Thm 4.14).
 
 ## Main results
 
-* **Best approximation**, `dist(y, Vₕᵏ) ≤ C h_N^s ‖y‖_s`, `C` independent of `N` and `s`:
-  **`infDist_poly_le_sobolevQ`** (`HΛ(Q)`, `y ∈ Hˢ(Q)`), **`infDist_polyPartial_le_sobolevPar`**
-  (`HΛ_J(Q)`, `y ∈ Hˢ_J(Q)`, every class `J`); `h^{min(s,1)}` for every `s ≥ 0`:
-  `infDist_polyPartial_le_sobolevPar_min`.
-* **Graph norm**: the Jackson estimate `sobolevJackson` of the complexes of `S` for `Hˢ(Q)`
-  components (`SobComp`, from `SobGraph`), through the projections
-  (`SubcomplexFamily.Jackson.ofInfDist`);
-  `ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar`
-  (`σ, dσ ∈ Hˢ`, `SobGraphPar`; degrees in `ℤ`, `SobAt`, `SobAtPar`).
-* **Mixed Hodge–Laplace problem**: **`mixed_rate_sobolevQ`** (`HΛ(Q)`) and
-  **`mixed_rate_sobolevPar`** (`HΛ_J(Q)`, in particular `H̊Λ(Q)` for `J = univ`):
-  `‖σ - σₕ‖ + ‖u - uₕ‖ + ‖q - qₕ‖ ≤ K L h_N^s` when `σ, dσ, u, du, P_𝔅 u, d P_𝔅 u, q` have
-  Sobolev norms `≤ L`, for every admissible sequence `S` (de Rham Hodge–Laplace rates for any
-  element family, including those of the rows of Tables 5.1/6.1; the BGG elasticity/TSD rates of
-  those tables are not restated here).
-* **Semi-discrete Hodge wave equation** on every window, for solutions with uniform-in-time
-  `Hˢ` bounds `L` on `[t₀, t₁]` (`L^∞([t₀, t₁]; Hˢ)`, e.g. `C⁰([t₀, t₁]; Hˢ)` solutions) on the
-  values and time derivatives (and their differentials):
-  **`PolySmoothingEstimates.norm_sub_le_window_sobolevQ`** (`HΛ(Q)`),
-  **`ParitySmoothingEstimates.norm_sub_le_window_sobolevPar`** (`HΛ_J(Q)`),
-  `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (1 + 2C) K L h_N^s`
-  (smoothing estimates exist for every `S` and `J`: `polySmoothingEstimates_exists`,
-  `paritySmoothing_exists`).
-
-## Proved exponents and the optimal ones
-
-`r` is the polynomial degree; the optimal `L²` best-approximation rate for `Hˢ` data is
-`h^{min(s, r_eff)}`, `r_eff = s_S + 1` where `S` reproduces `P_{s_S}` in the degrees used
-(`PolyOrder`, `PolyOrderAt`; `r_eff = r + 1` for `P_rΛᵏ`, `r` for `P_r⁻Λᵏ`).
-
-| Setting | proved | optimal | what is missing |
-|---|---|---|---|
-| `HΛ(Q)`, `y ∈ Hˢ(Q)` | `h^{min(s,1)}` | `h^{min(s, r_eff)}` | for `s > 1`: an `L²` Bramble–Hilbert estimate `‖y - π y‖ ≲ hᵐ ‖Dᵐ y‖` for the no-boundary-condition smoother; only its `H¹` form (`norm_sub_proj_le_grad`) is available |
-| `HΛ_J(Q)`, `H̊Λ(Q)`, `y ∈ Hˢ_J(Q)` | `h^{min(s,1)}` | `h^{min(s, r_eff)}` | for `s > 1`: the `L²` form of the high-order parity estimate; `norm_sub_proj_le_smooth` is in `sup_{cl Q} ‖D^{s+1} w‖`, which through the truncation would give only `h^{min(s, r_eff) - n/2}` (not formalized) |
-| graph norm, `σ, dσ ∈ Hˢ` | `h^{min(s,1)}` | `h^{min(s, r_eff)}` | as above |
-| mixed Hodge Laplacian | `h^s`, `s ≤ 1` | `h^{min(s, r_eff)}` | as above (the improved `L²` estimates of [AFW2010] are not combined with Sobolev data) |
-| semi-discrete Hodge wave | `h^s`, `s ≤ 1` | `h^{min(s, r_eff)}` | as above |
-
-For `s ≤ 1` the proved exponent is optimal. The `O(h^{s+1})` rates for `C^{s+2}` data are in
-`Feec.Models.Cube.PolyRate`, `Feec.Models.Cube.TangentialRate` and
-`Feec.Models.Cube.ParitySmoothingEstimates`; the BGG rates of Tables 5.1/6.1
-(`Feec.Models.Cube.WeakSymmetryWave`, unconditional since `CurlPotential` is proved,
-`Feec.Models.Cube.RegularDecomposition`) are not restated here for Sobolev data.
+* `infDist_poly_le_sobolevQ`, `infDist_polyPartial_le_sobolevPar`: `dist(y, Vₕᵏ) ≤ C h_N^s ‖y‖_s`.
+* `mixed_rate_sobolevQ`, `mixed_rate_sobolevPar`: the rate `h^s` of the mixed method.
+* `PolySmoothingEstimates.norm_sub_le_window_sobolevQ`: the rate `h^s` of the wave equation.
+* `ParitySmoothingEstimates.norm_sub_le_window_sobolevPar`: the same in `HΛ_J(Q)`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9 (quasi-optimality of the mixed method), §5.5 (smoothed projections)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates)
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.1 (Sobolev spaces)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -104,8 +48,7 @@ def castL2F {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (ι : Type) [Fintype �
     L2F ℝ Ω ι ≃ₗᵢ[ℝ] L2F ℝ Ω' ι := by
   subst h; exact LinearIsometryEquiv.refl ℝ _
 
-/-- `L²(cubeDomain n; Λᵏ) = L²(Q; Λᵏ)`: the forms of the finite element method as forms on the
-cube `Q` of the Sobolev spaces. -/
+/-- `L²(cubeDomain n; Λᵏ) = L²(Q; Λᵏ)`: the forms of the finite element method as forms on `Q`. -/
 abbrev toQ (k : ℤ) : L2F ℝ (cubeDomain n) (formIdx n k) ≃ₗᵢ[ℝ] L2F ℝ (Q (Fin n)) (formIdx n k) :=
   castL2F (cubeDomain_eq_Q n) _
 
@@ -113,7 +56,6 @@ theorem maximalComplex_d_zero {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) :
     ((deRham ℝ n).maximalComplex hΩ).d 0 1 = (extDerivOp ℝ n 0).maximal Ω :=
   deRham_maximalComplex_d hΩ 0
 
-/-- **Transport of `H¹` coefficients, no boundary condition**. -/
 theorem coeffForm_mem_of_eq {Ω : Set (Fin n → ℝ)} (h : Ω = Q (Fin n)) (hΩ : IsOpen Ω)
     {ι : Type} [Fintype ι] (z : L2F ℝ (Q (Fin n)) ι) (t : ι)
     (hz : zeroF (z t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain) :
@@ -128,7 +70,6 @@ theorem coeffForm_mem_of_eq {Ω : Set (Fin n → ℝ)} (h : Ω = Q (Fin n)) (hΩ
   change ‖((deRham ℝ n).maximalComplex hΩ).d 0 1 ⟨coeffForm (z t), hz'⟩‖ = _
   exact congrArg norm (LinearPMap.apply_eq_of_eq e ⟨_, hz'⟩ ⟨_, hz⟩ rfl)
 
-/-- **Transport of `H¹` coefficients with vanishing traces on the faces normal to `J'`**. -/
 theorem zeroForm_mem_dPart_of_eq {Ω : Set (Fin n → ℝ)} (h : Ω = Q (Fin n)) {ι : Type}
     [Fintype ι] (z : L2F ℝ (Q (Fin n)) ι) (t : ι) (J' : Finset (Fin n))
     (hz : zeroF (z t) ∈ (dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ)).domain) :
@@ -149,7 +90,6 @@ theorem meshSize_le_half (N : ℕ) : meshSize N ≤ 1 / 2 := by
 theorem two_pi_mul_succ_eq (N : ℕ) : 2 * Real.pi * ((N + 1 : ℕ) : ℝ) = Real.pi / meshSize N := by
   unfold meshSize; push_cast; field_simp
 
-/-- `(2π(N + 2))^{-s} ≤ h_N^s`. -/
 theorem rpow_neg_le_meshSize_rpow {s : ℝ} (hs : 0 ≤ s) (N : ℕ) :
     (2 * Real.pi * (((N + 1 : ℕ) : ℝ) + 1)) ^ (-s) ≤ meshSize N ^ s := by
   have hh := meshSize_pos N
@@ -163,7 +103,6 @@ theorem rpow_neg_le_meshSize_rpow {s : ℝ} (hs : 0 ≤ s) (N : ℕ) :
   refine (Real.rpow_le_rpow_of_nonpos (inv_pos.2 hh) hle (neg_nonpos.2 hs)).trans (le_of_eq ?_)
   rw [Real.inv_rpow hh.le, Real.rpow_neg hh.le, inv_inv]
 
-/-- `h_N (1 + n (2π(N+1))²)^{(1-s)/2} ≤ (1 + n) π² h_N^s` for `0 ≤ s ≤ 1`. -/
 theorem meshSize_mul_rpow_le {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ) :
     meshSize N * (1 + n * (2 * Real.pi * ((N + 1 : ℕ) : ℝ)) ^ 2) ^ ((1 - s) / 2) ≤
       ((1 + n) * Real.pi ^ 2) * meshSize N ^ s := by
@@ -230,12 +169,8 @@ theorem sqrt_rpow_mul {a : ℝ} (ha : 0 ≤ a) (b e : ℝ) :
 
 variable [NeZero n]
 
-/-- **Best approximation of `Hˢ(Q)` forms by the spaces of `S`, `0 ≤ s ≤ 1`** ([AFW2010],
-§5.4; [Brezis2011], §9.1): for `y ∈ Hˢ(Q; Λᵏ)`,
-`dist(y, Vₕᵏ) ≤ C h_N^s ‖y‖_{Hˢ(Q)}`, `C = sobConst n S k` independent of `N` and `s`.
-The proof truncates the Fourier series of an extension at `M = N + 1 ≈ 1/(2h_N)`
-(`norm_sub_Jinvf_trunc_le`, `grad_truncQ_le`) and applies the `H¹` estimate of the smoothed
-interpolant (`exists_mem_poly_near_grad`) to the truncation. -/
+/-- **Best approximation of `Hˢ(Q)` forms, `0 ≤ s ≤ 1`** ([AFW2010], §5.4):
+`dist(y, Vₕᵏ) ≤ C h_N^s ‖y‖_{Hˢ(Q)}`, with `C = sobConst n S k` independent of `N` and `s`. -/
 theorem infDist_poly_le_sobolevQ (S : PolySeq) (k : ℕ) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k)) (hy : toQ k y ∈ sobolevQ n k s) :
     Metric.infDist y ((poly n S N).V k) ≤
@@ -302,12 +237,8 @@ theorem sobConstPar_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ sobConstPar n S k := 
   have := h1ConstPar_nonneg (n := n) S k
   unfold sobConstPar; positivity
 
-/-- **Best approximation of the parity classes by `V_{h,Γ_J}`, `0 ≤ s ≤ 1`**: for
-`y ∈ Hˢ_J(Q; Λᵏ)` (the parity extension of the class `J` lies in `Hˢ(𝕋ⁿ)`),
-`dist(y, V_{h,Γ_J}ᵏ) ≤ C h_N^s ‖y‖_{s,J}`, `C = sobConstPar n S k`. The truncation
-`u_M` stays in the class (`truncPar`), its coefficients lie in `H¹` with the traces of the class
-(`mem_sobolevPar_one_iff`), and the parity smoother's `H¹` estimate
-(`exists_mem_polyPartial_near_grad`) applies. -/
+/-- **Best approximation of the parity classes by `V_{h,Γ_J}`, `0 ≤ s ≤ 1`**:
+`dist(y, V_{h,Γ_J}ᵏ) ≤ C h_N^s ‖y‖_{s,J}`, with `C = sobConstPar n S k`. -/
 theorem infDist_polyPartial_le_sobolevPar (S : PolySeq) (J : Finset (Fin n)) (k : ℕ) {s : ℝ}
     (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
     (hy : toQ k y ∈ sobolevPar J k s) :
@@ -370,7 +301,6 @@ theorem infDist_polyPartial_le_sobolevPar (S : PolySeq) (J : Finset (Fin n)) (k 
           ((1 + n) * Real.pi ^ 2) * meshSize N ^ s * σ := add_le_add h1 h3
     _ = sobConstPar n S k * meshSize N ^ s * σ := by unfold sobConstPar; ring
 
-/-- **The rate `h^{min(s,1)}` for every `s ≥ 0`** in the parity classes. -/
 theorem infDist_polyPartial_le_sobolevPar_min (S : PolySeq) (J : Finset (Fin n)) (k : ℕ)
     {s : ℝ} (hs0 : 0 ≤ s) (N : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
     (hy : toQ k y ∈ sobolevPar J k s) :
@@ -390,15 +320,11 @@ variable {𝕜 : Type*} [RCLike 𝕜] {V : ℤ → Type*} [∀ i, NormedAddCommG
   [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
   {H : HilbertComplex 𝕜 (ComplexShape.up ℤ) V} {S' : H.Subcomplex}
 
-/-- **A bounded cochain projection is quasi-optimal**: `‖y - π y‖ ≤ (1 + 2C) dist(y, Vₕ)`, the
-case `2C` of `Subcomplex.CochainProjection.norm_sub_π_le_infDist`. -/
 theorem norm_sub_π_le_infDist (P : S'.CochainProjection) {C : ℝ} (hC : 0 ≤ 2 * C) {i : ℤ}
     (hπ : ∀ x, ‖P.π i x‖ ≤ 2 * C * ‖x‖) (y : V i) :
     ‖y - P.π i y‖ ≤ (1 + 2 * C) * Metric.infDist y (S'.V i) :=
   P.norm_sub_π_le_infDist hC hπ y
 
-/-- **Graph-norm distance through a cochain projection**: for `σ ∈ D(dʲ)`,
-`dist_V(σ, Vₕʲ) ≤ (1 + 2C) (dist(σ, Vₕʲ) + dist(dσ, Vₕʲ⁺¹))` (`π` commutes with `d`). -/
 theorem infDist_domainSub_le_proj [∀ i, FiniteDimensional 𝕜 (S'.V i)] (P : S'.CochainProjection)
     {C : ℝ} (hC : 0 ≤ 2 * C) (hπ : ∀ i x, ‖P.π i x‖ ≤ 2 * C * ‖x‖) (j : ℤ)
     (σ : H.domainSpace j) :
@@ -414,8 +340,6 @@ theorem infDist_domainSub_le_proj [∀ i, FiniteDimensional 𝕜 (S'.V i)] (P : 
   rw [e, mul_add]
   exact add_le_add (norm_sub_π_le_infDist P hC (hπ j) _) (norm_sub_π_le_infDist P hC (hπ _) _)
 
-/-- **Componentwise approximation through a cochain projection**, in the form used for the
-graph spaces of windows (`Subcomplex.exists_mem_graphSub_le`). -/
 theorem exists_mem_le_proj (P : S'.CochainProjection) {C : ℝ} (hC : 0 ≤ 2 * C)
     (hπ : ∀ i x, ‖P.π i x‖ ≤ 2 * C * ‖x‖) {j : ℤ} (x : V j) {ε : ℝ}
     (h0 : (1 + 2 * C) * Metric.infDist x (S'.V j) ≤ ε)
@@ -436,10 +360,6 @@ theorem exists_mem_le_proj (P : S'.CochainProjection) {C : ℝ} (hC : 0 ≤ 2 * 
   · rw [LinearPMap.apply_eq_zero_of_eq_zero (H.shape j j' hjj), norm_zero]
     exact hε
 
-/-- **The mixed error from four graph-norm distances** ([AFW2010], Thm 3.9): with a cochain
-projection bounded by `C ≥ 1` in the graph norm and a Poincaré constant `c_P`, if `σ`, `u`,
-`P_𝔅 u` and the harmonic part `p` are within `T` of the discrete spaces in the graph norm, the
-error of the discrete mixed solution is `≤ (1 + 144 (C √(1 + c_P²))²) (1 + C) (4 + 2C) T`. -/
 theorem norm_sub_discreteMixedSolution_le [∀ i, FiniteDimensional 𝕜 (S'.V i)]
     (P : S'.CochainProjection) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) {cP C : ℝ} (hC : 1 ≤ C)
@@ -471,8 +391,7 @@ end Projection
 /-! ### Sobolev data in every degree -/
 
 variable (n) in
-/-- **`Hˢ(Q)` data with bound `L` in degree `j ∈ ℤ`**: for `j = k ≥ 0`, `y ∈ Hˢ(Q; Λᵏ)` with
-`‖y‖_{Hˢ(Q)} ≤ L`; no condition in negative degrees (the spaces are `0`). -/
+/-- `Hˢ(Q)` data with bound `L` in degree `j ∈ ℤ` (no condition in negative degrees). -/
 def SobAt (s L : ℝ) : (j : ℤ) → L2F ℝ (cubeDomain n) (formIdx n j) → Prop
   | Int.ofNat k, y => toQ k y ∈ sobolevQ n k s ∧ qNorm k s (toQ k y) ≤ L
   | Int.negSucc _, _ => True
@@ -498,7 +417,6 @@ theorem sobAt_zero {s L : ℝ} (hL : 0 ≤ L) (j : ℤ) : SobAt n s L j 0 := by
     simp [sobSum, cf_zero, hL]
   · trivial
 
-/-- **Best approximation in every degree** for `Hˢ(Q)` data (`0 ≤ s ≤ 1`). -/
 theorem infDist_poly_le_sobAt (S : PolySeq) {s L : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ)
     {j : ℤ} {y : L2F ℝ (cubeDomain n) (formIdx n j)} (hy : SobAt n s L j y) :
     Metric.infDist y ((poly n S N).V j) ≤ sobConstZ n S j * meshSize N ^ s * L := by
@@ -520,29 +438,24 @@ def SobGraph (s L : ℝ) {j : ℤ} (σ : (complex n).domainSpace j) : Prop :=
 /-! ### The mixed Hodge Laplacian with `Hˢ(Q)` solutions -/
 
 variable (n) in
-/-- **A component with `Hˢ(Q)` data in the graph norm**: `x ∈ Hˢ(Q)` and, if `x ∈ D(d)`,
-`dx ∈ Hˢ(Q)`, norms `≤ L`. -/
+/-- `x` and, if `x ∈ D(d)`, `dx` lie in `Hˢ(Q)` with norms `≤ L`. -/
 def SobComp (s L : ℝ) {j : ℤ} (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   SobAt n s L j x ∧ ∀ hx : x ∈ ((complex n).d j (j + 1)).domain,
     SobAt n s L (j + 1) ((complex n).d j (j + 1) ⟨x, hx⟩)
 
 omit [NeZero n] in
-/-- `σ ∈ D(d)` with `σ, dσ ∈ Hˢ(Q)` is an `Hˢ(Q)` component. -/
 theorem SobGraph.sobComp {s L : ℝ} {j : ℤ} {σ : (complex n).domainSpace j}
     (hσ : SobGraph n s L σ) : SobComp n s L ((complex n).domainIncl j σ) :=
   ⟨hσ.1, fun _ => hσ.2⟩
 
 omit [NeZero n] in
-/-- A cycle with `Hˢ(Q)` data is an `Hˢ(Q)` component (`d q = 0`). -/
 theorem SobAt.sobComp_of_mem_cycles {s L : ℝ} (hL : 0 ≤ L) {j : ℤ}
     {q : L2F ℝ (cubeDomain n) (formIdx n j)} (h : SobAt n s L j q) (hq : q ∈ (complex n).cycles j) :
     SobComp n s L q :=
   ⟨h, fun hx => by rw [(complex n).d_eq_zero_of_mem_cycles hq hx]; exact sobAt_zero hL _⟩
 
 variable (n) in
-/-- **The Jackson estimate of the complexes of `S` for `Hˢ(Q)` data, `0 ≤ s ≤ 1`**: `Hˢ(Q)`
-components (`SobComp`) at the order `h_N^s`, from the best approximation `infDist_poly_le_sobAt`
-through the projections (`SubcomplexFamily.Jackson.ofInfDist`). -/
+/-- The Jackson estimate of order `h_N^s`, `0 ≤ s ≤ 1`, of the complexes of `S` for `Hˢ(Q)` data. -/
 def sobolevJackson (S : PolySeq) : (polyFamily n S).Jackson (Set.Icc (0 : ℝ) 1) :=
   .ofInfDist _ meshSize (fun N => (meshSize_pos N).le) tendsto_meshSize
     (fun s _ L x => SobComp n s L x) (fun s => s)
@@ -557,11 +470,8 @@ def sobolevJackson (S : PolySeq) : (polyFamily n S).Jackson (Set.Icc (0 : ℝ) 1
       obtain rfl : i + 1 = j := hij
       exact (infDist_poly_le_sobAt S s.2.1 s.2.2 N (hx.2 hxj)).trans (by nlinarith)
 
-/-- **Convergence of order `h^s` of the mixed method for `Hˢ(Q)` solutions, `0 ≤ s ≤ 1`**
-([AFW2010], Thm 3.9, with the best-approximation estimate `infDist_poly_le_sobolevQ`): for every
-admissible sequence `S`, if `σ, dσ, u, du, P_𝔅 u, d P_𝔅 u` and the harmonic part `q` lie in `Hˢ(Q)`
-with norms `≤ L`, the error of the discrete mixed solution is `≤ K L h_N^s`, `K` independent of
-`N` and of the solution. -/
+/-- **Convergence of order `h^s`, `0 ≤ s ≤ 1`, of the mixed method** ([AFW2010], Thm 3.9): the
+error is `≤ K L h_N^s` for solutions with `Hˢ(Q)` norms `≤ L`. -/
 theorem mixed_rate_sobolevQ (S : PolySeq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
@@ -588,7 +498,6 @@ theorem mixed_rate_sobolevQ (S : PolySeq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤
 
 /-! ### The semi-discrete Hodge wave equation with uniformly `Hˢ(Q)`-bounded solutions -/
 
-/-- **Graph-norm approximation in the total space of a window** for `Hˢ(Q)` components. -/
 theorem PolySmoothingEstimates.exists_mem_window_le_sob {S : PolySeq}
     {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p C) {s L : ℝ}
     (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (hL0 : 0 ≤ L) {a : ℤ} {m : ℕ}
@@ -646,11 +555,8 @@ theorem PolySmoothingEstimates.exists_mem_window_le_sob {S : PolySeq}
   refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
   rw [Fintype.card_fin]
 
-/-- **Convergence of order `h^s` of the semi-discrete Hodge wave equation for solutions bounded
-in `Hˢ(Q)` uniformly on `[t₀, t₁]` (e.g. `C⁰([t₀, t₁]; Hˢ(Q))`), `0 ≤ s ≤ 1`**
-([QuennevilleBelair2015], Thm 4.14), on every window of `HΛ(Q)`: if the values and time derivatives of the weak solution have `Hˢ(Q)` components
-(and differentials) with bound `L` on `[t₀, t₁]`, then
-`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (1 + 2C) K L h_N^s`. -/
+/-- **Convergence of order `h^s`, `0 ≤ s ≤ 1`, of the semi-discrete Hodge wave equation**
+([QuennevilleBelair2015], Thm 4.14) on every window of `HΛ(Q)`, for `ξ`, `ξ'` bounded in `Hˢ(Q)`. -/
 theorem PolySmoothingEstimates.norm_sub_le_window_sobolevQ {S : PolySeq}
     {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p C) {s : ℝ}
     (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
@@ -705,7 +611,6 @@ theorem sobAtPar_zero {s L : ℝ} (hL : 0 ≤ L) (j : ℤ) : SobAtPar n J s L j 
     simpa [sobSum, cf_zero] using hL
   · trivial
 
-/-- **Best approximation in every degree** for `Hˢ_J(Q)` data (`0 ≤ s ≤ 1`). -/
 theorem infDist_polyPartial_le_sobAtPar (S : PolySeq) {s L : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     (N : ℕ) {j : ℤ} {y : L2F ℝ (cubeDomain n) (formIdx n j)} (hy : SobAtPar n J s L j y) :
     Metric.infDist y ((polyPartial n S N J).V j) ≤ sobConstParZ n S j * meshSize N ^ s * L := by
@@ -726,7 +631,6 @@ def SobGraphPar (s L : ℝ) {j : ℤ} (σ : (complexPart n J).domainSpace j) : P
       ((complexPart n J).d j (j + 1) ((complexPart n J).domainCoord j (j + 1) σ))
 
 variable {J} in
-/-- **Graph-norm best approximation in `HΛ_J(Q)`** through the parity-smoothed projections. -/
 theorem ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar {S : PolySeq}
     {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
     {s L : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ) {j : ℤ}
@@ -748,9 +652,7 @@ theorem ParitySmoothingEstimates.infDist_domainSub_le_sobGraphPar {S : PolySeq}
 
 set_option maxHeartbeats 400000 in
 /-- **Convergence of order `h^s` of the mixed method in `HΛ_J(Q)` for `Hˢ_J(Q)` solutions,
-`0 ≤ s ≤ 1`**, for every class `J` (`J = univ`: `H̊Λ(Q)`; `J = ∅`: `HΛ(Q)` with parity data) and
-every admissible sequence ([AFW2010], Thm 3.9, with the parity smoother and the Poincaré
-inequality of `HΛ_J(Q)`). -/
+`0 ≤ s ≤ 1`**, for every class `J` and every admissible sequence ([AFW2010], Thm 3.9). -/
 theorem mixed_rate_sobolevPar (S : PolySeq) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexPart n J).domainSpace i}
@@ -814,7 +716,6 @@ def SobCompPar (s L : ℝ) {j : ℤ} (x : L2F ℝ (cubeDomain n) (formIdx n j)) 
     SobAtPar n J s L (j + 1) ((complexPart n J).d j (j + 1) ⟨x, hx⟩)
 
 variable {J} in
-/-- **Graph-norm approximation in the total space of a window of `HΛ_J(Q)`**. -/
 theorem ParitySmoothingEstimates.exists_mem_window_le_sobPar {S : PolySeq}
     {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
     {s L : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (hL0 : 0 ≤ L) {a : ℤ} {m : ℕ}
@@ -876,9 +777,8 @@ theorem ParitySmoothingEstimates.exists_mem_window_le_sobPar {S : PolySeq}
   rw [Fintype.card_fin]
 
 variable {J} in
-/-- **Convergence of order `h^s` of the semi-discrete Hodge wave equation in `HΛ_J(Q)` for
-solutions bounded in `Hˢ_J(Q)` uniformly on `[t₀, t₁]`, `0 ≤ s ≤ 1`**, on every window, for
-every class `J`. -/
+/-- **Convergence of order `h^s` of the semi-discrete Hodge wave equation in `HΛ_J(Q)`,
+`0 ≤ s ≤ 1`**, on every window, for `ξ`, `ξ'` bounded in `Hˢ_J(Q)` on `[t₀, t₁]`. -/
 theorem ParitySmoothingEstimates.norm_sub_le_window_sobolevPar {S : PolySeq}
     {ρ : ℕ → ParitySmoother.ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C)
     {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}

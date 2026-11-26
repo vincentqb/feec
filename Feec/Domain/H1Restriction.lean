@@ -7,25 +7,18 @@ public import Feec.ForMathlib.Analysis.Inequalities
 /-!
 # Restrictions of `H¹(ℝⁿ)` fields and first-order operators
 
-A field `u ∈ L²(Ω; ℝ^ι)` that is the restriction of `F ∈ L²(ℝⁿ; ℝ^ι)` with weak first derivatives
-`G_{i m} = ∂_m F_i ∈ L²(ℝⁿ)` (`H1Data`: the restriction definition of `H¹(Ω)`, [Evans2010], §5.2)
-lies in the weak domain of every first-order operator with constant coefficients `a`,
-`(A f)_j = Σ_{i, m} a_{j i m} ∂_m f_i`: tested against a test field `φ`, `⟪u, Aᵗφ⟫ = ⟪w, φ⟫` with
-`w_j = Σ_{i, m} a_{j i m} G_{i m}|_Ω` (`H1Data.inner_eq`), and `‖w‖ ≤ (Σ |a|) B` when
-`‖G_{i m}‖ ≤ B` (`H1Data.norm_weak_le`, `coefSum`).
+A field of `L²(Ω; ℝ^ι)` that is the restriction of a field on `ℝⁿ` with weak first derivatives in
+`L²` ([Evans2010], §5.2) lies in the weak domain of every first-order operator with constant
+coefficients; for `d`, `d_min x` is the weak `dx` and `x ∈ D((d_min)†)` with value the weak `d*x`.
 
-For the exterior derivative, with coefficients `dCoef` (`extDerivOp_apply_eq_dCoef`,
-`formalAdj_apply_eq_dCoef`): `d_min x` is the weak `dx` (`H1Data.minimal_apply`), and `x` lies in
-the domain of `(d_min)†` with value the weak `d*x` (`H1Data.mem_adjoint`), on every open `Ω`.
+## Main results
 
-Test fields have `H¹(ℝⁿ)` data (`exists_h1Data_testField`), and the data scale
-(`H1Data.smul`, `H1Data.mono`, `H1Data.zero`).
+* `H1Data.inner_eq`: integration by parts against `H¹(ℝⁿ)` data.
+* `H1Data.minimal_apply`, `H1Data.mem_adjoint`: `d_min` and `(d_min)†` on forms with such data.
 
 ## References
 
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4
+* [L. C. Evans, *Partial Differential Equations*][Evans2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -39,25 +32,20 @@ namespace Feec.Domain
 
 variable {n : ℕ} {Ω : Set (Fin n → ℝ)} {ι κ : Type*}
 
-/-- `u ∈ L²(Ω; ℝ^ι)` is the restriction to `Ω` of `F ∈ L²(ℝⁿ; ℝ^ι)` whose components have weak
-first derivatives `G i m = ∂_m F_i ∈ L²(ℝⁿ)`, with `‖F_i‖, ‖G_{i m}‖ ≤ B`. -/
+/-- **`H¹(ℝⁿ)` data** of `u ∈ L²(Ω; ℝ^ι)`: a field on `ℝⁿ` restricting to `u`, with bound `B`. -/
 structure H1Data (Ω : Set (Fin n → ℝ)) (u : L2F ℝ Ω ι) (B : ℝ) where
   /-- the field on `ℝⁿ` -/
   F : ι → (Fin n → ℝ) → ℝ
   /-- its weak first derivatives -/
   G : ι → Fin n → (Fin n → ℝ) → ℝ
-  /-- `F_i ∈ L²(ℝⁿ)` -/
   memF : ∀ i, MemLp (F i) 2 volume
-  /-- `G_{i m} ∈ L²(ℝⁿ)` -/
   memG : ∀ i m, MemLp (G i m) 2 volume
-  /-- `G_{i m} = ∂_m F_i` weakly: `∫ F_i ∂_m φ = -∫ G_{i m} φ` for test functions `φ` -/
+  /-- `G_{i m} = ∂_m F_i` weakly -/
   weak : ∀ i m (φ : (Fin n → ℝ) → ℝ), IsTest univ φ →
     ∫ y, F i y * fderiv ℝ φ y (coordDir m) = -∫ y, G i m y * φ y
   /-- `u = F|_Ω` -/
   ae : ∀ i, (u i : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω] F i
-  /-- `‖F_i‖ ≤ B` -/
   normF : ∀ i, ‖(memF i).toLp (F i)‖ ≤ B
-  /-- `‖G_{i m}‖ ≤ B` -/
   normG : ∀ i m, ‖(memG i m).toLp (G i m)‖ ≤ B
 
 /-- The coefficient sum `Σ_{j, i, m} |a_{j i m}|` of a first-order operator. -/
@@ -73,8 +61,7 @@ variable {u : L2F ℝ Ω ι} {B : ℝ} (h : H1Data Ω u B)
 /-- The restriction of `G i m` to `Ω`. -/
 def gres (i : ι) (m : Fin n) : L2 ℝ Ω := ((h.memG i m).restrict Ω).toLp (h.G i m)
 
-/-- The weak value `w_j = Σ_{i, m} a_{j i m} G_{i m}|_Ω` of the operator with coefficients
-`a`. -/
+/-- The weak value `w_j = Σ_{i, m} a_{j i m} G_{i m}|_Ω` of the operator with coefficients `a`. -/
 def weak' [Fintype ι] (a : κ → ι → Fin n → ℝ) : L2F ℝ Ω κ :=
   WithLp.toLp 2 fun j => ∑ i, ∑ m, a j i m • h.gres i m
 
@@ -86,12 +73,10 @@ theorem norm_toLp_restrict_le {f : (Fin n → ℝ) → ℝ} (hf : MemLp f 2 volu
 theorem norm_gres_le (i : ι) (m : Fin n) : ‖h.gres i m‖ ≤ B :=
   (norm_toLp_restrict_le (h.memG i m)).trans (h.normG i m)
 
-/-- `u` is the class of `F|_Ω`. -/
 theorem eq_toL2F [Fintype ι] : u = toL2F (fun i => (h.memF i).restrict Ω) := by
   refine PiLp.ext fun i => Lp.ext ?_
   exact (h.ae i).trans (((h.memF i).restrict Ω).coeFn_toLp).symm
 
-/-- `‖w‖ ≤ (Σ_{j, i, m} |a_{j i m}|) B` (`coefSum`). -/
 theorem norm_weak_le [Fintype ι] [Fintype κ] (a : κ → ι → Fin n → ℝ) :
     ‖h.weak' a‖ ≤ coefSum a * B := by
   rw [coefSum, Finset.sum_mul]
@@ -117,9 +102,7 @@ theorem inner_toL2_gres {φ : (Fin n → ℝ) → ℝ} (hφ : IsTest Ω φ) (i :
   filter_upwards [((h.memG i m).restrict Ω).coeFn_toLp] with x hx
   simp [gres, hx]
 
-/-- **Integration by parts against `H¹(ℝⁿ)` data**: if `ψ = Aᵗφ`,
-`ψ_i = -Σ_{j, m} a_{j i m} ∂_m φ_j`, for test fields `φ`, `ψ` on `Ω`, then
-`⟪u, ψ⟫ = ⟪w, φ⟫` with `w = Σ a G|_Ω` (`weak'`). -/
+/-- **Integration by parts against `H¹(ℝⁿ)` data**: `⟪u, Aᵗ φ⟫ = ⟪w, φ⟫` for test fields `φ`. -/
 theorem inner_eq [Fintype ι] [Fintype κ] (a : κ → ι → Fin n → ℝ) {φ : κ → (Fin n → ℝ) → ℝ}
     (hφ : IsTestField Ω φ)
     {ψ : ι → (Fin n → ℝ) → ℝ} (hψ : IsTestField Ω ψ)
@@ -211,7 +194,6 @@ def zero : H1Data Ω (0 : L2F ℝ Ω ι) 0 where
 
 end H1Data
 
-/-- **Test fields have `H¹(ℝⁿ)` data**: `F = φ`, `G_{i m} = ∂_m φ_i`. -/
 theorem exists_h1Data_testField [Fintype ι] {φ : ι → (Fin n → ℝ) → ℝ} (hφ : IsTestField Ω φ) :
     ∃ B, Nonempty (H1Data Ω (testField hφ) B) := by
   have hm : ∀ i, MemLp (φ i) 2 volume := fun i =>

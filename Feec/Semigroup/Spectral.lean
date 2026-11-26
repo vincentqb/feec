@@ -9,51 +9,17 @@ public import Feec.Semigroup.Invariance
 /-!
 # Spectral mechanisms for isometric groups
 
-For an isometric group `G` with generator `A` on a Hilbert space over `𝕜 = ℝ` or `ℂ`:
-
-* `C0Group.periodic G τ = {x | S τ x = x}`, `C0Group.stationary G = {x | S t x = x ∀ t}`, and
-  `C0Group.IsPurePoint G`: the periodic vectors span a dense subspace.
-* `LinearPMap.IsEigenSq A ω v`: `v ∈ D(A²)` and `A² v = -ω² v`; `C0Group.EigenDense G`: such
-  vectors span a dense subspace.
+For an isometric group on a Hilbert space: periodic and stationary vectors, eigenvectors of `A²`,
+and when forward invariance of a closed subspace gives invariance for all times.
 
 ## Main results
 
-* `C0Group.IsIsometric.starProjection_periodic_mem_invariantCore` (no spectral hypothesis): if
-  `S t x ∈ K` for all `t ≥ 0`, the projection of `x` on the `τ`-periodic vectors lies in the
-  invariant core (von Neumann's mean ergodic theorem for `S τ`).
-* **`C0Group.IsIsometric.mem_invariantCore_of_forward_invariant`**: under `IsPurePoint`,
-  forward invariance of a closed `K` (`S t x ∈ K` for `t ≥ 0`) gives `x ∈ invariantCore G K`
-  (invariance for all `t ∈ ℝ`). Without a spectral hypothesis this is false (transport).
-* `C0Group.IsIsometric.S_eq_of_isEigenSq`: the orbit of an eigenvector of `A²` is
-  `cos(ωt) v + (sin(ωt)/ω) A v`; hence `isPurePoint_of_eigenDense`;
-  `C0Group.IsIsometric.S_eq_of_generator_eq_smul`: that of an eigenvector of `A` is `exp(t c) v`.
-* `LinearPMap.IsSkewSymmetric.exists_isEigenSq`: an eigenvector of `A²` of a skew-symmetric `A`
-  has eigenvalue `-ω²`, `ω` real.
-* **`LinearPMap.IsSkewAdjoint.dense_span_isEigenSq`** and
-  **`C0Group.eigenDense_of_compactResolvent`**: if `(1 - A)⁻¹` is compact, the eigenvectors of
-  `A²` are dense (Mathlib's spectral theorem for the compact self-adjoint operator
-  `(1 - A)⁻¹ (1 + A)⁻¹ = (1 - A²)⁻¹`), so `EigenDense` is a theorem, not a hypothesis;
-  `LinearPMap.IsSkewAdjoint.mem_invariantCore_of_forward_invariant` combines both.
-* `LinearPMap.IsSkewSymmetric.dense_span_isEigenSq_of_reducing`: finite-dimensional reducing
-  subspaces spanning a dense subspace give an eigenbasis (Fourier models);
-  `C0Group.IsIsometric.invariantCore_le_stationary_of_eigenDense`,
-  `C0Group.IsIsometric.exists_isEigenSq_mem_invariantCore`,
-  `C0Group.IsIsometric.mem_invariantCore_iff_of_isEigenSq`: spectral extraction from the
-  invariant core.
-* `C0Group.not_mem_stationary_of_isEigenSq`: a nonzero eigenvector of `A²` with eigenvalue
-  `-ω² ≠ 0` is not stationary.
-* `C0Group.rescale`, `C0Group.generator_rescale`: the group `t ↦ S (a t)` has generator `a A`.
-
-## References
-
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.10
-* [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
-  Thm VI.16 (Hilbert–Schmidt theorem), §VII.3 (mean ergodic theorem)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `C0Group.IsIsometric.mem_invariantCore_of_forward_invariant`: under pure point spectrum.
+* `C0Group.IsIsometric.S_eq_of_isEigenSq`: the orbit of an eigenvector of `A²`.
+* `LinearPMap.IsSkewAdjoint.dense_span_isEigenSq`: with a compact resolvent, the eigenvectors of
+  `A²` span a dense subspace.
+* `C0Group.IsIsometric.invariantCore_le_stationary_of_eigenDense`: under `EigenDense`, the
+  invariant core of a closed `K` is stationary if no nonzero `v` in it has `A² v = -ω² v`, `ω > 0`.
 -/
 
 open Set Filter Topology LinearPMap Feec.Operator
@@ -121,15 +87,11 @@ instance : G.stationary.HasOrthogonalProjection := by
   have : CompleteSpace G.stationary := isClosed_stationary.completeSpace_coe
   infer_instance
 
-/-- **Mean ergodic theorem for the time-`τ` map**: `N⁻¹ Σ_{n<N} S(nτ) x → P_{periodic τ} x`. -/
 theorem IsIsometric.tendsto_birkhoffAverage (hG : G.IsIsometric) (τ : ℝ) (x : E) :
     Tendsto (fun N => birkhoffAverage 𝕜 (G.S τ) _root_.id N x) atTop
       (𝓝 ((G.periodic τ).starProjection x)) :=
   (G.S τ).tendsto_birkhoffAverage_orthogonalProjection (hG.norm_S_le τ) x
 
-/-- **The periodic part of a forward-invariant datum lies in the invariant core.** If `K` is
-closed and `S t x ∈ K` for all `t ≥ 0`, then `P_{periodic τ} x ∈ invariantCore G K` for every
-`τ > 0`. No spectral hypothesis. -/
 theorem IsIsometric.starProjection_periodic_mem_invariantCore (hG : G.IsIsometric)
     {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E)) {τ : ℝ} (hτ : 0 < τ) {x : E}
     (hx : ∀ t, 0 ≤ t → G.S t x ∈ K) :
@@ -209,16 +171,13 @@ open Feec
 
 variable [NormedSpace ℝ E]
 
-/-- `v` is an eigenvector of `A²` with eigenvalue `-ω²`: `v ∈ D(A)`, `A v ∈ D(A)`,
-`A (A v) = -ω² v`. For skew-adjoint `A` these are the real parts of the eigenvectors of `A` with
-eigenvalues `± i ω` (over `ℂ`, also the eigenvectors themselves). -/
+/-- `v` is an eigenvector of `A²` with eigenvalue `-ω²`: `v, A v ∈ D(A)` and `A (A v) = -ω² v`. -/
 def IsEigenSq (A : E →ₗ.[𝕜] E) (ω : ℝ) (v : E) : Prop :=
   ∃ (h : v ∈ A.domain) (h' : A ⟨v, h⟩ ∈ A.domain), A ⟨A ⟨v, h⟩, h'⟩ = -(ω ^ 2) • v
 
 variable {A : E →ₗ.[𝕜] E}
 
 variable (A) in
-/-- `0` is (trivially) an eigenvector of `A²`. -/
 theorem isEigenSq_zero_right (ω : ℝ) : A.IsEigenSq ω 0 := by
   have e0 : A ⟨0, A.domain.zero_mem⟩ = 0 := A.map_zero
   have h' : A ⟨0, A.domain.zero_mem⟩ ∈ A.domain := by rw [e0]; exact A.domain.zero_mem
@@ -231,8 +190,6 @@ theorem IsEigenSq.abs {ω : ℝ} {v : E} (hv : A.IsEigenSq ω v) : A.IsEigenSq |
 
 variable [IsScalarTower ℝ 𝕜 E]
 
-/-- For skew-symmetric `A`, every eigenvector of `A²` has eigenvalue `-ω²` with `ω` real
-(`⟪A² v, v⟫ = -‖A v‖²`). -/
 theorem IsSkewSymmetric.exists_isEigenSq (hA : A.IsSkewSymmetric) {v : E} (h : v ∈ A.domain)
     (h' : A ⟨v, h⟩ ∈ A.domain) {c : 𝕜} (hc : A ⟨A ⟨v, h⟩, h'⟩ = c • v) :
     ∃ ω : ℝ, A.IsEigenSq ω v := by
@@ -268,7 +225,7 @@ def EigenDense (G : C0Group 𝕜 E) : Prop :=
   Dense (Submodule.span 𝕜 {v | ∃ ω, G.generator.IsEigenSq ω v} : Set E)
 
 /-- **The orbit of an eigenvector of `A²`**: if `A (A v) = -ω² v`, `ω > 0`, then
-`S t v = cos(ω t) v + (sin(ω t) / ω) A v` (both sides solve `u' = A u`). -/
+`S t v = cos(ω t) v + (sin(ω t) / ω) A v`. -/
 theorem IsIsometric.S_eq_of_isEigenSq (hG : G.IsIsometric) {ω : ℝ} (hω : 0 < ω) {v : E}
     (h : v ∈ G.generator.domain) (h' : G.generator ⟨v, h⟩ ∈ G.generator.domain)
     (e : G.generator ⟨G.generator ⟨v, h⟩, h'⟩ = -(ω ^ 2) • v) (t : ℝ) :
@@ -310,8 +267,6 @@ theorem IsIsometric.S_eq_of_isEigenSq (hG : G.IsIsometric) {ω : ℝ} (hω : 0 <
   have h0 := hG.isSkewSymmetric_generator.eq_zero_of_hasDerivAt hfm hdf (by simp [f, y]) t
   exact sub_eq_zero.1 h0
 
-/-- **The orbit of an eigenvector of the generator**: if `A v = c v`, then `S t v = exp(t c) v`
-(both sides solve `u' = A u`). -/
 theorem IsIsometric.S_eq_of_generator_eq_smul (hG : G.IsIsometric) {v : E}
     (h : v ∈ G.generator.domain) {c : 𝕜} (e : G.generator ⟨v, h⟩ = c • v) (t : ℝ) :
     G.S t v = NormedSpace.exp (t • c) • v := by
@@ -336,7 +291,6 @@ theorem IsIsometric.S_eq_of_generator_eq_smul (hG : G.IsIsometric) {v : E}
   have h0 := hG.isSkewSymmetric_generator.eq_zero_of_hasDerivAt hfm hdf (by simp [f, y]) t
   exact sub_eq_zero.1 h0
 
-/-- Eigenvectors of `A²` with eigenvalue `-ω²`, `ω > 0`, are `2π/ω`-periodic. -/
 theorem IsIsometric.mem_periodic_of_isEigenSq (hG : G.IsIsometric) {ω : ℝ} (hω : 0 < ω) {v : E}
     (hv : G.generator.IsEigenSq ω v) : v ∈ G.periodic (2 * Real.pi / ω) := by
   obtain ⟨h, h', e⟩ := hv
@@ -344,7 +298,6 @@ theorem IsIsometric.mem_periodic_of_isEigenSq (hG : G.IsIsometric) {ω : ℝ} (h
   have : ω * (2 * Real.pi / ω) = 2 * Real.pi := by field_simp
   simp [this]
 
-/-- An eigenvector of `A²` with eigenvalue `0` is stationary (`‖A v‖² = -⟪A² v, v⟫ = 0`). -/
 theorem IsIsometric.mem_stationary_of_isEigenSq_zero (hG : G.IsIsometric) {v : E}
     (hv : G.generator.IsEigenSq 0 v) : v ∈ G.stationary := by
   obtain ⟨h, h', e⟩ := hv
@@ -354,7 +307,6 @@ theorem IsIsometric.mem_stationary_of_isEigenSq_zero (hG : G.IsIsometric) {v : E
   have h0 : G.generator ⟨v, h⟩ = 0 := inner_self_eq_zero.1 (neg_eq_zero.1 hs.symm)
   exact mem_stationary.2 (S_apply_eq_of_generator_eq_zero ⟨v, h⟩ h0)
 
-/-- **An eigenbasis gives pure point spectrum.** -/
 theorem IsIsometric.isPurePoint_of_eigenDense (hG : G.IsIsometric) (hD : G.EigenDense) :
     G.IsPurePoint := by
   refine hD.mono (Submodule.span_le.2 ?_)
@@ -369,7 +321,7 @@ theorem IsIsometric.isPurePoint_of_eigenDense (hG : G.IsIsometric) (hD : G.Eigen
 
 end C0Group
 
-/-! ### Compact resolvent ⇒ eigenbasis -/
+/-! ### Compact resolvent ⇒ dense eigenvectors -/
 
 end Feec
 
@@ -379,10 +331,8 @@ open Feec
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-/-- **Compact resolvent ⇒ the eigenvectors of `A²` are dense.** For skew-adjoint `A` with
-`(1 - A)⁻¹` compact, `T = (1 - A)⁻¹ ((1 - A)⁻¹)† = (1 - A)⁻¹ (1 + A)⁻¹` is compact, self-adjoint
-and injective; by the spectral theorem its eigenvectors span a dense subspace, and each is an
-eigenvector of `A²` (`A² v = (1 - μ⁻¹) v` when `T v = μ v`). -/
+/-- **Compact resolvent ⇒ the eigenvectors of `A²` are dense**: for skew-adjoint `A` with
+`(1 - A)⁻¹` compact, the eigenvectors of `A²` span a dense subspace. -/
 theorem IsSkewAdjoint.dense_span_isEigenSq (hA : A.IsSkewAdjoint)
     (hK : IsCompactOperator (resolvent A 1)) :
     Dense (Submodule.span 𝕜 {v | ∃ ω, A.IsEigenSq ω v} : Set E) := by
@@ -446,12 +396,10 @@ namespace C0Group
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] {G : C0Group 𝕜 E}
   {A : E →ₗ.[𝕜] E}
 
-/-- An isometric group whose generator has compact resolvent satisfies `EigenDense`. -/
 theorem IsIsometric.eigenDense_of_compactResolvent (hG : G.IsIsometric)
     (hK : IsCompactOperator (resolvent G.generator 1)) : G.EigenDense :=
   LinearPMap.IsSkewAdjoint.dense_span_isEigenSq hG.isSkewAdjoint_generator hK
 
-/-- **Compact resolvent ⇒ `EigenDense`** for the Stone group of a skew-adjoint operator. -/
 theorem eigenDense_of_compactResolvent (hA : A.IsSkewAdjoint)
     (hK : IsCompactOperator (resolvent A 1)) : hA.group.EigenDense := by
   unfold EigenDense
@@ -468,9 +416,6 @@ open Feec
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-/-- **Forward invariance under a compact resolvent**: if `A` is skew-adjoint with compact
-resolvent and `K` is closed, a datum whose Stone orbit stays in `K` for `t ≥ 0` stays in `K`
-for all `t ∈ ℝ`. -/
 theorem IsSkewAdjoint.mem_invariantCore_of_forward_invariant (hA : A.IsSkewAdjoint)
     (hK : IsCompactOperator (resolvent A 1)) {K : Submodule 𝕜 E} (hKc : _root_.IsClosed (K : Set E))
     {x : E} (hx : ∀ t, 0 ≤ t → hA.group.S t x ∈ K) : x ∈ hA.group.invariantCore K :=
@@ -480,12 +425,7 @@ theorem IsSkewAdjoint.mem_invariantCore_of_forward_invariant (hA : A.IsSkewAdjoi
 
 end LinearPMap
 
-/-! ### Invariant cores under an eigenbasis
-
-The abstract mechanism behind "only stationary data propagate": the invariant core `K*` of a
-closed `K` reduces the generator `A`, so its projection maps eigenvectors of `A²` to eigenvectors
-of `A²` with the same eigenvalue. Under `EigenDense`, `K*` is stationary as soon as it contains no
-nonzero eigenvector of `A²` with eigenvalue `-ω²`, `ω > 0`. -/
+/-! ### Invariant cores under dense eigenvectors -/
 
 namespace LinearPMap
 
@@ -493,8 +433,6 @@ open Feec
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E}
 
-/-- **The projection onto a reducing subspace maps eigenvectors of `A²` to eigenvectors** with
-the same eigenvalue. -/
 theorem IsEigenSq.starProjection {N : Submodule 𝕜 E} [N.HasOrthogonalProjection]
     (hN : A.IsReducing N) {ω : ℝ} {v : E} (hv : A.IsEigenSq ω v) :
     A.IsEigenSq ω (N.starProjection v) := by
@@ -507,8 +445,6 @@ theorem IsEigenSq.starProjection {N : Submodule 𝕜 E} [N.HasOrthogonalProjecti
   rw [e2, hN.comm ⟨_, h'⟩, e]
   exact N.starProjection.map_smul_of_tower _ _
 
-/-- **Eigenvectors of `A²` and the kernel of a skew-symmetric `A`**: an eigenvector of `A²` with
-eigenvalue `-ω²`, `ω ≠ 0`, is orthogonal to every `s ∈ ker A`. -/
 theorem IsSkewSymmetric.inner_eq_zero_of_isEigenSq (hA : A.IsSkewSymmetric) {ω : ℝ} (hω : ω ≠ 0)
     {v : E} (hv : A.IsEigenSq ω v) (s : A.domain) (hs : A s = 0) : ⟪v, (s : E)⟫ = 0 := by
   obtain ⟨h, h', e⟩ := hv
@@ -519,11 +455,6 @@ theorem IsSkewSymmetric.inner_eq_zero_of_isEigenSq (hA : A.IsSkewSymmetric) {ω 
     rw [RCLike.conj_ofReal]; exact_mod_cast neg_ne_zero.2 (pow_ne_zero 2 hω)
   exact (mul_eq_zero.1 h1).resolve_left hω2
 
-/-- **Finite-dimensional reducing subspaces give an eigenbasis**: if `A` is skew-symmetric and
-densely defined, and finite-dimensional subspaces `B n` reducing `A` span a dense subspace, then
-the eigenvectors of `A²` span a dense subspace. (Each `B n` lies in `D(A)` and is invariant, so
-`A²` restricts to a symmetric operator of `B n`, which is diagonalizable.) This is the mode-wise
-spectral theorem of Fourier models, with no compactness of the resolvent. -/
 theorem IsSkewSymmetric.dense_span_isEigenSq_of_reducing (hA : A.IsSkewSymmetric)
     (hdense : Dense (A.domain : Set E)) {κ : Type*} (B : κ → Submodule 𝕜 E)
     [∀ n, FiniteDimensional 𝕜 (B n)] [∀ n, (B n).HasOrthogonalProjection]
@@ -586,7 +517,6 @@ namespace C0Group
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] {G : C0Group 𝕜 E}
 
-/-- A stationary vector lies in the domain of the generator and is killed by it. -/
 theorem mem_domain_generator_of_mem_stationary {x : E} (hx : x ∈ G.stationary) :
     ∃ h : x ∈ G.generator.domain, G.generator ⟨x, h⟩ = 0 := by
   have e : (fun t => G.S t x) = fun _ => x := funext (mem_stationary.1 hx)
@@ -594,9 +524,6 @@ theorem mem_domain_generator_of_mem_stationary {x : E} (hx : x ∈ G.stationary)
   have hD : x ∈ G.generator.domain := (G.mem_domain_generator_iff x).2 hd.differentiableAt
   exact ⟨hD, G.generator_apply_eq (x := ⟨x, hD⟩) hd⟩
 
-/-- **A vector orthogonal to every non-stationary eigenvector of `A²` is stationary** (under
-`EigenDense`): eigenvectors with eigenvalue `0` are stationary, those with eigenvalue `-ω²`,
-`ω ≠ 0`, are orthogonal to the stationary vectors. -/
 theorem IsIsometric.mem_stationary_of_inner_isEigenSq (hG : G.IsIsometric) (hD : G.EigenDense)
     {x : E} (hx : ∀ ω, 0 < ω → ∀ v, G.generator.IsEigenSq ω v → ⟪v, x⟫ = 0) :
     x ∈ G.stationary := by
@@ -624,11 +551,8 @@ theorem IsIsometric.mem_stationary_of_inner_isEigenSq (hG : G.IsIsometric) (hD :
   have := G.stationary.starProjection_apply_mem x
   rwa [← sub_eq_zero.1 hz'] at this
 
-/-- **Under an eigenbasis, the invariant core is stationary unless it contains a moving
-eigenvector**: if `K` is closed and every eigenvector of `A²` with eigenvalue `-ω²`, `ω > 0`,
-lying in the invariant core of `K` vanishes, then the invariant core consists of stationary
-vectors. (The projection onto the invariant core commutes with `A`, so it maps eigenvectors of
-`A²` to eigenvectors in the core.) -/
+/-- **With dense eigenvectors of `A²`, the invariant core is stationary** when it contains no
+nonzero eigenvector of `A²` with eigenvalue `-ω²`, `ω > 0`, for a closed `K`. -/
 theorem IsIsometric.invariantCore_le_stationary_of_eigenDense (hG : G.IsIsometric)
     (hD : G.EigenDense) {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E))
     (hkey : ∀ ω, 0 < ω → ∀ v ∈ G.invariantCore K, G.generator.IsEigenSq ω v → v = 0) :
@@ -645,9 +569,6 @@ theorem IsIsometric.invariantCore_le_stationary_of_eigenDense (hG : G.IsIsometri
   rw [← N.starProjection_eq_self_iff.2 hx, ← Submodule.inner_starProjection_left_eq_right, hPv,
     inner_zero_left]
 
-/-- **A non-stationary invariant core contains a moving eigenvector** (under an eigenbasis): if
-the invariant core of a closed `K` is not stationary, it contains a nonzero eigenvector of `A²`
-with eigenvalue `-ω²`, `ω > 0`. -/
 theorem IsIsometric.exists_isEigenSq_mem_invariantCore (hG : G.IsIsometric) (hD : G.EigenDense)
     {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E)) (h : ¬ G.invariantCore K ≤ G.stationary) :
     ∃ ω, 0 < ω ∧ ∃ v ∈ G.invariantCore K, G.generator.IsEigenSq ω v ∧ v ≠ 0 := by
@@ -656,9 +577,6 @@ theorem IsIsometric.exists_isEigenSq_mem_invariantCore (hG : G.IsIsometric) (hD 
   by_contra hv0
   exact hne ⟨ω, hω, v, hv, hev, hv0⟩
 
-/-- **When an eigenvector of `A²` lies in the invariant core**: for `A (A v) = -ω² v`, `ω > 0`,
-`v` lies in the invariant core of `K` iff `v ∈ K` and `A v ∈ K` (the orbit is
-`cos(ωt) v + (sin(ωt)/ω) A v`). -/
 theorem IsIsometric.mem_invariantCore_iff_of_isEigenSq (hG : G.IsIsometric) {K : Submodule 𝕜 E}
     [K.HasOrthogonalProjection] {ω : ℝ} (hω : 0 < ω) {v : E} (h : v ∈ G.generator.domain)
     (h' : G.generator ⟨v, h⟩ ∈ G.generator.domain)
@@ -698,7 +616,6 @@ theorem IsIsometric.rescale {G : C0Group 𝕜 E} (hG : G.IsIsometric) (a : ℝ) 
 
 variable [CompleteSpace E]
 
-/-- The rescaled orbit of `x ∈ D(A)` has derivative `a A x` at `0`. -/
 theorem hasDerivAt_rescale (G : C0Group 𝕜 E) (a : ℝ) (x : G.generator.domain) :
     HasDerivAt (fun t => G.S (a * t) x) (a • G.generator x) 0 := by
   have h : HasDerivAt (fun t => G.S t x) (G.generator x) (a * 0) := by
@@ -707,7 +624,6 @@ theorem hasDerivAt_rescale (G : C0Group 𝕜 E) (a : ℝ) (x : G.generator.domai
     simpa using (hasDerivAt_id (0 : ℝ)).const_mul a
   exact h.scomp (0 : ℝ) h2
 
-/-- **The generator of the rescaled group** is `a A` (`a ≠ 0`). -/
 theorem generator_rescale (G : C0Group 𝕜 E) {a : ℝ} (ha : a ≠ 0) :
     (G.rescale a).generator = (a : 𝕜) • G.generator := by
   have hdom : ∀ x, x ∈ (G.rescale a).generator.domain ↔ x ∈ G.generator.domain := by
@@ -742,7 +658,6 @@ variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {G : C0Group 𝕜 E}
 
 variable [CompleteSpace E]
 
-/-- **A nonzero eigenvector of `A²` with eigenvalue `-ω² ≠ 0` is not stationary.** -/
 theorem not_mem_stationary_of_isEigenSq {ω : ℝ} (hω : ω ≠ 0) {v : E}
     (hv : G.generator.IsEigenSq ω v) (hv0 : v ≠ 0) : v ∉ G.stationary := by
   intro hs
@@ -752,8 +667,6 @@ theorem not_mem_stationary_of_isEigenSq {ω : ℝ} (hω : ω ≠ 0) {v : E}
   rw [this, LinearPMap.map_zero] at e
   exact hv0 (smul_eq_zero.1 e.symm |>.resolve_left (by simpa using hω))
 
-/-- **Stationarity of the invariant core is checked on the domain**: if every element of
-`D(A) ∩ invariantCore K` is stationary, so is every element of `invariantCore K`. -/
 theorem IsIsometric.invariantCore_le_stationary_of_domain (hG : G.IsIsometric)
     {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
     (h : ∀ x : G.generator.domain, (x : E) ∈ G.invariantCore K → (x : E) ∈ G.stationary) :

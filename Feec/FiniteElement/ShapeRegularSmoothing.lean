@@ -5,54 +5,20 @@ public import Feec.FiniteElement.ShapeRegularInverse
 /-!
 # Mesh geometry for smoothed projections on shape-regular meshes
 
-The geometric and measure-theoretic ingredients of the smoothed-projection estimates
-([AFW2010], §5.5; [ChristiansenWinther2008]) on a general conforming simplicial mesh `M` of
-`Ω ⊆ ℝⁿ`, replacing the lattice arguments used for the Freudenthal meshes of the cube
-(`Feec.Models.Cube.SmoothingEstimates`).
+The geometric ingredients of the smoothed-projection estimates ([AFW2010], §5.5;
+[ChristiansenWinther2008]) on simplicial meshes: stars of faces, boundary facets, bounded overlap.
 
-* **Barycentric coordinates** `λ_T` (`Affine.Simplex.affineBasis`) are the coordinates
-  `baryCoord` of `Feec.FiniteElement.Whitney` (`coord_eq_baryCoord`), Lipschitz with constant
-  `n (n + 1) ‖B_T⁻¹‖` (`abs_coord_sub_le`); at a point of a face they are the face weights
-  (`coord_face_point`).
-* **The geometric lemma** (`StarGeom`). A *face point* of `g` with threshold `θ` has barycentric
-  coordinates `≥ θ` at the vertices of `g` in every simplex containing `g` (`IsFacePoint`;
-  `isFacePoint_sum_smul`). Near it, a simplex not containing `g` cannot meet one containing `g`
-  (`exists_coord_eq_zero`, `not_mem_starSet_inter_restSet`), so the closed sets `starSet` and
-  `restSet` (the unions of the simplices containing, resp. not containing, `g`) separate every
-  connected subset of `cl Ω` near the point (`subset_starSet_of_isPreconnected`,
-  `mem_starSet_of_segment`). Hence a sample `t` in the interior of `T'`, joined to the face point
-  by two segments in `cl Ω` near it, has `g ⊆ T'` (`subset_vertexSet_of_segments`).
-* **The pseudo-manifold property** (`exists_isBoundaryFacet_of_mem_frontier`): a point `z` of a
-  simplex `T` lying in the topological boundary of `cl Ω` lies on a boundary facet containing every
-  vertex of `T` at which `λ_T(z) > 0`. Proof: from an interior point of `T` near `z`, the segment
-  to a generic point outside `cl Ω` (avoiding the null set `badSet`, `volume_badSet`) leaves
-  `cl Ω` at a point lying on exactly one facet of a simplex through `z`; that facet contains the
-  support of `z` and is not interior, since relative interior points of interior facets are
-  interior points of `cl Ω` (`mem_interior_of_isInteriorFacet`); in particular every vertex on
-  the boundary of `cl Ω` is a vertex of a boundary facet
-  (`exists_isBoundaryFacet_of_mem_vertexSet`). Consequently a point outside
-  `int cl Ω` near a face point of `g` forces `g` into a boundary facet
-  (`exists_isBoundaryFacet_of_near`, using the first exit point `exists_mem_frontier_lineMap`).
-* **Bounded overlap by volume**: `|T| = |det B_T| / n!` (`volume_real_closedInterior`); simplices
-  of volume `≥ v` inside a ball `B̄(x, r)` number at most `(2r)ⁿ / v`
-  (`card_mul_le_of_subset_closedBall`); on a **quasi-uniform** mesh (`IsQuasiUniform M q`:
-  `q h ≤ h_T`) a point lies in at most `(2 (r + h))ⁿ n! / (c (q h)ⁿ)` of the `r`-neighbourhoods
-  of the simplices (`card_filter_mem_cthickening_le`), and the local masses add up
-  (`sum_integral_le_of_card_le`).
-* **Faces and integrals**: `Σₛ |minorₛ| ≤ 2ⁿ k! h_Tᵏ` on a `k`-face (`sum_abs_minor_face_le`),
-  `|∫_g ω| ≤ 2ⁿ h_Tᵏ sup_T |ω|` (`abs_simplexIntegral_face_le'`), `∫_T f ≤ (2 h_T)ⁿ sup_T f`
-  (`integral_closedInterior_le`).
+## Main results
 
-The estimates themselves need the smoother of `Feec.FiniteElement.SmoothedInterp` and are in
-`Feec.Models.StarShaped.Smoothing`.
+* `StarGeom.subset_vertexSet_of_segments`: samples near a face point lie in the star of the face.
+* `StarGeom.exists_isBoundaryFacet_of_mem_frontier`: frontier points lie on boundary facets.
+* `StarGeom.exists_isBoundaryFacet_of_near`: boundary faces near outside points.
+* `card_filter_mem_cthickening_le`: bounded overlap on quasi-uniform shape-regular meshes.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-  (shape-regular and quasi-uniform families)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -67,8 +33,6 @@ open Feec.Mesh ExteriorFibre
 
 variable {n : ℕ}
 
-/-! ### Barycentric coordinates -/
-
 theorem coord_eq_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Fin (n + 1))
     (y : Fin n → ℝ) : T.affineBasis.coord i y = baryCoord T.points y i := by
   have hw := T.affineBasis.sum_coord_apply_eq_one y
@@ -79,7 +43,6 @@ theorem coord_eq_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Fin (
   simp only [Affine.Simplex.coe_affineBasis, baryCoord_vertex (isUnit_det_edgeMatrix T),
     mul_ite, mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte]
 
-/-- The barycentric coordinates of `T` are Lipschitz with constant `n (n + 1) ‖B_T⁻¹‖`. -/
 theorem abs_coord_sub_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Fin (n + 1))
     (y y' : Fin n → ℝ) :
     |T.affineBasis.coord i y - T.affineBasis.coord i y'| ≤
@@ -96,8 +59,6 @@ theorem abs_coord_sub_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Fin (n 
         rwa [Real.norm_eq_abs, Pi.sub_apply] at this
     _ = _ := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
 
-/-- The barycentric coordinates of a point of a face `q` of `T` (`q` an enumeration of vertices
-of `T`, `x = Σₐ wₐ qₐ`, `Σ wₐ = 1`). -/
 theorem coord_sum_smul (T : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     {q : Fin (k + 1) → Fin n → ℝ} {w : Fin (k + 1) → ℝ} (hw : ∑ a, w a = 1) (i : Fin (n + 1)) :
     T.affineBasis.coord i (∑ a, w a • q a) = ∑ a, w a * T.affineBasis.coord i (q a) := by
@@ -118,8 +79,6 @@ theorem coord_face_point (T : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     rw [← hj, T.coord_points_ne (fun h => hqb (by rw [← hj, h])), mul_zero]
   · simp
 
-
-/-! ### The star of a face -/
 
 namespace StarGeom
 
@@ -158,8 +117,6 @@ theorem closure_domain_subset (g : Finset (Fin n → ℝ)) :
   · exact Or.inl (mem_starSet.2 ⟨T, hT, hg, hxT⟩)
   · exact Or.inr (mem_restSet.2 ⟨T, hT, hg, hxT⟩)
 
-/-- **A simplex not containing `g` meets a simplex containing `g` only where some barycentric
-coordinate of a vertex of `g` vanishes.** -/
 theorem exists_coord_eq_zero {T₁ T₂ : Affine.Simplex ℝ (Fin n → ℝ) n} (h1 : T₁ ∈ M.simplices)
     (h2 : T₂ ∈ M.simplices) {g : Finset (Fin n → ℝ)} (hg1 : g ⊆ vertexSet T₁)
     (hg2 : ¬ g ⊆ vertexSet T₂) {z : Fin n → ℝ} (hz1 : z ∈ T₁.closedInterior)
@@ -175,13 +132,11 @@ theorem exists_coord_eq_zero {T₁ T₂ : Affine.Simplex ℝ (Fin n → ℝ) n} 
     (fun h : T₁.points i ∈ (vertexSet T₁ : Set (Fin n → ℝ)) ∩ vertexSet T₂ => hv2 h.2) hz
   exact Set.inter_subset_left.trans (coe_vertexSet T₁).subset
 
-/-- A face point: in every simplex of `M` containing `g`, the barycentric coordinates of `x` at
-the vertices of `g` are at least `θ`. -/
+/-- `x` has barycentric coordinates `≥ θ` at the vertices of `g` in every simplex containing `g`. -/
 def IsFacePoint (M : SimplicialMesh n) (g : Finset (Fin n → ℝ)) (θ : ℝ) (x : Fin n → ℝ) :
     Prop :=
   ∀ T ∈ M.simplices, g ⊆ vertexSet T → ∀ i, T.points i ∈ g → θ ≤ T.affineBasis.coord i x
 
-/-- The points `Σₐ wₐ qₐ` of a face `g = {qₐ}` with weights `wₐ ≥ θ` are face points. -/
 theorem isFacePoint_sum_smul {k : ℕ} {q : Fin (k + 1) → Fin n → ℝ} (hq : Function.Injective q)
     {g : Finset (Fin n → ℝ)} (hqg : Set.range q = g) {w : Fin (k + 1) → ℝ} {θ : ℝ}
     (hw : ∀ a, θ ≤ w a) (hw1 : ∑ a, w a = 1) : IsFacePoint M g θ (∑ a, w a • q a) := by
@@ -194,7 +149,7 @@ theorem isFacePoint_sum_smul {k : ℕ} {q : Fin (k + 1) → Fin n → ℝ} (hq :
   rw [coord_face_point T hq hqT hw1 ha]
   exact hw a
 
-/-- Lipschitz bound of all the barycentric coordinates of the mesh. -/
+/-- All the barycentric coordinates of the simplices of `M` are `L`-Lipschitz. -/
 def CoordLip (M : SimplicialMesh n) (L : ℝ) : Prop :=
   ∀ T ∈ M.simplices, ∀ i y y', |T.affineBasis.coord i y - T.affineBasis.coord i y'| ≤ L * ‖y - y'‖
 
@@ -210,8 +165,6 @@ theorem not_mem_starSet_inter_restSet {L θ : ℝ} (hL : CoordLip M L) {g : Fins
   rw [hi0, sub_zero, norm_sub_rev] at hl
   linarith [le_abs_self (T₁.affineBasis.coord i x)]
 
-/-- **Propagation along connected sets**: a preconnected subset of `cl Ω` near a face point `x`
-of `g` meeting the star of `g` lies in it. -/
 theorem subset_starSet_of_isPreconnected {L θ : ℝ} (hL : CoordLip M L)
     {g : Finset (Fin n → ℝ)} {x : Fin n → ℝ} (hx : IsFacePoint M g θ x) {S : Set (Fin n → ℝ)}
     (hS : IsPreconnected S) (hSΩ : S ⊆ closure M.domain) (hnear : ∀ p ∈ S, L * ‖p - x‖ < θ)
@@ -226,8 +179,6 @@ theorem subset_starSet_of_isPreconnected {L θ : ℝ} (hL : CoordLip M L)
     (isClosed_restSet g) (hSΩ.trans (closure_domain_subset g)) ⟨z, hzS, hz⟩ ⟨w, hwS, hw'⟩
   exact not_mem_starSet_inter_restSet hL hx (hnear p hp) hp'
 
-/-- **Propagation along segments**: a segment inside `cl Ω` near a face point `x` of `g` starting
-in the star of `g` stays in it. -/
 theorem mem_starSet_of_segment {L θ : ℝ} (hL : CoordLip M L) {g : Finset (Fin n → ℝ)}
     {x : Fin n → ℝ} (hx : IsFacePoint M g θ x) {z w : Fin n → ℝ}
     (hseg : segment ℝ z w ⊆ closure M.domain) (hnear : ∀ p ∈ segment ℝ z w, L * ‖p - x‖ < θ)
@@ -235,9 +186,8 @@ theorem mem_starSet_of_segment {L θ : ℝ} (hL : CoordLip M L) {g : Finset (Fin
   subset_starSet_of_isPreconnected hL hx (convex_segment z w).isPreconnected hseg hnear
     (left_mem_segment ℝ z w) hz (right_mem_segment ℝ z w)
 
-/-- **Samples near a face point lie in simplices containing the face** (the geometric lemma of
-the smoothed-projection estimates, [AFW2010], §5.5): if `t` lies in the interior of `T'` and
-is joined to the face point `x` by two segments in `cl Ω` near `x`, then `g` is a face of `T'`. -/
+/-- **Samples near a face point**: if `t ∈ int T'` is joined to a face point `x ∈ starSet M g` by
+two segments in `cl Ω` near `x`, then `g ⊆ T'`. [AFW2010], §5.5 -/
 theorem subset_vertexSet_of_segments {L θ : ℝ} (hL : CoordLip M L) {g : Finset (Fin n → ℝ)}
     {x : Fin n → ℝ} (hx : IsFacePoint M g θ x) (hxs : x ∈ starSet M g) {y t : Fin n → ℝ}
     (h1 : segment ℝ x y ⊆ closure M.domain) (h1' : ∀ p ∈ segment ℝ x y, L * ‖p - x‖ < θ)
@@ -256,14 +206,10 @@ theorem subset_vertexSet_of_segments {L θ : ℝ} (hL : CoordLip M L) {g : Finse
     exact Set.disjoint_left.1 hd' ht htT''
 
 
-/-! ### Boundary facets near frontier points -/
-
 theorem continuous_coord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Fin (n + 1)) :
     Continuous (T.affineBasis.coord i) :=
   (T.affineBasis.coord i).continuous_of_finiteDimensional
 
-/-- **Barycentric coordinates on a common face**: if every vertex of `T` carrying a nonzero
-coordinate of `z` is a vertex of `T'`, the coordinates of `z` in `T'` are those in `T`. -/
 theorem coord_eq_of_vertices {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} {z : Fin n → ℝ}
     (hV : ∀ l, T.affineBasis.coord l z ≠ 0 → T.points l ∈ Set.range T'.points)
     {j l₀ : Fin (n + 1)} (hl₀ : T.points l₀ = T'.points j) :
@@ -287,7 +233,6 @@ theorem coord_eq_of_vertices {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} {z : 
       rw [← hm, T'.coord_points_ne hmj, mul_zero]
   · simp
 
-/-- The coordinates of a point of `T ∩ T'` (a common face). -/
 theorem coord_eq_of_mem_inter {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices)
     (hT' : T' ∈ M.simplices) {z : Fin n → ℝ} (hz : z ∈ T.closedInterior)
     (hz' : z ∈ T'.closedInterior) {i : Fin (n + 1)} (hi : T.affineBasis.coord i z ≠ 0) :
@@ -303,7 +248,6 @@ theorem coord_eq_of_mem_inter {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (hT 
   obtain ⟨j, hj⟩ := hV i hi
   exact ⟨j, hj, coord_eq_of_vertices hV hj.symm⟩
 
-/-- **Relative interior points of an interior facet are interior points of `cl Ω`**. -/
 theorem mem_interior_of_isInteriorFacet {F : Finset (Fin n → ℝ)} (hF : M.IsInteriorFacet F)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.cofaces F) {i : Fin (n + 1)}
     (hi : T.points i ∉ F) (hiF : ∀ j, j ≠ i → T.points j ∈ F) {z : Fin n → ℝ}
@@ -382,8 +326,7 @@ theorem volume_affineSpan_eq_zero {s : Finset (Fin n → ℝ)} (hs : s.card ≤ 
   Measure.addHaar_affineSubspace volume _ (affineSpan_ne_top_of_card_le hs)
 
 
-/-- The union of the affine spans of `y` and at most `n - 1` vertices of a simplex of `M`: a
-null set. -/
+/-- The union of the affine spans of `y` and at most `n - 1` vertices of a simplex of `M`. -/
 def badSet (M : SimplicialMesh n) (y : Fin n → ℝ) : Set (Fin n → ℝ) :=
   ⋃ T ∈ M.simplices, ⋃ s ∈ (Finset.univ : Finset (Finset (Fin (n + 1)))).filter
     (fun s => s.card + 2 ≤ n + 1),
@@ -400,7 +343,6 @@ theorem volume_badSet (y : Fin n → ℝ) : volume (badSet M y) = 0 := by
     _ ≤ s.card + 1 := by have := Finset.card_image_le (s := s) (f := T.points); omega
     _ ≤ n := by omega
 
-/-- **The first exit point** of a segment from a closed set. -/
 theorem exists_mem_frontier_lineMap {K : Set (Fin n → ℝ)} (hK : IsClosed K) {a b : Fin n → ℝ}
     (ha : a ∈ K) (hb : b ∉ K) :
     ∃ s ∈ Set.Icc (0 : ℝ) 1, AffineMap.lineMap a b s ∈ frontier K ∧
@@ -435,13 +377,8 @@ theorem exists_mem_frontier_lineMap {K : Set (Fin n → ℝ)} (hK : IsClosed K) 
   rw [frontier_eq_closure_inter_closure, hK.closure_eq]
   exact ⟨hsub ⟨s₀, ⟨hs0, le_rfl⟩, rfl⟩, hc⟩
 
-/-- **Frontier points lie on boundary facets** (the pseudo-manifold property of conforming
-meshes): if a point `z` of `T₁ ∈ M` lies in the topological boundary of `cl Ω`, some boundary
-facet contains every vertex of `T₁` at which the barycentric coordinate of `z` is positive.
-Proof: from a point `y` of the interior of `T₁` near `z`, go towards a generic point `w ∉ cl Ω`
-near `z` (outside the null set `badSet M y`); at the first exit point `z'` from `cl Ω`, `z'`
-lies on exactly one facet of a simplex containing `z`, which contains the positive vertices of
-`z` and cannot be an interior facet (`mem_interior_of_isInteriorFacet`). -/
+/-- **Frontier points lie on boundary facets**: a point `z` of `T₁ ∈ M` in the boundary of `cl Ω`
+lies on a boundary facet containing every vertex of `T₁` at which `λ(z) > 0`. -/
 theorem exists_isBoundaryFacet_of_mem_frontier {T₁ : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT₁ : T₁ ∈ M.simplices) {z : Fin n → ℝ} (hz : z ∈ T₁.closedInterior)
     (hzf : z ∈ frontier (closure M.domain)) :
@@ -584,8 +521,6 @@ theorem exists_isBoundaryFacet_of_mem_frontier {T₁ : Affine.Simplex ℝ (Fin n
     have hji : j ≠ i₀ := fun h => by rw [h, hi₀] at hjpos; exact lt_irrefl _ hjpos
     rw [← hj]; exact hiF j hji
 
-/-- **Frontier vertices lie on boundary facets**: a vertex of `T ∈ M` in the topological
-boundary of `cl Ω` is a vertex of a boundary facet (`exists_isBoundaryFacet_of_mem_frontier`). -/
 theorem exists_isBoundaryFacet_of_mem_vertexSet {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ M.simplices) {x : Fin n → ℝ} (hx : x ∈ vertexSet T)
     (hxf : x ∈ frontier (closure M.domain)) : ∃ F, M.IsBoundaryFacet F ∧ x ∈ F := by
@@ -595,9 +530,8 @@ theorem exists_isBoundaryFacet_of_mem_vertexSet {T : Affine.Simplex ℝ (Fin n �
   exact ⟨F, hF, hjF j (by rw [T.coord_points_self]; exact one_pos)⟩
 
 
-/-- **Boundary faces near outside points** (the geometric lemma for the vanishing-trace family):
-if a point `t` outside the interior of `cl Ω` is near a face point `x` of `g` lying in a simplex
-`T ⊇ g` of `M`, then `g` lies in a boundary facet of `M`. -/
+/-- **Boundary faces near outside points**: a point outside `int cl Ω` near a face point `x` of `g`
+lying in a simplex `T ⊇ g` of `M` forces `g` into a boundary facet. -/
 theorem exists_isBoundaryFacet_of_near {L θ : ℝ} (hL0 : 0 ≤ L) (hL : CoordLip M L)
     {g : Finset (Fin n → ℝ)} {x : Fin n → ℝ} (hx : IsFacePoint M g θ x)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices) (hgT : g ⊆ vertexSet T)
@@ -643,13 +577,10 @@ theorem exists_isBoundaryFacet_of_near {L θ : ℝ} (hL0 : 0 ≤ L) (hL : CoordL
 end StarGeom
 
 
-/-! ### Volumes and bounded overlap on quasi-uniform shape-regular meshes -/
-
 theorem refSimplex_closedInterior_eq :
     (Mesh.refSimplex n).closedInterior = FiniteElement.refSimplex n := by
   ext x; rw [mem_closedInterior_refSimplex, mem_refSimplex_iff]
 
-/-- `|T| = |det B_T| / n!`. -/
 theorem volume_real_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     volume.real T.closedInterior = |LinearMap.det T.linearPart| / n.factorial := by
   have h := volume_closedInterior_eq T
@@ -657,7 +588,6 @@ theorem volume_real_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     refSimplex_closedInterior_eq, ← Measure.real, volume_real_refSimplex]
   ring
 
-/-- **`|T| > 0`**: an `n`-simplex of `ℝⁿ` has positive volume `|det B_T| / n!`. -/
 theorem volume_real_closedInterior_pos (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     0 < volume.real T.closedInterior := by
   rw [volume_real_closedInterior]
@@ -672,8 +602,6 @@ theorem volume_interior_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n
   measure_congr (interior_ae_eq_of_null_frontier
     (Convex.addHaar_frontier volume (convex_closedInterior T)))
 
-/-- **Counting by volume**: simplices of a mesh lying in a ball `B̄(x, r)` and of volume at least
-`v` number at most `(2 r)ⁿ / v`. -/
 theorem card_mul_le_of_subset_closedBall (M : SimplicialMesh n)
     {S : Finset (Affine.Simplex ℝ (Fin n → ℝ) n)} (hS : S ⊆ M.simplices) {x : Fin n → ℝ}
     {r v : ℝ} (hr : 0 ≤ r) (hsub : ∀ T ∈ S, T.closedInterior ⊆ Metric.closedBall x r)
@@ -752,8 +680,6 @@ theorem card_filter_mem_cthickening_le (M : SimplicialMesh n) {C c q : ℝ}
         mul_le_mul_of_nonneg_right this (by positivity)
 
 open Classical in
-/-- **Bounded overlap, integrated**: if every point lies in at most `K` of the sets `A_T`,
-`Σ_T ∫_{A_T} f ≤ K ∫ f` for `f ≥ 0` integrable. -/
 theorem sum_integral_le_of_card_le {ι : Type*} (S : Finset ι) (A : ι → Set (Fin n → ℝ))
     (hA : ∀ T, MeasurableSet (A T)) {K : ℝ}
     (hK : ∀ x, ((S.filter fun T => x ∈ A T).card : ℝ) ≤ K) {f : (Fin n → ℝ) → ℝ}
@@ -771,8 +697,6 @@ theorem sum_integral_le_of_card_le {ι : Type*} (S : Finset ι) (A : ι → Set 
         exact mul_le_mul_of_nonneg_right (hK x) (hf0 x)
     _ = _ := integral_const_mul _ _
 
-
-/-! ### Faces and integrals on a simplex -/
 
 theorem vertexSet_subset_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     (vertexSet T : Set (Fin n → ℝ)) ⊆ T.closedInterior := by
@@ -793,7 +717,6 @@ theorem simplexMap_faceEnum_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : 
   refine convexHull_mono ?_ (simplexMap_mem_convexHull _ hx)
   rw [range_faceEnum hg]; exact Finset.coe_subset.2 hgT
 
-/-- The minors of a `k`-face of `T` are `O(h_Tᵏ)`: `Σₛ |minorₛ| ≤ 2ⁿ k! h_Tᵏ`. -/
 theorem sum_abs_minor_face_le {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : g.card = k + 1) :
     ∑ s, |wedgeProd (simplexMatrix (faceEnum g (k + 1))) s univ| ≤
@@ -806,7 +729,6 @@ theorem sum_abs_minor_face_le {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : �
   have h := norm_le_pi_norm (faceEnum g (k + 1) l.succ - faceEnum g (k + 1) 0) i
   rwa [Real.norm_eq_abs, Pi.sub_apply] at h
 
-/-- **Face integrals on a simplex**: `|∫_g ω| ≤ 2ⁿ h_Tᵏ sup_T |ω|` for a `k`-face `g` of `T`. -/
 theorem abs_simplexIntegral_face_le' {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : g.card = k + 1) {ω : FormField n}
     {A : ℝ} (hA0 : 0 ≤ A) (hA : ∀ x ∈ T.closedInterior, ∀ s, |ω x s| ≤ A) :
@@ -821,7 +743,6 @@ theorem abs_simplexIntegral_face_le' {T : Affine.Simplex ℝ (Fin n → ℝ) n} 
       ≤ 2 ^ n * (k.factorial * diam T ^ k) * A := mul_le_mul_of_nonneg_right hm hA0
     _ = _ := by ring
 
-/-- `|T| ≤ (2 h_T)ⁿ`. -/
 theorem volume_real_closedInterior_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     volume.real T.closedInterior ≤ (2 * diam T) ^ n := by
   have hsub : T.closedInterior ⊆ Metric.closedBall (T.points 0) (diam T) := fun p hp =>
@@ -832,7 +753,6 @@ theorem volume_real_closedInterior_le (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   rw [Measure.real]
   exact ENNReal.toReal_le_of_le_ofReal (by have := diam_nonneg T; positivity) h
 
-/-- `∫_T f ≤ (2 h_T)ⁿ sup_T f` for `0 ≤ f` continuous. -/
 theorem integral_closedInterior_le {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {f : (Fin n → ℝ) → ℝ} (hf : Continuous f) {A : ℝ}
     (hA : ∀ x ∈ T.closedInterior, f x ≤ A) (hf0 : ∀ x, 0 ≤ f x) :

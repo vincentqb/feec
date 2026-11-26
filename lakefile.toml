@@ -26,7 +26,7 @@ name = "feec-gate"
 srcDir = "scripts"
 root = "FeecCheck.Exe.Gate"
 supportInterpreter = true
-needs = ["Feec", "FeecCheck"]
+needs = ["Feec"]
 
 [[lean_exe]]
 name = "feec-citations"

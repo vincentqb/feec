@@ -6,57 +6,13 @@ public import Feec.HilbertComplex.Approximation.StaticCrime
 /-!
 # The heat FEEC theorem with variational crimes
 
-The Hodge heat equation `u' = -Δ u` on `W = ⊕ Wⁱ`, discretized on a family of discrete
-differential spaces for the heat equation (`ApproxComplexCrime.HeatFamily`: `Xₕ` with its own inner
-product, a differential `𝐝ₕ` independent of `𝐝`, reading maps `iₕ` that need not be cochain maps
-nor isometric, a closed constraint, a filter and the inner-product defect in the graph norm
-`‖1 - Jₕ‖_{Vₕ} → 0`, `ApproxComplexCrime.Family.graphDefect`; every
-approximating family `ApproxComplexCrime` is one) by the discrete Hodge Laplacian
-`Δₕ = 𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ` of `(Xₕ, 𝐝ₕ)`, is a dissipative FEEC discretization
-(`ApproxComplexCrime.HeatFamily.toHeat`), and the dissipative FEEC theorem holds for it with
-the **heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ iₕ* z`: the route of
-`Feec.HilbertComplex.Approximation.HeatFEEC` with the orthogonal projection `Qₕ` replaced by
-`iₕ*` and the static FEEC theorem by its version with crimes
-(`Feec.HilbertComplex.Approximation.StaticCrime`).
+The Hodge heat equation on discrete differential spaces with their own inner products and reading
+maps `iₕ`, with the heat Ritz projection with crimes `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ iₕ* z`.
 
-* **The discrete side**: `ApproxComplexCrime.Family.laplacian` (`Δₕ`), the discrete Green
-  operator `green` (`Δₕ Gₕ = 1 - P_ℌₕ`, `laplacian_green`) and the discrete harmonic projection
-  `harmonicProj`; `Gₕ iₕ* f = uₕ` and `P_ℌₕ iₕ* f = pₕ` are the components of the discrete mixed
-  solution with the load `iₕ* f` (`green_adjoint_incl`, `harmonicProj_adjoint_incl`), so the
-  static error `e(f)` bounds `‖G f - iₕ Gₕ iₕ* f‖` and `‖P_ℌ f - iₕ P_ℌₕ iₕ* f‖`.
-* **The heat Ritz projection** (`ApproxComplexCrime.HeatFamily.heatRitz`) for the graph lift
-  `ℓ y = (y, -Δ y)` of `D(Δ²)`: its Galerkin property `-Δₕ Rₕ (y, z) = (1 - P_ℌₕ) iₕ* z`
-  (`heatGen_ritzR`) gives the defect operator
-  `Δₕ (y, z) = 2 P_ℌₕ iₕ* (1 - P_ℌ) y + iₕ* G z - Gₕ iₕ* z` (`ritzDefect_lift`), bounded by
-  `2 C e((1 - P_ℌ) y) + C e(z) + ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖z‖` (`norm_ritzDefect_le`: `1 - Jₕ` acts
-  on `Gₕ iₕ* z`, uniformly stable in the graph norm): with crimes the inner-product defect enters
-  the consistency of the heat flow.
-* **Convergence** (`ApproxComplexCrime.HeatFamily.heatCore`, `heatFEEC`): under the uniform
-  discrete Poincaré inequality, if the static errors tend to `0` for every datum (e.g. from
-  consistency on a dense set, `ApproxComplexCrime.Family.StaticVerdict.converges`), the heat
-  Ritz projection gives a core with data `D(Δ²)` (dense) and the full `DissipFEEC.Verdict`. Only
-  the data of `ApproxComplexCrime.HeatFamily` are used: an approximating family `F` gives them
-  through `F.toHeatFamily`, so `F.heatFEEC` is the theorem for `F` (the field `heat` of
-  `ApproxComplexCrime.Verdict`).
-* **Rates** (`ApproxComplexCrime.HeatFamily.heatRateClass`, `rate_heat_of_static`): a static
-  rate `e(f) ≤ K L mᵅ` on regular data and an inner-product defect `‖1 - Jₕ‖_{Vₕ} ≤ K mᵅ` give
-  `‖S(t) x - iₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 K + C (3 C + 16 c_P² C) K t) L mᵅ`. The static rate is a
-  hypothesis: for cochain reading maps it follows from Jackson-type approximation of the mixed
-  solution and of `b = P_𝔷 G f` in the graph norm and from `‖1 - Jₕ‖_{Vₕ} ‖X‖`
-  (`ApproxComplexCrime.Family.IsCochain.staticError_le_of_approx`); it is discharged on the
-  conforming windows (`ConformingFamily.windowCrime_rate_heat`) and the shear families
-  (`ApproxComplexCrime.shear_rate_heat`).
+## Main results
 
-## References
-
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (the static theory with crimes)
-* [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
-  (the elliptic projection as comparison function)
-* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
-  (the Hodge heat equation in FEEC)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `ApproxComplexCrime.HeatFamily.heatFEEC`: the dissipative FEEC verdict under static convergence.
+* `ApproxComplexCrime.HeatFamily.rate_heat_of_static`: the heat rate from a static rate.
 -/
 
 open scoped InnerProductSpace
@@ -78,8 +34,7 @@ namespace ApproxComplexCrime.Family
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (S : ApproxComplexCrime.Family.{u} H κ)
 
-/-- **The discrete Hodge Laplacian** `Δₕ = 𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ` of `(Xₕ, 𝐝ₕ)` (adjoints in the inner
-product of `Xₕ`). -/
+/-- The discrete Hodge Laplacian `Δₕ = 𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ` of `(Xₕ, 𝐝ₕ)`. -/
 def laplacian (h : κ) : S.X h →L[𝕜] S.X h :=
   S.D h ∘L (S.D h).adjoint + (S.D h).adjoint ∘L S.D h
 
@@ -87,7 +42,6 @@ theorem laplacian_apply (h : κ) (v : S.X h) :
     S.laplacian h v = S.D h ((S.D h).adjoint v) + (S.D h).adjoint (S.D h v) :=
   rfl
 
-/-- `Δₕ ≥ 0`: `re ⟪Δₕ v, v⟫ = ‖𝐝ₕ* v‖² + ‖𝐝ₕ v‖²`. -/
 theorem re_inner_laplacian_self (h : κ) (v : S.X h) :
     RCLike.re ⟪S.laplacian h v, v⟫_𝕜 = ‖(S.D h).adjoint v‖ ^ 2 + ‖S.D h v‖ ^ 2 := by
   rw [laplacian_apply, inner_add_left,
@@ -95,8 +49,7 @@ theorem re_inner_laplacian_self (h : κ) (v : S.X h) :
     ContinuousLinearMap.adjoint_inner_left (S.D h) v (S.D h v), _root_.map_add,
     inner_self_eq_norm_sq, inner_self_eq_norm_sq]
 
-/-- **The discrete Green operator** `Gₕ` of `(Xₕ, 𝐝ₕ)`: the solution operator of its mixed Hodge
-Laplacian. -/
+/-- The discrete Green operator `Gₕ`, the solution operator of the mixed problem of `(Xₕ, 𝐝ₕ)`. -/
 def green (h : κ) : S.X h →L[𝕜] S.X h :=
   (S.cpx h).solutionOp (loop_rel () ()) (loop_rel () ()) (closedRangeAt_diffComplex _ _ ())
     (closedRangeAt_diffComplex _ _ ())
@@ -105,7 +58,6 @@ def green (h : κ) : S.X h →L[𝕜] S.X h :=
 def harmonicProj (h : κ) : S.X h →L[𝕜] S.X h :=
   ((S.cpx h).harmonic ()).starProjection
 
-/-- **The discrete Green operator inverts `Δₕ`**: `Δₕ Gₕ v = v - P_ℌₕ v`. -/
 theorem laplacian_green (h : κ) (v : S.X h) :
     S.laplacian h (S.green h v) = v - S.harmonicProj h v := by
   obtain ⟨h₁, h₂, h₃, h₄, e⟩ := (S.cpx h).hodgeLaplacian_solutionOp (loop_rel () ())
@@ -115,18 +67,15 @@ theorem laplacian_green (h : κ) (v : S.X h) :
   rw [adjoint_diffComplex_d_apply, adjoint_diffComplex_d_apply] at e'
   exact e'
 
-/-- **`Δₕ` vanishes on the discrete harmonic forms.** -/
 theorem laplacian_harmonicProj (h : κ) (v : S.X h) : S.laplacian h (S.harmonicProj h v) = 0 := by
   obtain ⟨h1, h2⟩ := (mem_diffComplex_harmonic (S.D h) (S.D_D h)).1
     (((S.cpx h).harmonic ()).starProjection_apply_mem v)
   rw [laplacian_apply, harmonicProj, h1, h2, _root_.map_zero, _root_.map_zero, add_zero]
 
-/-- `Gₕ iₕ* f = uₕ`, the `u` component of the discrete mixed solution with the load `iₕ* f`. -/
 theorem green_adjoint_incl (h : κ) (f : PiLp 2 W) :
     S.green h ((S.incl h).adjoint f) = (S.cpx h).mixedI1 () () (S.mixedSol h f) :=
   rfl
 
-/-- `P_ℌₕ iₕ* f = pₕ`, the harmonic component of the discrete mixed solution. -/
 theorem harmonicProj_adjoint_incl (h : κ) (f : PiLp 2 W) :
     S.harmonicProj h ((S.incl h).adjoint f) = (S.cpx h).mixedI2 () () (S.mixedSol h f) :=
   ((S.cpx h).harmonic_mixedSolution (loop_rel () ()) (loop_rel () ())
@@ -134,7 +83,6 @@ theorem harmonicProj_adjoint_incl (h : κ) (f : PiLp 2 W) :
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-/-- `‖G f - iₕ Gₕ iₕ* f‖ ≤ e(f)`. -/
 theorem norm_greenOp_sub_le (h : κ) (f : PiLp 2 W) :
     ‖H.greenOp hcr f - S.incl h (S.green h ((S.incl h).adjoint f))‖ ≤ S.staticError hcr h f := by
   rw [green_adjoint_incl]
@@ -150,7 +98,6 @@ theorem norm_greenOp_sub_le (h : κ) (f : PiLp 2 W) :
     norm_nonneg (H.total.mixedI2 () () (H.totalMixedSolution hcr f) -
       S.incl h ((S.cpx h).mixedI2 () () (S.mixedSol h f)))]
 
-/-- `‖P_ℌ f - iₕ P_ℌₕ iₕ* f‖ ≤ e(f)`. -/
 theorem norm_harmonicProj_sub_le (h : κ) (f : PiLp 2 W) :
     ‖(H.total.harmonic ()).starProjection f -
       S.incl h (S.harmonicProj h ((S.incl h).adjoint f))‖ ≤ S.staticError hcr h f := by
@@ -166,14 +113,12 @@ theorem norm_harmonicProj_sub_le (h : κ) (f : PiLp 2 W) :
     norm_nonneg (H.total.mixedD1 () () () (H.totalMixedSolution hcr f) -
       S.incl h ((S.cpx h).mixedD1 () () () (S.mixedSol h f)))]
 
-/-- `‖Gₕ iₕ* f‖ ≤ 16 c_P² C ‖f‖` (uniform stability). -/
 theorem norm_green_adjoint_incl_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ)
     (f : PiLp 2 W) :
     ‖S.green h ((S.incl h).adjoint f)‖ ≤ 16 * cP ^ 2 * S.boundConst * ‖f‖ := by
   rw [green_adjoint_incl]
   exact (norm_mixedComponents_le (S.cpx h) _).2.2.1.trans (S.norm_mixedSol_le hP hcP h f)
 
-/-- `‖(1 - Jₕ) Gₕ iₕ* f‖ ≤ ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖f‖` (uniform stability in the graph norm). -/
 theorem norm_one_sub_J_green_adjoint_incl_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP)
     (h : κ) (f : PiLp 2 W) :
     ‖(1 - S.J h) (S.green h ((S.incl h).adjoint f))‖ ≤
@@ -205,8 +150,7 @@ end ApproxComplexCrime.Family
 /-! ### The regular states of a heat rate -/
 
 variable (H : HilbertComplex 𝕜 c W) in
-/-- **The regular states of a heat rate** for regular data `Reg L` (bound `L`): `y ∈ D(Δ²)` such
-that `y`, `A y` and `A² y` (`A = -Δ`) are regular data with bound `L` and `‖A² y‖ ≤ L`. -/
+/-- The regular states: `y ∈ D(Δ²)` with `y`, `A y`, `A² y` regular of bound `L`, `‖A² y‖ ≤ L`. -/
 def heatReg (Reg : ℝ → Set (PiLp 2 W)) (L : ℝ) : Set (PiLp 2 W) :=
   {y | y ∈ (-H.hodgeLaplacian).sqDomain ∧ y ∈ Reg L ∧
     DissipFEEC.genExt (-H.hodgeLaplacian) y ∈ Reg L ∧
@@ -219,9 +163,7 @@ namespace ApproxComplexCrime.HeatFamily
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.HeatFamily.{u} H κ)
 
-/-- **The heat FEEC discretization with variational crimes** of `u' = -Δ u` on `W = ⊕ Wⁱ`:
-`Xₕ` with its own inner product, `Lₕ = -Δₕ` the discrete Hodge Laplacian of `(Xₕ, 𝐝ₕ)`, read by
-`iₕ`, with the left inverses `πₕ`. -/
+/-- The heat FEEC discretization with crimes: `Lₕ = -Δₕ` on `Xₕ`, read by `iₕ`. -/
 abbrev toHeat : DissipFEEC (-H.hodgeLaplacian) κ where
   isMDissipative := H.isMDissipative_neg_hodgeLaplacian
   K := F.K
@@ -247,10 +189,7 @@ section Ritz
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-/-- **The heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ iₕ* z`: on the graph
-lift, `Rₕ ℓ y = Gₕ iₕ* (Δ y) + P_ℌₕ iₕ* y`, the discrete mixed solution with the load `iₕ* Δ y`
-plus the discrete harmonic part of the load `iₕ* y` ([Wheeler1973] with `iₕ*` in place of the
-orthogonal projection). -/
+/-- The heat Ritz projection with crimes `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ iₕ* z`. -/
 def ritzR (h : κ) : PiLp 2 W × PiLp 2 W →L[𝕜] F.toFamily.X h :=
   F.toFamily.harmonicProj h ∘L (F.toFamily.incl h).adjoint ∘L ContinuousLinearMap.fst 𝕜 _ _ -
     F.toFamily.green h ∘L (F.toFamily.incl h).adjoint ∘L ContinuousLinearMap.snd 𝕜 _ _
@@ -260,8 +199,7 @@ theorem ritzR_apply (h : κ) (g : PiLp 2 W × PiLp 2 W) :
       F.toFamily.green h ((F.toFamily.incl h).adjoint g.2) :=
   rfl
 
-/-- The defect operator `Δₕ (y, z) = 2 P_ℌₕ iₕ* (1 - P_ℌ) y + iₕ* G z - Gₕ iₕ* z` of the heat Ritz
-projection with crimes; on `ℓ (A y)` it is the consistency defect (`ritzDefect_lift`). -/
+/-- The defect operator `Δₕ (y, z) = 2 P_ℌₕ iₕ* (1 - P_ℌ) y + iₕ* G z - Gₕ iₕ* z`. -/
 def ritzDefect (h : κ) : PiLp 2 W × PiLp 2 W →L[𝕜] F.toFamily.X h :=
   (2 : 𝕜) • (F.toFamily.harmonicProj h ∘L (F.toFamily.incl h).adjoint ∘L
       (1 - (H.total.harmonic ()).starProjection) ∘L ContinuousLinearMap.fst 𝕜 _ _) +
@@ -275,8 +213,6 @@ theorem ritzDefect_apply (h : κ) (g : PiLp 2 W × PiLp 2 W) :
         F.toFamily.green h ((F.toFamily.incl h).adjoint g.2)) :=
   rfl
 
-/-- **The Galerkin property of the heat Ritz projection with crimes**:
-`-Δₕ Rₕ (y, z) = (1 - P_ℌₕ) iₕ* z`. -/
 theorem heatGen_ritzR (h : κ) (g : PiLp 2 W × PiLp 2 W) :
     F.toHeat.L h (F.ritzR h g) = (F.toFamily.incl h).adjoint g.2 -
       F.toFamily.harmonicProj h ((F.toFamily.incl h).adjoint g.2) := by
@@ -284,8 +220,6 @@ theorem heatGen_ritzR (h : κ) (g : PiLp 2 W × PiLp 2 W) :
   rw [ritzR_apply, _root_.map_sub, F.toFamily.laplacian_harmonicProj, F.toFamily.laplacian_green]
   abel
 
-/-- **The defect identity of the heat Ritz projection with crimes**:
-`Rₕ ℓ(A y) - Lₕ Rₕ ℓ y = Rₕ ℓ(A y) - (1 - P_ℌₕ) iₕ* (A y)`. -/
 theorem heatRitz_defect_eq (h : κ) (y : PiLp 2 W) :
     F.ritzR h (DissipFEEC.genExt (-H.hodgeLaplacian) y,
         DissipFEEC.genExt (-H.hodgeLaplacian) (DissipFEEC.genExt (-H.hodgeLaplacian) y)) -
@@ -297,8 +231,6 @@ theorem heatRitz_defect_eq (h : κ) (y : PiLp 2 W) :
             ((F.toFamily.incl h).adjoint (DissipFEEC.genExt (-H.hodgeLaplacian) y))) := by
   rw [heatGen_ritzR]
 
-/-- **The defect operator on the lifted velocities**: for `a ∈ D(Δ)` with `P_ℌ a = 0` (e.g.
-`a = A y`), `Δₕ ℓ a = Rₕ ℓ a - (1 - P_ℌₕ) iₕ* a` (`G A a = -a`). -/
 theorem ritzDefect_lift (h : κ) {a : PiLp 2 W} (ha : a ∈ H.hodgeLaplacian.domain)
     (hPa : (H.total.harmonic ()).starProjection a = 0) :
     F.ritzDefect hcr h (a, DissipFEEC.genExt (-H.hodgeLaplacian) a) =
@@ -316,8 +248,6 @@ theorem ritzDefect_lift (h : κ) {a : PiLp 2 W} (ha : a ∈ H.hodgeLaplacian.dom
 variable {cP : ℝ} (hcP : 1 ≤ cP) (hP : F.toFamily.IsPoincare cP)
 
 include hcP hP in
-/-- **The defect operator is small**: `‖Δₕ (y, z)‖ ≤ 2 C e((1 - P_ℌ) y) + C e(z) +
-‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖z‖`, `e` the static error with crimes. -/
 theorem norm_ritzDefect_le (h : κ) (g : PiLp 2 W × PiLp 2 W) :
     ‖F.ritzDefect hcr h g‖ ≤
       2 * F.toFamily.boundConst *
@@ -362,9 +292,7 @@ def heatLift : F.toHeat.Lift (PiLp 2 W × PiLp 2 W) :=
   DissipFEEC.Lift.graph F.toHeat (H.heatRead hcr) fun _ hy => H.heatRead_lift hcr hy.1
 
 include hcP hP in
-/-- **The heat Ritz projection with crimes** of the heat FEEC discretization with crimes, for the
-graph lift of `D(Δ²)`: `Rₕ = ritzR`, defects `Δₕ = ritzDefect`, `Δₕ' = 0`, uniformly bounded by
-the uniform stability of the discrete mixed problem. -/
+/-- The heat Ritz projection with crimes for the graph lift of `D(Δ²)`. -/
 def heatRitz : F.toHeat.Ritz (F.heatLift hcr) where
   R := F.ritzR
   Δ := F.ritzDefect hcr
@@ -424,9 +352,7 @@ def heatRitz : F.toHeat.Ritz (F.heatLift hcr) where
 variable (hconv : ∀ f, Tendsto (fun h => F.toFamily.staticError hcr h f) F.l (𝓝 0))
 
 include hcP hP hconv in
-/-- **The heat core with crimes**: the core of the heat Ritz projection, data `D(Δ²)` (dense,
-`dense_heatCore_data`), from the convergence of the static mixed method with crimes for every
-datum and the inner-product defect in the graph norm `‖1 - Jₕ‖_{Vₕ} → 0`. -/
+/-- The heat core with crimes, with data `D(Δ²)`. -/
 def heatCore : F.toHeat.Core :=
   (F.heatRitz hcr hcP hP).toCore
     (fun g => by
@@ -450,16 +376,11 @@ def heatCore : F.toHeat.Core :=
 theorem heatCore_data : (F.heatCore hcr hcP hP hconv).Data = (-H.hodgeLaplacian).sqDomain :=
   rfl
 
-/-- The data `D(Δ²)` of the heat core with crimes are dense: the heat FEEC theorem with crimes
-applies to every datum. -/
 theorem dense_heatCore_data : (F.heatCore hcr hcP hP hconv).Data.topologicalClosure = ⊤ :=
   Submodule.dense_iff_topologicalClosure_eq_top.1 H.isMDissipative_neg_hodgeLaplacian.dense_sqDomain
 
-/-- **The heat FEEC theorem with variational crimes** (`DissipFEEC.Verdict` of the heat FEEC
-discretization with crimes and its heat core): well-posedness and the energy identity,
-propagation of `K`, convergence of the discrete heat flows from every convergent family of discrete
-data (every datum: `dense_heatCore_data`), rates for every rate class (`heatRateClass`), the
-constraint residual. -/
+/-- **The heat FEEC theorem with crimes**: with closed range, a uniform discrete Poincaré inequality
+and static convergence for every datum give the dissipative FEEC verdict on the heat core. -/
 theorem heatFEEC : F.toHeat.Verdict (F.heatCore hcr hcP hP hconv) :=
   dissipFEEC F.toHeat (F.heatCore hcr hcP hP hconv)
 
@@ -479,8 +400,6 @@ variable {cP : ℝ} (hcP : 1 ≤ cP) (hP : F.toFamily.IsPoincare cP) {Reg : ℝ 
   (hJ : ∀ h, F.toFamily.graphDefect h ≤ K * m h ^ α) {L : ℝ} (hL : 0 ≤ L)
 
 include hK hL in
-/-- **Static approximation of the heat Ritz projection with crimes**:
-`‖y - iₕ Rₕ ℓ y‖ ≤ e(y) + e(A y) ≤ 2 K L mᵅ` on the regular states (`y = P_ℌ y - G A y`). -/
 theorem norm_sub_ritzR_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h : κ) :
     ‖y - F.toFamily.incl h (F.ritzR h (y, DissipFEEC.genExt (-H.hodgeLaplacian) y))‖ ≤
       2 * K * L * m h ^ α := by
@@ -504,9 +423,6 @@ theorem norm_sub_ritzR_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h : κ) :
   linarith
 
 include hcP hP hm hK0 hK hJ hL in
-/-- **Static consistency of the heat Ritz projection with crimes**:
-`‖Δₕ ℓ(A y)‖ ≤ 2 C e(A y) + C e(A² y) + ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖A² y‖`, at most
-`(3 C + 16 c_P² C) K L mᵅ` on the regular states. -/
 theorem norm_ritzDefect_lift_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h : κ) :
     ‖F.ritzDefect hcr h (DissipFEEC.genExt (-H.hodgeLaplacian) y,
       DissipFEEC.genExt (-H.hodgeLaplacian) (DissipFEEC.genExt (-H.hodgeLaplacian) y))‖ ≤
@@ -535,9 +451,7 @@ theorem norm_ritzDefect_lift_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h :
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 include hcP hP hm hK0 hK hJ hL in
-/-- **The heat rate class with crimes** on `[0, T]`: data `x ∈ D(Δ²)` whose orbit stays in the
-regular states with bound `L`, approximation constant `2K` and consistency constant
-`(3 C + 16 c_P² C) K`. -/
+/-- The heat rate class with crimes on `[0, T]`. -/
 def heatRateClass (T : ℝ) : F.toHeat.RateClass T :=
   (F.heatRitz hcr hcP hP).toRateClass (DissipFEEC.RegScale.trajectory F.toHeat T
       (-H.hodgeLaplacian).sqDomain (H.heatReg Reg L) (fun _ => L) (fun _ => L))
@@ -553,11 +467,9 @@ def heatRateClass (T : ℝ) : F.toHeat.RateClass T :=
       exact (F.norm_ritzDefect_lift_le hcr hcP hP hm hK0 hK hJ hL hy h).trans_eq (by ring))
 
 include hcP hP hm hK0 hK hJ hL in
-/-- **The heat rate with crimes, from the static rate**: for `x ∈ D(Δ²)` whose orbit on `[0, T]`
-stays in the regular states with bound `L`,
-`‖S(t) x - iₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 K + C (3 C + 16 c_P² C) K t) L mᵅ`, for every constant `K` of
-the static rate with crimes `e(f) ≤ K L mᵅ` and of the inner-product defect
-`‖1 - Jₕ‖_{Vₕ} ≤ K mᵅ`. -/
+/-- **The heat rate with crimes**: with closed range and a uniform discrete Poincaré inequality, if
+`e(f) ≤ K L mᵅ` on regular data and `‖1 - Jₕ‖_{Vₕ} ≤ K mᵅ`, the error from `Rₕ (x, -Δ x)` is
+`O((1 + t) K L mᵅ)` on orbits that stay in the regular states with bound `L`. -/
 theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
     (hreg : ∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ H.heatReg Reg L) (h : κ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :

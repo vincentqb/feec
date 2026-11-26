@@ -7,94 +7,22 @@ public import Feec.FiniteElement.PolyElement
 /-!
 # Higher-order finite element complexes on meshes
 
-For an admissible sequence `S` (`Feec.FiniteElement.PolySeq`) the element family
-`Feec.FiniteElement.polyElement n S` gives, on every conforming simplicial mesh `M` of an open
-`Ω ⊆ ℝⁿ`, the global spaces of piecewise `P_{r_k}Λᵏ` / `P_{r_k}⁻Λᵏ` forms with continuous
-tangential traces, a subcomplex of `HΛ(Ω)` and, with vanishing boundary degrees of freedom, of
-`H̊Λ(Ω)` for strictly star-shaped `Ω`; this file names the classical sequences, computes the
-dimensions, and specializes to the Freudenthal meshes of cubes.
+For an admissible sequence `S`, `polyElement n S` assembles subcomplexes of `HΛ(Ω)` on meshes of an
+open `Ω ⊆ ℝⁿ` and, with vanishing boundary DOFs, of `H̊Λ(Ω)` for strictly star-shaped `Ω`.
 
-* **The periodic table** ([ArnoldLogg2014]): `PolySeq.ofKinds n κ s` is the admissible sequence
-  with the kinds `κ k` in the degrees `k < n` ending in `P_sΛⁿ` (`PolySeq.ofKinds_space_top`,
-  from `P_{s+1}⁻Λⁿ = P_sΛⁿ`, `polyMinusSpace_top`): every choice of kinds gives an admissible
-  sequence. That every admissible sequence ending in `P_sΛⁿ` has, up to its spaces, this form is
-  not formalized; as `P_r⁻Λ⁰ = P_rΛ⁰` (`polyMinusSpace_zero`) only `κ 1, …, κ (n-1)` matter:
-  `2ⁿ⁻¹` sequences for each `s` (this count is not formalized either). Named corners:
-  `PolySeq.trimmed r` (`P_r⁻Λ⁰ → ⋯ → P_r⁻Λⁿ`: Lagrange, Nédélec first kind [Nedelec1980],
-  Raviart–Thomas–Nédélec [RaviartThomas1977], discontinuous `P_{r-1}`;
-  `PolySeq.trimmed_eq_ofKinds`),
-  `PolySeq.full n r` (`P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_{r-n}Λⁿ`, `n ≤ r`: Lagrange, Nédélec second kind
-  [Nedelec1986], Brezzi–Douglas–Marini [BrezziDouglasMarini1985], discontinuous `P_{r-n}`;
-  `PolySeq.full_space`), and the two rows of Tables 5.1 and 6.1 of [QuennevilleBelair2015]
-  (§5.3, §6.3): `PolySeq.lowestOrder` (`P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`) and `PolySeq.lagrangeP2`
-  (`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`) (`PolySeq.lowestOrder_eq_ofKinds`,
-  `PolySeq.lagrangeP2_eq_ofKinds`).
-* **The algebra over a field**: the shape spaces are polynomial forms over every commutative ring
-  `K` (`PolyKind.form`, `PolySeq.form`; over `ℝ` the form fields are their evaluations,
-  `PolySeq.space_eq_map_form`), and so are the test forms of the degrees of freedom
-  (`PolyKind.testForm`, `PolySeq.test_eq_map_testForm`). For every admissible sequence `S`,
-  `d (S.form K k) ⊆ S.form K (k + 1)` over every commutative ring (`PolySeq.extDeriv_mem_form`)
-  and, over every field of characteristic `0`, the complex is exact (`PolySeq.exists_extDeriv_eq`)
-  with the constants as closed `0`-forms (`PolySeq.mem_polyForm_zero_of_extDeriv_eq_zero`), its
-  dimensions are the numbers of degrees of freedom of a simplex,
-  `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` ([AFW2006], Thms 4.9, 4.13,
-  `PolySeq.finrank_form_eq_sum`), and its shape spaces are affinely invariant
-  (`PolySeq.isAffineInvariant_form`). Its families and degrees form an admissible sequence of
-  [AFW2006], §3.5, (5.13) (`PolySeq.isAdmissible`); those sequences may also reach the degree `0`
-  before the top form degree (`PolyKind.IsAdmissible`).
-* **The classical elements in closed form**, over every field `K` (of characteristic `0` for the
-  trimmed spaces; `Koszul.finrank_polyForm_three_zero`, …, `Koszul.finrank_polyFormMinus_two_one`
-  of `Feec.Algebra.PolynomialFormClassical`), and over `ℝ` for the form fields: in `ℝ³`, `dim P_rΛ⁰ = dim P_rΛ³ = (r+1)(r+2)(r+3)/6`
-  (Lagrange, discontinuous `P_r`), `dim P_r⁻Λ¹ = r(r+2)(r+3)/2` (Nédélec first kind),
-  `dim P_rΛ¹ = dim P_rΛ² = (r+1)(r+2)(r+3)/2` (Nédélec second kind, Brezzi–Douglas–Marini),
-  `dim P_r⁻Λ² = r(r+1)(r+3)/2` (Raviart–Thomas–Nédélec): `finrank_polySpace_three_zero`, …,
-  `finrank_polyMinusSpace_three_two`; in `ℝ²`, `dim P_r⁻Λ¹ = r(r+2)` (Raviart–Thomas),
-  `dim P_rΛ¹ = (r+1)(r+2)` (Brezzi–Douglas–Marini): `finrank_polySpace_two_zero`, …,
-  `finrank_polyMinusSpace_two_one`.
-* **The Whitney complex is `P₁⁻Λ`**: the Whitney element and the element of `PolySeq.trimmed 1`
-  are equivalent (`whitneyElement_equivalent_trimmed`: the same local spaces,
-  `polyMinusSpace_one_eq_p1MinusForms`, and on every face the moment degrees of freedom are
-  nonzero multiples of the face integrals, `PolySeq.trimmed_one_dof_eq`), so they assemble the
-  same subcomplexes on every mesh (`whitneySubcomplex_eq_trimmed`,
-  `whitneySubcomplexMin_eq_trimmed`, by `LocalElement.Equivalent.subcomplex_eq`).
-* Dimensions: `PolySeq.finrank_globalSpace`: `Σ_m #{m-faces} · dim(test forms on m-faces)`;
-  `PolySeq.finrank_globalSpace₀`, `PolySeq.finrank_V₀`: the same with the faces not contained in
-  a boundary facet.
-* Subcomplexes: `PolySeq.subcomplex`, `PolySeq.subcomplexMin`, and on the level-`N` Freudenthal
-  mesh of a cube `PolySeq.freudenthalSubcomplexMin`.
-* **Nonzero interior spaces**: a face of `M` whose convex hull meets `Ω` is not contained in a
-  boundary facet (`LocalElement.not_isBoundaryDof_of_mem_convexHull`), and on the Freudenthal
-  meshes the faces of `b + (s/N) K_id` containing the diagonal from `b` to `b + (s/N)(1, …, 1)`
-  are such faces (`exists_meshFace_freudenthalMesh`). Hence `V̊ₕᵏ ≠ 0` for `1 ≤ k ≤ n` for every
-  admissible sequence (`PolySeq.finrank_V₀_freudenthalMesh_pos_of_one_le`) and for the Whitney
-  forms (`finrank_whitney_V₀_freudenthalMesh_pos`), and for `k = 0` when `r₀ ≥ 2`
-  (`PolySeq.finrank_V₀_freudenthalMesh_pos_zero`), on every level `N ≥ 1`. In particular the
-  interior spaces of the second row of Tables 5.1/6.1 on the level-`(N+1)` Freudenthal mesh of
-  `(0, ½)³` are nonzero in every degree (`PolySeq.lagrangeP2_V₀_ne_bot`). For `k = 0` and
-  `r₀ = 1` an interior vertex is needed: on every level `N ≥ 2` the lattice point
-  `b + (s/N)(1, …, 1)` is one (`exists_vertex_freudenthalMesh`), so `V̊ₕᵏ ≠ 0` in every degree
-  for every admissible sequence (`PolySeq.finrank_V₀_freudenthalMesh_pos_of_two_le`).
+## Main results
+
+* `PolySeq.exists_extDeriv_eq`: exactness of the polynomial complex in positive degree.
+* `PolySeq.finrank_globalSpace`: the dimension of the global spaces.
+* `whitneySubcomplex_eq_trimmed`: the Whitney complex is the trimmed complex of degree one.
+* `PolySeq.finrank_V₀_freudenthalMesh_pos_of_two_le`: `V̊ₕᵏ ≠ 0` for `k ≤ n` at level `N ≥ 2`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and their dimensions), §4 (degrees of freedom, Thms 4.9,
-  4.13), §5 (assembly, dimension counts)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.2
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, Table 5.1; §6.3, Table 6.1
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
-* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV, §27 (Whitney forms)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 * [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
-* [J.-C. Nédélec, *Mixed finite elements in ℝ³*][Nedelec1980] (`P_r⁻Λ¹`, `P_r⁻Λ²` in `ℝ³`)
-* [J.-C. Nédélec, *A new family of mixed finite elements in ℝ³*][Nedelec1986] (`P_rΛ¹`, `P_rΛ²`
-  in `ℝ³`)
-* [P.-A. Raviart, J.-M. Thomas, *A mixed finite element method for 2-nd order elliptic problems*][RaviartThomas1977]
-  (`P_r⁻Λ¹` in `ℝ²`)
-* [F. Brezzi, J. Douglas, Jr., L. D. Marini, *Two families of mixed finite elements for second order elliptic problems*][BrezziDouglasMarini1985]
-  (`P_rΛ¹` in `ℝ²`)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -109,18 +37,9 @@ open ExteriorFibre Feec.Mesh Feec.Domain
 
 variable {n : ℕ}
 
-/-! ### The admissible sequences of the periodic table -/
-
 namespace PolySeq
 
-/-- **The admissible sequence of kinds `κ` ending in `P_sΛⁿ`** ([AFW2006], §5; [AFW2010], §5.2;
-[ArnoldLogg2014]): in each degree `k < n` the family `κ k` of degree
-`r_k = s + 1 + #{j | k < j < n, κ j = full}`, and in the top degree `P_{s+1}⁻Λⁿ = P_sΛⁿ`
-(`ofKinds_space_top`). Read from the top down, a full space `P_{r_j}Λʲ` raises the degree of the
-space below it by one and a trimmed space `P_{r_j}⁻Λʲ` keeps it, which is the admissibility
-condition `PolyKind.Transition`. As `P_r⁻Λ⁰ = P_rΛ⁰` (`polyMinusSpace_zero`), `κ 0` does not
-change the spaces: the `2ⁿ⁻¹` choices of `κ 1, …, κ (n-1)` give the admissible sequences ending
-in `P_sΛⁿ`. -/
+/-- The admissible sequence of the kinds `κ` ending in `P_sΛⁿ`. [ArnoldLogg2014] -/
 def ofKinds (n : ℕ) (κ : ℕ → PolyKind) (s : ℕ) : PolySeq where
   kind k := if k < n then κ k else .trimmed
   deg k := s + 1 + #{j ∈ Finset.Ioo k n | κ j = .full}
@@ -149,8 +68,6 @@ theorem ofKinds_kind_of_lt {k : ℕ} (hk : k < n) : (ofKinds n κ s).kind k = κ
 theorem ofKinds_deg (k : ℕ) :
     (ofKinds n κ s).deg k = s + 1 + #{j ∈ Finset.Ioo k n | κ j = .full} := rfl
 
-/-- **The admissible sequence `ofKinds n κ s` ends in `P_sΛⁿ`** (as `P_{s+1}⁻Λⁿ`,
-`polyMinusSpace_top`). [ArnoldLogg2014] -/
 theorem ofKinds_space_top : (ofKinds n κ s).space n n = polySpace n s n := by
   change (if n < n then κ n else .trimmed).space n (s + 1 + #{j ∈ Finset.Ioo n n | κ j = .full})
     n = _
@@ -158,17 +75,13 @@ theorem ofKinds_space_top : (ofKinds n κ s).space n n = polySpace n s n := by
     add_zero, PolyKind.space_trimmed]
   rw [polyMinusSpace_top (by omega), Nat.add_sub_cancel]
 
-/-- The trimmed sequence `P_r⁻Λ⁰ → P_r⁻Λ¹ → ⋯ → P_r⁻Λⁿ` (`r ≥ 1`): in `ℝ³` Lagrange `P_r`, the
-Nédélec edge elements of the first kind ([Nedelec1980]), the Raviart–Thomas–Nédélec face elements
-([RaviartThomas1977], [Nedelec1980]) and discontinuous `P_{r-1}`; for `r = 1` the Whitney forms
-(`whitneyElement_equivalent_trimmed`). -/
+/-- The trimmed sequence `P_r⁻Λ⁰ → P_r⁻Λ¹ → ⋯ → P_r⁻Λⁿ` (`r ≥ 1`). -/
 def trimmed (r : ℕ) (hr : 1 ≤ r) : PolySeq where
   kind _ := .trimmed
   deg _ := r
   one_le_deg _ := hr
   transition _ := Or.inl ⟨rfl, rfl⟩
 
-/-- The trimmed sequence is the admissible sequence of trimmed kinds ending in `P_{r-1}Λⁿ`. -/
 theorem trimmed_eq_ofKinds {r : ℕ} (hr : 1 ≤ r) :
     trimmed r hr = ofKinds n (fun _ => .trimmed) (r - 1) := by
   ext k
@@ -176,10 +89,7 @@ theorem trimmed_eq_ofKinds {r : ℕ} (hr : 1 ≤ r) :
   · simp only [trimmed, ofKinds, reduceCtorEq, Finset.filter_false, Finset.card_empty, add_zero]
     omega
 
-/-- **The full sequence** `P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_{r-n}Λⁿ` on `ℝⁿ` (`n ≤ r`), the admissible
-sequence of full kinds ending in `P_{r-n}Λⁿ` (`full_space`): in `ℝ³` Lagrange `P_r`, the Nédélec
-edge elements of the second kind `P_{r-1}Λ¹` ([Nedelec1986]), the Brezzi–Douglas–Marini face
-elements `P_{r-2}Λ²` ([BrezziDouglasMarini1985], [Nedelec1986]) and discontinuous `P_{r-3}`. -/
+/-- The full sequence `P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_{r-n}Λⁿ` on `ℝⁿ` (`n ≤ r`). -/
 def full (n r : ℕ) (_hr : n ≤ r) : PolySeq := ofKinds n (fun _ => .full) (r - n)
 
 theorem full_kind {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k < n) : (full n r hr).kind k = .full :=
@@ -189,8 +99,6 @@ theorem full_deg {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k < n) : (full n r hr)
   rw [full, ofKinds_deg, Finset.filter_true_of_mem fun _ _ => rfl, Nat.card_Ioo]
   omega
 
-/-- **The spaces of the full sequence**: `P_{r-k}Λᵏ` in every degree `k ≤ n`. [AFW2006], §3;
-[ArnoldLogg2014] -/
 theorem full_space {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k ≤ n) :
     (full n r hr).space n k = polySpace n (r - k) k := by
   rcases hk.lt_or_eq with hk | rfl
@@ -198,20 +106,14 @@ theorem full_space {r : ℕ} (hr : n ≤ r) {k : ℕ} (hk : k ≤ n) :
     rw [full_kind hr hk, full_deg hr hk, PolyKind.space_full]
   · rw [full, ofKinds_space_top]
 
-/-- **The first row of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3), in `ℝ³`:
-`P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`, i.e. Lagrange `P₁`, the lowest-order Nédélec `H(curl)`
-elements of the first kind, the lowest-order Raviart–Thomas elements, and piecewise
-constants (the Whitney forms, with moment degrees of freedom). -/
+/-- The sequence `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`. [QuennevilleBelair2015], Tables 5.1, 6.1 -/
 def lowestOrder : PolySeq where
   kind k := if k = 0 then .full else .trimmed
   deg _ := 1
   one_le_deg _ := le_rfl
   transition _ := Or.inl ⟨by simp, rfl⟩
 
-/-- **The second row of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3), in `ℝ³`:
-`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` (with `P₀Λ³ = P₁⁻Λ³`), i.e. Lagrange `P₂`, the second-lowest-order
-Nédélec `H(curl)` elements of the first kind, the lowest-order Brezzi–Douglas–Marini elements
-`BDM₁`, and piecewise constants. -/
+/-- The sequence `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`. [QuennevilleBelair2015], Tables 5.1, 6.1 -/
 def lagrangeP2 : PolySeq where
   kind k := if k = 0 ∨ k = 2 then .full else .trimmed
   deg k := if k ≤ 1 then 2 else 1
@@ -232,8 +134,6 @@ def lagrangeP2 : PolySeq where
 @[simp] theorem lagrangeP2_deg_two : lagrangeP2.deg 2 = 1 := rfl
 @[simp] theorem lagrangeP2_deg_three : lagrangeP2.deg 3 = 1 := rfl
 
-/-- The first row of Tables 5.1/6.1 is the admissible sequence of the trimmed kinds above degree
-`0` ending in `P_0Λⁿ`, on every `ℝⁿ`, `n ≥ 1`. -/
 theorem lowestOrder_eq_ofKinds (hn : 1 ≤ n) :
     lowestOrder = ofKinds n (fun k => if k = 0 then .full else .trimmed) 0 := by
   ext k
@@ -244,8 +144,6 @@ theorem lowestOrder_eq_ofKinds (hn : 1 ≤ n) :
     intro j hj
     simp [show j ≠ 0 by omega]
 
-/-- The second row of Tables 5.1/6.1 is the admissible sequence of kinds `(full, trimmed, full)`
-ending in `P_0Λ³`. -/
 theorem lagrangeP2_eq_ofKinds :
     lagrangeP2 = ofKinds 3 (fun k => if k = 0 ∨ k = 2 then .full else .trimmed) 0 := by
   ext k
@@ -265,26 +163,10 @@ theorem lagrangeP2_eq_ofKinds :
 end PolySeq
 
 
-/-! ### The shape spaces over a field
-
-The shape spaces `P_rΛᵏ`, `P_r⁻Λᵏ` are spaces of polynomial forms (`Koszul.PolyForm`) over any
-commutative ring `K` (`PolyKind.form`, `Feec.FiniteElement.PolyKind`), and the form fields
-`PolyKind.space` over `ℝ` are their evaluations (`PolyKind.space_eq_map_form`); likewise the test
-forms of the degrees of freedom (`PolyKind.testForm`, `PolyKind.test_eq_map_testForm`). The algebra of an admissible sequence holds
-over every field of characteristic `0`: `d` maps each space into the next one
-(`PolySeq.extDeriv_mem_form`, over every commutative ring), the complex is exact
-(`PolySeq.exists_extDeriv_eq`) with the constants as closed `0`-forms
-(`PolySeq.mem_polyForm_zero_of_extDeriv_eq_zero`), the dimension is the number of degrees of
-freedom of a simplex (`PolySeq.finrank_form_eq_sum`), and the shape spaces are affinely invariant
-(`PolySeq.isAffineInvariant_form`). -/
-
 namespace PolyKind
 
 variable {K : Type*} [Field K] [CharZero K]
 
-/-- **The shape spaces of the periodic table are spaces `X(r', r - 1, k, n)` of [AFW2006],
-Theorem 3.5** (`1 ≤ r`, `1 ≤ k`), over every field of characteristic `0`:
-`P_rΛᵏ = dP_{r+1}Λ^{k-1} + κP_{r-1}Λ^{k+1}` and `P_r⁻Λᵏ = dP_rΛ^{k-1} + κP_{r-1}Λ^{k+1}`. -/
 theorem form_eq_sup (κ : PolyKind) {r k : ℕ} (hr : 1 ≤ r) (hk : 1 ≤ k) :
     κ.form K (n := n) r k =
       (Koszul.polyForm K (Fin n) (κ.dDeg r + 1) (k - 1)).map (Koszul.extDerivₗ K (Fin n)) ⊔
@@ -294,8 +176,6 @@ theorem form_eq_sup (κ : PolyKind) {r k : ℕ} (hr : 1 ≤ r) (hk : 1 ≤ k) :
   · exact (sup_eq_polyForm hk).symm
   · exact (sup_eq_polyFormMinus hk).symm
 
-/-- **The shape spaces of the periodic table are affinely invariant** ([AFW2006], Theorem 3.5),
-over every field of characteristic `0`. -/
 theorem isAffineInvariant_form (κ : PolyKind) {r k : ℕ} (hr : 1 ≤ r) (hk : 1 ≤ k) :
     IsAffineInvariant (κ.form K (n := n) r k) := by
   rw [κ.form_eq_sup hr hk]
@@ -309,8 +189,7 @@ section CommRing
 
 variable (K : Type*) [CommRing K] (S : PolySeq)
 
-/-- The space `P_{r_k}Λᵏ(Kⁿ)` or `P_{r_k}⁻Λᵏ(Kⁿ)` of polynomial forms of the sequence in degree `k`,
-over `K`. -/
+/-- The polynomial forms `P_{r_k}Λᵏ(Kⁿ)` or `P_{r_k}⁻Λᵏ(Kⁿ)` of the sequence in degree `k`. -/
 abbrev form (k : ℕ) : Submodule K (Koszul.PolyForm K (Fin n)) := (S.kind k).form K (S.deg k) k
 
 /-- The test forms over `K` of the degree-`k` degrees of freedom on `m`-faces. -/
@@ -325,118 +204,81 @@ theorem space_eq_map_form (k : ℕ) : S.space n k = (S.form ℝ k).map (evalForm
 theorem test_eq_map_testForm (k m : ℕ) : S.test k m = (S.testForm ℝ k m).map (evalForm m) :=
   PolyKind.test_eq_map_testForm _ _ _ _
 
-/-- **The polynomial complex of an admissible sequence**, over every commutative ring:
-`d (S.form K k) ⊆ S.form K (k + 1)`. [AFW2006], §5; [AFW2010], §5.2 -/
 theorem extDeriv_mem_form {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ S.form K k) :
     Koszul.extDeriv ω ∈ S.form K (k + 1) :=
   (S.kind k).extDeriv_mem_form (S.transition k) hω
 
-/-- The sequence of families and degrees of `S` is admissible in the sense of [AFW2006], §3.5,
-(5.13) (`PolyKind.IsAdmissible`), one whose degree stays `≥ 1`. -/
 theorem isAdmissible : PolyKind.IsAdmissible S.kind S.deg := ⟨S.one_le_deg 0, S.transition⟩
 
 end CommRing
 
 variable {K : Type*} [Field K] [CharZero K] (S : PolySeq)
 
-/-- **The polynomial complex of an admissible sequence is exact**, over every field of
-characteristic `0`: a closed form of `S.form K (k + 1)` is `d η`, `η ∈ S.form K k`.
-[AFW2010], §5.1.4, (71), (72); [ArnoldLogg2014] -/
+/-- **The polynomial complex of an admissible sequence is exact** in positive degree, over every
+field of characteristic `0`. [AFW2010], §5.1.4, (71), (72); [ArnoldLogg2014] -/
 theorem exists_extDeriv_eq {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ S.form K (k + 1))
     (hd : Koszul.extDeriv ω = 0) : ∃ η ∈ S.form K k, Koszul.extDeriv η = ω :=
   (S.kind k).exists_extDeriv_eq (S.transition k) hω hd
 
-/-- **The closed `0`-forms of an admissible sequence are the constants**, over every field of
-characteristic `0`: the polynomial complex is a resolution of `K`. -/
 theorem mem_polyForm_zero_of_extDeriv_eq_zero {ω : Koszul.PolyForm K (Fin n)}
     (hω : ω ∈ S.form K 0) (hd : Koszul.extDeriv ω = 0) : ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
   (S.kind 0).mem_polyForm_zero_of_extDeriv_eq_zero hω hd
 
-/-- **`dim = #DOF`**: the dimension of the shape space in degree `k` is the number of degrees of
-freedom of a simplex, `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`, over every field of
-characteristic `0`. [AFW2006], Thms 4.9, 4.13 -/
 theorem finrank_form_eq_sum (k : ℕ) :
     Module.finrank K (S.form K (n := n) k) =
       ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) * Module.finrank K (S.testForm K k m) :=
   (S.kind k).finrank_form_eq_sum (S.one_le_deg k) k
 
-/-- **The shape spaces of an admissible sequence are affinely invariant** ([AFW2006],
-Theorem 3.5) in every degree `k ≥ 1`, over every field of characteristic `0`: the spaces
-`P_rΛᵏ = X(r, r - 1)` and `P_r⁻Λᵏ = X(r - 1, r - 1)` (`PolyKind.form_eq_sup`), the first two of
-the three kinds of affinely invariant spaces of polynomial `k`-forms, which are all of them for
-`0 < k < n` ([AFW2006], Theorem 3.6, `IsAffineInvariant.eq_sup`). -/
 theorem isAffineInvariant_form {k : ℕ} (hk : 1 ≤ k) : IsAffineInvariant (S.form K (n := n) k) :=
   (S.kind k).isAffineInvariant_form (S.one_le_deg k) hk
 
 end PolySeq
 
-/-! ### The classical elements in `ℝ³` and `ℝ²`
-
-The form fields have the dimensions of the polynomial forms
-(`PolyKind.finrank_space_eq_finrank_form`), given in closed form in
-`Feec.Algebra.PolynomialFormClassical`. -/
-
-/-- **Lagrange `P_r` on tetrahedra**: `dim P_rΛ⁰(ℝ³) = (r+1)(r+2)(r+3)/6`. [AFW2006], §3 -/
 theorem finrank_polySpace_three_zero (r : ℕ) :
     6 * Module.finrank ℝ (polySpace 3 r 0) = (r + 1) * (r + 2) * (r + 3) := by
   rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyForm_three_zero (Fintype.card_fin 3) r
 
-/-- **Nédélec edge elements of the second kind** ([Nedelec1986]):
-`dim P_rΛ¹(ℝ³) = (r+1)(r+2)(r+3)/2`. -/
 theorem finrank_polySpace_three_one (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 3 r 1) = (r + 1) * (r + 2) * (r + 3) := by
   rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyForm_three_one (Fintype.card_fin 3) r
 
-/-- **Brezzi–Douglas–Marini face elements** ([BrezziDouglasMarini1985], [Nedelec1986]):
-`dim P_rΛ²(ℝ³) = (r+1)(r+2)(r+3)/2`. -/
 theorem finrank_polySpace_three_two (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 3 r 2) = (r + 1) * (r + 2) * (r + 3) := by
   rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyForm_three_two (Fintype.card_fin 3) r
 
-/-- **Discontinuous `P_r` on tetrahedra**: `dim P_rΛ³(ℝ³) = (r+1)(r+2)(r+3)/6`. [AFW2006], §3 -/
 theorem finrank_polySpace_three_three (r : ℕ) :
     6 * Module.finrank ℝ (polySpace 3 r 3) = (r + 1) * (r + 2) * (r + 3) := by
   rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyForm_three_three (Fintype.card_fin 3) r
 
-/-- **Nédélec edge elements of the first kind** ([Nedelec1980]):
-`dim P_r⁻Λ¹(ℝ³) = r(r+2)(r+3)/2`. -/
 theorem finrank_polyMinusSpace_three_one {r : ℕ} (hr : 1 ≤ r) :
     2 * Module.finrank ℝ (polyMinusSpace 3 r 1) = r * (r + 2) * (r + 3) := by
   rw [← PolyKind.space_trimmed, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyFormMinus_three_one (Fintype.card_fin 3) hr
 
-/-- **Raviart–Thomas–Nédélec face elements** ([RaviartThomas1977], [Nedelec1980]):
-`dim P_r⁻Λ²(ℝ³) = r(r+1)(r+3)/2`. -/
 theorem finrank_polyMinusSpace_three_two {r : ℕ} (hr : 1 ≤ r) :
     2 * Module.finrank ℝ (polyMinusSpace 3 r 2) = r * (r + 1) * (r + 3) := by
   rw [← PolyKind.space_trimmed, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyFormMinus_three_two (Fintype.card_fin 3) hr
 
-/-- **Lagrange `P_r` on triangles**: `dim P_rΛ⁰(ℝ²) = (r+1)(r+2)/2`. [AFW2006], §3 -/
 theorem finrank_polySpace_two_zero (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 2 r 0) = (r + 1) * (r + 2) := by
   rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyForm_two_zero (Fintype.card_fin 2) r
 
-/-- **Brezzi–Douglas–Marini elements on triangles** ([BrezziDouglasMarini1985]):
-`dim P_rΛ¹(ℝ²) = (r+1)(r+2)`. -/
 theorem finrank_polySpace_two_one (r : ℕ) :
     Module.finrank ℝ (polySpace 2 r 1) = (r + 1) * (r + 2) := by
   rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyForm_two_one (Fintype.card_fin 2) r
 
-/-- **Discontinuous `P_r` on triangles**: `dim P_rΛ²(ℝ²) = (r+1)(r+2)/2`. [AFW2006], §3 -/
 theorem finrank_polySpace_two_two (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 2 r 2) = (r + 1) * (r + 2) := by
   rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
   exact Koszul.finrank_polyForm_two_two (Fintype.card_fin 2) r
 
-/-- **Raviart–Thomas elements on triangles** ([RaviartThomas1977]; the rotated Nédélec edge
-elements of the first kind): `dim P_r⁻Λ¹(ℝ²) = r(r+2)`. -/
 theorem finrank_polyMinusSpace_two_one {r : ℕ} (hr : 1 ≤ r) :
     Module.finrank ℝ (polyMinusSpace 2 r 1) = r * (r + 2) := by
   rw [← PolyKind.space_trimmed, PolyKind.finrank_space_eq_finrank_form]
@@ -444,15 +286,11 @@ theorem finrank_polyMinusSpace_two_one {r : ℕ} (hr : 1 ≤ r) :
 
 namespace PolySeq
 
-/-! ### The Whitney forms are the trimmed sequence of degree one -/
-
-/-- **`P₁⁻Λᵏ(ℝⁿ)` is the space of trimmed linear forms** `x ↦ α + ι_x β` ([AFW2006], §3.3). -/
 theorem _root_.Feec.FiniteElement.polyMinusSpace_one_eq_p1MinusForms (k : ℕ) :
     polyMinusSpace n 1 k = p1MinusForms n k := by
   rw [polyMinusSpace, ← whitneySpace_refVertex_eq_map_polyFormMinus]
   exact le_antisymm (whitneySpace_le_p1MinusForms _ k) (p1MinusForms_le_whitneySpace_refVertex k)
 
-/-- A test form of `P₁⁻Λᵏ` on a `k`-face is constant, of degree `0`. -/
 theorem _root_.Feec.FiniteElement.eq_single_of_mem_testSpaceMinus_one {k : ℕ} {η : FormField k}
     (hη : η ∈ testSpaceMinus 1 k k) : η = fun _ => Pi.single ∅ (η 0 ∅) := by
   rw [testSpaceMinus_eq ⟨le_rfl, by omega⟩, show 1 + k - k - 1 = 0 by omega, Nat.sub_self] at hη
@@ -465,8 +303,6 @@ theorem _root_.Feec.FiniteElement.eq_single_of_mem_testSpaceMinus_one {k : ℕ} 
     simp
   · rw [Pi.single_eq_of_ne hs, evalForm_apply, hdeg s (by simpa using hs), map_zero]
 
-/-- **Moments against a constant test form are multiples of the face integral**: for the test
-forms of `P₁⁻Λᵏ` on a `k`-face, `∫_{T̂_k} F_q^* ω_k ∧ η = η₀ ∫_q ω`. -/
 theorem _root_.Feec.FiniteElement.degMoment_eq_mul_simplexIntegral {k : ℕ}
     (q : Fin (k + 1) → Fin n → ℝ) {η : FormField k} (hη : η ∈ testSpaceMinus 1 k k)
     (hc : Continuous η) (ω : contForms n) :
@@ -481,7 +317,6 @@ theorem _root_.Feec.FiniteElement.degMoment_eq_mul_simplexIntegral {k : ℕ}
   simp only [wedgeField, hw, Pi.smul_apply, smul_eq_mul, affinePullback_apply,
     pullback_degField_univ, Pi.single_eq_same]
 
-/-- The degrees of freedom of `P₁⁻Λᵏ` live on the `k`-faces. -/
 theorem card_eq_of_trimmed_one_dofIdx {g : Finset (Fin n → ℝ)} {k : ℕ}
     (i : (trimmed 1 le_rfl).DofIdx g k) : #g = k + 1 := by
   have h1 := card_pos.2 i.2
@@ -506,8 +341,6 @@ theorem degMoment_eq_smul_whitneyFaceDof {g : Finset (Fin n → ℝ)} {k m : ℕ
   rw [degMoment_eq_mul_simplexIntegral _ hη, LinearMap.smul_apply, whitneyFaceDof_apply, hεeq,
     smul_eq_mul, mul_assoc]
 
-/-- **The degrees of freedom of `P₁⁻Λᵏ` are the face integrals**, up to nonzero factors.
-[AFW2006], §4 -/
 theorem trimmed_one_dof_eq {g : Finset (Fin n → ℝ)} {k : ℕ}
     (i : (trimmed 1 le_rfl).DofIdx g k) :
     ∃ c : ℝ, c ≠ 0 ∧ (trimmed 1 le_rfl).dof g k i = c • whitneyFaceDof g k := by
@@ -517,10 +350,6 @@ theorem trimmed_one_dof_eq {g : Finset (Fin n → ℝ)} {k : ℕ}
 
 end PolySeq
 
-/-- **The Whitney element is the trimmed element `P₁⁻Λ` of degree one**: the same local spaces
-(`whitneySpace_eq_p1MinusForms`, `polyMinusSpace_one_eq_p1MinusForms`) and, on every face, the
-face integral and the moment degrees of freedom are nonzero multiples of each other.
-[Whitney1957], Ch. IV, §27; [AFW2006], §3–4 -/
 theorem whitneyElement_equivalent_trimmed :
     (whitneyElement n).Equivalent (polyElement n (PolySeq.trimmed 1 le_rfl)) where
   space_eq T k :=
@@ -555,12 +384,8 @@ theorem whitneyElement_equivalent_trimmed :
 
 namespace PolySeq
 
-/-! ### Counting the degrees of freedom on a set of faces -/
-
 variable (S : PolySeq)
 
-/-- The degrees of freedom of a set `F` of faces (of at most `n + 1` vertices):
-`Σ_{m ≤ n} #{m-faces in F} · dim(test forms on m-faces)`. -/
 theorem card_sigma_dofIdx_eq_sum (F : Finset (Finset (Fin n → ℝ)))
     (hF : ∀ g ∈ F, #g ≤ n + 1) (k : ℕ) :
     Fintype.card (Σ g : F, S.DofIdx (g : Finset (Fin n → ℝ)) k) =
@@ -586,8 +411,6 @@ theorem card_sigma_dofIdx_eq_sum (F : Finset (Finset (Fin n → ℝ)))
 
 end PolySeq
 
-/-! ### The global spaces on a mesh -/
-
 theorem card_le_of_mem_meshFaces (M : SimplicialMesh n) {g : Finset (Fin n → ℝ)}
     (hg : g ∈ LocalElement.meshFaces M) : #g ≤ n + 1 := by
   obtain ⟨T, -, hgT⟩ := (LocalElement.mem_meshFaces M).1 hg
@@ -605,8 +428,8 @@ theorem card_globalDofIdx (k : ℕ) :
   refine sum_congr rfl fun m _ => ?_
   rw [← coe_filter_meshFaces M m, Set.ncard_coe_finset]
 
-/-- **`dim Λ_hᵏ(M) = Σ_{m ≤ n} #{m-faces of M} · dim(test forms on m-faces)`** for the
-global `P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`) space ([AFW2006], Thms 4.9, 4.13 and §5.1). -/
+/-- **`dim Λ_hᵏ(M) = Σ_{m ≤ n} #{m-faces of M} · dim(test forms on m-faces)`** for the global
+`P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`) space. [AFW2006], Thms 4.9, 4.13, §5.1 -/
 theorem finrank_globalSpace (k : ℕ) :
     Module.finrank ℝ ((polyElement n S).globalSpace M k) =
       ∑ m ∈ range (n + 1), (M.faces m).ncard * Module.finrank ℝ (S.test k m) := by
@@ -646,8 +469,6 @@ theorem card_interiorDofIdx (k : ℕ) :
     SimplicialMesh.faces, Set.mem_ofPred_eq]
   tauto
 
-/-- **`dim Λ̊_hᵏ(M) = Σ_{m ≤ n} #{m-faces not in a boundary facet} · dim(test forms)`** for the
-global spaces with vanishing boundary degrees of freedom. -/
 theorem finrank_globalSpace₀ (k : ℕ) :
     Module.finrank ℝ ((polyElement n S).globalSpace₀ M k) =
       ∑ m ∈ range (n + 1), {g | g ∈ M.faces m ∧ ¬ ∃ F, M.IsBoundaryFacet F ∧ g ⊆ F}.ncard *
@@ -660,14 +481,10 @@ theorem finrank_V₀ (hΩ : IsOpen M.domain) (k : ℕ) :
         Module.finrank ℝ (S.test k m) := by
   rw [LocalElement.finrank_V₀ _ M hΩ, card_interiorDofIdx]
 
-/-- `dim` of the test forms, in closed form ([AFW2006], Thms 4.9, 4.13). -/
 theorem finrank_test (k m : ℕ) :
     Module.finrank ℝ (S.test k m) = (S.kind k).testDim (S.deg k) k m :=
   PolyKind.finrank_test _ (S.one_le_deg k) k m
 
-/-- **The global space is the space of piecewise `P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`) forms with
-continuous tangential traces** (for meshes with facet-connected face stars; [AFW2006], §5.1,
-[AFW2010], §5.2). -/
 theorem mem_globalSpace_iff (hM : LocalElement.FacetConnected M) {k : ℕ}
     {u : (polyElement n S).Piecewise M k} :
     u ∈ (polyElement n S).globalSpace M k ↔ ∀ F ∈ M.facets, ∀ T T' : M.simplices,
@@ -677,16 +494,12 @@ theorem mem_globalSpace_iff (hM : LocalElement.FacetConnected M) {k : ℕ}
             TangentialTraceEq F k ((u T : FormField n) x) ((u T' : FormField n) x) :=
   (polyElement n S).mem_globalSpace_iff M hM (inferInstanceAs (IsEmpty (S.DofIdx ∅ k)))
 
-/-! ### The finite element subcomplexes -/
-
-/-- **The finite element subcomplex** `Vₕ ⊆ HΛ(Ω)` of the admissible sequence `S` on a conforming
-mesh of an open `Ω ⊆ ℝⁿ`. -/
+/-- The finite element subcomplex `Vₕ ⊆ HΛ(Ω)` of `S` on a mesh of an open `Ω ⊆ ℝⁿ`. -/
 def subcomplex [NeZero n] (hΩ : IsOpen M.domain) :
     ((deRham ℝ n).maximalComplex hΩ).Subcomplex :=
   (polyElement n S).subcomplex M hΩ
 
-/-- **The finite element subcomplex with vanishing boundary degrees of freedom**
-`V̊ₕ ⊆ H̊Λ(Ω)`, for `Ω` strictly star-shaped with respect to `x₀` (e.g. convex). -/
+/-- The subcomplex `V̊ₕ ⊆ H̊Λ(Ω)` with vanishing boundary DOFs, for `Ω` strictly star-shaped. -/
 def subcomplexMin [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
     ((deRham ℝ n).minimalComplex hΩ).Subcomplex :=
@@ -701,8 +514,7 @@ instance [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     (k : ℤ) : FiniteDimensional ℝ ((S.subcomplexMin M hΩ x₀ hstar).V k) :=
   inferInstanceAs (FiniteDimensional ℝ ((polyElement n S).V₀ M k))
 
-/-- **The finite element subcomplex with vanishing boundary degrees of freedom on the level-`N`
-Freudenthal mesh of a cube**, a subcomplex of `H̊Λ` of the cube. -/
+/-- `subcomplexMin` on the level-`N` Freudenthal mesh of a cube. -/
 def freudenthalSubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)
     [NeZero N] :
     ((deRham ℝ n).minimalComplex (isOpen_freudenthalMesh_domain b s hs N)).Subcomplex :=
@@ -718,22 +530,16 @@ theorem whitneySubcomplex_eq_trimmed [NeZero n] (M : SimplicialMesh n) (hΩ : Is
     whitneySubcomplex M hΩ = (PolySeq.trimmed 1 le_rfl).subcomplex M hΩ :=
   whitneyElement_equivalent_trimmed.subcomplex_eq M hΩ
 
-/-- **The Whitney complex with vanishing boundary degrees of freedom is the trimmed one of degree
-one**, on every conforming mesh of a strictly star-shaped domain. -/
 theorem whitneySubcomplexMin_eq_trimmed [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain)
     (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
     whitneySubcomplexMin M hΩ x₀ hstar = (PolySeq.trimmed 1 le_rfl).subcomplexMin M hΩ x₀ hstar :=
   whitneyElement_equivalent_trimmed.subcomplexMin_eq M hΩ x₀ hstar
 
-/-! ### Nonzero spaces with vanishing boundary degrees of freedom -/
-
 namespace LocalElement
 
 variable (E : LocalElement n) (M : SimplicialMesh n)
 
-/-- A face whose convex hull meets the (open) domain carries **interior degrees of freedom**: it
-is not contained in a boundary facet (boundary facets lie in `∂Ω`). -/
 theorem not_isBoundaryDof_of_mem_convexHull (hΩ : IsOpen M.domain) {k : ℕ}
     (p : E.GlobalDofIdx M k) {x : Fin n → ℝ}
     (hx : x ∈ convexHull ℝ ((p.1 : Finset (Fin n → ℝ)) : Set (Fin n → ℝ)))
@@ -742,8 +548,6 @@ theorem not_isBoundaryDof_of_mem_convexHull (hΩ : IsOpen M.domain) {k : ℕ}
   have h := hF.2.2 (convexHull_mono (Finset.coe_subset.2 hpF) hx)
   exact h.2 (interior_mono subset_closure (hΩ.interior_eq.symm ▸ hxΩ))
 
-/-- **`V̊ₕᵏ ≠ 0`** as soon as some face of `M` whose convex hull meets `Ω` carries a degree of
-freedom of degree `k`. -/
 theorem finrank_V₀_pos (hΩ : IsOpen M.domain) {k : ℕ} {g : Finset (Fin n → ℝ)}
     (hg : g ∈ meshFaces M) (i : E.DofIdx g k) {x : Fin n → ℝ}
     (hx : x ∈ convexHull ℝ (g : Set (Fin n → ℝ))) (hxΩ : x ∈ M.domain) :
@@ -754,7 +558,6 @@ theorem finrank_V₀_pos (hΩ : IsOpen M.domain) {k : ℕ} {g : Finset (Fin n �
 
 end LocalElement
 
-/-- A `(d+1)`-subset of the vertices `{0, …, n}` containing `0` and `n`. -/
 theorem exists_finset_zero_last_mem {d : ℕ} (hd1 : 1 ≤ d) (hdn : d ≤ n) :
     ∃ f : Finset (Fin (n + 1)), 0 ∈ f ∧ Fin.last n ∈ f ∧ #f = d + 1 := by
   classical
@@ -777,10 +580,6 @@ theorem exists_finset_zero_last_mem {d : ℕ} (hd1 : 1 ≤ d) (hdn : d ≤ n) :
   rw [card_insert_of_notMem (by simp [hne, h0t]), card_insert_of_notMem hlt, htc]
   omega
 
-/-- **Faces of the Freudenthal mesh through the interior**: for `1 ≤ d ≤ n`, the level-`N`
-Freudenthal mesh of the box `∏ (bᵢ, bᵢ + s)` has a `d`-face whose convex hull meets the open
-box (a face of the simplex `b + (s/N) K_id` containing the diagonal from `b` to
-`b + (s/N)(1, …, 1)`). -/
 theorem exists_meshFace_freudenthalMesh {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s) {N : ℕ} [NeZero N]
     {d : ℕ} (hd1 : 1 ≤ d) (hdn : d ≤ n) :
     ∃ g ∈ LocalElement.meshFaces (freudenthalMesh b s hs N), #g = d + 1 ∧
@@ -817,9 +616,6 @@ namespace PolySeq
 
 variable (S : PolySeq)
 
-/-- **The interior spaces of every admissible sequence are nonzero** on every Freudenthal mesh of a
-box, in degree `k` as soon as some `d`-face, `1 ≤ d ≤ n`, carries degrees of freedom of degree
-`k`. -/
 theorem finrank_V₀_freudenthalMesh_pos [NeZero n] {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s) {N : ℕ}
     [NeZero N] {k d : ℕ} (hd1 : 1 ≤ d) (hdn : d ≤ n)
     (hdim : 0 < Module.finrank ℝ (S.test k d)) :
@@ -838,17 +634,12 @@ theorem _root_.Feec.FiniteElement.PolyKind.testDim_self_pos (κ : PolyKind) {r :
       Nat.sub_self, Nat.choose_zero_right, mul_one]
     exact Nat.choose_pos (by omega)
 
-/-- **`V̊ₕᵏ ≠ 0` for `1 ≤ k ≤ n`** on every Freudenthal mesh of a box, for every admissible
-sequence (the `k`-faces through the interior carry degrees of freedom). -/
 theorem finrank_V₀_freudenthalMesh_pos_of_one_le [NeZero n] {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s)
     {N : ℕ} [NeZero N] {k : ℕ} (hk1 : 1 ≤ k) (hkn : k ≤ n) :
     0 < Module.finrank ℝ ((polyElement n S).V₀ (freudenthalMesh b s hs N) k) :=
   S.finrank_V₀_freudenthalMesh_pos hs hk1 hkn
     (by rw [finrank_test]; exact PolyKind.testDim_self_pos _ (S.one_le_deg k) k)
 
-/-- **`V̊ₕ⁰ ≠ 0` for polynomial degree `r₀ ≥ 2`** on every Freudenthal mesh of a box (even the
-coarsest one, without interior vertices: the edge through the interior carries a degree of
-freedom). -/
 theorem finrank_V₀_freudenthalMesh_pos_zero [NeZero n] {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s)
     {N : ℕ} [NeZero N] (h2 : 2 ≤ S.deg 0) :
     0 < Module.finrank ℝ ((polyElement n S).V₀ (freudenthalMesh b s hs N) 0) := by
@@ -862,11 +653,6 @@ theorem finrank_V₀_freudenthalMesh_pos_zero [NeZero n] {b : Fin n → ℝ} {s 
     rw [Nat.choose_one_right]
     omega
 
-/-- **The interior spaces of the second row of Tables 5.1/6.1 are nonzero**: on the
-level-`(N+1)` Freudenthal mesh of `(0, ½)³`, the spaces `P₂Λ⁰`, `P₂⁻Λ¹`, `P₁Λ²`, `P₀Λ³` with
-vanishing boundary degrees of freedom are nonzero, for every `N`. (These are the boundary
-conditions of Ch. 5, imposed in every degree; for the Ch. 6 pattern `V̊ₕ⁰, V̊ₕ¹, Vₕ²` see
-`PolySeq.lagrangeP2_VPartial_bcFacets_ne_bot` in `Feec.FiniteElement.PolyElementMixed`.) -/
 theorem lagrangeP2_V₀_ne_bot (N k : ℕ) (hk : k ≤ 3) :
     (polyElement 3 lagrangeP2).V₀ (freudenthalMesh 0 (1 / 2) (by norm_num) (N + 1)) k ≠ ⊥ := by
   intro h
@@ -880,9 +666,6 @@ theorem lagrangeP2_V₀_ne_bot (N k : ℕ) (hk : k ≤ 3) :
 
 end PolySeq
 
-/-- **The interior Whitney spaces are nonzero in the degrees `1 ≤ k ≤ n`** on every Freudenthal
-mesh of a box: the `k`-faces through the interior are not contained in boundary facets. (For
-`k = 0`, `V̊ₕ⁰ ≠ 0` needs an interior vertex, i.e. level `N ≥ 2`.) -/
 theorem finrank_whitney_V₀_freudenthalMesh_pos [NeZero n] {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s)
     {N : ℕ} [NeZero N] {k : ℕ} (hk1 : 1 ≤ k) (hkn : k ≤ n) :
     0 < Module.finrank ℝ ((whitneyElement n).V₀ (freudenthalMesh b s hs N) k) := by
@@ -890,9 +673,6 @@ theorem finrank_whitney_V₀_freudenthalMesh_pos [NeZero n] {b : Fin n → ℝ} 
   exact (whitneyElement n).finrank_V₀_pos _ (isOpen_freudenthalMesh_domain b s hs N) hg
     (⟨(), hgc⟩ : WhitneyDofIdx g k) hx hxΩ
 
-/-- **An interior vertex of the Freudenthal mesh**: for `N ≥ 2`, the lattice point
-`b + (s/N)(1, …, 1)` (the first vertex of `b + (s/N)((1, …, 1) + K_id)`) is a vertex of the
-level-`N` Freudenthal mesh of `∏ (bᵢ, bᵢ + s)` lying in the open box. -/
 theorem exists_vertex_freudenthalMesh {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s) {N : ℕ} [NeZero N]
     (hN : 2 ≤ N) :
     ∃ g ∈ LocalElement.meshFaces (freudenthalMesh b s hs N), #g = 0 + 1 ∧
@@ -921,8 +701,6 @@ theorem exists_vertex_freudenthalMesh {b : Fin n → ℝ} {s : ℝ} (hs : 0 < s)
 
 namespace PolySeq
 
-/-- **`V̊ₕ⁰ ≠ 0` on Freudenthal meshes of level `N ≥ 2`** for every admissible sequence (in
-particular for `r₀ = 1`): the interior vertex carries a degree of freedom. -/
 theorem finrank_V₀_freudenthalMesh_pos_zero_of_two_le (S : PolySeq) [NeZero n] {b : Fin n → ℝ}
     {s : ℝ} (hs : 0 < s) {N : ℕ} [NeZero N] (hN : 2 ≤ N) :
     0 < Module.finrank ℝ ((polyElement n S).V₀ (freudenthalMesh b s hs N) 0) := by

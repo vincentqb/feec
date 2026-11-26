@@ -6,47 +6,19 @@ public import Feec.Instances.EinsteinBianchiFEMElliptic
 /-!
 # The mirror scheme (6.5): convergence from best approximation plus consistency
 
-For the approximating FEEC discretization `mirrorFEMApprox` of the mirror scheme (6.5)
-(`Feec.Instances.EinsteinBianchiFEMMirror`), this file builds the **elliptic core** `mirrorEllCore`
-and the **elliptic rate classes** `mirrorEllRate` (TSD data of `D(L³)`, order `1`) and
-`mirrorEllRateSobolev` (TSD data in `H^{2+s}`, order `s ≤ 1`), whose comparison trajectory is the
-elliptic projection (6.4) of the exact TSD solution (real and imaginary parts,
-`Feec.Instances.EinsteinBianchi.FEM.ellTraj`), not the discrete orbit. Its consistency defect
-`Πₕ' - Lₕ Πₕ` is bounded by the projection errors of the state and of its time derivative
-(`norm_ellDefect_le`). For these TSD data the consistency terms of the Strang bound, which measure
-the crime `S - Sₕ`, vanish exactly (`K₀ = K₁ = 0`: `TSDDatum.ell_S0_le_zero`,
-`TSDDatum.inner_M_S1_le_zero`), so any defect comes from the elliptic projection not commuting with
-the flow; that it is nonzero is not proved. So the convergence of (6.5) comes out of the
-approximating FEEC theorem's split "best approximation + consistency" (`DissipFEEC.norm_sub_sol_le`)
-with only the Strang bound of the elliptic projection (6.4) as model input (`norm_sub_ellTraj_le`,
-from `Feec.BGG.HarmonicStability.strang_of_isEllipticProjection`, the parity-smoothed projection
-errors `eventually_mirrorClose`, and the Sobolev projection errors
-`Feec.Models.Cube.MirrorWeakSymmetry.TSDDatum.strangData_le`); the model convergence theorems
-`mirror_waveFEM`, `mirror_waveFEM_rate_*` are **not** used.
+The elliptic core `mirrorEllCore` and the rate classes of the mirror scheme (6.5) of
+[QuennevilleBelair2015], §6.3 have the elliptic projection (6.4) of the exact TSD solution as
+comparison trajectory; from the initialization (6.4) they give the rates `O(h)` and `O(hˢ)`.
 
-The comparison of a datum on `[0, T]` uses the exact TSD solution on the horizon `T + 1`, so that
-the exact equations hold at `t = T`.
+## Main results
 
-* `mirrorEllCmp_p_horizon`, `mirrorEllInit`: the comparison trajectory, hence its initial value,
-  does not depend on the horizon `T`; it is the elliptic projection (6.4) of the initial data
-  (`mirrorEllCmp_p_zero`, `mEll_zero_toEState`, the thesis' initialization);
-* `einsteinBianchi_mirrorFEM_rate_init`, `einsteinBianchi_mirrorFEM_rate_sobolev_init`: from it, for
-  all `t ≥ 0`, `‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (C + C' t) hᵅ ‖ξ₀‖_c` with `C' = 2C`.
-
-The verdict of the approximating FEEC theorem on this core is read through the complex-level front
-end (`Feec.Instances.EinsteinBianchiFEMComplex`, `mirrorComplex`).
-
-**Faithfulness caveat.** As for `mirrorFEMApprox`: faithful to `mirrorWave` (`S₀,ₕ = π¹S⁰` with
-parity-smoothed projections), not to the canonical-interpolant variant. That the defect is
-nonzero for some datum is not formalized (it would need an explicit finite element computation
-with the smoothed projections).
+* `einsteinBianchi_mirrorFEM_rate_init`: the rate `O(h)` for TSD data of `D(L³)`.
+* `einsteinBianchi_mirrorFEM_rate_sobolev_init`: the rate `O(hˢ)`, `0 ≤ s ≤ 1`, for TSD data of
+  `D(L²)` in `H^{2+s}`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.4)), §6.3 ((6.5))
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  Thm 3.9, Thm 3.10 (elliptic analogue)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -78,8 +50,7 @@ theorem mirrorSrcFun_zero_apply (t : ℝ) (v : BU1) : mirrorSrcFun 0 t v = 0 := 
 
 /-! ### The elliptic trajectory of a TSD datum -/
 
-/-- The elliptic projection (6.4) at level `N` of the exact TSD solution of `D` (horizon `T + 1`),
-as a hidden state. -/
+/-- The elliptic projection (6.4) at level `N` of the exact TSD solution, as a hidden state. -/
 abbrev mEll (N : ℕ) (D : TSDDatum) (T t : ℝ) : mirrorHidden hT hB N :=
   ellTraj (mirrorFEM hT hB N) (mirrorWave_dt0_injective hT hB N) (mirrorWave_S0_surjective hT hB N)
     (D.exactWave (T + 1)) t
@@ -99,7 +70,6 @@ abbrev ellErr' (N : ℕ) (D : TSDDatum) (T t : ℝ) : ℝ :=
 
 
 set_option maxHeartbeats 1000000 in
-/-- **The consistency defect of one real part** is bounded by the projection errors. -/
 theorem norm_mEll_defect_le (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖mEll' hT hB N D T t - waveGen (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) (mEll hT hB N D T t)‖ ≤
@@ -109,8 +79,6 @@ theorem norm_mEll_defect_le (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc
     (fun t _ v => mirrorSrcFun_zero_apply t v) (Icc_sub_Ico_add_one ht))
 
 set_option maxHeartbeats 400000 in
-/-- The four-term error of a discrete energy state against a TSD state is its energy error against
-the forms state `(0, Re E, 0, ⋆Re B)` of the TSD solution. -/
 theorem tsdErr_eq (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
     (p : EState (mirrorFEM hT hB N).V0h (mirrorFEM hT hB N).Vt1h (mirrorFEM hT hB N).W2h
       (mirrorFEM hT hB N).Wt2h) :
@@ -136,7 +104,6 @@ theorem tsdErr_eq (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
   exact congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg (· ^ 2) e1.symm)
     (congrArg (· ^ 2) e2.symm)) (congrArg (· ^ 2) e3.symm)) (congrArg (· ^ 2) e4.symm)
 
-/-- **The approximation error of one real part** is the projection error. -/
 theorem tsdErr_mEll (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     tsdErr (D.U t) (mirrorFE hT hB N (mEll hT hB N D T t)) = ellErr hT hB N D T t :=
   tsdErr_eq hT hB N D (T := T + 1) ⟨ht.1, by linarith [ht.2]⟩ (mEll hT hB N D T t).toEState
@@ -200,8 +167,7 @@ theorem mirrorEllIm'_of_mem (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllD
     mirrorEllIm' hT hB T x N = mEll' hT hB N (tsdDatumOf (neg_I_smul_mem hx)) T :=
   funext fun _ => dite_eq_left hx
 
-/-- **The elliptic comparison** of the mirror scheme on `[0, T]`: the elliptic projections (6.4)
-of the exact solutions from the real part `ξ₀` and the imaginary part `-i ξ₀` of the datum. -/
+/-- The elliptic comparison of the mirror scheme on `[0, T]`. -/
 def mirrorEllCmp (T : ℝ) : (mirrorFEMApprox hT hB).Comparison T :=
   ApproxFEEC.complexifyCmp (mirrorFEMReal hT hB) mulI mulI_mulI norm_mulI
     (adjoint_mirrorEmb_mulI hT hB) (inner_mirrorEmb_mulI hT hB) mirrorEllData
@@ -218,8 +184,6 @@ def mirrorEllCmp (T : ℝ) : (mirrorFEMApprox hT hB).Comparison T :=
       exact hasDerivWithinAt_mEll hT hB N _ ht)
 
 set_option maxHeartbeats 2000000 in
-/-- **The consistency defect of the elliptic comparison** is bounded by the projection errors of
-the real and imaginary parts and of their time derivatives. -/
 theorem norm_mirrorEllCmp_defect_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData)
     (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖(mirrorEllCmp hT hB T).defect x N t‖ ≤
@@ -235,8 +199,6 @@ theorem norm_mirrorEllCmp_defect_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mi
   exact add_le_add (norm_mEll_defect_le hT hB N _ ht) (norm_mEll_defect_le hT hB N _ ht)
 
 set_option maxHeartbeats 1000000 in
-/-- **The approximation error of the elliptic comparison** is at most the projection errors of the
-real and imaginary parts. -/
 theorem norm_sub_mirrorEllCmp_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData) (N : ℕ)
     {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).incl N
@@ -276,9 +238,6 @@ abbrev mirrorStrangK : ℝ := √(2 * (strangConst (2 * Real.pi)⁻¹ + 1))
 
 theorem mirrorStrangK_nonneg : 0 ≤ mirrorStrangK := Real.sqrt_nonneg _
 
-/-- **The projection errors of a TSD datum tend to `0` uniformly on `[0, T]`** (the parity-smoothed
-projections converge on the compact trajectories, `eventually_mirrorClose`; `K₀ = K₁ = 0` for TSD
-data). -/
 theorem eventually_ellErr_le (D : TSDDatum) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ellErr hT hB N D T t ≤ ε ∧ ellErr' hT hB N D T t ≤ ε := by
   set s := D.exactWave (T + 1)
@@ -321,12 +280,7 @@ theorem eventually_ellErr_le (D : TSDDatum) (T : ℝ) {ε : ℝ} (hε : 0 < ε) 
 
 /-! ### The elliptic core -/
 
-/-- **The elliptic core of the mirror scheme**: TSD data of `D(L²)`, with the elliptic projection
-(6.4) of the exact solution as comparison trajectory (its consistency defect is bounded, not
-shown to be nonzero). Its
-two hypotheses (uniform approximation and uniform consistency) are discharged by the Strang bound
-of (6.4) and the convergence of the parity-smoothed projections; no convergence theorem of the
-scheme is used. -/
+/-- The elliptic core of the mirror scheme: TSD data of `D(L²)`. -/
 def mirrorEllCore : (mirrorFEMApprox hT hB).Core where
   Data := mirrorEllData
   cmp T := mirrorEllCmp hT hB T
@@ -364,8 +318,6 @@ theorem mirrorEllK_nonneg : 0 ≤ mirrorEllK (C := C) := by
   have := mirrorStrangK_nonneg
   positivity
 
-/-- **The projection errors are `O(hˢ)`** for a TSD datum with `U₀`, `LU₀`, `L²U₀` in `Hˢ`
-(`TSDDatum.strangData_le`, `K₀ = K₁ = 0`), uniformly on `[0, T]`. -/
 theorem ellErr_le_sobolev (D : TSDDatum) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     (h0 : MemSobState s D.U₀) (h1 : MemSobState s D.LU₀) (h2 : MemSobState s D.LLU₀) (N : ℕ)
     {T t : ℝ} (ht : t ∈ Icc 0 T) :
@@ -399,7 +351,6 @@ theorem ellErr_le_sobolev (D : TSDDatum) {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 
 theorem tsdDatumOf_negI_U₀ {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData) :
     (tsdDatumOf (neg_I_smul_mem hx)).U₀ = -Complex.I • x := rfl
 
-/-- The Sobolev sizes of the real and imaginary parts of an `H^{2+s}` datum. -/
 theorem sobSize_le_of_mem {s : ℝ} {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) :
     (MemSobState s (tsdDatumOf hx.1).U₀ ∧ MemSobState s (tsdDatumOf hx.1).LU₀ ∧
       MemSobState s (tsdDatumOf hx.1).LLU₀ ∧
@@ -415,9 +366,8 @@ theorem sobSize_le_of_mem {s : ℝ} {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobDat
   rw [tsdDatumOf_negI_U₀ hx.1, sobState_negI]
 
 set_option maxHeartbeats 2000000 in
-/-- **The elliptic rate class of order `s ∈ [0, 1]`** of the mirror scheme: TSD data with mirror
-extension in `H^{2+s}`, norm `‖ξ₀‖_{2+s}`, approximation constant `C = 6K` and consistency
-constant `C' = 12K` (`K = mirrorEllK`), independent of `T`. -/
+/-- The elliptic rate class of order `s ∈ [0, 1]`: TSD data of `D(L²)` in `H^{2+s}`, constants
+`6K`, `12K`. -/
 def mirrorEllRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     (mirrorFEMApprox hT hB).RateClass T where
   toComparison := (mirrorEllCmp hT hB T).restrict (mirrorSobData s) fun _ hx => hx.1
@@ -450,8 +400,6 @@ def mirrorEllRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     change _ ≤ 12 * mirrorEllK (C := C) * meshSize N ^ s * √(sobState (2 + s) x)
     nlinarith [e1.1, e1.2, e2.1, e2.2]
 
-/-- The data of `mirrorL3Data` have `U₀`, `LU₀`, `L²U₀` in `H¹` with
-`‖·‖_1 + ‖L·‖_1 + ‖L²·‖_1 ≤ 2 ‖ξ₀‖_{L³}`, for the real and imaginary parts. -/
 theorem sobSize_le_of_mem_l3 {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data) :
     (MemSobState 1 (tsdDatumOf hx.1).U₀ ∧ MemSobState 1 (tsdDatumOf hx.1).LU₀ ∧
       MemSobState 1 (tsdDatumOf hx.1).LLU₀ ∧
@@ -471,8 +419,7 @@ theorem sobSize_le_of_mem_l3 {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data) :
   rw [hb]
 
 set_option maxHeartbeats 2000000 in
-/-- **The elliptic rate class of order `1`** of the mirror scheme: TSD data of `D(L³)`, norm
-`‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖`, `C = 4K`, `C' = 8K`, independent of `T`. -/
+/-- The elliptic rate class of order `1`: TSD data of `D(L³)`, constants `4K`, `8K`. -/
 def mirrorEllRate (T : ℝ) : (mirrorFEMApprox hT hB).RateClass T where
   toComparison := (mirrorEllCmp hT hB T).restrict mirrorL3Data fun _ hx => hx.1
   classNorm := mirrorL3Norm
@@ -506,10 +453,6 @@ def mirrorEllRate (T : ℝ) : (mirrorFEMApprox hT hB).RateClass T where
 
 /-! ### The verdict with the elliptic initialization (6.4) -/
 
-/-- **The comparison initial value is the elliptic projection (6.4) of the exact initial state**,
-the initialization of the thesis' scheme (and of `mirror_waveFEM`): for each real part, the
-energy state of `Πₕ(0)` is the dynamic part of the elliptic projection of the data
-`((D.exactWave T).σ 0, …, (D.exactWave T).ℓ 0)`. -/
 theorem mEll_zero_toEState (N : ℕ) (D : TSDDatum) {T : ℝ} (hT0 : 0 ≤ T) :
     (mEll hT hB N D T 0).toEState = EState.mkL (Feec.BGG.ellipticProjection (mirrorWave hT hB N)
       (mirrorWave_dt0_injective hT hB N)
@@ -521,8 +464,6 @@ theorem mEll_zero_toEState (N : ℕ) (D : TSDDatum) {T : ℝ} (hT0 : 0 ≤ T) :
     (mirrorWave_S0_surjective hT hB N) (D.exactWave (T + 1))
     (fun t _ v => mirrorSrcFun_zero_apply t v) ⟨le_rfl, by linarith⟩
 
-/-- The comparison initial value of a datum: the elliptic projections of its real and imaginary
-parts. -/
 theorem mirrorEllCmp_p_zero (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData) (N : ℕ) :
     (mirrorEllCmp hT hB T).p x N 0 = WithLp.toLp 2 (mEll hT hB N (tsdDatumOf hx) T 0,
       mEll hT hB N (tsdDatumOf (neg_I_smul_mem hx)) T 0) := by
@@ -530,8 +471,6 @@ theorem mirrorEllCmp_p_zero (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllD
   rw [mirrorEllRe_of_mem hT hB T hx, mirrorEllIm_of_mem hT hB T hx]
   rfl
 
-/-- **The elliptic trajectory does not depend on the horizon**: the exact TSD solution
-`D.exactWave T` has the same fields for every `T` (only its proofs depend on `T`). -/
 theorem mEll_horizon (N : ℕ) (D : TSDDatum) (T T' t : ℝ) :
     mEll hT hB N D T t = mEll hT hB N D T' t := rfl
 
@@ -541,16 +480,13 @@ theorem mirrorEllRe_horizon (T T' : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) (t : ℝ)
 theorem mirrorEllIm_horizon (T T' : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) (t : ℝ) :
     mirrorEllIm hT hB T x N t = mirrorEllIm hT hB T' x N t := rfl
 
-/-- **The comparison trajectory does not depend on the horizon.** -/
 theorem mirrorEllCmp_p_horizon (T T' : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) (t : ℝ) :
     (mirrorEllCmp hT hB T).p x N t = (mirrorEllCmp hT hB T').p x N t := by
   change WithLp.toLp 2 (mirrorEllRe hT hB T x N t, mirrorEllIm hT hB T x N t) =
     WithLp.toLp 2 (mirrorEllRe hT hB T' x N t, mirrorEllIm hT hB T' x N t)
   rw [mirrorEllRe_horizon hT hB T T', mirrorEllIm_horizon hT hB T T']
 
-/-- **The thesis' initialization (6.4) of a datum**, independent of the horizon: the pair of
-elliptic projections of the real and imaginary parts of the exact initial state
-(`mirrorEllCmp_p_zero`, `mEll_zero_toEState`). -/
+/-- The initialization (6.4): the elliptic projections of the real and imaginary parts. -/
 def mirrorEllInit (x : PiLp 2 SpaceQ) (N : ℕ) : (mirrorFEMApprox hT hB).X N :=
   (mirrorEllCmp hT hB 0).p x N 0
 
@@ -559,11 +495,8 @@ theorem mirrorEllCmp_p_zero_eq_init (T : ℝ) (x : PiLp 2 SpaceQ) (N : ℕ) :
   mirrorEllCmp_p_horizon hT hB T 0 x N 0
 
 set_option maxHeartbeats 1000000 in
-/-- **The `O(h)` rate of the mirror scheme (6.5) from the thesis' initialization (6.4)**, for TSD
-data of `D(L³)` and all `t ≥ 0` (the rate clause of the verdict for `mirrorEllRate` on the horizon
-`t`, initial value `Πₕ(0)`): `‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (4K + 8K t) h_N ‖ξ₀‖_{L³}`,
-`K = mirrorEllK` (cf. `K L (1 + t) h_N` of
-`Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain`). -/
+/-- **The `O(h)` rate of the mirror scheme (6.5) from the initialization (6.4)**:
+`‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (4K + 8K t) h_N ‖ξ₀‖_{L³}` for TSD data of `D(L³)`. -/
 theorem einsteinBianchi_mirrorFEM_rate_init {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorL3Data) (N : ℕ)
     {t : ℝ} (ht : 0 ≤ t) :
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤
@@ -591,9 +524,9 @@ theorem einsteinBianchi_mirrorFEM_rate_init {x : PiLp 2 SpaceQ} (hx : x ∈ mirr
     exact l3Norm_nonneg _ _
 
 set_option maxHeartbeats 1000000 in
-/-- **The `O(hˢ)` rate of the mirror scheme (6.5) from the thesis' initialization (6.4)**, for TSD
-data in `H^{2+s}`, `0 ≤ s ≤ 1`, and all `t ≥ 0`:
-`‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (6K + 12K t) h_Nˢ ‖ξ₀‖_{2+s}`. -/
+/-- **The `O(hˢ)` rate of the mirror scheme (6.5) from the initialization (6.4)**:
+`‖e^{tL} ξ₀ - ι' e^{tL'} Πₕ(0)‖ ≤ (6K + 12K t) h_Nˢ ‖ξ₀‖_{2+s}`, `0 ≤ s ≤ 1`, for TSD data of
+`D(L²)` in `H^{2+s}`. -/
 theorem einsteinBianchi_mirrorFEM_rate_sobolev_init {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1)
     {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorSobData s) (N : ℕ) {t : ℝ} (ht : 0 ≤ t) :
     ‖complexQℝ.waveGroup.S t x - (mirrorFEMApprox hT hB).sol N (mirrorEllInit hT hB x N) t‖ ≤

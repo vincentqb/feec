@@ -4,28 +4,16 @@ public import Feec.Algebra.PolynomialForm
 public import Mathlib.Basic.Real.Basic
 
 /-!
-# `P_{r+1}Λ⁰ → P_r⁻Λ¹` is not a pair of a subcomplex
+# `P_{r+1}Λ⁰` and `P_r⁻Λ¹` do not form a subcomplex
 
-Thesis §4.10 lists `P_{r+1}Λ⁰ ⊗ V × P_r⁻Λ¹ ⊗ V × …` among the discretizations of the matrix wave
-equation (4.14). These are not subcomplexes: in every dimension, over every field of
-characteristic zero, the exterior derivative of a nonzero homogeneous `0`-form of degree
-`s ≥ r + 1` is not in `P_r⁻Λ¹` (`extDeriv_not_mem_polyFormMinus`), so
-`d (P_{r+1}Λ⁰) ⊄ P_r⁻Λ¹` (`not_map_extDeriv_polyForm_le_polyFormMinus`). The admissible pairing
-is `P_rΛ⁰` with `P_r⁻Λ¹` (`Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyForm`).
-
-Proof: `κ (P_r⁻Λ¹) ⊆ P_rΛ⁰` (`Feec.Koszul.koszul_mem_polyForm_of_mem_polyFormMinus_succ`), while
-the homotopy formula gives `κ d ω = s ω`, of degree `s > r`, for `ω ∈ H_sΛ⁰`.
-
-The three-dimensional function form for `r = 1` (lowest-order Nédélec fields `a + b × x`) is
-`grad_sq_not_whitney`.
+Over a field of characteristic zero, `d (P_{r+1}Λ⁰) ⊄ P_r⁻Λ¹` in every dimension `≥ 1`, so
+`P_{r+1}Λ⁰ ⊗ V × P_r⁻Λ¹ ⊗ V × V₂ ⊗ V`, listed in [QuennevilleBelair2015], §4.10 for (4.14), is not
+a subcomplex.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §4.10
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -40,8 +28,7 @@ open Feec.Koszul ExteriorFibre
 
 variable {K : Type*} [Field K] {d : Type*} [LinearOrder d] [Fintype d]
 
-/-- **`d ω ∉ P_r⁻Λ¹`** for every nonzero homogeneous `0`-form `ω` of degree `s ≥ r + 1`, in every
-dimension. [QuennevilleBelair2015], §4.10 (refuted) -/
+/-- `d ω ∉ P_r⁻Λ¹` for every nonzero homogeneous `0`-form `ω` of degree `s ≥ r + 1`. -/
 theorem extDeriv_not_mem_polyFormMinus [CharZero K] {r s : ℕ} (hs : r + 1 ≤ s)
     {ω : PolyForm K d} (hω : ω ∈ homForm K d s 0) (hne : ω ≠ 0) :
     extDeriv ω ∉ polyFormMinus K d r 1 := by
@@ -89,8 +76,7 @@ theorem monomialForm_ne_zero (j : d) (s : ℕ) : monomialForm (K := K) j s ≠ 0
   have := congrFun h ∅
   simp [monomialForm] at this
 
-/-- **`d (P_{r+1}Λ⁰) ⊄ P_r⁻Λ¹`** in every dimension `≥ 1`: the pairs `P_{r+1}Λ⁰ × P_r⁻Λ¹` listed in
-thesis §4.10 (`r ≥ 1`) are not subcomplexes. [QuennevilleBelair2015], §4.10 (refuted) -/
+/-- `d (P_{r+1}Λ⁰) ⊄ P_r⁻Λ¹` in every dimension `≥ 1`. -/
 theorem not_map_extDeriv_polyForm_le_polyFormMinus [CharZero K] [Nonempty d] (r : ℕ) :
     ¬ (polyForm K d (r + 1) 0).map (extDerivₗ K d) ≤ polyFormMinus K d r 1 := fun h => by
   obtain ⟨j⟩ := ‹Nonempty d›
@@ -98,8 +84,6 @@ theorem not_map_extDeriv_polyForm_le_polyFormMinus [CharZero K] [Nonempty d] (r 
     (monomialForm_ne_zero j (r + 1))
     (h ⟨_, homForm_le_polyForm _ _ (monomialForm_mem j (r + 1)), rfl⟩)
 
-/-- The `r = 1` instance in function form (lowest-order Nédélec fields `a + b × x` on `ℝ³`):
-`grad x₀² = (2x₀, 0, 0)` is not of this form. [QuennevilleBelair2015], §4.10 (refuted) -/
 theorem grad_sq_not_whitney :
     ¬ ∃ a b : Fin 3 → ℝ, ∀ x : Fin 3 → ℝ, 2 * x 0 = a 0 + (b 1 * x 2 - b 2 * x 1) := by
   rintro ⟨a, b, h⟩
@@ -108,10 +92,7 @@ theorem grad_sq_not_whitney :
   simp at h0 h1
   linarith
 
-/-- **The printed (4.14) discretizations with `P_r⁻Λ¹` are not subcomplexes** (thesis §4.10,
-p. 66), in every dimension `≥ 1` and for every number of rows: for every `r` and `V₂`,
-`P_{r+1}Λ⁰ ⊗ V × P_r⁻Λ¹ ⊗ V × V₂ ⊗ V` is not a subcomplex. The corrected list is
-`Feec.Koszul.isTensorSubcomplex_polyForm`. [QuennevilleBelair2015], §4.10 (refuted) -/
+/-- In every dimension `≥ 1`, `P_{r+1}Λ⁰ ⊗ V × P_r⁻Λ¹ ⊗ V × V₂ ⊗ V` is not a subcomplex. -/
 theorem not_isTensorSubcomplex_printed [CharZero K] [Nonempty d] (ι : Type*) [Nonempty ι]
     (r : ℕ) (V₂ : Submodule K (PolyForm K d)) :
     ¬ IsTensorSubcomplex ι (polyForm K d (r + 1) 0) (polyFormMinus K d r 1) V₂ := fun h =>

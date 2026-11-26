@@ -11,110 +11,21 @@ public import Mathlib.MeasureTheory.Constructions.HaarToSphere
 /-!
 # TSD eigenfields on the unit ball
 
-For the thesis' complex `H̊¹(Ω; ℝ³) → H̊(curl, Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` (`gradCurl`) and
-`K = {0} × L²(TSD) × L²(TSD)`, whether the invariant core `K*` contains a moving datum reduces
-(`Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff`, under a complete set of eigenvectors
-of `L²`) to the existence of a nonzero **TSD eigenfield**: `u ∈ L²(TSD) ∩ H̊(curl)` with
-`curl u ∈ H(curl)`, `curl† curl u = ξ² u`, `ξ > 0`, necessarily with `curl u ∉ H̊(curl)`. This
-file decides the question on the unit ball `B = {|x| < 1}` (`Feec.Counterexamples.BallSymTSD.ball3`)
-in the class of fields that are `C²` up to the boundary, and isolates what remains.
-
-## Decision
-
-**No TSD eigenfield exists on the ball in the smooth class** (alternative (b)): a TSD eigenfield
-with a representative `C²` on a neighbourhood of the closed ball vanishes
-(`eq_zero_of_isEigenfield_of_contDiff_ball`). Evidence before the proof: for the separated ansatz
-`Uᵢⱼ(x) = jₗ(ξ|x|) |x|⁻ˡ Pᵢⱼ(x)` with `Pᵢⱼ` homogeneous harmonic polynomials of degree `l`
-(`jₗ(ξ) = 0`, the Dirichlet condition forced on symmetric trace-free fields with normal rows),
-the divergence condition splits by degree into `P(x) x = 0`, and a symmetric, trace-free,
-harmonic `P` with `P(x) x = 0` restricts to a transverse-traceless tensor on `S²`, hence vanishes;
-an exact rank computation (outside the formalization) finds no nonzero solution for `l ≤ 6`.
-Mixed eigenspaces cannot help, since the recurrence `jₗ₋₁ + jₗ₊₁ = (2l + 1) jₗ / z` forbids
-common zeros of `jₗ` and `jₗ₊₂`, the only degrees the divergence couples. The separated fields
-are entire, so the smooth-class theorem covers them; spherical Bessel functions are not
-formalized.
-
-## Proof of the smooth-class theorem
-
-Let `U` be a `C²` representative (cut off to `ℝ³`, `exists_contDiff_eq_on_closedBall3`).
-1. **Interior equations** (`pointwise_of_mem_tsd`, `eigen_data`): `U` is symmetric, trace-free and
-   divergence-free in `B`, `curl curl U = ξ² U` in `B`, and Green's formula holds against every
-   `ψ ∈ C_c^∞(ℝ³)` (no boundary condition on `ψ`).
-2. **Trace** (`crossF_eq_zero_of_green`): the radial cut-offs `χₙ(x) = ηₙ(|x|²)` turn Green's
-   formula into `∫_{S²} Σᵢₖ ψᵢₖ (x × Uᵢ)ₖ dσ = 0` (`integral_sphere_eq_zero_of_integral_div`,
-   through polar coordinates `integral_eq_integral_sphere` and the approximate identity
-   `κₙ = -d/dr ηₙ(r²)`, `tendsto_integral_deriv_eta_mul`), so `x × Uᵢ(x) = 0` on `S²`; being
-   symmetric and trace-free, `U = 0` on `S²` (`eq_zero_of_symm_of_trace_of_cross`).
-3. **The boundary layer** `V = (x · ∇) U` (`isSphereTT_radDeriv`): tangential derivatives of `U`
-   vanish on `S²` and `∂ₜ² U = |t|² V` for `t ⊥ x` (`tangential_derivs`, along great circles);
-   with `div U = 0` and `ΔU = ∇ div U - curl curl U = 0` on `S²`, `V` is symmetric, trace-free,
-   tangential and surface-divergence-free: the TT layer.
-4. **No TT tensors on the round sphere** (`eq_zero_of_isSphereTT`): in the stereographic chart
-   `σ(x, y) = (2x, 2y, x² + y² - 1)/(1 + x² + y²)`, `F = σₓᵀ V σₓ - i σₓᵀ V σ_y` satisfies the
-   Cauchy–Riemann equations (`ttAx_add_ttBy`, `ttA'y_sub_ttB'x`, polynomial identities) and
-   `|F| = O(|z|⁻⁴)`, so `F = 0` by Liouville; `F = 0` forces `V = 0` (genus zero: no holomorphic
-   quadratic differentials). Hence `∇U = 0` and `curl U = 0` on `S²`.
-5. **Conclusion**: `curl U` is `C¹` and vanishes on `S²`, so `curl u ∈ H̊(curl)`
-   (`smoothField_mem_minimal_of_eq_zero_sphere`, cut-offs with `|curl U| = O(1 - |x|²)`), and
-   `u = 0` by `Feec.Models.BoundedDomain.eq_zero_of_isEigenfield_of_mem_minimal`.
-
-## What remains
-
-Whether every TSD eigenfield on `B` is `C²` up to `∂B` is elliptic boundary regularity, absent
-from Mathlib. It is isolated as the standard row-wise statement `MaxwellEigenfieldRegularity`:
-weakly divergence-free vector fields `w ∈ H̊(curl, B)` with `curl curl w = ξ² w` are `C²` up to
-`∂B`. This involves no symmetry or trace, is not equivalent to the absence of eigenfields, and
-implies the TSD form `TSDEigenfieldRegularity` (`tsdEigenfieldRegularity_of_maxwell`: the rows
-of a TSD eigenfield are such fields, `isDivFree_rowF`, `isMaxwellEigenfield_rowF`). On the ball
-the TSD form alone is *equivalent* to the absence of TSD eigenfields
-(`tsdEigenfieldRegularity_ball_iff`), so it only restates the open question; the Maxwell form is
-the genuine missing theorem. With it and a complete set of eigenvectors of `L²` (`EigenDense`,
-from compactness on the ball), `K*` is stationary on the ball
-(`coreSub_le_stationary_ball_of_maxwellRegularity`, `coreSub_le_stationary_ball_of_regularity`).
-Without `EigenDense`, a TSD eigenfield always produces a moving datum of `K*` on every open `Ω`,
-with the explicit orbit `cos(ξt) u + (sin(ξt)/ξ) L u` (`not_coreSub_le_stationary_of_eigenfield`).
-
-## Non-vacuity
-
-The hypotheses of the smooth-class theorem without the electric boundary condition are met by
-the nonzero smooth TSD shear wave `cos(ξ x₁)(e₂e₃ᵀ + e₃e₂ᵀ)`, which therefore lies outside
-`H̊(curl)` (`shearWaveL2_spec`). The zero field has a smooth representative (`hasC2Rep_zero`), so
-`TSDEigenfieldRegularity` holds wherever TSD eigenfields vanish
-(`tsdEigenfieldRegularity_of_forall_eq_zero`), concretely on every box
-(`tsdEigenfieldRegularity_box`); `MaxwellEigenfieldRegularity` holds on `∅`
-(`maxwellEigenfieldRegularity_empty`). On boxes and on the ball it is a genuine statement:
-nonzero smooth electric Maxwell eigenfields exist there (e.g. `sin x₁ sin x₂ e₃` on `(0, π)³`,
-and the toroidal fields below on the ball; not formalized). Dropping symmetry instead,
-`u = e₃ ⊗ T` with the toroidal field `T = j₁(k|x|)/|x| (x₂, -x₁, 0)`, `j₁(k) = 0`, is a nonzero
-trace-free, divergence-free eigenfield in `H̊(curl)` (not formalized: it needs `j₁`).
-
-## Layering
-
-The file lives in `Counterexamples` because it uses the ball geometry (`rho`, `ball3`, the radial
-cut-offs `eta`, `chi`) of `Feec.Counterexamples.BallSymTSD`; `Models` files do not import
-`Counterexamples`.
+For the minimal grad–curl complex and `K = {0} × L²(TSD) × L²(TSD)`
+(cf. [QuennevilleBelair2015], Prop 4.17), a nonzero TSD eigenfield of `curl† curl` gives a moving
+datum of the invariant core `K*`. On the unit ball, TSD eigenfields `C²` up to the boundary
+vanish.
 
 ## Main results
 
-* **`not_coreSub_le_stationary_of_eigenfield`**: a nonzero TSD eigenfield gives a non-stationary
-  datum of `K*`, on every open `Ω`, without `EigenDense`.
-* **`eq_zero_of_isSphereTT`**: transverse-traceless `C¹` tensors on `S²` vanish.
-* **`crossF_eq_zero_of_green`**: Green's formula forces the tangential trace to vanish pointwise.
-* **`eq_zero_of_isEigenfield_of_contDiff_ball`**: TSD eigenfields `C²` up to `∂B` vanish.
-* **`tsdEigenfieldRegularity_of_maxwell`**: row-wise Maxwell regularity implies TSD regularity.
-* **`coreSub_le_stationary_ball_of_maxwellRegularity`**,
-  `coreSub_le_stationary_ball_of_regularity`, `tsdEigenfieldRegularity_ball_iff`.
-* `shearWaveL2_spec`, `hasC2Rep_zero`, `tsdEigenfieldRegularity_box`,
-  `maxwellEigenfieldRegularity_empty`: non-vacuity.
+* `not_coreSub_le_stationary_of_eigenfield`: a nonzero TSD eigenfield moves `K*`.
+* `eq_zero_of_isEigenfield_of_contDiff_ball`: TSD eigenfields `C²` up to `∂B` vanish.
+* `coreSub_le_stationary_ball_of_maxwellRegularity`: `EigenDense` and regularity imply stationarity.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17)
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.5 (traces), §5.6, §6.3 (boundary
-  regularity)
-* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
-  Ch. I, §3 (`H(curl) ∩ H(div)`)
+  §4.10
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -130,19 +41,14 @@ namespace Feec.Counterexamples.BallEigenfields
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-/-! ### Sufficiency: an eigenfield moves `K*` (no spectral hypothesis) -/
+/-! ### An eigenfield moves `K*` -/
 
 section Sufficiency
 
 variable {Ω : Set R3}
 
-/-- **A TSD eigenfield gives a moving datum of `K*`, without `EigenDense`**: on every open
-`Ω ⊆ ℝ³` (bounded or not), if `u ≠ 0` lies in `L²(TSD) ∩ H̊(curl)` with `curl u ∈ H(curl)` and
-`curl† curl u = ξ² u`, `ξ > 0`, then `x = (0, u, 0)` lies in `K*`, is not stationary, and its
-orbit is `e^{tL} x = cos(ξt) x + (sin(ξt)/ξ) L x`
-(`Feec.C0Group.IsIsometric.S_eq_of_isEigenSq`). So `K*` is not stationary. This is the
-sufficiency half of `Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` (part 3), which needs
-no spectral hypothesis (`Feec.ShortHilbertComplex.eigenfield_mem_invariantCore₁`). -/
+/-- On every open `Ω ⊆ ℝ³`, a nonzero TSD eigenfield `u`, `curl† curl u = ξ² u`, `ξ > 0`, gives a
+non-stationary datum `(0, u, 0)` of `K*`, with `e^{tL} x = cos(ξt) x + (sin(ξt)/ξ) L x`. -/
 theorem not_coreSub_le_stationary_of_eigenfield (hΩ : IsOpen Ω)
     {ξ : ℝ} (hξ : 0 < ξ) {v : L2F ℝ Ω Ix} (hv0 : v ≠ 0) (hv : v ∈ tsd Ω)
     (hE : (gradCurl ℝ hΩ).IsEigenfield ξ v) :
@@ -215,8 +121,7 @@ def stXY (x y : ℝ) : R3 :=
 def stYY (x y : ℝ) : R3 :=
   ![-4 * x * (x ^ 2 - 3 * y ^ 2 + 1), -4 * y * (3 * x ^ 2 - y ^ 2 + 3), 4 * (x ^ 2 - 3 * y ^ 2 + 1)]
 
-/-- The inverse stereographic projection `σ(x, y) = (2x, 2y, x² + y² - 1) / (1 + x² + y²)`
-from the north pole. -/
+/-- The inverse stereographic projection `σ(x, y) = (2x, 2y, x² + y² - 1) / (1 + x² + y²)`. -/
 def stSig (x y : ℝ) : R3 := fun k => stN x y k * (stQ x y)⁻¹
 /-- `∂ₓσ`. -/
 def stSx (x y : ℝ) : R3 := fun k => stX x y k * (stQ x y)⁻¹ ^ 2
@@ -403,7 +308,6 @@ theorem hasDerivAt_comp_stSig_y {f : R3 → ℝ} (hf : Differentiable ℝ f) (x 
   rw [clm_apply_eq_sum] at h
   exact h
 
-/-- Derivative of a bilinear expression `Σᵢⱼ aᵢ Mᵢⱼ bⱼ` along a parameter. -/
 theorem hasDerivAt_quad {a b : ℝ → R3} {M : Ix → ℝ → ℝ} {a' b' : R3} {M' : Ix → ℝ} {t : ℝ}
     (ha : ∀ i, HasDerivAt (fun s => a s i) (a' i) t)
     (hb : ∀ j, HasDerivAt (fun s => b s j) (b' j) t)
@@ -416,9 +320,7 @@ theorem hasDerivAt_quad {a b : ℝ → R3} {M : Ix → ℝ → ℝ} {a' b' : R3}
 
 /-! ### Transverse-traceless tensors on the unit sphere -/
 
-/-- `V` is **transverse-traceless on the unit sphere** `S² = {|x| = 1}`: at every `x ∈ S²`,
-`V(x)` is symmetric, trace-free and tangential (`V(x) x = 0`), and `V` has zero tangential
-divergence `Σⱼₖ (δⱼₖ - xⱼ xₖ) ∂ₖ Vᵢⱼ(x) = 0` (the surface divergence of a tangential tensor). -/
+/-- `V` is symmetric, trace-free, tangential and surface-divergence-free on the unit sphere. -/
 def IsSphereTT (V : Ix → R3 → ℝ) : Prop :=
   ∀ x : R3, rho x = 1 → (∀ i j, V (i, j) x = V (j, i) x) ∧ ∑ i, V (i, i) x = 0 ∧
     (∀ i, ∑ j, V (i, j) x * x j = 0) ∧
@@ -430,10 +332,10 @@ def ttA (V : Ix → R3 → ℝ) (x y : ℝ) : ℝ :=
 /-- `B = σₓᵀ V σ_y`. -/
 def ttB (V : Ix → R3 → ℝ) (x y : ℝ) : ℝ :=
   ∑ i, ∑ j, stSx x y i * V (i, j) (stSig x y) * stSy x y j
-/-- `A' = -σ_yᵀ V σ_y` (equal to `A` on `S²`, `ttA_eq_ttA'`). -/
+/-- `A' = -σ_yᵀ V σ_y`. -/
 def ttA' (V : Ix → R3 → ℝ) (x y : ℝ) : ℝ :=
   -∑ i, ∑ j, stSy x y i * V (i, j) (stSig x y) * stSy x y j
-/-- `B' = σ_yᵀ V σₓ` (equal to `B` on `S²`, `ttB_eq_ttB'`). -/
+/-- `B' = σ_yᵀ V σₓ`. -/
 def ttB' (V : Ix → R3 → ℝ) (x y : ℝ) : ℝ :=
   ∑ i, ∑ j, stSy x y i * V (i, j) (stSig x y) * stSx x y j
 
@@ -441,7 +343,6 @@ section TT
 
 variable {V : Ix → R3 → ℝ}
 
-/-- The tangency condition in numerator form: `Σⱼ Vᵢⱼ(σ) Nⱼ = 0`. -/
 theorem sum_mul_stN_eq_zero (hV : IsSphereTT V) (x y : ℝ) (i : Fin 3) :
     ∑ j, V (i, j) (stSig x y) * stN x y j = 0 := by
   have h := (hV _ (rho_stSig x y)).2.2.1 i
@@ -453,7 +354,6 @@ theorem sum_mul_stN_eq_zero (hV : IsSphereTT V) (x y : ℝ) (i : Fin 3) :
   rw [e] at h
   exact (mul_eq_zero.1 h).resolve_right hr
 
-/-- The divergence condition in numerator form. -/
 theorem sum_tdiv_stN_eq_zero (hV : IsSphereTT V) (x y : ℝ) (i : Fin 3) :
     ∑ j, ∑ k, (stQ x y ^ 2 * (if j = k then 1 else 0) - stN x y j * stN x y k) *
       partialDeriv k (V (i, j)) (stSig x y) = 0 := by
@@ -468,7 +368,7 @@ theorem sum_tdiv_stN_eq_zero (hV : IsSphereTT V) (x y : ℝ) (i : Fin 3) :
     field_simp
   rw [e, h, mul_zero]
 
-/-- `∂ₓ A`, as produced by `hasDerivAt_quad`. -/
+/-- `∂ₓ A`. -/
 def ttAx (V : Ix → R3 → ℝ) (x y : ℝ) : ℝ :=
   ∑ i, ∑ j, (stSxx x y i * V (i, j) (stSig x y) * stSx x y j +
     stSx x y i * (∑ k, stSx x y k * partialDeriv k (V (i, j)) (stSig x y)) * stSx x y j +
@@ -489,7 +389,6 @@ def ttB'x (V : Ix → R3 → ℝ) (x y : ℝ) : ℝ :=
     stSy x y i * (∑ k, stSx x y k * partialDeriv k (V (i, j)) (stSig x y)) * stSx x y j +
     stSy x y i * V (i, j) (stSig x y) * stSxx x y j)
 
-/-- The constraints at `σ(x, y)` in polynomial form. -/
 private theorem tt_constraints (hV : IsSphereTT V) (x y : ℝ) :
     V (1, 0) (stSig x y) = V (0, 1) (stSig x y) ∧ V (2, 0) (stSig x y) = V (0, 2) (stSig x y) ∧
     V (2, 1) (stSig x y) = V (1, 2) (stSig x y) ∧
@@ -515,7 +414,6 @@ theorem ttB_eq_ttB' (hV : IsSphereTT V) (x y : ℝ) : ttB V x y = ttB' V x y := 
   simp only [ttB, ttB', Fin.sum_univ_three, h10, h20, h21]
   ring
 
-/-- **First Cauchy–Riemann equation** `∂ₓA + ∂_y B = 0`. -/
 theorem ttAx_add_ttBy (hV : IsSphereTT V) (x y : ℝ) : ttAx V x y + ttBy V x y = 0 := by
   obtain ⟨h10, h20, h21, htr⟩ := tt_constraints hV x y
   have hC0 := sum_mul_stN_eq_zero hV x y 0
@@ -535,7 +433,6 @@ theorem ttAx_add_ttBy (hV : IsSphereTT V) (x y : ℝ) : ttAx V x y + ttBy V x y 
     (4 * r ^ 6 * (-2 * (x ^ 2 - y ^ 2 - 1))) * hT0 + (4 * r ^ 6 * (-4 * x * y)) * hT1 +
     (4 * r ^ 6 * (4 * x)) * hT2
 
-/-- **Second Cauchy–Riemann equation** `∂_y A' - ∂ₓB' = 0`. -/
 theorem ttA'y_sub_ttB'x (hV : IsSphereTT V) (x y : ℝ) : ttA'y V x y - ttB'x V x y = 0 := by
   obtain ⟨h10, h20, h21, htr⟩ := tt_constraints hV x y
   have hC0 := sum_mul_stN_eq_zero hV x y 0
@@ -680,7 +577,6 @@ theorem hasFDerivAt_ttF_I (hV : IsSphereTT V) (hV' : ∀ ij, Differentiable ℝ 
       ((hasDerivAt_ttB_y hV' z.re z.im).ofReal_comp.const_mul I)
   exact h1.unique h2
 
-/-- **The pulled-back quadratic differential is holomorphic** (Cauchy–Riemann). -/
 theorem differentiable_complex_ttF (hV : IsSphereTT V) (hV' : ∀ ij, Differentiable ℝ (V ij)) :
     Differentiable ℂ (ttF V) := fun z => by
   refine differentiableAt_complex_iff_differentiableAt_real.2
@@ -735,7 +631,6 @@ private theorem abs_quad_le {a b : R3} {M : Ix → ℝ} {α β C : ℝ} (ha : �
           (mul_nonneg hα hC)
     _ = 9 * (α * C * β) := by simp; ring
 
-/-- `F → 0` at infinity: `|F| ≤ 72 M / (1 + |z|²)²`. -/
 theorem tendsto_ttF (hV' : ∀ ij, Continuous (V ij)) :
     Tendsto (ttF V) (cocompact ℂ) (𝓝 0) := by
   have hK : IsCompact {x : R3 | rho x = 1} :=
@@ -780,7 +675,6 @@ theorem tendsto_ttF (hV' : ∀ ij, Continuous (V ij)) :
     simpa using (tendsto_inv_atTop_zero.comp h1).const_mul (72 * C)
   exact squeeze_zero_norm hbound hlim
 
-/-- `A = B = 0` on the whole chart (Liouville). -/
 theorem ttA_eq_zero_and_ttB_eq_zero (hV : IsSphereTT V) (hV' : ∀ ij, ContDiff ℝ 1 (V ij))
     (x y : ℝ) : ttA V x y = 0 ∧ ttB V x y = 0 := by
   have hd : ∀ ij, Differentiable ℝ (V ij) := fun ij => (hV' ij).differentiable one_ne_zero
@@ -808,8 +702,6 @@ theorem ttB_eq_mul (x y : ℝ) : ttB V x y = (stQ x y)⁻¹ ^ 4 * ttBn V x y := 
   simp only [ttB, ttBn, stSx, stSy, Finset.mul_sum]
   exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ => by ring
 
-/-- A tangential, symmetric, trace-free tensor with `A = B = 0` vanishes (`σ, σₓ, σ_y` is a
-basis). -/
 theorem apply_stSig_eq_zero (hV : IsSphereTT V) {x y : ℝ} (hA : ttA V x y = 0)
     (hB : ttB V x y = 0) (ij : Ix) : V ij (stSig x y) = 0 := by
   have hr : (stQ x y)⁻¹ ^ 4 ≠ 0 := pow_ne_zero _ (inv_ne_zero (stQ_ne_zero x y))
@@ -878,7 +770,6 @@ theorem apply_stSig_eq_zero (hV : IsSphereTT V) {x y : ℝ} (hA : ttA V x y = 0)
   · rw [h21]; exact (mul_eq_zero.1 e12).resolve_left hq4
   · exact (mul_eq_zero.1 e22).resolve_left hq4
 
-/-- Every point of `S²` other than the north pole is in the chart. -/
 theorem stSig_inv {p : R3} (hp : rho p = 1) (h2 : p 2 ≠ 1) :
     stSig (p 0 / (1 - p 2)) (p 1 / (1 - p 2)) = p := by
   have h : 1 - p 2 ≠ 0 := sub_ne_zero.2 (Ne.symm h2)
@@ -896,12 +787,7 @@ theorem stSig_inv {p : R3} (hp : rho p = 1) (h2 : p 2 ≠ 1) :
   · field_simp
     linear_combination hρ
 
-/-- **No transverse-traceless tensors on the round sphere**: a `C¹` field that is symmetric,
-trace-free, tangential and surface-divergence-free on `S²` vanishes on `S²`. In the
-stereographic chart `σ`, `F = σₓᵀ V σₓ - i σₓᵀ V σ_y` satisfies the Cauchy–Riemann equations
-(`ttAx_add_ttBy`, `ttA'y_sub_ttB'x`) and decays like `|z|⁻⁴`, so it vanishes (Liouville); `F = 0`
-forces `V = 0` on the chart (`apply_stSig_eq_zero`), and at the north pole by continuity. This
-is the genus-zero case of the absence of holomorphic quadratic differentials. -/
+/-- A `C¹` field that is transverse-traceless on `S²` vanishes on `S²`. -/
 theorem eq_zero_of_isSphereTT (hV : IsSphereTT V) (hV' : ∀ ij, ContDiff ℝ 1 (V ij)) {p : R3}
     (hp : rho p = 1) (ij : Ix) : V ij p = 0 := by
   have hchart : ∀ q : R3, rho q = 1 → q 2 ≠ 1 → V ij q = 0 := fun q hq h2 => by
@@ -950,7 +836,6 @@ section Tangential
 
 open Feec.Counterexamples.BallSymTSD (rho ball3 continuous_rho)
 
-/-- Chain rule along a curve: `(f ∘ γ)' = Σₖ γₖ' ∂ₖ f(γ)`. -/
 theorem hasDerivAt_comp_curve {f : R3 → ℝ} (hf : Differentiable ℝ f) {γ : ℝ → R3} {γ' : R3}
     {s : ℝ} (hγ : ∀ k, HasDerivAt (fun s => γ s k) (γ' k) s) :
     HasDerivAt (fun s => f (γ s)) (∑ k, γ' k * partialDeriv k f (γ s)) s := by
@@ -960,9 +845,6 @@ theorem hasDerivAt_comp_curve {f : R3 → ℝ} (hf : Differentiable ℝ f) {γ :
 
 /-! ### Tangential derivatives of fields vanishing on the unit sphere -/
 
-/-- **Tangential derivatives of a `C²` function vanishing on `S²`**: at `x ∈ S²` and for `t ⊥ x`,
-`∂_t f(x) = 0` and `∂_t² f(x) = |t|² ∂_x f(x)` (differentiate `f` twice along the great circle
-`s ↦ cos(λs) x + sin(λs)/λ t`, `λ = |t|`). -/
 theorem tangential_derivs {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (hf0 : ∀ y, rho y = 1 → f y = 0)
     {x t : R3} (hx : rho x = 1) (ht : ∑ k, t k * x k = 0) :
     ∑ k, t k * partialDeriv k f x = 0 ∧
@@ -1054,8 +936,6 @@ theorem sum_tanProj_mul (x : R3) (hx : rho x = 1) (k : Fin 3) :
   have hx' : x 0 * x 0 + x 1 * x 1 + x 2 * x 2 = 1 := hx
   fin_cases k <;> simp [tanProj, Fin.sum_univ_three] <;> linear_combination (-x _) * hx'
 
-/-- **Trace of a Hessian with umbilic tangential part**: if `h(pₖ, pₖ) = |pₖ|² v` for the three
-tangential projections and `tr h = 0`, then `h(x, x) = -2 v` (on `|x| = 1`). -/
 theorem hess_eq_of_tangential (x : R3) (hx : rho x = 1) (h : Fin 3 → Fin 3 → ℝ) (v : ℝ)
     (hk : ∀ k, ∑ a, ∑ b, tanProj x k a * tanProj x k b * h b a =
       (∑ a, tanProj x k a * tanProj x k a) * v)
@@ -1122,7 +1002,6 @@ theorem contDiff_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2 (
   exact ContDiff.sum fun k _ => (contDiff_apply ℝ (fun _ : Fin 3 => ℝ) k).mul
     ((hU ij).partialDeriv (m := 1) (by norm_num) k)
 
-/-- `∂ₖ (x · ∇ f) = ∂ₖ f + Σₘ xₘ ∂ₖ∂ₘ f`. -/
 theorem pd_radDeriv {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (k : Fin 3) (x : R3) :
     partialDeriv k (fun y => ∑ m, y m * partialDeriv m f y) x =
       partialDeriv k f x + ∑ m, x m * partialDeriv k (partialDeriv m f) x := by
@@ -1139,10 +1018,6 @@ theorem pd_radDeriv {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (k : Fin 3) (x : R3
   congr 1
   simp
 
-/-- **The boundary layer of a TSD field vanishing on `S²` is transverse-traceless**: let `U` be
-`C²`, symmetric, trace-free and divergence-free in the ball, vanishing on `S²`, with `ΔU = 0` on
-`S²`. Then on `S²` the gradient is normal, `∂ₖ Uᵢⱼ = xₖ Vᵢⱼ` with `V = (x · ∇) U`, and `V` is
-transverse-traceless (`IsSphereTT`). -/
 theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2 (U ij))
     (hsym : ∀ x ∈ ball3, ∀ i j, U (i, j) x = U (j, i) x)
     (htr : ∀ x ∈ ball3, ∑ i, U (i, i) x = 0)
@@ -1269,8 +1144,6 @@ theorem exists_bound_closedBall3 {g : R3 → ℝ} (hg : Continuous g) :
   exact ⟨max C 0, le_max_right _ _, fun x hx => (by simpa [Real.norm_eq_abs] using hC x hx :
     |g x| ≤ C).trans (le_max_left _ _)⟩
 
-/-- **A `C¹` function vanishing on `S²` is `O(1 - |x|²)` in the ball** (mean value theorem along
-the ray through `x`). -/
 theorem exists_abs_le_mul_one_sub_rho {w : R3 → ℝ} (hw : ContDiff ℝ 1 w)
     (hw0 : ∀ x, rho x = 1 → w x = 0) : ∃ L, 0 ≤ L ∧ ∀ x ∈ ball3, |w x| ≤ L * (1 - rho x) := by
   obtain ⟨M0, hM0, hM0b⟩ := exists_bound_closedBall3 hw.continuous
@@ -1337,7 +1210,6 @@ theorem exists_abs_le_mul_one_sub_rho {w : R3 → ℝ} (hw : ContDiff ℝ 1 w)
     _ ≤ max (6 * M) (4 / 3 * M0) * (1 - rho x) :=
         mul_le_mul_of_nonneg_right (le_max_left _ _) (by linarith)
 
-/-- Componentwise `L²` convergence of `toL2F`. -/
 theorem tendsto_toL2F_of_forall {ι : Type*} [Fintype ι] {Ω : Set R3} {F : ℕ → ι → R3 → ℝ}
     {f : ι → R3 → ℝ} (hF : ∀ n i, MemLp (F n i) 2 (volume.restrict Ω))
     (hf : ∀ i, MemLp (f i) 2 (volume.restrict Ω))
@@ -1345,9 +1217,6 @@ theorem tendsto_toL2F_of_forall {ι : Type*} [Fintype ι] {Ω : Set R3} {F : ℕ
     Tendsto (fun n => toL2F (hF n)) atTop (𝓝 (toL2F hf)) :=
   ((PiLp.continuous_toLp 2 _).tendsto _).comp (tendsto_pi_nhds.2 h)
 
-/-- **A `C¹` field vanishing on `S²` lies in `H̊(curl, B)`**: the cut-offs `χₙ W` are compactly
-supported in `B`, hence in `D(curl_min)`, and converge to `W` in the graph norm because
-`|∇χₙ| |W| ≲ |ηₙ'(|x|²)| (1 - |x|²)` stays bounded (`exists_abs_le_mul_one_sub_rho`). -/
 theorem smoothField_mem_minimal_of_eq_zero_sphere {W : Ix → R3 → ℝ} (hW : ∀ ij, ContDiff ℝ 1 (W ij))
     (hW0 : ∀ x, rho x = 1 → ∀ ij, W ij x = 0) :
     smoothField isOpen_ball3 isBounded_ball3 W (fun ij => (hW ij).continuous) ∈
@@ -1468,8 +1337,6 @@ section Polar
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasurableSpace E] [BorelSpace E]
   [FiniteDimensional ℝ E] [Nontrivial E] (μ : Measure E) [μ.IsAddHaarMeasure]
 
-/-- **Polar coordinates**: `∫_E g = ∫_{S} ∫_{(0, ∞)} g(r u) r^{d-1} dr dσ(u)`, with
-`σ = μ.toSphere`. -/
 theorem integral_eq_integral_sphere {g : E → ℝ} (hg : Integrable g μ) :
     ∫ x, g x ∂μ = ∫ u : Metric.sphere (0 : E) 1, ∫ r : Ioi (0 : ℝ), g (r.1 • u.1)
       ∂(Measure.volumeIoiPow (Module.finrank ℝ E - 1)) ∂μ.toSphere := by
@@ -1498,7 +1365,6 @@ theorem integral_eq_integral_sphere {g : E → ℝ} (hg : Integrable g μ) :
     rw [← congrArg Subtype.val this, homeomorphUnitSphereProd_symm_apply_coe]
   rw [e1, e2, integral_prod _ hint]
 
-/-- The radial measure `r^n dr` on `(0, ∞)`. -/
 theorem integral_volumeIoiPow (n : ℕ) (f : ℝ → ℝ) :
     ∫ r : Ioi (0 : ℝ), f r.1 ∂(Measure.volumeIoiPow n) = ∫ r in Ioi (0 : ℝ), r ^ n * f r := by
   simp only [Measure.volumeIoiPow]
@@ -1518,8 +1384,7 @@ section Kernel
 open Feec.Counterexamples.BallSymTSD (eta deriv_eta differentiable_eta differentiable_deriv_eta
   eta_eq_one eta_eq_zero deriv_eta_eq_zero two_le_mul)
 
-/-- `κₙ(r) = -d/dr ηₙ(r²) = -2 r ηₙ'(r²)`: a nonnegative kernel of mass one concentrating at
-`r = 1`. -/
+/-- `κₙ(r) = -d/dr ηₙ(r²) = -2 r ηₙ'(r²)`. -/
 def kap (n : ℕ) (r : ℝ) : ℝ := -(2 * r * deriv (eta n) (r ^ 2))
 
 theorem hasDerivAt_neg_eta_sq (n : ℕ) (r : ℝ) :
@@ -1589,7 +1454,6 @@ theorem abs_setIntegral_kap_mul_le (n : ℕ) {h : ℝ → ℝ} {C : ℝ}
   rw [intervalIntegral.integral_const_mul, integral_kap, mul_one] at hb
   simpa [Real.norm_eq_abs] using hb
 
-/-- **`κₙ` is an approximate identity at `r = 1`**: `∫₀^∞ κₙ h → h(1)`. -/
 theorem tendsto_setIntegral_kap_mul {h : ℝ → ℝ} (hh : Continuous h) :
     Tendsto (fun n => ∫ r in Ioi (0 : ℝ), kap n r * h r) atTop (𝓝 (h 1)) := by
   rw [Metric.tendsto_atTop]
@@ -1643,7 +1507,7 @@ section SurfaceLimit
 
 open Feec.Counterexamples.BallSymTSD (eta rho deriv_eta deriv_eta_eq_zero two_le_mul)
 
-/-- `ℝ³` with the Euclidean norm, where the polar decomposition `Measure.toSphere` lives. -/
+/-- `ℝ³` with the Euclidean norm. -/
 abbrev E3 := EuclideanSpace ℝ (Fin 3)
 
 theorem rho_ofLp (y : E3) : rho (WithLp.ofLp y) = ‖y‖ ^ 2 := by
@@ -1656,8 +1520,6 @@ theorem deriv_eta_eq_zero_of_one_le (n : ℕ) {s : ℝ} (hs : 1 ≤ s) : deriv (
   · have := two_le_mul n
     nlinarith
 
-/-- **The cut-off gradients converge to the surface measure**: for continuous `H` on `ℝ³`,
-`∫ -2 ηₙ'(|x|²) H(x) dx → ∫_{S²} H dσ` (`σ = volume.toSphere` on `EuclideanSpace ℝ (Fin 3)`). -/
 theorem tendsto_integral_deriv_eta_mul {H : R3 → ℝ} (hH : Continuous H) :
     Tendsto (fun n => ∫ x, -2 * deriv (eta n) (rho x) * H x) atTop
       (𝓝 (∫ u : Metric.sphere (0 : E3) 1, H (WithLp.ofLp u.1)
@@ -1758,7 +1620,7 @@ variable {U ψ : Ix → R3 → ℝ}
 def crossF (U : Ix → R3 → ℝ) (ik : Ix) (x : R3) : ℝ :=
   x (ik.2 + 1) * U (ik.1, ik.2 + 2) x - x (ik.2 + 2) * U (ik.1, ik.2 + 1) x
 
-/-- The flux `G = Σᵢ Uᵢ × ψᵢ`, whose divergence is `Σ (curl U : ψ - U : curl ψ)`. -/
+/-- The flux `G = Σᵢ Uᵢ × ψᵢ`. -/
 def fluxG (U ψ : Ix → R3 → ℝ) (m : Fin 3) (x : R3) : ℝ :=
   ∑ i, (U (i, m + 1) x * ψ (i, m + 2) x - U (i, m + 2) x * ψ (i, m + 1) x)
 
@@ -1766,7 +1628,6 @@ theorem contDiff_fluxG (hU : ∀ ij, ContDiff ℝ 1 (U ij)) (hψ : ∀ ij, ContD
     (m : Fin 3) : ContDiff ℝ 1 (fluxG U ψ m) :=
   ContDiff.sum fun _ _ => ((hU _).mul (hψ _)).sub ((hU _).mul (hψ _))
 
-/-- `div (Σᵢ Uᵢ × ψᵢ) = Σ (curl U : ψ - U : curl ψ)`. -/
 theorem sum_pd_fluxG (hU : ∀ ij, Differentiable ℝ (U ij)) (hψ : ∀ ij, Differentiable ℝ (ψ ij))
     (x : R3) : ∑ m, partialDeriv m (fluxG U ψ m) x =
       ∑ ij, (curlM U ij x * ψ ij x - U ij x * curlM ψ ij x) := by
@@ -1790,7 +1651,6 @@ theorem sum_pd_fluxG (hU : ∀ ij, Differentiable ℝ (U ij)) (hψ : ∀ ij, Dif
     show (2 : Fin 3) + 1 = 0 from rfl, show (2 : Fin 3) + 2 = 1 from rfl]
   ring
 
-/-- `x · G = Σᵢₖ ψᵢₖ (x × Uᵢ)ₖ`. -/
 theorem sum_mul_fluxG (x : R3) :
     ∑ m, x m * fluxG U ψ m x = ∑ ik, ψ ik x * crossF U ik x := by
   simp only [fluxG, crossF, Fintype.sum_prod_type, Fin.sum_univ_three]
@@ -1799,8 +1659,6 @@ theorem sum_mul_fluxG (x : R3) :
     show (2 : Fin 3) + 1 = 0 from rfl, show (2 : Fin 3) + 2 = 1 from rfl]
   ring
 
-/-- **Green's formula on the ball as a surface integral**: if `∫_B div G = 0`, then the flux
-`∫_{S²} x · G dσ` vanishes. -/
 theorem integral_sphere_eq_zero_of_integral_div {G : Fin 3 → R3 → ℝ}
     (hG : ∀ m, ContDiff ℝ 1 (G m)) (h0 : ∫ x in ball3, ∑ m, partialDeriv m (G m) x = 0) :
     ∫ u : Metric.sphere (0 : E3) 1, ∑ m, (WithLp.ofLp u.1) m * G m (WithLp.ofLp u.1)
@@ -1856,9 +1714,8 @@ theorem integral_sphere_eq_zero_of_integral_div {G : Fin 3 → R3 → ℝ}
   simp only [← e] at hlim2
   rw [← tendsto_nhds_unique hlim1 hlim2, h0]
 
-/-- **The tangential trace of an `H̊(curl)` field vanishes pointwise**: if the `C¹` field `U`
-satisfies Green's formula `Σ ∫_B curl U : ψ = Σ ∫_B U : curl ψ` against every `ψ ∈ C_c^∞(ℝ³)`
-(no boundary condition on `ψ`), then `x × Uᵢ(x) = 0` on `S²`. -/
+/-- If a `C¹` field `U` satisfies `Σ ∫_B curl U : ψ = Σ ∫_B U : curl ψ` for every
+`ψ ∈ C_c^∞(ℝ³)`, then `x × Uᵢ = 0` on `S²`. -/
 theorem crossF_eq_zero_of_green (hU : ∀ ij, ContDiff ℝ 1 (U ij))
     (hG : ∀ ψ : Ix → R3 → ℝ, IsTestField (univ : Set R3) ψ →
       ∑ ij, ∫ x in ball3, curlM U ij x * ψ ij x = ∑ ij, ∫ x in ball3, U ij x * curlM ψ ij x)
@@ -1941,7 +1798,6 @@ section Assembly
 
 variable {U : Ix → R3 → ℝ}
 
-/-- The fundamental lemma on the ball, for continuous functions. -/
 theorem eqOn_zero_of_integral_mul {f : R3 → ℝ} (hf : Continuous f)
     (h : ∀ g : R3 → ℝ, IsTest ball3 g → ∫ x in ball3, f x * g x = 0) : ∀ x ∈ ball3, f x = 0 := by
   have hae := isOpen_ball3.ae_eq_zero_of_integral_contDiff_smul_eq_zero (μ := volume) (f := f)
@@ -1959,8 +1815,6 @@ theorem eqOn_of_ae_ball3 {f g : R3 → ℝ} (hf : Continuous f) (hg : Continuous
     (h : f =ᵐ[volume.restrict ball3] g) : ∀ x ∈ ball3, f x = g x := fun _ hx =>
   Measure.eqOn_open_of_ae_eq h isOpen_ball3 hf.continuousOn hg.continuousOn hx
 
-/-- **TSD in the pointwise sense**: a `C¹` field in `L²(TSD)` is symmetric, trace-free and
-divergence-free at every point of the ball. -/
 theorem pointwise_of_mem_tsd (hU : ∀ ij, ContDiff ℝ 1 (U ij))
     (hv : smoothField isOpen_ball3 isBounded_ball3 U (fun ij => (hU ij).continuous) ∈ tsd ball3) :
     (∀ x ∈ ball3, ∀ i j, U (i, j) x = U (j, i) x) ∧ (∀ x ∈ ball3, ∑ i, U (i, i) x = 0) ∧
@@ -2012,9 +1866,6 @@ theorem contDiff_curlM {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, ContDiff ℝ 2 (�
   ((hΨ _).partialDeriv (m := 1) (by norm_num) _).sub
     ((hΨ _).partialDeriv (m := 1) (by norm_num) _)
 
-/-- **An electric eigenfield with a `C²` representative**, pointwise: `curl_min u = curl U`,
-`curl curl U = ξ² U` in the ball, and Green's formula against all of `C_c^∞(ℝ³)` (the weak form
-of the electric boundary condition). -/
 theorem eigen_data (hU : ∀ ij, ContDiff ℝ 2 (U ij)) {ξ : ℝ}
     (hE : (gradCurl ℝ isOpen_ball3).IsEigenfield ξ
       (smoothField isOpen_ball3 isBounded_ball3 U (fun ij => (hU ij).continuous))) :
@@ -2077,7 +1928,6 @@ theorem eigen_data (hU : ∀ ij, ContDiff ℝ 2 (U ij)) {ξ : ℝ}
     simp only [e1, e2] at hg
     exact hg
 
-/-- **No TSD eigenfield on the ball with a `C²` representative on `ℝ³`** (core form). -/
 theorem eq_zero_of_isEigenfield_of_contDiff_two {ξ : ℝ} (hξ : ξ ≠ 0)
     (hU : ∀ ij, ContDiff ℝ 2 (U ij))
     (hv : smoothField isOpen_ball3 isBounded_ball3 U (fun ij => (hU ij).continuous) ∈ tsd ball3)
@@ -2151,8 +2001,6 @@ section Ball
 open Feec.Counterexamples.BallSymTSD (rho ball3 isOpen_ball3 isBounded_ball3 continuous_rho)
 
 
-/-- **Cut-off to `ℝ³`**: a field `C²` on a neighbourhood `O` of the closed ball agrees on a
-neighbourhood of the closed ball with a field `C²` on `ℝ³`. -/
 theorem exists_contDiff_eq_on_closedBall3 {O : Set R3} (hO : IsOpen O)
     (hBO : {x : R3 | rho x ≤ 1} ⊆ O) {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiffOn ℝ 2 (U ij) O) :
     ∃ U' : Ix → R3 → ℝ, (∀ ij, ContDiff ℝ 2 (U' ij)) ∧
@@ -2176,9 +2024,8 @@ theorem exists_contDiff_eq_on_closedBall3 {O : Set R3} (hO : IsOpen O)
       exact contDiffAt_const.congr_of_eventuallyEq hev
   · simp only [(hζ1 x).1 hx, one_mul]
 
-/-- **TSD eigenfields on the unit ball that are `C²` up to the boundary vanish**: on
-`B = {|x| < 1}`, let `ξ ≠ 0` and `u ∈ L²(TSD) ∩ H̊(curl)` with `curl† curl u = ξ² u`, and assume
-`u` has a representative that is `C²` on a neighbourhood of the closed ball. Then `u = 0`. -/
+/-- On the unit ball, a TSD eigenfield of `curl† curl` with `ξ ≠ 0` that is `C²` on a
+neighbourhood of the closed ball vanishes. -/
 theorem eq_zero_of_isEigenfield_of_contDiff_ball {ξ : ℝ} (hξ : ξ ≠ 0) {v : L2F ℝ ball3 Ix}
     (hv : v ∈ tsd ball3) (hE : (gradCurl ℝ isOpen_ball3).IsEigenfield ξ v) {O : Set R3}
     (hO : IsOpen O) (hBO : {x : R3 | rho x ≤ 1} ⊆ O) {U : Ix → R3 → ℝ}
@@ -2194,7 +2041,7 @@ theorem eq_zero_of_isEigenfield_of_contDiff_ball {ξ : ℝ} (hξ : ξ ≠ 0) {v 
   subst hveq
   exact eq_zero_of_isEigenfield_of_contDiff_two hξ hU' hv hE
 
-/-! ### The conditional result: regularity implies stationarity -/
+/-! ### Regularity implies stationarity -/
 
 section Regularity
 
@@ -2205,10 +2052,7 @@ def HasC2Rep {ι : Type*} [Fintype ι] (Ω : Set R3) (v : L2F ℝ Ω ι) : Prop 
   ∃ O : Set R3, IsOpen O ∧ closure Ω ⊆ O ∧ ∃ U : ι → R3 → ℝ,
     (∀ ij, ContDiffOn ℝ 2 (U ij) O) ∧ ∀ ij, v ij =ᵐ[volume.restrict Ω] U ij
 
-/-- **Boundary regularity of TSD eigenfields** (hypothesis, absent from Mathlib): every TSD
-eigenfield `u ∈ L²(TSD) ∩ H̊(curl)`, `curl† curl u = ξ² u`, `ξ > 0`, on `Ω` is `C²` up to `∂Ω`.
-It follows from the row-wise Maxwell regularity `MaxwellEigenfieldRegularity`
-(`tsdEigenfieldRegularity_of_maxwell`). -/
+/-- Every TSD eigenfield of `curl† curl` on `Ω`, `ξ > 0`, has a representative `C²` up to `∂Ω`. -/
 def TSDEigenfieldRegularity (Ω : Set R3) (hΩ : IsOpen Ω) : Prop :=
   ∀ ξ : ℝ, 0 < ξ → ∀ v : L2F ℝ Ω Ix, v ∈ tsd Ω → (gradCurl ℝ hΩ).IsEigenfield ξ v → HasC2Rep Ω v
 
@@ -2217,25 +2061,18 @@ theorem hasC2Rep_zero {ι : Type*} [Fintype ι] : HasC2Rep Ω (0 : L2F ℝ Ω ι
     (Lp.coeFn_zero ℝ 2 (volume.restrict Ω)).mono fun x hx => by
       rw [show (0 : L2F ℝ Ω ι) ij = 0 from rfl, hx]; rfl⟩
 
-/-- The regularity hypothesis holds whenever every TSD eigenfield vanishes (the zero field has a
-smooth representative). -/
 theorem tsdEigenfieldRegularity_of_forall_eq_zero (hΩ : IsOpen Ω)
     (h : ∀ ξ : ℝ, 0 < ξ → ∀ v : L2F ℝ Ω Ix, v ∈ tsd Ω → (gradCurl ℝ hΩ).IsEigenfield ξ v →
       v = 0) : TSDEigenfieldRegularity Ω hΩ := fun ξ hξ v hv hE => by
   rw [h ξ hξ v hv hE]; exact hasC2Rep_zero
 
-/-- **A concrete instance**: on every box `∏ (aᵢ, aᵢ + ℓᵢ)` the regularity hypothesis holds,
-since there are no TSD eigenfields (`Feec.Models.Box.not_exists_tsd_eigenfield_box`). -/
 theorem tsdEigenfieldRegularity_box {a ℓ : R3} (hℓ : ∀ i, 0 < ℓ i) :
     TSDEigenfieldRegularity (Models.Box.openBox a ℓ) (Models.Box.isOpen_openBox a ℓ) :=
   tsdEigenfieldRegularity_of_forall_eq_zero _ fun ξ hξ v hv hE => by
     by_contra hv0
     exact Models.Box.not_exists_tsd_eigenfield_box hℓ ⟨ξ, hξ, v, hv0, hv, hE⟩
 
-/-- **On the ball, regularity is equivalent to the absence of TSD eigenfields**: the smooth-class
-theorem `eq_zero_of_isEigenfield_of_contDiff_ball` kills every regular eigenfield. So, as a
-hypothesis on the ball, `TSDEigenfieldRegularity` restates the open question O3; the standard
-regularity statement it follows from is `MaxwellEigenfieldRegularity`. -/
+/-- On the ball, `TSDEigenfieldRegularity` holds iff every TSD eigenfield vanishes. -/
 theorem tsdEigenfieldRegularity_ball_iff :
     TSDEigenfieldRegularity ball3 isOpen_ball3 ↔
       ∀ ξ : ℝ, 0 < ξ → ∀ v : L2F ℝ ball3 Ix, v ∈ tsd ball3 →
@@ -2245,9 +2082,8 @@ theorem tsdEigenfieldRegularity_ball_iff :
   exact eq_zero_of_isEigenfield_of_contDiff_ball hξ.ne' hv hE hO
     (fun x hx => hcl (mem_closure_ball3 hx)) hU hvU
 
-/-- **`K*` is stationary on the ball under regularity**: for the thesis' complex on the unit ball
-and `K = {0} × L²(TSD) × L²(TSD)`, if the eigenvectors of `L²` are complete (`hD`) and TSD
-eigenfields are `C²` up to the boundary (`hR`), every datum of `K*` is stationary. -/
+/-- On the unit ball, `EigenDense` and `TSDEigenfieldRegularity` make every datum of `K*`
+stationary. -/
 theorem coreSub_le_stationary_ball_of_regularity (hD : (gradCurl ℝ isOpen_ball3).EigenDense)
     (hR : TSDEigenfieldRegularity ball3 isOpen_ball3) :
     (gradCurl ℝ isOpen_ball3).coreSub (tsd ball3) (tsd ball3) ≤
@@ -2265,15 +2101,14 @@ section Maxwell
 
 variable {Ω : Set R3}
 
-/-- Row `i` of a matrix field, as a vector field (index `Fin 1 × Fin 3`, the index of
-`Feec.Domain.curlOp 1`, the row-wise curl of a single row). -/
+/-- Row `i` of a matrix field, as a vector field. -/
 def rowF (i : Fin 3) : L2F ℝ Ω Ix →L[ℝ] L2F ℝ Ω (Fin 1 × Fin 3) :=
   compF fun p : Fin 1 × Fin 3 => (i, p.2)
 
 theorem rowF_apply (i : Fin 3) (v : L2F ℝ Ω Ix) (p : Fin 1 × Fin 3) :
     rowF i v p = v (i, p.2) := rfl
 
-/-- A vector field placed in row `i` of a matrix field (the adjoint of `rowF i`). -/
+/-- A vector field placed in row `i` of a matrix field. -/
 def rowEmb (i : Fin 3) : L2F ℝ Ω (Fin 1 × Fin 3) →L[ℝ] L2F ℝ Ω Ix :=
   (PiLp.continuousLinearEquiv 2 ℝ (fun _ : Ix => L2 ℝ Ω)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun jk : Ix =>
@@ -2335,40 +2170,27 @@ theorem gradOp_rowTest (i : Fin 3) (φ : Fin 1 → R3 → ℝ) :
     simp [rowTest, gradOp_apply]
   · simp [rowTest, h]
 
-/-- A vector field `w` is **weakly divergence-free** in `Ω`: `∫ w · ∇φ = 0` for all
-`φ ∈ C_c^∞(Ω)` (no boundary condition). -/
+/-- A vector field `w` is weakly divergence-free in `Ω`: `∫ w · ∇φ = 0` for all `φ ∈ C_c^∞(Ω)`. -/
 def IsDivFree (w : L2F ℝ Ω (Fin 1 × Fin 3)) : Prop :=
   ∀ φ : Fin 1 → R3 → ℝ, ∀ hφ : IsTestField Ω φ,
     ⟪w, testField ((gradOp 3 1 : ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ)⟫_ℝ = 0
 
-/-- `w` is an **electric (perfectly conducting) Maxwell eigenfield** with frequency `ξ`:
-`w ∈ H̊(curl, Ω)`, `curl w ∈ H(curl, Ω)` and `curl curl w = ξ² w`, where the second curl is the
-weak one, `(curl_min)†` (`Feec.Domain.ConstCoeffOp.adjoint_minimal`). -/
+/-- `w ∈ H̊(curl, Ω)` with `curl w ∈ H(curl, Ω)` and `curl curl w = ξ² w`. -/
 def IsMaxwellEigenfield (ξ : ℝ) (w : L2F ℝ Ω (Fin 1 × Fin 3)) : Prop :=
   ∃ (h1 : w ∈ ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω).domain)
     (h2 : (curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω ⟨w, h1⟩ ∈
       ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)†.domain),
     ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)† ⟨_, h2⟩ = (ξ ^ 2 : ℝ) • w
 
-/-- **Boundary regularity of Maxwell eigenfields** (hypothesis, absent from Mathlib): every
-weakly divergence-free vector field `w ∈ H̊(curl, Ω)` with `curl curl w = ξ² w`, `ξ > 0`, has a
-representative `C²` on a neighbourhood of `cl Ω`. This is the textbook statement for the
-electric Maxwell eigenproblem on a smooth bounded domain: `H̊(curl) ∩ H(div) ↪ H¹` with
-`H^{s+1}` regularity from `curl curl w`, `div w ∈ H^s` ([GiraultRaviart1986], Ch. I, §3), then
-bootstrapping and Sobolev embedding ([Evans2010], §5.6, §6.3 for the scalar model). It involves
-no symmetry or trace condition, and it is not a restatement of the absence of eigenfields:
-nonzero smooth Maxwell eigenfields exist on every box and on the ball (for instance the toroidal
-fields `j₁(k|x|)/|x| (x₂, -x₁, 0)`, `j₁(k) = 0`; not formalized). -/
+/-- Every weakly divergence-free electric Maxwell eigenfield on `Ω` is `C²` near `cl Ω`. -/
 def MaxwellEigenfieldRegularity (Ω : Set R3) : Prop :=
   ∀ ξ : ℝ, 0 < ξ → ∀ w : L2F ℝ Ω (Fin 1 × Fin 3), IsDivFree w → IsMaxwellEigenfield ξ w →
     HasC2Rep Ω w
 
-/-- The hypothesis is satisfiable: it holds trivially on `∅`, where `L²` is zero. -/
 theorem maxwellEigenfieldRegularity_empty : MaxwellEigenfieldRegularity (∅ : Set R3) :=
   fun _ _ _ _ _ => ⟨univ, isOpen_univ, subset_univ _, fun _ _ => 0, fun _ => contDiffOn_const,
     fun _ => ae_iff.2 (by simp)⟩
 
-/-- The rows of a TSD field are weakly divergence-free. -/
 theorem isDivFree_rowF {v : L2F ℝ Ω Ix} (hv : v ∈ tsd Ω) (i : Fin 3) : IsDivFree (rowF i v) := by
   intro φ hφ
   have hφ' : IsTestField Ω (fun j => if j = i then φ 0 else 0) := fun j => by
@@ -2389,7 +2211,6 @@ theorem rowF_mem_testGraph (i : Fin 3) {φ : Ix → R3 → ℝ} (hφ : IsTestFie
   rw [rowF, compF_testField, compF_testField]
   exact Prod.ext rfl (testField_congr _ _ (curlOp_row i φ).symm)
 
-/-- Rows of `H̊(curl)` matrix fields lie in `H̊(curl)`, with the row of the curl as curl. -/
 theorem rowF_mem_minimal (hΩ : IsOpen Ω) (i : Fin 3)
     (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) :
     ∃ h : rowF i (u : L2F ℝ Ω Ix) ∈ ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω).domain,
@@ -2398,8 +2219,6 @@ theorem rowF_mem_minimal (hΩ : IsOpen Ω) (i : Fin 3)
   (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).mem_minimal_of_mapsTo_testGraph hΩ hΩ (rowF i) (rowF i)
     (fun _ hφ => rowF_mem_testGraph i hφ) u
 
-/-- Rows of `H(curl)` matrix fields lie in `H(curl)`, with the row of the weak curl as weak
-curl. -/
 theorem rowF_mem_adjoint (hΩ : IsOpen Ω) (i : Fin 3)
     (c : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω)†.domain) :
     ∃ h : rowF i (c : L2F ℝ Ω Ix) ∈ ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).minimal Ω)†.domain,
@@ -2417,8 +2236,6 @@ theorem rowF_mem_adjoint (hΩ : IsOpen Ω) (i : Fin 3)
   have hmem := ((curlOp 1 : ConstCoeffOp R3 ℝ _ _).mem_adjoint_minimal_domain_iff hΩ).2 ⟨_, hid⟩
   exact ⟨hmem, (curlOp 1 : ConstCoeffOp R3 ℝ _ _).adjoint_minimal_apply_eq hΩ ⟨_, hmem⟩ hid⟩
 
-/-- **The rows of an electric eigenfield of the thesis' complex are electric Maxwell eigenfields**
-(the curl acts row-wise). -/
 theorem isMaxwellEigenfield_rowF (hΩ : IsOpen Ω) {ξ : ℝ} {v : L2F ℝ Ω Ix}
     (hE : (gradCurl ℝ hΩ).IsEigenfield ξ v) (i : Fin 3) : IsMaxwellEigenfield ξ (rowF i v) := by
   obtain ⟨h1, h3, e⟩ := hE
@@ -2434,23 +2251,19 @@ theorem isMaxwellEigenfield_rowF (hΩ : IsOpen Ω) {ξ : ℝ} {v : L2F ℝ Ω Ix
     exact congrArg (rowF i) e
   exact ⟨hr1, er1 ▸ hr3, key _ _ er1⟩
 
-/-- Componentwise assembly of `C²` representatives. -/
 theorem hasC2Rep_of_rowF {v : L2F ℝ Ω Ix} (h : ∀ i, HasC2Rep Ω (rowF i v)) : HasC2Rep Ω v := by
   choose O hO hcl U hU hvU using h
   refine ⟨⋂ i, O i, isOpen_iInter_of_finite hO, subset_iInter hcl, fun jk => U jk.1 (0, jk.2),
     fun jk => (hU jk.1 (0, jk.2)).mono (iInter_subset _ _), fun jk => ?_⟩
   simpa only [rowF_apply] using hvU jk.1 (0, jk.2)
 
-/-- **Maxwell regularity implies TSD regularity**: a TSD eigenfield is, row by row, a weakly
-divergence-free electric Maxwell eigenfield. -/
+/-- `MaxwellEigenfieldRegularity` implies `TSDEigenfieldRegularity`. -/
 theorem tsdEigenfieldRegularity_of_maxwell (hΩ : IsOpen Ω) (h : MaxwellEigenfieldRegularity Ω) :
     TSDEigenfieldRegularity Ω hΩ := fun ξ hξ _ hv hE =>
   hasC2Rep_of_rowF fun i => h ξ hξ _ (isDivFree_rowF hv i) (isMaxwellEigenfield_rowF hΩ hE i)
 
-/-- **`K*` is stationary on the ball under Maxwell regularity**: for the thesis' complex on the
-unit ball and `K = {0} × L²(TSD) × L²(TSD)`, if the eigenvectors of `L²` are complete (`hD`) and
-electric Maxwell eigenfields on the ball are `C²` up to the boundary (`hM`, the standard elliptic
-regularity statement, absent from Mathlib), every datum of `K*` is stationary. -/
+/-- On the unit ball, `EigenDense` and `MaxwellEigenfieldRegularity` make every datum of `K*`
+stationary. -/
 theorem coreSub_le_stationary_ball_of_maxwellRegularity
     (hD : (gradCurl ℝ isOpen_ball3).EigenDense) (hM : MaxwellEigenfieldRegularity ball3) :
     (gradCurl ℝ isOpen_ball3).coreSub (tsd ball3) (tsd ball3) ≤
@@ -2459,15 +2272,14 @@ theorem coreSub_le_stationary_ball_of_maxwellRegularity
 
 end Maxwell
 
-/-! ### Non-vacuity: the boundary condition is the operative hypothesis -/
+/-! ### A plane wave outside `H̊(curl, B)` -/
 
 section ShearWave
 
 /-- The constant symmetric trace-free matrix `M = e₂ e₃ᵀ + e₃ e₂ᵀ`, with `M e₁ = 0`. -/
 def shearMat (ij : Ix) : ℝ := if ij = (1, 2) ∨ ij = (2, 1) then 1 else 0
 
-/-- **The transverse plane wave** `P(x) = cos(ξ x₁) M`: symmetric, trace-free, divergence-free
-(`M e₁ = 0`) and `curl curl P = ξ² P`, smooth on `ℝ³`, but with nonzero tangential trace. -/
+/-- The transverse plane wave `P(x) = cos(ξ x₁) M`. -/
 def shearWave (ξ : ℝ) : Ix → R3 → ℝ := fun ij x => shearMat ij * Real.cos (ξ * x 0)
 
 theorem contDiff_shearWave (ξ : ℝ) (ij : Ix) : ContDiff ℝ ∞ (shearWave ξ ij) := by
@@ -2537,10 +2349,8 @@ def shearWaveL2 (ξ : ℝ) : L2F ℝ ball3 Ix :=
   smoothField isOpen_ball3 isBounded_ball3 (shearWave ξ)
     fun ij => (contDiff_shearWave ξ ij).continuous
 
-/-- **Non-vacuity of the smooth-class theorem**: for every `ξ ≠ 0` the plane wave
-`P = cos(ξ x₁) (e₂ e₃ᵀ + e₃ e₂ᵀ)` is a nonzero smooth TSD field on the ball with
-`curl curl P = ξ² P` in `H(curl)` (all hypotheses of `eq_zero_of_isEigenfield_of_contDiff_ball`
-but the electric boundary condition); hence it is **not** in `H̊(curl, B)`. -/
+/-- For `ξ ≠ 0`, `P = cos(ξ x₁) (e₂ e₃ᵀ + e₃ e₂ᵀ)` is a nonzero smooth TSD field on the ball with
+`curl curl P = ξ² P` in `H(curl)`, but `P ∉ H̊(curl, B)`. -/
 theorem shearWaveL2_spec {ξ : ℝ} (hξ : ξ ≠ 0) :
     shearWaveL2 ξ ≠ 0 ∧ shearWaveL2 ξ ∈ tsd ball3 ∧ HasC2Rep ball3 (shearWaveL2 ξ) ∧
       (∃ h : shearWaveL2 ξ ∈ (gradCurl ℝ isOpen_ball3).d₁†.domain,

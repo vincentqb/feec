@@ -7,18 +7,7 @@ public import Mathlib.Topology.Algebra.Module.LinearPMap
 /-!
 # Closed operators and the Bochner integral
 
-* `LinearPMap.mem_graph_iff_exists`: membership in the graph, in domain form.
-* `LinearPMap.integral_mem_graph_of_isClosed` (**Hille**): a closed operator commutes with the
-  Bochner integral over `(a,b]`.
-
-## References
-
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2
-* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §II.1
-
-Bibliography: [references.bib](../../../docs/references.bib)
+A closed operator commutes with the Bochner integral over `(a, b]` (Hille's theorem).
 -/
 
 open Set MeasureTheory
@@ -27,7 +16,6 @@ open Set MeasureTheory
 
 namespace LinearPMap
 
-/-- Membership in the graph, in domain form. -/
 theorem mem_graph_iff_exists {R E F : Type*} [Ring R] [AddCommGroup E] [Module R E]
     [AddCommGroup F] [Module R F] {A : E →ₗ.[R] F} {x : E} {v : F} :
     (x, v) ∈ A.graph ↔ ∃ h : x ∈ A.domain, A ⟨x, h⟩ = v :=
@@ -38,9 +26,6 @@ theorem mem_graph_iff_exists {R E F : Type*} [Ring R] [AddCommGroup E] [Module R
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedSpace ℝ E]
   [IsScalarTower ℝ 𝕜 E] [CompleteSpace E]
 
-/-- **Hille's theorem for closed operators**: if `A` is closed, `f` and `H` are integrable on
-`(a,b]` and `(f s, H s)` lies in the graph of `A` for a.e. `s`, then
-`(∫ₐᵇ f, ∫ₐᵇ H)` lies in the graph of `A`. -/
 theorem integral_mem_graph_of_isClosed {A : E →ₗ.[𝕜] E} (hA : A.IsClosed) {f H : ℝ → E}
     {a b : ℝ} (hab : a ≤ b) (hf : IntegrableOn f (Ioc a b)) (hH : IntegrableOn H (Ioc a b))
     (hfH : ∀ᵐ s ∂(volume.restrict (Ioc a b)), (f s, H s) ∈ A.graph) :

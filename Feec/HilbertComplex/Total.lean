@@ -7,38 +7,13 @@ public import Feec.ForMathlib.Analysis.Inequalities
 /-!
 # The total complex of a finite Hilbert complex
 
-A Hilbert complex `H` on a finite index type (any shape: a window, a short complex, …) rolls up
-into a Hilbert complex with one space: `W = ⊕ Wⁱ` with the total differential `𝐝`, a complex
-on the one-point shape `() → ()` (`ComplexShape.loop`), the **total complex** `H.total`
-(`𝐝 𝐝 = 0` is `totalD_comp_totalD`). Its mixed Hodge Laplacian at `()` is the Hodge Laplacian
-`Δ = 𝐝 𝐝* + 𝐝* 𝐝` of `H` in all degrees at once, so the mixed theory of a single degree
-(`Feec.HilbertComplex.HodgeSolution`) applies to `Δ` on `W`, at the boundary degrees of a window
-too (where a degree has no neighbour, `H` itself has no mixed problem).
-
-## Main results
-
-* `HilbertComplex.harmonic_total`: the harmonic forms of `H.total` are `⊕ ℌⁱ = ker Δ`
-  (`HilbertComplex.harmonicSum`).
-* `HilbertComplex.closedRangeAt_total`: closed range in every degree gives closed range of `𝐝`
-  (`exists_poincare_totalD`, a Poincaré inequality for `𝐝`).
-* `HilbertComplex.greenOp`: **the Green operator** `G` of `Δ` (the solution operator of
-  `H.total`), with `Δ G f = f - P_ℌ f` in its strong form and **the Hodge decomposition**
-  `G (Δ x) = x - P_ℌ x` on `D(Δ)` (`greenOp_hodgeLaplacian`); `Δ x ⊥ ℌ`
-  (`starProjection_harmonic_total_hodgeLaplacian`).
-* `HilbertComplex.isReducing_hodgeLaplacian_ker_adjoint`: `ker 𝐝†` reduces `Δ`, with no closed
-  range (in degree `1` of the de Rham complex: Hodge heat on divergence-free fields is unsteady
-  Stokes flow with slip boundary conditions); `exists_hodgeLaplacian_eq_adjoint`, the domain of
-  `Δ` in terms of `𝐝` and `𝐝†`.
-* `HilbertComplex.single_mem_ker_adjoint_totalD_of_mem_orthogonal`: a form of degree `i`
-  orthogonal to `𝔅ⁱ` is in `ker 𝐝†` (in degree `1`, a divergence-free velocity with vanishing
-  normal trace).
+A finite Hilbert complex rolls up into the total complex `W →𝐝 W`, `W = ⊕ Wⁱ`, on the shape
+`ComplexShape.loop`; under closed range in every degree, its solution operator is the Green operator
+`G` of the Hodge Laplacian.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2 (the Hodge Laplacian and its solution operator)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 4.10 (the solution
-  operator of the Hodge Laplacian)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -62,8 +37,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- **The total complex** `W →𝐝 W` of a finite Hilbert complex, `W = ⊕ Wⁱ`, on the one-point
-shape `ComplexShape.loop`. -/
+/-- **The total complex** `W →𝐝 W`, `W = ⊕ Wⁱ`, on `ComplexShape.loop`. -/
 def total : HilbertComplex 𝕜 ComplexShape.loop (fun _ : Unit => PiLp 2 W) where
   d _ _ := H.totalD
   shape _ _ h := absurd trivial h
@@ -76,7 +50,6 @@ theorem total_d (i j : Unit) : H.total.d i j = H.totalD := rfl
 
 theorem loop_rel (i j : Unit) : ComplexShape.loop.Rel i j := trivial
 
-/-- **The harmonic forms of the total complex** are `⊕ ℌⁱ = ker 𝐝 ∩ ker 𝐝*`. -/
 theorem harmonic_total : H.total.harmonic () = H.harmonicSum := by
   rw [harmonicSum_eq_inf, ← adjoint_totalD]; rfl
 
@@ -89,8 +62,6 @@ instance [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] : FiniteDimensional 𝕜
   exact Module.Finite.of_injective f fun x y hxy => Subtype.ext (PiLp.ext fun i =>
     congrArg Subtype.val (congrFun hxy i))
 
-/-- **A Poincaré inequality for `𝐝`** from closed range in every degree: `‖x‖ ≤ C ‖𝐝 x‖` on
-`D(𝐝) ∩ (ker 𝐝)ᗮ` (componentwise, `xⁱ ⊥ 𝔷ⁱ`). -/
 theorem exists_poincare_totalD (hcr : ∀ i, H.ClosedRangeAt i) : ∃ C : ℝ,
     ∀ x : H.totalD.domain, (x : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(x : PiLp 2 W)‖ ≤ C * ‖H.totalD x‖ := by
@@ -126,13 +97,10 @@ theorem exists_poincare_totalD (hcr : ∀ i, H.ClosedRangeAt i) : ∃ C : ℝ,
     _ ≤ ∑ i, C i * ‖H.totalD x‖ := Finset.sum_le_sum fun i _ => hC i x hx
     _ = _ := (Finset.sum_mul _ _ _).symm
 
-/-- **The total complex has closed range** when `H` has closed range in every degree. -/
 theorem closedRangeAt_total (hcr : ∀ i, H.ClosedRangeAt i) (i : Unit) : H.total.ClosedRangeAt i :=
   let ⟨_, hP⟩ := H.exists_poincare_totalD hcr
   isClosed_range_of_norm_le H.isClosed_totalD hP
 
-/-- **The Hodge Laplacian in the total complex**: for `x ∈ D(Δ)`, `x ∈ D(𝐝) ∩ D(𝐝†)`,
-`𝐝 x ∈ D(𝐝†)`, `𝐝† x ∈ D(𝐝)` and `Δ x = 𝐝 𝐝† x + 𝐝† 𝐝 x`. -/
 theorem hodgeLaplacian_apply_eq_adjoint (x : H.hodgeLaplacian.domain) :
     ∃ (h₁ : (x : PiLp 2 W) ∈ H.totalD.domain) (h₂ : (x : PiLp 2 W) ∈ H.totalD†.domain)
       (h₃ : (H.totalD ⟨_, h₁⟩ : PiLp 2 W) ∈ H.totalD†.domain)
@@ -141,7 +109,6 @@ theorem hodgeLaplacian_apply_eq_adjoint (x : H.hodgeLaplacian.domain) :
   rw [adjoint_totalD]
   exact H.hodgeLaplacian_apply_eq x
 
-/-- `Δ x ⊥ ℌ`: the range of the Hodge Laplacian is orthogonal to its kernel. -/
 theorem hodgeLaplacian_mem_orthogonal_harmonic_total (x : H.hodgeLaplacian.domain) :
     (H.hodgeLaplacian x : PiLp 2 W) ∈ (H.total.harmonic ())ᗮ := by
   rw [Submodule.mem_orthogonal']
@@ -158,9 +125,6 @@ theorem starProjection_harmonic_total_hodgeLaplacian (x : H.hodgeLaplacian.domai
 
 /-! ### `ker 𝐝†` reduces the Hodge Laplacian -/
 
-/-- **The domain of the Hodge Laplacian** (the converse of `hodgeLaplacian_apply_eq_adjoint`):
-`x ∈ D(𝐝) ∩ D(𝐝†)` with `𝐝 x ∈ D(𝐝†)` and `𝐝† x ∈ D(𝐝)` is in `D(Δ)`, and
-`Δ x = 𝐝 𝐝† x + 𝐝† 𝐝 x`. -/
 theorem exists_hodgeLaplacian_eq_adjoint {x : PiLp 2 W} (h₁ : x ∈ H.totalD.domain)
     (h₂ : x ∈ H.totalD†.domain) (h₃ : (H.totalD ⟨x, h₁⟩ : PiLp 2 W) ∈ H.totalD†.domain)
     (h₄ : (H.totalD† ⟨x, h₂⟩ : PiLp 2 W) ∈ H.totalD.domain) :
@@ -181,16 +145,11 @@ theorem exists_hodgeLaplacian_eq_adjoint {x : PiLp 2 W} (h₁ : x ∈ H.totalD.d
   rw [e1, e2, H.totalD_comp_totalD, H.dual.totalD_comp_totalD]
   abel
 
-/-- `ker 𝐝†` is closed (`𝐝†` is closed), so it has an orthogonal projection. -/
+/-- `ker 𝐝†` has an orthogonal projection. -/
 instance : (H.totalD†).ker.HasOrthogonalProjection :=
   hasOrthogonalProjection_ker _ (adjoint_isClosed H.dense_totalD_domain)
 
-/-- **`ker 𝐝†` reduces the Hodge Laplacian** of every finite Hilbert complex, with no closed-range
-hypothesis. For `x ∈ D(Δ)` and `P` the projection onto `ker 𝐝†`, `x - P x ∈ (ker 𝐝†)ᗮ ⊆ ker 𝐝`, so
-`P x ∈ D(Δ)` and `Δ P x = 𝐝† 𝐝 x = P Δ x` (`𝐝 𝐝† x ∈ R(𝐝) ⊥ ker 𝐝†` and `𝐝† 𝐝 x ∈ ker 𝐝†`). In
-degree `1` of `HΛ(Ω)` the forms of `ker 𝐝†` are the divergence-free fields with vanishing normal
-trace, and the Hodge heat flow on them is the unsteady Stokes flow with slip boundary conditions.
-[AFW2010], §3.2 -/
+/-- **`ker 𝐝†` reduces the Hodge Laplacian** of every finite Hilbert complex. [AFW2010], §3.2 -/
 theorem isReducing_hodgeLaplacian_ker_adjoint :
     H.hodgeLaplacian.IsReducing (H.totalD†).ker := by
   set K := (H.totalD†).ker
@@ -227,9 +186,6 @@ theorem isReducing_hodgeLaplacian_ker_adjoint :
     exact congrArg _ (Subtype.ext hDz)
   exact ⟨fun x => (key x).1, fun x => (key x).2⟩
 
-/-- **A form orthogonal to the boundaries is in `ker 𝐝†`**: if `v ⊥ 𝔅ⁱ`, then
-`single i v ⊥ R(𝐝)`. In degree `1` of `HΛ(Ω)`: a field orthogonal to the gradients, divergence-free
-with vanishing normal trace. -/
 theorem single_mem_ker_adjoint_totalD_of_mem_orthogonal [DecidableEq ι] {i : ι} {v : W i}
     (hv : v ∈ (H.boundaries i)ᗮ) : PiLp.single 2 i v ∈ (H.totalD†).ker := by
   rw [← orthogonal_range_eq_ker_adjoint _ H.dense_totalD_domain, Submodule.mem_orthogonal]
@@ -243,8 +199,6 @@ theorem single_mem_ker_adjoint_totalD_of_mem_orthogonal [DecidableEq ι] {i : ι
     exact Submodule.inner_right_of_mem_orthogonal (K := H.boundaries _) ⟨_, rfl⟩ hv
   · rw [H.apply_eq_zero_of_not_rel hj, inner_zero_left]
 
-/-- **A form in a degree that no differential reaches is in `ker 𝐝†`**: if `¬ c.Rel j i` for
-every `j` (the first degree of a window), then `single i v ⊥ R(𝐝)`. -/
 theorem single_mem_ker_adjoint_totalD [DecidableEq ι] {i : ι} (hi : ∀ j, ¬ c.Rel j i)
     (v : W i) : PiLp.single 2 i v ∈ (H.totalD†).ker :=
   H.single_mem_ker_adjoint_totalD_of_mem_orthogonal <| by
@@ -263,19 +217,16 @@ theorem isMixedSolution_totalMixedSolution (hcr : ∀ i, H.ClosedRangeAt i) (f :
       (H.totalMixedSolution hcr f).snd.fst (H.totalMixedSolution hcr f).snd.snd :=
   H.total.isMixedSolution_mixedSolution _ _ _ _ f
 
-/-- The harmonic component of the mixed solution is `P_ℌ f`. -/
 theorem harmonic_totalMixedSolution (hcr : ∀ i, H.ClosedRangeAt i) (f : PiLp 2 W) :
     ((H.totalMixedSolution hcr f).snd.snd : PiLp 2 W) = (H.total.harmonic ()).starProjection f :=
   H.total.harmonic_mixedSolution _ _ _ _ f
 
-/-- **The Green operator** `G` of the Hodge Laplacian on `W = ⊕ Wⁱ`: the solution operator of the
-total complex, `G f ⊥ ℌ`, `Δ G f = f - P_ℌ f` (`HilbertComplex.hodgeLaplacian_solutionOp` for
-`H.total`). [AFW2010], §3.2 -/
+/-- **The Green operator** `G` of the Hodge Laplacian on `W = ⊕ Wⁱ`: the solution operator of
+the total complex. [AFW2010], §3.2 -/
 def greenOp (hcr : ∀ i, H.ClosedRangeAt i) : PiLp 2 W →L[𝕜] PiLp 2 W :=
   H.total.solutionOp (loop_rel () ()) (loop_rel () ()) (H.closedRangeAt_total hcr ())
     (H.closedRangeAt_total hcr ())
 
-/-- `G f` is the `u` component of the mixed solution. -/
 theorem greenOp_apply (hcr : ∀ i, H.ClosedRangeAt i) (f : PiLp 2 W) :
     H.greenOp hcr f = H.total.domainIncl () (H.totalMixedSolution hcr f).snd.fst :=
   rfl

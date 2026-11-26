@@ -6,32 +6,13 @@ public import Feec.ForMathlib.Analysis.DiagonalChoice
 /-!
 # Every state is the limit of initial states of the scheme (6.5)
 
-[QuennevilleBelair2015], §6.3: the semi-discrete scheme (6.5) on `Q = (0, ½)³` with the elements
-of Table 6.1 and the thesis' boundary conditions (`Feec.Models.Cube.WeakSymmetry.cubeWave`). Its
-initial values are constrained: every solution has `uₕ(0) ⊥ d̃ψ` for `ψ ∈ ker S₀,ₕ`
-(`Feec.BGG.DiscreteSolution.hidden_constraint`), and only such data have solutions
-(`Feec.Models.Cube.WeakSymmetry.cubeWave_exists_iff_compatible_u`). The constraint does not
-obstruct approximation: every point of the total space of the forms model is the limit, in
-energy, of the initial states of solutions of (6.5) without source (`exists_tendsto_dvec`). So
-the convergence of `Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution`, for
-every family of solutions whose initial states converge, is a statement about every datum of
-`D(L)`.
-
-The proof approximates the point by `y ∈ D(L²)`
-(`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`), whose orbit is approximated uniformly at all
-large `N` by solutions of (6.5) (`eventually_exists_dvec_le`), and chooses the solutions level by
-level (`exists_tendsto_zero_of_forall_eventually_exists_lt`).
-
-## Main results
-
-* `nonempty_discreteSolution`: (6.5) has solutions at every level (from the zero data).
-* `eventually_exists_dvec_lt`: at all large levels some solution starts within `ε` of the point.
-* **`exists_tendsto_dvec`**: solutions of (6.5) whose initial states converge to the point.
+For the semi-discrete scheme (6.5) of [QuennevilleBelair2015], §6.3 on `Q = (0, ½)³`, every point
+of the total space of the forms model is the limit, in energy, of initial states of solutions of
+(6.5) without source (`exists_tendsto_dvec`).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.4)), §6.3 ((6.5), Table 6.1)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -54,8 +35,6 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-/-- **(6.5) has solutions on `[0, T]` at every level** (source `0`): the zero data satisfy the
-compatibility condition of `cubeWave_exists_iff_compatible_u`. -/
 theorem nonempty_discreteSolution {T : ℝ} (hT0 : 0 < T) (N : ℕ) :
     Nonempty (Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0)) := by
   obtain ⟨s, -⟩ := (cubeWave_exists_iff_compatible_u hT hB N hT0
@@ -64,9 +43,6 @@ theorem nonempty_discreteSolution {T : ℝ} (hT0 : 0 < T) (N : ℕ) :
   exact ⟨s⟩
 
 set_option maxHeartbeats 8000000 in
-/-- **At all large levels, (6.5) has a solution starting within `ε` of a point** (source `0`, in
-energy): approximate the point by `y ∈ D(L²)`; at all large levels some solution of (6.5) is
-uniformly close to the orbit of `y` (`eventually_exists_dvec_le`), in particular at `t = 0`. -/
 theorem eventually_exists_dvec_lt {T : ℝ} (hT0 : 0 < T) (x : WS) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
       ‖vecL x - dvec (cubeFEM hT hB N) sh 0‖ < ε := by
@@ -97,12 +73,8 @@ theorem eventually_exists_dvec_lt {T : ℝ} (hT0 : 0 < T) (x : WS) {ε : ℝ} (h
     _ < η + η := add_lt_add_of_lt_of_le k0 k2
     _ = ε := by rw [hηdef]; ring
 
-/-- **Every state is the limit of initial states of (6.5)** ([QuennevilleBelair2015], §6.3,
-(6.5), Table 6.1, thesis' boundary conditions; no hypothesis): for every point `x` of the total
-space of the forms model and every `T > 0`, some solutions of (6.5) on `[0, T]` (source `0`) have
-initial energy vectors converging to that of `x`, although their initial values `uₕ(0)` are
-constrained (`Feec.BGG.DiscreteSolution.hidden_constraint`). With `tendsto_of_isStrongSolution`,
-(6.5) converges along them from every datum of `D(L)`. -/
+/-- For every point `x` of the total space and `T > 0`, some solutions of (6.5) on `[0, T]` with
+source `0` have initial energy vectors converging to that of `x`. [QuennevilleBelair2015], §6.3 -/
 theorem exists_tendsto_dvec {T : ℝ} (hT0 : 0 < T) (x : WS) :
     ∃ sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
       Tendsto (fun N => ‖vecL x - dvec (cubeFEM hT hB N) (sh N) 0‖) atTop (𝓝 0) :=

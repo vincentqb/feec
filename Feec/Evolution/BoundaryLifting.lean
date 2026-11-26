@@ -6,50 +6,13 @@ public import Feec.Evolution.Energy
 /-!
 # Inhomogeneous boundary data by lifting
 
-An evolution problem with boundary conditions is given by two operators `A ≤ A_max` on a
-Hilbert space `E`: `A_max` acts without boundary condition (e.g. `d_max − d_min†` for a Hodge
-wave equation, or `curl_max` for Maxwell), and `A` is its restriction to the fields with
-**homogeneous** boundary values, `D(A) = {x ∈ D(A_max) | γ x = 0}` for a trace `γ`.
-Inhomogeneous boundary data are prescribed through a field `G(t)`
-with the desired traces (a **lifting**): `U` solves the problem with data `γ G` when
-
-`U' = A_max U + F`,  `U(t) − G(t) ∈ D(A)` (`IsBoundarySolution A_max A I F G U`).
-
-For a lifting with `G ∈ C¹(I; E)`, `G(t) ∈ D(A_max)`, the substitution `W = U − G` reduces it to
-the homogeneous problem with the extra forcing `A_max G − G'` (`isBoundarySolution_iff`):
-
-`W' = A W + (F − G' + A_max G)`,
-
-i.e. the forcing `F − (G' + L G)` for `L = −A_max`. This gives existence and uniqueness of the
-inhomogeneous problem from Duhamel's formula for the homogeneous one, for every forcing class of
-`Feec.Evolution.ForcingClass` (`existsUnique_isBoundarySolution`,
-`C0Semigroup.existsUnique_isBoundarySolution`), and the energy estimate
-`‖U(t) − G(t)‖ ≤ ‖U(a) − G(a)‖ + ∫ₐᵗ ‖F − G' + A_max G‖` (`IsBoundarySolution.norm_sub_le`).
-
-## Main results
-
-* `isBoundarySolution_iff`: the reduction to homogeneous boundary values.
-* `IsBoundarySolution.unique`: uniqueness for dissipative `A` (no regularity of the lifting).
-* `existsUnique_isBoundarySolution` (skew-adjoint `A`, Stone's group),
-  `C0Semigroup.existsUnique_isBoundarySolution` (any semigroup generator): a classical solution
-  `W = U − G` exists for `U(a) − G(a) ∈ D(A)` and admissible `F − G' + A_max G`, and it is unique.
-* `IsBoundarySolution.eq_add_mild`: the lifted Duhamel formula
-  `U(t) = G(t) + S(t − a)(U(a) − G(a)) + ∫ₐᵗ S(t − s)(F − G' + A_max G)(s) ds`; the fully discrete
-  FEEC theorem approximates the mild solution `U − G` (the last two summands, the forcing entering
-  through the integral) by forced iterates
-  (`Feec.HilbertComplex.DissipFEEC.TimeScheme.Verdict.lifted_iterates`).
-* `IsBoundarySolution.norm_sub_le`, `IsBoundarySolution.norm_le`: energy estimates.
-* `IsBoundarySolution.hasDerivWithinAt_norm_sq`: the energy identity
-  `d/dt ‖U‖² = 2 re ⟪A_max U + F, U⟫`; the boundary flux `re ⟪A_max U, U⟫` vanishes when `U(t)`
-  has homogeneous boundary values and `A` is skew-symmetric.
+For operators `A ≤ A_max`, `A` the restriction to homogeneous boundary values, and a lifting `G`
+of the boundary data, `U` solves `U' = A_max U + F` with `U − G ∈ D(A)` iff `U − G` solves
+`W' = A W + (F − G' + A_max G)`, which gives existence, uniqueness and energy estimates.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (the experiments prescribe the traces of the exact solution), §4.3 (Thm 4.3)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §4.1–4.2 (inhomogeneous problems)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (Hodge evolution problems)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -66,7 +29,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
   [NormedSpace ℝ E] {Amax A : E →ₗ.[𝕜] E} {I : Set ℝ} {F G U V : ℝ → E}
 
 omit [NormedSpace ℝ E] in
-/-- The graph of a linear partial map is functional. -/
 theorem _root_.LinearPMap.eq_of_mem_graph {f : E →ₗ.[𝕜] E} {x y₁ y₂ : E}
     (h₁ : (x, y₁) ∈ f.graph) (h₂ : (x, y₂) ∈ f.graph) : y₁ = y₂ := by
   have h := f.graph.sub_mem h₁ h₂
@@ -74,30 +36,23 @@ theorem _root_.LinearPMap.eq_of_mem_graph {f : E →ₗ.[𝕜] E} {x y₁ y₂ :
   exact sub_eq_zero.1 (f.graph_fst_eq_zero_snd h rfl)
 
 omit [NormedSpace ℝ E] in
-/-- For `A ≤ A_max`, a point of the graph of `A_max` whose first component lies in `D(A)` lies
-in the graph of `A`. -/
 theorem _root_.LinearPMap.mem_graph_of_le {f g : E →ₗ.[𝕜] E} (hle : f ≤ g) {x y : E}
     (hx : x ∈ f.domain) (h : (x, y) ∈ g.graph) : (x, y) ∈ f.graph := by
   have h₁ : (x, f ⟨x, hx⟩) ∈ f.graph := f.mem_graph ⟨x, hx⟩
   rwa [LinearPMap.eq_of_mem_graph h (LinearPMap.le_graph_iff.2 hle h₁)]
 
-/-- `U` solves the evolution problem `U' = A_max U + F` on `I` **with the boundary values of
-`G`**: `U` is a strong solution for the operator `A_max` without boundary conditions, and
-`U(t) − G(t)` has homogeneous boundary values, `U(t) − G(t) ∈ D(A)`. For `G = 0` this is a
-strong solution of `U' = A U + F` (`isBoundarySolution_zero_iff`). -/
+/-- `U` solves `U' = A_max U + F` on `I` **with the boundary values of `G`**: `U − G ∈ D(A)`. -/
 structure IsBoundarySolution (Amax A : E →ₗ.[𝕜] E) (I : Set ℝ) (F G U : ℝ → E) : Prop where
   toIsStrongSolution : IsStrongSolution Amax I F U
   sub_mem : ∀ t ∈ I, U t - G t ∈ A.domain
 
-/-- `G` is a **lifting** on `I` with time derivative `DG` and `A_max G = AG`: `G(t) ∈ D(A_max)`
-with `A_max G(t) = AG(t)`, and `G' = DG` within `I`. -/
+/-- `G` is a **lifting** on `I`: `G(t) ∈ D(A_max)`, `A_max G = AG` and `G' = DG`. -/
 structure IsLifting (Amax : E →ₗ.[𝕜] E) (I : Set ℝ) (G DG AG : ℝ → E) : Prop where
   mem_graph : ∀ t ∈ I, (G t, AG t) ∈ Amax.graph
   hasDerivWithinAt : ∀ t ∈ I, HasDerivWithinAt G (DG t) I t
 
-/-- **Reduction to homogeneous boundary values**: for `A ≤ A_max` and a lifting `G`, `U` solves
-`U' = A_max U + F` with the boundary values of `G` iff `W = U − G` is a strong solution of the
-homogeneous problem `W' = A W + (F − G' + A_max G)`. -/
+/-- **Reduction to homogeneous boundary values**: `U` solves `U' = A_max U + F` with the boundary
+values of `G` iff `U − G` is a strong solution of `W' = A W + (F − G' + A_max G)`. -/
 theorem isBoundarySolution_iff (hle : A ≤ Amax) {DG AG : ℝ → E} (hG : IsLifting Amax I G DG AG) :
     IsBoundarySolution Amax A I F G U ↔ IsStrongSolution A I (F - DG + AG) (U - G) := by
   constructor
@@ -126,16 +81,12 @@ theorem isBoundarySolution_iff (hle : A ≤ Amax) {DG AG : ℝ → E} (hG : IsLi
     · simp only [Pi.add_apply, Pi.sub_apply]
       abel
 
-/-- With homogeneous boundary data (`G = 0`), boundary solutions are the strong solutions of
-`U' = A U + F`. -/
 theorem isBoundarySolution_zero_iff (hle : A ≤ Amax) :
     IsBoundarySolution Amax A I F 0 U ↔ IsStrongSolution A I F U := by
   have hG : IsLifting Amax I 0 0 0 :=
     ⟨fun _ _ => Amax.graph.zero_mem, fun t _ => hasDerivWithinAt_const t I (0 : E)⟩
   rw [isBoundarySolution_iff hle hG, sub_zero, add_zero, sub_zero]
 
-/-- Linearity: the difference of two boundary solutions solves the problem with the difference
-of the data. -/
 theorem IsBoundarySolution.sub {F₂ G₂ : ℝ → E} (hU : IsBoundarySolution Amax A I F G U)
     (hV : IsBoundarySolution Amax A I F₂ G₂ V) :
     IsBoundarySolution Amax A I (F - F₂) (G - G₂) (U - V) := by
@@ -145,8 +96,6 @@ theorem IsBoundarySolution.sub {F₂ G₂ : ℝ → E} (hU : IsBoundarySolution 
   simp only [Pi.sub_apply]
   abel
 
-/-- The difference of two solutions with the same boundary data and forcing is a strong solution
-of the homogeneous problem `W' = A W`. -/
 theorem IsBoundarySolution.isStrongSolution_sub (hle : A ≤ Amax)
     (hU : IsBoundarySolution Amax A I F G U) (hV : IsBoundarySolution Amax A I F G V) :
     IsStrongSolution A I 0 (U - V) := by
@@ -155,8 +104,6 @@ theorem IsBoundarySolution.isStrongSolution_sub (hle : A ≤ Amax)
   have := (isBoundarySolution_zero_iff (I := I) (F := 0) (U := U - V) hle).1 h
   exact this
 
-/-- **Uniqueness** for a dissipative `A`: two solutions on `[a, b]` with the same boundary data,
-forcing and initial value agree. No regularity of `G` is needed. -/
 theorem IsBoundarySolution.unique (hle : A ≤ Amax) (hA : A.IsDissipative) {a b : ℝ}
     (hU : IsBoundarySolution Amax A (Icc a b) F G U)
     (hV : IsBoundarySolution Amax A (Icc a b) F G V) (h0 : U a = V a) : EqOn U V (Icc a b) := by
@@ -167,8 +114,6 @@ theorem IsBoundarySolution.unique (hle : A ≤ Amax) (hA : A.IsDissipative) {a b
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- **Energy estimate**: for dissipative `A`, a lifting `G` and continuous
-`F − G' + A_max G`, `‖U(t) − G(t)‖ ≤ ‖U(a) − G(a)‖ + ∫ₐᵗ ‖F − G' + A_max G‖` on `[a, b]`. -/
 theorem IsBoundarySolution.norm_sub_le (hle : A ≤ Amax) (hA : A.IsDissipative) {a b : ℝ}
     {DG AG : ℝ → E} (hG : IsLifting Amax (Icc a b) G DG AG)
     (hU : IsBoundarySolution Amax A (Icc a b) F G U)
@@ -178,7 +123,6 @@ theorem IsBoundarySolution.norm_sub_le (hle : A ≤ Amax) (hA : A.IsDissipative)
   intro t ht
   simpa using hW.norm_le_add_integral hA hc t ht
 
-/-- **A priori bound**: `‖U(t)‖ ≤ ‖G(t)‖ + ‖U(a) − G(a)‖ + ∫ₐᵗ ‖F − G' + A_max G‖`. -/
 theorem IsBoundarySolution.norm_le (hle : A ≤ Amax) (hA : A.IsDissipative) {a b : ℝ}
     {DG AG : ℝ → E} (hG : IsLifting Amax (Icc a b) G DG AG)
     (hU : IsBoundarySolution Amax A (Icc a b) F G U)
@@ -189,18 +133,12 @@ theorem IsBoundarySolution.norm_le (hle : A ≤ Amax) (hA : A.IsDissipative) {a 
     _ ≤ ‖G t‖ + ‖U t - G t‖ := norm_add_le _ _
     _ ≤ _ := by gcongr; exact hU.norm_sub_le hle hA hG hc t ht
 
-/-- **Energy identity with boundary flux**: `d/dt ‖U‖² = 2 re ⟪A_max U + F, U⟫` within `I`. The
-term `re ⟪A_max U, U⟫` is the boundary flux: it vanishes for skew-symmetric `A` when `U(t)` has
-homogeneous boundary values. -/
 theorem IsBoundarySolution.hasDerivWithinAt_norm_sq (hU : IsBoundarySolution Amax A I F G U)
     {t : ℝ} (ht : t ∈ I) :
     HasDerivWithinAt (fun s => ‖U s‖ ^ 2)
       (2 * RCLike.re ⟪Amax ⟨U t, hU.toIsStrongSolution.mem_domain ht⟩ + F t, U t⟫) I t :=
   hU.toIsStrongSolution.hasDerivWithinAt_norm_sq ht
 
-/-- **Exact liftings**: if the lifting `G` itself solves `G' = A_max G + F` (e.g. the exact
-solution of a test problem, whose traces are prescribed), the solution with the boundary values
-of `G` and initial value `G(a)` is `G` itself, and it is the only one. -/
 theorem isBoundarySolution_self_unique {a b : ℝ} (hle : A ≤ Amax) (hA : A.IsDissipative)
     (hG : IsStrongSolution Amax (Icc a b) F G) {V : ℝ → E} (hV0 : V a = G a)
     (hV : IsBoundarySolution Amax A (Icc a b) F G V) : EqOn V G (Icc a b) :=
@@ -214,12 +152,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
   [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {Amax A : E →ₗ.[𝕜] E}
   {F G DG AG : ℝ → E} {a b : ℝ}
 
-/-- **Existence and uniqueness for a semigroup generator** `A ≤ A_max`: for a lifting `G`, an
-initial value with `U₀ − G(a) ∈ D(A)` and admissible `F − G' + A_max G`
-(`C([a,b]; E) ∩ (W^{1,1} ∪ L¹(D(A)))`), there is a solution `U` of `U' = A_max U + F` with the
-boundary values of `G` and `U(a) = U₀`, with `U − G` a classical solution of the homogeneous
-problem (Duhamel's formula), and every solution with the same data agrees with it on `[a, b]`.
-No dissipativity is needed. -/
 theorem _root_.Feec.C0Semigroup.existsUnique_isBoundarySolution (S : C0Semigroup 𝕜 E)
     (hgen : S.generator = A) (hle : A ≤ Amax) (hG : IsLifting Amax (Icc a b) G DG AG) {U₀ : E}
     (hU₀ : U₀ - G a ∈ A.domain) (hF : ForcingClass.admissible A a b (F - DG + AG)) :
@@ -238,10 +170,8 @@ theorem _root_.Feec.C0Semigroup.existsUnique_isBoundarySolution (S : C0Semigroup
     ht
   simpa [sub_eq_zero] using this
 
-/-- **The lifted Duhamel formula**: for a semigroup generator `A ≤ A_max` and a lifting `G`, a
-solution `U` of `U' = A_max U + F` with the boundary values of `G` and continuous
-`f = F − G' + A_max G` is `G` plus the mild solution of the homogeneous problem with forcing `f`:
-`U(t) = G(t) + S(t − a)(U(a) − G(a)) + ∫ₐᵗ S(t − s) f(s) ds`. -/
+/-- **The lifted Duhamel formula**: `U(t) = G(t) + S(t − a)(U(a) − G(a)) + ∫ₐᵗ S(t − s) f(s) ds`,
+`f = F − G' + A_max G`. -/
 theorem IsBoundarySolution.eq_add_mild (S : C0Semigroup 𝕜 E) (hgen : S.generator = A)
     (hle : A ≤ Amax) (hG : IsLifting Amax (Icc a b) G DG AG) {U : ℝ → E}
     (hU : IsBoundarySolution Amax A (Icc a b) F G U) (hc : ContinuousOn (F - DG + AG) (Icc a b)) :
@@ -252,11 +182,8 @@ theorem IsBoundarySolution.eq_add_mild (S : C0Semigroup 𝕜 E) (hgen : S.genera
   simp only [Pi.sub_apply] at e
   rw [← e, add_sub_cancel]
 
-/-- **Existence and uniqueness for a skew-adjoint `A ≤ A_max`** (Stone's group): the
-inhomogeneous boundary value problem `U' = A_max U + F`, `U(t) − G(t) ∈ D(A)`, `U(a) = U₀` with
-`U₀ − G(a) ∈ D(A)` and admissible `F − G' + A_max G` has a solution, `U − G` is a classical
-solution of the homogeneous problem, and the solution is unique. [QuennevilleBelair2015], Thm 4.3,
-extended to inhomogeneous boundary data. -/
+/-- **Existence and uniqueness for a skew-adjoint `A ≤ A_max`**, for a lifting `G`, admissible
+`F − G' + A_max G` and `U₀ − G(a) ∈ D(A)`. [QuennevilleBelair2015], Thm 4.3 (adapted) -/
 theorem existsUnique_isBoundarySolution (hA : A.IsSkewAdjoint) (hle : A ≤ Amax)
     (hG : IsLifting Amax (Icc a b) G DG AG) {U₀ : E} (hU₀ : U₀ - G a ∈ A.domain)
     (hF : ForcingClass.admissible A a b (F - DG + AG)) :

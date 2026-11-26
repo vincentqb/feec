@@ -12,26 +12,17 @@ public import Mathlib.MeasureTheory.Measure.Haar.Unique
 /-!
 # Finite speed of propagation for symmetric hyperbolic systems
 
-Let `E` be a finite-dimensional real inner product space (`ℝⁿ`) with Haar measure, `ι` a finite set
-of components, and `β : ι → ι → E` symmetric (`β j i = β i j`). The constant-coefficient
-**symmetric hyperbolic system**
+A bounded `C¹` or weak `L²` solution of a constant-coefficient symmetric hyperbolic system with
+speed `c` that vanishes at `t = 0` on a ball `B(x, R)` of its domain vanishes on `B(x, R - c t)`.
 
-  `∂ₜ wⱼ = Σᵢ ∂_{β j i} wᵢ`
+## Main results
 
-(Maxwell, acoustics, linear elastodynamics, the Einstein–Bianchi violation system, …) has
-**speed** `c ≥ 0` if `|Σ_{j,i} wⱼ wᵢ L (β j i)| ≤ c ‖L‖ |w|²` for every covector `L`.
-
-* `cone_energy` (classical solutions): if `w` solves the system on the ball `B(x, R)` for
-  `t ∈ (0, T)` and `w(0) = 0` on `B(x, R)`, then `w(t) = 0` on `B(x, R - c t)`. Proof: the energy
-  `e(s) = ∫ χ(R - c s - √(δ² + |y - x|²)) |w(s, y)|² dy` is nonincreasing, since
-  `∂ₜ |w|² = Σ_{ji} ∂_{β j i} (wⱼ wᵢ)` (symmetry) and the flux is controlled by the speed.
+* `FiniteSpeed.cone_energy`: finite speed of propagation for bounded `C¹` solutions.
+* `FiniteSpeed.IsWeakSolution.ae_eq_zero_of_ball`: the same for weak `L²` solutions.
 
 ## References
 
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (symmetric hyperbolic systems,
-  domain of dependence)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.5 (Prop 3.6), §4.10 (interior propagation)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -59,7 +50,6 @@ theorem hypOp_apply (β : ι → ι → E) (f : ι → E → ℝ) (j : ι) (y : 
     (hypOp β).apply f j y = ∑ i, fderiv ℝ (f i) y (β j i) := by
   simp [ConstCoeffOp.apply, hypOp, ConstCoeffOp.applyEntry, iterDeriv_singleton]
 
-/-- The formal adjoint `(Pᵗ ψ)ᵢ = -Σⱼ ∂_{β j i} ψⱼ`. -/
 theorem hypOp_formalAdj_apply (β : ι → ι → E) (f : ι → E → ℝ) (i : ι) (y : E) :
     (hypOp β).formalAdj.apply f i y = -∑ j, fderiv ℝ (f j) y (β j i) := by
   simp [ConstCoeffOp.apply, ConstCoeffOp.formalAdj, hypOp, ConstCoeffOp.adjEntry,
@@ -67,8 +57,7 @@ theorem hypOp_formalAdj_apply (β : ι → ι → E) (f : ι → E → ℝ) (i :
 
 variable [MeasureSpace E] [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)]
 
-/-- `W : [0, T] → L²(Ω; ℝ^ι)` is a **weak solution** of `∂ₜ W = P W`: continuous, and
-`∂ₜ ⟪W, ψ⟫ = ⟪W, Pᵗ ψ⟫` for every test field `ψ ∈ C_c^∞(Ω; ℝ^ι)` (no boundary condition). -/
+/-- **Weak solutions** `W : [0, T] → L²(Ω; ℝ^ι)` of `∂ₜ W = P W`, tested against `C_c^∞(Ω)`. -/
 structure IsWeakSolution (β : ι → ι → E) (Ω : Set E) (T : ℝ) (W : ℝ → L2F ℝ Ω ι) : Prop where
   cont : ContinuousOn W (Icc 0 T)
   deriv : ∀ t ∈ Icc 0 T, ∀ (ψ : ι → E → ℝ) (hψ : IsTestField Ω ψ),
@@ -127,7 +116,6 @@ theorem contDiff_qd (hδ : 0 < δ) : ContDiff ℝ ∞ (qd x δ) := by
 
 theorem continuous_qd (hδ : 0 < δ) : Continuous (qd x δ) := (contDiff_qd hδ).continuous
 
-/-- `|∇q| ≤ 1`. -/
 theorem norm_fderiv_qd_le (hδ : 0 < δ) (y : E) : ‖fderiv ℝ (qd x δ) y‖ ≤ 1 := by
   have hq := qd_pos (x := x) hδ y
   rw [(hasFDerivAt_qd hδ y).fderiv, norm_smul, innerSL_apply_norm, Real.norm_of_nonneg
@@ -150,7 +138,6 @@ theorem wt_pos {s : ℝ} {y : E} (h : qd x δ y < R - c * s) : 0 < wt x δ c R s
   Real.smoothTransition.pos_of_pos (by linarith)
 
 omit [InnerProductSpace ℝ E] in
-/-- Off the ball `B(x, R)` the weight and its time derivative vanish for `s ≥ 0`. -/
 theorem wt_far (hc : 0 ≤ c) {s : ℝ} (hs : 0 ≤ s) {y : E} (hy : R ≤ ‖y - x‖) :
     wt x δ c R s y = 0 ∧ dχ (R - c * s - qd x δ y) = 0 := by
   have h1 := norm_le_qd (δ := δ) (x := x) y
@@ -166,7 +153,6 @@ theorem hasFDerivAt_wt (hδ : 0 < δ) (s : ℝ) (y : E) :
     ((hasFDerivAt_const (R - c * s) y).sub ((contDiff_qd hδ).differentiable (by simp) y).hasFDerivAt)
   exact h.congr_fderiv (by simp [neg_smul])
 
-/-- `|∇ψ| ≤ χ'`. -/
 theorem norm_fderiv_wt_le (hδ : 0 < δ) (s : ℝ) (y : E) :
     ‖fderiv ℝ (wt x δ c R s) y‖ ≤ dχ (R - c * s - qd x δ y) := by
   rw [(hasFDerivAt_wt hδ s y).fderiv, norm_smul, norm_neg, Real.norm_of_nonneg (dχ_nonneg _)]
@@ -195,8 +181,7 @@ section Energy
 variable [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] {ι : Type*} [Fintype ι]
 
-/-- A **symmetric hyperbolic system** `∂ₜ wⱼ = Σᵢ ∂_{β j i} wᵢ` with speed `c`: `β` is symmetric and
-`|Σ_{j,i} wⱼ wᵢ L (β j i)| ≤ c ‖L‖ |w|²` for every covector `L`. -/
+/-- A **symmetric hyperbolic system** `∂ₜ wⱼ = Σᵢ ∂_{β j i} wᵢ` with speed `c`. -/
 structure IsSymmHyperbolic (β : ι → ι → E) (c : ℝ) : Prop where
   symm : ∀ j i, β j i = β i j
   nonneg : 0 ≤ c
@@ -205,7 +190,6 @@ structure IsSymmHyperbolic (β : ι → ι → E) (c : ℝ) : Prop where
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- `∂ₜ |w|² = Σ_{j,i} ∂_{β j i} (wⱼ wᵢ)` along solutions (symmetry of `β`). -/
 theorem two_sum_mul_eq_sum_fderiv_mul {β : ι → ι → E} (hβ : ∀ j i, β j i = β i j)
     {f : ι → E → ℝ} {y : E} (hf : ∀ i, DifferentiableAt ℝ (f i) y) :
     2 * ∑ j, f j y * ∑ i, fderiv ℝ (f i) y (β j i) =
@@ -223,10 +207,7 @@ theorem two_sum_mul_eq_sum_fderiv_mul {β : ι → ι → E} (hβ : ∀ j i, β 
   rw [hswap, ← two_mul]
   simp only [Finset.mul_sum]
 
-/-- **Energy estimate on cones** (finite speed of propagation, classical form). Let `w` solve
-the symmetric hyperbolic system `∂ₜ wⱼ = Σᵢ ∂_{β j i} wᵢ` (speed `c`) on the ball `B(x, R)` for
-`t ∈ (0, T)`, with `w(s, ·) ∈ C¹` and `w`, `∂_β w` bounded. If `w(0) = 0` on `B(x, R)`, then
-`w(t) = 0` on `B(x, R - c t)` for `t ∈ [0, T]`. -/
+/-- **Energy estimate on cones**: finite speed of propagation for bounded `C¹` solutions. -/
 theorem cone_energy {β : ι → ι → E} {c : ℝ} (hβ : IsSymmHyperbolic β c) {T : ℝ}
     {w : ℝ → ι → E → ℝ} (hsm : ∀ s ∈ Icc 0 T, ∀ i, ContDiff ℝ 1 (w s i))
     (hcont : ∀ i y, ContinuousOn (fun s => w s i y) (Icc 0 T))
@@ -505,8 +486,6 @@ theorem norm_kerL2_le {h : E → ℝ} (hh : IsTest (univ : Set E) h) (y : E) :
 
 omit [FiniteDimensional ℝ E] [DecidableEq ι] in
 omit [(volume : Measure E).IsNegInvariant] in
-/-- Convolution of a zero extension with a smooth compactly supported kernel is an `L²(Ω)`
-pairing with the reflected kernel. -/
 theorem indicator_convolution_eq_inner (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) {h : E → ℝ}
     (hh : IsTest (univ : Set E) h) (y : E) :
     (Ω.indicator (u : E → ℝ) ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] h) y =
@@ -534,9 +513,6 @@ theorem locallyIntegrable_indicator (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
   ((memLp_indicator_iff_restrict hΩ.nullMeasurableSet).2 (Lp.memLp u)).locallyIntegrable
     (by norm_num)
 
-/-- **Mollified weak solutions vanish on cones.** If `W` is a weak solution of a symmetric
-hyperbolic system with speed `c`, `B(x, R + r) ⊆ Ω` (`r` the bump radius) and `W(0) = 0` a.e. on
-`B(x, R + r)`, then the mollification `W(t) ⋆ ρ` vanishes on `B(x, R - c t)`. -/
 theorem IsWeakSolution.molli_eq_zero {β : ι → ι → E} {c : ℝ} (hβ : IsSymmHyperbolic β c)
     {T : ℝ} {W : ℝ → L2F ℝ Ω ι} (hW : IsWeakSolution β Ω T W) (hΩ : IsOpen Ω)
     (φ : ContDiffBump (0 : E)) {x : E} {R : ℝ} (hball : Metric.ball x (R + φ.rOut) ⊆ Ω)
@@ -635,11 +611,7 @@ theorem IsWeakSolution.molli_eq_zero {β : ι → ι → E} {c : ℝ} (hβ : IsS
       rw [this, mul_zero]; rfl
 
 
-/-- **Finite speed of propagation for weak `L²` solutions** of a constant-coefficient symmetric
-hyperbolic system with speed `c` (Maxwell, acoustics, elastodynamics, the Einstein–Bianchi
-violation system): if `B(x, R) ⊆ Ω` and `W(0) = 0` a.e. on `B(x, R)`, then `W(t) = 0` a.e. on
-`B(x, R - c t)` for every `t ∈ [0, T]`. No boundary condition and no boundedness of `Ω` enter.
-[QuennevilleBelair2015], Prop 3.6 -/
+/-- **Finite speed of propagation for weak `L²` solutions** ([QuennevilleBelair2015], Prop 3.6). -/
 theorem IsWeakSolution.ae_eq_zero_of_ball {β : ι → ι → E} {c : ℝ} (hβ : IsSymmHyperbolic β c)
     {T : ℝ} {W : ℝ → L2F ℝ Ω ι} (hW : IsWeakSolution β Ω T W) (hΩ : IsOpen Ω) {x : E} {R : ℝ}
     (hball : Metric.ball x R ⊆ Ω) (h0 : ∀ i, ∀ᵐ y ∂volume.restrict (Metric.ball x R), W 0 i y = 0)
@@ -673,12 +645,7 @@ theorem IsWeakSolution.ae_eq_zero_of_ball {β : ι → ι → E} {c : ℝ} (hβ 
 
 end Weak
 
-/-! ## Transport along a measure-preserving linear isomorphism
-
-`ℝⁿ = Fin n → ℝ` carries the sup norm, so its balls are cubes. Weak solutions on an open subset of
-a normed space `F` are transported to the Euclidean space `E` along a measure-preserving linear
-isomorphism `e : F ≃ E` (e.g. `WithLp.toLp 2`), where finite speed of propagation holds on
-Euclidean balls; the conclusion holds on the preimages `e⁻¹ B(e x, R)` of Euclidean balls. -/
+/-! ## Transport along a measure-preserving linear isomorphism -/
 
 section Transport
 
@@ -704,7 +671,6 @@ theorem _root_.Feec.Domain.IsTestField.comp_continuousLinearEquiv {ψ : ι → E
 
 omit [MeasureSpace F] [BorelSpace F] [MeasureSpace E] [BorelSpace E]
   [IsFiniteMeasureOnCompacts (volume : Measure F)] [IsFiniteMeasureOnCompacts (volume : Measure E)] in
-/-- `Pᵗ` commutes with the change of variables: `(P_{eβ}ᵗ ψ) ∘ e = P_βᵗ (ψ ∘ e)`. -/
 theorem hypOp_formalAdj_apply_comp (β : ι → ι → F) (ψ : ι → E → ℝ) (i : ι) (y : F) :
     (hypOp fun j i => e (β j i)).formalAdj.apply ψ i (e y) =
       (hypOp β).formalAdj.apply (fun j => ψ j ∘ e) i y := by
@@ -737,7 +703,6 @@ theorem coeFn_transportL2F (hΩ : MeasurableSet Ω) (u : L2F ℝ Ω ι) (i : ι)
     (transportL2F e he' hΩ u i : E → ℝ) =ᵐ[volume.restrict (e.symm ⁻¹' Ω)] (u i) ∘ e.symm :=
   Lp.coeFn_compMeasurePreserving _ _
 
-/-- **Change of variables for the test pairing**: `⟪u ∘ e⁻¹, ψ⟫_{e Ω} = ⟪u, ψ ∘ e⟫_Ω`. -/
 theorem inner_transportL2F_testField (hΩ : MeasurableSet Ω) (u : L2F ℝ Ω ι) {ψ : ι → E → ℝ}
     (hψ : IsTestField (e.symm ⁻¹' Ω) ψ) :
     ⟪transportL2F e he' hΩ u, testField hψ⟫_ℝ =
@@ -752,8 +717,6 @@ theorem inner_transportL2F_testField (hΩ : MeasurableSet Ω) (u : L2F ℝ Ω ι
     (fun y => (starRingEnd ℝ) ((u i : F → ℝ) y) * ψ i (e y))
   simpa [Function.comp] using this
 
-/-- **Weak solutions transport**: if `W` solves `∂ₜ W = P_β W` weakly on `Ω`, then `W ∘ e⁻¹` solves
-`∂ₜ W' = P_{eβ} W'` weakly on `e Ω`. -/
 theorem IsWeakSolution.transport {β : ι → ι → F} {T : ℝ} {W : ℝ → L2F ℝ Ω ι}
     (hW : IsWeakSolution β Ω T W) (hΩ : MeasurableSet Ω) :
     IsWeakSolution (fun j i => e (β j i)) (e.symm ⁻¹' Ω) T
@@ -776,10 +739,6 @@ variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] [MeasureSpace F]
   [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure]
   [(volume : Measure E).IsNegInvariant] (e : F ≃L[ℝ] E) {Ω : Set F}
 
-/-- **Finite speed of propagation on preimages of Euclidean balls** for weak solutions on an
-open subset of a normed space `F` (such as `ℝⁿ` with the sup norm): if `e⁻¹ B(e x, R) ⊆ Ω` and
-`W(0) = 0` a.e. there, then `W(t) = 0` a.e. on `e⁻¹ B(e x, R - c t)`, for the speed `c` of the
-transported system. -/
 theorem IsWeakSolution.ae_eq_zero_of_preimage_ball (he : MeasurePreserving e volume volume)
     (he' : MeasurePreserving e.symm volume volume)
     {β : ι → ι → F} {c : ℝ} (hβ : IsSymmHyperbolic (fun j i => e (β j i)) c) {T : ℝ}

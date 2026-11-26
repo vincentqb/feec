@@ -5,69 +5,15 @@ public import Feec.Algebra.PolynomialFormDim
 /-!
 # The tensor-product polynomial forms `Q_r⁻Λᵏ` of the cube
 
-On the cube `[0, 1]ⁿ` the trimmed tensor-product family of [ArnoldBoffiBonizzoni2015] (the
-cubical column of the periodic table [ArnoldLogg2014]) is
-
-  `Q_r⁻Λᵏ = Σ_{k₁ + ⋯ + kₙ = k} P_r⁻Λ^{k₁}(I) ⊗ ⋯ ⊗ P_r⁻Λ^{kₙ}(I)`
-
-(a direct sum; only the spanning is formalized), the span of the products of `1`-dimensional
-factors in `P_r⁻Λ⁰(I) = P_rΛ⁰(I)` and `P_r⁻Λ¹(I) = P_{r-1}Λ¹(I)`. In coordinates, `ω = Σ_s ω_s dx_s` lies in `Q_r⁻Λᵏ` when every
-coefficient `ω_s` has degree at most `r - 1` in the variables `x_j`, `j ∈ s`, and at most `r` in
-the others. We allow a degree `b_j` in each direction (`cubeFormMinus R b k`, the isotropic family
-being `b = fun _ => r`): the faces of the cube are then the directions with `b_j = 0`
-(`Q_0⁻Λ⁰ = ℝ`, `Q_0⁻Λ¹ = 0`).
-
-## Main definitions
-
-* `Feec.Koszul.supportForm R d k S`: the span of the monomial `k`-forms `x^α dx_s`, `α ∈ S s`
-  (`finrank_supportForm`: its dimension is the number of these monomials);
-* `Feec.Koszul.cubeSupport b s`: the exponents `α` with `α_j + [j ∈ s] ≤ b_j`;
-* `Feec.Koszul.cubeFormMinus R b k`: `Q_b⁻Λᵏ`, the `k`-forms whose coefficient `ω_s` is supported
-  on `cubeSupport b s`;
-* `Feec.Koszul.prodForm ω`: the tensor product `ω₁ ⊗ ⋯ ⊗ ωₙ` of `1`-dimensional polynomial forms
-  (`PolyForm R Unit`), `(⊗ⱼ ωⱼ)_s = ∏ⱼ ωⱼ(x_j)_{[j ∈ s]}`;
-* `Feec.Koszul.antideriv K j`, `Feec.Koszul.zeroSubst R t`: the antiderivative in `x_j` and the
-  substitution `x_j = 0` (`j ∈ t`); `Feec.Koszul.cubeHomotopy`, `Feec.Koszul.cubeProj`: their
-  coefficientwise extensions to forms.
-
-## Main results
-
-* `cubeFormMinus_eq_span`: **`Q_b⁻Λᵏ` is the span of the tensor products** of factors in
-  `P_{b_j}Λ⁰(I)` and `P_{b_j - 1}Λ¹(I)` with form degrees summing to `k`
-  ([ArnoldBoffiBonizzoni2015], §5);
-* `extDeriv_mem_cubeFormMinus`: **`d Q_b⁻Λᵏ ⊆ Q_b⁻Λ^{k+1}`** (a subcomplex of the polynomial
-  de Rham complex, `isSubcomplex_cubeFormMinus`);
-* `finrank_cubeFormMinus`: `dim Q_b⁻Λᵏ = Σ_{#s = k} Πⱼ (b_j + 1 - [j ∈ s])`, and
-  `finrank_cubeFormMinus_const`: **`dim Q_r⁻Λᵏ = (n choose k) rᵏ (r + 1)ⁿ⁻ᵏ`**
-  ([ArnoldBoffiBonizzoni2015], §5; [ArnoldAwanou2014], §2);
-* the homotopy formula `extDeriv_cubeHomotopy_add`: `d hⱼ + hⱼ d = 1 - Pⱼ` for the integration
-  `hⱼ` in the direction `x_j` and the restriction `Pⱼ` to the hyperplane `x_j = 0`;
-* **polynomial exactness** (characteristic zero): `exists_extDeriv_eq_of_mem_cubeFormMinus`, a
-  closed form of `Q_b⁻Λ^{k+1}` is `d η` with `η ∈ Q_b⁻Λᵏ`, and
-  `eq_const_of_extDeriv_eq_zero`, a closed `0`-form of `Q_b⁻Λ⁰` is a constant: the cohomology of
-  the complex `Q_b⁻Λ` is that of a point.
-
-## Implementation notes
-
-Unlike the Koszul arguments for the simplicial families (`Feec.Algebra.PolynomialFormDim`), the
-exactness proof is the classical Poincaré lemma by integration along one coordinate at a time:
-the operators `hⱼ` and `Pⱼ` preserve the tensor-product degree bounds direction by direction, so
-it works for any multidegree `b`.
-
-The serendipity forms `S_rΛᵏ` [ArnoldAwanou2014] are in `Feec.Algebra.SerendipityForm`; the
-trimmed serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019] are not formalized.
+The trimmed tensor-product spaces `Q_b⁻Λᵏ` of [ArnoldBoffiBonizzoni2015], §5, with a degree `b_j`
+in each direction: a subcomplex of the polynomial de Rham complex, exact over a field of
+characteristic zero, with its dimension, its traces on coordinate planes and, for `b_j ≥ 1`, a
+spanning set of tensor products.
 
 ## References
 
-* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §3 (tensor products of complexes), §5 (the spaces `Q_r⁻Λᵏ`, their dimension and degrees
-  of freedom)
-* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
-  §2 (the tensor-product family `Q_r⁻Λᵏ`)
-* [A. Gillette, T. Kloefkorn, *Trimmed serendipity finite element differential forms*][GilletteKloefkorn2019]
-* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (the polynomial de Rham complex)
+* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015]
+* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -84,7 +30,6 @@ variable {R : Type*} [CommRing R] {d : Type*}
 
 /-! ### Linear maps on monomial supports -/
 
-/-- A linear map sending the monomials of `S` into `T` maps `restrictSupport S` into `T`. -/
 theorem map_mem_of_mem_restrictSupport {M : Type*} [AddCommGroup M] [Module R M]
     {S : Set (d →₀ ℕ)} {T : Submodule R M} (f : MvPolynomial d R →ₗ[R] M)
     (h : ∀ α ∈ S, f (monomial α 1) ∈ T) {p : MvPolynomial d R}
@@ -96,8 +41,6 @@ theorem map_mem_of_mem_restrictSupport {M : Type*} [AddCommGroup M] [Module R M]
   | add x y _ _ hx hy => rw [map_add]; exact T.add_mem hx hy
   | smul c x _ hx => rw [map_smul]; exact T.smul_mem c hx
 
-/-- `∂ⱼ` maps `restrictSupport S` into `restrictSupport T` when lowering `α_j ≠ 0` maps `S`
-into `T`. -/
 theorem pderiv_mem_restrictSupport [DecidableEq d] {S T : Set (d →₀ ℕ)} (j : d)
     (h : ∀ α ∈ S, α j ≠ 0 → α - Finsupp.single j 1 ∈ T) {p : MvPolynomial d R}
     (hp : p ∈ restrictSupport R S) : pderiv j p ∈ restrictSupport R T := by
@@ -108,14 +51,12 @@ theorem pderiv_mem_restrictSupport [DecidableEq d] {S T : Set (d →₀ ℕ)} (j
   · simp [h0]
   · exact (monomial_mem_restrictSupport R).2 (Or.inl (h α hα h0))
 
-/-- Linear maps commute with the signs. -/
 theorem map_sgn_mul [LinearOrder d] {A : Type*} [CommRing A] [Algebra R A]
     (f : MvPolynomial d R →ₗ[R] A) (j : d) (s : Finset d) (p : MvPolynomial d R) :
     f (sgn j s * p) = sgn j s * f p := by
   rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], ← smul_eq_C_mul, map_smul,
     Algebra.smul_def, show algebraMap R A (sgn j s) = sgn j s by simp [sgn]]
 
-/-- Multiplying by a sign stays in a submodule. -/
 theorem sgn_mul_mem [LinearOrder d] {M : Submodule R (MvPolynomial d R)} (j : d) (s : Finset d)
     {p : MvPolynomial d R} (hp : p ∈ M) : sgn j s * p ∈ M := by
   rw [show (sgn j s : MvPolynomial d R) = C (sgn j s) by simp [sgn], ← smul_eq_C_mul]
@@ -126,8 +67,7 @@ theorem sgn_mul_mem [LinearOrder d] {M : Submodule R (MvPolynomial d R)} (j : d)
 section Support
 
 variable (R d) in
-/-- The `k`-forms whose coefficients `ω_s` are supported on `S s`: the span of the monomial forms
-`x^α dx_s`, `#s = k`, `α ∈ S s`. -/
+/-- The `k`-forms whose coefficients `ω_s` are supported on `S s`. -/
 def supportForm (k : ℕ) (S : Finset d → Set (d →₀ ℕ)) : Submodule R (PolyForm R d) where
   carrier := {ω | IsDeg k ω ∧ ∀ s, ω s ∈ restrictSupport R (S s)}
   zero_mem' := ⟨fun _ _ => rfl, fun _ => Submodule.zero_mem _⟩
@@ -139,7 +79,6 @@ theorem supportForm_mono {S T : Finset d → Set (d →₀ ℕ)} (h : ∀ s, S s
     supportForm R d k S ≤ supportForm R d k T :=
   fun _ hω => ⟨hω.1, fun s => restrictSupport_mono R (h s) (hω.2 s)⟩
 
-/-- The monomial form `x^α dx_s` lies in `supportForm #s S` when `α ∈ S s`. -/
 theorem single_monomial_mem_supportForm [DecidableEq d] {S : Finset d → Set (d →₀ ℕ)}
     {s : Finset d} {α : d →₀ ℕ} (hα : α ∈ S s) :
     (Pi.single s (monomial α 1) : PolyForm R d) ∈ supportForm R d #s S := by
@@ -149,8 +88,6 @@ theorem single_monomial_mem_supportForm [DecidableEq d] {S : Finset d → Set (d
     exact (monomial_mem_restrictSupport R).2 (Or.inl hα)
   · rw [Pi.single_eq_of_ne ht]; exact Submodule.zero_mem _
 
-/-- A form of `supportForm k S` is a combination of its monomial forms: a submodule containing
-them contains `supportForm k S`. -/
 theorem supportForm_le_of_single [DecidableEq d] [Fintype d] {k : ℕ}
     {S : Finset d → Set (d →₀ ℕ)} {V : Submodule R (PolyForm R d)}
     (h : ∀ s : Finset d, #s = k → ∀ α ∈ S s, (Pi.single s (monomial α 1) : PolyForm R d) ∈ V) :
@@ -182,8 +119,6 @@ def supportFormEquiv (k : ℕ) (S : Finset d → Set (d →₀ ℕ)) :
   map_add' ω η := rfl
   map_smul' c ω := rfl
 
-/-- **The dimension of a monomial space** is the number of its monomial forms:
-`dim supportForm k S = Σ_{#s = k} #(S s)`. -/
 theorem finrank_supportForm {K : Type*} [Field K] [Fintype d] {k : ℕ}
     {S : Finset d → Set (d →₀ ℕ)} (hS : ∀ s, (S s).Finite) :
     Module.finrank K (supportForm K d k S) = ∑ s ∈ powersetCard k univ, Nat.card (S s) := by
@@ -203,12 +138,10 @@ section Spaces
 
 variable [LinearOrder d]
 
-/-- The exponents `α` with `α_j + [j ∈ s] ≤ b_j` for all `j`: degree `≤ b_j - 1` in the
-variables `x_j` of `dx_s`, `≤ b_j` in the others. -/
+/-- The exponents `α` with `α_j + [j ∈ s] ≤ b_j` for all `j`. -/
 def cubeSupport (b : d → ℕ) (s : Finset d) : Set (d →₀ ℕ) :=
   {α | ∀ j, α j + (if j ∈ s then 1 else 0) ≤ b j}
 
-/-- Lowering `j ∈ s` to a face exponent `v ≤ α_j + 1` stays in the support of `s ∖ j`. -/
 theorem update_mem_cubeSupport_erase {b : d → ℕ} {s : Finset d} {α : d →₀ ℕ}
     (hα : α ∈ cubeSupport b s) {j : d} (hj : j ∈ s) {v : ℕ} (hv : v ≤ α j + 1) :
     α.update j v ∈ cubeSupport b (s.erase j) := fun l => by
@@ -218,9 +151,7 @@ theorem update_mem_cubeSupport_erase {b : d → ℕ} {s : Finset d} {α : d →�
   · simpa [Finsupp.update_apply, hl] using this
 
 variable (R) in
-/-- `Q_b⁻Λᵏ`: the `k`-forms whose coefficient `ω_s` has degree `≤ b_j - [j ∈ s]` in each
-variable `x_j`; for `b = fun _ => r` the trimmed tensor-product space `Q_r⁻Λᵏ` of the cube.
-[ArnoldBoffiBonizzoni2015], §5 -/
+/-- `Q_b⁻Λᵏ`: the `k`-forms whose coefficient `ω_s` has degree `≤ b_j - [j ∈ s]` in `x_j`. -/
 def cubeFormMinus (b : d → ℕ) (k : ℕ) : Submodule R (PolyForm R d) :=
   supportForm R d k (cubeSupport b)
 
@@ -228,8 +159,6 @@ theorem mem_cubeFormMinus {b : d → ℕ} {k : ℕ} {ω : PolyForm R d} :
     ω ∈ cubeFormMinus R b k ↔ IsDeg k ω ∧ ∀ s, ω s ∈ restrictSupport R (cubeSupport b s) :=
   Iff.rfl
 
-/-- **`Q_b⁻Λᵏ ⊆ P_{Σ b}Λᵏ`**: a coefficient of degree `≤ b_j` in each variable `x_j` has total
-degree `≤ Σⱼ b_j`. -/
 theorem cubeFormMinus_le_polyForm [Fintype d] (b : d → ℕ) (k : ℕ) :
     cubeFormMinus R b k ≤ polyForm R d (∑ j, b j) k := fun ω hω =>
   ⟨hω.1, fun s => Finset.sup_le fun α hα => by
@@ -237,8 +166,6 @@ theorem cubeFormMinus_le_polyForm [Fintype d] (b : d → ℕ) (k : ℕ) :
     rw [Finsupp.sum_fintype _ _ fun _ => rfl]
     exact sum_le_sum fun j _ => (Nat.le_add_right _ _).trans (hα' j)⟩
 
-/-- **`d Q_b⁻Λᵏ ⊆ Q_b⁻Λ^{k+1}`**: `∂ⱼ` lowers the degree in `x_j` exactly where `dx_j` is added.
-[ArnoldBoffiBonizzoni2015], §5 -/
 theorem extDeriv_mem_cubeFormMinus {b : d → ℕ} {k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ cubeFormMinus R b k) : extDeriv ω ∈ cubeFormMinus R b (k + 1) := by
   refine ⟨IsDeg.extDeriv h.1, fun s => Submodule.sum_mem _ fun j hj => sgn_mul_mem j s
@@ -252,7 +179,6 @@ theorem extDeriv_mem_cubeFormMinus {b : d → ℕ} {k : ℕ} {ω : PolyForm R d}
   · simp only [mem_erase, hl, ne_eq, not_false_eq_true, true_and] at this
     simpa [Finsupp.single_apply, Ne.symm hl] using this
 
-/-- `Q_b⁻Λᵏ → Q_b⁻Λ^{k+1} → Q_b⁻Λ^{k+2}` is a subcomplex of the polynomial de Rham complex. -/
 theorem isSubcomplex_cubeFormMinus (b : d → ℕ) (k : ℕ) :
     IsSubcomplex (cubeFormMinus R b k) (cubeFormMinus R b (k + 1)) (cubeFormMinus R b (k + 2)) :=
   ⟨fun _ h => extDeriv_mem_cubeFormMinus h, fun _ h => extDeriv_mem_cubeFormMinus h⟩
@@ -302,7 +228,6 @@ theorem finrank_restrictSupport_cubeSupport (b : d → ℕ) (s : Finset d) :
     Nat.card_congr (cubeSupportEquiv b s), Nat.card_eq_fintype_card, Fintype.card_pi]
   simp
 
-/-- **`dim Q_b⁻Λᵏ = Σ_{#s = k} Πⱼ (b_j + 1 - [j ∈ s])`**. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem finrank_cubeFormMinus (b : d → ℕ) (k : ℕ) :
     Module.finrank K (cubeFormMinus K b k) =
       ∑ s ∈ powersetCard k univ, ∏ j, (b j + 1 - if j ∈ s then 1 else 0) := by
@@ -311,8 +236,8 @@ theorem finrank_cubeFormMinus (b : d → ℕ) (k : ℕ) :
   exact (Finset.sum_subtype (powersetCard k univ) (fun s => by simp [mem_powersetCard])
     (fun s => ∏ j, (b j + 1 - if j ∈ s then 1 else 0))).symm
 
-/-- **`dim Q_r⁻Λᵏ = (n choose k) rᵏ (r + 1)ⁿ⁻ᵏ`** on the `n`-cube. [ArnoldBoffiBonizzoni2015], §5;
-[ArnoldAwanou2014], §2 -/
+/-- `dim Q_r⁻Λᵏ = (n choose k) rᵏ (r + 1)ⁿ⁻ᵏ` on the `n`-cube ([ArnoldBoffiBonizzoni2015], §5;
+[ArnoldAwanou2014], §2). -/
 theorem finrank_cubeFormMinus_const (r k : ℕ) :
     Module.finrank K (cubeFormMinus K (fun _ : d => r) k) =
       (Fintype.card d).choose k * (r ^ k * (r + 1) ^ (Fintype.card d - k)) := by
@@ -336,8 +261,7 @@ variable [Fintype d]
 /-- The weight `∏_{f j = some c} c^{γ_j}` of the substitution `x_j = c` (`f j = some c`). -/
 def faceWeight (f : d → Option R) (γ : d →₀ ℕ) : R := ∏ j, (f j).elim 1 fun c => c ^ γ j
 
-/-- The substitution `x_j = c` in the directions with `f j = some c`:
-`x^γ ↦ (∏_{f j = some c} c^{γ_j}) x^{γ'}`, `γ'` the free part of `γ`. -/
+/-- The substitution `x_j = c` in the directions with `f j = some c`. -/
 def faceSubst (f : d → Option R) : MvPolynomial d R →ₗ[R] MvPolynomial d R :=
   (basisMonomials d R).constr R fun γ =>
     monomial (γ.filter fun j => (f j).isNone) (faceWeight f γ)
@@ -356,7 +280,6 @@ theorem faceSubst_none (p : MvPolynomial d R) :
       simp [faceSubst_monomial, faceWeight, this]
   rw [this, LinearMap.id_apply]
 
-/-- Successive substitutions: `x_j = c` from `g`, then from `f` in the remaining directions. -/
 theorem faceSubst_faceSubst (f g : d → Option R) (p : MvPolynomial d R) :
     faceSubst f (faceSubst g p) = faceSubst (fun j => (g j).or (f j)) p := by
   have : faceSubst f ∘ₗ faceSubst g = faceSubst (fun j => (g j).or (f j)) :=
@@ -373,7 +296,6 @@ theorem faceSubst_faceSubst (f g : d → Option R) (p : MvPolynomial d R) :
         cases g j <;> cases f j <;> simp
   exact LinearMap.congr_fun this p
 
-/-- `∂_l` commutes with the substitution in the other directions. -/
 theorem pderiv_faceSubst [DecidableEq d] {f : d → Option R} {l : d} (hl : f l = none)
     (p : MvPolynomial d R) : pderiv l (faceSubst f p) = faceSubst f (pderiv l p) := by
   have : (pderiv l).toLinearMap ∘ₗ faceSubst f = faceSubst f ∘ₗ (pderiv l).toLinearMap :=
@@ -394,7 +316,6 @@ theorem pderiv_faceSubst [DecidableEq d] {f : d → Option R} {l : d} (hl : f l 
         simp [hw, hl, mul_comm]
   exact LinearMap.congr_fun this p
 
-/-- `∂_l` kills the polynomials where `x_l` has been substituted. -/
 theorem pderiv_faceSubst_of_ne_none {f : d → Option R} {l : d} (hl : f l ≠ none)
     (p : MvPolynomial d R) : pderiv l (faceSubst f p) = 0 := by
   have : (pderiv l).toLinearMap ∘ₗ faceSubst f = 0 :=
@@ -408,7 +329,6 @@ theorem faceSubst_mem_restrictSupport {S T : Set (d →₀ ℕ)} (f : d → Opti
   map_mem_of_mem_restrictSupport _ (fun γ hγ => by
     rw [faceSubst_monomial]; exact (monomial_mem_restrictSupport R).2 (Or.inl (h γ hγ))) hp
 
-/-- The substitution `x = 0` leaves the constant coefficient. -/
 theorem faceSubst_zero (p : MvPolynomial d R) :
     faceSubst (fun _ : d => some (0 : R)) p = C (p.coeff 0) := by
   classical
@@ -425,7 +345,6 @@ theorem faceSubst_zero (p : MvPolynomial d R) :
         rw [prod_eq_zero (mem_univ j) (zero_pow hj), ite_eq_right h, map_zero, map_zero]
   simpa using LinearMap.congr_fun this p
 
-/-- The substitution `x_j = c` does not change the values on the plane `{x_j = c}`. -/
 theorem eval_faceSubst {f : d → Option R} {y : d → R} (hy : ∀ j c, f j = some c → y j = c)
     (p : MvPolynomial d R) : eval y (faceSubst f p) = eval y p := by
   have : (aeval y).toLinearMap ∘ₗ faceSubst f = (aeval y).toLinearMap :=
@@ -440,7 +359,6 @@ theorem eval_faceSubst {f : d → Option R} {y : d → R} (hy : ∀ j c, f j = s
       | some c => simp [hf, hy j c hf]
   simpa using LinearMap.congr_fun this p
 
-/-- After the substitution, the values only depend on the free coordinates. -/
 theorem eval_faceSubst_congr {f : d → Option R} {y y' : d → R} (h : ∀ j, f j = none → y j = y' j)
     (p : MvPolynomial d R) : eval y (faceSubst f p) = eval y' (faceSubst f p) := by
   have : (aeval y).toLinearMap ∘ₗ faceSubst f = (aeval y').toLinearMap ∘ₗ faceSubst f :=
@@ -457,13 +375,11 @@ theorem eval_faceSubst_congr {f : d → Option R} {y y' : d → R} (h : ∀ j, f
 
 variable [LinearOrder d]
 
-/-- The trace `tr_f` on the coordinate plane `{x_j = c : f j = some c}`: the components `dx_s`
-along the free directions, with `x_j = c` substituted. -/
+/-- The trace `tr_f` on the coordinate plane `{x_j = c : f j = some c}`. -/
 def cubeTrace (f : d → Option R) (ω : PolyForm R d) : PolyForm R d := fun s =>
   if ∀ j ∈ s, (f j).isNone then faceSubst f (ω s) else 0
 
-/-- The degrees `b` in the free directions of `f`, `0` in the others: `Q_{faceDeg b f}⁻Λᵏ` is the
-space `Q_b⁻Λᵏ(f)` of the plane `f` (`Q_0⁻Λ⁰ = ℝ`, `Q_0⁻Λ¹ = 0` across it). -/
+/-- The degrees `b` in the free directions of `f` and `0` in the others. -/
 def faceDeg (b : d → ℕ) (f : d → Option R) (j : d) : ℕ := if (f j).isNone then b j else 0
 
 theorem cubeTrace_none (ω : PolyForm R d) : cubeTrace (fun _ : d => (none : Option R)) ω = ω := by
@@ -480,7 +396,6 @@ theorem cubeTrace_smul (f : d → Option R) (c : R) (ω : PolyForm R d) :
     cubeTrace f (c • ω) = c • cubeTrace f ω := by
   funext s; simp only [cubeTrace, Pi.smul_apply, map_smul]; split_ifs <;> simp
 
-/-- Traces compose: `tr_f ∘ tr_g = tr_{g, then f}`. -/
 theorem cubeTrace_cubeTrace (f g : d → Option R) (ω : PolyForm R d) :
     cubeTrace f (cubeTrace g ω) = cubeTrace (fun j => (g j).or (f j)) ω := by
   funext s
@@ -495,7 +410,6 @@ theorem cubeTrace_cubeTrace (f g : d → Option R) (ω : PolyForm R d) :
     · rw [ite_eq_left hf, ite_eq_right hg, ite_eq_right (fun h => hg (hiff.1 h).2), map_zero]
   · rw [ite_eq_right hf, ite_eq_right (fun h => hf (hiff.1 h).1)]
 
-/-- **`d` commutes with the traces**: `d tr_f = tr_f d`. -/
 theorem extDeriv_cubeTrace (f : d → Option R) (ω : PolyForm R d) :
     extDeriv (cubeTrace f ω) = cubeTrace f (extDeriv ω) := by
   funext s
@@ -526,7 +440,6 @@ omit [CommRing R] [Fintype d] [LinearOrder d] in
 theorem faceDeg_le (b : d → ℕ) (f : d → Option R) (j : d) : faceDeg b f j ≤ b j := by
   unfold faceDeg; split_ifs <;> omega
 
-/-- **The trace property**: `tr_f Q_b⁻Λᵏ ⊆ Q_b⁻Λᵏ(f)`. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem cubeTrace_mem {b : d → ℕ} {k : ℕ} {ω : PolyForm R d} (h : ω ∈ cubeFormMinus R b k)
     (f : d → Option R) : cubeTrace f ω ∈ cubeFormMinus R (faceDeg b f) k := by
   refine ⟨fun s hs => by simp [cubeTrace, h.1 s hs], fun s => ?_⟩
@@ -542,7 +455,6 @@ theorem cubeTrace_mem {b : d → ℕ} {k : ℕ} {ω : PolyForm R d} (h : ω ∈ 
       exact fun hjs => hj (hs j hjs)
   · exact Submodule.zero_mem _
 
-/-- A form of `Q_b⁻Λᵏ(f)` is its own trace. -/
 theorem cubeTrace_eq_self {b : d → ℕ} {f : d → Option R} {k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ cubeFormMinus R (faceDeg b f) k) : cubeTrace f ω = ω := by
   funext s
@@ -583,8 +495,7 @@ theorem cubeTrace_eq_self {b : d → ℕ} {f : d → Option R} {k : ℕ} {ω : P
     refine (support_eq_empty.1 (eq_empty_of_forall_notMem fun γ hγ => ?_)).symm
     exact (hsupp γ (h.2 s hγ) j (by simpa using hj)).2 hjs
 
-/-- **`tr_f Q_b⁻Λᵏ = Q_b⁻Λᵏ(f)`**: the traces of `Q_b⁻Λᵏ` on a coordinate plane are the forms of
-the same family on the plane. [ArnoldBoffiBonizzoni2015], §5 -/
+/-- `tr_f Q_b⁻Λᵏ = Q_b⁻Λᵏ(f)` ([ArnoldBoffiBonizzoni2015], §5). -/
 theorem image_cubeTrace (b : d → ℕ) (f : d → Option R) (k : ℕ) :
     cubeTrace f '' (cubeFormMinus R b k : Set (PolyForm R d)) =
       cubeFormMinus R (faceDeg b f) k := by
@@ -611,7 +522,6 @@ theorem antideriv_monomial (j : d) (α : d →₀ ℕ) (c : K) :
   rw [show monomial α c = c • (basisMonomials d K) α by simp [smul_monomial], map_smul,
     antideriv, Module.Basis.constr_basis, smul_monomial, smul_eq_mul]
 
-/-- `∂ⱼ Iⱼ = 1`. -/
 theorem pderiv_antideriv [CharZero K] [DecidableEq d] (j : d) (p : MvPolynomial d K) :
     pderiv j (antideriv K j p) = p := by
   have : (pderiv j).toLinearMap ∘ₗ antideriv K j = LinearMap.id :=
@@ -624,7 +534,6 @@ theorem pderiv_antideriv [CharZero K] [DecidableEq d] (j : d) (p : MvPolynomial 
       exact inv_mul_cancel₀ (Nat.cast_add_one_ne_zero _)
   exact LinearMap.congr_fun this p
 
-/-- `∂_l Iⱼ = Iⱼ ∂_l` for `l ≠ j`. -/
 theorem pderiv_antideriv_of_ne [DecidableEq d] {l j : d} (hlj : l ≠ j) (p : MvPolynomial d K) :
     pderiv l (antideriv K j p) = antideriv K j (pderiv l p) := by
   have : (pderiv l).toLinearMap ∘ₗ antideriv K j = antideriv K j ∘ₗ (pderiv l).toLinearMap :=
@@ -652,7 +561,6 @@ theorem antideriv_mem_restrictSupport {S T : Set (d →₀ ℕ)} (j : d)
 def zeroFace [DecidableEq d] (t : Finset d) : d → Option K := fun j =>
   if j ∈ t then some 0 else none
 
-/-- `Iⱼ ∂ⱼ = 1 - (x_j = 0)`. -/
 theorem antideriv_pderiv [Fintype d] [CharZero K] [DecidableEq d] (j : d) (p : MvPolynomial d K) :
     antideriv K j (pderiv j p) = p - faceSubst (zeroFace {j}) p := by
   have : antideriv K j ∘ₗ (pderiv j).toLinearMap = LinearMap.id - faceSubst (zeroFace {j}) :=
@@ -681,8 +589,7 @@ theorem antideriv_pderiv [Fintype d] [CharZero K] [DecidableEq d] (j : d) (p : M
 
 variable [LinearOrder d]
 
-/-- The integration `hⱼ` along `x_j` from the plane `x_j = 0`:
-`(hⱼ ω)_s = ε(j, s) Iⱼ ω_{s ∪ j}` for `j ∉ s` (contraction with `∂ⱼ`, then antiderivative). -/
+/-- The integration `hⱼ` along `x_j` from the plane `x_j = 0`. -/
 def cubeHomotopy (j : d) (ω : PolyForm K d) : PolyForm K d := fun s =>
   if j ∈ s then 0 else sgn j s * antideriv K j (ω (insert j s))
 
@@ -722,7 +629,6 @@ variable [Fintype d]
 theorem zeroFace_univ : zeroFace (K := K) (univ : Finset d) = fun _ => some 0 := by
   funext j; simp [zeroFace]
 
-/-- **The homotopy formula** along `x_j`: `d hⱼ + hⱼ d = 1 - tr_{x_j = 0}`. -/
 theorem extDeriv_cubeHomotopy_add [CharZero K] (j : d) (ω : PolyForm K d) :
     extDeriv (cubeHomotopy j ω) + cubeHomotopy j (extDeriv ω) =
       ω - cubeTrace (zeroFace {j}) ω := by
@@ -755,8 +661,6 @@ theorem extDeriv_cubeHomotopy_add [CharZero K] (j : d) (ω : PolyForm K d) :
         antideriv K j (pderiv l (ω (insert j (s.erase l))))) * this
     linear_combination hcross
 
-/-- The telescoped homotopy: a closed `ω ∈ Q_b⁻Λᵏ` differs from its trace on `{x_j = 0 : j ∈ t}`
-by `d η`, `η ∈ Q_b⁻Λ^{k-1}`. -/
 theorem exists_sub_cubeTrace_eq_extDeriv [CharZero K] {b : d → ℕ} {k : ℕ} {ω : PolyForm K d}
     (h : ω ∈ cubeFormMinus K b k) (hd : extDeriv ω = 0) (t : Finset d) :
     ∃ η ∈ cubeFormMinus K b (k - 1), ω - cubeTrace (zeroFace t) ω = extDeriv η := by
@@ -775,7 +679,6 @@ theorem exists_sub_cubeTrace_eq_extDeriv [CharZero K] {b : d → ℕ} {k : ℕ} 
     rw [extDeriv_add, ← he, H]
     abel
 
-/-- The trace on the vertex `0`. -/
 theorem cubeTrace_zeroFace_univ (ω : PolyForm K d) :
     cubeTrace (zeroFace univ) ω =
       (Pi.single (∅ : Finset d) (C ((ω ∅).coeff 0)) : PolyForm K d) := by
@@ -786,8 +689,8 @@ theorem cubeTrace_zeroFace_univ (ω : PolyForm K d) :
   · subst hs; simp
   · rw [ite_eq_right fun h => hs (eq_empty_of_forall_notMem h), Pi.single_eq_of_ne hs]
 
-/-- **Polynomial exactness of `Q_b⁻Λ`**: a closed form of `Q_b⁻Λ^{k+1}` is `d η` with
-`η ∈ Q_b⁻Λᵏ`. [ArnoldBoffiBonizzoni2015], §5 -/
+/-- In characteristic zero, a closed form of `Q_b⁻Λ^{k+1}` is `d η` with `η ∈ Q_b⁻Λᵏ`
+([ArnoldBoffiBonizzoni2015], §5). -/
 theorem exists_extDeriv_eq_of_mem_cubeFormMinus [CharZero K] {b : d → ℕ} {k : ℕ}
     {ω : PolyForm K d} (h : ω ∈ cubeFormMinus K b (k + 1)) (hd : extDeriv ω = 0) :
     ∃ η ∈ cubeFormMinus K b k, extDeriv η = ω := by
@@ -797,8 +700,6 @@ theorem exists_extDeriv_eq_of_mem_cubeFormMinus [CharZero K] {b : d → ℕ} {k 
     Pi.single_zero, sub_zero] at he
   exact ⟨η, hη, he.symm⟩
 
-/-- **The cohomology in degree `0` is the constants**: a closed `0`-form of `Q_b⁻Λ⁰` is
-constant. -/
 theorem eq_const_of_extDeriv_eq_zero [CharZero K] {b : d → ℕ} {ω : PolyForm K d}
     (h : ω ∈ cubeFormMinus K b 0) (hd : extDeriv ω = 0) :
     ω = (Pi.single (∅ : Finset d) (C ((ω ∅).coeff 0)) : PolyForm K d) := by
@@ -819,7 +720,6 @@ section Tensor
 
 variable [LinearOrder d]
 
-/-- A polynomial in `x_j` alone has degree `≤ deg q` in `x_j` and `0` in the other variables. -/
 theorem degreeOf_rename_le (q : MvPolynomial Unit R) (i j : d) :
     degreeOf i (rename (fun _ => j) q) ≤ if i = j then q.totalDegree else 0 := by
   have hinj : Function.Injective (fun _ : Unit => j) := fun _ _ _ => rfl
@@ -832,7 +732,6 @@ theorem degreeOf_rename_le (q : MvPolynomial Unit R) (i j : d) :
     exact le_of_eq_of_le (by simp [Finsupp.sum_fintype]) (le_totalDegree hn)
   · exact (Finsupp.mapDomain_of_notMem_range _ _ (by simpa [eq_comm] using h)).le
 
-/-- Degree bounds in each variable give membership in `restrictSupport (cubeSupport b s)`. -/
 theorem mem_restrictSupport_cubeSupport {b : d → ℕ} {s : Finset d} {p : MvPolynomial d R}
     (h : ∀ j, degreeOf j p + (if j ∈ s then 1 else 0) ≤ b j) :
     p ∈ restrictSupport R (cubeSupport b s) := fun α hα j =>
@@ -840,14 +739,10 @@ theorem mem_restrictSupport_cubeSupport {b : d → ℕ} {s : Finset d} {p : MvPo
 
 variable [Fintype d]
 
-/-- The tensor product `ω₁ ⊗ ⋯ ⊗ ωₙ` of `1`-dimensional polynomial forms `ωⱼ ∈ PolyForm R Unit`,
-the factor `ωⱼ` in the variable `x_j`: `(⊗ⱼ ωⱼ)_s = ∏ⱼ ωⱼ(x_j)_{[j ∈ s]}`, `dx_s` being the
-increasing product of the `dx_j`. -/
+/-- The tensor product `ω₁ ⊗ ⋯ ⊗ ωₙ` of `1`-dimensional polynomial forms. -/
 def prodForm (ω : d → PolyForm R Unit) : PolyForm R d := fun s =>
   ∏ j, rename (fun _ => j) (ω j (if j ∈ s then univ else ∅))
 
-/-- The monomial form `x^α dx_s` is the tensor product of the `1`-dimensional forms
-`x^{α_j} dx^{[j ∈ s]}`. -/
 theorem prodForm_monomial (s : Finset d) (α : d →₀ ℕ) :
     prodForm (fun j => Pi.single (if j ∈ s then univ else ∅) (X () ^ α j)) =
       (Pi.single s (monomial α 1) : PolyForm R d) := by
@@ -866,9 +761,8 @@ theorem prodForm_monomial (s : Finset d) (α : d →₀ ℕ) :
     rw [Pi.single_eq_of_ne, map_zero]
     by_cases h : j ∈ t <;> simp_all [eq_comm]
 
-/-- **`Q_b⁻Λᵏ` is spanned by tensor products** of `1`-dimensional factors `ωⱼ ∈ P_{b_j}Λ⁰(I)`
-or `P_{b_j - 1}Λ¹(I)` (`= P_{b_j}⁻Λ⁰(I)`, `P_{b_j}⁻Λ¹(I)`) whose form degrees `e_j` sum to `k`:
-`Q_b⁻Λᵏ = Σ_{Σ e_j = k} ⊗ⱼ P_{b_j}⁻Λ^{e_j}(I)` (`b_j ≥ 1`). [ArnoldBoffiBonizzoni2015], §5 -/
+/-- If every `b_j ≥ 1`, `Q_b⁻Λᵏ` is spanned by tensor products of factors in `P_{b_j}Λ⁰(I)` and
+`P_{b_j - 1}Λ¹(I)` ([ArnoldBoffiBonizzoni2015], §5). -/
 theorem cubeFormMinus_eq_span {b : d → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℕ) :
     cubeFormMinus R b k = Submodule.span R {θ | ∃ (e : d → ℕ) (ω : d → PolyForm R Unit),
       ∑ j, e j = k ∧ (∀ j, ω j ∈ polyForm R Unit (b j - e j) (e j)) ∧ prodForm ω = θ} := by

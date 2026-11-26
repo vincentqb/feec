@@ -6,28 +6,9 @@ public import Feec.ForMathlib.LinearPMap.Basic
 /-!
 # Complex partial linear maps viewed over `ℝ`
 
-A complex Hilbert space `E` is also a real Hilbert space for the inner product
-`⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ`. A complex partial linear map `T : E →ₗ.[ℂ] F` is then a real one,
-`T.restrictScalars`, with the same domain, graph and values. Its real adjoint is the real
-restriction of its complex adjoint (`LinearPMap.adjoint_restrictScalars`): the real orthogonality
-relations for `x` and `i x` together give the complex one. So closedness, density, adjoints and
-skew-adjointness do not depend on the scalars.
-
-The real structure of `E` is passed as instances `[InnerProductSpace ℝ E] [IsScalarTower ℝ ℂ E]`
-with the compatibility `⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ` as a hypothesis (Mathlib's
-`InnerProductSpace.complexToReal` is not an instance, to avoid diamonds with `PiLp`, `Lp`, …).
-
-## Main definitions and results
-
-* `LinearPMap.restrictScalars T`; `mem_graph_restrictScalars`, `isClosed_restrictScalars`,
-  `dense_restrictScalars_domain`.
-* **`LinearPMap.adjoint_restrictScalars`**: `(T_ℝ)† = (T†)_ℝ` for densely defined `T`.
-
-## References
-
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §V.3 (adjoints)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+A complex partial linear map is a real one with the same domain, graph and values; when the real
+inner products are the real parts of the complex ones, its real adjoint is the real restriction of
+its complex adjoint.
 -/
 
 @[expose] public noncomputable section
@@ -82,8 +63,6 @@ theorem restrictScalars_zero : (0 : E →ₗ.[ℂ] F).restrictScalars = 0 := by
 
 variable [CompleteSpace E]
 
-/-- **The real adjoint is the real restriction of the complex adjoint**, when the real inner
-products are the real parts of the complex ones. -/
 theorem adjoint_restrictScalars (hE : ∀ x y : E, ⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ)
     (hF : ∀ x y : F, ⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ) (hd : Dense (T.domain : Set E)) :
     (T.restrictScalars)† = (T†).restrictScalars := by

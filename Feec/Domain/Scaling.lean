@@ -6,34 +6,14 @@ public import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
 /-!
 # Rescaled test fields: homogeneous operators of positive order are unbounded
 
-Let `B` be a constant-coefficient operator homogeneous of order `r > 0` on a finite-dimensional
-real space `E` (`ℝⁿ`) and `ψ` a smooth compactly supported field with `B ψ ≠ 0`. Concentrating
-`ψ` at a point `x₀`, `ψₐ = ψ (a (· - x₀))`, multiplies `‖ψ‖_{L²}` by `a^{-n/2}` and `‖B ψ‖_{L²}`
-by `a^{r - n/2}` (the chain rule `ConstCoeffOp.apply_comp_aff` and the change of variables
-`integral_comp_aff`). So on every nonempty open `Ω`, for every `C`, some rescaling of `ψ` is a
-test field on `Ω` with `‖B ψₐ‖ > C ‖ψₐ‖` (**`ConstCoeffOp.exists_lt_norm_testField_comp_aff`**):
-no bound `‖B φ‖ ≤ C ‖φ‖` holds on the test fields of `Ω` that a second homogeneous operator
-annihilates along with `ψ`. This is the scaling argument that fixes the exponent of the
-Gagliardo–Nirenberg–Sobolev inequality ([Evans2010], §5.6.1), here showing that a space defined by
-some first derivatives is not one defined by all of them, e.g. `H(curl) ⊄ H¹` (`ψ = ∇χ`); it is
-used for the connecting maps of the `L²` BGG diagrams in `Feec.Domain.BGGRealization`.
-
-The nonvanishing of `B ψ` is checked through `fderiv_apply_ne_zero`: a nonzero compactly
-supported `C¹` function has nonzero directional derivatives (it is constant along the lines on
-which the derivative vanishes, and these leave its support).
+For a constant-coefficient operator `B` homogeneous of order `r > 0` and a smooth compactly
+supported `ψ` with `B ψ ≠ 0`, rescalings of `ψ` concentrated in any nonempty open `Ω` make
+`‖B ψₐ‖ / ‖ψₐ‖` unbounded.
 
 ## Main results
 
-* `fderiv_apply_ne_zero`, `IsTest.fderiv_apply_ne_zero`, `exists_isTest_univ_ne_zero`,
-  `norm_sq_testField`, `integral_comp_aff`.
-* **`ConstCoeffOp.exists_lt_norm_testField_comp_aff`**, and for finite families of fields with a
-  common rescaling `ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff`.
-
-## References
-
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.6.1 (the scaling argument)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.exists_lt_norm_testField_comp_aff`: some rescaling has `C ‖ψₐ‖ < ‖B ψₐ‖`.
+* `ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff`: the same for finite families.
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate
@@ -50,9 +30,6 @@ section Deriv
 variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
   [NormedSpace ℝ F]
 
-/-- **A nonzero compactly supported differentiable function has nonzero directional
-derivatives**: if `∂ᵥ f = 0`, then `f` is constant along the lines `x + ℝ v`, which leave its
-support. -/
 theorem fderiv_apply_ne_zero {f : E → F} (hf : Differentiable ℝ f) (hc : HasCompactSupport f)
     (hf0 : f ≠ 0) {v : E} (hv : v ≠ 0) : (fun x => fderiv ℝ f x v) ≠ 0 := by
   intro h
@@ -77,13 +54,11 @@ theorem fderiv_apply_ne_zero {f : E → F} (hf : Differentiable ℝ f) (hc : Has
   rw [norm_smul, Real.norm_eq_abs, abs_of_pos ht, div_mul_cancel₀ _ hv'.ne'] at htv
   linarith
 
-/-- The directional derivatives of a nonzero test function are nonzero. -/
 theorem IsTest.fderiv_apply_ne_zero {Ω : Set E} {f : E → F} (hf : IsTest Ω f) (hf0 : f ≠ 0)
     {v : E} (hv : v ≠ 0) : (fun x => fderiv ℝ f x v) ≠ 0 :=
   Feec.Domain.fderiv_apply_ne_zero hf.differentiable hf.hasCompactSupport hf0 hv
 
 variable (E) in
-/-- A nonzero test function on a finite-dimensional space (a smooth bump). -/
 theorem exists_isTest_univ_ne_zero [FiniteDimensional ℝ E] (𝕜 : Type*) [RCLike 𝕜] :
     ∃ χ : E → 𝕜, IsTest univ χ ∧ χ ≠ 0 := by
   let f : ContDiffBump (0 : E) := ⟨1, 2, one_pos, one_lt_two⟩
@@ -104,7 +79,6 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimension
   {Ω : Set E} {ι : Type*} [Fintype ι]
 
 omit [FiniteDimensional ℝ E] in
-/-- `‖φ‖²_{L²(Ω)} = Σᵢ ∫_E |φᵢ|²` for a test field `φ` (the integrand vanishes off `Ω`). -/
 theorem norm_sq_testField {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
     ‖testField hφ‖ ^ 2 = ∑ i, ∫ x, ‖φ i x‖ ^ 2 := by
   have h := inner_testField_toL2F hφ fun i => (hφ i).memLp
@@ -114,7 +88,6 @@ theorem norm_sq_testField {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
   simp_rw [RCLike.conj_mul, ← RCLike.ofReal_pow]
   rw [integral_ofReal, RCLike.ofReal_re]
 
-/-- **Change of variables along `aff a b`**: `∫ g (a x + b) dx = |a|^{-n} ∫ g`. -/
 theorem integral_comp_aff {a : ℝ} (ha : a ≠ 0) (b : E) (g : E → ℝ) :
     ∫ x, g (aff a b x) = (jac (E := E) a)⁻¹ * ∫ y, g y := by
   have h := (measurePreserving_aff ha b).integral_comp
@@ -122,12 +95,7 @@ theorem integral_comp_aff {a : ℝ} (ha : a ≠ 0) (b : E) (g : E → ℝ) :
   rw [integral_smul_measure, ENNReal.toReal_ofReal (jac_pos ha).le, smul_eq_mul] at h
   rw [← h, inv_mul_cancel_left₀ (jac_pos ha).ne']
 
-/-- **Homogeneous operators of positive order are unbounded on rescaled families of test
-fields.** If `B` is homogeneous of order `r > 0` and `B ψ_c ≠ 0` for some member of a finite
-family `ψ` of smooth compactly supported fields, then on every nonempty open `Ω`, for every `C`,
-a common rescaling `ψ_c ∘ aff a b` of the family consists of test fields on `Ω` with
-`C ‖(ψ_c ∘ aff a b)_c‖ < ‖(B (ψ_c ∘ aff a b))_c‖` in `L²(Ω)ᵐ` (the `ℓ²` sum over the family):
-`‖ψ_c ∘ aff a b‖²` scales as `a^{-n}` and `‖B (ψ_c ∘ aff a b)‖²` as `a^{2r - n}`. -/
+/-- **Homogeneous operators of positive order are unbounded on rescaled families of fields.** -/
 theorem ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
     {κ m : Type*} [Fintype κ] [Fintype m] {B : ConstCoeffOp E 𝕜 ι κ} {r : ℕ}
     (hB : B.IsHomogeneous r) (hr : 0 < r) {ψ : m → ι → E → 𝕜} (hψ : ∀ c, IsTestField univ (ψ c))
@@ -207,11 +175,7 @@ theorem ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff (hΩ : IsOpen Ω) (h
   have hjinv : 0 < (jac (E := E) a)⁻¹ := inv_pos.2 hj
   nlinarith
 
-/-- **Homogeneous operators of positive order are unbounded on rescaled test fields.** If `B` is
-homogeneous of order `r > 0` and `B ψ ≠ 0` for a smooth compactly supported field `ψ`, then on
-every nonempty open `Ω`, for every `C`, a rescaling `ψ ∘ aff a b` of `ψ` is a test
-field on `Ω` with `C ‖ψ ∘ aff a b‖ < ‖B (ψ ∘ aff a b)‖` in `L²(Ω)` (the family
-`exists_lt_norm_toLp_testField_comp_aff` of one field). -/
+/-- **Homogeneous operators of positive order are unbounded on rescaled test fields.** -/
 theorem ConstCoeffOp.exists_lt_norm_testField_comp_aff (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
     {κ : Type*} [Fintype κ] {B : ConstCoeffOp E 𝕜 ι κ} {r : ℕ} (hB : B.IsHomogeneous r)
     (hr : 0 < r) {ψ : ι → E → 𝕜} (hψ : IsTestField univ ψ) (hBψ : B.apply ψ ≠ 0) (C : ℝ) :

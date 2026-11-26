@@ -4,28 +4,10 @@ public import Feec.Domain.Complexes
 public import Mathlib.Analysis.Calculus.FDeriv.Symmetric
 
 /-!
-# Standard constant-coefficient operators on `ℝⁿ`
+# Constant-coefficient operators on `ℝⁿ`
 
-Coordinates on `ℝⁿ = Fin n → ℝ`, with partial derivatives `∂ₖ f = fderiv ℝ f · (Pi.single k 1)`.
-
-* `gradOp n m`: the row-wise gradient `𝕜^m → 𝕜^{m×n}`, `(grad φ)_{ij} = ∂ⱼ φᵢ`; its formal
-  adjoint is minus the row-wise divergence (`gradOp_formalAdj_apply`);
-* `divOp n m`: the row-wise divergence `𝕜^{m×n} → 𝕜^m`;
-* `curlOp m`: the row-wise curl on `ℝ³`, `(curl Φ)_{ik} = ∂_{k+1} Φ_{i,k+2} − ∂_{k+2} Φ_{i,k+1}`,
-  formally self-adjoint (`curlOp_formalAdj_apply`);
-* `hessOp n`: the Hessian `𝕜 → 𝕜^{n×n}`, `(∇² h)_{ij} = ∂ⱼ ∂ᵢ h`.
-
-The complex identities `curl ∘ grad = 0`, `div ∘ curl = 0`, `curl ∘ hess = 0`
-(`isComplexPair_grad_curl`, `isComplexPair_curl_div`, `isComplexPair_hess_curl`) follow from
-Schwarz (`fderiv_fderiv_comm`).
-
-## References
-
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §2
-
-Bibliography: [references.bib](../../docs/references.bib)
+The row-wise gradient, divergence and curl, the Hessian, the double divergence and the symmetric
+curl as constant-coefficient operators on `ℝⁿ`, with their formal adjoints and complex identities.
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate
@@ -35,7 +17,6 @@ open MeasureTheory Set
 
 namespace Feec.Domain
 
-/-- **Schwarz**: directional derivatives of a `C²` function commute. -/
 theorem fderiv_fderiv_comm {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     [NormedAddCommGroup F] [NormedSpace ℝ F] {f : E → F} (hf : ContDiff ℝ 2 f) (v w x : E) :
     fderiv ℝ (fun y => fderiv ℝ f y v) x w = fderiv ℝ (fun y => fderiv ℝ f y w) x v := by
@@ -80,7 +61,7 @@ omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
 
 variable {ι κ κ' : Type*} [Fintype κ]
 
-/-- `M ∘ A` for a constant matrix `M : 𝕜^κ → 𝕜^{κ'}` (e.g. the symmetric part of a matrix). -/
+/-- `M ∘ A` for a constant matrix `M : 𝕜^κ → 𝕜^{κ'}`. -/
 def postComp (M : κ' → κ → 𝕜) (A : ConstCoeffOp E 𝕜 ι κ) : ConstCoeffOp E 𝕜 ι κ' where
   coeff j' i := Finset.univ.toList.flatMap fun j => (A.coeff j i).map fun t => (t.1, M j' j * t.2)
 
@@ -152,7 +133,6 @@ theorem divOp_apply (B : Fin m × Fin n → (Fin n → ℝ) → 𝕜) (i : Fin m
     applyEntry_nil', Fintype.sum_prod_type, iterDeriv_singleton]
   simp
 
-/-- `gradᵗ = -div`. -/
 theorem gradOp_formalAdj_apply (B : Fin m × Fin n → (Fin n → ℝ) → 𝕜) (i : Fin m)
     (x : Fin n → ℝ) :
     (gradOp n m).formalAdj.apply B i x = -∑ j, fderiv ℝ (B (i, j)) x (coordDir j) := by
@@ -162,7 +142,6 @@ theorem gradOp_formalAdj_apply (B : Fin m × Fin n → (Fin n → ℝ) → 𝕜)
     iterDeriv_singleton]
   simp [Finset.sum_neg_distrib]
 
-/-- `divᵗ = -grad`. -/
 theorem divOp_formalAdj_apply (f : Fin m → (Fin n → ℝ) → 𝕜) (ij : Fin m × Fin n)
     (x : Fin n → ℝ) :
     (divOp n m).formalAdj.apply f ij x = -fderiv ℝ (f ij.1) x (coordDir ij.2) := by
@@ -171,8 +150,7 @@ theorem divOp_formalAdj_apply (f : Fin m → (Fin n → ℝ) → 𝕜) (ij : Fin
 
 /-! ## Row-wise curl on `ℝ³` -/
 
-/-- The row-wise curl `𝕜^{m×3} → 𝕜^{m×3}` on `ℝ³`:
-`(curl Φ)_{ik} = ∂_{k+1} Φ_{i,k+2} − ∂_{k+2} Φ_{i,k+1}` (indices mod 3). -/
+/-- The row-wise curl `(curl Φ)_{ik} = ∂_{k+1} Φ_{i,k+2} − ∂_{k+2} Φ_{i,k+1}` on `ℝ³`. -/
 def curlOp (m : ℕ) : ConstCoeffOp (Fin 3 → ℝ) 𝕜 (Fin m × Fin 3) (Fin m × Fin 3) where
   coeff ik jl := if jl.1 = ik.1 then
     (if jl.2 = ik.2 + 2 then [([coordDir (ik.2 + 1)], 1)]
@@ -188,7 +166,6 @@ theorem curlOp_apply (Φ : Fin m × Fin 3 → (Fin 3 → ℝ) → 𝕜) (ik : Fi
   simp only [Fin.sum_univ_three]
   fin_cases k <;> simp [Finset.sum_add_distrib] <;> ring
 
-/-- The row-wise curl is formally self-adjoint. -/
 theorem curlOp_formalAdj_apply (Φ : Fin m × Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (curlOp m).formalAdj.apply Φ = (curlOp m).apply Φ := by
   funext ⟨i, k⟩ x
@@ -253,7 +230,6 @@ theorem divdivOp_isOrderLE : (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _
 
 /-! ## Complex identities -/
 
-/-- `curl ∘ grad = 0`. -/
 theorem isComplexPair_grad_curl :
     (gradOp 3 m : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (curlOp m) := by
   intro f hf
@@ -265,7 +241,6 @@ theorem isComplexPair_grad_curl :
   simp only [Pi.zero_apply]
   rw [fderiv_fderiv_comm ((hf i).of_le (by simp)), sub_self]
 
-/-- `div ∘ curl = 0` (row-wise). -/
 theorem isComplexPair_curl_div :
     (curlOp m : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (divOp 3 m) := by
   intro f hf
@@ -289,7 +264,6 @@ theorem isComplexPair_curl_div :
     fderiv_fderiv_comm ((hf (i, 1)).of_le (by simp)) (coordDir 0) (coordDir 2)]
   ring
 
-/-- `curl ∘ hess = 0`. -/
 theorem isComplexPair_hess_curl :
     (hessOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (curlOp 3) := by
   intro h hh
@@ -310,7 +284,6 @@ theorem contDiff_fderiv_apply {f : (Fin n → ℝ) → 𝕜} (hf : ContDiff ℝ 
     ContDiff ℝ ∞ fun y => fderiv ℝ f y v :=
   (hf.fderiv_right (m := ∞) (by simp)).clm_apply contDiff_const
 
-/-- `div div Bᵀ = div div B` for smooth `B` (Schwarz). -/
 theorem divdivOp_apply_transpose {B : Fin n × Fin n → (Fin n → ℝ) → 𝕜}
     (hB : ∀ ij, ContDiff ℝ ∞ (B ij)) :
     (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply (fun ij => B (ij.2, ij.1)) =
@@ -321,7 +294,6 @@ theorem divdivOp_apply_transpose {B : Fin n × Fin n → (Fin n → ℝ) → �
   obtain ⟨i, j⟩ := ij
   exact fderiv_fderiv_comm ((hB (j, i)).of_le (by simp)) _ _ x
 
-/-- `div div B = Σᵢ ∂ᵢ (div B)ᵢ` for smooth `B`. -/
 theorem divdivOp_apply_eq_sum_divOp {B : Fin n × Fin n → (Fin n → ℝ) → 𝕜}
     (hB : ∀ ij, ContDiff ℝ ∞ (B ij)) (u : Unit) (x : Fin n → ℝ) :
     (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply B u x =
@@ -334,7 +306,6 @@ theorem divdivOp_apply_eq_sum_divOp {B : Fin n × Fin n → (Fin n → ℝ) → 
     ((contDiff_fderiv_apply (hB (i, j)) (coordDir j)).differentiable (by simp)) x]
   simp
 
-/-- `div div ∘ curl = 0` (row-wise curl). -/
 theorem isComplexPair_curl_divdiv :
     (curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (divdivOp 3) := by
   intro f hf
@@ -343,7 +314,6 @@ theorem isComplexPair_curl_divdiv :
     isComplexPair_curl_div f hf]
   simp
 
-/-- **`div div ∘ sym curl = 0`**: the symmetric-curl–div-div complex. -/
 theorem isComplexPair_symCurl_divdiv :
     (symCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (divdivOp 3) := by
   intro f hf
@@ -362,7 +332,6 @@ theorem isComplexPair_symCurl_divdiv :
   rw [e, h1, h2, hCtdef, divdivOp_apply_transpose hC, hCdef, isComplexPair_curl_divdiv f hf]
   simp
 
-/-- The Hessian is symmetric (Schwarz). -/
 theorem hessOp_apply_swap {h : Unit → (Fin n → ℝ) → 𝕜} (hh : ∀ u, ContDiff ℝ ∞ (h u))
     (i j : Fin n) :
     (hessOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).apply h (i, j) = (hessOp n).apply h (j, i) := by
@@ -370,7 +339,6 @@ theorem hessOp_apply_swap {h : Unit → (Fin n → ℝ) → 𝕜} (hh : ∀ u, C
   rw [hessOp_apply, hessOp_apply]
   exact fderiv_fderiv_comm ((hh ()).of_le (by simp)) _ _ x
 
-/-- `div divᵗ = hess` (two integrations by parts). -/
 theorem divdivOp_formalAdj : (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).formalAdj = hessOp
     n := by
   simp only [ConstCoeffOp.formalAdj, divdivOp, hessOp, adjEntry_singleton]
@@ -378,14 +346,12 @@ theorem divdivOp_formalAdj : (divdivOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _
   funext ij u
   simp
 
-/-- `hessᵗ = div div`. -/
 theorem hessOp_formalAdj : (hessOp n : ConstCoeffOp (Fin n → ℝ) 𝕜 _ _).formalAdj = divdivOp n := by
   rw [← divdivOp_formalAdj, ConstCoeffOp.formalAdj_formalAdj]
 
 /-! ## The BGG operator `(S₁, curl)` on `ℝ³` -/
 
-/-- The second operator `u ↦ (S₁ u, curl u)` of the BGG complex (5.1) on `ℝ³`, with
-`S₁ = 2 vskw`, `(S₁ u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}` (order `0`), and the row-wise curl. -/
+/-- The operator `u ↦ (S₁ u, curl u)` on `ℝ³`, `S₁ = 2 vskw`. -/
 def skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) (Fin 3 ⊕ Fin 3 × Fin 3) where
   coeff
     | .inl i, jk => if jk = (i + 1, i + 2) then [([], 1)]
@@ -410,7 +376,6 @@ theorem skwCurlOp_apply_inr (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (
     (skwCurlOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply Φ (.inr ik) = (curlOp 3).apply Φ ik :=
   rfl
 
-/-- **`(S₁, curl) ∘ hess = 0`**: Hessians are symmetric and curl-free. -/
 theorem isComplexPair_hess_skwCurl :
     (hessOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair skwCurlOp := by
   intro h hh

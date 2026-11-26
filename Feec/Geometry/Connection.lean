@@ -6,32 +6,13 @@ public import Feec.ForMathlib.Calculus.Partial
 /-!
 # The Riemann tensor of a connection in coordinates
 
-The coordinate formula (2.2) `R^a_{bcd} = ∂_c Γ^a_{bd} - ∂_d Γ^a_{bc} + Γ^a_{ec} Γ^e_{bd} -
-Γ^a_{ed} Γ^e_{bc}` at the jet level (over any commutative ring and index type), and for
-connection fields on `ℝ^ι`. The thesis' Ch. 2 background (manifolds, covariant derivative,
-curvature) follows [Wald1984], with [Alcubierre2008], [BaumgarteShapiro2010], [Carroll2004]
-and [Stewart1991] as further general references.
-
-## Main results
-
-* `riemComp_skew`, `riemComp_bianchi`: skew in the last pair, and the first Bianchi identity
-  for a torsion-free connection (no metric needed);
-* `lower_riemComp_skew`: skew in the first pair for a metric-compatible connection;
-* `riemComp_isAlgCurv`: **Prop 2.1 (corrected), jet level**: the lowered Riemann tensor of a
-  torsion-free metric-compatible connection is an algebraic curvature tensor, and has the
-  interchange symmetry;
-* `riemField_isAlgCurv`: Prop 2.1 for a `C²` metric field and its Levi-Civita connection on
-  `ℝ^ι`; `ricci_riemField_isSymm`: the Ricci tensor is symmetric.
+The coordinate formula (2.2) for the Riemann tensor of a connection, for jets over any commutative
+ring and for connection fields on `ℝ^ι`, with the symmetries of [QuennevilleBelair2015], Prop 2.1
+(adapted).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §2.3 (Prop 2.1, (2.2))
-* [R. M. Wald, *General Relativity*][Wald1984], §3.2, §3.4
-* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008]
-* [T. W. Baumgarte, S. L. Shapiro, *Numerical Relativity: Solving Einstein's Equations on the Computer*][BaumgarteShapiro2010]
-* [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004]
-* [J. Stewart, *Advanced General Relativity*][Stewart1991]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -46,12 +27,7 @@ section Jet
 
 variable {ι : Type*} [Fintype ι] {R : Type*} [CommRing R]
 
-/-- The coordinate formula (2.2) for `R^a_{bcd}` from the values of `Γ^a_{bc} = Γ a b c` and
-`∂_e Γ^a_{bc} = dΓ e a b c` at a point. [QuennevilleBelair2015], (2.2)
-
-The thesis defines `R^a_{bcd} v^b := ∇_{[c} ∇_{d]} v^a` following [Alcubierre2008] (after noting
-its tensoriality, [Stewart1991], p. 33) and derives (2.2); here (2.2) is the definition, and the
-commutator definition and its tensoriality are not formalized. -/
+/-- The coordinate formula (2.2) for `R^a_{bcd}` from `Γ^a_{bc}` and `∂_e Γ^a_{bc}` at a point. -/
 def riemComp (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) : ι → ι → ι → ι → R :=
   fun a b c d => dΓ c a b d - dΓ d a b c + ∑ e, (Γ a e c * Γ e b d - Γ a e d * Γ e b c)
 
@@ -59,7 +35,6 @@ def riemComp (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
 def lower (g : Matrix ι ι R) (C : ι → ι → ι → ι → R) : ι → ι → ι → ι → R :=
   fun a b c d => ∑ e, g a e * C e b c d
 
-/-- Skew-symmetry in the second pair, for any connection. [QuennevilleBelair2015], Prop 2.1 -/
 theorem riemComp_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (a b c d : ι) :
     riemComp Γ dΓ a b c d = -riemComp Γ dΓ a b d c := by
   simp only [riemComp]
@@ -68,9 +43,8 @@ theorem riemComp_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → 
     rw [← sum_neg_distrib]; exact sum_congr rfl fun _ _ => by ring
   linear_combination this
 
-/-- **First Bianchi identity** `R^a_{[bcd]} = 0` for a torsion-free connection.
-Correction: the thesis concludes with a four-index antisymmetrisation, which is not the Bianchi
-identity. [QuennevilleBelair2015], Prop 2.1 (corrected) -/
+/-- The first Bianchi identity `R^a_{[bcd]} = 0` for a torsion-free connection.
+[QuennevilleBelair2015], Prop 2.1 (adapted) -/
 theorem riemComp_bianchi (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
     (hΓ : ∀ a b c, Γ a b c = Γ a c b) (hdΓ : ∀ e a b c, dΓ e a b c = dΓ e a c b) :
     Bianchi1 (riemComp Γ dΓ) := by
@@ -84,16 +58,10 @@ theorem riemComp_bianchi (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι �
     rw [hΓ e c b, hΓ e d c, hΓ e d b]; ring
   linear_combination hs + hdΓ c a b d - hdΓ d a b c - hdΓ b a c d
 
-/-- A double sum of `A r s - A s r` vanishes. -/
 theorem sum_sum_sub_swap (A : ι → ι → R) : ∑ r, ∑ s, (A r s - A s r) = 0 := by
   simp only [sum_sub_distrib]
   rw [Finset.sum_comm (f := fun r s => A s r), sub_self]
 
-/-- Skew-symmetry in the first pair `R_abcd = -R_bacd`, at the jet level, for a symmetric `g`
-and a torsion-free connection compatible with `g` to first order (`hcomp`:
-`∂_e g_ab = g_rb Γ^r_ea + g_ar Γ^r_eb`) and second order (`hcomp'`, the product rule applied to
-`hcomp`), with symmetric second derivatives of `g` (`hddg`). This is the thesis' argument
-`0 = [∇_c, ∇_d] g_ab`, proved from (2.2) directly. [QuennevilleBelair2015], Prop 2.1 -/
 theorem lower_riemComp_skew [DecidableEq ι] (g : Matrix ι ι R) (hg : g.IsSymm)
     (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (dg : ι → ι → ι → R)
     (ddg : ι → ι → ι → ι → R)
@@ -135,9 +103,6 @@ theorem lower_riemComp_skew [DecidableEq ι] (g : Matrix ι ι R) (hg : g.IsSymm
   simp only [lower, riemComp, mul_add, sum_add_distrib]
   linear_combination hD + hG - hQ
 
-/-- **Prop 2.1 (corrected), jet level**: for a torsion-free metric-compatible connection, the
-lowered Riemann tensor (2.2) is skew in each pair and satisfies the first Bianchi identity;
-with `2` invertible it also has the interchange symmetry. [QuennevilleBelair2015], Prop 2.1 (corrected) -/
 theorem lower_riemComp_isAlgCurv [DecidableEq ι] (g : Matrix ι ι R) (hg : g.IsSymm)
     (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (dg : ι → ι → ι → R)
     (ddg : ι → ι → ι → ι → R)
@@ -160,24 +125,16 @@ end Jet
 
 section Field
 
-/-! ### Prop 2.1 for fields on `ℝ^ι`
-
-The jet hypotheses of `lower_riemComp_isAlgCurv` are discharged for a `C²` symmetric metric
-field and a differentiable, torsion-free, metric-compatible connection field (the Levi-Civita
-connection), with coordinate partial derivatives `partialDeriv`. -/
+/-! ### Prop 2.1 for fields on `ℝ^ι` -/
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι]
 
-/-- The Riemann tensor field `R^a_bcd(x)` of a connection field `Γ`, by formula (2.2).
-[QuennevilleBelair2015], (2.2); the thesis' commutator definition, following [Alcubierre2008],
-is not formalized (see `riemComp`). -/
+/-- The Riemann tensor field `R^a_bcd(x)` of a connection field `Γ`, by formula (2.2). -/
 def riemField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) : ι → ι → ι → ι → ℝ :=
   riemComp (Γ x) (fun e a b c => partialDeriv e (fun y => Γ y a b c) x)
 
-/-- **Prop 2.1 (corrected)** for fields: for a `C²` symmetric metric field `g` on `ℝ^ι` and a
-differentiable torsion-free connection `Γ` compatible with `g` (the Levi-Civita connection),
-the lowered Riemann tensor `R_abcd = g_ae R^e_bcd` of (2.2) is skew in each pair and satisfies
-the first Bianchi identity and the interchange symmetry. [QuennevilleBelair2015], Prop 2.1 (corrected) -/
+/-- For a `C²` metric field and a differentiable torsion-free compatible connection, `R_abcd` is
+pair skew, Bianchi and interchange symmetric. [QuennevilleBelair2015], Prop 2.1 (adapted) -/
 theorem riemField_isAlgCurv (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ)
     (hg : ∀ x, (g x).IsSymm) (hgC : ∀ a b, ContDiff ℝ 2 fun x => g x a b)
     (hΓd : ∀ a b c, Differentiable ℝ fun x => Γ x a b c)
@@ -211,8 +168,8 @@ theorem riemField_isAlgCurv (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι �
     (fun f e a b => partialDeriv_comm (hgC a b) f e x)
   exact ⟨hs, hb, interchange_of_bianchi hs hb⟩
 
-/-- **The Ricci tensor is symmetric** (§2.3) for the curvature (2.2) of the Levi-Civita
-connection of a `C²` metric field, given an inverse `gi` of `g x`. [QuennevilleBelair2015], §2.3 -/
+/-- The Ricci tensor `R_ab = R^c_acb` of the Levi-Civita connection of a `C²` metric field is
+symmetric. [QuennevilleBelair2015], §2.3 -/
 theorem ricci_riemField_isSymm (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ)
     (hg : ∀ x, (g x).IsSymm) (hgC : ∀ a b, ContDiff ℝ 2 fun x => g x a b)
     (hΓd : ∀ a b c, Differentiable ℝ fun x => Γ x a b c)

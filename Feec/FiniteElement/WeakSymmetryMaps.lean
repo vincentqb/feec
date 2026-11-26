@@ -7,58 +7,19 @@ public import Feec.FiniteElement.TensorElement
 /-!
 # The weak-symmetry maps `S⁰ = I` and `S¹ = 2 vskw` in the language of forms
 
-The connecting maps of the BGG complex (4.16) of [QuennevilleBelair2015], §5.3, between the de
-Rham complex and its vector-valued copy `ℝⁿ ⊗ Λ`, are the restrictions to degrees `0` and `1` of
-
-`S v = Σᵢ dxᵢ ∧ vᵢ` (`coordWedgeField`), for `v = (v₁, …, vₙ)` a vector of `k`-forms,
-
-that is `S⁰ψ = Σᵢ ψᵢ dxᵢ` on vector `0`-forms (the identity `S₀ = I` on vector proxies,
-`coordWedgeSum_singleton`) and `S¹v = Σᵢ dxᵢ ∧ vᵢ` on vector `1`-forms. With rows `vᵢ = Σⱼ uᵢⱼ dxⱼ`,
-`(S¹v)_{ab} = u_{ab} − u_{ba}` (`coordWedgeSum_pair`): on vector proxies `S¹ = 2 vskw`,
-`(S₁u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}`, the operator of `Feec.Domain.skwCurlOp`
-and of `Feec.Models.BoundedDomain.skwL`. This choice of signs gives the thesis' anticommutation
-
-`d S = −S d` (`extDeriv_coordWedgeField`),
-
-since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ = −S₁ grad`.
+The connecting maps of the BGG complex of [QuennevilleBelair2015], §5.3 (adapted) are, in degrees
+`0` and `1`, the map `S v = Σᵢ dxᵢ ∧ vᵢ` on vectors of `k`-forms, and `S_h = Π' S` on meshes.
 
 ## Main results
 
-* **Algebra.** `isDeg_coordWedgeSum` (degree `k ↦ k + 1`), `coordWedgeSum_singleton` (`S₀ = I`),
-  `coordWedgeSum_pair` (`(S¹v)_{ab} = v_{a,b} − v_{b,a}`, so `S₁ = 2 vskw`);
-  `pullback_coordWedgeSum`: `B^*(S v) = Σᵢ (Bᵀeᵢ) ∧ B^*vᵢ`, so `S` commutes with the pullback by a
-  dilation `x ↦ c x + t` up to the factor `c` (`affinePullback_scalarMat_coordWedgeField`).
-* **Analysis.** `extDeriv_coordWedgeField` (`d S = −S d` pointwise), `contDiff_coordWedgeField`.
-* **`L²` realization.** `wsL2 k : L²(Ω; Λᵏ)ⁿ → L²(Ω; Λᵏ⁺¹)` (bounded, `norm_wsL2_sq_le`:
-  `‖S v‖² ≤ (k + 1) ‖v‖²`, adjoint `wsL2Adj`) maps `D(d_min)ⁿ` into `D(d_min)` and `D(d_max)ⁿ`
-  into `D(d_max)` with `d S = −S d` (`wsL2_mem_minimal`, `wsL2_mem_maximal`); since `S` is a
-  constant-coefficient map, it commutes with mollification (the smoothing form
-  `Feec.Models.Cube.WeakSymmetry.smoothForm_wsL2` lives in `Models`).
-* **Finite element level.** For a polynomial family `S` whose degree-`k` test spaces on
-  `(k + 1)`-faces contain the constant `1`-forms (`PolySeq.ConstOneTest`), the DOFs of the lowest-order family of `S v`
-  are combinations of the DOFs of `v` (`PolySeq.dof_comp_coordWedgeC_mem_span`); this gives
-  `S_h = Π' S` on `Vₕ ⊗ ℝⁿ` (`PolySeq.wsPiecewise`, `PolySeq.wsGlobal`, `PolySeq.wsGlobal₀`:
-  vanishing boundary DOFs are preserved), **Prop 5.7, adapted** `Π' S Π̃ = Π' S`
-  (`PolySeq.wsGlobal_tensorInterp`), the
-  **discrete anticommutation** `d S_h = −S_h d` (`PolySeq.dPiecewise_wsPiecewise`), and
-  **`S₀,ₕ` onto `P₁⁻Λ̊¹`** (`PolySeq.wsGlobal₀_surjective`). The interpolants coincide with the
-  `Feec.FiniteElement.LocalDof` interpolants (`PolySeq.localInterp_eq_polyMinusInterp`).
-* **Table 5.1.** `PolySeq.bggS0h`, `PolySeq.bggS1h` (`P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`, `P₂⁻Λ¹ ⊗ ℝⁿ → P₁⁻Λ²`),
-  `PolySeq.bggS0h₀_surjective`, `PolySeq.bggS0h_tensorInterp` (`Π¹S⁰Π̃⁰ = Π¹S⁰`; the case `k = 1`,
-  `Π²S¹Π̃¹ = Π²S¹`, is `PolySeq.wsGlobal_tensorInterp`).
-* **Smoothed pairs.** `Feec.HilbertComplex.Subcomplex.CommutingMap.toCochainProjection_comp_toCochainProjection`:
-  if `Q 𝒮 = c A Q̃` (from `R 𝒮 = c 𝒮 R̃` and Prop 5.7), the smoothed projections satisfy
-  `π 𝒮 π̃ = π 𝒮`, the compatibility `Feec.BGG.Discrete.Compatible`.
+* `extDeriv_coordWedgeField`: `d S = −S d`.
+* `wsL2_mem_minimal`, `wsL2_mem_maximal`: `S` preserves the domains of `d_min` and `d_max`.
+* `PolySeq.wsGlobal_tensorInterp`: `Π' S Π̃ = Π' S` on continuous fields.
+* `PolySeq.wsGlobal₀_surjective`: `S_h` maps onto the spaces with vanishing boundary DOFs.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3 (the maps `S₀ = I`, `S₁ = vskw` of the complex (4.16), here `S₁ = 2 vskw`; Prop 5.7)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
-  (the maps `S` of weakly imposed symmetry)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG connecting maps)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (exterior algebra, pullbacks, traces)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -73,8 +34,6 @@ namespace Feec.FiniteElement
 open ExteriorFibre Feec.Mesh Feec.Domain
 
 variable {n : ℕ}
-
-/-! ### The fibre map `v ↦ Σᵢ dxᵢ ∧ vᵢ` -/
 
 section Fibre
 
@@ -111,13 +70,11 @@ def coordWedgeSumₗ : (Fin n → Finset (Fin n) → ℝ) →ₗ[ℝ] (Finset (F
   map_add' := coordWedgeSum_add
   map_smul' := coordWedgeSum_smul
 
-/-- `S` raises the form degree by one. -/
 theorem isDeg_coordWedgeSum {k : ℕ} {v : Fin n → Finset (Fin n) → ℝ} (hv : ∀ i, IsDeg k (v i)) :
     IsDeg (k + 1) (coordWedgeSum v) := fun s hs => by
   rw [coordWedgeSum, Finset.sum_apply]
   exact Finset.sum_eq_zero fun i _ => (hv i).wedge _ s hs
 
-/-- **`S₀ = I`**: on vector `0`-forms, `(S⁰ψ)_{{j}} = ψⱼ`. -/
 theorem coordWedgeSum_singleton {v : Fin n → Finset (Fin n) → ℝ} (j : Fin n) :
     coordWedgeSum v {j} = v j ∅ := by
   rw [coordWedgeSum_apply]
@@ -126,8 +83,6 @@ theorem coordWedgeSum_singleton {v : Fin n → Finset (Fin n) → ℝ} (j : Fin 
   rw [Finset.sum_eq_single j (fun i _ hij => by simp [Ne.symm hij]) (by simp)]
   simp [this]
 
-/-- **`(S¹v)_{ab} = v_{a,b} − v_{b,a}`** for `a < b`: the coefficient of `dx_a ∧ dx_b` of
-`Σᵢ dxᵢ ∧ vᵢ` (with `(vᵢ)_{{j}} = uᵢⱼ`). -/
 theorem coordWedgeSum_pair {v : Fin n → Finset (Fin n) → ℝ} {a b : Fin n} (hab : a < b) :
     coordWedgeSum v {a, b} = v a {b} - v b {a} := by
   have hne : a ≠ b := hab.ne
@@ -146,7 +101,6 @@ theorem coordWedgeSum_pair {v : Fin n → Finset (Fin n) → ℝ} {a b : Fin n} 
   simp
   ring
 
-/-- **The pullback of `S v`**: `B^*(Σᵢ dxᵢ ∧ vᵢ) = Σᵢ (Bᵀeᵢ) ∧ B^*vᵢ`. -/
 theorem pullback_coordWedgeSum {m : ℕ} (B : Fin n → Fin m → ℝ) (v : Fin n → Finset (Fin n) → ℝ) :
     pullback B (coordWedgeSum v) = ∑ i, wedge (B i) (pullback B (v i)) := by
   rw [coordWedgeSum, pullback_sum]
@@ -158,12 +112,9 @@ theorem pullback_coordWedgeSum {m : ℕ} (B : Fin n → Fin m → ℝ) (v : Fin 
 
 end Fibre
 
-/-! ### The map on form fields -/
-
 section Field
 
-/-- **The weak-symmetry map on form fields** `S v = Σᵢ dxᵢ ∧ vᵢ`: `S⁰` on vector `0`-forms, `S¹`
-on vector `1`-forms ([QuennevilleBelair2015], §5.3, with `S₁ = 2 vskw`). -/
+/-- The weak-symmetry map `S v = Σᵢ dxᵢ ∧ vᵢ` on form fields. -/
 def coordWedgeField (v : Fin n → FormField n) : FormField n := fun x => coordWedgeSum fun i => v i x
 
 theorem coordWedgeField_apply (v : Fin n → FormField n) (x : Fin n → ℝ) :
@@ -202,7 +153,6 @@ theorem partialDeriv_const_mul_apply {f : (Fin n → ℝ) → ℝ} {x : Fin n �
     partialDeriv j (fun y => c * f y) x = c * partialDeriv j f x :=
   partialDeriv_const_smul hf c j
 
-/-- The partial derivatives of `S v` are `S` of the partial derivatives. -/
 theorem partialDerivForm_coordWedgeField {v : Fin n → FormField n} {x : Fin n → ℝ}
     (hv : ∀ i, DifferentiableAt ℝ (v i) x) (j : Fin n) :
     partialDerivForm j (coordWedgeField v) x =
@@ -217,8 +167,8 @@ theorem partialDerivForm_coordWedgeField {v : Fin n → FormField n} {x : Fin n 
   rw [partialDeriv_sum _ (fun l _ => (hc i _).const_mul _)]
   exact Finset.sum_congr rfl fun l _ => partialDeriv_const_mul_apply (hc i _) _ j
 
-/-- **The anticommutation `d S = −S d`**: `d(Σᵢ dxᵢ ∧ vᵢ) = −Σᵢ dxᵢ ∧ dvᵢ`, at every point where
-the `vᵢ` are differentiable ([QuennevilleBelair2015], §5.3: `curl S₀ = −S₁ grad`). -/
+/-- **The anticommutation `d S = −S d`**: `d(Σᵢ dxᵢ ∧ vᵢ) = −Σᵢ dxᵢ ∧ dvᵢ` at every point where the
+`vᵢ` are differentiable. [QuennevilleBelair2015], §5.3 -/
 theorem extDeriv_coordWedgeField {v : Fin n → FormField n} {x : Fin n → ℝ}
     (hv : ∀ i, DifferentiableAt ℝ (v i) x) :
     extDeriv (coordWedgeField v) x = -coordWedgeField (fun i => extDeriv (v i)) x := by
@@ -229,12 +179,10 @@ theorem extDeriv_coordWedgeField {v : Fin n → FormField n} {x : Fin n → ℝ}
   rw [← Finset.sum_neg_distrib]
   exact Finset.sum_congr rfl fun j _ => eq_neg_of_add_eq_zero_left (wedge_wedge_add_wedge_wedge _ _ _)
 
-/-- `d S = −S d` for `C¹` fields. -/
 theorem extDeriv_coordWedgeField_eq {v : Fin n → FormField n} (hv : ∀ i, ContDiff ℝ 1 (v i)) :
     extDeriv (coordWedgeField v) = -coordWedgeField (fun i => extDeriv (v i)) :=
   funext fun x => extDeriv_coordWedgeField fun i => (hv i).differentiable one_ne_zero x
 
-/-- **The pullback of `S v` by an affine map**: `F^*(S v) = Σᵢ (Bᵀeᵢ) ∧ F^*vᵢ`. -/
 theorem affinePullback_coordWedgeField {m : ℕ} (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
     (v : Fin n → FormField n) (x : Fin m → ℝ) :
     affinePullback B b (coordWedgeField v) x =
@@ -242,8 +190,6 @@ theorem affinePullback_coordWedgeField {m : ℕ} (B : Fin n → Fin m → ℝ) (
   rw [affinePullback_apply, coordWedgeField_apply, pullback_coordWedgeSum]
   rfl
 
-/-- **`S` commutes with the pullback by a dilation up to the factor `c`**:
-`(x ↦ c x + t)^*(S v) = c S((x ↦ c x + t)^* v)`. -/
 theorem affinePullback_scalarMat_coordWedgeField (c : ℝ) (t : Fin n → ℝ) (v : Fin n → FormField n) :
     affinePullback (scalarMat n c) t (coordWedgeField v) =
       c • coordWedgeField fun i => affinePullback (scalarMat n c) t (v i) := by
@@ -275,12 +221,10 @@ def coordWedgeC1 : (Fin n → c1Forms n) →ₗ[ℝ] c1Forms n where
 @[simp] theorem coe_coordWedgeC1 (v : Fin n → c1Forms n) :
     (coordWedgeC1 v : FormField n) = coordWedgeField fun i => v i := rfl
 
-/-- `d S = −S d` on `C¹` forms. -/
 theorem extDerivC1_coordWedgeC1 (v : Fin n → c1Forms n) :
     extDerivC1 (coordWedgeC1 v) = -coordWedgeC fun i => extDerivC1 (v i) :=
   Subtype.ext (extDeriv_coordWedgeField_eq fun i => mem_c1Forms.1 (v i).2)
 
-/-- The degree-`(k+1)` part of `S v` is `S` of the degree-`k` parts. -/
 theorem degField_coordWedgeField (k : ℕ) (v : Fin n → FormField n) :
     degField (k + 1) (coordWedgeField v) = coordWedgeField fun i => degField k (v i) := by
   funext x s
@@ -294,12 +238,8 @@ theorem degField_coordWedgeField (k : ℕ) (v : Fin n → FormField n) :
 
 end Field
 
-/-! ### Moments of `S v` -/
-
 section Moment
 
-/-- **Moments of `S v`**: `∫_{T̂} F_q^*(S v)_{k+1} ∧ η = (−1)ᵏ Σᵢ ∫_{T̂} F_q^*(vᵢ)_k ∧ (B_q eᵢ ∧ η)`,
-`B_q = simplexMatrix q` (the pulled-back `dxᵢ` are the constant covectors `B_q eᵢ`). -/
 theorem vertexMoment_degField_coordWedgeField {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ)
     {η : FormField m} (hη : Continuous η) (k : ℕ) {v : Fin n → FormField n}
     (hv : ∀ i, Continuous (v i)) :
@@ -323,17 +263,12 @@ theorem vertexMoment_degField_coordWedgeField {m : ℕ} (q : Fin (m + 1) → Fin
 
 end Moment
 
-/-! ### DOF compatibility of `S` for the polynomial families -/
-
 namespace PolySeq
 
-/-- The source sequence `S` admits constant `1`-forms as test forms of its degree-`k` DOFs on
-`(k+1)`-faces (true for `P_rΛᵏ` and `P_r⁻Λᵏ` with `r ≥ 2`, `constOneTest_of_two_le_deg`). -/
+/-- The constant `1`-forms are test forms of the degree-`k` DOFs of `S` on `(k+1)`-faces. -/
 def ConstOneTest (S : PolySeq) (k : ℕ) : Prop :=
   ∀ m, m = k + 1 → ∀ ξ : Fin m → ℝ, (fun _ : Fin m → ℝ => oneForm ξ) ∈ S.test k m
 
-/-- **The test forms of `P₁⁻Λᵏ⁺¹`** on `m`-faces are the constant `0`-forms for `m = k + 1` and
-`0` otherwise. -/
 theorem lowestOrder_test_succ {k m : ℕ} {η : FormField m}
     (hη : η ∈ lowestOrder.test (k + 1) m) :
     η = 0 ∨ ∃ _ : m = k + 1, ∃ c : ℝ, ∀ y, η y = c • Pi.single ∅ 1 := by
@@ -356,7 +291,6 @@ theorem lowestOrder_test_succ {k m : ℕ} {η : FormField m}
       simp [hs]
   · exact Or.inl ((Submodule.mem_bot ℝ).1 hη)
 
-/-- **Constant `1`-forms are test forms** of `P_rΛᵏ` and `P_r⁻Λᵏ` on `(k+1)`-faces for `r ≥ 2`. -/
 theorem constOneTest_of_two_le_deg (S : PolySeq) {k : ℕ} (hk : 2 ≤ S.deg k) :
     S.ConstOneTest k := by
   rintro m rfl ξ
@@ -375,11 +309,6 @@ theorem constOneTest_of_two_le_deg (S : PolySeq) {k : ℕ} (hk : 2 ≤ S.deg k) 
     rw [show k + 1 - k = 1 by omega]
     exact mem_polySpace_of_eq_const hc hd
 
-/-- **DOF compatibility of `S` with the target `P₁⁻Λᵏ⁺¹`** (the moment form of
-[QuennevilleBelair2015], Prop 5.7): for a source family whose test forms on `(k+1)`-faces contain
-the constant `1`-forms, each DOF `ℓ'_{g,i}` of `P₁⁻Λᵏ⁺¹` composed with `S v = Σ dxₐ ∧ vₐ` is a
-combination of the degree-`k` DOFs of the components `vₐ` **on the same face** `g`:
-`ℓ'_{g,i}(S v) = (−1)ᵏ Σₐ ∫_{T̂} F^*(vₐ) ∧ (B eₐ ∧ η)`, and `B eₐ ∧ η` is a source test form. -/
 theorem dof_comp_coordWedgeC_mem_span (S : PolySeq) {k : ℕ} (hS : S.ConstOneTest k)
     (g : Finset (Fin n → ℝ)) (i : lowestOrder.DofIdx g (k + 1)) :
     lowestOrder.dof g (k + 1) i ∘ₗ coordWedgeC ∈
@@ -428,7 +357,6 @@ theorem dof_comp_coordWedgeC_mem_span (S : PolySeq) {k : ℕ} (hS : S.ConstOneTe
     exact Submodule.sum_mem _ fun a _ => Submodule.sum_mem _ fun j _ =>
       Submodule.smul_mem _ _ (Submodule.subset_span ⟨(a, j), rfl⟩)
 
-/-- **The target DOFs of `S v` only see the source DOFs of the components on the same face.** -/
 theorem dof_coordWedgeC_eq (S : PolySeq) {k : ℕ} (hS : S.ConstOneTest k)
     {g : Finset (Fin n → ℝ)} (i : lowestOrder.DofIdx g (k + 1)) {v w : Fin n → contForms n}
     (h : ∀ a j, S.dof g k j (v a) = S.dof g k j (w a)) :
@@ -437,8 +365,6 @@ theorem dof_coordWedgeC_eq (S : PolySeq) {k : ℕ} (hS : S.ConstOneTest k)
     (S.dof_comp_coordWedgeC_mem_span hS g i) fun p => h p.1 p.2
 
 end PolySeq
-
-/-! ### The weak-symmetry interpolant on the finite element spaces -/
 
 namespace PolySeq
 
@@ -449,10 +375,7 @@ abbrev toCont {T : Affine.Simplex ℝ (Fin n → ℝ) n} (u : (polyElement n S).
     contForms n :=
   ⟨u, (polyElement n S).le_contForms T k u.2⟩
 
-/-- **The weak-symmetry interpolant on piecewise fields**
-`(Π'_h S u)_T = Π'_T (Σₐ dxₐ ∧ (uₐ)_T)` into the piecewise `P₁⁻Λᵏ⁺¹` fields: the global
-canonical interpolant `Π¹(S⁰ ·)`, `Π²(S¹ ·)` of [QuennevilleBelair2015], §5.3, on the discrete
-spaces (where the canonical interpolant of a continuous form is not available). -/
+/-- The weak-symmetry interpolant `(Π'_h S u)_T = Π'_T (Σₐ dxₐ ∧ (uₐ)_T)` on piecewise fields. -/
 def wsPiecewise :
     (Fin n → (polyElement n S).Piecewise M k) →ₗ[ℝ] (polyElement n lowestOrder).Piecewise M (k + 1)
     where
@@ -484,8 +407,6 @@ theorem localDof_wsPiecewise (u : Fin n → (polyElement n S).Piecewise M k) (T 
 
 variable {S M k}
 
-/-- `Π'_h S` maps `(Λ_hᵏ)ⁿ` into `P₁⁻Λ_hᵏ⁺¹`: the target DOFs on a shared face are combinations of
-the source DOFs on that face (`dof_coordWedgeC_eq`). -/
 theorem wsPiecewise_mem_globalSpace (hS : S.ConstOneTest k)
     {u : Fin n → (polyElement n S).Piecewise M k} (hu : ∀ a, u a ∈ (polyElement n S).globalSpace M k) :
     S.wsPiecewise M k u ∈ (polyElement n lowestOrder).globalSpace M (k + 1) := by
@@ -493,7 +414,6 @@ theorem wsPiecewise_mem_globalSpace (hS : S.ConstOneTest k)
   rw [localDof_wsPiecewise _ _ _ _ _ hg, localDof_wsPiecewise _ _ _ _ _ hg']
   exact S.dof_coordWedgeC_eq hS i fun a j => hu a T T' g hg hg' j
 
-/-- `Π'_h S` maps `(Λ̊_hᵏ)ⁿ` (vanishing boundary DOFs) into `P₁⁻Λ̊_hᵏ⁺¹`. -/
 theorem wsPiecewise_mem_globalSpace₀ (hS : S.ConstOneTest k)
     {u : Fin n → (polyElement n S).Piecewise M k}
     (hu : ∀ a, u a ∈ (polyElement n S).globalSpace₀ M k) :
@@ -506,8 +426,7 @@ theorem wsPiecewise_mem_globalSpace₀ (hS : S.ConstOneTest k)
       exact (hu a).2 T F hF hFT g hg j
   exact h0.trans (by rw [map_zero, map_zero])
 
-/-- **`S_h = Π'_h S` on the global spaces**: `(Λ_hᵏ)ⁿ → P₁⁻Λ_hᵏ⁺¹` (`S₀,ₕ = Π¹S⁰` for `k = 0`,
-`S₁,ₕ = Π²S¹` for `k = 1`). -/
+/-- `S_h = Π'_h S : (Λ_hᵏ)ⁿ → P₁⁻Λ_hᵏ⁺¹` on the global spaces. -/
 def wsGlobal (hS : S.ConstOneTest k) :
     (Fin n → (polyElement n S).globalSpace M k) →ₗ[ℝ]
       (polyElement n lowestOrder).globalSpace M (k + 1) where
@@ -538,12 +457,8 @@ def wsGlobal₀ (hS : S.ConstOneTest k) :
     (S.wsGlobal₀ hS u : (polyElement n lowestOrder).Piecewise M (k + 1)) =
       S.wsPiecewise M k fun a => (u a : (polyElement n S).Piecewise M k) := rfl
 
-/-! ### The surjectivity hypothesis (5.4): `Π' S Π̃ = Π' S` -/
-
-/-- **Thesis Prop 5.7, adapted (global form)**: `Π'_h S Π̃_h ψ = Π'_h S ψ` for continuous `ψ`
-(`Π̃_h` the componentwise canonical interpolant, `Π'_h` the canonical interpolant of
-`P₁⁻Λᵏ⁺¹`): the surjectivity hypothesis (5.4) for the canonical projections, i.e.
-`Π¹S⁰Π̃⁰ = Π¹S⁰` (`k = 0`) and `Π²S¹Π̃¹ = Π²S¹` (`k = 1`). -/
+/-- **`Π'_h S Π̃_h = Π'_h S`** on continuous fields, with `Π̃_h` the componentwise canonical
+interpolant. [QuennevilleBelair2015], Prop 5.7 (adapted) -/
 theorem wsGlobal_tensorInterp (hS : S.ConstOneTest k) (ψ : Fin n → contForms n) :
     S.wsGlobal hS ((polyElement n S).tensorInterp M n k ψ) =
       (polyElement n lowestOrder).globalInterp M (k + 1) (coordWedgeC ψ) := by
@@ -552,10 +467,6 @@ theorem wsGlobal_tensorInterp (hS : S.ConstOneTest k) (ψ : Fin n → contForms 
   exact S.dof_coordWedgeC_eq hS i fun a j =>
     ((polyElement n S).localDof_globalInterp M k (ψ a) T g hg j).symm
 
-/-! ### The discrete anticommutation -/
-
-/-- **Canonical discrete anticommutation** `d S_h = −S_h d` on the global spaces: with
-`dΠ' = Π'd` and `d S = −S d` on polynomial fields. -/
 theorem dPiecewise_wsPiecewise (u : Fin n → (polyElement n S).Piecewise M k) :
     (polyElement n lowestOrder).dPiecewise M (k + 1) (S.wsPiecewise M k u) =
       -S.wsPiecewise M (k + 1) fun a => (polyElement n S).dPiecewise M k (u a) := by
@@ -570,9 +481,6 @@ theorem dPiecewise_wsPiecewise (u : Fin n → (polyElement n S).Piecewise M k) :
     map_neg]
   rfl
 
-/-! ### `S₀,ₕ` is onto -/
-
-/-- `P₁⁻Λᵏ⁺¹` has at most one DOF per face. -/
 theorem lowestOrder_finrank_test_le_one (k m : ℕ) :
     Module.finrank ℝ (lowestOrder.test (k + 1) m) ≤ 1 := by
   have hkind : lowestOrder.kind (k + 1) = .trimmed := by simp [lowestOrder]
@@ -592,11 +500,6 @@ instance lowestOrder_dofIdx_subsingleton (g : Finset (Fin n → ℝ)) (k : ℕ) 
     have := lowestOrder_finrank_test_le_one k (#g - 1)
     omega))⟩
 
-/-- **A target DOF of `S v` is reached from one source DOF**: for every DOF `ℓ'_{g,i}` of
-`P₁⁻Λᵏ⁺¹` there are a component `a` and a source DOF `ℓ_{g,j}` on the same face such that
-`ℓ'_{g,i}(S v) ≠ 0` whenever the source DOFs of `v` on `g` are the Kronecker delta at `(a, j)`.
-(The pulled-back `dxₐ` is a nonzero constant `1`-form for some `a`, hence a nonzero source test
-form.) -/
 theorem exists_dof_coordWedgeC_ne_zero (S : PolySeq) {k : ℕ} (hS : S.ConstOneTest k)
     {g : Finset (Fin n → ℝ)} (i : lowestOrder.DofIdx g (k + 1)) :
     ∃ (a : Fin n) (j : S.DofIdx g k), ∀ v : Fin n → contForms n,
@@ -666,10 +569,7 @@ theorem exists_dof_coordWedgeC_ne_zero (S : PolySeq) {k : ℕ} (hS : S.ConstOneT
   exact mul_ne_zero (pow_ne_zero _ (by norm_num)) hj
 
 /-- **`S_h = Π' S` maps `(Λ̊_hᵏ)ⁿ` onto `P₁⁻Λ̊_hᵏ⁺¹`** for a source family whose test forms on
-`(k+1)`-faces contain the constant `1`-forms (`P_rΛᵏ`, `P_r⁻Λᵏ`, `r ≥ 2`): in particular
-`S₀,ₕ = Π¹S⁰ : P₂Λ̊⁰ ⊗ ℝ³ → P₁⁻Λ̊¹` is onto ([QuennevilleBelair2015], §5.3: the edge moments of
-`ψ · τ_e` are free). Each interior target DOF is hit by a single source DOF on the same face, and
-the target DOFs of `S v` on a face only see the source DOFs on that face. -/
+`(k+1)`-faces contain the constant `1`-forms. -/
 theorem wsGlobal₀_surjective (hS : S.ConstOneTest k) :
     Function.Surjective (S.wsGlobal₀ (M := M) hS) := by
   classical
@@ -761,8 +661,6 @@ theorem wsGlobal₀_surjective (hS : S.ConstOneTest k) :
 
 end PolySeq
 
-/-! ### The `L²` realization of `S` and the domains of `d` -/
-
 section L2
 
 open scoped InnerProductSpace
@@ -789,7 +687,6 @@ theorem formExt_eq_sum {k : ℤ} (w : formIdx n k → ℝ) :
   · have hne : ∀ r : formIdx n k, s ≠ r.1 := fun r h => hs (h ▸ r.2)
     simp [formExt, hs, hne]
 
-/-- **`S` in coordinates**: `(S v)_t = Σ_{a,r} c(t; a, r) (vₐ)_r`. -/
 theorem coordWedgeSum_formExt {k : ℤ} (w : Fin n → formIdx n k → ℝ) (t : formIdx n (k + 1)) :
     coordWedgeSum (fun a => formExt (w a)) t.1 = ∑ p, wsCoeff k t p * w p.1 p.2 := by
   have : (fun a => formExt (w a)) =
@@ -845,7 +742,6 @@ theorem formComp_toFormField {k : ℤ} (w : formIdx n k → (Fin n → ℝ) → 
   funext r x
   simp [formComp, toFormField, formExt_val]
 
-/-- `d` on coefficient fields is the classical exterior derivative of the form field. -/
 theorem toFormField_extDerivOp {k : ℕ} (w : formIdx n k → (Fin n → ℝ) → ℝ) :
     toFormField ((extDerivOp ℝ n k).apply w) = extDeriv (toFormField w) := by
   funext x s
@@ -858,7 +754,6 @@ theorem toFormField_extDerivOp {k : ℕ} (w : formIdx n k → (Fin n → ℝ) �
     refine (IsDeg.extDeriv (isDeg_toFormField w) x s fun h => hs ?_).symm
     rw [h]; push_cast; ring
 
-/-- **`d S = −S d` on smooth coefficient fields.** -/
 theorem extDerivOp_wsFields {k : ℕ} {φ : Fin n → formIdx n k → (Fin n → ℝ) → ℝ}
     (hφ : ∀ a r, ContDiff ℝ ∞ (φ a r)) :
     (extDerivOp ℝ n ((k : ℤ) + 1)).apply (wsFields k φ) =
@@ -878,8 +773,7 @@ theorem extDerivOp_wsFields {k : ℕ} {φ : Fin n → formIdx n k → (Fin n →
   funext a
   exact (toFormField_extDerivOp (φ a)).symm
 
-/-- **The `L²` realization of `S`**: `L²(Ω; Λᵏ)ⁿ → L²(Ω; Λᵏ⁺¹)`,
-`(S v)_t = Σ_{a,r} c(t; a, r) (vₐ)_r`. -/
+/-- The `L²` realization `L²(Ω; Λᵏ)ⁿ → L²(Ω; Λᵏ⁺¹)` of `S`. -/
 def wsL2 (k : ℤ) :
     PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k)) →L[ℝ] L2F ℝ Ω (formIdx n (k + 1)) :=
   (PiLp.continuousLinearEquiv 2 ℝ (fun _ : formIdx n (k + 1) => L2 ℝ Ω)).symm.toContinuousLinearMap
@@ -924,7 +818,6 @@ theorem toL2_sum {ι' : Type*} (u : Finset ι') (c : ι' → ℝ) {f : ι' → (
     rw [Finset.sum_insert ha, ih, ← toL2_smul, ← toL2_add]
     exact toL2_congr _ _ (by funext x; simp [Finset.sum_insert ha])
 
-/-- `S` maps test fields to test fields. -/
 theorem wsL2_testField {k : ℤ} {φ : Fin n → formIdx n k → (Fin n → ℝ) → ℝ}
     (hφ : ∀ a, IsTestField Ω (φ a)) :
     wsL2 k (WithLp.toLp 2 fun a => testField (hφ a)) = testField (isTestField_wsFields hφ) := by
@@ -946,7 +839,6 @@ theorem isTestField_wsFieldsAdj {k : ℤ} {ψ : formIdx n (k + 1) → (Fin n →
   rw [this]
   exact IsTest.sum _ fun t _ => (hψ t).const_mul _
 
-/-- `Sᵀ` maps test fields to test fields. -/
 theorem wsL2Adj_testField {k : ℤ} {ψ : formIdx n (k + 1) → (Fin n → ℝ) → ℝ}
     (hψ : IsTestField Ω ψ) :
     wsL2Adj k (testField hψ) =
@@ -957,8 +849,7 @@ theorem wsL2Adj_testField {k : ℤ} {ψ : formIdx n (k + 1) → (Fin n → ℝ) 
   rw [toL2_sum Finset.univ (fun t => wsCoeff k t (a, r)) hψ]
   exact toL2_congr _ _ (by funext x; simp [wsFieldsAdj, Finset.sum_apply])
 
-/-- **`S` maps `D(d_min)ⁿ` into `D(d_min)`** (`H̊Λᵏ(Ω)ⁿ → H̊Λᵏ⁺¹(Ω)`), with `d S = −S d`: the
-pairs `(S φ, −S dφ)` of test fields lie in the graph of `d`, and `S` is bounded. -/
+/-- **`S` maps `D(d_min)ⁿ` into `D(d_min)`** (`H̊Λᵏ(Ω)ⁿ → H̊Λᵏ⁺¹(Ω)`), with `d S = −S d`. -/
 theorem wsL2_mem_minimal (hΩ : IsOpen Ω) (k : ℕ)
     {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))}
     (hv : ∀ a, v a ∈ ((extDerivOp ℝ n k).minimal Ω).domain) :
@@ -1037,8 +928,6 @@ theorem toLp_testField_single {k : ℤ} {χ : formIdx n k → (Fin n → ℝ) �
   · conv_rhs => rw [Pi.single_eq_of_ne h]
     exact (testField_congr _ IsTestField.zero (by simp [h])).trans testField_zero
 
-/-- **The dual anticommutation on test fields**: `Sᵀ dᵗ = −dᵗ Sᵀ` (from `d S = −S d` and Green's
-formula). -/
 theorem testField_wsFieldsAdj_formalAdj (hΩ : IsOpen Ω) (k : ℕ)
     {ψ : formIdx n ((k : ℤ) + 1 + 1) → (Fin n → ℝ) → ℝ} (hψ : IsTestField Ω ψ) (a : Fin n) :
     testField (isTestField_wsFieldsAdj
@@ -1085,14 +974,13 @@ theorem testField_wsFieldsAdj_formalAdj (hΩ : IsOpen Ω) (k : ℕ)
   have := A.inner_testField_apply_testField hχ (isTestField_wsFieldsAdj hψ a)
   rw [real_inner_comm, this, real_inner_comm]
 
-/-- Below degree `0` the vectors of forms are zero. -/
 theorem subsingleton_vec_formIdx {k : ℤ} (hk : k < 0) :
     Subsingleton (PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :=
   have := LocalElement.subsingleton_L2F_of_neg Ω (n := n) hk
   ⟨fun _ _ => PiLp.ext fun _ => Subsingleton.elim _ _⟩
 
 /-- **`S` maps `D(d_max)ⁿ` into `D(d_max)`** (`HΛᵏ(Ω)ⁿ → HΛᵏ⁺¹(Ω)`), with `d S = −S d`, in every
-degree (below degree `0` the spaces are zero). -/
+degree. -/
 theorem wsL2_mem_maximal (hΩ : IsOpen Ω) (k : ℤ)
     {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))}
     (hv : ∀ a, v a ∈ ((extDerivOp ℝ n k).maximal Ω).domain) :
@@ -1131,7 +1019,6 @@ theorem wsL2_mem_maximal (hΩ : IsOpen Ω) (k : ℤ)
   have hmem : wsL2 k v ∈ (A'.maximal Ω).domain := (A'.mem_maximal_domain_iff hΩ).2 ⟨_, key⟩
   exact ⟨hmem, A'.maximal_apply_eq hΩ ⟨_, hmem⟩ key⟩
 
-/-- The coefficients of `S`: `c(t; a, r) = ε(a, t)` if `a ∈ t` and `r = t ∖ a`, else `0`. -/
 theorem wsCoeff_eq {k : ℤ} (t : formIdx n (k + 1)) (p : Fin n × formIdx n k) :
     wsCoeff k t p = if p.1 ∈ t.1 ∧ t.1.erase p.1 = p.2.1 then sgn p.1 t.1 else 0 := by
   rw [wsCoeff, coordWedgeSum_apply, Finset.sum_eq_single p.1 (fun i _ hi => by
@@ -1153,7 +1040,6 @@ theorem abs_wsCoeff {k : ℤ} (t : formIdx n (k + 1)) (p : Fin n × formIdx n k)
   · simp [sgn]
   · simp
 
-/-- Each `t` sees `#t = k + 1` coefficients of absolute value one. -/
 theorem sum_abs_wsCoeff_left (k : ℤ) (t : formIdx n (k + 1)) :
     ∑ p : Fin n × formIdx n k, |wsCoeff k t p| = (k : ℝ) + 1 := by
   simp only [abs_wsCoeff]
@@ -1175,7 +1061,6 @@ theorem sum_abs_wsCoeff_left (k : ℤ) (t : formIdx n (k + 1)) :
   have : ((#t.1 : ℕ) : ℝ) = (k : ℝ) + 1 := by exact_mod_cast h
   exact this
 
-/-- Each `(a, r)` occurs for at most one `t` (namely `r ∪ {a}`). -/
 theorem sum_abs_wsCoeff_right {k : ℤ} (p : Fin n × formIdx n k) :
     ∑ t : formIdx n (k + 1), |wsCoeff k t p| ≤ 1 := by
   simp only [abs_wsCoeff, Finset.sum_boole]
@@ -1186,9 +1071,6 @@ theorem sum_abs_wsCoeff_right {k : ℤ} (p : Fin n × formIdx n k) :
     rw [← Finset.insert_erase ht.1, ← Finset.insert_erase ht'.1, ht.2, ht'.2]
   exact_mod_cast this
 
-/-- **The bound of `S`**: `‖S v‖² ≤ (k + 1) ‖v‖²` (each `(a, r)` occurs in at most one
-`t = r ∪ {a}`, and `#t = k + 1`). For `k = 0` (`S⁰`) the constant is `1`, for `k = 1` (`S¹`)
-it is `2`. -/
 theorem norm_wsL2_sq_le (k : ℤ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :
     ‖wsL2 k v‖ ^ 2 ≤ ((k : ℝ) + 1) * ‖v‖ ^ 2 := by
   set c := wsCoeff (n := n) k
@@ -1229,11 +1111,8 @@ theorem norm_wsL2_sq_le (k : ℤ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (form
 
 end L2
 
-/-! ### Comparison with the interpolants of `Feec.FiniteElement.LocalDof` -/
-
 namespace PolySeq
 
-/-- The local interpolant of a polynomial family only depends on the vertex set of `T`. -/
 theorem localInterp_congr (S : PolySeq) (k : ℕ) {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
     (h : vertexSet T = vertexSet T') (w : contForms n) :
     (((polyElement n S).localInterp T k w : (polyElement n S).space T k) : FormField n) =
@@ -1248,10 +1127,6 @@ theorem localInterp_congr (S : PolySeq) (k : ℕ) {T T' : Affine.Simplex ℝ (Fi
       exact this.symm
   exact congrArg Subtype.val e
 
-/-- **The global trimmed families have the interpolants of `LocalDof`**: on an `n`-simplex `T`
-whose vertices, in lexicographic order, are `q`, the canonical interpolant of a trimmed degree
-`k` of an admissible sequence is `polyMinusInterp` for the vertex order `q` (the face moments of
-`q ∘ e` are the DOFs of the faces `q(e(·))`, `lexEnum_image_comp`). -/
 theorem localInterp_eq_polyMinusInterp (S : PolySeq) {k : ℕ} (hκ : S.kind k = .trimmed)
     (hk : k ≤ n) (T : Affine.Simplex ℝ (Fin n → ℝ) n) {q : Fin (n + 1) → Fin n → ℝ}
     (hq : StrictMono fun i => toLex (q i)) (hqT : ∀ x ∈ vertexSet T, ∃ i, q i = x)
@@ -1313,41 +1188,30 @@ theorem localInterp_eq_polyMinusInterp (S : PolySeq) {k : ℕ} (hκ : S.kind k =
 
 end PolySeq
 
-/-! ### The thesis' elements (Table 5.1) -/
-
 namespace PolySeq
 
-/-- The constant `1`-forms are test forms of `P₂Λ⁰` on edges. -/
 theorem lagrangeP2_constOneTest_zero : lagrangeP2.ConstOneTest 0 :=
   constOneTest_of_two_le_deg _ (by simp)
 
-/-- The constant `1`-forms are test forms of `P₂⁻Λ¹` on triangles. -/
 theorem lagrangeP2_constOneTest_one : lagrangeP2.ConstOneTest 1 :=
   constOneTest_of_two_le_deg _ (by simp)
 
 variable (M : SimplicialMesh n)
 
-/-- **`S₀,ₕ = Π¹S⁰ : P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`** ([QuennevilleBelair2015], §5.3, (5.7)), with `Π¹` the
-canonical interpolant. In a `Feec.BGG.Discrete` instance built from smoothed projections,
-`Discrete.S0h = π¹ ∘ S⁰` is a different map; results about `bggS0h` (surjectivity, Props 5.8,
-5.9(1)) do not transfer to it automatically. -/
+/-- `S₀,ₕ = Π¹S⁰ : P₂Λ⁰ ⊗ ℝⁿ → P₁⁻Λ¹`. [QuennevilleBelair2015], §5.3, (5.7) -/
 def bggS0h : (Fin n → (polyElement n lagrangeP2).globalSpace M 0) →ₗ[ℝ]
     (polyElement n lowestOrder).globalSpace M 1 :=
   lagrangeP2.wsGlobal (M := M) lagrangeP2_constOneTest_zero
 
-/-- **`S₁,ₕ = Π²S¹ : P₂⁻Λ¹ ⊗ ℝⁿ → P₁⁻Λ²`** ([QuennevilleBelair2015], §5.3, (5.7), with
-`S₁ = 2 vskw`). -/
+/-- `S₁,ₕ = Π²S¹ : P₂⁻Λ¹ ⊗ ℝⁿ → P₁⁻Λ²`. [QuennevilleBelair2015], §5.3, (5.7) (adapted) -/
 def bggS1h : (Fin n → (polyElement n lagrangeP2).globalSpace M 1) →ₗ[ℝ]
     (polyElement n lowestOrder).globalSpace M 2 :=
   lagrangeP2.wsGlobal (M := M) lagrangeP2_constOneTest_one
 
-/-- **`S₀,ₕ` is onto `P₁⁻Λ̊¹`** from `P₂Λ̊⁰ ⊗ ℝⁿ` (vanishing boundary DOFs). -/
 theorem bggS0h₀_surjective :
     Function.Surjective (lagrangeP2.wsGlobal₀ (M := M) lagrangeP2_constOneTest_zero) :=
   wsGlobal₀_surjective _
 
-/-- **Thesis Prop 5.7, adapted**, for the elements of Table 5.1: `Π¹S⁰Π̃⁰ = Π¹S⁰` on continuous
-fields (`Π²S¹Π̃¹ = Π²S¹` is `wsGlobal_tensorInterp` with `lagrangeP2_constOneTest_one`). -/
 theorem bggS0h_tensorInterp (ψ : Fin n → contForms n) :
     bggS0h M ((polyElement n lagrangeP2).tensorInterp M n 0 ψ) =
       (polyElement n lowestOrder).globalInterp M 1 (coordWedgeC ψ) :=
@@ -1356,8 +1220,6 @@ theorem bggS0h_tensorInterp (ψ : Fin n → contForms n) :
 end PolySeq
 
 end Feec.FiniteElement
-
-/-! ### Compatibility of a pair of smoothed projections -/
 
 namespace Feec.HilbertComplex.Subcomplex.CommutingMap
 
@@ -1368,15 +1230,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι ι' : Type*} {c : ComplexShape ι} {c'
   {H : HilbertComplex 𝕜 c W} {H' : HilbertComplex 𝕜 c' W'} {S : H.Subcomplex} {S' : H'.Subcomplex}
   [∀ i, FiniteDimensional 𝕜 (S.V i)] [∀ i, FiniteDimensional 𝕜 (S'.V i)]
 
-/-- **Smoothed projections satisfy the surjectivity hypothesis (5.4)**: let `Q = Π R`,
-`Q̃ = Π̃ R̃` be commuting maps into the two finite element rows and `𝒮 : W̃ⁱ → Wʲ` a connecting map
-with `Q 𝒮 y = c Π' 𝒮 (Q̃ y)` (from `R 𝒮 = c 𝒮 R̃`, the dilation factor `c`, and
-`Π 𝒮 Π̃ = Π 𝒮` on smooth fields, the adapted Prop 5.7; `A` is `Π 𝒮` on the discrete fields).
-Then the smoothed projections `π = J⁻¹ Q`, `π̃ = J̃⁻¹ Q̃` satisfy `π 𝒮 π̃ = π 𝒮`: since
-`Q̃ π̃ = Q̃`, `Q 𝒮 π̃ x = c A (Q̃ π̃ x) = c A (Q̃ x) = Q 𝒮 x`. This is `Feec.BGG.Discrete.Compatible`
-(`P1 = π`, `Pt0 = π̃`, `S0 = 𝒮`) for smoothed projections. The hypothesis `hA` is not discharged
-here for the cube smoothing (it combines `Feec.Models.Cube.WeakSymmetry.smoothForm_wsL2` with
-`PolySeq.wsGlobal_tensorInterp`); this lemma is the abstract step only. -/
 theorem toCochainProjection_comp_toCochainProjection (Q : S.CommutingMap) (Q' : S'.CommutingMap)
     {θ θ' : ℝ} (hθ : θ < 1) (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ θ * ‖v‖) (hθ' : θ' < 1)
     (hQ' : ∀ i, ∀ v ∈ S'.V i, ‖v - Q'.Q i v‖ ≤ θ' * ‖v‖) {i : ι'} {j : ι}

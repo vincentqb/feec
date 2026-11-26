@@ -5,38 +5,15 @@ public import Feec.HilbertComplex.Hodge
 /-!
 # The domain complex
 
-The domain complex of a Hilbert complex `H : HilbertComplex 𝕜 c W` has the spaces
-`Vⁱ = D(d i (c.next i))` with the graph inner product `⟪x, y⟫ + ⟪d x, d y⟫` (realized as the
-graph space, complete since `d` is closed) and the differentials `d i j` restricted to them,
-which are bounded. It is again a Hilbert complex on the same shape (`domainComplex`), with
-bounded everywhere-defined differentials, so every result on Hilbert complexes applies to it;
-the Hodge decomposition of `domainComplex` is the `V`-level Hodge decomposition.
-
-## Main definitions
-
-* `HilbertComplex.domainSpace i`: `Vⁱ` as the graph space of `d i (c.next i)`.
-* `HilbertComplex.domainIncl i : Vⁱ →L Wⁱ`: the inclusion.
-* `HilbertComplex.domainD i j : Vⁱ →L Vʲ`: the bounded differentials, `(x, d x) ↦ (d x, 0)`.
-* `HilbertComplex.ofBounded`: the Hilbert complex of a complex of bounded operators.
-* `HilbertComplex.domainComplex`: the domain complex.
-
-## Main results
-
-* `HilbertComplex.mem_domainComplex_cycles`, `HilbertComplex.norm_of_mem_domainComplex_cycles`:
-  the cycles of `V` are the cycles of `W`, isometrically.
-* `HilbertComplex.domainComplex_closedRangeAt_iff`: closed range in `V` ⇔ in `W`.
-* `HilbertComplex.map_domainIncl_harmonic`: the harmonic forms of `V` (`V`-orthogonal to the
-  boundaries) are those of `W`.
-* `HilbertComplex.hodge_domainComplex`: `Vⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ (𝔷ⁱ)^{⊥V}` under closed range.
+The domain complex of a Hilbert complex: the spaces `Vⁱ = D(d i (c.next i))` with the graph inner
+product and the restricted, bounded differentials, a Hilbert complex with the same cycles, harmonic
+forms and closed ranges.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (the domain complex, Thms 4.1–4.2)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1.2 (domain complex)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.1
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -48,8 +25,7 @@ open LinearPMap Set
 
 namespace Feec.HilbertComplex
 
-/-- **The Hilbert complex of a complex of bounded operators** `δ i j : Xⁱ → Xʲ` (zero off the
-relation, `δ δ = 0`), with full domains. -/
+/-- The Hilbert complex of a complex of bounded operators, with full domains. -/
 def ofBounded {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {X : ι → Type*}
     [∀ i, NormedAddCommGroup (X i)] [∀ i, InnerProductSpace 𝕜 (X i)] [∀ i, CompleteSpace (X i)]
     (δ : ∀ i j, X i →L[𝕜] X j) (shape : ∀ i j, ¬ c.Rel i j → δ i j = 0)
@@ -65,13 +41,12 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- `D(d i (c.next i)) ⊆ D(d i j)` for every `j` (the other `d i j` vanish, with domain `⊤`). -/
 theorem domain_next_le (i j : ι) : (H.d i (c.next i)).domain ≤ (H.d i j).domain := by
   by_cases hj : j = c.next i
   · subst hj; exact le_rfl
   · rw [H.d_eq_zero_of_ne_next hj]; exact le_top
 
-/-- The domain space `Vⁱ = D(d i (c.next i))` with the graph inner product. [QuennevilleBelair2015], §4.2 -/
+/-- The domain space `Vⁱ = D(d i (c.next i))` with the graph inner product. -/
 abbrev domainSpace (i : ι) : Type _ := (H.d i (c.next i)).GraphSpace
 
 instance (i : ι) : CompleteSpace (H.domainSpace i) := (H.closed _ _).completeSpace_graphSpace
@@ -97,7 +72,6 @@ def domainCoord (i j : ι) : H.domainSpace i →ₗ[𝕜] (H.d i j).domain :=
 @[simp] theorem domainIncl_toGraphSpace (i : ι) (x : (H.d i (c.next i)).domain) :
     H.domainIncl i ((H.d i (c.next i)).toGraphSpace x) = x := rfl
 
-/-- `‖d i j (ι v)‖ ≤ ‖v‖_V`. -/
 theorem norm_d_domainCoord_le (i j : ι) (v : H.domainSpace i) :
     ‖H.d i j (H.domainCoord i j v)‖ ≤ ‖v‖ := by
   by_cases hj : j = c.next i
@@ -110,7 +84,6 @@ theorem norm_d_domainCoord_le (i j : ι) (v : H.domainSpace i) :
 theorem norm_domainIncl_le (i : ι) (v : H.domainSpace i) : ‖H.domainIncl i v‖ ≤ ‖v‖ :=
   norm_graphFst_le v
 
-/-- The graph-norm identity `‖v‖² = ‖ι v‖² + ‖d (ι v)‖²`. -/
 theorem norm_sq_domainSpace (i : ι) (v : H.domainSpace i) :
     ‖v‖ ^ 2 = ‖H.domainIncl i v‖ ^ 2 + ‖H.d i (c.next i) (H.domainCoord i _ v)‖ ^ 2 := by
   obtain ⟨x, rfl, -, -⟩ := (H.d i (c.next i)).exists_toGraphSpace_eq v
@@ -138,7 +111,6 @@ def domainD (i j : ι) : H.domainSpace i →L[𝕜] H.domainSpace j :=
 @[simp] theorem domainIncl_domainD (i j : ι) (v : H.domainSpace i) :
     H.domainIncl j (H.domainD i j v) = H.d i j (H.domainCoord i j v) := rfl
 
-/-- `d (domainD v) = 0`: the image of `domainD` consists of cycles. -/
 theorem d_domainCoord_domainD (i j k : ι) (v : H.domainSpace i) :
     H.d j k (H.domainCoord j k (H.domainD i j v)) = 0 :=
   H.d_comp_d i j k (H.domainCoord i j v)
@@ -153,9 +125,8 @@ theorem domainD_comp_domainD (i j k : ι) (v : H.domainSpace i) :
   H.domainIncl_injective k (by
     rw [domainIncl_domainD, d_domainCoord_domainD, _root_.map_zero])
 
-/-- **The domain complex**: the spaces `Vⁱ` with the bounded differentials `domainD`, as a
-Hilbert complex on the same shape. [QuennevilleBelair2015], §4.2; see [BruningLesch1992], §2
-and [AFW2010], §3.1.2. -/
+/-- **The domain complex**: the spaces `Vⁱ` with the bounded differentials `domainD`.
+[QuennevilleBelair2015], §4.2; [BruningLesch1992], §2; [AFW2010], §3.1.2 -/
 def domainComplex : HilbertComplex 𝕜 c H.domainSpace :=
   ofBounded H.domainD (fun _ _ h => H.domainD_eq_zero_of_not_rel h) H.domainD_comp_domainD
 
@@ -182,7 +153,6 @@ theorem mem_domainComplex_cycles {i : ι} {v : H.domainSpace i} :
     change H.d i (c.next i) (H.domainCoord i _ v) = H.domainIncl _ 0
     rw [_root_.map_zero, ← hy0]; congr 1; exact Subtype.ext hy
 
-/-- On the cycles the `V`-norm is the `W`-norm. -/
 theorem norm_of_mem_domainComplex_cycles {i : ι} {v : H.domainSpace i}
     (hv : v ∈ H.domainComplex.cycles i) : ‖v‖ = ‖H.domainIncl i v‖ := by
   obtain ⟨y, hy, hy0⟩ := (LinearPMap.mem_ker_iff).1 ((H.mem_domainComplex_cycles).1 hv)
@@ -192,7 +162,6 @@ theorem norm_of_mem_domainComplex_cycles {i : ι} {v : H.domainSpace i}
   rw [e, norm_zero, zero_pow two_ne_zero, add_zero] at h
   exact (pow_left_inj₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 h
 
-/-- On the cycles the `V`-inner product is the `W`-inner product. -/
 theorem inner_of_mem_domainComplex_cycles {i : ι} {u : H.domainSpace i}
     (hu : u ∈ H.domainComplex.cycles i) (v : H.domainSpace i) :
     ⟪u, v⟫_𝕜 = ⟪H.domainIncl i u, H.domainIncl i v⟫_𝕜 := by
@@ -207,13 +176,11 @@ theorem inner_of_mem_domainComplex_cycles {i : ι} {u : H.domainSpace i}
   rw [e, inner_zero_left, add_zero]
   rfl
 
-/-- With no arrow into `j`, there are no boundaries at `j`. -/
 theorem boundaries_eq_bot_of_not_rel {j : ι} (h : ¬ c.Rel (c.prev j) j) : H.boundaries j = ⊥ := by
   rw [eq_bot_iff]
   rintro _ ⟨x, rfl⟩
   exact (Submodule.mem_bot 𝕜).2 (apply_eq_zero_of_not_rel _ h x)
 
-/-- `ι` maps `R(domainD i j)` onto `R(d i j)` at a related pair. -/
 theorem map_domainIncl_range_domainD {i j : ι} (h : c.Rel i j) :
     (LinearMap.range (H.domainD i j : H.domainSpace i →ₗ[𝕜] H.domainSpace j)).map
         (H.domainIncl j : H.domainSpace j →ₗ[𝕜] W j) = LinearMap.range (H.d i j).toFun := by
@@ -225,7 +192,6 @@ theorem map_domainIncl_range_domainD {i j : ι} (h : c.Rel i j) :
   · rintro ⟨x, rfl⟩
     exact ⟨_, ⟨(H.d i (c.next i)).toGraphSpace x, rfl⟩, rfl⟩
 
-/-- `ι` maps the boundaries of `V` onto those of `W`. -/
 theorem map_domainIncl_boundaries (j : ι) :
     (H.domainComplex.boundaries j).map (H.domainIncl j : H.domainSpace j →ₗ[𝕜] W j) =
       H.boundaries j := by
@@ -266,8 +232,6 @@ theorem domainComplex_closedRangeAt_iff (j : ι) :
 
 /-! ### Harmonic forms and the `V`-level Hodge decomposition -/
 
-/-- `ι` maps the harmonic forms of `V` (cycles `V`-orthogonal to the boundaries) onto those of
-`W`. [QuennevilleBelair2015], §4.2 -/
 theorem map_domainIncl_harmonic (i : ι) :
     (H.domainComplex.harmonic i).map (H.domainIncl i : H.domainSpace i →ₗ[𝕜] W i) =
       H.harmonic i := by
@@ -291,10 +255,8 @@ theorem map_domainIncl_harmonic (i : ι) :
     rw [← H.map_domainIncl_boundaries i] at hwB
     exact (Submodule.mem_orthogonal _ _).1 hwB _ (Submodule.mem_map_of_mem hu)
 
-/-- **Hodge decomposition of `V`** (`V`-level, Thesis Thm 4.1): under closed range,
-`Vⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ (𝔷ⁱ)^{⊥V}`, pairwise orthogonal in the graph inner product. Here the summands are
-those of the domain complex.
-[QuennevilleBelair2015], Thm 4.1 -/
+/-- **Hodge decomposition of `V`**: under closed range, `Vⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ (𝔷ⁱ)^{⊥V}` in the domain
+complex, pairwise orthogonal in the graph inner product. [QuennevilleBelair2015], Thm 4.1 -/
 theorem hodge_domainComplex {i : ι} (hi : H.ClosedRangeAt i) :
     H.domainComplex.boundaries i ⊔ H.domainComplex.harmonic i ⊔
         (H.domainComplex.cycles i)ᗮ = ⊤ ∧

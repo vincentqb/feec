@@ -6,36 +6,9 @@ public import Feec.Models.Cube.RowWiseIdent
 /-!
 # Real parity extensions on `Q = (0, ½)ᵈ` and their Fourier coefficients
 
-The parity extension `Feec.Models.Cube.MirrorExt.extL2 c : L²(Q) → L²(𝕋ᵈ)` (parity `c_j = ±1`
-in `x_j`) is described here by a **folding formula**: for continuous `g` on `𝕋ᵈ`,
-
-  `∫_{𝕋ᵈ} (ext_c f) g = ∫_Q f · fold_c g`,  `fold_c g (y) = Σ_ε sign_c(ε) g(R_ε y)`
-
-(`integral_extL2_mul`), so the Fourier coefficients of an extension are pairings on `Q` with the
-folded characters (`mFourierCoeff_extL2`). The folded function is smooth for smooth `g`, its
-partial derivatives are folds with the parity of one variable reversed (`fderiv_fold`), and it
-vanishes on the faces `y_j ∈ {0, ½}` when `c_j = -1` (`fold_eq_zero_of_face`).
-
-For real fields `L²(Q; ℝᴾ)` with parity vectors `c p`, `JR c` is the real-linear parity extension
-on the Fourier side, a scaled isometry (`⟪JR u, JR v⟫ = 2ᵈ ⟪u, v⟫`, `inner_JR`) onto the
-coefficient sequences with the parities `c` and real entries (`w(-n) = conj w(n)`,
-`JR_mem_fieldParity`, `JR_isReal`, `JR_Jinv`), inverted by `Jinv` (`Jinv_JR`).
-
-## Main results
-
-* `fold`, `fold_eq_zero_of_face`, `contDiff_fold`, `fderiv_fold`, `norm_fold_le`.
-* **`integral_extL2_mul`**, **`mFourierCoeff_extL2`**, `star_extL2`.
-* `JR`, `Jinv`, **`inner_JR`**, `Jinv_JR`, **`coeff_JR`**, `JR_mem_fieldParity`, `JR_isReal`,
-  **`JR_Jinv`**.
-
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the cube by the method of images)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The folding formula `∫_{𝕋ᵈ} (ext_c f) g = ∫_Q f · fold_c g` for continuous `g`
+(`integral_extL2_mul`) and the real parity extension `JR` on the Fourier side, with
+`⟪JR u, JR v⟫ = 2ᵈ ⟪u, v⟫` (`inner_JR`).
 -/
 
 open scoped InnerProductSpace ComplexConjugate ENNReal Topology
@@ -50,12 +23,11 @@ open Feec.Fourier.Torus (flipAt flipAt_neg)
 open RowWise (ofRealL reL coeFn_ofRealL coeFn_reL reL_ofRealL ofRealL_reL star_ofRealL
   inner_ofRealL)
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 variable {d : Type*} [Fintype d]
 
-/-- Restriction to `Q` commutes with complex conjugation. -/
 theorem resQ_star (f : T2 d) : star (resQ f) = resQ (star f) := by
   refine Lp.ext ?_
   filter_upwards [Lp.coeFn_star (resQ f), coeFn_resQ f, coeFn_resQ (star f),
@@ -69,7 +41,6 @@ variable [DecidableEq d]
 
 /-! ### Signs -/
 
-/-- Reversing the parity of `x_j` multiplies the sign of `R_ε` by `±1`. -/
 theorem sign_update (c : d → ℂ) (j : d) (ε : d → Bool) :
     sign (Function.update c j (-c j)) ε = (if ε j then -1 else 1) * sign c ε := by
   rw [sign, sign, ← Finset.mul_prod_erase _ _ (Finset.mem_univ j),
@@ -83,12 +54,10 @@ theorem sign_update (c : d → ℂ) (j : d) (ε : d → Bool) :
 
 /-! ### Folding -/
 
-/-- **The fold** `fold_c g (y) = Σ_ε sign_c(ε) g(R_ε (proj y))` of a function on `𝕋ᵈ`: the
-pairing of the extension `ext_c f` with `g` is the pairing of `f` with `fold_c g` on `Q`. -/
+/-- **The fold** `fold_c g (y) = Σ_ε sign_c(ε) g(R_ε (proj y))` of a function on `𝕋ᵈ`. -/
 def fold (c : d → ℂ) (g : UnitAddTorus d → ℂ) (y : d → ℝ) : ℂ :=
   ∑ ε : d → Bool, sign c ε * g (reflB ε (proj y))
 
-/-- **The fold vanishes on the faces where the parity is odd**: `c_j = -1` and `y_j ∈ {0, ½}`. -/
 theorem fold_eq_zero_of_face {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {j : d} (hcj : c j = -1)
     (g : UnitAddTorus d → ℂ) {y : d → ℝ} (hy : y j = 0 ∨ y j = 1 / 2) : fold c g y = 0 := by
   let e : (d → Bool) ≃ (d → Bool) :=
@@ -111,7 +80,6 @@ theorem fold_eq_zero_of_face {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {j : d}
 theorem fold_eq (c : d → ℂ) (g : UnitAddTorus d → ℂ) :
     fold c g = fun y => ∑ ε : d → Bool, sign c ε * ((fun x => g (reflB ε x)) ∘ proj) y := rfl
 
-/-- The fold of a smooth function is smooth. -/
 theorem contDiff_fold (c : d → ℂ) {g : UnitAddTorus d → ℂ} (hg : IsSmooth g) :
     ContDiff ℝ (⊤ : ℕ∞) (fold c g) := by
   rw [fold_eq]
@@ -128,8 +96,6 @@ where
       · simp only [reflB, h, ↓reduceIte]; exact (continuous_apply i).neg
       · simp only [reflB, h, Bool.false_eq_true, ↓reduceIte]; exact continuous_apply i
 
-/-- **Derivatives of the fold**: `∂_j fold_c g = fold_{c'} (∂_j g)` with the parity of `x_j`
-reversed (`c'_j = -c_j`). -/
 theorem fderiv_fold (c : d → ℂ) {g : UnitAddTorus d → ℂ} (hg : IsSmooth g) (j : d)
     (y : d → ℝ) :
     fderiv ℝ (fold c g) y (Pi.single j 1) =
@@ -148,7 +114,6 @@ theorem fderiv_fold (c : d → ℂ) {g : UnitAddTorus d → ℂ} (hg : IsSmooth 
     partialT_comp_reflB (hg.contDiff_one.differentiable one_ne_zero), sign_update]
   ring
 
-/-- `|fold_c g| ≤ 2ᵈ ‖g‖_∞` for `|c_j| = 1`. -/
 theorem norm_fold_le {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g : C(UnitAddTorus d, ℂ))
     (y : d → ℝ) : ‖fold c g y‖ ≤ 2 ^ Fintype.card d * ‖g‖ := by
   calc ‖fold c g y‖ ≤ ∑ ε : d → Bool, ‖sign c ε * g (reflB ε (proj y))‖ := norm_sum_le _ _
@@ -159,7 +124,6 @@ theorem norm_fold_le {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g : C(UnitAddT
 
 /-! ### The folding formula -/
 
-/-- A parity function is reflected by multiplication with the sign: `f ∘ R_ε = sign_c(ε) f`. -/
 theorem comp_reflB_ae_of_mem {c : d → ℂ} {f : T2 d} (hf : f ∈ paritySub c) (ε : d → Bool) :
     (fun x => (f : UnitAddTorus d → ℂ) (reflB ε x)) =ᵐ[volume]
       fun x => sign c ε * (f : UnitAddTorus d → ℂ) x := by
@@ -186,7 +150,6 @@ theorem isFiniteMeasure_Q : IsFiniteMeasure (volume.restrict (Q d)) :=
   isFiniteMeasure_restrict.2 (isBounded_openCube _ _).measure_lt_top.ne
 
 omit [DecidableEq d] in
-/-- `L²(Q)` functions times bounded continuous functions are integrable on `Q`. -/
 theorem integrable_mul_bdd_Q (f : Domain.L2 ℂ (Q d)) {h : (d → ℝ) → ℂ} (hh : Continuous h)
     {C : ℝ} (hC : ∀ y, ‖h y‖ ≤ C) :
     Integrable (fun y => (f : (d → ℝ) → ℂ) y * h y) (volume.restrict (Q d)) := by
@@ -249,7 +212,6 @@ theorem mFourierCoeff_extL2 {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (f : Dom
 
 /-! ### Conjugation -/
 
-/-- **The extension of a real parity vector commutes with conjugation.** -/
 theorem star_extL2 {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (hcr : ∀ j, conj (c j) = c j)
     (f : Domain.L2 ℂ (Q d)) : star (extL2 hc f) = extL2 hc (star f) := by
   refine (eq_extL2_iff hc).2 ⟨mem_paritySub.2 fun k n => ?_, ?_⟩
@@ -308,7 +270,7 @@ def Jinv : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ)) →
 theorem Jinv_apply (w : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ))) :
     Jinv d P w = reF (Q d) P (resQF ((Fourier.Torus.fieldFourier d P).symm w)) := rfl
 
-/-- Coefficient sequences with real entries: `w(-n) = conj w(n)`. -/
+/-- Coefficient sequences of real fields: `w(-n) = conj w(n)`. -/
 def IsReal (w : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ))) : Prop :=
   ∀ n p, (w : (d → ℤ) → EuclideanSpace ℂ P) (-n) p = conj ((w : (d → ℤ) → EuclideanSpace ℂ P) n p)
 
@@ -322,15 +284,13 @@ section Ext
 
 variable [DecidableEq d] {c : P → d → ℂ} (hc : ∀ p j, c p j * c p j = 1)
 
-/-- **The real parity extension on the Fourier side**: real fields on `Q` to coefficient
-sequences, `(JR u)_p = (ext_{c p} u_p)^`. -/
+/-- **The real parity extension on the Fourier side**, `(JR u)_p = (ext_{c p} u_p)^`. -/
 def JR : Domain.L2F ℝ (Q d) P →L[ℝ]
     Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ)) :=
   ((extF hc).restrictScalars ℝ).comp (ofRealF (Q d) P)
 
 theorem JR_apply (u : Domain.L2F ℝ (Q d) P) : JR hc u = extF hc (ofRealF (Q d) P u) := rfl
 
-/-- `Jinv` inverts `JR`. -/
 theorem Jinv_JR (u : Domain.L2F ℝ (Q d) P) : Jinv d P (JR hc u) = u := by
   rw [Jinv_apply, JR_apply, resQF_symm_extF]
   refine PiLp.ext fun p => ?_
@@ -343,7 +303,6 @@ theorem inner_JR (u v : Domain.L2F ℝ (Q d) P) :
     JR_apply, inner_extF, inner_ofRealF, ← Complex.ofReal_mul]
   exact Complex.ofReal_re _
 
-/-- **The coefficients of `JR`** are pairings on `Q` with the folded characters. -/
 theorem coeff_JR (u : Domain.L2F ℝ (Q d) P) (n : d → ℤ) (p : P) :
     (JR hc u : (d → ℤ) → EuclideanSpace ℂ P) n p =
       ∫ y in Q d, (((u p : (d → ℝ) → ℝ) y : ℝ) : ℂ) * fold (c p) (mFourier (-n)) y := by

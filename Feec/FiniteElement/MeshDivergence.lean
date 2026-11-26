@@ -7,53 +7,14 @@ public import Mathlib.Analysis.Convex.Measure
 /-!
 # The divergence theorem on simplicial meshes
 
-Let `M` be a conforming simplicial mesh of `Ω ⊆ ℝⁿ` (`n = m + 1 ≥ 1`) and, on every closed
-`n`-simplex `T` of `M`, let `G_T` be a `C¹` vector field with values in `𝕜ⁿ` (`𝕜 = ℝ` or `ℂ`).
-If the normal components of the `G_T` agree from both sides of every interior facet and vanish on
-every boundary facet, then
-
-  `Σ_T ∫_T div G_T = 0`.
-
-This is the integration-by-parts identity behind the conformity of piecewise smooth fields
-(`Feec.FiniteElement.Conformity`): the face terms of the divergence theorem on each `T`
-(`Feec.FiniteElement.setIntegral_image_simplexMap_divergence`) cancel in pairs across the
-interior facets, because the two `n`-simplices sharing a facet lie strictly on opposite sides
-of it (`Feec.Mesh.SimplicialMesh.sOppSide_of_mem_cofaces`) and therefore induce opposite
-orientations on it.
-
-The normal component is measured against any vector `ν` orthogonal (for the dot product) to the
-facet (`IsFaceNormal F ν`); the proof uses the cofactor normal `faceNormal q` of an enumeration
-`q` of the facet, which satisfies `Σⱼ (faceNormal q)ⱼ wⱼ = det [w | q₁ - q₀ | ⋯ | qₘ - q₀]`
-(`det_edgeMatrix_cons`).
-
-## Main definitions
-
-* `Feec.FiniteElement.faceNormal q`: the cofactor normal of `m + 1` points of `ℝ^{m+1}`.
-* `Feec.FiniteElement.IsFaceNormal F ν`: `ν · (a - b) = 0` for all `a, b ∈ F`.
-* `Feec.FiniteElement.faceFlux q G`: the flux `∫_q ι_G vol` of a `𝕜ⁿ`-valued field through
-  the oriented face `q`.
-* `Feec.FiniteElement.faceEnum F k`: a fixed enumeration of a finite set of points.
+On a simplicial mesh, `C¹` fields `G_T` on the `n`-simplices `T` whose normal components agree
+across interior facets and vanish on boundary facets satisfy `Σ_T ∫_T div G_T = 0`.
 
 ## Main results
 
-* `simplexIntegral_fluxForm`: `∫_q ι_F vol = ∫_{T̂} F(F_q ŷ) · faceNormal q dŷ`.
-* `det_edgeMatrix_cons`, `sign_perm_mul_det_edgeMatrix_cons`: orientations of faces.
-* `setIntegral_closedInterior_divergence_rclike`: the divergence theorem on an `n`-simplex for
-  `𝕜ⁿ`-valued fields, any vertex order.
-* `setIntegral_divergence_eq_sum_faces`: the same with the face terms indexed by the facets
-  `F ⊆ vert T` and the canonical enumerations `faceEnum F`.
-* `orient_eq_neg`: two `n`-simplices sharing an interior facet induce opposite
-  orientations on it.
-* `sum_setIntegral_divergence_eq_zero`: **the divergence theorem on a mesh**.
-
-## References
-
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (simplicial meshes,
-  integration by parts across interfaces)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (conformity of piecewise smooth forms)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `setIntegral_closedInterior_divergence_rclike`: the divergence theorem on an `n`-simplex.
+* `orient_eq_neg`: two `n`-simplices sharing an interior facet induce opposite orientations on it.
+* `sum_setIntegral_divergence_eq_zero`: the divergence theorem on a mesh.
 -/
 
 open Finset MeasureTheory
@@ -66,14 +27,10 @@ open ExteriorFibre
 
 variable {m : ℕ} {𝕜 : Type*} [RCLike 𝕜]
 
-/-! ### The cofactor normal of a face -/
-
-/-- The cofactor normal of `m + 1` points `q₀, …, qₘ` of `ℝ^{m+1}`:
-`Nⱼ = (-1)ʲ det (B_q without row j)`, with `B_q` the edge matrix (columns `qₗ₊₁ - q₀`). -/
+/-- The cofactor normal `Nⱼ = (-1)ʲ det (B_q without row j)` of `m + 1` points of `ℝ^{m+1}`. -/
 def faceNormal (q : Fin (m + 1) → Fin (m + 1) → ℝ) : Fin (m + 1) → ℝ :=
   fun j => (-1) ^ (j : ℕ) * ((Matrix.of (simplexMatrix q)).submatrix j.succAbove id).det
 
-/-- `det [q₀ - a | q₁ - a | ⋯ | qₘ - a] = N_q · (q₀ - a)`. -/
 theorem det_edgeMatrix_cons (a : Fin (m + 1) → ℝ) (q : Fin (m + 1) → Fin (m + 1) → ℝ) :
     (edgeMatrix (Fin.cons a q : Fin (m + 2) → Fin (m + 1) → ℝ)).det =
       ∑ j, faceNormal q j * (q 0 j - a j) := by
@@ -95,7 +52,6 @@ theorem det_edgeMatrix_cons (a : Fin (m + 1) → ℝ) (q : Fin (m + 1) → Fin (
     ext i l; simp
   rw [this]; ring
 
-/-- The cofactor normal is orthogonal to the edges of the face. -/
 theorem faceNormal_dot_edge (q : Fin (m + 1) → Fin (m + 1) → ℝ) (l : Fin m) :
     ∑ j, faceNormal q j * simplexMatrix q j l = 0 := by
   set C' : Matrix (Fin (m + 1)) (Fin (m + 1)) ℝ :=
@@ -133,16 +89,12 @@ theorem isFaceNormal_faceNormal {F : Finset (Fin (m + 1) → ℝ)}
     (∑ j, faceNormal q j * (q l j - q 0 j)) - ∑ j, faceNormal q j * (q l' j - q 0 j) by
       rw [← sum_sub_distrib]; exact sum_congr rfl fun j _ => by ring, h1, h2, sub_zero]
 
-/-! ### Flux through an oriented face -/
-
 theorem wedgeProd_simplexMatrix_erase (q : Fin (m + 1) → Fin (m + 1) → ℝ) (j : Fin (m + 1)) :
     wedgeProd (simplexMatrix q) (univ.erase j) univ =
       ((Matrix.of (simplexMatrix q)).submatrix j.succAbove id).det := by
   rw [← map_succAboveOrderEmb_univ, wedgeProd_map, wedgeProd_univ_apply_univ]
   rfl
 
-/-- **The integral of the flux form over a face** is the integral of the normal component
-against the cofactor normal: `∫_q ι_F vol = ∫_{T̂_m} Σⱼ Fⱼ(F_q ŷ) (faceNormal q)ⱼ dŷ`. -/
 theorem simplexIntegral_fluxForm (q : Fin (m + 1) → Fin (m + 1) → ℝ)
     (F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ) :
     simplexIntegral q (fluxForm F) =
@@ -156,14 +108,12 @@ theorem simplexIntegral_fluxForm (q : Fin (m + 1) → Fin (m + 1) → ℝ)
   simp only [ite_true, wedgeProd_simplexMatrix_erase, faceNormal]
   ring
 
-/-- The flux `∫_q ι_G vol` of a `𝕜`-valued vector field `G` through the oriented face `q`
-(real and imaginary parts separately). -/
+/-- The flux `∫_q ι_G vol` of a `𝕜ⁿ`-valued field `G` through the oriented face `q`. -/
 def faceFlux (q : Fin (m + 1) → Fin (m + 1) → ℝ) (G : Fin (m + 1) → (Fin (m + 1) → ℝ) → 𝕜) :
     𝕜 :=
   (simplexIntegral q (fluxForm fun j x => RCLike.re (G j x)) : 𝕜) +
     (simplexIntegral q (fluxForm fun j x => RCLike.im (G j x)) : 𝕜) * RCLike.I
 
-/-- Reordering the vertices of a face multiplies the flux by the sign of the permutation. -/
 theorem faceFlux_comp_perm (q : Fin (m + 1) → Fin (m + 1) → ℝ) (π : Equiv.Perm (Fin (m + 1)))
     (G : Fin (m + 1) → (Fin (m + 1) → ℝ) → 𝕜) :
     faceFlux (q ∘ π) G = (((Equiv.Perm.sign π : ℤ) : ℝ) : 𝕜) * faceFlux q G := by
@@ -171,7 +121,6 @@ theorem faceFlux_comp_perm (q : Fin (m + 1) → Fin (m + 1) → ℝ) (π : Equiv
   push_cast
   ring
 
-/-- The flux depends only on the normal component on the face. -/
 theorem faceFlux_congr (q : Fin (m + 1) → Fin (m + 1) → ℝ)
     {G G' : Fin (m + 1) → (Fin (m + 1) → ℝ) → 𝕜}
     (h : ∀ x ∈ convexHull ℝ (Set.range q),
@@ -200,8 +149,6 @@ theorem faceFlux_eq_zero (q : Fin (m + 1) → Fin (m + 1) → ℝ)
   rw [← faceFlux_zero q]
   exact faceFlux_congr q fun x hx => by simpa using h x hx
 
-/-! ### The divergence theorem on an `n`-simplex, any vertex order -/
-
 theorem simplexMap_eq_refMap {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     simplexMap T.points = T.refMap := by
   funext x i
@@ -213,13 +160,10 @@ theorem refSimplex_eq_closedInterior {n : ℕ} :
   ext x
   rw [Feec.Mesh.mem_closedInterior_refSimplex, mem_refSimplex_iff]
 
-/-- `F_T(T̂) = T`. -/
 theorem image_simplexMap_refSimplex {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     simplexMap T.points '' refSimplex n = T.closedInterior := by
   rw [simplexMap_eq_refMap, refSimplex_eq_closedInterior, ← T.closedInterior_eq_image_refMap]
 
-/-- The divergence theorem on an `n`-simplex for real fields, with the orientation sign
-`sign det B_T`: `∫_T div F = sign(det B_T) Σᵢ (-1)ⁱ ∫_{∂ᵢ T} ι_F vol`. -/
 theorem setIntegral_closedInterior_divergence (T : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1))
     {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ} (hF : ∀ j, ContDiff ℝ 1 (F j)) :
     ∫ x in T.closedInterior, ∑ j, partialDeriv j (F j) x =
@@ -265,9 +209,6 @@ theorem setIntegral_closedInterior_divergence_rclike
   · refine sum_congr rfl fun i _ => by ring
   · rw [Finset.sum_mul]; refine sum_congr rfl fun i _ => by ring
 
-/-! ### Orientations of the faces of a simplex -/
-
-/-- The determinant of the edge matrix after a vertex permutation. -/
 theorem det_edgeMatrix_comp_perm {n : ℕ} (p : Fin (n + 1) → Fin n → ℝ)
     (σ : Equiv.Perm (Fin (n + 1))) :
     (edgeMatrix (p ∘ σ)).det = ((Equiv.Perm.sign σ : ℤ) : ℝ) * (edgeMatrix p).det := by
@@ -292,7 +233,6 @@ theorem cons_comp_perm {α : Type*} (a : α) (q : Fin (m + 1) → α) (π : Equi
   · simp
   · simp
 
-/-- Two injective enumerations with the same range differ by a permutation. -/
 theorem exists_perm_comp_eq {α : Type*} {k : ℕ} {f g : Fin k → α} (hf : Function.Injective f)
     (hg : Function.Injective g) (h : Set.range f = Set.range g) :
     ∃ π : Equiv.Perm (Fin k), f = g ∘ π := by
@@ -302,8 +242,6 @@ theorem exists_perm_comp_eq {α : Type*} {k : ℕ} {f g : Fin k → α} (hf : Fu
   rw [Equiv.apply_ofInjective_symm hg]
   rfl
 
-/-- **Orientation of the face opposite `pᵢ`**: if `p ∘ succAbove i = q ∘ π`, then
-`sign π · det [q₀ - pᵢ | ⋯ | qₘ - pᵢ] = (-1)ⁱ det B_p`. -/
 theorem sign_perm_mul_det_edgeMatrix_cons (p : Fin (m + 2) → Fin (m + 1) → ℝ) (i : Fin (m + 2))
     (q : Fin (m + 1) → Fin (m + 1) → ℝ) (π : Equiv.Perm (Fin (m + 1)))
     (h : p ∘ i.succAbove = q ∘ π) :
@@ -314,8 +252,6 @@ theorem sign_perm_mul_det_edgeMatrix_cons (p : Fin (m + 2) → Fin (m + 1) → �
   rw [Equiv.Perm.sign_symm, Fin.sign_cycleRange, Equiv.Perm.decomposeFin.symm_sign] at h1
   simpa using h1
 
-/-- If an affine function vanishes on an affine subspace `s`, it takes opposite signs at two
-points strictly on opposite sides of `s` where it does not vanish. -/
 theorem _root_.AffineMap.mul_neg_of_sOppSide {V P : Type*} [AddCommGroup V] [Module ℝ V]
     [AddTorsor V P] {s : AffineSubspace ℝ P} (f : P →ᵃ[ℝ] ℝ) (hf : ∀ x ∈ s, f x = 0) {a b : P}
     (hab : s.SOppSide a b) (ha : f a ≠ 0) (hb : f b ≠ 0) : f a * f b < 0 := by
@@ -338,8 +274,6 @@ theorem sign_mul_of_eq_one_or {ε x : ℝ} (hε : ε = 1 ∨ ε = -1) :
 
 theorem intCast_units_eq_one_or (u : ℤˣ) : ((u : ℤ) : ℝ) = 1 ∨ ((u : ℤ) : ℝ) = -1 := by
   rcases Int.units_eq_one_or u with h | h <;> simp [h]
-
-/-! ### Canonical enumerations of facets -/
 
 /-- A fixed enumeration `Fin k → Fin n → ℝ` of a finite point set (of cardinality `k`). -/
 def faceEnum {n : ℕ} (F : Finset (Fin n → ℝ)) (k : ℕ) : Fin k → Fin n → ℝ := fun i =>
@@ -408,13 +342,11 @@ theorem card_erase_vertexSet {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n
     ((vertexSet T).erase (T.points i)).card = n := by
   rw [card_erase_of_mem (points_mem_vertexSet T i), card_vertexSet]; rfl
 
-/-- The orientation that `T` induces on its facet `F`, relative to the enumeration `faceEnum F`:
-the sign of `det [q₀ - a | ⋯ | qₘ - a]`, `a` the apex. -/
+/-- The orientation that `T` induces on its facet `F`, relative to the enumeration `faceEnum F`. -/
 def orient (T : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1)) (F : Finset (Fin (m + 1) → ℝ)) : ℝ :=
   SignType.sign (edgeMatrix (Fin.cons (apex T F) (faceEnum F (m + 1)) :
     Fin (m + 2) → Fin (m + 1) → ℝ)).det
 
-/-- The face terms of `T`, reindexed by its facets. -/
 theorem neg_one_pow_mul_faceFlux_eq_orient (T : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1))
     (i : Fin (m + 2)) (G : Fin (m + 1) → (Fin (m + 1) → ℝ) → 𝕜) :
     (((-1) ^ (i : ℕ) * SignType.sign (edgeMatrix T.points).det : ℝ) : 𝕜) *
@@ -441,7 +373,6 @@ theorem neg_one_pow_mul_faceFlux_eq_orient (T : Affine.Simplex ℝ (Fin (m + 1) 
   ring
 
 open Feec.Mesh in
-/-- A facet of an `n`-simplex is the vertex set minus one vertex. -/
 theorem exists_eq_erase_of_facet {n : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {F : Finset (Fin n → ℝ)} (hF : F ⊆ vertexSet T) (hc : F.card = n) :
     ∃ i, F = (vertexSet T).erase (T.points i) := by
@@ -452,9 +383,6 @@ theorem exists_eq_erase_of_facet {n : ℕ} {T : Affine.Simplex ℝ (Fin n → �
   rw [card_erase_vertexSet, hc]
 
 open Feec.Mesh in
-/-- **The divergence theorem on an `n`-simplex, face by face**: the face terms indexed by the
-facets `F ⊆ vert T`, each with the fixed enumeration `faceEnum F` and the orientation
-`orient T F` that `T` induces on it. -/
 theorem setIntegral_divergence_eq_sum_faces (T : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1))
     {G : Fin (m + 1) → (Fin (m + 1) → ℝ) → 𝕜} (hG : ∀ j, ContDiff ℝ 1 (G j)) :
     ∫ x in T.closedInterior, ∑ j, partialDeriv j (G j) x =
@@ -531,7 +459,7 @@ theorem faceAffine_eq_zero (q : Fin (m + 1) → Fin (m + 1) → ℝ) {x : Fin (m
   simpa [S, AffineSubspace.mem_mk'] using this
 
 open Feec.Mesh in
-/-- **The two `n`-simplices sharing an interior facet induce opposite orientations on it.** -/
+/-- **Two `n`-simplices sharing an interior facet induce opposite orientations on it.** -/
 theorem orient_eq_neg (M : SimplicialMesh (m + 1)) {F : Finset (Fin (m + 1) → ℝ)}
     (hF : M.IsInteriorFacet F) {T T' : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1)}
     (hT : T ∈ M.cofaces F) (hT' : T' ∈ M.cofaces F) (hne : T ≠ T') :
@@ -561,9 +489,8 @@ theorem orient_eq_neg (M : SimplicialMesh (m + 1)) {F : Finset (Fin (m + 1) → 
     rw [sign_neg h2, sign_pos h1]; simp
 
 open Feec.Mesh in
-/-- **The divergence theorem on a simplicial mesh.** Let `G_T` (`T ∈ M`) be `C¹` vector fields
-with values in `𝕜ⁿ`, `n = m + 1`. If their normal components agree from both sides of every
-interior facet and vanish on every boundary facet, then `Σ_T ∫_T div G_T = 0`. -/
+/-- **The divergence theorem on a simplicial mesh**: `C¹` fields `G_T` whose normal components
+agree across interior facets and vanish on boundary facets satisfy `Σ_T ∫_T div G_T = 0`. -/
 theorem sum_setIntegral_divergence_eq_zero (M : SimplicialMesh (m + 1))
     (G : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1) → Fin (m + 1) → (Fin (m + 1) → ℝ) → 𝕜)
     (hG : ∀ T ∈ M.simplices, ∀ j, ContDiff ℝ 1 (G T j))

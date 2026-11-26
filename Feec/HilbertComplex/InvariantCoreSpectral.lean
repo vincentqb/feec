@@ -6,46 +6,9 @@ public import Feec.Semigroup.Spectral
 /-!
 # Which data of `K*` move: stationary data and electric eigenfields
 
-For a short Hilbert complex `W₀ --d₀--> W₁ --d₁--> W₂`, its Hodge wave group `e^{tL}` and a
-product constraint `K = {0} × S₁ × S₂`, the invariant core `K* = {0} × S₁* × S₂*`
-(`Feec.ShortHilbertComplex.coreSub`, `Feec.HilbertComplex.InvariantCore`) is the largest closed
-subspace of `K` reducing `L`. This file decides when `K*` consists of stationary data only.
-
-* **Stationary electric data are harmonic** (`inj₁_mem_stationary_iff`): `(0, E, 0)` is
-  stationary iff `E ∈ D(d₁) ∩ D(d₀†)` with `d₁ E = 0` and `d₀† E = 0`.
-* **`K*` is stationary iff its electric slot is** (`coreSub_le_stationary_iff`,
-  `coreSub_le_stationary_iff_harmonic`), with no spectral hypothesis: for `x = (0, E, B)` in
-  `D(L) ∩ K*`, `d₁† B ∈ S₁*` (`adjoint_mem_invariantCore₁`), so if `S₁*` is stationary then
-  `u = d₁† B` has `d₁ u = 0` and `‖u‖² = ⟪B, d₁ u⟫ = 0`; hence `L x = 0`, and `D(L) ∩ K*` is
-  dense in `K*`.
-* **Electric eigenfields move** (`eigenfield_mem_invariantCore₁`): for `ω > 0` and
-  `u ∈ S₁ ∩ D(d₁) ∩ N(d₀†)` with `d₁ u ∈ S₂ ∩ D(d₁†)` and `d₁† d₁ u = ω² u`, the datum `(0, u, 0)`
-  is an eigenvector of `L²` with eigenvalue `-ω²` lying in `K*`, and it is not stationary unless
-  `u = 0`. Conversely every nonzero eigenvector of `L²` in `K*` with eigenvalue `-ω²`, `ω > 0`,
-  yields such a `u` (`exists_eigenfield_of_isEigenSq_mem_coreSub`).
-* Under a complete set of eigenvectors of `L²` (`Feec.C0Group.EigenDense`), `K*` contains a
-  moving datum iff an electric eigenfield exists (`not_coreSub_le_stationary_iff`), and forward
-  invariance of `K` is equivalent to membership in `K*` (`coreSub_spectral`).
-
-## Main definitions
-
-* `stationary`, `EigenDense`: the stationary data and the eigenvector hypothesis for the wave
-  group of a short complex; `IsEigenfield`: `d₁† d₁ u = ω² u`.
-
-## Main results
-
-* `inj₁_mem_stationary_iff`, `coreSub_le_stationary_iff`, `coreSub_le_stationary_iff_harmonic`.
-* `eigenfield_mem_invariantCore₁`, `exists_eigenfield_of_isEigenSq_mem_coreSub`.
-* **`not_coreSub_le_stationary_iff`**, **`coreSub_spectral`**.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Props 4.16–4.18), §4.11 (Prop 4.19)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.10 (groups of isometries)
-
-Bibliography: [references.bib](../../docs/references.bib)
+For a short Hilbert complex and a constraint `K = {0} × S₁ × S₂`, the invariant core `K*` is
+stationary iff its electric slot is; under a complete set of eigenvectors of `L²`, `K*` contains a
+moving datum iff an electric eigenfield exists.
 -/
 
 open scoped InnerProductSpace
@@ -53,7 +16,6 @@ open Set LinearPMap
 
 @[expose] public noncomputable section
 
-/-- A vector of the kernel of a partially defined map lies in its domain and is killed by it. -/
 theorem LinearPMap.exists_apply_eq_zero_of_mem_ker {R E F : Type*} [Ring R] [AddCommGroup E]
     [Module R E] [AddCommGroup F] [Module R F] {f : E →ₗ.[R] F} {x : E} (hx : x ∈ f.ker) :
     ∃ h : x ∈ f.domain, f ⟨x, h⟩ = 0 := by
@@ -80,25 +42,21 @@ variable (S) in
 abbrev stationary : Submodule 𝕜 (PiLp 2 (W3 W₀ W₁ W₂)) := S.toHilbertComplex.waveGroup.stationary
 
 variable (S) in
-/-- `v` is an **electric eigenfield** with frequency `ω`: `v ∈ D(d₁)`, `d₁ v ∈ D(d₁†)` and
-`d₁† d₁ v = ω² v`. -/
+/-- `v` is an **electric eigenfield** of frequency `ω`: `d₁† d₁ v = ω² v`. -/
 def IsEigenfield (ω : ℝ) (v : W₁) : Prop :=
   ∃ (h1 : v ∈ S.d₁.domain) (h3 : S.d₁ ⟨v, h1⟩ ∈ (S.d₁†).domain),
     S.d₁† ⟨_, h3⟩ = ((ω ^ 2 : ℝ) : 𝕜) • v
 
 variable (S) in
-/-- The eigenvectors of `L²` span a dense subspace (`Feec.C0Group.EigenDense` for the Hodge wave
-group of `S`). -/
+/-- The eigenvectors of `L²` span a dense subspace. -/
 abbrev EigenDense : Prop := S.toHilbertComplex.waveGroup.EigenDense
 
-/-- A stationary vector lies in `D(L)` and is killed by `L`. -/
 theorem wave_eq_zero_of_mem_stationary {x : PiLp 2 (W3 W₀ W₁ W₂)}
     (hx : x ∈ S.stationary) :
     ∃ h : x ∈ S.wave.domain, S.wave ⟨x, h⟩ = 0 := by
   have := C0Group.mem_domain_generator_of_mem_stationary hx
   rwa [HilbertComplex.generator_waveGroup] at this
 
-/-- A zero of `L` is stationary. -/
 theorem mem_stationary_of_wave_eq_zero (x : S.wave.domain) (h0 : S.wave x = 0) :
     (x : PiLp 2 (W3 W₀ W₁ W₂)) ∈ S.stationary := by
   have key : ∀ (A : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂)) (_ : A = S.wave),
@@ -108,7 +66,6 @@ theorem mem_stationary_of_wave_eq_zero (x : S.wave.domain) (h0 : S.wave x = 0) :
   exact C0Group.mem_stationary.2 fun t => C0Group.S_apply_eq_of_generator_eq_zero ⟨_, hx'⟩ e t
 
 omit [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)] in
-/-- `L (0, E, 0) = (-d₀† E, 0, d₁ E)`. -/
 private theorem wave_inj₁_eq (u : S.d₁.domain) (hu : (u : W₁) ∈ (S.d₀†).domain) :
     S.wave ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu⟩ =
       WithLp.toLp 2 (fun i => match i with
@@ -123,8 +80,6 @@ private theorem wave_inj₁_eq (u : S.d₁.domain) (hu : (u : W₁) ∈ (S.d₀�
 
 /-! ### Stationary data -/
 
-/-- **Stationary electric data are harmonic**: `(0, E, 0)` is stationary iff
-`E ∈ D(d₁) ∩ D(d₀†)`, `d₁ E = 0` and `d₀† E = 0`. -/
 theorem inj₁_mem_stationary_iff {v : W₁} :
     inj₁ (𝕜 := 𝕜) W₀ W₁ W₂ v ∈ S.stationary ↔
       ∃ (h1 : v ∈ S.d₁.domain) (h2 : v ∈ (S.d₀†).domain),
@@ -153,7 +108,6 @@ theorem inj₁_mem_stationary_iff {v : W₁} :
 
 variable [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
 
-/-- `L` maps `D(L) ∩ K*` into `K*`. -/
 theorem wave_mem_coreSub (x : S.wave.domain) (hx : (x : PiLp 2 (W3 W₀ W₁ W₂)) ∈ S.coreSub S₁ S₂) :
     S.wave x ∈ S.coreSub S₁ S₂ := by
   have key : ∀ (A : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂))
@@ -163,13 +117,8 @@ theorem wave_mem_coreSub (x : S.wave.domain) (hx : (x : PiLp 2 (W3 W₀ W₁ W�
     exact S.toHilbertComplex.isIsometric_waveGroup.apply_mem_invariantCore ⟨_, hA⟩ hx
   exact key _ S.toHilbertComplex.generator_waveGroup x.2
 
-/-- **`K*` is stationary iff its electric slot is**: every element of
-`K* = {0} × S₁* × S₂*` is a stationary point of `U' = L U` iff every `E ∈ S₁*` gives a
-stationary point `(0, E, 0)`. No spectral hypothesis.
-
-For `x = (0, E, B) ∈ D(L) ∩ K*`, `d₁† B ∈ S₁*`; if `S₁*` is stationary, `d₁ E = 0`, `d₀† E = 0`
-and `u = d₁† B` has `d₁ u = 0`, so `‖u‖² = ⟪B, d₁ u⟫ = 0` and `L x = 0`; `D(L) ∩ K*` is dense in
-`K*`. -/
+/-- **`K*` is stationary iff its electric slot is**: every element of `K* = {0} × S₁* × S₂*` is a
+stationary point of `U' = L U` iff every `E ∈ S₁*` gives a stationary point `(0, E, 0)`. -/
 theorem coreSub_le_stationary_iff :
     S.coreSub S₁ S₂ ≤ S.stationary ↔
       ∀ v ∈ S.invariantCore₁ S₁ S₂,
@@ -206,8 +155,6 @@ theorem coreSub_le_stationary_iff :
     rw [S.wave_apply_two]
     exact e1
 
-/-- **Harmonic form**: `K*` is stationary iff every `E ∈ S₁*` lies in `D(d₁) ∩ D(d₀†)` with
-`d₁ E = 0` and `d₀† E = 0`. -/
 theorem coreSub_le_stationary_iff_harmonic :
     S.coreSub S₁ S₂ ≤ S.stationary ↔
       ∀ v ∈ S.invariantCore₁ S₁ S₂, ∃ (h1 : v ∈ S.d₁.domain) (h2 : v ∈ (S.d₀†).domain),
@@ -218,7 +165,6 @@ theorem coreSub_le_stationary_iff_harmonic :
 /-! ### Electric eigenfields -/
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
-/-- An eigenvector of `L²` lies in `K*` iff it and its image under `L` lie in `K`. -/
 theorem mem_coreSub_iff_of_isEigenSq [(HilbertComplex.totalSub
       (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂)).HasOrthogonalProjection]
     {ω : ℝ} (hω : 0 < ω) {v : PiLp 2 (W3 W₀ W₁ W₂)}
@@ -236,11 +182,8 @@ theorem mem_coreSub_iff_of_isEigenSq [(HilbertComplex.totalSub
     exact S.toHilbertComplex.isIsometric_waveGroup.mem_invariantCore_iff_of_isEigenSq hω h h' e
   exact key _ S.toHilbertComplex.generator_waveGroup h h' e
 
-/-- **Electric eigenfields give moving elements of `K*`**: let `ω > 0` and `u ∈ S₁` with
-`u ∈ D(d₁) ∩ D(d₀†)`, `d₀† u = 0`, `d₁ u ∈ D(d₁†) ∩ S₂` and `d₁† d₁ u = ω² u`. Then `(0, u, 0)` is
-an eigenvector of `L²` with eigenvalue `-ω²`, `u ∈ S₁*`, its orbit is
-`(0, cos(ωt) u, (sin(ωt)/ω) d₁ u)` (`Feec.C0Group.IsIsometric.S_eq_of_isEigenSq`), and it is not
-stationary unless `u = 0`. -/
+/-- **Electric eigenfields give moving elements of `K*`**: for `ω > 0` and `u ∈ S₁ ∩ N(d₀†)` with
+`d₁ u ∈ S₂` and `d₁† d₁ u = ω² u`, `u ∈ S₁*` and `(0, u, 0)` is not stationary unless `u = 0`. -/
 theorem eigenfield_mem_invariantCore₁ {ω : ℝ} (hω : 0 < ω) {v : W₁} (hv : v ∈ S₁)
     (h1 : v ∈ S.d₁.domain) (h2 : v ∈ (S.d₀†).domain) (e2 : S.d₀† ⟨v, h2⟩ = 0)
     (h3 : S.d₁ ⟨v, h1⟩ ∈ (S.d₁†).domain) (h3S : S.d₁ ⟨v, h1⟩ ∈ S₂)
@@ -274,9 +217,6 @@ theorem eigenfield_mem_invariantCore₁ {ω : ℝ} (hω : 0 < ω) {v : W₁} (hv
     simp only [inj₁_apply_one] at this
     exact this
 
-/-- **Eigenvectors of `L²` in `K*` come from electric eigenfields**: if `x ∈ K*` is a nonzero
-eigenvector of `L²` with eigenvalue `-ω²`, `ω > 0`, there is `u ≠ 0` with the hypotheses of
-`eigenfield_mem_invariantCore₁` (the electric part of `x` if nonzero, `-d₁† B` otherwise). -/
 theorem exists_eigenfield_of_isEigenSq_mem_coreSub {ω : ℝ} (hω : 0 < ω)
     {x : PiLp 2 (W3 W₀ W₁ W₂)} (hxK : x ∈ S.coreSub S₁ S₂) (hx : S.wave.IsEigenSq ω x)
     (hx0 : x ≠ 0) :
@@ -366,10 +306,8 @@ theorem exists_eigenfield_of_isEigenSq_mem_coreSub {ω : ℝ} (hω : 0 < ω)
     rw [hq]
     exact eE
 
-/-- **When does `K*` contain a moving datum?** Under a complete set of eigenvectors of `L²`
-(`Feec.C0Group.EigenDense`), `K*` contains a non-stationary element iff there are `ω > 0` and
-`u ≠ 0` with `u ∈ S₁ ∩ D(d₁) ∩ D(d₀†)`, `d₀† u = 0`, `d₁ u ∈ S₂ ∩ D(d₁†)` and `d₁† d₁ u = ω² u`
-(an electric eigenfield whose `d₁` stays in `S₂`). The direction `⇐` needs no hypothesis. -/
+/-- **When does `K*` contain a moving datum?** Under `EigenDense`, iff some `u ≠ 0` in `S₁ ∩ N(d₀†)`
+has `d₁ u ∈ S₂ ∩ D(d₁†)` and `d₁† d₁ u = ω² u` for some `ω > 0`. -/
 theorem not_coreSub_le_stationary_iff (hD : S.EigenDense) :
     ¬ S.coreSub S₁ S₂ ≤ S.stationary ↔
       ∃ ω : ℝ, 0 < ω ∧ ∃ v : W₁, v ≠ 0 ∧ v ∈ S₁ ∧
@@ -387,13 +325,6 @@ theorem not_coreSub_le_stationary_iff (hD : S.EigenDense) :
     obtain ⟨-, hm, hns⟩ := eigenfield_mem_invariantCore₁ (S := S) hω hv h1 h2 e2 h3 h3S e3
     exact hns hv0 (hle (mem_invariantCore₁.1 hm))
 
-/-- **Summary for `S₁ ⊆ N(d₀†)`** (as for the TSD constraint), under a complete set of
-eigenvectors of `L²`:
-1. forward invariance of `K = {0} × S₁ × S₂` (`t ≥ 0`) is equivalent to `x ∈ K*`;
-2. `K*` is stationary iff every `E ∈ S₁*` satisfies `E ∈ D(d₁)`, `d₁ E = 0` (this item needs no
-   hypothesis);
-3. `K*` contains a non-stationary datum iff there are `ω > 0` and `u ≠ 0` in `S₁ ∩ D(d₁)` with
-   `d₁ u ∈ S₂ ∩ D(d₁†)` and `d₁† d₁ u = ω² u`. -/
 theorem coreSub_spectral (hS₁ : S₁ ≤ (S.d₀†).ker)
     (hD : S.EigenDense) :
     (∀ x, (∀ t, 0 ≤ t → S.toHilbertComplex.waveGroup.S t x ∈

@@ -5,46 +5,19 @@ public import Feec.HilbertComplex.Equivariant
 public import Feec.HilbertComplex.InvariantCoreSpectral
 
 /-!
-# Compactness, closed range, harmonic forms and eigenbases of compressed complexes
+# Compactness, harmonic forms and eigenbases of compressed complexes
 
-A reducing subcomplex `S` of a Hilbert complex `H` is a Hilbert complex
-(`Feec.HilbertComplex.ReducingSubcomplex.toHilbertComplex`), whose differentials and adjoints are
-the parts of those of `H` (`LinearPMap.IsReducingPair.adjoint_part`). This file shows that the
-Hodge-theoretic and spectral properties of `H` pass to the compression:
+The compactness property and `EigenDense` pass from a Hilbert complex to its compressions onto
+reducing subcomplexes, its compressions along scaled isometries, its transports (with unit factors
+for `EigenDense`) and its fixed complexes under finite unitary actions; the compactness property
+passes to windows between zero spaces.
 
-* **the compactness property** (`ReducingSubcomplex.hasCompactPropertyAt_toHilbertComplex`):
-  the box `‖x‖, ‖d x‖, ‖d† x‖ ≤ 1` of `S` is the box of `H` intersected with `S`, a closed
-  subspace; more generally compactness pulls back along closed embeddings with bounded
-  distortion of `d` and `d†` (`HasCompactPropertyAt.of_isClosedEmbedding`), e.g. along
-  transport (`hasCompactPropertyAt_transport`) and compression along scaled isometries
-  (`hasCompactPropertyAt_compress`), and to the windows of a complex on `ℤ` whose spaces just
-  outside the window are zero (`hasCompactProperty_window`);
-* **closed range** and the **Poincaré inequality** with the same constant
-  (`ReducingSubcomplex.norm_le_of_mem_orthogonal`): `R(d|_S) = R(d) ∩ S` and
-  `N(d|_S)ᗮ ⊆ N(d)ᗮ`;
-* **the harmonic forms of the compression are the harmonic forms lying in `S`**
-  (`ReducingSubcomplex.mem_harmonic_toHilbertComplex_iff`);
-* **`EigenDense`** (`ReducingSubcomplex.eigenDense_toHilbertComplex`): the projection onto `S`
-  commutes with the wave operator, so it maps eigenvectors of `L²` to eigenvectors of `L_S²`,
-  and it is onto; the same for transport along uniformly scaled isometries
-  (`eigenDense_transport`) and compressions (`eigenDense_compress`). The abstract statement is
-  `LinearPMap.dense_span_isEigenSq_of_map`: a map with dense range intertwining the generators
-  up to a real factor transports a dense set of eigenvectors.
+## Main results
 
-For a finite unitary action (`Feec.HilbertComplex.Action`) all of this applies to the fixed
-complex of the method of images (`Action.hasCompactPropertyAt_fixedComplex`,
-`Action.eigenDense_fixedComplex`, …).
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1.3 (compactness property), §4.3 (compactness of the de Rham complex)
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (parts of operators in
-  reducing subspaces)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (compactness property), §4.10 (the cube by compression of the torus)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `HasCompactPropertyAt.of_isClosedEmbedding`: compactness pulls back along closed embeddings.
+* `ReducingSubcomplex.hasCompactPropertyAt_toHilbertComplex`: compactness passes to compressions.
+* `ReducingSubcomplex.eigenDense_toHilbertComplex`: `EigenDense` passes to compressions.
+* `hasCompactProperty_window`: the compactness property of windows of a complex on `ℤ`.
 -/
 
 open scoped InnerProductSpace
@@ -61,8 +34,6 @@ variable {𝕜 E E' : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E'] [InnerProductSpace 𝕜 E'] [NormedSpace ℝ E'] [IsScalarTower ℝ 𝕜 E']
   {A : E →ₗ.[𝕜] E} {B : E' →ₗ.[𝕜] E'}
 
-/-- **Eigenvectors of `A²` map to eigenvectors of `B²`** under `Q` with `Q D(A) ⊆ D(B)` and
-`B Q = c Q A` (`c` real): `A² v = -ω² v ⇒ B² (Q v) = -(c ω)² Q v`. -/
 theorem IsEigenSq.of_map (Q : E →L[𝕜] E') (c : ℝ)
     (hQ : ∀ x : A.domain, ∃ h : Q x ∈ B.domain, B ⟨Q x, h⟩ = (c : 𝕜) • Q (A x))
     {ω : ℝ} {v : E} (hv : A.IsEigenSq ω v) : B.IsEigenSq (c * ω) (Q v) := by
@@ -78,8 +49,6 @@ theorem IsEigenSq.of_map (Q : E →L[𝕜] E') (c : ℝ)
   congr 1
   ring
 
-/-- **A dense set of eigenvectors transports along a map with dense range** intertwining the
-operators up to a real factor. -/
 theorem dense_span_isEigenSq_of_map
     (hD : Dense (Submodule.span 𝕜 {v | ∃ ω, A.IsEigenSq ω v} : Set E))
     (Q : E →L[𝕜] E') (hQd : DenseRange Q) (c : ℝ)
@@ -105,7 +74,6 @@ variable {𝕜 E E' : Type*} [RCLike 𝕜]
   [CompleteSpace E']
 
 omit [CompleteSpace E] [CompleteSpace E'] in
-/-- **`EigenDense` transports along intertwining maps with dense range.** -/
 theorem EigenDense.of_map {G : C0Group 𝕜 E} {G' : C0Group 𝕜 E'} (hD : G.EigenDense)
     (Q : E →L[𝕜] E') (hQd : DenseRange Q) (c : ℝ)
     (hQ : ∀ x : G.generator.domain, ∃ h : Q x ∈ G'.generator.domain,
@@ -128,8 +96,8 @@ variable {ι' : Type*} {c' : ComplexShape ι'} {W' : ι' → Type*}
   [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)] [∀ i, CompleteSpace (W' i)]
   {H' : HilbertComplex 𝕜 c' W'}
 
-/-- **The compactness property pulls back along closed embeddings** `J : Wⁱ → W'ⁱ'` mapping
-`D(d) ∩ D(d†)` into `D(d') ∩ D(d'†)` with `‖d' J x‖ ≤ C ‖d x‖` and `‖d'† J x‖ ≤ C' ‖d† x‖`. -/
+/-- **The compactness property pulls back along closed embeddings** `J : Wⁱ → W'ⁱ'` with
+`J D(d) ⊆ D(d')`, `J D(d†) ⊆ D(d'†)`, `‖d' J x‖ ≤ C ‖d x‖` and `‖d'† J x‖ ≤ C' ‖d† x‖`. -/
 theorem HasCompactPropertyAt.of_isClosedEmbedding {i : ι} {i' : ι'}
     (h : H'.HasCompactPropertyAt i') (J : W i →L[𝕜] W' i') (hJ : Topology.IsClosedEmbedding J)
     {C C' : ℝ} (hC : 0 ≤ C) (hC' : 0 ≤ C')
@@ -155,7 +123,6 @@ end Embedding
 
 section Window
 
-/-- A closed densely defined operator into a zero space is everywhere defined. -/
 theorem _root_.LinearPMap.domain_eq_top_of_subsingleton {E F : Type*} [NormedAddCommGroup E]
     [NormedSpace 𝕜 E] [NormedAddCommGroup F] [NormedSpace 𝕜 F] [Subsingleton F]
     {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) (hd : Dense (T.domain : Set E)) : T.domain = ⊤ := by
@@ -168,7 +135,6 @@ theorem _root_.LinearPMap.domain_eq_top_of_subsingleton {E F : Type*} [NormedAdd
     exact hc.preimage (continuous_id.prodMk continuous_const)
   exact SetLike.coe_injective (by rw [Submodule.top_coe, ← hd.closure_eq, hD.closure_eq])
 
-/-- The adjoint of an operator out of a zero space is everywhere defined. -/
 theorem _root_.LinearPMap.mem_adjoint_domain_of_subsingleton {E F : Type*} [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] [CompleteSpace E] [Subsingleton E] [NormedAddCommGroup F]
     [InnerProductSpace 𝕜 F] (T : E →ₗ.[𝕜] F) (y : F) : y ∈ T†.domain :=
@@ -232,7 +198,6 @@ namespace ReducingSubcomplex
 
 variable {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, CompleteSpace (S i)]
 
-/-- The adjoints of the compressed differentials are the parts of the adjoints. -/
 theorem adjoint_toHilbertComplex_d (h : H.ReducingSubcomplex S) (i j : ι) :
     (h.toHilbertComplex.d i j)† = (h.dual.reduces j i).part :=
   h.dual_toHilbertComplex_d j i
@@ -251,8 +216,7 @@ theorem coe_adjoint_toHilbertComplex_d (h : H.ReducingSubcomplex S) {i j : ι}
     IsReducingPair.part_apply]
   rfl
 
-/-- **The compactness property passes to the compression**: the box of `S` is the box of `H`
-intersected with the closed subspace `S`. -/
+/-- **The compactness property passes to the compression.** -/
 theorem hasCompactPropertyAt_toHilbertComplex (h : H.ReducingSubcomplex S) {i : ι}
     (hc : H.HasCompactPropertyAt i) : h.toHilbertComplex.HasCompactPropertyAt i := by
   have hiso : Isometry ((S i).subtypeL : S i →L[𝕜] W i) := isometry_subtype_coe
@@ -277,15 +241,12 @@ theorem mem_ker_adjoint_part_iff (h : H.ReducingSubcomplex S) {i j : ι} {x : S 
   rw [adjoint_toHilbertComplex_d]
   exact (h.dual.mem_ker_part_iff (i := j) (j := i))
 
-/-- **The harmonic forms of the compression are the harmonic forms of `H` lying in `S`.** -/
 theorem mem_harmonic_toHilbertComplex_iff (h : H.ReducingSubcomplex S) {i : ι} {x : S i} :
     x ∈ h.toHilbertComplex.harmonic i ↔ (x : W i) ∈ H.harmonic i := by
   change x ∈ (h.toHilbertComplex.d i (c.next i)).ker ⊓ ((h.toHilbertComplex.d (c.prev i) i)†).ker ↔
     (x : W i) ∈ (H.d i (c.next i)).ker ⊓ ((H.d (c.prev i) i)†).ker
   rw [Submodule.mem_inf, Submodule.mem_inf, h.mem_ker_part_iff, h.mem_ker_adjoint_part_iff]
 
-/-- **The Poincaré inequality passes to the compression, with the same constant**:
-`N(d|_S)ᗮ ⊆ N(d)ᗮ` inside `S`. -/
 theorem norm_le_of_mem_orthogonal (h : H.ReducingSubcomplex S) {i j : ι} {C : ℝ}
     (hP : ∀ u : (H.d i j).domain, (u : W i) ∈ (H.d i j).kerᗮ → ‖(u : W i)‖ ≤ C * ‖H.d i j u‖)
     (u : (h.toHilbertComplex.d i j).domain)
@@ -310,7 +271,6 @@ theorem norm_le_of_mem_orthogonal (h : H.ReducingSubcomplex S) {i j : ι} {C : �
 
 variable [Fintype ι]
 
-/-- **The wave domain of the compression** is the preimage of the wave domain. -/
 theorem mem_wave_domain_toHilbertComplex_iff (h : H.ReducingSubcomplex S)
     {y : PiLp 2 fun i => S i} :
     y ∈ h.toHilbertComplex.wave.domain ↔ totalIncl S y ∈ H.wave.domain := by
@@ -347,8 +307,6 @@ omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (S i)] in
 theorem surjective_totalOrthProj [∀ i, (S i).HasOrthogonalProjection] :
     Function.Surjective (totalOrthProj S) := fun y => ⟨_, totalOrthProj_totalIncl y⟩
 
-/-- **The projection onto a reducing subcomplex intertwines the wave operators**:
-`P D(L) ⊆ D(L_S)` and `L_S P = P L`. -/
 theorem wave_totalOrthProj (h : H.ReducingSubcomplex S) (x : H.wave.domain) :
     ∃ hx : totalOrthProj S x ∈ h.toHilbertComplex.wave.domain,
       h.toHilbertComplex.wave ⟨_, hx⟩ = ((1 : ℝ) : 𝕜) • totalOrthProj S (H.wave x) := by
@@ -368,8 +326,7 @@ theorem wave_totalOrthProj (h : H.ReducingSubcomplex S) (x : H.wave.domain) :
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **`EigenDense` passes to the compression**: the projection onto `∏ S i` commutes with the
-generator, so it maps eigenvectors of `L²` onto eigenvectors of `L_S²`, and it is onto. -/
+/-- **`EigenDense` passes to the compression.** -/
 theorem eigenDense_toHilbertComplex (h : H.ReducingSubcomplex S) (hD : H.waveGroup.EigenDense) :
     h.toHilbertComplex.waveGroup.EigenDense := by
   unfold C0Group.EigenDense at hD ⊢
@@ -387,7 +344,6 @@ variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerPro
   [∀ i, CompleteSpace (W' i)] {e : ∀ i, W i ≃L[𝕜] W' i} {s : ℝ}
 
 omit [∀ i, CompleteSpace (W' i)] in
-/-- A transported differential distorts norms by at most `|κ|⁻¹ ‖e⁻¹‖`. -/
 theorem norm_d_le_transport {κ : ι → ι → 𝕜} (hκ : ∀ i j, κ i j ≠ 0) {i j : ι}
     (x : (transportD H e κ i j).domain) :
     ‖H.d i j ⟨((e i).symm : W' i →L[𝕜] W i) x, x.2⟩‖ ≤
@@ -401,8 +357,6 @@ theorem norm_d_le_transport {κ : ι → ι → 𝕜} (hκ : ∀ i j, κ i j ≠
   gcongr
   exact ContinuousLinearMap.le_opNorm ((e j).symm : W' j →L[𝕜] W j) _
 
-/-- **The compactness property passes to transports** along uniformly scaled isometries, with
-any nonzero chain-rule factors. -/
 theorem hasCompactPropertyAt_transport (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) {κ : ι → ι → 𝕜}
     (hκ : ∀ i j, κ i j ≠ 0) {i : ι} (hc : H.HasCompactPropertyAt i) :
@@ -434,8 +388,6 @@ omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] [∀ i, NormedSp
 theorem surjective_totalMap : Function.Surjective (totalMap e) := fun y =>
   ⟨WithLp.toLp 2 fun i => (e i).symm (y i), PiLp.ext fun i => (e i).apply_symm_apply (y i)⟩
 
-/-- **`EigenDense` passes to transports** along uniformly scaled isometries (chain-rule
-factors `1`). -/
 theorem eigenDense_transport (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (hD : H.waveGroup.EigenDense) :
     (H.transport e (fun _ _ => 1) fun _ _ => one_ne_zero).waveGroup.EigenDense := by
@@ -454,7 +406,6 @@ variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerPro
   [∀ i, CompleteSpace (W' i)] {J : ∀ i, W' i →L[𝕜] W i} {s : ℝ}
   [∀ i, (LinearMap.range (J i : W' i →ₗ[𝕜] W i)).HasOrthogonalProjection]
 
-/-- **The compactness property passes to compressions** along scaled isometric embeddings. -/
 theorem hasCompactPropertyAt_compress (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) {i : ι}
@@ -471,7 +422,6 @@ theorem hasCompactProperty_compress (hs : 0 < s)
 variable [Fintype ι] [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   [∀ i, NormedSpace ℝ (W' i)] [∀ i, IsScalarTower ℝ 𝕜 (W' i)]
 
-/-- **`EigenDense` passes to compressions** along scaled isometric embeddings. -/
 theorem eigenDense_compress (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i))
@@ -487,7 +437,6 @@ namespace Action
 
 variable {Γ : Type*} [Group Γ] [Fintype Γ] (A : H.Action Γ)
 
-/-- **The compactness property passes to the fixed complex** of a finite unitary action. -/
 theorem hasCompactPropertyAt_fixedComplex {i : ι} (hc : H.HasCompactPropertyAt i) :
     A.fixedComplex.HasCompactPropertyAt i :=
   A.reducingSubcomplex_fixed.hasCompactPropertyAt_toHilbertComplex hc
@@ -495,14 +444,12 @@ theorem hasCompactPropertyAt_fixedComplex {i : ι} (hc : H.HasCompactPropertyAt 
 theorem hasCompactProperty_fixedComplex (hc : H.HasCompactProperty) :
     A.fixedComplex.HasCompactProperty := fun _ => A.hasCompactPropertyAt_fixedComplex (hc _)
 
-/-- **The harmonic forms of the fixed complex are the fixed harmonic forms.** -/
 theorem mem_harmonic_fixedComplex_iff {i : ι} {x : A.fixed i} :
     x ∈ A.fixedComplex.harmonic i ↔ (x : W i) ∈ H.harmonic i :=
   A.reducingSubcomplex_fixed.mem_harmonic_toHilbertComplex_iff
 
 variable [Fintype ι] [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **`EigenDense` passes to the fixed complex** of a finite unitary action. -/
 theorem eigenDense_fixedComplex (hD : H.waveGroup.EigenDense) :
     A.fixedComplex.waveGroup.EigenDense :=
   A.reducingSubcomplex_fixed.eigenDense_toHilbertComplex hD

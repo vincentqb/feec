@@ -6,48 +6,13 @@ public import Feec.Geometry.AlgebraicCurvature
 /-!
 # The linearized Einstein operator on jets, for any constant metric in any dimension
 
-Linearized gravity about a constant (flat) metric `g` with inverse `gi` on an index type `ι`
-(any dimension `n = card ι`, any signature), over a commutative ring with `2` invertible. The
-linearized Einstein tensor `H` (thesis Thm 2.3) is a linear constant-coefficient second-order
-operator, so it is a linear function of the 2-jet `D i j a b = ∂_i ∂_j h_ab`. All identities
-below are exact identities on jets; only the trace-reversal involution needs `n = 4`.
-
-Indices are lowered; `∂^c = gi^{cc'} ∂_{c'}`, `□ = gi^{ij} ∂_i ∂_j`, `h̄ = h - ½ (tr h) g`.
-
-The thesis' Ch. 2 background (tensors, metric, covariant derivative, curvature, Einstein's
-equations) follows [Wald1984] and also refers to [Alcubierre2008], [Carroll2004] and
-[Stewart1991], among others. Here only its flat, linearized part is formalized: `H` is defined
-directly as an operator on jets about a constant metric, and the one-parameter family
-`g(ε) = η + εh + O(ε²)` of exact solutions behind it is not formalized.
-
-## Main definitions
-
-* `IsSymJet2 D` (Schwarz and `h` symmetric), `IsSymJet3ξ`, `IsSymJet3`.
-* `boxJ`, `ddivJ` (`∂^c ∂^e h_ec`), `divJ` (`∂_i ∂^a h̄_ab`), `barJ` (jet of `h̄`).
-* `Hjet g gi D`: Thm 2.3, first form; `HbarJet`: second form; `Rjet D`: the linearized Riemann
-  tensor (2.6); `RicJ`, `scalJ`.
-* Symbols: `symbolJet k h = k ⊗ k ⊗ h`, `Hsym`, `divSym`.
-
-## Main results
-
-* **Thm 2.3**: `Hjet_eq_bar` (both forms agree), `Hjet_eq_div` (the operator form
-  `H = E(div h̄) - ½ □h̄ - ½ g div div h̄`), `Hjet_eq_einstein` (`H = Ric - ½ g R` for the
-  linearized Riemann tensor (2.6), an algebraic curvature tensor: `Rjet_pairSkew`,
-  `Rjet_bianchi1`).
-* **Gauge invariance** `Hjet_gauge` (`H(2∂_(a ξ_b)) = 0`) and the **linearized Bianchi
-  identity** `Hjet_bianchi` (`∂^b H_bd = 0`).
-* **Prop 2.4(b), corrected**: `Hjet_lorentz` (`H = -½ □h̄` in Lorentz gauge), `Hjet_lorentz_eq_iff`.
-* Symbol level: `Hsym_eq`, `Hsym_gauge`, `Hsym_div`, `Hsym_lorentz`.
+The linearized Einstein tensor `H` of [QuennevilleBelair2015], Thm 2.3 about a constant metric of
+any dimension and signature, as a linear function of the 2-jet `∂_i ∂_j h_ab`: its two forms,
+`H = Ric - ½ g R`, gauge invariance, the linearized Bianchi identity and the Lorentz gauge.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §2.7 ((2.5), Thm 2.3, (2.6)–(2.11)), §2.8 (Prop 2.4)
-* [R. M. Wald, *General Relativity*][Wald1984], §4.4; pp. 75, 183, 441
-* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], p. 39
-* [S. M. Carroll, *Spacetime and Geometry: An Introduction to General Relativity*][Carroll2004],
-  p. 277
-* [J. Stewart, *Advanced General Relativity*][Stewart1991], p. 24
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -100,9 +65,7 @@ def mixJ (D : Jet2 ι R) (b d : ι) : R := ∑ c, ∑ c', gi c c' * (D c' b d c 
 /-- The trace of a jet `tr (∂_i ∂_j h) = ∂_i ∂_j tr h`. -/
 def trJ (D : Jet2 ι R) (i j : ι) : R := Metric.trace gi (D i j)
 
-/-- **Thm 2.3**, first form: `H_bd = ∂^c ∂_(b h_d)c - ½ (□h_bd + ∂_d ∂_b h)
-- ½ g_bd (∂^c ∂^e h_ec - □h)`. [QuennevilleBelair2015], Thm 2.3; the linearization about a flat
-metric follows [Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
+/-- The linearized Einstein tensor `H` as a function of the 2-jet of `h` (first form). -/
 def Hjet (D : Jet2 ι R) (b d : ι) : R :=
   ⅟2 * mixJ gi D b d - ⅟2 * (boxJ gi D b d + trJ gi D d b) -
     ⅟2 * g b d * (ddivJ gi D - ∑ i, ∑ j, gi i j * trJ gi D i j)
@@ -110,8 +73,7 @@ def Hjet (D : Jet2 ι R) (b d : ι) : R :=
 /-- The 2-jet of the trace reversal `h̄`. -/
 def barJ (D : Jet2 ι R) : Jet2 ι R := fun i j => Metric.trRev g gi (D i j)
 
-/-- **Thm 2.3**, second form: `H_bd = ∂^a ∂_(b h̄_d)a - ½ (□h̄_bd + g_bd ∂^a ∂^e h̄_ea)`, as a
-function of the 2-jet `E` of `h̄`. [QuennevilleBelair2015], Thm 2.3 -/
+/-- The linearized Einstein tensor as a function of the 2-jet of `h̄` (second form). -/
 def HbarJet (E : Jet2 ι R) (b d : ι) : R :=
   ⅟2 * mixJ gi E b d - ⅟2 * (boxJ gi E b d + g b d * ddivJ gi E)
 
@@ -120,8 +82,6 @@ def divJ (E : Jet2 ι R) (i b : ι) : R := ∑ a, ∑ a', gi a a' * E i a' a b
 
 /-- Lorentz gauge at the jet level: `∂_i (∂^a h̄_ab) = 0`. [QuennevilleBelair2015], Prop 2.4 -/
 def LorentzJet (D : Jet2 ι R) : Prop := ∀ i b, divJ gi (barJ g gi D) i b = 0
-
-/-! ### Contractions -/
 
 variable {g gi}
 
@@ -133,7 +93,6 @@ theorem sum_g_mul_gi (hinv : gi * g = 1) (c d : ι) :
   simpa [mul_apply, one_apply] using this
 
 omit [Invertible (2 : R)] in
-/-- The basic contraction `gi^{aa'} g_da F_a' = F_d`. -/
 theorem contract (hinv : gi * g = 1) (F : ι → R) (d : ι) :
     ∑ a, ∑ a', gi a a' * (F a' * g d a) = F d := by
   rw [Finset.sum_comm]
@@ -151,7 +110,6 @@ theorem barJ_apply (D : Jet2 ι R) (i j a b : ι) :
   simp [barJ, Metric.trRev_apply, trJ]
 
 omit [DecidableEq ι] in
-/-- The jet of `h̄` is again symmetric. -/
 theorem IsSymJet2.barJ (hg : g.IsSymm) {D : Jet2 ι R} (hD : IsSymJet2 D) :
     IsSymJet2 (barJ g gi D) where
   deriv_symm i j a b := by
@@ -163,7 +121,6 @@ omit [DecidableEq ι] [Invertible (2 : R)] in
 theorem trJ_symm {D : Jet2 ι R} (hD : IsSymJet2 D) (i j : ι) : trJ gi D i j = trJ gi D j i := by
   simp only [trJ, Metric.trace, hD.deriv_symm i j]
 
-/-- `mixJ` of the jet of `h̄`. -/
 theorem mixJ_barJ (hinv : gi * g = 1) {D : Jet2 ι R} (hD : IsSymJet2 D) (b d : ι) :
     mixJ gi (barJ g gi D) b d = mixJ gi D b d - 2 * ⅟2 * trJ gi D b d := by
   have e : ∀ c c', gi c c' * (barJ g gi D c' b d c + barJ g gi D c' d b c) =
@@ -175,7 +132,6 @@ theorem mixJ_barJ (hinv : gi * g = 1) {D : Jet2 ι R} (hD : IsSymJet2 D) (b d : 
   ring
 
 omit [DecidableEq ι] in
-/-- `boxJ` of the jet of `h̄`. -/
 theorem boxJ_barJ (D : Jet2 ι R) (b d : ι) :
     boxJ gi (barJ g gi D) b d =
       boxJ gi D b d - ⅟2 * (∑ i, ∑ j, gi i j * trJ gi D i j) * g b d := by
@@ -185,7 +141,6 @@ theorem boxJ_barJ (D : Jet2 ι R) (b d : ι) :
   simp only [boxJ, e, sum_sub_distrib, ← mul_sum]
   ring
 
-/-- `ddivJ` of the jet of `h̄`. -/
 theorem ddivJ_barJ (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R} (hD : IsSymJet2 D) :
     ddivJ gi (barJ g gi D) = ddivJ gi D - ⅟2 * ∑ i, ∑ j, gi i j * trJ gi D i j := by
   have e : ∀ c c' e e', gi c c' * gi e e' * barJ g gi D c' e' e c =
@@ -196,18 +151,14 @@ theorem ddivJ_barJ (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R} (hD : IsS
   congr 2
   exact sum_congr rfl fun c _ => sum_congr rfl fun c' _ => by rw [trJ_symm hD c' c]
 
-/-- **Thm 2.3** (equivalence of the two forms), for any constant metric in any dimension:
-for the 2-jet of a symmetric `C²` field, `H` written in `h` equals `H` written in `h̄`.
-(The thesis uses `n = 4`; the identity holds in every dimension.) [QuennevilleBelair2015], Thm 2.3,
-whose proof follows [Alcubierre2008], p. 39. -/
+/-- For the 2-jet of a symmetric `C²` field, the two forms of `H` agree, for any constant metric
+in any dimension. [QuennevilleBelair2015], Thm 2.3 (adapted) -/
 theorem Hjet_eq_bar (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R} (hD : IsSymJet2 D)
     (b d : ι) : Hjet g gi D b d = HbarJet g gi (barJ g gi D) b d := by
   have h2 : (⅟2 : R) * 2 = 1 := invOf_mul_self 2
   rw [HbarJet, mixJ_barJ hinv hD, boxJ_barJ, ddivJ_barJ hg hinv hD, Hjet, trJ_symm hD d b]
   linear_combination (⅟2 * trJ gi D b d - ⅟2 * g b d * ∑ i, ∑ j, gi i j * trJ gi D i j) * h2
 
-/-- **Thm 2.3**, operator form: `H_bd = ½ (∂_b L_d + ∂_d L_b) - ½ □h̄_bd - ½ g_bd ∂^a L_a`
-with `L_b = ∂^a h̄_ab`. [QuennevilleBelair2015], Thm 2.3 -/
 theorem Hjet_eq_div (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R}
     (hD : IsSymJet2 D) (b d : ι) :
     Hjet g gi D b d = ⅟2 * (divJ gi (barJ g gi D) b d + divJ gi (barJ g gi D) d b)
@@ -231,8 +182,6 @@ theorem Hjet_eq_div (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R}
   rw [HbarJet, e1, e2]
   ring
 
-/-! ### Reindexing finite sums -/
-
 section Reindex
 
 variable {α : Type*} [Fintype α] {M : Type*} [AddCommMonoid M]
@@ -248,7 +197,6 @@ theorem sum4_swap34 (f : α → α → α → α → M) :
     ∑ a, ∑ b, ∑ c, ∑ d, f a b c d = ∑ a, ∑ b, ∑ d, ∑ c, f a b c d :=
   sum_congr rfl fun _ _ => sum_congr rfl fun _ _ => Finset.sum_comm
 
-/-- Reverse the order of four nested sums. -/
 theorem sum4_reverse (f : α → α → α → α → M) :
     ∑ a, ∑ b, ∑ c, ∑ d, f d c b a = ∑ a, ∑ b, ∑ c, ∑ d, f a b c d := by
   rw [sum4_swap34, sum4_swap23, sum4_swap12, sum4_swap34, sum4_swap23, sum4_swap34]
@@ -263,8 +211,7 @@ theorem sum_sum_symm (hgi : gi.IsSymm) (F : ι → ι → R) :
 
 /-! ### Gauge invariance -/
 
-/-- 2-jet of the pure-gauge field `h_ab = ∂_a ξ_b + ∂_b ξ_a`, from the 3-jet
-`X i j c b = ∂_i ∂_j ∂_c ξ_b`. -/
+/-- The 2-jet of the pure-gauge field `h_ab = ∂_a ξ_b + ∂_b ξ_a`, from the 3-jet of `ξ`. -/
 def gaugeJet (X : ι → ι → ι → ι → R) : Jet2 ι R := fun i j => Matrix.of fun a b =>
   X i j a b + X i j b a
 
@@ -278,10 +225,8 @@ theorem IsSymJet3ξ.perm3 {X : ι → ι → ι → ι → R} (hX : IsSymJet3ξ 
   rw [hX.symm₁, hX.symm₂]
 
 omit [DecidableEq ι] in
-/-- **Gauge invariance** (end of §2.7), any constant metric, any dimension:
-`H(2∂_(a ξ_b)) = 0` for every `C³` covector field `ξ` (at the level of its 3-jet); by linearity
-`H(h + 2∂_(a ξ_b)) = H(h)`. [QuennevilleBelair2015], §2.7; see [Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24.
--/
+/-- Gauge invariance: `H(2∂_(a ξ_b)) = 0` for every `C³` covector field `ξ`, at the level of its
+3-jet, for any constant metric in any dimension. [QuennevilleBelair2015], §2.7 -/
 theorem Hjet_gauge (hgi : gi.IsSymm) {X : ι → ι → ι → ι → R} (hX : IsSymJet3ξ X) (b d : ι) :
     Hjet g gi (gaugeJet X) b d = 0 := by
   have hbox : boxJ gi (gaugeJet X) b d =
@@ -328,9 +273,8 @@ theorem Hjet_gauge (hgi : gi.IsSymm) {X : ι → ι → ι → ι → R} (hX : I
 
 /-! ### The linearized Bianchi identity -/
 
-/-- **Linearized Bianchi identity** `∂^b H_bd = 0` for every `C³` symmetric `h`, any constant
-metric, any dimension (`∂_m H_bd = Hjet (Y m) b d` by linearity). Not stated in the thesis.
-[QuennevilleBelair2015], §2.7; for the linearization see [Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
+/-- The linearized Bianchi identity `∂^b H_bd = 0` for every `C³` symmetric `h`, for any constant
+metric in any dimension. -/
 theorem Hjet_bianchi (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1) {Y : Jet3 ι R}
     (hY : IsSymJet3 Y) (d : ι) : ∑ b, ∑ b', gi b b' * Hjet g gi (Y b') b d = 0 := by
   set K : ι → R := fun m => ddivJ gi (Y m) - ∑ i, ∑ j, gi i j * trJ gi (Y m) i j with hK
@@ -382,24 +326,19 @@ theorem Hjet_bianchi (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1) {Y : 
 
 /-! ### The linearized Riemann tensor (2.6) and `H = Ric - ½ g R` -/
 
-/-- The linearized Riemann tensor (2.6),
-`R_abcd = ½ (∂_c ∂_b h_da - ∂_c ∂_a h_bd - ∂_d ∂_b h_ca + ∂_d ∂_a h_bc)` (metric-free).
-[QuennevilleBelair2015], (2.6), following [Alcubierre2008], p. 39. -/
+/-- The linearized Riemann tensor (2.6) of the 2-jet of `h`. -/
 def Rjet (D : Jet2 ι R) : ι → ι → ι → ι → R := fun a b c d =>
   ⅟2 * (D c b d a - D c a b d - D d b c a + D d a b c)
 
 variable (gi) in
-/-- The linearized Ricci tensor `R_bd = gi^{aa'} R_{a b a' d}`. [QuennevilleBelair2015], (2.7), following
-[Alcubierre2008], p. 39. -/
+/-- The linearized Ricci tensor `R_bd = gi^{aa'} R_{a b a' d}`. [QuennevilleBelair2015], (2.7) -/
 def RicJ (D : Jet2 ι R) (b d : ι) : R := ∑ a, ∑ a', gi a a' * Rjet D a b a' d
 
 variable (gi) in
-/-- The linearized scalar curvature `R = gi^{bb'} R_bb'`. [QuennevilleBelair2015], (2.8), following [Alcubierre2008],
-p. 39. -/
+/-- The linearized scalar curvature `R = gi^{bb'} R_bb'`. [QuennevilleBelair2015], (2.8) -/
 def scalJ (D : Jet2 ι R) : R := ∑ b, ∑ b', gi b b' * RicJ gi D b b'
 
 omit [DecidableEq ι] [Fintype ι] in
-/-- The linearized Riemann tensor of a symmetric `C²` field is pair-skew. [QuennevilleBelair2015], (2.6) -/
 theorem Rjet_pairSkew {D : Jet2 ι R} (hD : IsSymJet2 D) : CurvatureTensor.PairSkew (Rjet D) := by
   intro a b c d
   simp only [Rjet]
@@ -412,7 +351,6 @@ theorem Rjet_pairSkew {D : Jet2 ι R} (hD : IsSymJet2 D) : CurvatureTensor.PairS
   · ring
 
 omit [DecidableEq ι] [Fintype ι] in
-/-- The linearized Riemann tensor satisfies the first Bianchi identity. [QuennevilleBelair2015], (2.6) -/
 theorem Rjet_bianchi1 {D : Jet2 ι R} (hD : IsSymJet2 D) : CurvatureTensor.Bianchi1 (Rjet D) := by
   intro a b c d
   simp only [Rjet]
@@ -422,10 +360,9 @@ theorem Rjet_bianchi1 {D : Jet2 ι R} (hD : IsSymJet2 D) : CurvatureTensor.Bianc
     hD.deriv_symm a d c b - hD.deriv_symm b c d a + hD.deriv_symm b d c a - hD.deriv_symm c d b a)
 
 omit [DecidableEq ι] in
-/-- **Thm 2.3** (derivation): `H` is the linearized Einstein tensor `Ric - ½ g R` of the
-linearized Riemann tensor (2.6), for any constant metric in any dimension.
-[QuennevilleBelair2015], Thm 2.3, (2.6)–(2.8). The derivation (linearized Christoffel symbols,
-then (2.6)–(2.8)) follows [Alcubierre2008], p. 39; the linearization follows [Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
+/-- On the 2-jet of a symmetric `C²` field, `H` is the linearized Einstein tensor `Ric - ½ g R` of
+the linearized Riemann tensor (2.6), for any constant metric in any dimension.
+[QuennevilleBelair2015], Thm 2.3, (2.6)–(2.8) -/
 theorem Hjet_eq_einstein (hgi : gi.IsSymm) {D : Jet2 ι R} (hD : IsSymJet2 D) (b d : ι) :
     Hjet g gi D b d = RicJ gi D b d - ⅟2 * g b d * scalJ gi D := by
   have hRic : ∀ b d, RicJ gi D b d = ⅟2 * mixJ gi D b d - ⅟2 * boxJ gi D b d -
@@ -484,8 +421,8 @@ theorem Hjet_eq_einstein (hgi : gi.IsSymm) {D : Jet2 ι R} (hD : IsSymJet2 D) (b
 
 /-! ### Prop 2.4(b): Lorentz gauge -/
 
-/-- **Prop 2.4(b), corrected**, any metric, any dimension: in Lorentz gauge `H = -½ □h̄`.
-(The thesis states `H = -□h̄`, contradicting its own (2.11).) [QuennevilleBelair2015], Prop 2.4 (corrected) -/
+/-- For the 2-jet of a symmetric `C²` field in Lorentz gauge, `H = -½ □h̄`, for any metric in any
+dimension. [QuennevilleBelair2015], Prop 2.4 (adapted) -/
 theorem Hjet_lorentz (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R} (hD : IsSymJet2 D)
     (hL : LorentzJet g gi D) (b d : ι) :
     Hjet g gi D b d = -⅟2 * boxJ gi (barJ g gi D) b d := by
@@ -493,7 +430,7 @@ theorem Hjet_lorentz (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R} (hD : I
   simp only [show ∀ i b, divJ gi (barJ g gi D) i b = 0 from hL, mul_zero, sum_const_zero]
   ring
 
-/-- **(2.11)**: in Lorentz gauge, `H = c T ⟺ □h̄ = -2 c T` (the thesis has `c = 8π`).
+/-- For the 2-jet of a symmetric `C²` field in Lorentz gauge, `H = c T ⟺ □h̄ = -2 c T`.
 [QuennevilleBelair2015], (2.11) -/
 theorem Hjet_lorentz_eq_iff (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R}
     (hD : IsSymJet2 D) (hL : LorentzJet g gi D) (c : R) (T : Matrix ι ι R) (b d : ι) :
@@ -503,8 +440,6 @@ theorem Hjet_lorentz_eq_iff (hg : g.IsSymm) (hinv : gi * g = 1) {D : Jet2 ι R}
   constructor
   · intro h; linear_combination -2 * h - boxJ gi (barJ g gi D) b d * h2
   · intro h; linear_combination -⅟2 * h + c * T b d * h2
-
-/-! ### Linearity -/
 
 omit [DecidableEq ι] in
 theorem Hjet_add (D G : Jet2 ι R) (b d : ι) :
@@ -555,7 +490,6 @@ omit [Fintype ι] [DecidableEq ι] [Invertible (2 : R)] in
   simp [symbolJet]
 
 omit [Fintype ι] [DecidableEq ι] [Invertible (2 : R)] in
-/-- The symbol jet of a symmetric amplitude is symmetric. -/
 theorem symbolJet_isSymJet2 (k : ι → R) {h : Matrix ι ι R} (hs : hᵀ = h) :
     IsSymJet2 (symbolJet k h) where
   deriv_symm i j a b := by simp only [symbolJet_apply]; ring
@@ -564,7 +498,7 @@ theorem symbolJet_isSymJet2 (k : ι → R) {h : Matrix ι ι R} (hs : hᵀ = h) 
     rw [show h a b = h b a by simpa using congrFun (congrFun hs b) a]
 
 variable (g gi) in
-/-- The symbol of `H` (Thm 2.3, `∂ ↦ k`). -/
+/-- The symbol of `H` (`∂ ↦ k`). -/
 def Hsym (k : ι → R) (h : Matrix ι ι R) (b d : ι) : R := Hjet g gi (symbolJet k h) b d
 
 variable (g gi) in
@@ -573,7 +507,7 @@ def divSym (k : ι → R) (h : Matrix ι ι R) (b : ι) : R :=
   ∑ a, ∑ a', gi a a' * k a' * Metric.trRev g gi h a b
 
 variable (gi) in
-/-- The metric pairing `k·k = gi^{ij} k_i k_j`. -/
+/-- The metric pairing `k·k' = gi^{ij} k_i k'_j`. -/
 def dot (k k' : ι → R) : R := ∑ i, ∑ j, gi i j * k i * k' j
 
 omit [DecidableEq ι] in
@@ -582,21 +516,17 @@ theorem barJ_symbolJet (k : ι → R) (h : Matrix ι ι R) (i j : ι) :
   simp [barJ, symbolJet, Metric.trRev_smul]
 
 omit [DecidableEq ι] in
-/-- `∂_i L_b ↦ k_i L_b`. -/
 theorem divJ_symbolJet (k : ι → R) (h : Matrix ι ι R) (i b : ι) :
     divJ gi (barJ g gi (symbolJet k h)) i b = k i * divSym g gi k h b := by
   simp only [divJ, barJ_symbolJet, Matrix.smul_apply, smul_eq_mul, divSym, mul_sum]
   exact sum_congr rfl fun _ _ => sum_congr rfl fun _ _ => by ring
 
 omit [DecidableEq ι] in
-/-- `□h̄ ↦ (k·k) h̄`. -/
 theorem boxJ_symbolJet (k : ι → R) (h : Matrix ι ι R) (a b : ι) :
     boxJ gi (barJ g gi (symbolJet k h)) a b = dot gi k k * Metric.trRev g gi h a b := by
   simp only [boxJ, barJ_symbolJet, Matrix.smul_apply, smul_eq_mul, dot, sum_mul]
   exact sum_congr rfl fun _ _ => sum_congr rfl fun _ _ => by ring
 
-/-- **Thm 2.3** at the symbol level:
-`H = ½ (k_b L_d + k_d L_b) - ½ (k·k) h̄_bd - ½ g_bd k^a L_a`. [QuennevilleBelair2015], Thm 2.3 -/
 theorem Hsym_eq (hg : g.IsSymm) (hinv : gi * g = 1) (k : ι → R) {h : Matrix ι ι R}
     (hs : hᵀ = h) (b d : ι) :
     Hsym g gi k h b d = ⅟2 * (k b * divSym g gi k h d + k d * divSym g gi k h b)
@@ -606,8 +536,6 @@ theorem Hsym_eq (hg : g.IsSymm) (hinv : gi * g = 1) (k : ι → R) {h : Matrix �
   simp only [divJ_symbolJet, boxJ_symbolJet, mul_assoc]
 
 omit [DecidableEq ι] in
-/-- Gauge invariance at the symbol level: `H(k ⊗ ξ + ξ ⊗ k) = 0`. [QuennevilleBelair2015], §2.7; see
-[Wald1984], pp. 75, 183, 441, [Carroll2004], p. 277 and [Stewart1991], p. 24. -/
 theorem Hsym_gauge (hgi : gi.IsSymm) (k ξ : ι → R) (b d : ι) :
     Hsym g gi k (Matrix.of fun a c => k a * ξ c + k c * ξ a) b d = 0 := by
   have hX : IsSymJet3ξ (fun i j c b => k i * k j * k c * ξ b) :=
@@ -617,7 +545,6 @@ theorem Hsym_gauge (hgi : gi.IsSymm) (k ξ : ι → R) (b d : ι) :
     funext i j; ext a b; simp only [symbolJet_apply, gaugeJet_apply, Matrix.of_apply]; ring
   rw [Hsym, e]; exact Hjet_gauge hgi hX b d
 
-/-- The linearized Bianchi identity at the symbol level: `k^b H_bd = 0`. [QuennevilleBelair2015], §2.7 -/
 theorem Hsym_div (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1) (k : ι → R)
     {h : Matrix ι ι R} (hs : hᵀ = h) (d : ι) :
     ∑ b, ∑ b', gi b b' * k b' * Hsym g gi k h b d = 0 := by
@@ -634,15 +561,14 @@ theorem Hsym_div (hg : g.IsSymm) (hgi : gi.IsSymm) (hinv : gi * g = 1) (k : ι �
   rw [← this]
   exact sum_congr rfl fun _ _ => sum_congr rfl fun _ _ => by rw [Hsym]; ring
 
-/-- **Prop 2.4(b), corrected**, symbol level: if `k^a h̄_ab = 0`, then `H = -½ (k·k) h̄`.
-[QuennevilleBelair2015], Prop 2.4 (corrected) -/
+/-- At the symbol level, for symmetric `h` with `k^a h̄_ab = 0`, `H = -½ (k·k) h̄`.
+[QuennevilleBelair2015], Prop 2.4 (adapted) -/
 theorem Hsym_lorentz (hg : g.IsSymm) (hinv : gi * g = 1) (k : ι → R) {h : Matrix ι ι R}
     (hs : hᵀ = h) (hL : ∀ b, divSym g gi k h b = 0) (b d : ι) :
     Hsym g gi k h b d = -⅟2 * dot gi k k * Metric.trRev g gi h b d := by
   rw [Hsym_eq hg hinv k hs]; simp [hL]
 
 omit [DecidableEq ι] in
-/-- Symbol-level Lorentz gauge implies jet-level Lorentz gauge. -/
 theorem lorentzJet_symbolJet (k : ι → R) (h : Matrix ι ι R) (hL : ∀ b, divSym g gi k h b = 0) :
     LorentzJet g gi (symbolJet k h) := fun i b => by rw [divJ_symbolJet, hL, mul_zero]
 

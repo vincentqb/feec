@@ -7,61 +7,15 @@ public import Feec.ForMathlib.LinearPMap.Skew
 /-!
 # Complexes of constrained realizations
 
-A **constrained complex** (`Feec.Domain.ConstrainedComplex`) on an open `Ω ⊆ E` is a complex of
-constant-coefficient operators `A k : 𝕜^{ι k} → 𝕜^{ι (k+1)}` (`A (k+1) ∘ A k = 0` on smooth
-fields, `Feec.Domain.ConstCoeffComplex`) together with closed subspaces
-`V k ⊆ L²(Ω; 𝕜^{ι k})` (symmetric, trace-free, or unconstrained matrix fields, …) such that
-the constrained test fields are dense in each `V k` and both `A k` and its formal adjoint map
-constrained test fields to constrained test fields. It gives two Hilbert complexes on
-`ComplexShape.up ℤ`, mirroring `Feec.Domain.ConstCoeffComplex`:
+A constrained complex is a complex of constant-coefficient operators with closed subspaces of `L²`
+fields, in which the constrained test fields are dense, mapped to each other by the operators and
+their formal adjoints; it has a minimal and a maximal Hilbert complex, and the dual of the minimal
+complex is the maximal complex of the formal adjoints.
 
-* the **minimal complex** (`ConstrainedComplex.minimalComplex`), `d k = (A k)_via`, the closure
-  of `A k` on the constrained test fields (`Feec.Domain.ConstCoeffOp.minimalVia`), the `H̊`
-  boundary conditions;
-* the **maximal complex** (`ConstrainedComplex.maximalComplex`), `d k = (A k)_max,via`, the
-  adjoint of the minimal realization of the formal adjoint
-  (`Feec.Domain.ConstCoeffOp.maximalVia`): the weak realization tested against constrained test
-  fields, with no boundary condition;
+## Main results
 
-and the **duality** of the two families: the dual of the minimal complex is the maximal complex
-of the formal adjoints (`dual_minimalComplex_d`), and vice versa by taking adjoints.
-
-The constraints of the elasticity, Hessian and div-div complexes are ranges of pointwise
-self-adjoint projections `M` (`L2F.matSubmodule`, with density `L2F.denseVia_matSubmodule`): the
-symmetric part `symMat` (`L2F.symSubmodule`), the deviatoric part `deviatoricMat`
-(`L2F.traceFreeSubmodule`) and the identity (`⊤`). The operators of these complexes are built
-from those of `Feec.Domain.Operators` by composition (`ConstCoeffOp.comp`) and by pre- and
-post-composition with constant matrices (`ConstCoeffOp.preComp`, `ConstCoeffOp.postComp`), with
-`(postComp M A)ᵗ = preComp Mᴴ Aᵗ` (`formalAdj_postComp`) and `(B ∘ A)ᵗ = Aᵗ ∘ Bᵗ`
-(`formalAdj_comp_apply`).
-
-## Main definitions
-
-* `ConstCoeffOp.preComp`, `ConstCoeffOp.comp`, `ConstCoeffOp.negOp`: operator algebra.
-* `ConstCoeffOp.maximalVia`: the maximal constrained realization; congruence lemmas
-  `ConstCoeffOp.minimalVia_congr`, `ConstCoeffOp.maximalVia_congr`.
-* `L2F.matSubmodule`, `L2F.symSubmodule`, `L2F.traceFreeSubmodule`: pointwise constraints, with
-  embeddings `symEmb`, `traceFreeEmb`, `freeEmb`.
-* `ConstrainedComplex`, `ConstrainedComplex.minimalComplex`, `ConstrainedComplex.maximalComplex`,
-  and `ConstrainedComplex.ofMatrices` (constraints given by pointwise projections).
-
-The symmetric/trace-free subspaces and projections duplicate, in the `Domain` layer, those of
-`Feec.Models.BoundedDomain.SymCurl` (which `Domain` may not import).
-
-No closed-range statement is made: on a general open `Ω` the ranges need not be closed.
-
-## References
-
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (the two boundary-condition
-  families and their duality)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (dual complexes)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (complexes with values in
-  subspaces of matrices)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (minimal and maximal ideal boundary
-  conditions)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.adjoint_minimalVia`: `(A_via)† = (Aᵗ)_max,via`.
+* `ConstrainedComplex.dual_minimalComplex_d`: the dual of the minimal complex.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap
@@ -130,13 +84,11 @@ theorem adjEntry_flatMap {α : Type*} (l : List α) (P : α → List (List E × 
   simp only [adjEntry, List.map_flatMap]
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `(M ∘ A)ᵗ = Aᵗ ∘ Mᴴ`. -/
 theorem formalAdj_postComp [Fintype κ] (M : κ' → κ → 𝕜) (A : ConstCoeffOp E 𝕜 ι κ) :
     (A.postComp M).formalAdj = A.formalAdj.preComp fun j j' => conj (M j' j) := by
   simp only [formalAdj, postComp, preComp, adjEntry_flatMap, adjEntry_map_mul]
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `(A ∘ M)ᵗ = Mᴴ ∘ Aᵗ`. -/
 theorem formalAdj_preComp [Fintype ι] (M : ι → ι' → 𝕜) (A : ConstCoeffOp E 𝕜 ι κ) :
     (A.preComp M).formalAdj = A.formalAdj.postComp fun i l => conj (M l i) := by
   simp only [formalAdj, postComp, preComp, adjEntry_flatMap, adjEntry_map_mul]
@@ -213,7 +165,6 @@ theorem applyEntry_map {α : Type*} (P : List α) (g : α → List E × 𝕜) (f
   simp only [applyEntry, List.map_map]
   rfl
 
-/-- **`(B ∘ A)ᵗ = Aᵗ ∘ Bᵗ`** on smooth fields. -/
 theorem formalAdj_comp_apply [Fintype ι] [Fintype κ] [Fintype μ] (B : ConstCoeffOp E 𝕜 κ μ)
     (A : ConstCoeffOp E 𝕜 ι κ) {f : μ → E → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (B.comp A).formalAdj.apply f = A.formalAdj.apply (B.formalAdj.apply f) := by
@@ -251,9 +202,7 @@ def MapsToVia : Prop :=
   ∀ (φ : ι → E → 𝕜) (hφ : IsTestField Ω φ) (x : X), Jx x = testField hφ →
     ∃ y : Y, Jy y = testField (A.isTestField_apply hφ)
 
-/-- The **maximal constrained realization** `A_max,via : X → Y`, the adjoint of the constrained
-minimal realization of the formal adjoint: `u ∈ D(A_max,via)` iff `A u ∈ Y` weakly, tested
-against the `Y`-valued test fields, with no boundary condition. -/
+/-- The **maximal constrained realization** `A_max,via = ((Aᵗ)_via)†`. -/
 def maximalVia [CompleteSpace Y] : X →ₗ.[𝕜] Y := (A.formalAdj.minimalVia Jy Jx)†
 
 variable [CompleteSpace X] [CompleteSpace Y]
@@ -286,13 +235,11 @@ def IsComplexPairVia (A : ConstCoeffOp E 𝕜 ι κ) (B : ConstCoeffOp E 𝕜 κ
     testField (B.isTestField_apply (A.isTestField_apply hφ)) = 0
 
 omit [CompleteSpace X] [CompleteSpace Y] in
-/-- The formal adjoints of a complex pair form a complex pair on test fields. -/
 theorem IsComplexPair.isComplexPairVia_formalAdj (hΩ : IsOpen Ω) (hAB : A.IsComplexPair B) :
     B.formalAdj.IsComplexPairVia A.formalAdj Jz :=
   fun _ hψ _ _ => formalAdj_comp_testField hΩ hAB hψ
 
 omit [CompleteSpace X] [CompleteSpace Y] in
-/-- `R(A_via) ⊆ D(B_via)` and `B_via A_via = 0` when `B A = 0` on the `X`-valued test fields. -/
 theorem minimalVia_graph_mem_of_isComplexPairVia (hAB : A.IsComplexPairVia B Jx)
     (hY : DenseVia Jy) (hZ : DenseVia Jz) (x : (A.minimalVia Jx Jy).domain) :
     (A.minimalVia Jx Jy x, (0 : Z)) ∈ (B.minimalVia Jy Jz).graph := by
@@ -324,7 +271,6 @@ end Complex
 /-! ### Congruence -/
 
 omit [FiniteDimensional ℝ E] [CompleteSpace X] [CompleteSpace Y] in
-/-- Operators agreeing on the `X`-valued test fields have the same constrained test graph. -/
 theorem testGraphVia_congr {A' : ConstCoeffOp E 𝕜 ι κ}
     (h : ∀ (φ : ι → E → 𝕜) (hφ : IsTestField Ω φ) (x : X), Jx x = testField hφ →
       testField (A'.isTestField_apply hφ) = testField (A.isTestField_apply hφ)) :
@@ -337,7 +283,6 @@ theorem testGraphVia_congr {A' : ConstCoeffOp E 𝕜 ι κ}
     exact ⟨φ, hφ, h1, by rw [h2, h φ hφ x h1]⟩
 
 omit [FiniteDimensional ℝ E] [CompleteSpace X] [CompleteSpace Y] in
-/-- Operators agreeing on the `X`-valued test fields have the same constrained realization. -/
 theorem minimalVia_congr {A' : ConstCoeffOp E 𝕜 ι κ}
     (h : ∀ (φ : ι → E → 𝕜) (hφ : IsTestField Ω φ) (x : X), Jx x = testField hφ →
       testField (A'.isTestField_apply hφ) = testField (A.isTestField_apply hφ)) :
@@ -345,8 +290,6 @@ theorem minimalVia_congr {A' : ConstCoeffOp E 𝕜 ι κ}
   rw [minimalVia, minimalVia, testGraphVia_congr A Jx Jy h]
 
 omit [FiniteDimensional ℝ E] [CompleteSpace X] in
-/-- Operators whose formal adjoints agree on the `Y`-valued test fields have the same maximal
-constrained realization. -/
 theorem maximalVia_congr {A' : ConstCoeffOp E 𝕜 ι κ}
     (h : ∀ (ψ : κ → E → 𝕜) (hψ : IsTestField Ω ψ) (y : Y), Jy y = testField hψ →
       testField (A'.formalAdj.isTestField_apply hψ) =
@@ -433,7 +376,6 @@ theorem matCLM_apply (M : ι → ι → 𝕜) (u : L2F 𝕜 Ω ι) (i : ι) :
     matCLM M u i = ∑ j, M i j • u j := by
   simp [matCLM]
 
-/-- `matCLM` acts pointwise on test fields. -/
 theorem matCLM_testField (M : ι → ι → 𝕜) {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
     matCLM M (testField hφ) = testField (hφ.matMulField M) := by
   refine (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)
@@ -469,8 +411,7 @@ theorem matCLM_matCLM {M : ι → ι → 𝕜} (hM : IsProjMat M) (u : L2F 𝕜 
   rw [← Finset.sum_smul, hM.idem]
 
 variable (𝕜 Ω) in
-/-- The fields with values in the range of the constant matrix `M` (for a projection `M`):
-`{u | M u = u}`. -/
+/-- The fields fixed by the constant matrix `M`: `{u | M u = u}`. -/
 def matSubmodule (M : ι → ι → 𝕜) : Submodule 𝕜 (L2F 𝕜 Ω ι) :=
   LinearMap.ker ((matCLM M - ContinuousLinearMap.id 𝕜 (L2F 𝕜 Ω ι) : L2F 𝕜 Ω ι →L[𝕜] L2F 𝕜 Ω ι) :
     L2F 𝕜 Ω ι →ₗ[𝕜] L2F 𝕜 Ω ι)
@@ -496,19 +437,15 @@ theorem matCLM_mem {M : ι → ι → 𝕜} (hM : IsProjMat M) (u : L2F 𝕜 Ω 
     matCLM M u ∈ matSubmodule 𝕜 Ω M :=
   mem_matSubmodule.2 (matCLM_matCLM hM u)
 
-/-- A test field with values in the range of `M` lies in `matSubmodule M`. -/
 theorem testField_mem_matSubmodule {M : ι → ι → 𝕜} {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ)
     (h : matMulField M φ = φ) : testField hφ ∈ matSubmodule 𝕜 Ω M := by
   rw [mem_matSubmodule, matCLM_testField]
   exact testField_congr _ _ h
 
-/-- A test field in `matSubmodule M` agrees in `L²` with its pointwise projection. -/
 theorem testField_eq_of_mem_matSubmodule {M : ι → ι → 𝕜} {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ)
     (h : testField hφ ∈ matSubmodule 𝕜 Ω M) : testField hφ = testField (hφ.matMulField M) := by
   rw [← matCLM_testField M hφ, mem_matSubmodule.1 h]
 
-/-- **The test fields with values in the range of a projection are dense in
-`matSubmodule M`.** -/
 theorem denseVia_matSubmodule [FiniteDimensional ℝ E] (hΩ : IsOpen Ω) {M : ι → ι → 𝕜}
     (hM : IsProjMat M) : ConstCoeffOp.DenseVia (matSubmodule 𝕜 Ω M).subtypeₗᵢ :=
   ConstCoeffOp.denseVia_of_proj hΩ _ (matCLM M) (fun y => mem_matSubmodule.1 y.2)
@@ -518,14 +455,12 @@ theorem denseVia_matSubmodule [FiniteDimensional ℝ E] (hΩ : IsOpen Ω) {M : �
 
 end L2F
 
-/-- `A` maps fields with values in the range of `M` to fields with values in the range of
-`N`: `N (A (M φ)) = A (M φ)` for smooth `φ`. -/
+/-- `A` maps smooth fields with values in the range of `M` to fields fixed by `N`. -/
 def ConstCoeffOp.MatMapsTo (A : ConstCoeffOp E 𝕜 ι κ) (M : ι → ι → 𝕜) (N : κ → κ → 𝕜) : Prop :=
   ∀ φ : ι → E → 𝕜, (∀ i, ContDiff ℝ ∞ (φ i)) →
     matMulField N (A.apply (matMulField M φ)) = A.apply (matMulField M φ)
 
 omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- `N ∘ A` maps everything to the range of an idempotent `N`. -/
 theorem ConstCoeffOp.matMapsTo_postComp (A : ConstCoeffOp E 𝕜 ι κ) (M : ι → ι → 𝕜)
     {N : κ → κ → 𝕜} (hN : IsProjMat N) : (A.postComp N).MatMapsTo M N := fun φ _ => by
   rw [ConstCoeffOp.postComp_apply_eq_matMulField, hN.matMulField_matMulField]
@@ -542,7 +477,6 @@ theorem ConstCoeffOp.matMapsTo_of_isEmpty_right [IsEmpty κ] (A : ConstCoeffOp E
     (M : ι → ι → 𝕜) (N : κ → κ → 𝕜) : A.MatMapsTo M N := fun _ _ =>
   funext fun j => isEmptyElim j
 
-/-- Equal test fields have equal images. -/
 theorem ConstCoeffOp.testField_apply_congr [FiniteDimensional ℝ E] (hΩ : IsOpen Ω)
     (A : ConstCoeffOp E 𝕜 ι κ) {φ ψ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (hψ : IsTestField Ω ψ)
     (h : testField hφ = testField hψ) :
@@ -551,7 +485,6 @@ theorem ConstCoeffOp.testField_apply_congr [FiniteDimensional ℝ E] (hΩ : IsOp
   congr 1
   exact Subtype.ext h
 
-/-- **Pointwise mapping of the constraints gives `MapsToVia`.** -/
 theorem ConstCoeffOp.MatMapsTo.mapsToVia [FiniteDimensional ℝ E] (hΩ : IsOpen Ω)
     {A : ConstCoeffOp E 𝕜 ι κ} {M : ι → ι → 𝕜} {N : κ → κ → 𝕜} (h : A.MatMapsTo M N) :
     A.MapsToVia (L2F.matSubmodule 𝕜 Ω M).subtypeₗᵢ (L2F.matSubmodule 𝕜 Ω N).subtypeₗᵢ := by
@@ -614,7 +547,6 @@ theorem isProjMat_symMat : IsProjMat (symMat n : _ → _ → 𝕜) where
     · exact if_congr ⟨fun h => by rw [h], fun h => by rw [h]⟩ rfl rfl
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `sym φ = ½ (φ + φᵀ)`. -/
 theorem matMulField_symMat_eq (φ : Fin n × Fin n → E → 𝕜) :
     matMulField (symMat n) φ = (1 / 2 : 𝕜) • (φ + fun ij => φ (ij.2, ij.1)) := by
   funext ij x
@@ -751,10 +683,7 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasureSpace E]
   [FiniteDimensional ℝ E] [(volume : Measure E).IsAddHaarMeasure] {𝕜 : Type*} [RCLike 𝕜]
 
 variable (E 𝕜) in
-/-- A **complex of constrained realizations** on `Ω`: a complex of constant-coefficient operators
-`A k : 𝕜^{ι k} → 𝕜^{ι (k+1)}` (`A (k+1) ∘ A k = 0` on smooth fields) with closed subspaces
-`V k ⊆ L²(Ω; 𝕜^{ι k})` in which the constrained test fields are dense, mapped to each other by
-the `A k` and by their formal adjoints. -/
+/-- A **complex of constrained realizations** on `Ω`: a complex with constraint subspaces `V k`. -/
 structure ConstrainedComplex (Ω : Set E) where
   /-- the underlying complex of constant-coefficient operators -/
   toConstCoeffComplex : ConstCoeffComplex E 𝕜
@@ -803,7 +732,6 @@ theorem minimalComplex_d (k : ℤ) :
     K.minimalComplex.d k (k + 1) = (K.A k).minimalVia (K.J k) (K.J (k + 1)) :=
   HilbertComplex.ofSuccD_succ (fun k => (K.A k).minimalVia (K.J k) (K.J (k + 1))) k
 
-/-- The constrained realizations of the formal adjoints form a descending complex. -/
 theorem formalAdj_minimalVia_mapsTo (hΩ : IsOpen Ω) (k : ℤ)
     (x : ((K.A (k + 1)).formalAdj.minimalVia (K.J (k + 1 + 1)) (K.J (k + 1))).domain) :
     ((K.A (k + 1)).formalAdj.minimalVia (K.J (k + 1 + 1)) (K.J (k + 1)) x : K.V (k + 1)) ∈
@@ -837,8 +765,7 @@ theorem maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     (K.maximalComplex hΩ).d k (k + 1) = (K.A k).maximalVia (K.J k) (K.J (k + 1)) :=
   HilbertComplex.ofSuccD_succ (fun k => (K.A k).maximalVia (K.J k) (K.J (k + 1))) k
 
-/-- **Duality**: the dual of the minimal complex is the maximal complex of the formal adjoints,
-`(d_min k)† = (A kᵗ)_max,via`. -/
+/-- **Duality**: the dual of the minimal complex is the maximal complex of the formal adjoints. -/
 theorem dual_minimalComplex_d (k : ℤ) :
     K.minimalComplex.dual.d (k + 1) k = (K.A k).formalAdj.maximalVia (K.J (k + 1)) (K.J k) := by
   rw [HilbertComplex.dual_d, minimalComplex_d, ConstCoeffOp.adjoint_minimalVia]
@@ -847,8 +774,7 @@ end ConstrainedComplex
 
 /-! ### Constraints by pointwise projections -/
 
-/-- A constrained complex whose constraints are ranges of pointwise orthogonal projections
-`M k`, given the pointwise mapping properties of the operators and their formal adjoints. -/
+/-- The constrained complex of pointwise orthogonal projections `M k`. -/
 def ConstrainedComplex.ofMatrices {Ω : Set E} (hΩ : IsOpen Ω) (C : ConstCoeffComplex E 𝕜)
     (M : ∀ k, C.ι k → C.ι k → 𝕜) (hM : ∀ k, IsProjMat (M k))
     (hA : ∀ k, (C.A k).MatMapsTo (M k) (M (k + 1)))

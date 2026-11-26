@@ -17,49 +17,19 @@ public import Feec.ForMathlib.Calculus.Partial
 /-!
 # Extension from a shell into the cube `Q = (0, ½)³`
 
-Let `S = (-¼, ¾)³ ∖ [0, ½]³` be the shell around `Q` (`shell`). For a smooth `q` on `ℝ³` this
-file constructs a smooth `s = lift q` such that
-
-* `s = q` and `∇s = ∇q` on the hyperplanes `xᵢ ∈ {0, ½}` containing the faces of `Q`: the
-  remainder `r = q - s` and its first derivatives vanish there (`rem_of_face`, `pd_rem_of_face`);
-* on `Q`, `s` depends only on `q|_S`, with the `H²` bound `n2 s Q ≤ C n2 q S`
-  (`exists_n2_lift_le`, `C` independent of `q`), where
-  `n2 F B = ‖F‖ + Σⱼ ‖∂ⱼF‖ + Σⱼₖ ‖∂ₖ∂ⱼF‖` in `L²(B)` (`n2`).
-
-**Construction.** In the coordinate `i`, the Hestenes reflection
-`E_i F (x) = h(xᵢ) (-5 F(-xᵢ/2) + 6 F(-xᵢ/4)) + h(½ - xᵢ) (-5 F(¾ - xᵢ/2) + 6 F(⅝ - xᵢ/4))`
-(`hest`; the other coordinates fixed, `h(t) = 1 - 12t² + 16t³` the cubic Hermite blend) reproduces
-the value and the first derivatives of `F` on `xᵢ ∈ {0, ½}` (`hest_of_face`, `pd_hest_of_face`),
-and for `xᵢ ∈ (0, ½)` it only samples `F` at points with `xᵢ ∈ (-¼, 0) ∪ (½, ¾)`. So
-`T_i = I - E_i` kills the value and the first derivatives on these faces, the `T_i` commute
-(`tI_comm`), `r = T₀ T₁ T₂ q` (`rem`) vanishes with its gradient on all six faces, and
-`s = q - r = Σ_{A ≠ ∅} (-1)^{|A|+1} E_A q` (`lift_eq`) only samples `q` on the shell.
-
-**Estimates.** Each `E_i` is a sum of four affine pull-backs in one coordinate,
-`x ↦ x` with `xᵢ ↦ λ xᵢ + μ` (`refl`), with polynomial weights in `xᵢ` (`ext1`); the derivatives
-of such an operator are operators of the same kind with the weights differentiated or scaled
-(`pd_ext1`), and their `L²` bounds follow from the change of variables
-`refl_* vol = |λ|⁻¹ vol` (`map_refl_volume`, `eLpNorm_comp_refl_le`, `eLpNorm_ext1_le`,
-`n2_ext1_le`). Iterating over the coordinates moves the estimate from `Q` to the boxes of the
-shell (`box`, `exists_n2_hest_le`). This is the extension step of the regular decomposition of
-`Feec.Models.Cube.RegularDecomposition`; the two-point reflection is the one of [Hestenes1941].
-
-## Main definitions
-
-* `partialDeriv`, `refl`, `ext1`, `hest`, `tI`, `rem`, `lift`; `n2`, `In`, `Out`, `box`, `shell`.
+For a smooth `q` on `ℝ³`, the extension `s = lift q`, built from the reflection of [Hestenes1941] in
+each coordinate, agrees with `q` to first order on the faces of `Q = (0, ½)³`, and its `H²`-type
+norm on `Q` is bounded by that of `q` on the shell `S = (-¼, ¾)³ ∖ [0, ½]³`.
 
 ## Main results
 
-* `map_refl_volume`, `eLpNorm_comp_refl_le`, `pd_ext1`, `ext1_comm`.
-* `hest_of_face`, `pd_hest_of_face`, **`rem_of_face`**, **`pd_rem_of_face`**.
-* `eLpNorm_ext1_le`, `n2_ext1_le`, `exists_n2_hest_le`, **`exists_n2_lift_le`**.
+* `hest_of_face`, `pd_hest_of_face`: `E_i F` agrees with `F` to first order on `xᵢ ∈ {0, ½}`.
+* `rem_of_face`, `pd_rem_of_face`: `q - s` and its first derivatives vanish on the faces of `Q`.
+* `exists_n2_lift_le`: the estimate `n2 s Q ≤ C n2 q S`.
 
 ## References
 
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension operators by reflection)
 * [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
-  (the reflection `hest`)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -73,8 +43,7 @@ namespace Feec.Models.Cube.ShellExtension
 
 /-! ### Partial derivatives and one-coordinate affine maps -/
 
-/-- The affine map `x ↦ x + ((a - 1) xᵢ + b) eᵢ`, acting by `t ↦ a t + b` in the coordinate `i`
-and by the identity in the others. -/
+/-- The affine map `t ↦ a t + b` in the coordinate `i`, the identity in the others. -/
 def refl (i : Fin 3) (a b : ℝ) (x : Fin 3 → ℝ) : Fin 3 → ℝ :=
   x + ((a - 1) * x i + b) • (Pi.single i 1 : Fin 3 → ℝ)
 
@@ -117,7 +86,6 @@ theorem contDiff_refl (i : Fin 3) (a b : ℝ) {n : WithTop ℕ∞} :
 theorem continuous_refl (i : Fin 3) (a b : ℝ) : Continuous (refl i a b) :=
   (contDiff_refl i a b (n := 0)).continuous
 
-/-- The linear part of `refl`: the diagonal matrix with `a` in position `i`. -/
 theorem refl_eq_toLin' (i : Fin 3) (a b : ℝ) (x : Fin 3 → ℝ) :
     refl i a b x = Matrix.toLin' (Matrix.diagonal (Function.update (1 : Fin 3 → ℝ) i a)) x +
       Pi.single i b := by
@@ -127,7 +95,6 @@ theorem refl_eq_toLin' (i : Fin 3) (a b : ℝ) (x : Fin 3 → ℝ) :
   · subst hk; simp
   · rw [refl_apply_of_ne hk, Function.update_of_ne hk, Pi.single_eq_of_ne hk]; simp
 
-/-- **The image measure of `refl`**: `refl_* vol = |a|⁻¹ vol`. -/
 theorem map_refl_volume (i : Fin 3) {a : ℝ} (ha : a ≠ 0) (b : ℝ) :
     Measure.map (refl i a b) volume = ENNReal.ofReal |a⁻¹| • (volume : Measure (Fin 3 → ℝ)) := by
   set L : (Fin 3 → ℝ) →ₗ[ℝ] (Fin 3 → ℝ) :=
@@ -143,7 +110,6 @@ theorem map_refl_volume (i : Fin 3) {a : ℝ} (ha : a ≠ 0) (b : ℝ) :
     Measure.map_smul, map_add_right_eq_self]
   exact (measurable_add_const _).aemeasurable
 
-/-- **Pull-back by `refl`**: `‖G ∘ refl‖_{L²(B)} ≤ |a|^{-1/2} ‖G‖_{L²(B')}` if `refl (B) ⊆ B'`. -/
 theorem eLpNorm_comp_refl_le (i : Fin 3) {a : ℝ} (ha : a ≠ 0) (b : ℝ) {G : (Fin 3 → ℝ) → ℝ}
     (hG : Continuous G) {B B' : Set (Fin 3 → ℝ)} (hB' : MeasurableSet B')
     (h : MapsTo (refl i a b) B B') :
@@ -167,17 +133,15 @@ theorem eLpNorm_comp_refl_le (i : Fin 3) {a : ℝ} (ha : a ≠ 0) (b : ℝ) {G :
 theorem contDiff_eval (P : ℝ[X]) {n : WithTop ℕ∞} : ContDiff ℝ n fun t : ℝ => P.eval t := by
   simpa using P.contDiff_aeval (𝕜 := ℝ) n
 
-/-- The slopes of the four reflections of the Hestenes extension: `t ↦ -t/2`, `t ↦ -t/4` about
-`0` and `t ↦ ¾ - t/2`, `t ↦ ⅝ - t/4` about `½`. -/
+/-- The slopes `λₘ` of the four reflections `t ↦ λₘ t + μₘ` of the Hestenes extension. -/
 def lam : Fin 4 → ℝ := ![-1 / 2, -1 / 4, -1 / 2, -1 / 4]
 
-/-- The offsets of the four reflections. -/
+/-- The offsets `μₘ` of the four reflections. -/
 def mu : Fin 4 → ℝ := ![0, 0, 3 / 4, 5 / 8]
 
 theorem lam_ne_zero (m : Fin 4) : lam m ≠ 0 := by fin_cases m <;> norm_num [lam]
 
-/-- A reflection operator in the coordinate `i` with polynomial weights `ω`:
-`(R F)(x) = Σₘ ωₘ(xᵢ) F(x with xᵢ ↦ λₘ xᵢ + μₘ)`. -/
+/-- The reflection operator `(R F)(x) = Σₘ ωₘ(xᵢ) F(x with xᵢ ↦ λₘ xᵢ + μₘ)`. -/
 def ext1 (i : Fin 3) (ω : Fin 4 → ℝ[X]) (F : (Fin 3 → ℝ) → ℝ) (x : Fin 3 → ℝ) : ℝ :=
   ∑ m, (ω m).eval (x i) * F (refl i (lam m) (mu m) x)
 
@@ -188,16 +152,14 @@ theorem contDiff_ext1 (i : Fin 3) (ω : Fin 4 → ℝ[X]) {F : (Fin 3 → ℝ) �
     ((contDiff_eval (ω m)).comp (contDiff_apply ℝ (fun _ : Fin 3 => ℝ) i)).mul
     (hF.comp (contDiff_refl _ _ _))
 
-/-- Weights of the term with the weight differentiated. -/
+/-- The weights of the term of `∂ⱼ (R_ω F)` with the weights differentiated. -/
 def dω (j i : Fin 3) (ω : Fin 4 → ℝ[X]) : Fin 4 → ℝ[X] :=
   fun m => if j = i then derivative (ω m) else 0
 
-/-- Weights of the term with `F` differentiated (chain-rule factor `λₘ` if `j = i`). -/
+/-- The weights of the term of `∂ⱼ (R_ω F)` with `F` differentiated. -/
 def cω (j i : Fin 3) (ω : Fin 4 → ℝ[X]) : Fin 4 → ℝ[X] :=
   fun m => if j = i then C (lam m) * ω m else ω m
 
-/-- **The derivative of a reflection operator**:
-`∂ⱼ (R_ω F) = R_{dω} F + R_{cω} (∂ⱼ F)`. -/
 theorem pd_ext1 (i j : Fin 3) (ω : Fin 4 → ℝ[X]) {F : (Fin 3 → ℝ) → ℝ}
     (hF : Differentiable ℝ F) :
     partialDeriv j (ext1 i ω F) = ext1 i (dω j i ω) F + ext1 i (cω j i ω) (partialDeriv j F) := by
@@ -262,7 +224,6 @@ theorem ext1_add (i : Fin 3) (ω : Fin 4 → ℝ[X]) (F G : (Fin 3 → ℝ) → 
 theorem ext1_zero_weight (i : Fin 3) (F : (Fin 3 → ℝ) → ℝ) : ext1 i (fun _ => 0) F = 0 := by
   funext x; simp [ext1]
 
-/-- **Reflection operators in different coordinates commute.** -/
 theorem ext1_comm {i j : Fin 3} (h : i ≠ j) (ω ω' : Fin 4 → ℝ[X]) (F : (Fin 3 → ℝ) → ℝ) :
     ext1 i ω (ext1 j ω' F) = ext1 j ω' (ext1 i ω F) := by
   funext x
@@ -274,22 +235,16 @@ theorem ext1_comm {i j : Fin 3} (h : i ≠ j) (ω ω' : Fin 4 → ℝ[X]) (F : (
 
 /-! ### The Hestenes extension -/
 
-/-- The cubic Hermite blend `h(t) = 1 - 12 t² + 16 t³`: `h(0) = 1`, `h(½) = 0`,
-`h'(0) = h'(½) = 0`. -/
+/-- The cubic Hermite blend `h(t) = 1 - 12 t² + 16 t³`. -/
 def herm : ℝ[X] := 1 - C 12 * X ^ 2 + C 16 * X ^ 3
 
 /-- The reversed blend `h(½ - t)`. -/
 def hermR : ℝ[X] := herm.comp (C (1 / 2) - X)
 
-/-- The Hestenes weights: `-5 h`, `6 h` on the reflections about `0`, `-5 h(½ - ·)`, `6 h(½ - ·)`
-on the reflections about `½`. -/
+/-- The Hestenes weights `-5 h`, `6 h`, `-5 h(½ - ·)`, `6 h(½ - ·)`. -/
 def ωE : Fin 4 → ℝ[X] := ![C (-5) * herm, C 6 * herm, C (-5) * hermR, C 6 * hermR]
 
-/-- **The Hestenes extension** in the coordinate `i` ([Hestenes1941]):
-`E_i F (x) = h(xᵢ) (-5 F(-xᵢ/2) + 6 F(-xᵢ/4)) + h(½ - xᵢ) (-5 F(¾ - xᵢ/2) + 6 F(⅝ - xᵢ/4))`
-(the other coordinates fixed). On the faces `xᵢ ∈ {0, ½}` it reproduces the value and the first
-derivatives of `F` (`hest_of_face`, `pd_hest_of_face`); for `xᵢ ∈ (0, ½)` it only samples `F`
-at points with `xᵢ ∈ (-¼, 0) ∪ (½, ¾)`. -/
+/-- The Hestenes extension `E_i` in the coordinate `i` ([Hestenes1941]). -/
 def hest (i : Fin 3) (F : (Fin 3 → ℝ) → ℝ) : (Fin 3 → ℝ) → ℝ := ext1 i ωE F
 
 @[simp] theorem herm_eval_zero : herm.eval 0 = 1 := by simp [herm]
@@ -377,9 +332,7 @@ theorem pd_tI_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 /
 /-- The remainder `r = (I - E₀)(I - E₁)(I - E₂) q`. -/
 def rem (q : (Fin 3 → ℝ) → ℝ) : (Fin 3 → ℝ) → ℝ := tI 0 (tI 1 (tI 2 q))
 
-/-- **The shell extension** `s = q - r`: on `Q` it depends only on the values of `q` on the
-shell (`exists_n2_lift_le`), and on `∂Q` its first derivatives agree with those of `q`
-(`pd_rem_of_face`). -/
+/-- The shell extension `s = q - r`. -/
 def lift (q : (Fin 3 → ℝ) → ℝ) : (Fin 3 → ℝ) → ℝ := q - rem q
 
 theorem contDiff_rem {q : (Fin 3 → ℝ) → ℝ} {n : WithTop ℕ∞} (hq : ContDiff ℝ n q) :
@@ -416,7 +369,7 @@ theorem pd_rem_of_face {x : Fin 3 → ℝ} (hx : OnFace x) {q : (Fin 3 → ℝ) 
 
 /-! ### `L²` estimates -/
 
-/-- `‖F‖ + Σⱼ ‖∂ⱼF‖ + Σⱼₖ ‖∂ₖ∂ⱼF‖` in `L²(B)` (a quantity equivalent to the `H²(B)` norm). -/
+/-- `‖F‖ + Σⱼ ‖∂ⱼF‖ + Σⱼₖ ‖∂ₖ∂ⱼF‖` in `L²(B)`. -/
 def n2 (F : (Fin 3 → ℝ) → ℝ) (B : Set (Fin 3 → ℝ)) : ℝ≥0∞ :=
   eLpNorm F 2 (volume.restrict B) + ∑ j, eLpNorm (partialDeriv j F) 2 (volume.restrict B) +
     ∑ j, ∑ k, eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B)
@@ -562,8 +515,6 @@ theorem eLpNorm_four_le {M : ℝ≥0} (m : Fin 4) :
           show (4 : ℝ) = 2 ^ (2 : ℝ) by norm_num, ← Real.rpow_mul (by norm_num)]
         norm_num
 
-/-- **`L²` estimate of a reflection operator**: `‖R_ω G‖_{L²(B)} ≤ 8 M ‖G‖_{L²(B')}` when the
-four reflections map `B` into `B'` and the weights are bounded by `M` on `[0, ½]`. -/
 theorem eLpNorm_ext1_le (i : Fin 3) {ω : Fin 4 → ℝ[X]} {M : ℝ≥0} (hM : Bd ω M)
     {G : (Fin 3 → ℝ) → ℝ} (hG : Continuous G) {B B' : Set (Fin 3 → ℝ)} (hB : MeasurableSet B)
     (hB' : MeasurableSet B') (hBi : ∀ x ∈ B, x i ∈ Icc (0 : ℝ) (1 / 2))
@@ -600,8 +551,6 @@ theorem eLpNorm_ext1_le (i : Fin 3) {ω : Fin 4 → ℝ[X]} {M : ℝ≥0} (hM : 
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
         push_cast; ring
 
-/-- **`H²`-type estimate of a reflection operator**:
-`n2 (R_ω G) B ≤ 43 · 8 M · n2 G B'` when `ω`, `ω'`, `ω''` are bounded by `M` on `[0, ½]`. -/
 theorem n2_ext1_le (i : Fin 3) {ω : Fin 4 → ℝ[X]} {M : ℝ≥0} (h0 : Bd ω M) (h1 : Bd (Dω ω) M)
     (h2 : Bd (Dω (Dω ω)) M) {G : (Fin 3 → ℝ) → ℝ} (hG : ContDiff ℝ (⊤ : ℕ∞) G)
     {B B' : Set (Fin 3 → ℝ)} (hB : MeasurableSet B) (hB' : MeasurableSet B')
@@ -732,8 +681,6 @@ theorem mapsTo_refl_box {P : Fin 3 → Bool} {i : Fin 3} (hP : P i = false) (m :
   · rw [Function.update_of_ne hji, refl_apply_of_ne hji]
     exact hx j
 
-/-- **`H²` estimate of the Hestenes extension on a box**: from `xᵢ ∈ (0, ½)` to
-`xᵢ ∈ (-¼, 0) ∪ (½, ¾)`. -/
 theorem exists_n2_hest_le : ∃ C : ℝ≥0, ∀ (i : Fin 3) {G : (Fin 3 → ℝ) → ℝ},
     ContDiff ℝ (⊤ : ℕ∞) G → ∀ {P : Fin 3 → Bool}, P i = false →
       n2 (hest i G) (box P) ≤ C * n2 G (box (Function.update P i true)) := by
@@ -743,16 +690,13 @@ theorem exists_n2_hest_le : ∃ C : ℝ≥0, ∀ (i : Fin 3) {G : (Fin 3 → ℝ
     (fun x hx => mem_In_of_box hP hx) (mapsTo_refl_box hP)
   simpa [hest] using this
 
-/-- `s = q - (I - E₀)(I - E₁)(I - E₂) q` as a sum of extensions:
-`s = E₀ q + s' - E₀ s'`, `s' = E₁ q + s'' - E₁ s''`, `s'' = E₂ q`. -/
 theorem lift_eq (q : (Fin 3 → ℝ) → ℝ) :
     lift q = hest 0 q + (hest 1 q + hest 2 q - hest 1 (hest 2 q)) -
       hest 0 (hest 1 q + hest 2 q - hest 1 (hest 2 q)) := by
   simp only [lift, rem, tI, hest, ext1_sub, ext1_add]
   abel
 
-/-- **The `H²` estimate of the shell extension**: `n2 s Q ≤ C n2 q S`; on `Q` the extension
-`s` depends only on `q` on the shell `S`. -/
+/-- **The `H²` estimate of the shell extension**: `n2 s Q ≤ C n2 q S` for every smooth `q`. -/
 theorem exists_n2_lift_le : ∃ C : ℝ≥0, ∀ {q : (Fin 3 → ℝ) → ℝ}, ContDiff ℝ (⊤ : ℕ∞) q →
     n2 (lift q) (univ.pi fun _ => Ioo (0 : ℝ) (1 / 2)) ≤ C * n2 q shell := by
   obtain ⟨C, hC⟩ := exists_n2_hest_le

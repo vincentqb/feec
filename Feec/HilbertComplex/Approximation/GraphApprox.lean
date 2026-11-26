@@ -8,49 +8,15 @@ public import Feec.ForMathlib.Analysis.Inequalities
 /-!
 # Graph-norm approximation by subcomplexes, degree by degree
 
-Interpolation estimates are proved one degree at a time: `‖x - v‖ ≤ ε` and `‖d (x - v)‖ ≤ ε`
-for `x ∈ Wⁱ` and some `v ∈ Vₕⁱ`. This module turns them into the two forms used by the
-approximation theory of subcomplexes.
-
-* **The total graph space** `Γ(𝐝)` of a finite complex (the space of the semi-discrete Hodge
-  wave equation, [QuennevilleBelair2015], §4.6): degreewise approximation within `ε` gives a
-  point of `graphSub` within `(m + m²) ε`, `m` the number of degrees
-  (`Subcomplex.exists_mem_graphSub_le`; on a window `Wᵃ → ⋯ → W^{a+m-1}` with degreewise bounds
-  `bᵢ ε`, within `(m + m²) (Σᵢ bᵢ) ε`, `Subcomplex.exists_mem_window_graphSub_le`), and
-  degreewise density gives density (`Subcomplex.eventually_exists_graphSub_lt`, the hypothesis of
-  `Subcomplex.isApproximating`).
-* **The discrete domain spaces** `Vₕⁱ ⊆ HΛⁱ`, measured in the graph norm (the quantities of the
-  quasi-optimal estimate [AFW2010], Thm 3.9): `dist(σ, Vₕⁱ) ≤ ‖σ - v‖ + ‖d σ - d v‖`
-  (`Subcomplex.infDist_domainSub_le`), so `dist(σ, Vₕⁱ) ≤ 2 ε` from a degreewise approximation
-  within `ε` (`Subcomplex.infDist_domainSub_le_two_mul`).
-* **Families `(S_N)_{N ∈ ℕ}`** (complexes graded by `ℤ`): graph-norm approximation of every
-  `x ∈ D(d)` from approximants `(y, z)` of `(x, d x)` with rates `b_N → 0`
-  (`Subcomplex.eventually_exists_graph_of_near`);
-  graph-norm density gives `L²` density (`Subcomplex.eventually_exists_lt_of_graph`, `D(d)` is
-  dense), degreewise density in every graph norm (`Subcomplex.eventually_exists_near_of_graph`)
-  and `dist(q, V_Nʲ) → 0` (`Subcomplex.tendsto_infDist_of_lt`); with degreewise density the
-  semi-discrete Hodge wave equation converges on every window
-  (`Subcomplex.exists_tendstoUniformlyOn_window_of`, [QuennevilleBelair2015], Thm 4.14).
+Degreewise estimates `‖x - v‖ ≤ ε`, `‖d (x - v)‖ ≤ ε` with `v ∈ Vₕⁱ` give approximation in the total
+graph space `Γ(𝐝)` of a finite complex and in the discrete domain spaces with the graph norm.
 
 ## Main results
 
-* `Feec.HilbertComplex.Subcomplex.exists_mem_graphSub_le`,
-  `Feec.HilbertComplex.Subcomplex.exists_mem_window_graphSub_le`
-* `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`
-* `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le`,
-  `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_two_mul`
-* `Feec.HilbertComplex.Subcomplex.eventually_exists_near_of_graph`,
-  `Feec.HilbertComplex.Subcomplex.exists_tendstoUniformlyOn_window_of`
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9 (quasi-optimality in the graph norm)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 (approximating subcomplexes), Thm 4.14 (convergence of the semi-discrete Hodge wave
-  equation)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `Subcomplex.exists_mem_graphSub_le`: approximation in `Γ(𝐝)` within `(m + m²) ε`, `m = #ι`.
+* `Subcomplex.eventually_exists_graphSub_lt`: degreewise density gives density in `Γ(𝐝)`.
+* `Subcomplex.infDist_domainSub_le_two_mul`: graph-norm distance at most `2 ε`.
+* `Subcomplex.exists_tendstoUniformlyOn_window_of`: convergence of the semi-discrete wave equation.
 -/
 
 @[expose] public noncomputable section
@@ -63,10 +29,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   {H : HilbertComplex 𝕜 c W}
 
-/-- **Degreewise approximation in the graph space of the total differential, with a rate**: if
-every component `xᵢ` of `x ∈ D(𝐝)` has a `vᵢ ∈ Vₕⁱ` with `‖xᵢ - vᵢ‖ ≤ ε` and
-`‖d (xᵢ - vᵢ)‖ ≤ ε` in every degree, then some point of `graphSub` is within `(m + m²) ε` of
-`(x, 𝐝 x)`, with `m = #ι`. -/
+/-- **Graph-space approximation from degreewise approximation**: if each `xᵢ` has `vᵢ ∈ Vₕⁱ` with
+`‖xᵢ - vᵢ‖, ‖d (xᵢ - vᵢ)‖ ≤ ε`, a point of `graphSub` is within `(m + m²) ε` of `(x, 𝐝 x)`. -/
 theorem exists_mem_graphSub_le (S : H.Subcomplex) (x : H.totalD.domain) {ε : ℝ}
     (hdeg : ∀ i, ∃ v, ∃ hv : v ∈ S.V i, ‖(x : PiLp 2 W) i - v‖ ≤ ε ∧
       ∀ j (hx : (x : PiLp 2 W) i ∈ (H.d i j).domain),
@@ -99,10 +63,8 @@ theorem exists_mem_graphSub_le (S : H.Subcomplex) (x : H.totalD.domain) {ε : �
       _ = m * (m * ε) := by simp [m]
   linarith
 
-/-- **Degreewise graph-norm approximation gives approximation in the graph space of the total
-differential**: if every `x ∈ Wⁱ` is eventually within `ε` of `Vₕⁱ`, with `‖d (x - v)‖ < ε`
-whenever `x ∈ D(d)`, then the total spaces `graphSub` of the subcomplexes approximate every point
-of `Γ(𝐝)`. This is the hypothesis of `Feec.HilbertComplex.Subcomplex.isApproximating`. -/
+/-- **Degreewise density gives density in `Γ(𝐝)`**: if every `x ∈ Wⁱ` eventually has `v ∈ Vₕⁱ` with
+`‖x - v‖, ‖d (x - v)‖ < ε`, the spaces `graphSub` approximate every point of `Γ(𝐝)`. -/
 theorem eventually_exists_graphSub_lt {κ : Type*} {l : Filter κ} (S : κ → H.Subcomplex)
     (hdeg : ∀ i (x : W i) (ε : ℝ), 0 < ε → ∀ᶠ h in l, ∃ v, ∃ hv : v ∈ (S h).V i,
       ‖x - v‖ < ε ∧ ∀ j (hx : x ∈ (H.d i j).domain),
@@ -133,10 +95,6 @@ variable {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α] {
   [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
   {H : HilbertComplex 𝕜 (ComplexShape.up α) V}
 
-/-- **Degreewise approximation in the total space of a window, with degreewise rates**: if every
-component `ζᵢ` of `ζ ∈ Γ(𝐝)` (the window `Wᵃ → ⋯ → W^{a+m-1}`) has a `vᵢ ∈ Vₕ^{a+i}` with
-`‖ζᵢ - vᵢ‖ ≤ bᵢ ε` and `‖d (ζᵢ - vᵢ)‖ ≤ bᵢ ε` in every degree, then some point of the window of
-`Vₕ` is within `(m + m²) (Σᵢ bᵢ) ε` of `ζ` (`exists_mem_graphSub_le` with `ε Σᵢ bᵢ`). -/
 theorem exists_mem_window_graphSub_le (S : H.Subcomplex) {a : α} {m : ℕ}
     (ζ : (H.window a m).totalD.GraphSpace) (b : Fin m → ℝ) (hb : ∀ i, 0 ≤ b i) {ε : ℝ}
     (hε : 0 ≤ ε)
@@ -164,9 +122,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   {H : HilbertComplex 𝕜 c W} (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
-/-- **Distance to the discrete domain space**: for `v ∈ Vₕⁱ`, the graph-norm distance of `σ` to
-`Vₕⁱ` is at most `‖σ - v‖ + ‖d σ - d v‖` (the quantity bounded by interpolation estimates;
-`domainSub` enters `CochainProjection.norm_sub_le_infDist`). -/
 theorem infDist_domainSub_le_of_next {i : ι} (σ : H.domainSpace i) {v : W i} (hv : v ∈ S.V i) :
     Metric.infDist σ (S.domainSub i) ≤ ‖H.domainIncl i σ - v‖ +
       ‖H.d i (c.next i) (H.domainCoord i _ σ) - H.d i (c.next i) ⟨v, S.le_domain i _ hv⟩‖ := by
@@ -179,8 +134,6 @@ theorem infDist_domainSub_le_of_next {i : ι} (σ : H.domainSpace i) {v : W i} (
   rw [LinearPMap.map_sub]
   rfl
 
-/-- **Distance to the discrete domain space** at a related pair `i → j`
-(`infDist_domainSub_le_of_next`). -/
 theorem infDist_domainSub_le {i j : ι} (hij : c.Rel i j) (σ : H.domainSpace i) {v : W i}
     (hv : v ∈ S.V i) :
     Metric.infDist σ (S.domainSub i) ≤ ‖H.domainIncl i σ - v‖ +
@@ -199,10 +152,6 @@ theorem infDist_domainSub_le_two_mul {i j : ι} (hij : c.Rel i j) (σ : H.domain
   rw [← LinearPMap.map_sub, two_mul]
   exact add_le_add h1 (h2 (H.domainCoord i j σ).2)
 
-/-- **Degreewise graph-norm approximation gives graph-space approximation of the total
-differential**: if every component `xᵢ` of `x ∈ D(𝐝)` is within `ε` of `Vₕⁱ` in the graph norm
-of `d i (c.next i)`, then some point of `graphSub` is within `(m + m²) ε` of `(x, 𝐝 x)`,
-`m = #ι` (`exists_mem_graphSub_le`). -/
 theorem exists_mem_graphSub_le_of_infDist [Fintype ι] (x : H.totalD.domain) {ε : ℝ}
     (hx : ∀ i, Metric.infDist ((H.d i (c.next i)).toGraphSpace ⟨(x : PiLp 2 W) i, x.2 i _⟩)
       (S.domainSub i) < ε) :
@@ -233,8 +182,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   {H : HilbertComplex 𝕜 c W} (S : H.Subcomplex)
 
-/-- **Degreewise approximation in a trivial degree**: if `Wⁱ = 0`, then `v = 0 ∈ Vₕⁱ` is within
-every `ε ≥ 0` of `x`, in every graph norm. -/
 theorem exists_mem_le_of_subsingleton {i : ι} [Subsingleton (W i)] {x : W i} {ε : ℝ}
     (hε : 0 ≤ ε) :
     ∃ v, ∃ hv : v ∈ S.V i, ‖x - v‖ ≤ ε ∧ ∀ j (hx : x ∈ (H.d i j).domain),
@@ -243,9 +190,6 @@ theorem exists_mem_le_of_subsingleton {i : ι} [Subsingleton (W i)] {x : W i} {�
   · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hε
   · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hε
 
-/-- **Degreewise approximation on the cochain shape over `ℤ`**: the only differential out of
-degree `j` is `d j (j + 1)` (`d j j' = 0` for `j' ≠ j + 1`), so a `v ∈ Vₕʲ` with `‖x - v‖ ≤ ε`
-and `‖d x - d v‖ ≤ ε` approximates `x` within `ε` in every graph norm. -/
 theorem exists_mem_le_of_succ {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     {H : HilbertComplex 𝕜 (ComplexShape.up ℤ) W} (S : H.Subcomplex) {j : ℤ} {x v : W j}
@@ -277,10 +221,6 @@ variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProd
   [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ (ComplexShape.up ℤ) W}
   (S : ℕ → H.Subcomplex)
 
-/-- **Graph-norm approximation from approximants with rates**: if every
-`x ∈ D(d)` is within `ε` of some `y`, with `d x` within `ε` of some `z`, and `(y, z)` is
-approximated by `(v, d v)`, `v ∈ Vₕ`, up to `b_N → 0`, then `x` is eventually within `ε` of `Vₕ`
-in the graph norm. -/
 theorem eventually_exists_graph_of_near {k : ℤ} {x : W k} (hx : x ∈ (H.d k (k + 1)).domain)
     (happ : ∀ ε > 0, ∃ (y : W k) (z : W (k + 1)) (b : ℕ → ℝ), ‖x - y‖ < ε ∧
       ‖H.d k (k + 1) ⟨x, hx⟩ - z‖ < ε ∧ Tendsto b atTop (𝓝 0) ∧
@@ -307,7 +247,6 @@ theorem eventually_exists_graph_of_near {k : ℤ} {x : W k} (hx : x ∈ (H.d k (
 
 variable {S}
 
-/-- **`L²` density from graph-norm approximation** (`D(d)` is dense). -/
 theorem eventually_exists_lt_of_graph
     (hgraph : ∀ (k : ℤ) (x : W k) (hx : x ∈ (H.d k (k + 1)).domain) (ε : ℝ), 0 < ε →
       ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V k, ‖x - v‖ < ε ∧
@@ -322,8 +261,6 @@ theorem eventually_exists_lt_of_graph
     _ < ε / 2 + ε / 2 := add_lt_add hxy h1
     _ = ε := add_halves ε
 
-/-- **Degreewise approximation in every graph norm from graph-norm approximation in the next
-degree** (the hypothesis of `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`). -/
 theorem eventually_exists_near_of_graph
     (hgraph : ∀ (k : ℤ) (x : W k) (hx : x ∈ (H.d k (k + 1)).domain) (ε : ℝ), 0 < ε →
       ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V k, ‖x - v‖ < ε ∧
@@ -346,7 +283,6 @@ theorem eventually_exists_near_of_graph
     · subst hj; exact absurd hxj hx
     · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
 
-/-- `dist(q, Vₕʲ) → 0` from `L²` density. -/
 theorem tendsto_infDist_of_lt {j : ℤ} (q : W j)
     (hlt : ∀ ε > 0, ∀ᶠ N in atTop, ∃ v ∈ (S N).V j, ‖q - v‖ < ε) :
     Tendsto (fun N => Metric.infDist q ((S N).V j : Set (W j))) atTop (𝓝 0) := by

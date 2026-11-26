@@ -5,66 +5,15 @@ public import Feec.Models.Cube.Absorbing
 /-!
 # The TSD constraint under absorbing boundary conditions on the cube
 
-For the row-wise Einstein–Bianchi system on `Q = (0, ½)³` with the absorbing boundary condition
-`n × E + B_τ = 0` (`Feec.Models.Cube.Absorbing.absorbing`), this file decides what happens to the
-TSD constraint `K = L²(TSD) × L²(TSD)` (`tsdPair`; symmetric, trace-free, weakly
-divergence-free in `Q`, no boundary condition).
+Under the absorbing boundary condition, the TSD constraint `K = L²(TSD) × L²(TSD)` propagates on the
+domain of dependence but is not invariant.
 
-## What holds
+## Main results
 
-* **The interior equations** (`weakEB_absorbingSemigroup`): for TSD data the orbit
-  `t ↦ S(t) u₀` is a weak solution of `Ė = -curl B`, `Ḃ = curl E` in `Q`
-  (`Feec.Models.BoundedDomain.WeakEB`). For every datum, `⟪E(t), Φ⟫ = ⟪E(0), Φ⟫ - ∫₀ᵗ ⟪B, curl Φ⟫`
-  and `⟪B(t), Φ⟫ = ⟪B(0), Φ⟫ + ∫₀ᵗ ⟪E, curl Φ⟫` for test fields `Φ`
-  (`inner_fst_absorbingSemigroup`, `inner_snd_absorbingSemigroup`), from
-  `A ∫₀ᵗ S u₀ = S(t) u₀ - u₀` and the interior form of the weak equation (`inner_absorbing_fst`,
-  `inner_absorbing_snd`).
-* Hence **the Gauss laws propagate** (`absorbingSemigroup_divFree`) and **TSD propagates in the
-  domain of dependence**: for TSD data, `S(t) u₀` is symmetric and trace-free a.e. at every point
-  whose Euclidean distance to `ℝ³ \ Q` exceeds `t` (`absorbingSemigroup_symTF_depDomain`), by
-  finite speed of propagation of the violation system
-  (`Feec.Models.BoundedDomain.WeakEB.ae_symTF_depDomain`).
-* **A radiating state** (`exists_inner_absorbing_neg`): a smooth state satisfying the absorbing
-  condition with nonzero boundary trace, from which the energy strictly decreases.
-
-## What fails: the obstruction
-
-**`not_invariant_tsdPair`**: `K` is **not** invariant under the absorbing semigroup. On TSD
-states the absorbing condition overdetermines the boundary: for `(E, B) ∈ D(A) ∩ K` the
-normal–normal component of `E` vanishes on the face `{x₀ = ½}`, in the weak sense
-`λ_φ(E) = ⟪E₀, ∇φ⟫ = 0` for every `φ = φ_ψ = 2 x₀ ψ(x₁, x₂)`, `ψ` a test function of the
-square (`φ` equals `ψ` on that face and vanishes on the others; `normalNormal_eq_zero`):
-
-1. `λ_φ(E) = -⟪E, curl Ψ_φ⟫` for the skew field `Ψ_φ = skewOf (φ, 0, 0)`, by symmetry and
-   trace-freeness of `E` (`normalNormalFun_eq_neg_inner_curl`);
-2. by Green's formula on the energy space and the symmetry `(curl E)₂₁ = (curl E)₁₂` of the curl of
-   a TSD field (Lemma 3.5, `curlMap_two_one`), this is the boundary pairing
-   `⟪γ E, fluxTrace Ψ_φ⟫ = -⟪γ E, γ Θ_φ⟫ = -∮_{x₀ = ½} (E₁₁ + E₂₂) ψ` with
-   `Θ_φ = φ (e₁ ⊗ e₁ + e₂ ⊗ e₂)` (`flux_skewC1`);
-3. the absorbing condition (the weak equation tested with `Θ_φ`) and the symmetry of `B` force
-   `∮ (E₁₁ + E₂₂) ψ = 0` (`inner_trace_diagC1_eq_zero`: for the cut-off fields `Θ_{φ ρ_k}`, test
-   fields with no boundary term, `⟪B, curl Θ⟫` contains no `∂₀`, the terms `B₁₂ ∂₀ - B₂₁ ∂₀`
-   cancelling, and `k → ∞`).
-
-The constant TSD field `diag(1, -½, -½)` has `λ_φ = ∫_{x₀ = ½} ψ > 0` (`normalNormalFun_constTSD`,
-`integral_sqBump_pos`), so `D(A) ∩ K` is not dense in `K`; an invariant closed `K` would make it
-dense (`LinearPMap.IsMDissipative.closure_domain_inter_of_invariant`).
-
-So the naive absorbing condition is not constraint-preserving: the semigroup is well posed and
-dissipative, the interior stays TSD up to the domain of dependence, and the violation is created at
-the boundary. Constraint-preserving boundary conditions need derivative (Neumann-type) conditions
-on the constraint fields [KreissWinicour2006], [CPRST2003], or a modified evolution system whose
-constraint subsystem is characteristic at the boundary [FriedrichNagy1999]; neither is formalized.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
-* [H. Friedrich, G. Nagy, *The Initial Boundary Value Problem for Einstein's Vacuum Field Equation*][FriedrichNagy1999]
-* [H.-O. Kreiss, J. Winicour, *Problems which are well posed in a generalized sense with applications to the Einstein equations*][KreissWinicour2006]
-* [G. Calabrese, J. Pullin, O. Reula, O. Sarbach, M. Tiglio, *Well Posed Constraint-Preserving Boundary Conditions for the Linearized Einstein Equations*][CPRST2003]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `absorbingSemigroup_symTF_depDomain`: for TSD data, `S(t) u₀` is symmetric and trace-free a.e.
+  on `depDomain Q t`.
+* `not_invariant_tsdPair`: `K` is not invariant under the absorbing semigroup.
+* `exists_inner_absorbing_neg`: some `u ∈ D(A)` has `⟪A u, u⟫ < 0`.
 -/
 
 open scoped InnerProductSpace ContDiff
@@ -91,7 +40,6 @@ def testTriple {Φ : Ix → R3 → ℝ} (hΦ : IsTestField (Q (Fin 3)) Φ) : Ene
 @[simp] theorem traceMap_testTriple {Φ : Ix → R3 → ℝ} (hΦ : IsTestField (Q (Fin 3)) Φ) :
     traceMap (testTriple hΦ) = 0 := C1Field.ofTest_tan hΦ
 
-/-- `⟪(A u)_E, Φ⟫ = -⟪B, curl Φ⟫` for test fields `Φ`. -/
 theorem inner_absorbing_fst (u : absorbing.domain) {Φ : Ix → R3 → ℝ}
     (hΦ : IsTestField (Q (Fin 3)) Φ) :
     ⟪(absorbing u).fst, testField hΦ⟫_ℝ =
@@ -104,7 +52,6 @@ theorem inner_absorbing_fst (u : absorbing.domain) {Φ : Ix → R3 → ℝ}
     ⟪impedanceTriple.γ (impedanceTriple.witness u), traceMap (testTriple hΦ)⟫_ℝ = _
   rw [traceMap_testTriple, inner_zero_right, sub_zero, curlMap_testTriple]
 
-/-- `⟪(A u)_B, Φ⟫ = ⟪E, curl Φ⟫` for test fields `Φ`. -/
 theorem inner_absorbing_snd (u : absorbing.domain) {Φ : Ix → R3 → ℝ}
     (hΦ : IsTestField (Q (Fin 3)) Φ) :
     ⟪(absorbing u).snd, testField hΦ⟫_ℝ = ⟪(u : State).fst, (C1Field.ofTest hΦ).curlL2⟫_ℝ := by
@@ -117,7 +64,6 @@ theorem inner_absorbing_snd (u : absorbing.domain) {Φ : Ix → R3 → ℝ}
 theorem generator_absorbingSemigroup : absorbingSemigroup.generator = absorbing :=
   isMDissipative_absorbing.generator_semigroup
 
-/-- The integral `∫₀ᵗ S(s) u₀ ds` is in `D(A)` with `A ∫₀ᵗ S(s) u₀ ds = S(t) u₀ - u₀`. -/
 theorem integral_mem_domain (u₀ : State) {t : ℝ} (ht : 0 ≤ t) :
     ∃ h : (∫ s in (0 : ℝ)..t, absorbingSemigroup.S s u₀) ∈ absorbing.domain,
       absorbing ⟨_, h⟩ = absorbingSemigroup.S t u₀ - u₀ := by
@@ -134,8 +80,6 @@ theorem inner_integral_eq (u₀ : State) {t : ℝ} (ht : 0 ≤ t) (L : State →
       ∫ s in (0 : ℝ)..t, L (absorbingSemigroup.S s u₀) :=
   (L.intervalIntegral_comp_comm (intervalIntegrable_S u₀ ht)).symm
 
-/-- **Mild solutions satisfy the weak `E`-equation**: for every datum and test field `Φ`,
-`⟪E(t), Φ⟫ = ⟪E(0), Φ⟫ - ∫₀ᵗ ⟪B(s), curl Φ⟫ ds`. -/
 theorem inner_fst_absorbingSemigroup (u₀ : State) {Φ : Ix → R3 → ℝ}
     (hΦ : IsTestField (Q (Fin 3)) Φ) {t : ℝ} (ht : 0 ≤ t) :
     ⟪(absorbingSemigroup.S t u₀).fst, testField hΦ⟫_ℝ = ⟪u₀.fst, testField hΦ⟫_ℝ -
@@ -155,8 +99,6 @@ theorem inner_fst_absorbingSemigroup (u₀ : State) {Φ : Ix → R3 → ℝ}
   change _ = -⟪(∫ s in (0 : ℝ)..t, absorbingSemigroup.S s u₀).snd, _⟫_ℝ at h
   linarith
 
-/-- **Mild solutions satisfy the weak `B`-equation**:
-`⟪B(t), Φ⟫ = ⟪B(0), Φ⟫ + ∫₀ᵗ ⟪E(s), curl Φ⟫ ds`. -/
 theorem inner_snd_absorbingSemigroup (u₀ : State) {Φ : Ix → R3 → ℝ}
     (hΦ : IsTestField (Q (Fin 3)) Φ) {t : ℝ} (ht : 0 ≤ t) :
     ⟪(absorbingSemigroup.S t u₀).snd, testField hΦ⟫_ℝ = ⟪u₀.snd, testField hΦ⟫_ℝ +
@@ -217,13 +159,10 @@ theorem curlM_skewE0 {f : R3 → ℝ} (hf : Differentiable ℝ f) (jk : Ix) (x :
   rw [skewE0, curlM_skewOf (fun i => by split_ifs; exacts [hf, differentiable_const 0])]
   simp [pd_ite_zero]
 
-/-- **The normal–normal functional** `λ_f(E) = Σⱼ ∫_Q E_{0j} ∂ⱼ f = ⟪E₀, ∇f⟫`: for divergence-free
-`E` and `f` vanishing on the faces other than `{x₀ = ½}`, the weak normal–normal trace `∮ E₀₀ f`. -/
+/-- **The normal–normal functional** `λ_f(E) = Σⱼ ∫_Q E_{0j} ∂ⱼ f = ⟪E₀, ∇f⟫`. -/
 def normalNormalFun (f : R3 → ℝ) (E : MQ) : ℝ :=
   ∑ j : Fin 3, ∫ x in Q (Fin 3), E (0, j) x * partialDeriv j f x
 
-/-- **Symmetry and trace-freeness turn the normal–normal functional into a curl pairing**:
-`λ_f(E) = -⟪E, curl Ψ_f⟫`. -/
 theorem normalNormalFun_eq_neg_inner_curl {E : MQ} (hsym : ∀ i j, E (i, j) = E (j, i))
     (htr : ∑ i, E (i, i) = 0) {f : R3 → ℝ} (hf : ContDiff ℝ 1 f) :
     normalNormalFun f E =
@@ -253,8 +192,6 @@ theorem normalNormalFun_eq_neg_inner_curl {E : MQ} (hsym : ∀ i j, E (i, j) = E
     rw [hsym a 0]
   rw [h1, h2, zero_sub, neg_neg]
 
-/-- **Lemma 3.5 on the energy space**: for `v` with `E = ι v ∈ L²(TSD)`, the curl `C = c v` has
-`C₂₁ = C₁₂`. -/
 theorem curlMap_two_one {v : EnergySpace} (hv : fieldMap v ∈ tsd (Q (Fin 3))) :
     curlMap v (2, 1) = curlMap v (1, 2) := by
   rw [← sub_eq_zero]
@@ -279,7 +216,6 @@ theorem curlMap_two_one {v : EnergySpace} (hv : fieldMap v ∈ tsd (Q (Fin 3))) 
   rw [← this]
   exact e1
 
-/-- For `v` with `ι v ∈ L²(TSD)`, `⟪c v, Ψ_f⟫ = 0` (the skew test field sees only `C₂₁ - C₁₂`). -/
 theorem inner_curlMap_skewE0 {v : EnergySpace} (hv : fieldMap v ∈ tsd (Q (Fin 3))) {f : R3 → ℝ}
     (hf : ContDiff ℝ 1 f) :
     ⟪curlMap v, C1Field.l2 ⟨skewE0 f, contDiff_skewE0 hf⟩⟫_ℝ = 0 := by
@@ -311,8 +247,6 @@ theorem curlM_diagPair (f : R3 → ℝ) (jk : Ix) (x : R3) :
   simp only [curlM, diagPair, pd_ite_zero]
   fin_cases j <;> fin_cases k <;> simp
 
-/-- **The normal derivatives cancel for symmetric `B`**:
-`⟪B, curl Θ_f⟫ = -∫ B₁₀ ∂₂ f + ∫ B₂₀ ∂₁ f` when `B₁₂ = B₂₁`. -/
 theorem sum_integral_curlM_diagPair {B : MQ} (hB : B (1, 2) = B (2, 1)) {f : R3 → ℝ}
     (hf : ContDiff ℝ 1 f) :
     ∑ jk, ∫ x in Q (Fin 3), B jk x * curlM (diagPair f) jk x =
@@ -327,8 +261,7 @@ theorem sum_integral_curlM_diagPair {B : MQ} (hB : B (1, 2) = B (2, 1)) {f : R3 
 
 /-! ### The weak equation of the absorbing condition on symmetric `B` -/
 
-/-- The cutoff `ρ_k(t) = s((k+4) t - 1) s((k+4)(½ - t) - 1)` (`s` the smooth transition): smooth,
-`[0, 1]`-valued, supported in `[1/(k+4), ½ - 1/(k+4)]`, and `ρ_k → 1` on `(0, ½)`. -/
+/-- A smooth cutoff `ρ_k` with values in `[0, 1]`, supported in `[1/(k+4), ½ - 1/(k+4)]`. -/
 def cutoff (k : ℕ) (t : ℝ) : ℝ :=
   Real.smoothTransition ((k + 4) * t - 1) * Real.smoothTransition ((k + 4) * (1 / 2 - t) - 1)
 
@@ -388,7 +321,8 @@ theorem faceFun_faceMap_self {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ)
   rw [faceFun, faceExt_faceMap 0 true (φ := ψ) (fun y hy => hψ.eq_zero_of_notMem hy) _ y,
     ite_eq_left rfl]
 
-/-- `φ_ψ` cut off near the faces `{x₀ = 0}`, `{x₀ = ½}`: a test function on `Q`. -/
+/-- `φ_ψ` cut off near the faces `{x₀ = 0}`, `{x₀ = ½}`: for `ψ` a test function on `Sq`, a test
+function on `Q`. -/
 def faceFunCut (ψ : (Fin 2 → ℝ) → ℝ) (k : ℕ) (x : R3) : ℝ := faceFun ψ x * cutoff k (x 0)
 
 theorem contDiff_faceFunCut {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) (k : ℕ) :
@@ -447,7 +381,6 @@ theorem pd_faceFunCut {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) (k : �
   unfold faceFunCut
   rw [h, hpc, mul_zero, add_zero]
 
-/-- Dominated convergence for the cutoff: `∫_Q g h ρ_k → ∫_Q g h`. -/
 theorem tendsto_integral_cutoff (g : L2 ℝ (Q (Fin 3))) {h : R3 → ℝ} (hh : Continuous h) :
     Tendsto (fun k : ℕ => ∫ x in Q (Fin 3), g x * (h x * cutoff k (x 0))) atTop
       (𝓝 (∫ x in Q (Fin 3), g x * h x)) := by
@@ -478,8 +411,6 @@ theorem isClosed_tsdPair : IsClosed (tsdPair : Set State) :=
   (isClosed_tsd.preimage (WithLp.fstL 2 ℝ MQ MQ).continuous).inter
     (isClosed_tsd.preimage (WithLp.sndL 2 ℝ MQ MQ).continuous)
 
-/-- A function of `[0, T]` that is an integral of a function continuous on `[0, ∞)` has that
-function as derivative within `[0, T]`. -/
 theorem hasDerivWithinAt_of_eq_add_integral {f g : ℝ → ℝ} {T : ℝ} (hg : ContinuousOn g (Ici 0))
     (hf : ∀ s ∈ Icc 0 T, f s = f 0 + ∫ σ in (0 : ℝ)..s, g σ) :
     ∀ t ∈ Icc 0 T, HasDerivWithinAt f (g t) (Icc 0 T) t := by
@@ -498,8 +429,7 @@ theorem hasDerivWithinAt_of_eq_add_integral {f g : ℝ → ℝ} {T : ℝ} (hg : 
   rw [uIcc_of_le hs.1] at hσ
   simp [g', max_eq_left hσ.1]
 
-/-- **The orbits of the absorbing semigroup are weak solutions** of `Ė = -curl B`, `Ḃ = curl E` in
-`Q` (`WeakEB`), for TSD data (the weak divergence of the data is part of `WeakEB`). -/
+/-- **The orbits of the absorbing semigroup are weak solutions** in `Q`, for TSD data. -/
 theorem weakEB_absorbingSemigroup {u₀ : State} (hu₀ : u₀ ∈ tsdPair) (T : ℝ) :
     WeakEB (Q (Fin 3)) T (fun t => (absorbingSemigroup.S t u₀).fst)
       (fun t => (absorbingSemigroup.S t u₀).snd) := by
@@ -540,8 +470,6 @@ theorem weakEB_absorbingSemigroup {u₀ : State} (hu₀ : u₀ ∈ tsdPair) (T :
       rw [h]
       rfl
 
-/-- **The Gauss laws propagate** under the absorbing semigroup: for TSD data, `E(t)` and `B(t)`
-stay weakly divergence-free in `Q`. -/
 theorem absorbingSemigroup_divFree {u₀ : State} (hu₀ : u₀ ∈ tsdPair) {t : ℝ} (ht : 0 ≤ t)
     (φ : Fin 3 → R3 → ℝ) (hφ : IsTestField (Q (Fin 3)) φ) :
     (∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).fst ij x *
@@ -552,8 +480,7 @@ theorem absorbingSemigroup_divFree {u₀ : State} (hu₀ : u₀ ∈ tsdPair) {t 
     (weakEB_absorbingSemigroup hu₀ t).divB t ⟨ht, le_rfl⟩ φ hφ⟩
 
 /-- **TSD propagates in the domain of dependence**: for TSD data, `S(t) u₀` is symmetric and
-trace-free a.e. on `depDomain Q t`, the points at Euclidean distance `> t` from `ℝ³ \ Q`
-(finite speed of propagation of the violation system). The violation enters from the boundary. -/
+trace-free a.e. on `depDomain Q t`. -/
 theorem absorbingSemigroup_symTF_depDomain {u₀ : State} (hu₀ : u₀ ∈ tsdPair) {t : ℝ}
     (ht : 0 ≤ t) :
     ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),
@@ -579,11 +506,6 @@ theorem sum_integral_diagPair (w : MQ) (f : R3 → ℝ) :
   simp only [diagPair, Fintype.sum_prod_type, Fin.sum_univ_three]
   simp
 
-/-- **The weak absorbing condition on symmetric `B`**: for `u = (E, B) ∈ D(A)` with `B₁₂ = B₂₁`,
-the tangential trace satisfies `∮_{x₀ = ½} (E₁₁ + E₂₂) ψ = 0`, i.e. `⟪γ E, γ Θ_φ⟫ = 0`. The
-weak equation `⟪Ė, Θ⟫ = -⟪B, curl Θ⟫ - ⟪γ E, γ Θ⟫` holds without boundary term for the cut-off
-`Θ_{φ ρ_k}` (a test field), and `⟪B, curl Θ_{φ ρ_k}⟫` contains no derivative of the cutoff since
-the `∂₀` terms `B₁₂ ∂₀ - B₂₁ ∂₀` cancel; letting `k → ∞` gives the identity for `Θ_φ`. -/
 theorem inner_trace_diagC1_eq_zero (u : absorbing.domain)
     (hB : (u : State).snd (1, 2) = (u : State).snd (2, 1)) {ψ : (Fin 2 → ℝ) → ℝ}
     (hψ : IsTest Sq ψ) : ⟪impedanceTriple.trace u, (diagC1 hψ).tan⟫_ℝ = 0 := by
@@ -627,8 +549,6 @@ theorem inner_trace_diagC1_eq_zero (u : absorbing.domain)
   rw [sum_integral_diagPair, sum_integral_curlM_diagPair hB hφ] at hw
   linarith
 
-/-- **The flux trace of `Ψ_φ` is minus the tangential trace of `Θ_φ`** (both live on the face
-`{x₀ = ½}`). -/
 theorem flux_skewC1 {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) :
     (skewC1 hψ).flux = -(diagC1 hψ).tan := by
   ext1 b
@@ -649,9 +569,7 @@ theorem flux_skewC1 {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) :
     unfold cL2; congr 1]
   exact MemLp.toLp_neg _
 
-/-- **The absorbing condition forces the normal–normal component of `E` to vanish** on the face
-`{x₀ = ½}` for TSD states of the domain: `⟪E₀, ∇φ_ψ⟫ = 0` for every test function `ψ` of the
-face. -/
+/-- **The normal–normal component of `E` vanishes on `{x₀ = ½}`** for TSD states of `D(A)`. -/
 theorem normalNormal_eq_zero (u : absorbing.domain) (hu : (u : State) ∈ tsdPair)
     {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) :
     normalNormalFun (faceFun ψ) (u : State).fst = 0 := by
@@ -693,7 +611,6 @@ theorem integral_constTSD_mul (ij : Ix) (g : R3 → ℝ) :
   simp only [constTSD, cField_apply]
   rw [hx]
 
-/-- `∫_Q ∂ᵢ g = 0` for a test function `g` (no boundary terms). -/
 theorem integral_pd_eq_zero {g : R3 → ℝ} (hg : IsTest (Q (Fin 3)) g) (i : Fin 3) :
     ∫ x in Q (Fin 3), partialDeriv i g x = 0 := by
   have hF : ∀ m, ContDiff ℝ 1 (if m = i then g else 0) := fun m => by
@@ -721,7 +638,6 @@ theorem constTSD_mem_tsd : constTSD ∈ tsd (Q (Fin 3)) := by
     simp only [integral_constTSD_mul, integral_pd_eq_zero (hφ _)]
     simp
 
-/-- The normal–normal functional of `diag(1, -½, -½)` is `∫_{x₀ = ½} ψ`. -/
 theorem normalNormalFun_constTSD {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) :
     normalNormalFun (faceFun ψ) constTSD = ∫ y in Sq, ψ y := by
   simp only [normalNormalFun, integral_constTSD_mul, Fin.sum_univ_three]
@@ -737,8 +653,7 @@ theorem normalNormalFun_constTSD {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq
     (0, true)), integral_zero, sub_zero]
   simp
 
-/-- A nonnegative test function of the square with positive integral (a bump centred at
-`(¼, ¼)`). -/
+/-- A nonnegative test function of the square with positive integral. -/
 def sqBump : ContDiffBump (fun _ : Fin 2 => (1 / 4 : ℝ)) :=
   ⟨1 / 16, 1 / 8, by norm_num, by norm_num⟩
 
@@ -760,7 +675,6 @@ theorem integral_sqBump_pos : 0 < ∫ y in Sq, (sqBump : (Fin 2 → ℝ) → ℝ
 
 /-! ### The theorem -/
 
-/-- `λ_f` as a continuous linear functional on `L²(Q; ℝ^{3×3})`. -/
 theorem normalNormalFun_eq_inner {f : R3 → ℝ} (hf : ContDiff ℝ 1 f) (E : MQ) :
     normalNormalFun f E = ∑ j : Fin 3, ⟪E (0, j), cL2 measurableSet_Q isBounded_Q
       (hf.continuous_partialDeriv j)⟫_ℝ :=
@@ -773,11 +687,7 @@ theorem continuous_normalNormalFun {f : R3 → ℝ} (hf : ContDiff ℝ 1 f) :
     ((L2F.continuous_apply (0, j)).comp (WithLp.fstL 2 ℝ MQ MQ).continuous).inner
       continuous_const
 
-/-- **The TSD constraint is not invariant under the absorbing semigroup**: some TSD datum leaves
-`L²(TSD) × L²(TSD)`. On `D(A) ∩ K` the normal–normal functional `⟪E₀, ∇φ_ψ⟫` of the face
-`{x₀ = ½}` vanishes (`normalNormal_eq_zero`), while on the TSD state `(diag(1, -½, -½), 0)` it is
-`∫ ψ > 0`; so `D(A) ∩ K` is not dense in `K`, whereas an invariant `K` would make it dense
-(`LinearPMap.IsMDissipative.closure_domain_inter_of_invariant`). -/
+/-- **The TSD constraint is not invariant under the absorbing semigroup.** -/
 theorem not_invariant_tsdPair :
     ¬ ∀ t, 0 ≤ t → ∀ x ∈ tsdPair, absorbingSemigroup.S t x ∈ tsdPair := by
   intro hinv
@@ -830,9 +740,7 @@ theorem witness_bc : witnessE.tan + witnessB.flux = 0 := by
   · have h0 := faceFun_faceMap_of_ne isTest_sqBump hf y
     split_ifs <;> simp [h0]
 
-/-- **A radiating state**: `(φ_ψ e₀ ⊗ e₁, -φ_ψ e₀ ⊗ e₂)` satisfies the absorbing condition (a wave
-leaving through the face `{x₀ = ½}`), lies in `D(A)`, and has nonzero boundary trace, so
-`⟪A u, u⟫ = -‖E_τ‖² < 0`: the energy strictly decreases. -/
+/-- **A radiating state**: some `u ∈ D(A)` has `⟪A u, u⟫ < 0`. -/
 theorem exists_inner_absorbing_neg :
     ∃ u : absorbing.domain, ⟪absorbing u, (u : State)⟫_ℝ < 0 := by
   obtain ⟨hdom, -, htr⟩ := mem_domain_of_smooth witnessE witnessB witness_bc

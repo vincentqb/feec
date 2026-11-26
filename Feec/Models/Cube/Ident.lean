@@ -6,42 +6,17 @@ public import Feec.Domain.Affine
 /-!
 # The thesis' complex on every open cube: only stationary data propagate
 
-The bounded-domain complex `H̊¹ → H̊(curl) → L²` (`Feec.Models.BoundedDomain.gradCurl`, the
-minimal realizations of `grad` and `curl`) on an open cube `∏ (bᵢ, bᵢ + s)` is the one on the box
-with equal sides (`openCube b s` is `Feec.Models.Box.openBox b (s, s, s)` by definition), so
-forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces stationarity there
-(`Feec.Models.Box.forward_iff`): on `Q = (0, ½)³` (`RowWise.forward_iff`), on every open cube
-(`Ident.forward_iff`) and on `(0, π)³`.
-
-The cube complex is also the transport of the one on `Q` along the affine map
-`T x = (x - b) / (2s)` (`Feec.Domain.ConstCoeffOp.minimal_pull`), with chain-rule factor
-`a = 1/(2s)` (`Ident.complexCube_eq`), so its wave group is the conjugate of the one on `Q` with
-time rescaled by `a` (`Feec.HilbertComplex.waveGroup_transport_const`); the compactness of
-`Feec.Models.BoundedDomain.Compactness` is transported along it.
+For `H̊¹ → H̊(curl) → L²` on `Q = (0, ½)³` and on every open cube, forward invariance of
+`{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces stationarity.
 
 ## Main results
 
-* **`RowWise.forward_iff`**, **`RowWise.mem_invariantCore_iff`**,
-  **`RowWise.mem_invariantCore_tsd_iff`**: on `Q`, the box results for `ℓ = (½, ½, ½)`.
-* `HilbertComplex.wave_transport_const`, `HilbertComplex.waveGroup_transport_const`: transport
-  with a constant real chain-rule factor `κ` rescales the wave operator by `κ` and time by `κ`.
-* **`Ident.forward_iff`**: on every open cube, for every `S₁, S₂ ⊆ L²(TSD)` (closed or not), the
-  forward orbit of `y` stays in `{0} × S₁ × S₂` iff `y` lies there and is stationary;
-* **`Ident.mem_invariantCore_iff`**: the largest invariant subspace consists of the stationary
-  data in `{0} × S₁ × S₂`;
-* **`Ident.mem_invariantCore_tsd_iff`**: for the thesis' constraint these are the data
-  `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `d₁† B₀ = curl B₀ = 0`;
-* `Ident.forward_iff_pi`, `Ident.mem_invariantCore_tsd_iff_pi`: the cube `(0, π)³`.
-
-The comparison of the mirror complex on `Q` with the minimal and maximal realizations is in
-`Feec.Models.Cube.MirrorDirichlet`.
+* `RowWise.forward_iff`, `Ident.forward_iff`: on `Q` and on every open cube.
+* `RowWise.mem_invariantCore_tsd_iff`, `Ident.mem_invariantCore_tsd_iff`: `K*` explicitly.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -60,8 +35,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)] [∀ i, CompleteSpace (W' i)]
   (H : HilbertComplex 𝕜 c W) {e : ∀ i, W i ≃L[𝕜] W' i} {s : ℝ}
 
-/-- **Transport with a constant real chain-rule factor `κ` rescales the wave operator**:
-`L' (e x) = κ e (L x)`, for uniformly scaled isometries `e`. -/
 theorem wave_transport_const (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) {κ : ℝ} (hκ : κ ≠ 0) :
     Intertwines (totalMap e) ((κ : 𝕜) • H.wave)
@@ -97,8 +70,7 @@ theorem wave_transport_const (hs : 0 < s)
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   [∀ i, NormedSpace ℝ (W' i)] [∀ i, IsScalarTower ℝ 𝕜 (W' i)]
 
-/-- **The wave group of a transport with constant chain-rule factor `κ`** is the conjugated wave
-group with time rescaled by `κ`: `e^{tL'} e = e e^{κ t L}`. -/
+/-- **Wave group of a transport with constant chain-rule factor `κ`**: `e^{tL'} e = e e^{κ t L}`. -/
 theorem waveGroup_transport_const (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) {κ : ℝ} (hκ : κ ≠ 0) (t : ℝ)
     (x : PiLp 2 W) :
@@ -111,10 +83,7 @@ theorem waveGroup_transport_const (hs : 0 < s)
 
 end Feec.HilbertComplex
 
-/-! ### The cube `Q = (0, ½)³`
-
-`Q` is the box `∏ (0, ½)` (`Feec.Models.Box.openBox 0 (½, ½, ½)`, by definition), so the results
-of `Feec.Models.Box.EigenDense` hold on it. -/
+/-! ### The cube `Q = (0, ½)³` -/
 
 namespace Feec.Models.Cube.RowWise
 
@@ -125,10 +94,8 @@ open Geometry (Q)
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
-/-- **On `Q` with the thesis' boundary conditions, forward invariance forces stationarity**: for
-`S₁, S₂ ⊆ L²(TSD)` (closed or not), the forward orbit (`t ≥ 0`) of `y` under the wave group of
-`H̊¹(Q) → H̊(curl, Q) → L²(Q)` stays in `{0} × S₁ × S₂` iff `y` lies there and is stationary.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **On `Q`, forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces stationarity**
+([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem forward_iff {S1 S2 : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) Ix)}
     (h1 : S1 ≤ tsd (Q (Fin 3))) (h2 : S2 ≤ tsd (Q (Fin 3))) (y : PiLp 2 WQ) :
     (∀ t, 0 ≤ t → cubeComplex.waveGroup.S t y ∈
@@ -137,8 +104,6 @@ theorem forward_iff {S1 S2 : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) Ix)}
         y ∈ cubeComplex.waveGroup.stationary :=
   Box.forward_iff (a := 0) (ℓ := fun _ => 1 / 2) (fun _ => one_half_pos) h1 h2 y
 
-/-- **`K*` on `Q` with the thesis' boundary conditions consists of the stationary data in `K`**,
-for every `S₁, S₂ ⊆ L²(TSD)`. See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem mem_invariantCore_iff {S1 S2 : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) Ix)}
     (h1 : S1 ≤ tsd (Q (Fin 3))) (h2 : S2 ≤ tsd (Q (Fin 3))) (y : PiLp 2 WQ) :
     y ∈ cubeComplex.waveGroup.invariantCore
@@ -147,9 +112,8 @@ theorem mem_invariantCore_iff {S1 S2 : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3))
         y ∈ cubeComplex.waveGroup.stationary :=
   Box.mem_invariantCore_iff (a := 0) (ℓ := fun _ => 1 / 2) (fun _ => one_half_pos) h1 h2 y
 
-/-- **`K*` on `Q` for the thesis' constraint, explicitly**: `y ∈ K*` iff `y = (0, 0, B₀)` with
-`B₀ ∈ L²(TSD)` and `d₁† B₀ = curl B₀ = 0` (no boundary condition on `B₀`).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **`K*` on `Q`**: `y ∈ K*` iff `y = (0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `curl B₀ = 0`
+([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem mem_invariantCore_tsd_iff (y : PiLp 2 WQ) :
     y ∈ cubeComplex.waveGroup.invariantCore
         (totalSub (family3 (⊥ : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) (Fin 3)))
@@ -202,8 +166,7 @@ theorem preimage_Q (hs : 0 < s) : aff (scale s) (shift b s) ⁻¹' Q (Fin 3) = o
 abbrev WC (b : R3) (s : ℝ) : Fin 3 → Type :=
   W3 (L2F ℝ (openCube b s) (Fin 3)) (L2F ℝ (openCube b s) Ix) (L2F ℝ (openCube b s) Ix)
 
-/-- **The thesis' complex on the open cube** `∏ (bᵢ, bᵢ + s)`: `H̊¹ → H̊(curl) → L²`, the minimal
-realizations of `grad` and `curl`. -/
+/-- **The complex `H̊¹ → H̊(curl) → L²` on the open cube** `∏ (bᵢ, bᵢ + s)`. -/
 abbrev complexCube (b : R3) (s : ℝ) : HilbertComplex ℝ ComplexShape.fin3 (WC b s) :=
   (gradCurl ℝ (Geometry.isOpen_openCube b s)).toHilbertComplex
 
@@ -241,8 +204,7 @@ theorem isHomogeneous_curlOp :
   simp only [Domain.curlOp] at ht
   split_ifs at ht <;> simp_all
 
-/-- **The cube complex is the transport of the complex on `Q`** along the pull-back, with
-chain-rule factor `a = 1/(2s)` (`grad` and `curl` are of order one). -/
+/-- **The cube complex is the transport of the complex on `Q`**, with chain-rule factor `1/(2s)`. -/
 theorem complexCube_eq (hs : 0 < s) :
     complexCube b s = cubeComplex.transport (pullC hs) (fun _ _ => scale s)
       fun _ _ => scale_ne_zero hs := by
@@ -262,10 +224,8 @@ theorem complexCube_eq (hs : 0 < s) :
 
 /-! ### Only stationary data propagate on the cube -/
 
-/-- **On every open cube with the thesis' boundary conditions, forward invariance forces
-stationarity**: for `S₁, S₂ ⊆ L²(TSD)` (closed or not), the forward orbit of `y` under the wave
-group stays in `{0} × S₁ × S₂` iff `y` lies there and is stationary.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **On every open cube, forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces
+stationarity** ([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem forward_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (L2F ℝ (openCube b s) Ix)}
     (h1 : S1 ≤ tsd (openCube b s)) (h2 : S2 ≤ tsd (openCube b s)) (y : PiLp 2 (WC b s)) :
     (∀ t, 0 ≤ t → (complexCube b s).waveGroup.S t y ∈
@@ -274,9 +234,6 @@ theorem forward_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (L2F ℝ (openCube b s) 
         y ∈ (complexCube b s).waveGroup.stationary :=
   Box.forward_iff (a := b) (ℓ := fun _ => s) (fun _ => hs) h1 h2 y
 
-/-- **`K*` on every open cube with the thesis' boundary conditions consists of the stationary data
-in `K`**, for every `S₁, S₂ ⊆ L²(TSD)`.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem mem_invariantCore_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (L2F ℝ (openCube b s) Ix)}
     (h1 : S1 ≤ tsd (openCube b s)) (h2 : S2 ≤ tsd (openCube b s)) (y : PiLp 2 (WC b s)) :
     y ∈ (complexCube b s).waveGroup.invariantCore
@@ -285,9 +242,8 @@ theorem mem_invariantCore_iff (hs : 0 < s) {S1 S2 : Submodule ℝ (L2F ℝ (open
         y ∈ (complexCube b s).waveGroup.stationary :=
   Box.mem_invariantCore_iff (a := b) (ℓ := fun _ => s) (fun _ => hs) h1 h2 y
 
-/-- **`K*` on every open cube for the thesis' constraint, explicitly**: `y ∈ K*` iff
-`y = (0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `d₁† B₀ = curl B₀ = 0` (no boundary condition on `B₀`).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **`K*` on every open cube**: `y ∈ K*` iff `y = (0, 0, B₀)` with `B₀ ∈ L²(TSD)` and
+`curl B₀ = 0` ([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem mem_invariantCore_tsd_iff (hs : 0 < s) (y : PiLp 2 (WC b s)) :
     y ∈ (complexCube b s).waveGroup.invariantCore
         (totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (openCube b s) (Fin 3)))
@@ -301,8 +257,6 @@ theorem mem_invariantCore_tsd_iff (hs : 0 < s) (y : PiLp 2 (WC b s)) :
 
 /-! ### The cube `(0, π)³` -/
 
-/-- **Forward invariance forces stationarity on `(0, π)³`.**
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem forward_iff_pi {S1 S2 : Submodule ℝ (L2F ℝ (openCube 0 Real.pi) Ix)}
     (h1 : S1 ≤ tsd (openCube 0 Real.pi)) (h2 : S2 ≤ tsd (openCube 0 Real.pi))
     (y : PiLp 2 (WC 0 Real.pi)) :
@@ -312,8 +266,6 @@ theorem forward_iff_pi {S1 S2 : Submodule ℝ (L2F ℝ (openCube 0 Real.pi) Ix)}
         y ∈ (complexCube 0 Real.pi).waveGroup.stationary :=
   forward_iff Real.pi_pos h1 h2 y
 
-/-- **`K*` on `(0, π)³` for the thesis' constraint.**
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem mem_invariantCore_tsd_iff_pi (y : PiLp 2 (WC 0 Real.pi)) :
     y ∈ (complexCube 0 Real.pi).waveGroup.invariantCore
         (totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ (openCube 0 Real.pi) (Fin 3)))

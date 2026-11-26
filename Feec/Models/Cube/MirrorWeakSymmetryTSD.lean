@@ -6,66 +6,19 @@ public import Feec.Models.Cube.MirrorBGG
 /-!
 # The mirror scheme (6.5) converges to the TSD solution
 
-[QuennevilleBelair2015], Ch. 6, solves the linearized Einstein–Bianchi system through the Hodge
-wave equation of the BGG complex (5.1) with the symmetry of `E` imposed weakly. On the cube
-`Q = (0, ½)³` with the mirror boundary conditions this is the complex
-`Feec.Models.Cube.MirrorBGG.complexQ` (complex scalars, matrix fields), where TSD data have TSD
-solutions (`Feec.Models.Cube.MirrorBGG.existsUnique_memQ`). The scheme (6.5) is the
-discretization of the multiplier problem (6.2) for the mirror data in the forms model
-(`Feec.Models.Cube.MirrorWeakSymmetryComplex.mirrorBGGSegment`), proved convergent for classical
-solutions of (6.2) in `Feec.Models.Cube.MirrorWeakSymmetryConvergence`. This file identifies the
-two: **the real part of the TSD solution is a classical solution of (6.2)**, so the scheme converges
-to it.
-
-**The identification.** Both sides are parity models of the torus, compared through Fourier
-coefficients. For a matrix field `E` on `Q`, the row `a` of `Re E` is a `1`-form in the class
-`HΛ_{a}(Q)` of the bottom row (vanishing tangential trace on the faces normal to `eₐ`): the
-parity class of the coefficient of `dx_b` is the tensor parity of `E_{ab}` (`pcJ_one`), and the
-row `a` of `B` through the Hodge star has the pseudo-tensor parity (`pcJ_two`). The real parity
-extension of the forms is the complex mirror extension of the complexified field, so the
-coefficients of `Re E` are `½ (Ê(m) + conj Ê(-m))` (`coeff_JfJ_rowRe`), and `d_ξ` of a row is the
-row of the curl symbol through the Hodge star (`deRham_rowF`). Hence
-* `E ∈ D(curl)` (the mirror curl of `Feec.Models.Cube.Mirror.complexQ`), in particular
-  `E ∈ D((S₁, curl))`, gives rows in `D(d_{a})` with `d (Re E)_a = (Re curl E)_a`
-  (`rowRe_mem_curl`, `rowRe_mem`);
-* real rows in `D(d_{a})` give a field of `D(curl)` and of `D((S₁, curl))`
-  (`ofRealRows_mem_curl`, `ofRealRows_mem`);
-* TSD coefficients (`Ê(m) ξ_m = 0`) make `Re E` orthogonal to `grad` of the bottom `0`-forms
-  (`inner_rowRe_dPart_zero`), and a symmetric `E` has `S¹ (Re E) = 0` (`wsL2_rowsW1L_of_symm`).
-
-**The TSD solution as a classical solution of (6.2).** For a datum `U₀ ∈ D(L²)` in the constraint
-(`TSDDatum`), `U(t) = e^{tL} U₀` is the solution of `existsUnique_memQ`
-(`TSDDatum.eqOn_of_isStrongSolution`), and `(σ, φ, u, M, ρ, ℓ) = (0, 0, Re E, 0, ⋆Re B, 0)` is a
-classical solution of (6.2) for the mirror data without source (`TSDDatum.exactWave`): (6.2a) is
-the divergence condition, (6.2b) is `E' = -d₁† (0, B)` tested against complexified bottom
-`1`-forms, (6.2c) is `S¹ E = 0`, (6.2d) is `B' = curl E`. The regularity of `ExactWave`
-(time derivatives of `d u`) is where `L U₀ ∈ D(L)` is used.
+On the cube `Q = (0, ½)³` with the mirror boundary conditions, for TSD data in `D(L²)` the real
+part of the TSD solution of the system of [QuennevilleBelair2015], Ch. 6, is a classical solution of
+(6.2) (`TSDDatum.exactWave`), and the scheme (6.5) converges to it.
 
 ## Main results
 
-* **`mirror_waveFEM`**: for every TSD datum in `D(L²)` and every `ε > 0`, for all large `N` the
-  scheme (6.5) from the elliptic projection (6.4) of the initial forms state has a solution with
-  `‖σₕ‖, ‖Re E − uₕ‖, ‖Mₕ‖, ‖Re B − ρₕ‖ ≤ ε` and `‖Bₕ − Bₕᵀ‖ ≤ 2ε` on `[0,T]`, and the continuous
-  solution keeps `σ ≡ 0`, `M ≡ 0`, `E`, `B` TSD.
-* `cosDatum`: `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, a non-stationary TSD datum in `D(L²)`; for the
-  mirror grad–curl complex, `Mirror.cosStateQ_mem_tsdQ`, `Mirror.cosStateQ_wave_mem`,
-  `Mirror.cosStateQ_wave_wave_mem` (`(0, E₀, 0)` in the constraint, `L E₀, L² E₀ ∈ D(L)`), from
-  the finitely many modes of any torus model (`torus_wave_mem_of_finite`).
-* `TSDDatum.exactWave`, `TSDDatum.eqOn_of_isStrongSolution`, `rowRe_mem_curl`, `rowRe_mem`,
-  `ofRealRows_mem_curl`, `ofRealRows_mem`, `coeff_JfJ_rowRe`, `deRham_rowF`,
-  `inner_rowRe_dPart_zero`, `wsL2_rowsW1L_of_symm`.
-
-## Remarks
-
-Rates: `Feec.Models.Cube.MirrorWaveRegularity` (`O(h)` for TSD data in `D(L³)`). The scheme works with real fields: the imaginary part of a
-complex TSD solution is the real part of the solution from `-i U₀`.
+* `mirror_waveFEM`: the convergence, with `σₕ, Mₕ → 0` and `Bₕ` asymptotically symmetric.
+* `TSDDatum.eqOn_of_isStrongSolution`: every strong solution from `U₀` is `e^{tL} U₀`.
+* `cosDatum_not_stationary`: `cosDatum`, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, is not stationary.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 5 ((5.1)), Ch. 6 (§6.1 (6.2), §6.2 (6.4), §6.3 (6.5))
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (boundary conditions)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -92,7 +45,7 @@ theorem sub2_bijective : Function.Bijective sub2 := by decide
 
 /-- The index equivalence `Fin 3 ≃ formIdx 3 1`, `b ↦ dx_b`. -/
 def eq1 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 1} := Equiv.ofBijective sub1 sub1_bijective
-/-- The index equivalence `Fin 3 ≃ formIdx 3 2`, `i ↦ ⋆dx_i`. -/
+/-- The index equivalence `Fin 3 ≃ formIdx 3 2`, `i ↦ ±⋆dx_i`. -/
 def eq2 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 2} := Equiv.ofBijective sub2 sub2_bijective
 
 @[simp] theorem eq1_apply (b : Fin 3) : eq1 b = sub1 b := rfl
@@ -169,7 +122,6 @@ theorem koszulDeg_sub1 (ξ : EuclideanSpace ℝ (Fin 3)) (c : Form ℂ (Fin 3) 0
     ext_apply 0 _ (by simp)]
   simp [Finset.filter_singleton]
 
-/-- `d_ξ c = i c ξ` on `0`-forms, in the coordinates `dx_b`. -/
 theorem deRham_zero_sub1 (ξ : EuclideanSpace ℝ (Fin 3)) (c : Form ℂ (Fin 3) 0) (b : Fin 3) :
     (Feec.Fourier.Exterior.deRham (Fin 3)).m 0 (0 + 1) ξ c (sub1 b) =
       Complex.I * ((ξ b : ℂ) * c ⟨∅, by simp⟩) := by
@@ -190,15 +142,11 @@ open Feec.Models.Cube.RowWise (ofRealL reL coeFn_ofRealL coeFn_reL norm_reL_le)
 open Feec.Domain (L2F L2 formIdx)
 open Feec.Models.Cube.Geometry (Q)
 
-/-- The parity class of the coefficient of `dx_b` in the row `a` of the bottom row is the tensor
-parity of `E_{ab}`. -/
 theorem pcJ_one (a b : Fin 3) : pcJ {a} {b} = Mirror.cE (a, b) := by
   funext k
   fin_cases a <;> fin_cases b <;> fin_cases k <;>
     simp [pcJ, DeRham.mixedSign, DeRham.reflSign, Mirror.cE, MirrorTorus.sgn]
 
-/-- The parity class of the coefficient of `⋆dx_i` in the row `a` of the bottom `2`-forms is the
-pseudo-tensor parity of `B_{ai}`. -/
 theorem pcJ_two (a i : Fin 3) : pcJ {a} (univ.erase i) = Mirror.cB (a, i) := by
   funext k
   fin_cases a <;> fin_cases i <;> fin_cases k <;>
@@ -243,13 +191,11 @@ theorem mFourierCoeff_extL2_re {c : Fin 3 → ℂ} (hc : ∀ j, c j * c j = 1)
 
 /-! ### Rows of matrix fields as forms -/
 
-/-- **The real part of the row `a` of a matrix field, as a `1`-form on `Q`**:
-`Σ_b Re E_{ab} dx_b`. -/
+/-- The real part of row `a` of a matrix field as a `1`-form on `Q`: `Σ_b Re E_{ab} dx_b`. -/
 def rowRe (E : MQ) (a : Fin 3) : L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)) :=
   WithLp.toLp 2 fun s => reL _ (E (a, eq1.symm s))
 
-/-- **The real part of the row `a` of a matrix field, as a `2`-form on `Q`** (Hodge star):
-`Σ_i ± Re B_{ai} ⋆dx_i`. -/
+/-- The real part of row `a` of a matrix field as a `2`-form on `Q`: `Σ_i ± Re B_{ai} ⋆dx_i`. -/
 def rowRe2 (B : MQ) (a : Fin 3) : L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ) : ℤ)) :=
   WithLp.toLp 2 fun s => sg2 (eq2.symm s) • reL _ (B (a, eq2.symm s))
 
@@ -307,8 +253,6 @@ open Feec.FiniteElement (wsL2 wsL2_apply wsCoeff wsCoeff_eq)
 
 /-! ### The mirror curl and the second operator of the BGG complex on the Fourier side -/
 
-/-- **The mirror curl on the Fourier side**: `(curl E)^(n) = curl_{ξ_n} Ê(n)` for the mirror
-extensions (the curl of `Feec.Models.Cube.Mirror.complexQ`). -/
 theorem coeff_curlQ (E : (Mirror.complexQ.d 1 2).domain) (n : Fin 3 → ℤ) :
     (extF (c := Mirror.cB) cB_sq (Mirror.complexQ.d 1 2 E) : (Fin 3 → ℤ) → Mat) n =
       curl (Fourier.Torus.freq n) ((MirrorBGG.J₁ (show MQ from E.1) : (Fin 3 → ℤ) → Mat) n) := by
@@ -318,8 +262,6 @@ theorem coeff_curlQ (E : (Mirror.complexQ.d 1 2).domain) (n : Fin 3 → ℤ) :
   exact Operator.coeFn_mulOp_count (𝕜 := ℂ)
     (fun n => Fourier.GradCurl.gradCurl.m 1 2 (Fourier.Torus.freq n)) _ n
 
-/-- The curl part of `d₁ E = (S₁ E, curl E)` on `Q`, on the Fourier side:
-`(curl E)^(n) = curl_{ξ_n} Ê(n)` for the mirror extensions. -/
 theorem coeff_curl (E : (MirrorBGG.complexQ.d 1 2).domain) (n : Fin 3 → ℤ) :
     (extF (c := Mirror.cB) cB_sq (WithLp.ofLp (MirrorBGG.complexQ.d 1 2 E : MirrorBGG.W2Q)).2 :
       (Fin 3 → ℤ) → Mat) n =
@@ -328,8 +270,6 @@ theorem coeff_curl (E : (MirrorBGG.complexQ.d 1 2).domain) (n : Fin 3 → ℤ) :
   rw [e]
   exact coeff_curlQ ⟨E.1, h⟩ n
 
-/-- **The rows of a field of `D(curl)` are in `HΛ_{a}¹(Q)`** (real parts), with `d` the rows of
-`curl E` through the Hodge star (the mirror curl of `Feec.Models.Cube.Mirror.complexQ`). -/
 theorem rowRe_mem_curl (E : (Mirror.complexQ.d 1 2).domain) (a : Fin 3) :
     ∃ h : rowRe (show MQ from E.1) a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain,
       dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨_, h⟩ = rowRe2 (Mirror.complexQ.d 1 2 E) a := by
@@ -342,8 +282,6 @@ theorem rowRe_mem_curl (E : (Mirror.complexQ.d 1 2).domain) (a : Fin 3) :
         coeff_curlQ E (-m), Fourier.Torus.freq_neg, curl_neg, rowF2_neg, cjForm_neg]
   exact ⟨hu, injective_JfJ {a} (1 + 1) e⟩
 
-/-- **The rows of a field of `D((S₁, curl))` are in `HΛ_{a}¹(Q)`** (real parts), with `d` the
-rows of `curl E` through the Hodge star. -/
 theorem rowRe_mem (E : (MirrorBGG.complexQ.d 1 2).domain) (a : Fin 3) :
     ∃ h : rowRe (show MQ from E.1) a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain,
       dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨_, h⟩ =
@@ -354,13 +292,11 @@ theorem rowRe_mem (E : (MirrorBGG.complexQ.d 1 2).domain) (a : Fin 3) :
 
 /-! ### Real rows as matrix fields -/
 
-/-- **Real `1`-forms `v_a` on `Q` as the rows of a complex matrix field**:
-`E_{ab} = (v_a)_{dx_b}`. -/
+/-- Real `1`-forms `v_a` on `Q` as the rows of a complex matrix field: `E_{ab} = (v_a)_{dx_b}`. -/
 def ofRealRows (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ))) : MQ :=
   WithLp.toLp 2 fun p => ofRealL _ (v p.1 (sub1 p.2))
 
-/-- **Real `2`-forms `w_a` on `Q` as the rows of a complex matrix field** (Hodge star):
-`B_{ai} = ± (w_a)_{⋆dx_i}`. -/
+/-- Real `2`-forms `w_a` as the rows of a complex matrix field: `B_{ai} = ± (w_a)_{⋆dx_i}`. -/
 def ofRealRows2 (w : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ) : ℤ))) : MQ :=
   WithLp.toLp 2 fun p => (sg2 p.2 : ℂ) • ofRealL _ (w p.1 (sub2 p.2))
 
@@ -391,8 +327,6 @@ theorem rowF2_extF_ofRealRows2 (w : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((2
   rw [map_smul, mFourierCoeff_smul', ← mul_assoc, ← Complex.ofReal_mul, sg2_mul_self,
     Complex.ofReal_one, one_mul]
 
-/-- The curl symbol of the mirror extension of real rows `v_a ∈ HΛ_{a}¹(Q)` is the mirror
-extension of the rows `d v_a` (Hodge star). -/
 theorem curl_J₁_ofRealRows (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)))
     (hv : ∀ a, v a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain) (n : Fin 3 → ℤ) :
     curl (Fourier.Torus.freq n) ((MirrorBGG.J₁ (ofRealRows v) : (Fin 3 → ℤ) → Mat) n) =
@@ -403,8 +337,6 @@ theorem curl_J₁_ofRealRows (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 :
   rw [← deRham_rowF, rowF_J₁_ofRealRows, rowF2_extF_ofRealRows2]
   exact coeff_d_dPart {a} 1 ⟨v a, hv a⟩ n
 
-/-- **Rows of `HΛ_{a}¹(Q)` give a field of `D(curl)`** (the mirror curl of
-`Feec.Models.Cube.Mirror.complexQ`), with `curl E` the rows of `d v_a` (Hodge star). -/
 theorem ofRealRows_mem_curl (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)))
     (hv : ∀ a, v a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain) :
     ∃ h : ofRealRows v ∈ (Mirror.complexQ.d 1 2).domain,
@@ -416,8 +348,6 @@ theorem ofRealRows_mem_curl (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : 
   exact ⟨hV, Mirror.embeddingQ.J_injective 2
     ((Mirror.J_complexQ_d (i := 1) (j := 2) ⟨_, hV⟩).trans eJ)⟩
 
-/-- **Rows of `HΛ_{a}¹(Q)` give a field of `D((S₁, curl))`**, with
-`d₁ E = (S₁ E, rows of d v_a)`. -/
 theorem ofRealRows_mem (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)))
     (hv : ∀ a, v a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain) :
     ∃ h : ofRealRows v ∈ (MirrorBGG.complexQ.d 1 2).domain,
@@ -485,8 +415,6 @@ theorem re_inner_ofRealRows2 (B : MQ) (w : Fin 3 → L2F ℝ (Q (Fin 3)) (formId
 
 /-! ### TSD fields are divergence-free against the bottom `0`-forms -/
 
-/-- **`⟪Re E_a, grad ψ⟫ = 0`** for `ψ ∈ HΛ_{a}⁰(Q)` when the coefficients of `E` are TSD
-(`Ê(n) ξ_n = 0`): on the Fourier side the pairing vanishes frequency by frequency. -/
 theorem inner_rowRe_dPart_zero (E : MQ)
     (hE : ∀ n, (MirrorBGG.J₁ E : (Fin 3 → ℤ) → Mat) n ∈ Fourier.GradCurl.tsd (Fourier.Torus.freq n))
     (a : Fin 3) (ψ : (dPart (Q (Fin 3)) {a} ((0 : ℕ) : ℤ)).domain) :
@@ -546,7 +474,6 @@ theorem wsCoeff_swap (t : formIdx 3 ((1 : ℤ) + 1)) (a b : Fin 3) :
   fin_cases i <;> fin_cases a <;> fin_cases b <;>
     simp (config := { decide := true }) [eq2, sub2, Equiv.ofBijective, Feec.ExteriorFibre.sgn]
 
-/-- **`S¹ = 2 vskw` vanishes on symmetric rows**: `(S v)_{jk} = ±(v_j{k} − v_k{j})`. -/
 theorem wsL2_eq_zero_of_symm {Ω : Set (Fin 3 → ℝ)}
     (v : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 1)))
     (hv : ∀ a b, v a (eq1 b) = v b (eq1 a)) : wsL2 (Ω := Ω) 1 v = 0 := by
@@ -588,7 +515,6 @@ open Feec.Models.Cube.FEM (cubeDomain cubeDomain_eq_Q)
 abbrev cQ (ι : Type*) [Fintype ι] : L2F ℝ (cubeDomain 3) ι ≃ₗᵢ[ℝ] L2F ℝ (Q (Fin 3)) ι :=
   castL2 (cubeDomain_eq_Q 3) ι
 
-/-- `d_J` on the cube domain is `d_J` on `Q` (forms from `Q`). -/
 theorem dPart_cube_of_Q {J : Finset (Fin 3)} {k : ℤ} {x : L2F ℝ (Q (Fin 3)) (formIdx 3 k)}
     {y : L2F ℝ (Q (Fin 3)) (formIdx 3 (k + 1))} (h : (x, y) ∈ (dPart (Q (Fin 3)) J k).graph) :
     ∃ hx : (cQ _).symm x ∈ (dPart (cubeDomain 3) J k).domain,
@@ -600,7 +526,6 @@ theorem dPart_cube_of_Q {J : Finset (Fin 3)} {k : ℤ} {x : L2F ℝ (Q (Fin 3)) 
   have hx := LinearPMap.mem_domain_of_mem_graph h'
   exact ⟨hx, ((LinearPMap.image_iff hx).2 h').symm⟩
 
-/-- `d_J` on `Q` is `d_J` on the cube domain (forms from the cube domain). -/
 theorem dPart_Q_of_cube {J : Finset (Fin 3)} {k : ℤ} (x : (dPart (cubeDomain 3) J k).domain) :
     ∃ hx : cQ _ (x : L2F ℝ (cubeDomain 3) (formIdx 3 k)) ∈ (dPart (Q (Fin 3)) J k).domain,
       dPart (Q (Fin 3)) J k ⟨_, hx⟩ = cQ _ (dPart (cubeDomain 3) J k x) := by
@@ -629,14 +554,13 @@ def rowRe2L (a : Fin 3) : MQ →L[ℝ] L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ)
       ((PiLp.proj (𝕜 := ℂ) 2 (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))
         (a, eq2.symm s)).restrictScalars ℝ))
 
-/-- **The matrix proxy of the bottom `1`-forms**: the real rows of `E` as `(L²Λ¹(Q))³`. -/
+/-- The matrix proxy of the bottom `1`-forms: the real rows of `E` as `(L²Λ¹(Q))³`. -/
 def rowsW1L : MQ →L[ℝ] Wv W1 :=
   (PiLp.continuousLinearEquiv 2 ℝ (fun _ : Fin 3 => W1)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun a =>
       (cQ (formIdx 3 ((1 : ℕ) : ℤ))).symm.toContinuousLinearEquiv.toContinuousLinearMap ∘L rowReL a
 
-/-- **The matrix proxy of the bottom `2`-forms**: the real rows of `B` through the Hodge star, as
-`(L²Λ²(Q))³`. -/
+/-- The matrix proxy of the bottom `2`-forms: the real rows of `B` through the Hodge star. -/
 def rowsW2L : MQ →L[ℝ] Wv W2 :=
   (PiLp.continuousLinearEquiv 2 ℝ (fun _ : Fin 3 => W2)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun a =>
@@ -645,7 +569,6 @@ def rowsW2L : MQ →L[ℝ] Wv W2 :=
 @[simp] theorem rowsW1L_apply (E : MQ) (a : Fin 3) : rowsW1L E a = (cQ _).symm (rowRe E a) := rfl
 @[simp] theorem rowsW2L_apply (B : MQ) (a : Fin 3) : rowsW2L B a = (cQ _).symm (rowRe2 B a) := rfl
 
-/-- `‖rowsW1L E‖² = Σ_{ab} ‖Re E_{ab}‖²`. -/
 theorem norm_sq_rowsW1L (E : MQ) : ‖rowsW1L E‖ ^ 2 = ∑ p, ‖reL _ (E p)‖ ^ 2 := by
   rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun a _ => ?_
@@ -654,7 +577,6 @@ theorem norm_sq_rowsW1L (E : MQ) : ‖rowsW1L E‖ ^ 2 = ∑ p, ‖reL _ (E p)�
   refine Finset.sum_congr rfl fun b _ => ?_
   rw [rowRe_eq1]
 
-/-- `‖rowsW2L B‖² = Σ_{ai} ‖Re B_{ai}‖²`. -/
 theorem norm_sq_rowsW2L (B : MQ) : ‖rowsW2L B‖ ^ 2 = ∑ p, ‖reL _ (B p)‖ ^ 2 := by
   rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun a _ => ?_
@@ -663,12 +585,10 @@ theorem norm_sq_rowsW2L (B : MQ) : ‖rowsW2L B‖ ^ 2 = ∑ p, ‖reL _ (B p)�
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [rowRe2_eq2, norm_smul, Real.norm_eq_abs, abs_sg2, one_mul]
 
-/-- **The real rows of a matrix field are no larger than the field**: `‖Re E‖ ≤ ‖E‖`. -/
 theorem sq_norm_rowsW1L_le (E : MQ) : ‖rowsW1L E‖ ^ 2 ≤ ‖E‖ ^ 2 := by
   rw [norm_sq_rowsW1L, PiLp.norm_sq_eq_of_L2]
   exact Finset.sum_le_sum fun p _ => pow_le_pow_left₀ (norm_nonneg _) (norm_reL_le _) 2
 
-/-- The real rows of a matrix field through the Hodge star are no larger than the field. -/
 theorem sq_norm_rowsW2L_le (B : MQ) : ‖rowsW2L B‖ ^ 2 ≤ ‖B‖ ^ 2 := by
   rw [norm_sq_rowsW2L, PiLp.norm_sq_eq_of_L2]
   exact Finset.sum_le_sum fun p _ => pow_le_pow_left₀ (norm_nonneg _) (norm_reL_le _) 2
@@ -707,13 +627,10 @@ theorem bD1_rowsBU (E : (MirrorBGG.complexQ.d 1 2).domain) :
   obtain ⟨h, e⟩ := rowsBU_mem E a
   rw [← e, rowsBU_apply_of_mem _ a h]
 
-/-- The forms model `⟪u, v⟫` on `∏ₐ H_{a}Λ¹(Q)` is the `L²` pairing. -/
 theorem inner_BU1 (x y : BU1) : ⟪x, y⟫_ℝ = ⟪bIncl1 x, bIncl1 y⟫_ℝ := by
   rw [PiLp.inner_apply, PiLp.inner_apply]
   rfl
 
-/-- **The pairing of the matrix proxy with vectors of `1`-forms is the real part of the complex
-pairing with the complexified rows.** -/
 theorem inner_rowsW1L (E : MQ) (w : Wv W1) :
     ⟪rowsW1L E, w⟫_ℝ = RCLike.re ⟪E, ofRealRows fun a => cQ _ (w a)⟫_ℂ := by
   rw [re_inner_ofRealRows, PiLp.inner_apply]
@@ -721,8 +638,6 @@ theorem inner_rowsW1L (E : MQ) (w : Wv W1) :
   rw [rowsW1L_apply, ← LinearIsometryEquiv.inner_map_map (cQ _),
     LinearIsometryEquiv.apply_symm_apply]
 
-/-- **The pairing of the proxy of `⋆B` with vectors of `2`-forms is the real part of the complex
-pairing with the complexified rows.** -/
 theorem inner_rowsW2L (B : MQ) (w : Wv W2) :
     ⟪rowsW2L B, w⟫_ℝ = RCLike.re ⟪B, ofRealRows2 fun a => cQ _ (w a)⟫_ℂ := by
   rw [re_inner_ofRealRows2, PiLp.inner_apply]
@@ -730,7 +645,6 @@ theorem inner_rowsW2L (B : MQ) (w : Wv W2) :
   rw [rowsW2L_apply, ← LinearIsometryEquiv.inner_map_map (cQ _),
     LinearIsometryEquiv.apply_symm_apply]
 
-/-- **Bottom `1`-forms as matrix fields lie in `D((S₁, curl))`.** -/
 theorem ofRealRows_BU1_mem (v : BU1) :
     ∃ h : ofRealRows (fun a => cQ _ ((v a : (BD1 a).domain) : W1)) ∈
         (MirrorBGG.complexQ.d 1 2).domain,
@@ -754,7 +668,6 @@ theorem wsL2_castL2 {Ω : Set (Fin 3 → ℝ)} (h : Ω = Q (Fin 3))
       wsL2 (Ω := Q (Fin 3)) 1 (WithLp.toLp 2 fun a => castL2 h _ (v a)) := by
   subst h; rfl
 
-/-- **`S¹` vanishes on the proxy of a symmetric matrix field.** -/
 theorem wsL2_rowsW1L_of_symm {E : MQ} (hE : ∀ i j, E (i, j) = E (j, i)) :
     wsL2 (Ω := cubeDomain 3) 1 (rowsW1L E) = 0 := by
   have h := wsL2_castL2 (cubeDomain_eq_Q 3) (rowsW1L E)
@@ -776,9 +689,7 @@ theorem wsL2_rowsW1L_of_symm {E : MQ} (hE : ∀ i j, E (i, j) = E (j, i)) :
 
 open Feec.HilbertComplex (totalSub)
 
-/-- **A TSD datum in `D(L²)`** for the Ch. 6 system on `Q` with mirror boundary conditions
-(`Feec.Models.Cube.MirrorBGG.complexQ`): `U₀ ∈ D(L)`, `L U₀ ∈ D(L)`, and `U₀` in the constraint
-`{0} × L²(TSD) × ({0} × L²(TSD))`. -/
+/-- A TSD datum `U₀ ∈ D(L²)` in the constraint `{0} × L²(TSD) × ({0} × L²(TSD))`. -/
 structure TSDDatum where
   /-- The initial state `(σ₀, E₀, (M₀, B₀))`. -/
   U₀ : PiLp 2 MirrorBGG.SpaceQ
@@ -807,7 +718,6 @@ def W (t : ℝ) : PiLp 2 MirrorBGG.SpaceQ := MirrorBGG.complexQ.waveGroup.S t D.
 
 end TSDDatum
 
-/-- The wave group maps `D(L)` into `D(L)` and commutes with `L` (`t ≥ 0`). -/
 theorem waveGroupQ_graph {x : PiLp 2 MirrorBGG.SpaceQ} (hx : x ∈ MirrorBGG.complexQ.wave.domain)
     {t : ℝ} (ht : 0 ≤ t) :
     ∃ h : MirrorBGG.complexQ.waveGroup.S t x ∈ MirrorBGG.complexQ.wave.domain,
@@ -824,7 +734,6 @@ theorem waveGroupQ_graph {x : PiLp 2 MirrorBGG.SpaceQ} (hx : x ∈ MirrorBGG.com
   have hm := LinearPMap.mem_domain_of_mem_graph h2
   exact ⟨hm, ((LinearPMap.image_iff hm).2 h2).symm⟩
 
-/-- The orbit of `x ∈ D(L)` has right derivative `e^{tL} L x`. -/
 theorem waveGroupQ_hasDerivWithinAt {x : PiLp 2 MirrorBGG.SpaceQ}
     (hx : x ∈ MirrorBGG.complexQ.wave.domain) {t : ℝ} (ht : 0 ≤ t) :
     HasDerivWithinAt (fun s => MirrorBGG.complexQ.waveGroup.S s x)
@@ -840,7 +749,6 @@ theorem waveGroupQ_hasDerivWithinAt {x : PiLp 2 MirrorBGG.SpaceQ}
   rw [e] at h
   exact h
 
-/-- In a constrained state, `(L x)₁ = -d₁† x₂`. -/
 theorem waveQ_one_of_tsd (x : MirrorBGG.complexQ.wave.domain)
     (hx : (x : PiLp 2 MirrorBGG.SpaceQ) ∈ totalSub MirrorBGG.tsdQ) :
     (MirrorBGG.complexQ.wave x) 1 =
@@ -859,7 +767,6 @@ def stW2 (x : PiLp 2 MirrorBGG.SpaceQ) : MirrorBGG.W2Q := x 2
 /-- The electric slot `E` of a state. -/
 def stE (x : PiLp 2 MirrorBGG.SpaceQ) : MQ := x 1
 
-/-- **The complex form of `E' = -d₁† (M, B)`**: `⟪(L x)₁, X⟫ = -⟪x₂, d₁ X⟫`. -/
 theorem inner_waveQ_one (x : MirrorBGG.complexQ.wave.domain)
     (hx : (x : PiLp 2 MirrorBGG.SpaceQ) ∈ totalSub MirrorBGG.tsdQ)
     (Xm : MQ) (hX : Xm ∈ (MirrorBGG.complexQ.d 1 2).domain) :
@@ -891,7 +798,6 @@ theorem stBL_apply (x : PiLp 2 MirrorBGG.SpaceQ) : stBL x = (WithLp.ofLp (stW2 x
 
 theorem isometry_bIncl1 : Isometry bIncl1 := AddMonoidHomClass.isometry_of_norm bIncl1 norm_bIncl1
 
-/-- Derivatives through a linear isometry. -/
 theorem hasDerivWithinAt_of_isometry {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     [NormedAddCommGroup F] [NormedSpace ℝ F] (ι : E →ₗ[ℝ] F) (hι : ∀ x, ‖ι x‖ = ‖x‖)
     {f : ℝ → E} {y : E} {s : Set ℝ} {t : ℝ}
@@ -927,13 +833,10 @@ theorem bD1_rowsBU_state :
 variable {x} (hx : (x : PiLp 2 MirrorBGG.SpaceQ) ∈ totalSub MirrorBGG.tsdQ)
 include hx
 
-/-- **`S¹ u = 0`**: the electric field of a constrained state is symmetric. -/
 theorem mS1_rowsBU_state : mS1 (rowsBU (stEL x)) = 0 := by
   rw [mS1_apply, bIncl1_rowsBU_state]
   exact wsL2_rowsW1L_of_symm (MirrorBGG.tsd_of_mem_tsdQ hx).2.2.1.1
 
-/-- **`⟪u, grad ψ⟫ = 0`**: the electric field of a constrained state is divergence-free against the
-bottom `0`-forms. -/
 theorem inner_rowsBU_bD0 (ψ : BU0) : ⟪rowsBU (stEL x), bD0 ψ⟫_ℝ = 0 := by
   rw [inner_BU1, bIncl1_rowsBU_state, PiLp.inner_apply]
   refine Finset.sum_eq_zero fun a _ => ?_
@@ -949,8 +852,6 @@ theorem inner_rowsBU_bD0 (ψ : BU0) : ⟪rowsBU (stEL x), bD0 ψ⟫_ℝ = 0 := b
           congrArg (fun z => ⟪rowRe (stEL x) a, z⟫_ℝ) eψ.symm
     _ = 0 := h
 
-/-- **`⟪u', v⟫ + ⟪ρ, d v⟫ = 0`**: the equation `E' = -d₁† (0, B)` of a constrained state, in the
-forms model. -/
 theorem inner_rowsBU_wave_add (hL : MirrorBGG.complexQ.wave x ∈ MirrorBGG.complexQ.wave.domain)
     (v : BU1) :
     ⟪rowsBU (stEL (MirrorBGG.complexQ.wave x)), v⟫_ℝ + ⟪rowsW2L (stBL x), bD1 v⟫_ℝ = 0 := by
@@ -1001,7 +902,6 @@ theorem LU₀_tsd : D.LU₀ ∈ totalSub MirrorBGG.tsdQ :=
 theorem V_tsd (t : ℝ) : D.V t ∈ totalSub MirrorBGG.tsdQ :=
   MirrorBGG.reducingSubcomplexQ.waveGroup_mem t D.LU₀_tsd
 
-/-- `d u = ρ'` along the solution. -/
 theorem bD1_u {t : ℝ} (ht : 0 ≤ t) : bD1 (rowsBU (stEL (D.U t))) = rowsW2L (stBL (D.V t)) := by
   rw [bD1_rowsBU_state ⟨D.U t, D.U_mem ht⟩, D.wave_U ht]
 
@@ -1022,12 +922,7 @@ theorem mS1_u' {t : ℝ} (ht : 0 ≤ t) : mS1 (rowsBU (stEL (D.V t))) = 0 :=
   mS1_rowsBU_state (x := ⟨D.V t, D.V_mem ht⟩) (D.V_tsd t)
 
 set_option maxHeartbeats 4000000 in
-/-- **The TSD solution of the Ch. 6 system on `Q` as a classical solution of the multiplier
-problem (6.2) for the mirror data**: `σ ≡ 0`, `φ ≡ 0`, `u` the real rows of `E`, `M ≡ 0`, `ρ` the
-real rows of `B` through the Hodge star, multiplier `ℓ ≡ 0`, no source. The equations: `E` is
-divergence-free against the bottom `0`-forms (6.2a), `E' = -curl* B` (6.2b), `S¹E = 0` since `E` is
-symmetric (6.2c), `B' = curl E` (6.2d). See [QuennevilleBelair2015], §6.1, (6.2), and Ch. 6
-(corrected). -/
+/-- The real part of the TSD solution as a classical solution of (6.2) without source. -/
 def exactWave (T : ℝ) : Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun 0) where
   σ _ := 0
   φ _ := 0
@@ -1112,7 +1007,6 @@ variable (D : TSDDatum)
 theorem U_zero : D.U 0 = D.U₀ := by
   simp [TSDDatum.U, MirrorBGG.complexQ.waveGroup.map_zero]
 
-/-- `U(t) = e^{tL} U₀` is a (classical, hence) strong solution of `U' = L U` on `[0,T]`. -/
 theorem isStrongSolution (T : ℝ) :
     Evolution.IsStrongSolution MirrorBGG.complexQ.wave (Icc 0 T) 0 D.U := by
   have hx : D.U₀ ∈ MirrorBGG.complexQ.waveGroup.toC0Semigroup.generator.domain := by
@@ -1126,8 +1020,7 @@ theorem isStrongSolution (T : ℝ) :
   change Evolution.IsStrongSolution MirrorBGG.complexQ.waveGroup.generator _ _ _ at h
   rwa [HilbertComplex.generator_waveGroup] at h
 
-/-- **The solution of `Feec.Models.Cube.MirrorBGG.existsUnique_memQ` is `e^{tL} U₀`**: every strong
-solution of the Ch. 6 system on `Q` from `U₀` agrees with `D.U` on `[0,T]`. -/
+/-- **Every strong solution from `U₀` agrees with `e^{tL} U₀` on `[0,T]`.** -/
 theorem eqOn_of_isStrongSolution {T : ℝ} {U : ℝ → PiLp 2 MirrorBGG.SpaceQ} (h0 : U 0 = D.U₀)
     (hU : Evolution.IsStrongSolution MirrorBGG.complexQ.wave (Icc 0 T) 0 U) :
     EqOn U D.U (Icc 0 T) := by
@@ -1142,8 +1035,7 @@ end TSDDatum
 
 /-! ### The matrix proxy of the bottom `2`-forms -/
 
-/-- **The matrix proxy of the bottom `2`-forms**: `ρ ↦ B`, `B_{ai} = ± ρ_a(⋆dx_i)` (inverse of
-`rowsW2L` on real fields). -/
+/-- The matrix proxy of the bottom `2`-forms: `ρ ↦ B`, `B_{ai} = ± ρ_a(⋆dx_i)`. -/
 def matB (w : Wv W2) : MQ :=
   WithLp.toLp 2 fun p => (sg2 p.2 : ℂ) • ofRealL _ (cQ (formIdx 3 ((2 : ℕ) : ℤ)) (w p.1) (eq2 p.2))
 
@@ -1193,7 +1085,6 @@ theorem transposeQ_matB_rowsW2L {B : MQ} (hB : ∀ i j, B (i, j) = B (j, i)) :
   refine PiLp.ext fun p => ?_
   rw [transposeQ, PiLp.toLp_apply, matB_rowsW2L, matB_rowsW2L, hB]
 
-/-- **`‖B_h − B_hᵀ‖ ≤ 2 ‖ρ − ρ_h‖`** when `ρ` is the proxy of a symmetric field. -/
 theorem norm_matB_sub_transpose_le {B : MQ} (hB : ∀ i j, B (i, j) = B (j, i)) (w : Wv W2) :
     ‖matB w - transposeQ (matB w)‖ ≤ 2 * ‖rowsW2L B - w‖ := by
   have e : matB w - transposeQ (matB w) =
@@ -1242,7 +1133,6 @@ theorem TSDDatum.norm_exactWave_ρ_sub (D : TSDDatum) {T : ℝ} {U : ℝ → PiL
     ‖(D.exactWave T).ρ t - w‖ = ‖rowsW2L (stBL (U t)) - w‖ := by
   rw [hEq ht]; rfl
 
-/-- The componentwise bounds, `σₕ`, `Mₕ` small and `Bₕ` nearly symmetric. -/
 theorem tsd_bounds {X Y : Type*} [SeminormedAddCommGroup X] [SeminormedAddCommGroup Y]
     {x : X} {y : Y} {z : Wv W1} {B : MQ} {w : Wv W2} {ε : ℝ}
     (h : √(‖x‖ ^ 2 + ‖z‖ ^ 2 + ‖y‖ ^ 2 + ‖rowsW2L B - w‖ ^ 2) ≤ ε)
@@ -1253,21 +1143,8 @@ theorem tsd_bounds {X Y : Type*} [SeminormedAddCommGroup X] [SeminormedAddCommGr
     (norm_nonneg _)
   exact ⟨b1, b2, b3, b4, (norm_matB_sub_transpose_le hB w).trans (by linarith)⟩
 
-/-- **The mirror scheme (6.5) converges to the TSD solution of the Ch. 6 system on `Q`**, the main
-theorem of the mirror repair of [QuennevilleBelair2015], Ch. 6. Let `U₀ ∈ D(L²)` lie in the
-constraint `{0} × L²(TSD) × ({0} × L²(TSD))` (`TSDDatum`), and let `U` be its solution of the Hodge
-wave equation of the mirror BGG complex on `Q` (`Feec.Models.Cube.MirrorBGG.existsUnique_memQ`;
-every strong solution from `U₀` qualifies, `TSDDatum.eqOn_of_isStrongSolution`). Then:
-* `U(t)` stays in the constraint on `[0,T]`: `σ ≡ 0`, `M ≡ 0`, `E` and `B` TSD;
-* for every `ε > 0` and all large `N`, the scheme (6.5) without source, started from the elliptic
-  projection (6.4) of the forms state `(0, 0, Re E₀, 0, Re B₀)`, has a
-  solution with, on `[0,T]`, `‖σₕ‖ ≤ ε`, `‖Re E − uₕ‖ ≤ ε`, `‖Mₕ‖ ≤ ε`, `‖Re B − ρₕ‖ ≤ ε` (rows of
-  the matrix fields as forms, `B` through the Hodge star) and `‖Bₕ − Bₕᵀ‖ ≤ 2ε` for the matrix proxy
-  `Bₕ = matB ρₕ`: `σₕ → 0`, `Mₕ → 0` and `Bₕ` becomes symmetric.
-The scheme computes the real part `Re U`; the imaginary part is the real part of the solution from
-`-i U₀`. The proof identifies `Re U` with a classical solution of (6.2) for the mirror data
-(`TSDDatum.exactWave`, on the Fourier side of the parity models) and applies
-`mirrorWave_converges`. See [QuennevilleBelair2015], Ch. 6, §6.3, (6.5). -/
+/-- **The mirror scheme (6.5) converges to the TSD solution** ([QuennevilleBelair2015], §6.3):
+from the elliptic projection (6.4), its solutions are eventually `ε`-close to `Re U` on `[0,T]`. -/
 theorem mirror_waveFEM (D : TSDDatum) {T : ℝ} (hT0 : 0 < T)
     {U : ℝ → PiLp 2 MirrorBGG.SpaceQ} (hU0 : U 0 = D.U₀)
     (hU : Evolution.IsStrongSolution MirrorBGG.complexQ.wave (Icc 0 T) 0 U) {ε : ℝ} (hε : 0 < ε) :
@@ -1304,25 +1181,18 @@ section NonVacuity
 
 section Finite
 
-/-! #### Finitely many modes on the torus
-
-For the torus model `Fourier.Torus.complex F` of any family of fibre complexes on `ℤ³` (the
-grad–curl complex of (4.14), the BGG complex (5.1)), finitely supported coefficient sequences lie
-in the domains of the differentials and of their adjoints, and the wave operator keeps them
-finitely supported. -/
+/-! #### Finitely many modes on the torus -/
 
 variable {E : Fin 3 → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace ℂ (E i)]
   [∀ i, FiniteDimensional ℂ (E i)] [∀ i, CompleteSpace (E i)]
   {F : Fourier.FibreComplex ℂ (EuclideanSpace ℝ (Fin 3)) ComplexShape.fin3 E}
 
-/-- Finitely supported coefficient sequences lie in the domains of the torus complex. -/
 theorem torus_mem_domain_of_finite {i j : Fin 3}
     {x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))} (S : Finset (Fin 3 → ℤ))
     (hx : ∀ n ∉ S, (x : (Fin 3 → ℤ) → E i) n = 0) :
     x ∈ ((Fourier.Torus.complex F).d i j).domain :=
   Feec.Models.Cube.MirrorExt.mem_mulDomain_of_finite _ S hx
 
-/-- Finitely supported coefficient sequences lie in the domains of the adjoints. -/
 theorem torus_mem_adjoint_domain_of_finite {i j : Fin 3}
     {x : Lp (E j) 2 (Measure.count : Measure (Fin 3 → ℤ))} (S : Finset (Fin 3 → ℤ))
     (hx : ∀ n ∉ S, (x : (Fin 3 → ℤ) → E j) n = 0) :
@@ -1332,7 +1202,6 @@ theorem torus_mem_adjoint_domain_of_finite {i j : Fin 3}
     (Fourier.Torus.symbolComplex F).adjoint_d i j]
   exact Feec.Models.Cube.MirrorExt.mem_mulDomain_of_finite _ S hx
 
-/-- The differentials keep finitely supported coefficient sequences supported in `S`. -/
 theorem torus_d_eq_zero_of_finite {i j : Fin 3} (x : ((Fourier.Torus.complex F).d i j).domain)
     (S : Finset (Fin 3 → ℤ))
     (hx : ∀ n ∉ S, ((x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
@@ -1342,7 +1211,6 @@ theorem torus_d_eq_zero_of_finite {i j : Fin 3} (x : ((Fourier.Torus.complex F).
   (Operator.coeFn_mulOp_count (𝕜 := ℂ) (fun n => F.m i j (Fourier.Torus.freq n)) x n).trans
     (by rw [hx n hn, map_zero])
 
-/-- The adjoints keep finitely supported coefficient sequences supported in `S`. -/
 theorem torus_adjoint_eq_zero_of_finite {i j : Fin 3}
     (y : (((Fourier.Torus.complex F).d i j)†).domain) (S : Finset (Fin 3 → ℤ))
     (hy : ∀ n ∉ S, ((y : Lp (E j) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
@@ -1368,7 +1236,6 @@ theorem coeFn_sub_count {E : Type*} [NormedAddCommGroup E]
     ((f - g : Lp E 2 _) : (Fin 3 → ℤ) → E) n = (f : (Fin 3 → ℤ) → E) n - (g : (Fin 3 → ℤ) → E) n :=
   Measure.ae_count_iff.1 (Lp.coeFn_sub f g) n
 
-/-- **On the torus, `L` preserves finitely supported states.** -/
 theorem torus_wave_finite (x : (Fourier.Torus.complex F).wave.domain) (S : Finset (Fin 3 → ℤ))
     (hx : ∀ i, ∀ n ∉ S, (((x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ)))
       i : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → E i) n = 0) :
@@ -1392,7 +1259,6 @@ theorem torus_wave_finite (x : (Fourier.Torus.complex F).wave.domain) (S : Finse
     rw [HilbertComplex.wave_apply_fin3_two (Fourier.Torus.complex F) x]
     exact torus_d_eq_zero_of_finite _ S (hx 1) n hn
 
-/-- **On the torus, `L` maps finitely supported states of `D(L)` into `D(L)`.** -/
 theorem torus_wave_mem_of_finite (x : (Fourier.Torus.complex F).wave.domain)
     (S : Finset (Fin 3 → ℤ))
     (hx : ∀ i, ∀ n ∉ S, (((x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ)))
@@ -1420,7 +1286,6 @@ theorem cosState_finite (i : Fin 3) :
     rw [MirrorBGG.cosState_two]
     exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
 
-/-- `L cosState ∈ D(L)` on the torus. -/
 theorem cosState_wave_mem : Models.Torus.BGG.complex.wave ⟨_, MirrorBGG.cosState_mem_domain⟩ ∈
     Models.Torus.BGG.complex.wave.domain :=
   torus_wave_mem_of_finite _ _ cosState_finite
@@ -1463,19 +1328,13 @@ end NonVacuity
 
 end Feec.Models.Cube.MirrorWeakSymmetry
 
-/-! ### The non-stationary datum of the mirror grad–curl complex
-
-The datum `(0, E₀, 0)` of `Feec.Models.Cube.Mirror.complexQ`, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`
-(`Feec.Models.Cube.Mirror.cosStateQ`), lies in the constraint, and `L E₀`, `L² E₀` lie in `D(L)`:
-its mirror extension has finitely many Fourier modes, which `L` preserves on the torus
-(`Feec.Models.Cube.MirrorWeakSymmetry.torus_wave_finite`). -/
+/-! ### The non-stationary datum of the mirror grad–curl complex -/
 
 namespace Feec.Models.Cube.Mirror
 
 open Feec.HilbertComplex (totalSub)
 open Feec.Models.Cube.MirrorWeakSymmetry (torus_wave_finite torus_wave_mem_of_finite)
 
-/-- The torus datum `(0, E₀, 0)` has the Fourier modes `±k₀` only. -/
 theorem cosState_finite (i : Fin 3) :
     ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)), ((cosState i : Models.Torus.GradCurl.Space i) :
       (Fin 3 → ℤ) → _) n = 0 := by
@@ -1491,14 +1350,11 @@ theorem cosState_finite (i : Fin 3) :
     rw [cosState_two]
     exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
 
-/-- **The datum `(0, E₀, 0)` on `Q` lies in the constraint.** -/
 theorem cosStateQ_mem_tsdQ : cosStateQ ∈ totalSub tsdQ := fun i => by
   change J i (cosStateQ i) ∈ Models.Torus.GradCurl.constraint i
   rw [← HilbertComplex.totalJ_apply, totalJ_cosStateQ]
   exact cosState_mem_constraint i
 
-/-- **`L E₀ ∈ D(L)` on `Q`**: the mirror extension of `(0, E₀, 0)` has finitely many Fourier
-modes, which `L` preserves on the torus. -/
 theorem cosStateQ_wave_mem :
     complexQ.wave ⟨_, cosStateQ_mem_domain⟩ ∈ complexQ.wave.domain := by
   refine (HilbertComplex.mem_wave_domain_compress_iff eight_pos inner_J
@@ -1507,7 +1363,6 @@ theorem cosStateQ_wave_mem :
     ⟨_, cosStateQ_mem_domain⟩, LinearPMap.apply_congr' _ _ cosState_mem_domain totalJ_cosStateQ]
   exact torus_wave_mem_of_finite _ _ cosState_finite
 
-/-- **`L² E₀ ∈ D(L)` on `Q`.** -/
 theorem cosStateQ_wave_wave_mem :
     complexQ.wave ⟨_, cosStateQ_wave_mem⟩ ∈ complexQ.wave.domain := by
   have hc := (HilbertComplex.wave_compress eight_pos inner_J reducingSubcomplex_range).comm

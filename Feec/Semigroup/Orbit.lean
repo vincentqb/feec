@@ -11,37 +11,16 @@ public import Feec.ForMathlib.Analysis.Gronwall
 /-!
 # Orbit calculus for a strongly continuous semigroup
 
-For a strongly continuous semigroup `G` on a Banach space `E` over `𝕜 = ℝ` or `ℂ`, with
-generator `A`:
+The orbits `t ↦ S t x` of a strongly continuous semigroup: the orbit identity on `D(A)`, closedness
+and density of the generator `A`, and convolutions `∫ₐᵗ S(t - s) g(s) ds`.
 
-* `C0Semigroup.exists_bound`, `C0Semigroup.continuous_extS_uncurry`: local boundedness and joint
-  continuity of `(t, x) ↦ S t x` (`extS t = S (max t 0)` extends `S` to negative times);
-* `C0Semigroup.mapsTo_domain`, `C0Semigroup.generator_apply_S`: `S t D(A) ⊆ D(A)`,
-  `A S t = S t A`;
-* `C0Semigroup.sub_eq_integral`, `C0Semigroup.hasDerivWithinAt_apply`: on `D(A)`,
-  `S t x - x = ∫₀ᵗ S s (A x) ds` and `(d/dt) S t x = S t (A x)`;
-* `C0Semigroup.mem_graph_iff_sub_eq_integral`: `(x, y) ∈ graph A` iff
-  `S τ x - x = ∫₀^τ S s y ds` for all `τ ≥ 0`; hence `C0Semigroup.isClosed_generator`;
-* convolutions `∫ₐᵗ S(t - s) g(s) ds`: continuity (`continuousOn_conv`), the graph property
-  (`conv_mem_graph`, `integral_mem_graph_S`) and the primitive identity (`conv_primitive`);
-* `C0Semigroup.hasDerivWithinAt_extS_comp`: the product rule along the semigroup;
-* `C0Semigroup.dense_domain_generator`, `C0Group.dense_domain_generator`: generators are densely
-  defined;
-* `C0Semigroup.eqOn_of_generator_eq_of_isDissipative`: on an inner product space, two semigroups
-  with the same dissipative generator agree for `t ≥ 0` (energy method);
-* `C0Semigroup.forall_nonneg_of_forall_Icc`, `C0Group.forall_of_forall_Icc_neg`: invariance on
-  `[0, T]` (resp. `[-T, T]`), `T > 0`, is invariance for all `t ≥ 0` (resp. all `t`).
+## Main results
 
-Duhamel's formula and mild solutions are in `Feec.Evolution.Duhamel`.
-
-## References
-
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2 (Thm 2.4: generators)
-* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §II.1
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `C0Semigroup.sub_eq_integral`: `S t x - x = ∫₀ᵗ S s (A x) ds` on `D(A)`.
+* `C0Semigroup.mem_graph_iff_sub_eq_integral`: the graph of the generator through the orbits.
+* `C0Semigroup.isClosed_generator`: the generator is closed.
+* `C0Semigroup.dense_domain_generator`: the generator is densely defined.
+* `C0Semigroup.eqOn_of_generator_eq_of_isDissipative`: uniqueness for a dissipative generator.
 -/
 
 open Set Filter Topology MeasureTheory
@@ -66,7 +45,6 @@ theorem S_comm_apply {s t : ℝ} (hs : 0 ≤ s) (ht : 0 ≤ t) (x : E) :
     G.S s (G.S t x) = G.S t (G.S s x) := by
   rw [← G.S_add_apply hs ht, add_comm, G.S_add_apply ht hs]
 
-/-- **Invariance on `[0, T]` is invariance for all `t ≥ 0`** (`S(t) = S(t - T) S(T)`). -/
 theorem forall_nonneg_of_forall_Icc {P : Set E} {T : ℝ} (hT : 0 < T)
     (h : ∀ x ∈ P, ∀ t ∈ Icc 0 T, G.S t x ∈ P) : ∀ x ∈ P, ∀ t, 0 ≤ t → G.S t x ∈ P := by
   have key : ∀ n : ℕ, ∀ x ∈ P, ∀ t ∈ Icc 0 (n * T), G.S t x ∈ P := by
@@ -99,7 +77,6 @@ theorem continuous_extS_apply (x : E) : Continuous fun t => G.extS t x :=
 
 variable [CompleteSpace E]
 
-/-- `‖S t‖` is bounded on `[0,T]` (Banach–Steinhaus). -/
 theorem exists_bound (T : ℝ) : ∃ C, 0 ≤ C ∧ ∀ t ∈ Icc 0 T, ‖G.S t‖ ≤ C := by
   have h : ∀ x, ∃ C, ∀ i : Icc (0 : ℝ) T, ‖G.S i x‖ ≤ C := fun x => by
     obtain ⟨C, hC⟩ := isCompact_Icc.exists_bound_of_continuousOn
@@ -108,12 +85,10 @@ theorem exists_bound (T : ℝ) : ∃ C, 0 ≤ C ∧ ∀ t ∈ Icc 0 T, ‖G.S t�
   obtain ⟨C, hC⟩ := banach_steinhaus h
   exact ⟨max C 0, le_max_right _ _, fun t ht => (hC ⟨t, ht⟩).trans (le_max_left _ _)⟩
 
-/-- `‖extS t‖` is bounded on `(-∞, T]`. -/
 theorem exists_bound_extS (T : ℝ) : ∃ C, 0 ≤ C ∧ ∀ t ≤ T, ‖G.extS t‖ ≤ C := by
   obtain ⟨C, hC0, hC⟩ := G.exists_bound (max T 0)
   exact ⟨C, hC0, fun t ht => hC _ ⟨le_max_right _ _, max_le_max_right 0 ht⟩⟩
 
-/-- **Joint continuity** of `(t, x) ↦ extS t x`. -/
 theorem continuous_extS_uncurry : Continuous fun p : ℝ × E => G.extS p.1 p.2 := by
   rw [continuous_iff_continuousAt]
   rintro ⟨t₀, x₀⟩
@@ -135,15 +110,11 @@ theorem continuous_extS_uncurry : Continuous fun p : ℝ × E => G.extS p.1 p.2 
   rw [zero_add] at this
   exact this.congr fun p => by rw [← _root_.map_add, sub_add_cancel]
 
-/-- `s ↦ extS (φ s) (g s)` is a.e.-strongly measurable for `g` a.e.-strongly measurable and `φ`
-continuous. -/
 theorem aestronglyMeasurable_extS_comp {μ : Measure ℝ} {g : ℝ → E} {φ : ℝ → ℝ}
     (hg : AEStronglyMeasurable g μ) (hφ : Continuous φ) :
     AEStronglyMeasurable (fun s => G.extS (φ s) (g s)) μ :=
   G.continuous_extS_uncurry.comp_aestronglyMeasurable (hφ.aestronglyMeasurable.prodMk hg)
 
-/-- `s ↦ extS (φ s) (g s)` is interval integrable when `g` is and `φ` is continuous and bounded
-above on `[a,b]`. -/
 theorem intervalIntegrable_extS_comp {g : ℝ → E} {φ : ℝ → ℝ} {a b T : ℝ}
     (hg : IntervalIntegrable g volume a b) (hφ : Continuous φ) (hT : ∀ s ∈ uIcc a b, φ s ≤ T) :
     IntervalIntegrable (fun s => G.extS (φ s) (g s)) volume a b := by
@@ -161,7 +132,6 @@ section Generator
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 omit [CompleteSpace E] in
-/-- A continuous `𝕜`-linear map carries `ℝ`-derivatives within a set along. -/
 theorem _root_.ContinuousLinearMap.hasDerivWithinAt_apply_of_hasDerivWithinAt (L : E →L[𝕜] E)
     {f : ℝ → E} {f' : E} {s : Set ℝ} {t : ℝ} (h : HasDerivWithinAt f f' s t) :
     HasDerivWithinAt (fun r => L (f r)) (L f') s t :=
@@ -175,13 +145,11 @@ theorem integral_extS_eq {τ : ℝ} (hτ : 0 ≤ τ) (y : E) :
     rw [G.extS_of_nonneg hσ.1]
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- The orbit `τ ↦ x + ∫₀^τ extS σ y` has derivative `extS t y` everywhere. -/
 theorem hasDerivAt_add_integral_extS (x y : E) (t : ℝ) :
     HasDerivAt (fun τ => x + ∫ σ in (0 : ℝ)..τ, G.extS σ y) (G.extS t y) t :=
   ((G.continuous_extS_apply y).integral_hasStrictDerivAt 0 t).hasDerivAt.const_add x
 
 omit [CompleteSpace E] in
-/-- On `D(A)`, the orbit has right derivative `S t (A x)` at every `t ≥ 0`. -/
 theorem hasDerivWithinAt_Ici_apply (x : G.generator.domain) {t : ℝ} (ht : 0 ≤ t) :
     HasDerivWithinAt (fun s => G.S s x) (G.S t (G.generator x)) (Ici t) t := by
   have h1 : HasDerivWithinAt (fun h => G.S t (G.S h x)) (G.S t (G.generator x)) (Ici 0)
@@ -198,7 +166,6 @@ theorem hasDerivWithinAt_Ici_apply (x : G.generator.domain) {t : ℝ} (ht : 0 �
   rw [← G.S_add_apply ht (sub_nonneg.2 hs), add_sub_cancel]
 
 omit [CompleteSpace E] in
-/-- `S t` maps `D(A)` into `D(A)` (`t ≥ 0`), with right derivative `S t (A x)` at `0`. -/
 theorem hasDerivWithinAt_S_apply_zero (x : G.generator.domain) {t : ℝ} (ht : 0 ≤ t) :
     HasDerivWithinAt (fun h => G.S h (G.S t x)) (G.S t (G.generator x)) (Ici 0) 0 := by
   refine ((G.S t).hasDerivWithinAt_apply_of_hasDerivWithinAt
@@ -206,19 +173,16 @@ theorem hasDerivWithinAt_S_apply_zero (x : G.generator.domain) {t : ℝ} (ht : 0
   exact G.S_comm_apply hh ht x
 
 omit [CompleteSpace E] in
-/-- `S t` maps `D(A)` into `D(A)` for `t ≥ 0`. -/
 theorem mapsTo_domain (x : G.generator.domain) {t : ℝ} (ht : 0 ≤ t) :
     G.S t x ∈ G.generator.domain :=
   ⟨_, G.hasDerivWithinAt_S_apply_zero x ht⟩
 
 omit [CompleteSpace E] in
-/-- `A (S t x) = S t (A x)` on `D(A)`, `t ≥ 0`. -/
 theorem generator_apply_S (x : G.generator.domain) {t : ℝ} (ht : 0 ≤ t) :
     G.generator ⟨G.S t x, G.mapsTo_domain x ht⟩ = G.S t (G.generator x) :=
   G.generator_apply_eq (G.hasDerivWithinAt_S_apply_zero x ht)
 
 omit [CompleteSpace E] in
-/-- Graph form of `generator_apply_S`. -/
 theorem S_mem_graph {x y : E} (h : (x, y) ∈ G.generator.graph) {t : ℝ} (ht : 0 ≤ t) :
     (G.S t x, G.S t y) ∈ G.generator.graph := by
   obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 h
@@ -243,7 +207,6 @@ theorem sub_eq_integral (x : G.generator.domain) {t : ℝ} (ht : 0 ≤ t) :
   simp only [S_zero_apply, sub_self, intervalIntegral.integral_same, sub_eq_zero] at this
   rw [this, G.integral_extS_eq ht]
 
-/-- On `D(A)`, `t ↦ S t x` has derivative `S t (A x)` within `[0, ∞)` at every `t ≥ 0`. -/
 theorem hasDerivWithinAt_apply (x : G.generator.domain) {t : ℝ} (ht : 0 ≤ t) :
     HasDerivWithinAt (fun s => G.S s x) (G.S t (G.generator x)) (Ici 0) t := by
   refine ((G.hasDerivAt_add_integral_extS x (G.generator x) t).hasDerivWithinAt).congr_of_mem
@@ -283,7 +246,6 @@ theorem isClosed_generator : G.generator.IsClosed := by
     exact intervalIntegral.continuous_parametric_intervalIntegral_of_continuous'
       (f := fun (p : E × E) (σ : ℝ) => G.extS σ p.2) hc 0 τ
 
-/-- `∫₀ᵘ S σ y dσ ∈ D(A)` with `A ∫₀ᵘ S σ y dσ = S u y - y` (`u ≥ 0`). -/
 theorem integral_mem_graph_S {u : ℝ} (hu : 0 ≤ u) (y : E) :
     (∫ σ in (0 : ℝ)..u, G.S σ y, G.S u y - y) ∈ G.generator.graph := by
   rw [G.mem_graph_iff_sub_eq_integral]
@@ -341,7 +303,6 @@ theorem integrableOn_S_sub {g : ℝ → E} {a t : ℝ} (hat : a ≤ t) (hg : Int
   simp only [G.extS_of_nonneg (sub_nonneg.2 hs.2)]
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- The convolution `t ↦ ∫ₐᵗ S(t - s) g(s) ds` of `g ∈ L¹(a,b)` is continuous on `[a,b]`. -/
 theorem continuousOn_conv {g : ℝ → E} {a b : ℝ} (hg : IntegrableOn g (Ioc a b)) :
     ContinuousOn (fun t => ∫ s in a..t, G.S (t - s) (g s)) (Icc a b) := by
   set μ := volume.restrict (Ioc a b)
@@ -375,8 +336,6 @@ theorem continuousOn_conv {g : ℝ → E} {a b : ℝ} (hg : IntegrableOn g (Ioc 
       filter_upwards [eventually_lt_nhds hs] with t ht
       simp [indicator_of_notMem (show s ∉ Iic t from not_le.2 ht)]
 
-/-- **Hille's theorem along the semigroup**: if `(f s, H s) ∈ graph A` for a.e. `s ∈ (a,t]`, then
-`(∫ₐᵗ S(t - s) f s ds, ∫ₐᵗ S(t - s) H s ds) ∈ graph A`. -/
 theorem conv_mem_graph {f H : ℝ → E} {a t : ℝ} (hat : a ≤ t) (hf : IntegrableOn f (Ioc a t))
     (hH : IntegrableOn H (Ioc a t))
     (hfH : ∀ᵐ s ∂(volume.restrict (Ioc a t)), (f s, H s) ∈ G.generator.graph) :
@@ -387,7 +346,6 @@ theorem conv_mem_graph {f H : ℝ → E} {a t : ℝ} (hat : a ≤ t) (hf : Integ
   exact G.S_mem_graph hs (sub_nonneg.2 hs'.2)
 
 omit [CompleteSpace E] [IsScalarTower ℝ 𝕜 E] in
-/-- `t ↦ ∫ₐᵗ S(t - s) x ds = ∫₀^{t-a} S σ x dσ`. -/
 theorem integral_S_sub_const {a t : ℝ} (hat : a ≤ t) (x : E) :
     ∫ s in a..t, G.S (t - s) x = ∫ σ in (0 : ℝ)..t - a, G.S σ x := by
   rw [G.integral_S_sub_eq_extS hat,
@@ -395,8 +353,6 @@ theorem integral_S_sub_const {a t : ℝ} (hat : a ≤ t) (x : E) :
     G.integral_extS_eq (sub_nonneg.2 hat)]
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- **Fubini for the convolution with a primitive**: for `g ∈ L¹(a,t)`,
-`∫ₐᵗ S(t - s) (∫ₐˢ g) ds = ∫ₐᵗ (∫₀^{t-r} S σ (g r) dσ) dr`. -/
 theorem conv_primitive {g : ℝ → E} {a t : ℝ} (hat : a ≤ t) (hg : IntegrableOn g (Ioc a t)) :
     ∫ s in a..t, G.S (t - s) (∫ r in a..s, g r) =
       ∫ r in a..t, ∫ σ in (0 : ℝ)..t - r, G.S σ (g r) := by
@@ -424,9 +380,6 @@ theorem conv_primitive {g : ℝ → E} {a t : ℝ} (hat : a ≤ t) (hg : Integra
   rw [intervalIntegral.integral_comp_sub_left (fun σ => G.extS σ (g r)) t, sub_self,
     G.integral_extS_eq (sub_nonneg.2 hr.2)]
 
-/-- **Product rule along the semigroup**: if `y` and `φ` have derivatives `y'`, `φ'` within `s`
-at `x` and `u ↦ extS u (y x)` has derivative `D` at `φ x`, then
-`τ ↦ extS (φ τ) (y τ)` has derivative `extS (φ x) y' + φ' • D` within `s` at `x`. -/
 theorem hasDerivWithinAt_extS_comp {y : ℝ → E} {y' D : E} {φ : ℝ → ℝ} {φ' : ℝ} {s : Set ℝ}
     {x : ℝ} (hy : HasDerivWithinAt y y' s x) (hφ : HasDerivWithinAt φ φ' s x)
     (hD : HasDerivAt (fun u => G.extS u (y x)) D (φ x)) :
@@ -446,7 +399,6 @@ theorem hasDerivWithinAt_extS_comp {y : ℝ → E} {y' D : E} {φ : ℝ → ℝ}
   · simp only [Pi.add_apply, Function.comp_apply]
     rw [sub_self, _root_.map_zero, zero_add]
 
-/-- On `D(A)`, `u ↦ extS u x` has derivative `S u (A x)` at every `u > 0`. -/
 theorem hasDerivAt_extS_apply (x : G.generator.domain) {u : ℝ} (hu : 0 < u) :
     HasDerivAt (fun v => G.extS v x) (G.S u (G.generator x)) u := by
   have h := (G.hasDerivWithinAt_apply x hu.le).hasDerivAt (Ici_mem_nhds hu)
@@ -454,8 +406,7 @@ theorem hasDerivAt_extS_apply (x : G.generator.domain) {u : ℝ} (hu : 0 < u) :
   filter_upwards [eventually_gt_nhds hu] with v hv
   exact congrArg (· (x : E)) (G.extS_of_nonneg hv.le)
 
-/-- **The generator of a semigroup is densely defined**: `h⁻¹ ∫₀ʰ S σ x dσ ∈ D(A)` tends to
-`x` as `h → 0⁺`. -/
+/-- **The generator of a semigroup is densely defined.** -/
 theorem dense_domain_generator : Dense (G.generator.domain : Set E) := by
   intro x
   have hd := ((G.continuous_extS_apply x).integral_hasStrictDerivAt 0 0).hasDerivAt
@@ -478,13 +429,10 @@ namespace C0Group
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
-/-- **The generator of a group is densely defined** (that of `G.toC0Semigroup`). -/
 theorem dense_domain_generator (G : C0Group 𝕜 E) [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
     [CompleteSpace E] : Dense (G.generator.domain : Set E) :=
   G.toC0Semigroup.dense_domain_generator
 
-/-- **Invariance on `[-T, T]` is invariance for all `t`** (`T > 0`): the forward case for the
-group and for its reversal `t ↦ S(-t)`. -/
 theorem forall_of_forall_Icc_neg (G : C0Group 𝕜 E) {P : Set E} {T : ℝ} (hT : 0 < T)
     (hP : ∀ x ∈ P, ∀ s ∈ Icc (-T) T, G.S s x ∈ P) : ∀ x ∈ P, ∀ t, G.S t x ∈ P := by
   let R : C0Semigroup 𝕜 E := ⟨fun t => G.S (-t), by rw [neg_zero, G.map_zero],
@@ -512,8 +460,8 @@ private theorem apply_eq_of_eq {T T' : E →ₗ.[𝕜] E} (e : T = T') {y : E} (
 
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **Uniqueness for a dissipative generator** (energy method): two strongly continuous
-semigroups with the same dissipative generator agree for `t ≥ 0`. -/
+/-- **Uniqueness for a dissipative generator**: two strongly continuous semigroups with the same
+dissipative generator agree for `t ≥ 0`. -/
 theorem eqOn_of_generator_eq_of_isDissipative {G G' : C0Semigroup 𝕜 E}
     (hA : G.generator.IsDissipative) (h : G'.generator = G.generator) :
     EqOn G'.S G.S (Ici 0) := by

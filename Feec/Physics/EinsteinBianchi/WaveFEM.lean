@@ -8,68 +8,12 @@ public import Feec.Domain.StarShapedSmoothing
 /-!
 # The Einstein–Bianchi system with weak symmetries: the wave problem on the cube
 
-The linearized EB system with weakly imposed symmetry, [QuennevilleBelair2015], §6.3: the
-multiplier problem (6.2) for the complex (4.16) on `Q = (0, ½)³` with the thesis' boundary
-conditions, and its semi-discretization (6.5) by the elements of Table 6.1.
-
-## Main results
-
-* `cubeWaveData`: the data of (6.1)/(6.2) on `Q` (`Feec.BGG.WaveData`);
-  `exists_multiplierSolution`: every solution of (6.1) has a unique multiplier `Λ(t) ∈ W̌¹`
-  (corrected Prop 6.1).
-* `negNorm_le_tripleNorm`: `|||λ||| = ‖Jλ‖` is equivalent to `‖div λ‖_{H⁻¹} + ‖λ‖_{H⁻¹}`
-  (`W̌¹ = H⁻¹(div, V)` of §6.3); `denseRange_B`, `J_injective`: `B = (d, −S)` has dense range, so
-  `W̌¹` is the completion of `(L²Λ¹(Q), |||·|||)`; `not_isClosed_range_B`: the range of `B` is not
-  closed (it lies in `H̊(curl, Q)`, which misses the constant `1`-forms, `dxZero_not_mem_D1`), so
-  the completion is genuinely needed.
-* `bgg_wave_existsUnique`: existence and uniqueness for the Hodge wave equation of (5.1) on `Q`
-  (Stone), under the regularity hypothesis.
-* **`gamma_equiv_hessMin`** (`Γ ≅ H̊²(Q)`, §6.3): `(σ, φ) ↦ σ` is a bijection from
-  `Γ = {(σ, φ) ∈ H̊¹ × H̊¹(Q; ℝ³) : grad σ = φ}` onto the domain of the minimal Hessian
-  `Feec.Models.BoundedDomain.hessMin` (the first space of `Feec.Models.BoundedDomain.bggComplex`
-  on `Q`), and `D₀(σ, φ) = grad φ` is `∇²σ`. `Γ ⊆ H̊²` (`hessMin_of_mem_Γ`) by smoothing
-  (dilation towards the centre and mollification: test functions `Rσ` with
-  `∇²(Rσ) = c² R(grad φ)`); `H̊² ⊆ Γ` (`mem_Γ_of_hessMin`) by integration by parts on test
-  functions, `‖∂ⱼψ‖² ≤ ‖ψ‖ ‖∂ⱼ∂ⱼψ‖` (`inner_toL2_fderiv`), and the closedness of `grad` on
-  `H̊¹`.
-* **`waveFEM`**: under `CurlPotential`, for one smoother: (5.4) and uniform bounds; `grad`
-  injective and `S₀,ₕ` onto; corrected Prop 6.2 for (6.5); energy stability; `O(h)` convergence
-  for classical solutions whose states and time derivatives are `C²` and vanish outside `Q`
-  (flat at `∂Q`). **`waveFEM_nonvacuous`**: a nontrivial manufactured solution meets
-  all hypotheses and its discrete `σₕ(t)` converge and are nonzero for large `N`.
-  `CurlPotential` is proved: the unconditional versions are `waveFEM_cube`,
-  `waveFEM_nonvacuous_cube` and `bgg_wave_existsUnique_cube`
-  (`Feec.Physics.EinsteinBianchi.Unconditional`).
-
-## Gaps
-
-* The identification of (6.1) for `bggHilb` with the matrix model
-  `Feec.Models.BoundedDomain.bggComplex` (`Feec.Models.BoundedDomain.bggComplex_weakEqs_of_isStrongSolution`) is
-  complete: `gamma_equiv_hessMin` here for the first space, and
-  `Feec.EinsteinBianchi.MatrixModel.matrixComplex_eq_map` for the whole complex (the isometry
-  `rowsEquiv : H̊Λ¹(Q)³ ≅ H̊(curl, Q; ℝ³ˣ³)`, rows `u_a = Σ_b u_{ab} dx_b`, intertwining
-  `(S¹, d)` with `(skwL, curl)`, and the Hodge star on `2`-forms), with conjugate Hodge wave
-  operators and groups and corresponding strong and classical solutions
-  (`Feec.EinsteinBianchi.MatrixModel.isStrongSolution_iff`). The TSD datum of
-  `Feec.Counterexamples.BoundedBGG.bggComplex_verdict` (whose solution leaves `L²(TSD)`) is
-  transported to this model in `Feec.EinsteinBianchi.BoundedFailure`. The rate theorem does not
-  apply to it (its magnetic datum `β = x₃(e₁e₂ᵀ + e₂e₁ᵀ)` does not vanish on `∂Q`);
-  `Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd` proves, with no
-  hypothesis, that (6.5) converges to it without rate and that the discrete fields leave TSD
-  (convergence for every datum in `D(L)`: `BoundedConvergence.tendsto_of_mem_wave_domain`, from
-  the rate-free `Feec.Models.Cube.WeakSymmetry.cubeWave_converges` for multipliers represented by
-  `L²` data and the density of `D(L²)`).
-* The mirror variant of the scheme is discretized and well posed in
-  `Feec.Models.Cube.MirrorWeakSymmetryFEM`; its convergence is open (see there).
+The multiplier problem (6.2) of [QuennevilleBelair2015], §6.3 for the complex (4.16) on
+`Q = (0, ½)³`, and its semi-discretization (6.5) by the elements of Table 6.1 (`waveFEM`).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.1 ((6.1), (6.2), Prop 6.1), §6.2 (Prop 6.2), §6.3 ((6.5), Table 6.1), Thm 4.6
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.10 (Stone's theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -90,10 +34,7 @@ theorem incl1_injective : Function.Injective incl1 := fun _ _ h =>
   PiLp.ext fun a => Subtype.ext (congrArg (fun z : Wv W1 => z a) h)
 
 
-/-- **The continuous data (6.1)/(6.2) of the BGG system (4.16) on `Q = (0, ½)³`** in the model of
-`Feec.BGG.WaveData`: `V⁰ = H̊Λ⁰(Q)`, `Ṽ⁰ = H̊Λ⁰(Q)³` (graph norms), `Ṽ¹ = H̊Λ¹(Q)³`, the
-`L²` spaces `W⁰ = L²Λ⁰`, `W¹ = L²Λ¹`, `W² = L²Λ²`, `W̃¹ = (L²Λ¹)³`, `W̃² = (L²Λ²)³`, `d = grad`,
-`curl`, `S⁰ = I`, `S¹ = 2 vskw`. -/
+/-- The continuous data (6.1)/(6.2) of the BGG system (4.16) on `Q = (0, ½)³`. -/
 def cubeWaveData : Feec.BGG.WaveData V0 Vt0 (Wv U1) W0 W1 W2 (Wv W1) (Wv W2) where
   i0 := D0.graphFst
   d0 := D1.graphFst ∘L bggD0
@@ -110,9 +51,8 @@ theorem cubeWaveData_d0 (τ : V0) : cubeWaveData.d0 τ = D0.graphSnd τ := graph
 theorem cubeWaveData_S0 (ψ : Vt0) :
     cubeWaveData.S0 ψ = wsL2 (Ω := cubeDomain 3) 0 (ιt0 ψ) := graphFst_bggS0 ψ
 
-/-- **Corrected Prop 6.1 on the cube**: every solution of (6.1) has a unique multiplier
-`Λ(t) ∈ W̌¹` solving (6.2) (no hypothesis on `u`, `M` arbitrary, no `λ₀`;
-`Feec.BGG.WaveData.Solution.exists_multiplierSolution`). -/
+/-- Every solution of (6.1) has a unique multiplier `Λ(t) ∈ W̌¹` solving (6.2).
+[QuennevilleBelair2015], Prop 6.1 (adapted) -/
 theorem exists_multiplierSolution {T : ℝ} {f : ℝ → Wv W1} (s : cubeWaveData.Solution T f) :
     ∃ s' : cubeWaveData.MultiplierSolution T f, s'.toTrajectory = s.toTrajectory ∧
       ∀ s'' : cubeWaveData.MultiplierSolution T f, s''.toTrajectory = s.toTrajectory →
@@ -136,8 +76,6 @@ theorem norm_toLp_zero_left {A B : Type*} [NormedAddCommGroup A] [NormedAddCommG
   rw [WithLp.prod_norm_eq_of_L2]; simp
 
 set_option maxHeartbeats 2000000 in
-/-- **`|||λ|||` is equivalent to `‖div λ‖_{H⁻¹} + ‖λ‖_{H⁻¹}`** ([QuennevilleBelair2015], §5.1,
-§6.3: `W̌¹ = H⁻¹(div, V)`): `max(‖div λ‖₋₁, ‖λ‖₋₁) ≤ |||λ||| = ‖Jλ‖ ≤ ‖div λ‖₋₁ + ‖λ‖₋₁`. -/
 theorem negNorm_le_tripleNorm (μ : W1) :
     negNormDiv μ ≤ ‖cubeWaveData.J μ‖ ∧ negNorm μ ≤ ‖cubeWaveData.J μ‖ ∧
       ‖cubeWaveData.J μ‖ ≤ negNormDiv μ + negNorm μ := by
@@ -179,9 +117,7 @@ theorem negNorm_le_tripleNorm (μ : W1) :
       ‖x‖
     nlinarith [mul_le_mul_of_nonneg_left m1 a1, mul_le_mul_of_nonneg_left m2 a2]
 
-/-- **`B = (d, −S) : H̊¹(Q) × H̊¹(Q; ℝ³) → L²Λ¹(Q)` has dense range** (its range contains
-`S⁰ C_c^∞(Q; ℝ³) = C_c^∞(Q; Λ¹)`), so `J` is injective, `|||·|||` is a norm on `L²Λ¹(Q)` and
-`W̌¹` is the completion of `(L²Λ¹(Q), |||·|||)` (the thesis assumes `S Ṽ⁰` dense in `W¹`). -/
+/-- `B = (d, −S) : H̊¹(Q) × H̊¹(Q; ℝ³) → L²Λ¹(Q)` has dense range. -/
 theorem denseRange_B : DenseRange cubeWaveData.B := by
   refine (dense_testFieldSub (𝕜 := ℝ) (isOpen_cubeDomain 3) (formIdx 3 1)).mono ?_
   rintro _ ⟨χ, hχ, rfl⟩
@@ -209,9 +145,6 @@ theorem dxZero_ne_zero : dxZero ≠ 0 :=
     ((isOpen_cubeDomain 3).measure_pos MeasureTheory.volume
       ⟨fun _ => 1 / 4, Set.mem_univ_pi.2 fun _ => by norm_num⟩).ne' _
 
-/-- **The constant `1`-form is not in `H̊(curl, Q)`**: if it were, its curl would be its classical
-curl `0` (`d_min ≤ d_max`), so by exactness of `H̊Λ(Q)` it would be `grad τ` with `τ ∈ H̊¹(Q)`,
-and Green's formula `⟪grad τ, dx₀⟫ = ⟪τ, div dx₀⟫ = 0` would give `‖dx₀‖² = 0`. -/
 theorem dxZero_not_mem_D1 : dxZero ∉ D1.domain := by
   intro hc
   obtain ⟨hmax, emax⟩ := Feec.Domain.extDerivOp_smooth_mem_maximal_domain (isOpen_cubeDomain 3)
@@ -244,12 +177,7 @@ theorem dxZero_not_mem_D1 : dxZero ∉ D1.domain := by
   rw [hx', real_inner_self_eq_norm_sq] at hg
   exact dxZero_ne_zero (norm_eq_zero.1 (pow_eq_zero_iff two_ne_zero |>.1 hg))
 
-/-- **`B = (d, −S)` does not have closed range** on the cube: its range lies in `H̊(curl, Q)`
-(`grad H̊¹ + S⁰H̊¹(Q; ℝ³)`), which misses the constant `1`-forms, while it is dense
-(`denseRange_B`). This is why the multiplier of (6.2) lives in the completion `W̌¹` (the thesis'
-`H⁻¹(div, V)`, [QuennevilleBelair2015], §6.3) and not in `L²Λ¹(Q)`
-(`Feec.BGG.WaveData.Wcheck_eq_range_of_isClosed` would apply under closed range); by the closed
-range theorem, `|||·|||` is then not equivalent to the `L²` norm (not formalized here). -/
+/-- `B = (d, −S)` does not have closed range on the cube. -/
 theorem not_isClosed_range_B : ¬ IsClosed (Set.range cubeWaveData.B) := by
   intro hcl
   have huniv : Set.range cubeWaveData.B = Set.univ := by
@@ -261,8 +189,6 @@ theorem not_isClosed_range_B : ¬ IsClosed (Set.range cubeWaveData.B) := by
   rw [← hx']
   exact D1.domain.sub_mem (D1.graphFst_mem_domain _) (D1.graphFst_mem_domain _)
 
-/-! ### Classical solutions of (6.2) with `L²` multiplier are solutions of (6.1)/(6.2) -/
-
 /-! ### Existence for the Hodge wave equation of (5.1) on the cube (Stone) -/
 
 section Stone
@@ -270,11 +196,8 @@ section Stone
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-/-- **Existence and uniqueness for the Hodge wave equation of (5.1) on the cube**
-([QuennevilleBelair2015], Thm 4.6 for the complex (4.16) of §6.3; Stone's theorem): under the
-regularity hypothesis (`bggHyps`), for data in `D(L)` and admissible forcing, the Hodge wave
-equation `U' = L U + F` of the closed Hilbert complex `Γ̄ → (L²Λ¹)³ → L²Λ² × (L²Λ²)³` has a
-classical solution, unique among strong and among weak solutions. -/
+/-- Under `CurlPotential`, for data in `D(L)` and admissible forcing, the Hodge wave equation of
+(5.1) on `Q` has a classical solution, unique among strong ones. [QuennevilleBelair2015], Thm 4.6 -/
 theorem bgg_wave_existsUnique (hR : CurlPotential)
     {U₀ : PiLp 2 (ShortHilbertComplex.W3 bggHilb.Γbar (Wv W1) (WithLp 2 (W2 × Wv W2)))}
     (hU₀ : U₀ ∈ (bggHilb.toHilbertComplex (bggHyps hR) bggS0_injective).wave.domain) {a b : ℝ}
@@ -294,21 +217,9 @@ end Stone
 /-! ### The headline theorems -/
 
 set_option maxHeartbeats 4000000 in
-/-- **The Einstein–Bianchi wave system with weak symmetries on the cube: the semi-discrete method
-(6.5) of Table 6.1** ([QuennevilleBelair2015], §6.3), under the regularity hypothesis
-`CurlPotential`. There are smoothing parameters `p` (one smoother for both rows) and a constant
-`C` such that, for the discretizations `cubeFEM hT hB N` (`S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹`):
-1. (5.4) holds and the projections are bounded uniformly in `N`;
-2. `grad` is injective on `P₂Λ̊⁰ ⊗ ℝ³` and `S₀,ₕ` maps `P₂Λ̊⁰ ⊗ ℝ³` onto `P₁⁻Λ̊¹`;
-3. (corrected Prop 6.2) for every `T > 0` and source continuous on `[0,T]`, (6.5) has a solution
-   with dynamic data `(σ₀, u₀, M₀, ρ₀)` iff (C2) `u₀ ⊥ grad (ker S₀,ₕ)`;
-4. every solution of (6.5) is energy-stable:
-   `E(t)^{1/2} ≤ E(0)^{1/2} + ∫₀ᵗ ‖f‖`, `E = ‖σₕ‖² + ‖uₕ‖² + ‖Mₕ‖² + ‖ρₕ‖²`;
-5. (`O(h)` convergence) there is `K` such that for every classical solution of (6.2)
-   (`Feec.BGG.ExactWave`) with `C²` states and time derivatives that vanish outside `Q` (flat at
-   `∂Q`, a class much smaller than the thesis' boundary conditions, which put no condition on
-   `M`, `ρ`; bound `L`) and `L²`-bounded multiplier, the solution of (6.5) from the elliptic projection (6.4) of the exact initial
-   state satisfies `‖(σ, u, M, ρ)(t) − (σₕ, uₕ, Mₕ, ρₕ)(t)‖ ≤ K L (1 + t) h_N` on `[0,T]`. -/
+/-- Under `CurlPotential`, for some common smoother, (6.5) satisfies (5.4), is solvable iff
+`u₀ ⊥ grad (ker S₀,ₕ)`, is energy stable and has `O(h_N)` error for `C²` solutions flat at `∂Q`
+with bounded multipliers. [QuennevilleBelair2015], Prop 6.2 (adapted), §6.3 -/
 theorem waveFEM (hR : CurlPotential) :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -350,12 +261,8 @@ theorem waveFEM (hR : CurlPotential) :
     fun N _ _ s hf => s.sqrt_energy_le hf, cubeWave_rate hT hB hCR.1 hCR.2⟩
 
 set_option maxHeartbeats 4000000 in
-/-- **Non-vacuity of `waveFEM`** (for any common smoother): the manufactured classical solution
-`waveManufactured T` of (6.2) on the cube (`σ(t) = t σ̄`, `φ(t) = t φ̄`, `u = ū`, `ρ(t) = t curl ū`,
-`λ = dg`, from the coupled static solution) has `σ(t), φ(t) ≠ 0` for `t ∈ (0,T]` and `u, λ ≠ 0`,
-meets every hypothesis of item 5 of `waveFEM`, and under `CurlPotential` the discrete solutions of
-(6.5) from the elliptic projection of its initial state converge at rate `h_N`, with `σₕ(t) ≠ 0`
-for all large `N` at every `t ∈ (0,T]`. -/
+/-- Under `CurlPotential`, the manufactured classical solution `waveManufactured T` of (6.2) is
+nonzero and approximated by solutions of (6.5) at rate `h_N`, with `σₕ(t) ≠ 0` for large `N`. -/
 theorem waveFEM_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) (hR : CurlPotential) {T : ℝ}
@@ -457,11 +364,6 @@ theorem smoothExt_hess (p : SmoothingParam (Fin 3 → ℝ)) {σ : U0} {φ : Wv U
   rw [smoothExt_grad]
   ring
 
-/-- **`Γ ⊆ H̊²(Q)`**: if `(σ, φ) ∈ Γ` (`σ ∈ H̊¹`, `φ ∈ H̊¹(Q; ℝ³)`, `grad σ = φ`), then `σ` lies
-in the domain of the minimal Hessian `H̊²(Q)` (the closure of `grad grad` on `C_c^∞(Q)`) and
-`∇²σ = (∂ⱼ φᵢ)ᵢⱼ`. The smoothed functions `R σ` (dilation towards the centre, then
-mollification, `Feec.Domain.smoothField`) are test functions with `∇²(R σ) = c² R (∂ⱼ φᵢ)`
-(`smoothExt_hess`), and converge to `σ` and `(∂ⱼ φᵢ)` in `L²`. -/
 theorem hessMin_of_mem_Γ {σ : U0} {φ : Wv U0} (h : segD0 σ = segS0 φ) :
     ∃ hd : toScalar σ ∈ (hessMin ℝ (isOpen_cubeDomain 3)).domain,
       hessMin ℝ (isOpen_cubeDomain 3) ⟨_, hd⟩ = hessOf φ := by
@@ -533,8 +435,6 @@ theorem hessMin_of_mem_Γ {σ : U0} {φ : Wv U0} (h : segD0 σ = segS0 φ) :
 
 /-! ### `H̊²(Q) ⊆ Γ` -/
 
-/-- **Integration by parts for test functions**:
-`⟪∂ⱼψ, ∂ⱼψ'⟫ = -⟪ψ, ∂ⱼ∂ⱼψ'⟫` in `L²(Q)`. -/
 theorem inner_toL2_fderiv {ψ ψ' : (Fin 3 → ℝ) → ℝ} (hψ : IsTest (cubeDomain 3) ψ)
     (hψ' : IsTest (cubeDomain 3) ψ') (v : Fin 3 → ℝ) :
     ⟪toL2 (hψ.fderiv_apply v), toL2 (hψ'.fderiv_apply v)⟫_ℝ =
@@ -591,10 +491,6 @@ theorem D0_form0_apply {ψ : (Fin 3 → ℝ) → ℝ} (hψ : IsTest (cubeDomain 
   rw [e, testField_apply]
   exact toL2_congr _ _ (funext fun x => extDerivOp_zero_apply _ j x)
 
-/-- **`H̊²(Q) ⊆ Γ`**: every `v` in the domain of the minimal Hessian is `σ` of a pair
-`(σ, φ) ∈ Γ`. For test functions `ψₙ → v` with `∇²ψₙ → ∇²v`, integration by parts
-(`inner_toL2_fderiv`) gives `‖∂ⱼ(ψₙ − ψₘ)‖² ≤ ‖ψₙ − ψₘ‖ ‖∇²(ψₙ − ψₘ)‖`, so `∇ψₙ` converges, and
-the closedness of `grad` on `H̊¹` gives `v ∈ H̊¹` and `∂ⱼ v ∈ H̊¹`. -/
 theorem mem_Γ_of_hessMin {v : L2 ℝ (cubeDomain 3)}
     (hv : v ∈ (hessMin ℝ (isOpen_cubeDomain 3)).domain) :
     ∃ σ : U0, ∃ φ : Wv U0, toScalar σ = v ∧ segD0 σ = segS0 φ := by
@@ -727,12 +623,8 @@ theorem segS0_injective : Function.Injective segS0 := fun φ ψ h => by
   simp only [coe_segS0, wsL2_zero_apply] at e
   exact e
 
-/-- **`Γ ≅ H̊²(Q)`** ([QuennevilleBelair2015], §6.3): `(σ, φ) ↦ σ` maps
-`Γ = {(σ, φ) ∈ H̊¹(Q) × H̊¹(Q; ℝ³) : grad σ = φ}` (`Feec.BGG.Segment.Γ` of the cube data
-`bggSegment`) bijectively onto the domain `H̊²(Q)` of the minimal Hessian of
-`Feec.Models.BoundedDomain` (the first space of `Feec.Models.BoundedDomain.bggComplex` on `Q`),
-and the first BGG operator `D₀(σ, φ) = grad φ` is the Hessian:
-`(∇²σ)ᵢⱼ = (grad φᵢ)ⱼ` (`hessOf`). -/
+/-- `Γ ≅ H̊²(Q)`: `(σ, φ) ↦ σ` maps `Γ` bijectively onto the domain of the minimal Hessian, and
+`D₀(σ, φ) = grad φ` is the Hessian of `σ`. [QuennevilleBelair2015], §6.3 -/
 theorem gamma_equiv_hessMin :
     Set.InjOn (fun x : U0 × Wv U0 => toScalar (x.1 : W0)) bggSegment.Γ ∧
       (∀ v, v ∈ (hessMin ℝ (isOpen_cubeDomain 3)).domain ↔

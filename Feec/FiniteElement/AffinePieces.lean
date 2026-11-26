@@ -6,24 +6,9 @@ public import Feec.FiniteElement.LocalSpace
 /-!
 # Glued finite element forms are their pieces, and the pieces of `P₁Λ` are affine
 
-Two facts about the glued spaces `Vₕᵏ = E.V M k` of an element family on a mesh
-(`Feec.FiniteElement.LocalElement`):
-
-* **`LocalElement.exists_piece_of_mem_V`**: a form of `Vₕᵏ` is, almost everywhere on each element
-  `Ω ∩ T`, a form field of the local space `P(T)ᵏ` (the frontier of a simplex is null), and
-  equality almost everywhere on `Ω` is equality almost everywhere on every element
-  (`ae_eq_restrict_domain_iff`);
-* **`exists_affine_of_mem_polySpace_one`**: the form fields of `P₁Λᵏ` are affine,
-  `ω(x)_s = a_s + Σᵢ A_{s,i} xᵢ` (from `MvPolynomial.eval_eq_of_totalDegree_le_one`: a polynomial
-  of total degree at most `1` is `c₀ + Σᵢ cᵢ Xᵢ`); so are those of `P₁⁻Λᵏ ⊆ P₁Λᵏ`, the Whitney
-  forms.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3, §5
-
-Bibliography: [references.bib](../../docs/references.bib)
+On each element, a form of `Vₕᵏ` agrees almost everywhere with a form field of the local space
+(`LocalElement.exists_piece_of_mem_V`); the form fields of `P₁Λᵏ` are affine
+(`exists_affine_of_mem_polySpace_one`).
 -/
 
 open MeasureTheory Set
@@ -32,7 +17,6 @@ open MeasureTheory Set
 
 namespace MvPolynomial
 
-/-- A monomial of degree at most `1` is `1` or a variable. -/
 theorem eq_zero_or_eq_single_of_sum_le_one {σ : Type*} (m : σ →₀ ℕ)
     (hm : (m.sum fun _ e => e) ≤ 1) : m = 0 ∨ ∃ i, m = Finsupp.single i 1 := by
   by_cases h0 : m = 0
@@ -55,8 +39,6 @@ theorem eq_zero_or_eq_single_of_sum_le_one {σ : Type*} (m : σ →₀ ℕ)
     rw [Finset.sum_pair (Ne.symm hij)] at this
     omega
 
-/-- **A polynomial of total degree at most `1` is affine**:
-`p(x) = p₀ + Σᵢ p_{eᵢ} xᵢ`. -/
 theorem eval_eq_of_totalDegree_le_one {n : ℕ} (p : MvPolynomial (Fin n) ℝ)
     (hp : p.totalDegree ≤ 1) (x : Fin n → ℝ) :
     eval x p = p.coeff 0 + ∑ i, p.coeff (Finsupp.single i 1) * x i := by
@@ -95,7 +77,7 @@ open Feec.Mesh Feec.Domain
 
 variable {n : ℕ}
 
-/-- **The form fields of `P₁Λᵏ` are affine**: `ω(x)_s = a_s + Σᵢ A_{s,i} xᵢ`. -/
+/-- The form fields of `P₁Λᵏ` are affine: `ω(x)_s = a_s + Σᵢ A_{s,i} xᵢ`. -/
 theorem exists_affine_of_mem_polySpace_one {k : ℕ} {ω : FormField n} (h : ω ∈ polySpace n 1 k) :
     ∃ (a : Finset (Fin n) → ℝ) (A : Finset (Fin n) → Fin n → ℝ),
       ∀ x s, ω x s = a s + ∑ i, A s i * x i := by
@@ -103,7 +85,6 @@ theorem exists_affine_of_mem_polySpace_one {k : ℕ} {ω : FormField n} (h : ω 
   exact ⟨fun s => (Ω s).coeff 0, fun s i => (Ω s).coeff (Finsupp.single i 1), fun x s =>
     (evalForm_apply Ω x s).trans (MvPolynomial.eval_eq_of_totalDegree_le_one _ (hΩ.2 s) x)⟩
 
-/-- Almost every point of a simplex lies in its interior. -/
 theorem ae_mem_interior_closedInterior (Ω : Set (Fin n → ℝ))
     (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     ∀ᵐ x ∂volume.restrict (Ω ∩ T.closedInterior), x ∈ interior T.closedInterior := by
@@ -116,8 +97,6 @@ theorem ae_mem_interior_closedInterior (Ω : Set (Fin n → ℝ))
   by_contra hi
   exact hx ⟨subset_closure hx', hi⟩
 
-/-- **Equality almost everywhere on a mesh is local**: two functions agree almost everywhere on
-`Ω` iff they agree almost everywhere on every element `Ω ∩ T`. -/
 theorem ae_eq_restrict_domain_iff (M : SimplicialMesh n) {β : Type*} {f g : (Fin n → ℝ) → β} :
     f =ᵐ[volume.restrict M.domain] g ↔
       ∀ T ∈ M.simplices, f =ᵐ[volume.restrict (M.domain ∩ T.closedInterior)] g := by
@@ -134,7 +113,6 @@ namespace LocalElement
 
 variable (E : LocalElement n) (M : SimplicialMesh n)
 
-/-- **The glued field is the element field almost everywhere on each simplex.** -/
 theorem glue_ae_eq {k : ℤ} (v : E.Piecewise M k.toNat) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ M.simplices) (s : formIdx n k) :
     ⇑((E.glue M k v) s) =ᵐ[volume.restrict (M.domain ∩ T.closedInterior)]
@@ -148,8 +126,7 @@ theorem glue_ae_eq {k : ℤ} (v : E.Piecewise M k.toNat) {T : Affine.Simplex ℝ
   rw [hx, pieceFun_of_mem_interior M _ hT hx', ← E.extendPW_of_mem M v hT]
   rfl
 
-/-- **A form of `Vₕᵏ` is, on each element, a field of the local space**: almost everywhere on
-`Ω ∩ T` it agrees with some `w ∈ P(T)ᵏ`. -/
+/-- A form of `Vₕᵏ` agrees almost everywhere on each element `Ω ∩ T` with some `w ∈ P(T)ᵏ`. -/
 theorem exists_piece_of_mem_V {k : ℤ} {u : L2F ℝ M.domain (formIdx n k)} (hu : u ∈ E.V M k)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices) :
     ∃ w ∈ E.space T k.toNat, ∀ s : formIdx n k,

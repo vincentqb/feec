@@ -7,62 +7,14 @@ public import Feec.Semigroup.Complexification
 /-!
 # Rational schemes on Banach spaces from the Hille–Yosida estimates
 
-Let `G` be a strongly continuous semigroup on a Banach space `E` over `𝕜 = ℝ` or `ℂ`, with
-generator `A` and `‖S(t)‖ ≤ M e^{ωt}`, and let `R = (1 - τA)⁻¹`, `τ > 0`, `ωτ < 1`. For a real
-polynomial `d` of degree `N` without roots in `re z ≤ ωτ`, the operator `Q(R) = Rᴺ d(1 - R⁻¹)`
-(`resolventEval`; `d(τA)` up to `R^N`) is invertible, with
-
-  `‖Q(R)⁻¹‖ ≤ |d_N|⁻¹ ∏_{d(ζ) = 0} (1 + |1 - ζ| M / (re ζ - ωτ))`
-
-(`isUnit_resolventEval_of_generator`). Over `ℂ`, `Q(R) = d_N ∏ ((1 - ζ) R - 1)` over the roots
-`ζ` of `d`, and `(1 - ζ) R - 1 = R (τA - ζ)` has the inverse `-1 - (1 - ζ)(ζ - τA)⁻¹`; the
-Hille–Yosida estimate at `ζ/τ`, `re ζ/τ > ω`, bounds it by `1 + |1 - ζ| M/(re ζ - ωτ)`
-(`Feec.C0Semigroup.norm_resolvent_pow_le`). Over `ℝ` the roots are complex: the argument runs on
-the complexification of `E` and of `G` (`NormedComplexification`, `C0Semigroup.complexification`),
-and invertibility and the bound come back because `T` is invertible when `T_ℂ` is, with
-`‖T_ℂ⁻¹‖ = ‖T⁻¹‖`.
-
-For a rational scheme `r` (whose poles lie in `re z > 0`) this discharges two hypotheses of
-Brenner–Thomée on Banach spaces (`RationalScheme.norm_resolventStep_pow_sub_S_le`): `Q(R)` is
-invertible, and the remainder `ρ = (r - Tₚ)/z^{p+1}` is bounded, `‖ρ(τA)‖ ≤ K₀` uniformly in
-`ωτ ≤ c` with `c > 0` and `K₀` depending only on `r`, `p` and `M`
-(`RationalScheme.exists_norm_remainder_resolventStep_le`); A-stability is not needed. What
-remains is the **stability** `‖r(τA)ⁿ‖ ≤ Mₛ`
-(`RationalScheme.exists_norm_resolventStep_pow_sub_S_le`). It is not automatic on Banach spaces,
-even for A-stable `r` (for bounded semigroups Brenner and Thomée bound `‖r(τA)ⁿ‖` by `C √n`,
-[BrennerThomee1979]); it holds for **backward Euler** `r = 1/(1 - z)`, for which `r(τA) = R`
-(`RationalScheme.resolventStep_theta_one`) and the Hille–Yosida estimates `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ`
-give it (`norm_pow_le_of_generator`). Backward Euler therefore has the error
-bound with no hypothesis beyond the growth bound of the semigroup
-(`RationalScheme.norm_backwardEuler_pow_sub_S_le`):
-
-  `‖Rⁿ x - S(nτ) x‖ ≤ (M/(1 - ωτ)ⁿ) (M/(1 - ωτ) + M e^{ωnτ}/2) M e^{ωnτ} nτ τ ‖A² x‖`.
-
-The same estimates give stability for every positive combination `r = Σ c_k (1 - bz)^{-k}`,
-`b > 0`, `c_k ≥ 0`, of powers of one resolvent; this is not formalized, since such `r` are
-absolutely monotone on `z < 1/b` and positivity-preserving rational approximations of `e^z`
-have order at most `1` ([BolleyCrouzeix1978], as recalled; the paper was not consulted), so they
-add no order beyond backward Euler.
-
-## Main results
-
-* `isUnit_resolventEval_of_generator`: `Q(R)` invertible, with the bound above;
-* `RationalScheme.norm_resolventStep_le_of_generator`: `‖r(τA)‖` bounded by the coefficients of
-  `r`, the roots of its denominator and `M` (for every rational scheme; with `r = ρ`, the
-  remainder bound);
-* `RationalScheme.exists_norm_remainder_resolventStep_le`: the uniform remainder bound;
-* `RationalScheme.exists_norm_resolventStep_pow_sub_S_le`: **Brenner–Thomée on Banach spaces with
-  only the stability assumed**;
-* `norm_pow_le_of_generator`, `RationalScheme.norm_backwardEuler_pow_sub_S_le`: **backward Euler
-  on Banach spaces**, stability and error.
+For `‖S(t)‖ ≤ M e^{ωt}` on a Banach space, `τ > 0` and `ωτ < 1`, `r(τA)` is well defined and
+bounded for every rational scheme without poles in `re z ≤ ωτ`; for `ω ≥ 0` and small `ωτ`, it
+satisfies Brenner–Thomée's error estimate if its powers are bounded.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 9
-* [C. Bolley, M. Crouzeix, *Conservation de la positivité lors de la discrétisation des problèmes d'évolution paraboliques*][BolleyCrouzeix1978]
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.5 (the Hille–Yosida estimates)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -101,8 +53,6 @@ theorem natDegree_list_prod_X_sub_C_le (L : List ℂ) :
     rw [List.map_cons, List.prod_cons, List.length_cons]
     exact natDegree_mul_le.trans (by have := natDegree_X_sub_C_le ζ; omega)
 
-/-- **`sᴺ d(1 - 1/s)` factors over the roots**: for `d = ∏ (X - ζ)`,
-`sᴺ d(1 - 1/s) = ∏ ((1 - ζ) s - 1)`. -/
 theorem resolventEval_list_prod (L : List ℂ) (S : A) :
     resolventEval L.length (L.map fun ζ => X - C ζ).prod S =
       (L.map fun ζ => (1 - ζ) • S - 1).prod := by
@@ -113,8 +63,6 @@ theorem resolventEval_list_prod (L : List ℂ) (S : A) :
       resolventEval_mul (natDegree_X_sub_C_le ζ) (natDegree_list_prod_X_sub_C_le L),
       resolventEval_X_sub_C, ih, List.map_cons, List.prod_cons]
 
-/-- **The inverse of a linear factor**: if `T - W = (ζ - 1) T W` and `T W = W T`, then
-`(1 - ζ) T - 1` has the inverse `-1 - (1 - ζ) W` (for `T = (1 - τA)⁻¹`, `W = (ζ - τA)⁻¹`). -/
 theorem mul_neg_one_sub_smul {T W : A} {ζ : ℂ} (h : T - W = (ζ - 1) • (T * W)) (hc : Commute T W) :
     ((1 - ζ) • T - 1) * (-1 - (1 - ζ) • W) = 1 ∧ (-1 - (1 - ζ) • W) * ((1 - ζ) • T - 1) = 1 := by
   have h' : (1 - ζ) • (T * W) = W - T := by
@@ -142,7 +90,6 @@ section Norm
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
-/-- `‖sᴺ f(1 - 1/s)‖ ≤ (∑ₖ ‖fₖ‖) (‖S‖ + 1)ᴺ` at a bounded operator `S`. -/
 theorem norm_resolventEval_le (N : ℕ) (f : 𝕜[X]) (S : E →L[𝕜] E) :
     ‖resolventEval N f S‖ ≤ (∑ k ∈ range (N + 1), ‖f.coeff k‖) * (‖S‖ + 1) ^ N := by
   rw [resolventEval, sum_mul]
@@ -170,7 +117,6 @@ section Complex
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℂ F] [CompleteSpace F]
 
 omit [CompleteSpace F] in
-/-- `B L = 1 = L B` and `‖B‖ ≤ ∏ b` for a list of invertible operators with bounded inverses. -/
 private theorem exists_inverse_list_prod (L : List ℂ) (f : ℂ → F →L[ℂ] F) (b : ℂ → ℝ)
     (h : ∀ ζ ∈ L, 0 ≤ b ζ ∧ ∃ g, g * f ζ = 1 ∧ f ζ * g = 1 ∧ ‖g‖ ≤ b ζ) :
     ∃ B, B * (L.map f).prod = 1 ∧ (L.map f).prod * B = 1 ∧ ‖B‖ ≤ (L.map b).prod := by
@@ -192,7 +138,6 @@ private theorem exists_inverse_list_prod (L : List ℂ) (f : ℂ → F →L[ℂ]
     · rw [List.map_cons, List.prod_cons, mul_comm (b ζ)]
       exact (norm_mul_le _ _).trans (mul_le_mul h3 hg3 (norm_nonneg _) hL)
 
-/-- **Invertibility of `sᴺ d(1 - 1/s)` at `(1 - τA)⁻¹` on complex Banach spaces.** -/
 private theorem isUnit_resolventEval_complex (H : Feec.C0Semigroup ℂ F) {M ω τ : ℝ}
     (hS : ∀ t, 0 ≤ t → ‖H.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hτω : ω * τ < 1)
     {d : ℝ[X]} (hd : ∀ z : ℂ, z.re ≤ ω * τ → aeval z d ≠ 0) :
@@ -295,7 +240,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜
   [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (G : Feec.C0Semigroup 𝕜 E)
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- Complexification commutes with `sᴺ f(1 - 1/s)` for real `f`. -/
 theorem map_resolventEval_map {n : ComplexificationNorm} [NormCore n 𝕜 E] (N : ℕ) (f : ℝ[X])
     (S : E →L[𝕜] E) :
     map (n := n) (resolventEval N (f.map (algebraMap ℝ 𝕜)) S) =
@@ -305,8 +249,6 @@ theorem map_resolventEval_map {n : ComplexificationNorm} [NormCore n 𝕜 E] (N 
   rw [coeff_map, coeff_map, RCLike.algebraMap_eq_ofReal, Complex.coe_algebraMap, mapHom_apply,
     map_ofReal_smul, ← mapHom_apply, map_mul, map_pow, map_pow, map_sub, map_one, mapHom_apply]
 
-/-- **`(1 - τA)⁻¹` is the resolvent**: `R = τ⁻¹ (τ⁻¹ - A)⁻¹` for `R (x - τ A x) = x` on `D(A)`,
-`τ > 0`, `ωτ < 1`, when `‖S(t)‖ ≤ M e^{ωt}`. -/
 theorem eq_inv_smul_resolvent_of_generator {M ω τ : ℝ}
     (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hωτ : ω * τ < 1)
     {R : E →L[𝕜] E} (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) :
@@ -315,8 +257,6 @@ theorem eq_inv_smul_resolvent_of_generator {M ω τ : ℝ}
   rw [RCLike.ofReal_inv] at h
   exact h.eq_inv_smul_of_apply_sub hτ.ne' hR
 
-/-- **Backward Euler is stable on Banach spaces**: `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` for
-`R = (1 - τA)⁻¹`, from the Hille–Yosida estimates. [Pazy1983], §1.5 -/
 theorem norm_pow_le_of_generator {M ω τ : ℝ}
     (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hωτ : ω * τ < 1)
     {R : E →L[𝕜] E} (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) (k : ℕ) :
@@ -331,7 +271,6 @@ theorem norm_pow_le_of_generator {M ω τ : ℝ}
         rw [show 1 - ω * τ = τ * (τ⁻¹ - ω) by field_simp, mul_pow, inv_pow]
         field_simp
 
-/-- `(1 - τA)⁻¹` is injective. -/
 theorem injective_of_generator {M ω τ : ℝ}
     (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hωτ : ω * τ < 1)
     {R : E →L[𝕜] E} (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) :
@@ -342,12 +281,6 @@ theorem injective_of_generator {M ω τ : ℝ}
   have hτ' : ((τ : 𝕜))⁻¹ ≠ 0 := inv_ne_zero (by exact_mod_cast hτ.ne')
   exact fun a b hab => h.injective (smul_right_injective E hτ' hab)
 
-/-- **`sᴺ d(1 - 1/s)` at `(1 - τA)⁻¹` is invertible on Banach spaces**: for `‖S(t)‖ ≤ M e^{ωt}`,
-`τ > 0`, `ωτ < 1`, `R (x - τ A x) = x` on `D(A)`, and a real polynomial `d` of degree `N`
-without roots in `re z ≤ ωτ`, `Q(R) = Rᴺ d(1 - R⁻¹)` is invertible with
-`‖Q(R)⁻¹‖ ≤ |d_N|⁻¹ ∏_{d(ζ)=0} (1 + |1 - ζ| M/(re ζ - ωτ))` (roots with multiplicity). Over
-`ℂ`, `Q(R) = d_N ∏ ((1 - ζ) R - 1)` with `((1 - ζ) R - 1)⁻¹ = -1 - (1 - ζ)(ζ - τA)⁻¹`; over `ℝ`
-on the complexification. [Pazy1983], §1.5 -/
 theorem isUnit_resolventEval_of_generator {M ω τ : ℝ}
     (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hωτ : ω * τ < 1)
     {d : ℝ[X]} (hd : ∀ z : ℂ, z.re ≤ ω * τ → aeval z d ≠ 0) {R : E →L[𝕜] E}
@@ -376,8 +309,7 @@ namespace RationalScheme
 variable (r : RationalScheme)
 
 /-- **`r(τA)` on Banach spaces is well defined**: `Q(R)` is invertible for every rational scheme
-`r` without poles in `re z ≤ ωτ` (all its poles are in `re z > 0`), `‖S(t)‖ ≤ M e^{ωt}`,
-`τ > 0`, `ωτ < 1`. -/
+`r` without poles in `re z ≤ ωτ`, `‖S(t)‖ ≤ M e^{ωt}`, `τ > 0`, `ωτ < 1`. -/
 theorem isUnit_resolventEval_den_of_generator {M ω τ : ℝ}
     (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hωτ : ω * τ < 1)
     (hden : ∀ z : ℂ, z.re ≤ ω * τ → aeval z r.den ≠ 0) {R : E →L[𝕜] E}
@@ -385,10 +317,6 @@ theorem isUnit_resolventEval_den_of_generator {M ω τ : ℝ}
     IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) R) :=
   (isUnit_resolventEval_of_generator G hS hτ hωτ hden hR).1
 
-/-- **`‖r(τA)‖` on Banach spaces**: for a rational scheme `r = n/d` without poles in
-`re z ≤ ωτ`, `‖S(t)‖ ≤ M e^{ωt}`, `τ > 0`, `ωτ < 1`,
-`‖r(τA)‖ ≤ (∑ₖ |nₖ|) (1 + M/(1 - ωτ))ᴺ |d_N|⁻¹ ∏_{d(ζ)=0} (1 + |1 - ζ| M/(re ζ - ωτ))`.
-For the remainder `ρ` of `r` this is the remainder bound of Brenner–Thomée. -/
 theorem norm_resolventStep_le_of_generator {M ω τ : ℝ}
     (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hωτ : ω * τ < 1)
     (hden : ∀ z : ℂ, z.re ≤ ω * τ → aeval z r.den ≠ 0) {R : E →L[𝕜] E}
@@ -409,11 +337,6 @@ theorem norm_resolventStep_le_of_generator {M ω τ : ℝ}
   refine (norm_mul_le _ _).trans (mul_le_mul (hP.trans ?_) hQ (norm_nonneg _) (by positivity))
   exact mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (by positivity) (by linarith) _) hs
 
-/-- **The remainder bound of Brenner–Thomée from the Hille–Yosida estimates**: for a rational
-scheme `r` and `p`, there are `c > 0`, depending only on `r` and `p` (in the proof, on `r`
-only), and for every `M` a `K₀`, depending only on `r`, `p` and `M`, such that for every strongly continuous semigroup with
-`‖S(t)‖ ≤ M e^{ωt}` on a Banach space, every `τ > 0` with `ωτ ≤ c` and `R = (1 - τA)⁻¹`:
-`Q(R)` is invertible and `‖ρ(τA)‖ ≤ K₀`. [BrennerThomee1979]; [Thomee2006], Ch. 9 -/
 theorem exists_norm_remainder_resolventStep_le (p : ℕ) :
     ∃ c : ℝ, 0 < c ∧ ∀ M : ℝ, ∃ K₀ : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
       [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
@@ -466,15 +389,11 @@ theorem exists_norm_remainder_resolventStep_le (p : ℕ) :
       nlinarith [mul_nonneg hM (sub_nonneg.2 hωτ), mul_nonneg hM (sub_pos.2 hζ').le]
     exact add_le_add_right (mul_le_mul_of_nonneg_left this (norm_nonneg _)) 1
 
-/-- **Brenner–Thomée on Banach spaces with only the stability assumed**: for a rational scheme `r`
-of order `p` there are `c > 0`, depending only on `r` and `p`, and for every `M` a `K₀`, depending
-only on `r`, `p` and `M`, such that for every strongly continuous semigroup with `‖S(t)‖ ≤ M e^{ωt}`,
-`ω ≥ 0`, on a Banach space, every `τ > 0` with `ωτ ≤ c` and `R = (1 - τA)⁻¹`: `Q(R)` is
-invertible, `‖ρ(τA)‖ ≤ K₀` (`exists_norm_remainder_resolventStep_le`), and for `n` with
-`‖r(τA)ᵏ‖ ≤ Mₛ` (`k ≤ n`) and `x ∈ D(A^{p+1})`,
-`‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M e^{ωnτ}/(p+1)!) M e^{ωnτ} nτ τᵖ ‖A^{p+1} x‖`. The stability
-does not follow from the Hille–Yosida estimates in general ([BrennerThomee1979]).
-[Thomee2006], Ch. 9 -/
+/-- **Brenner–Thomée on Banach spaces with only the stability assumed**: for `r` of order `p`
+there are `c > 0` and, for each `M`, a `K₀` such that if `‖S(t)‖ ≤ M e^{ωt}`, `ω ≥ 0`, `τ > 0`,
+`ωτ ≤ c` and `‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n`, then
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M e^{ωnτ}/(p+1)!) M e^{ωnτ} nτ τᵖ ‖A^{p+1} x‖`.
+[BrennerThomee1979]; [Thomee2006], Ch. 9 -/
 theorem exists_norm_resolventStep_pow_sub_S_le {p : ℕ} (hp : r.HasOrder p) :
     ∃ c : ℝ, 0 < c ∧ ∀ M : ℝ, ∃ K₀ : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
       [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
@@ -516,7 +435,6 @@ theorem natDegree_den_theta {θ : ℝ} (hθ : 0 < θ) : (theta θ hθ).den.natDe
   rw [hd]; exact natDegree_linear (neg_ne_zero.2 hθ.ne')
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- At backward Euler `r = 1/(1 - z)`, `Q(R) = 1`. -/
 theorem resolventEval_den_theta_one (R : E →L[𝕜] E) :
     resolventEval (theta 1 one_pos).den.natDegree ((theta 1 one_pos).den.map (algebraMap ℝ 𝕜)) R =
       1 := by
@@ -524,20 +442,17 @@ theorem resolventEval_den_theta_one (R : E →L[𝕜] E) :
   simp [theta, coeff_one, coeff_X]
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **Backward Euler is the resolvent**: for `r = 1/(1 - z)`, `r(τA) = R = (1 - τA)⁻¹`. -/
 theorem resolventStep_theta_one (R : E →L[𝕜] E) : (theta 1 one_pos).resolventStep R = R := by
   rw [resolventStep, resolventEval_den_theta_one, Ring.inverse_one, mul_one, natDegree_den_theta,
     resolventEval_one_eq]
   simp [theta, coeff_one]
 
-/-- The remainder of backward Euler at order `1` is `ρ = 1/(1 - z)`. -/
 theorem remainder_theta_one_num : ((theta 1 one_pos).remainder 1).num = 1 := by
   have h : (theta 1 one_pos).num - (theta 1 one_pos).den * expTaylor 1 = X ^ (1 + 1) * 1 := by
     simp [theta, expTaylor, sum_range_succ]; ring
   simp only [remainder, h, mul_divByMonic_cancel_left _ (monic_X_pow _)]
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **The remainder of backward Euler is the resolvent**: `ρ(τA) = R`. -/
 theorem resolventStep_remainder_theta_one (R : E →L[𝕜] E) :
     ((theta 1 one_pos).remainder 1).resolventStep R = R := by
   rw [resolventStep, remainder_theta_one_num]
@@ -547,12 +462,9 @@ theorem resolventStep_remainder_theta_one (R : E →L[𝕜] E) :
   rw [resolventEval_den_theta_one, Ring.inverse_one, mul_one, Polynomial.map_one,
     resolventEval_one, natDegree_den_theta, pow_one]
 
-/-- **Backward Euler on Banach spaces**: for a strongly continuous semigroup with
-`‖S(t)‖ ≤ M e^{ωt}`, `ω ≥ 0`, `τ > 0` with `ωτ < 1`, `R = (1 - τA)⁻¹` and `x ∈ D(A²)`,
-`‖Rⁿ x - S(nτ) x‖ ≤ (M/(1 - ωτ)ⁿ) (M/(1 - ωτ) + M e^{ωnτ}/2) M e^{ωnτ} nτ τ ‖A² x‖`, with no
-further hypothesis: the stability `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` and the remainder `ρ(τA) = R` come from the
-Hille–Yosida estimates. For bounded semigroups (`ω = 0`): `‖Rⁿ x - S(nτ) x‖ ≤ (3/2) M³ nτ² ‖A² x‖`.
-[BrennerThomee1979]; [Pazy1983], §1.5 -/
+/-- **Backward Euler on Banach spaces**: for `‖S(t)‖ ≤ M e^{ωt}`, `ω ≥ 0`, `τ > 0`, `ωτ < 1` and
+`x ∈ D(A²)`,
+`‖Rⁿ x - S(nτ) x‖ ≤ (M/(1 - ωτ)ⁿ) (M/(1 - ωτ) + M e^{ωnτ}/2) M e^{ωnτ} nτ τ ‖A² x‖`. -/
 theorem norm_backwardEuler_pow_sub_S_le {M ω τ : ℝ} (hω : 0 ≤ ω)
     (hS : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M * Real.exp (ω * t)) (hτ : 0 < τ) (hωτ : ω * τ < 1)
     {R : E →L[𝕜] E} (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) (n : ℕ)

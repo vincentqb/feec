@@ -6,68 +6,20 @@ public import Feec.FiniteElement.InterpolationError
 /-!
 # Interpolation error of the Whitney elements `P₁⁻Λᵏ`
 
-The canonical interpolant `Π_T ω = Σ_g (∫_g ω) φ_g` of the lowest-order Whitney forms
-(`Feec.FiniteElement.whitneyInterp`) is estimated in the classical `C¹` form of [Arnold2018],
-Ch. 7 ([Ciarlet2002], Thm 3.1.4), with explicit constants:
-
-* **stability**: if the degree-`k` coefficients of `ω` are bounded by `M` on an `n`-simplex `T`,
-  then `|Σ_g (∫_g ω) φ_g(x)_s| ≤ C_{n,k} (h_T ‖B_T⁻¹‖)^k M` on `T`
-  (`abs_sum_simplexIntegral_mul_whitneyForm_le`; `C_{n,k} = whitneyConst n k`), from the bounds
-  `Σ_s |minor_s(B_g)| ≤ 2ⁿ (k h_T)^k` of the face edge matrices and
-  `|φ_g| ≤ k! (k + 1) (n (n + 1) ‖B_T⁻¹‖)^k` of the Whitney forms
-  (`sum_abs_wedgeProd_faceVertices_le`, `abs_baryGrad_le`, `abs_whitneyForm_le`);
-* **reproduction of constants**: `P₁⁻Λᵏ(T)` is the space of trimmed linear forms
-  `x ↦ α + ι_x β` for every simplex (`whitneySpace_eq_p1MinusForms`, by a dimension count), so
-  constant `k`-forms are Whitney forms (`const_mem_whitneySpace_simplex`);
-* **local error**: `|(w - Π_T w)(x)_s| ≤ C_{n,k} (h_T ‖B_T⁻¹‖)^k h_T sup_T ‖Dw‖` for `C¹` forms
-  `w` and `#s = k` (`abs_sub_whitneyInterp_le`).
-
-**The reference interpolant.** On the reference simplex `T̂`, the interpolant in all degrees at
-once, `whitneyRefInterp g = Σ_k Σ_{k-faces f} (∫_f g) φ_f` (equal to `Π_T̂` on `k`-forms,
-`whitneyRefInterp_apply_eq_whitneyInterp`), satisfies `Feec.FiniteElement.IsRefInterpolant` with
-`r = 0`, `m = 0` (`isRefInterpolant_whitney`): it reproduces the constant forms
-(`whitneyRefInterp_const`) and is stable in `C⁰(T̂)`; hence
-`sup_{T̂} ‖f - I f‖ ≤ (1 + C) sup_{T̂} ‖Df‖` (`IsRefInterpolant.norm_sub_le`). This instance is a
-side result, stated for coefficient fields `T̂ → (Finset (Fin n) → ℝ)`; the mesh estimates below
-do not use it.
-
-**On a mesh.** The global canonical interpolant of the Whitney element family is `Π_T` on every
-simplex (`whitney_globalInterp_apply`). With `formL2` the degree-`k` coefficients of a continuous
-form as an element of `L²(Ω; Λᵏ)`, on a mesh with `h_T ‖B_T⁻¹‖ ≤ C₀` and `h_T ≤ h`:
-`‖w - Π_h w‖_{L²(Ω; Λᵏ)} ≤ #Λᵏ |Ω|^{1/2} C_{n,k} C₀^k h sup_{cl Ω} ‖Dw‖`
-(`norm_formL2_sub_glue_le`). Since `Π_h` commutes with `d`
-(`LocalElement.glue_globalInterp_mem_maximal` in `Feec.FiniteElement.GlobalInterpolation`), the
-same bound for `dw` (with `sup ‖D dw‖`, so `w ∈ C²`) gives the graph-norm error. Smooth
-`k`-forms are in `D(d_max)` with the classical `d` (`formL2_mem_maximal`). The estimate takes
-the raw shape bound `h_T ‖B_T⁻¹‖ ≤ C₀`, which follows from the second condition of
-`Feec.Mesh.IsShapeRegular` (`diam_mul_norm_symm_le_of_isShapeRegular`,
-`norm_formL2_sub_glue_le_of_isShapeRegular`). It is proved directly on each simplex, not by
-transport from `T̂` (`Feec.FiniteElement.norm_sub_transportInterp_le` would need the naturality
-of `Π_T` under affine maps).
-
-## Main definitions
-
-* `Feec.FiniteElement.whitneyConst n k`: the constant of the local estimates.
-* `Feec.FiniteElement.formL2`: a continuous form as an `L²` field of `k`-forms on a bounded `Ω`.
-* `Feec.FiniteElement.whitneyRefInterp`, `whitneyRefConst`: the reference interpolant and its
-  stability constant.
+The canonical interpolant `Π_T` of the Whitney forms on an `n`-simplex `T` satisfies, for `C¹`
+forms `w`, `|(w - Π_T w)(x)_s| ≤ C_{n,k} (h_T ‖B_T⁻¹‖)^k h_T sup_T ‖Dw‖` for `x ∈ T` and `#s = k`
+([Arnold2018], Ch. 7; [Ciarlet2002], Thm 3.1.4), and hence an `L²` error bound on meshes.
 
 ## Main results
 
 * `abs_sub_whitneyInterp_le`: the local interpolation error.
-* `isRefInterpolant_whitney`: the Whitney interpolant as a reference interpolant.
-* `whitney_globalInterp_apply`, `norm_formL2_sub_glue_le`,
-  `norm_formL2_sub_glue_le_of_isShapeRegular`: the global `L²` error; for any element family, a
-  pointwise bound on the simplex interiors bounds it (`norm_formL2_sub_glue_le_of_forall`).
-* `formL2_mem_maximal`, `contDiff_extDeriv`: `d` on smooth forms.
+* `norm_formL2_sub_glue_le_of_isShapeRegular`: the global `L²` error on shape-regular meshes.
+* `formL2_mem_maximal`: smooth `k`-forms are in `D(d_max)`.
 
 ## References
 
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates on shape regular meshes)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (canonical interpolants, Whitney forms)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -84,7 +36,6 @@ omit [Fintype d] in
 theorem abs_sgn (j : d) (s : Finset d) : |(sgn j s : ℝ)| = 1 := by
   simp [sgn, abs_pow]
 
-/-- `|(ξ ∧ ω)_s| ≤ #d · A · B` if `|ξ_j| ≤ A` and `|ω_t| ≤ B`. -/
 theorem abs_wedge_le {ξ : d → ℝ} {ω : Finset d → ℝ} {A B : ℝ} (hA : 0 ≤ A) (hB : 0 ≤ B)
     (hξ : ∀ j, |ξ j| ≤ A) (hω : ∀ t, |ω t| ≤ B) (s : Finset d) :
     |wedge ξ ω s| ≤ Fintype.card d * (A * B) := by
@@ -99,7 +50,6 @@ theorem abs_wedge_le {ξ : d → ℝ} {ω : Finset d → ℝ} {A B : ℝ} (hA : 
         gcongr
         exact_mod_cast card_le_univ s
 
-/-- `|(θ_{s₁} ∧ ⋯ ∧ θ_{s_k})_t| ≤ (#d · A)^k` if all `|θ_{ij}| ≤ A`. -/
 theorem abs_wedgeProd_le {ι : Type*} [LinearOrder ι] {θ : ι → d → ℝ} {A : ℝ} (hA : 0 ≤ A)
     (hθ : ∀ i j, |θ i j| ≤ A) (s : Finset ι) (t : Finset d) :
     |wedgeProd θ s t| ≤ (Fintype.card d * A) ^ #s := by
@@ -123,8 +73,6 @@ open ExteriorFibre Feec.Mesh Feec.Domain
 
 variable {n : ℕ}
 
-/-! ### The degree-`k` part of a fibre form -/
-
 /-- The degree-`k` part `Σ_{#s = k} α_s dx_s` of a fibre form. -/
 def degPart (k : ℕ) (α : Finset (Fin n) → ℝ) : Finset (Fin n) → ℝ :=
   fun t => if #t = k then α t else 0
@@ -135,10 +83,6 @@ theorem isDeg_degPart (k : ℕ) (α : Finset (Fin n) → ℝ) : IsDeg k (degPart
 theorem degPart_of_card {k : ℕ} (α : Finset (Fin n) → ℝ) {t : Finset (Fin n)} (ht : #t = k) :
     degPart k α t = α t := by simp [degPart, ht]
 
-/-! ### Bounds for face integrals -/
-
-/-- **The face integral only sees the degree-`k` coefficients**: if `|ω_s| ≤ M` on the face for
-`#s = k`, then `|∫_p ω| ≤ (Σ_s |minor_s(B_p)|) M / k!` (the minors vanish for `#s ≠ k`). -/
 theorem abs_simplexIntegral_le_of_card {k : ℕ} {p : Fin (k + 1) → Fin n → ℝ} {ω : FormField n}
     {M : ℝ} (hM : ∀ x ∈ refSimplex k, ∀ s : Finset (Fin n), #s = k → |ω (simplexMap p x) s| ≤ M) :
     |simplexIntegral p ω| ≤
@@ -154,8 +98,6 @@ theorem abs_simplexIntegral_le_of_card {k : ℕ} {p : Fin (k + 1) → Fin n → 
       isDeg_wedgeProd _ s univ (by rw [card_univ, Fintype.card_fin]; exact Ne.symm hs)
     simp [h0]
 
-/-! ### Geometry of a simplex: vertices, barycentric coordinates and their gradients -/
-
 theorem simplexMatrix_faceVertices_abs_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     (g : Finset (Fin (n + 1))) (hg : #g = k + 1) (i : Fin n) (l : Fin k) :
     |simplexMatrix (faceVertices T.points g hg) i l| ≤ diam T := by
@@ -168,7 +110,6 @@ theorem simplexMatrix_faceVertices_abs_le (T : Affine.Simplex ℝ (Fin n → ℝ
   rw [← Pi.sub_apply, ← Real.norm_eq_abs]
   exact norm_le_pi_norm _ i
 
-/-- The minors of the edge matrix of a face: `Σ_s |minor_s| ≤ 2ⁿ (k h_T)^k`. -/
 theorem sum_abs_wedgeProd_faceVertices_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     (g : Finset (Fin (n + 1))) (hg : #g = k + 1) :
     ∑ s, |wedgeProd (simplexMatrix (faceVertices T.points g hg)) s univ| ≤
@@ -185,7 +126,6 @@ theorem sum_abs_wedgeProd_faceVertices_le (T : Affine.Simplex ℝ (Fin n → ℝ
   calc _ ≤ ∑ _s : Finset (Fin n), (k * diam T) ^ k := sum_le_sum fun s _ => hterm s
     _ = _ := by rw [sum_const, card_univ, Fintype.card_finset, Fintype.card_fin, nsmul_eq_mul]; simp
 
-/-- `B_T x̂ = (edge matrix) x̂`. -/
 theorem edgeMatrix_mulVec (T : Affine.Simplex ℝ (Fin n → ℝ) n) (v : Fin n → ℝ) :
     Matrix.mulVec (edgeMatrix T.points) v = T.linearPart v := by
   funext i
@@ -216,7 +156,6 @@ theorem abs_inv_edgeMatrix_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (m l : 
   · subst hj; simp
   · simp [hj]
 
-/-- **The gradients of the barycentric coordinates**: `|dλᵢ| ≤ (n + 1) ‖B_T⁻¹‖`. -/
 theorem abs_baryGrad_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Fin (n + 1)) (l : Fin n) :
     |baryGrad T.points i l| ≤
       (n + 1) * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ := by
@@ -233,7 +172,6 @@ theorem abs_baryGrad_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i : Fin (n +
     calc |(edgeMatrix T.points)⁻¹ m l| ≤ S := abs_inv_edgeMatrix_le T m l
       _ ≤ (n + 1) * S := le_mul_of_one_le_left hS (by linarith [(Nat.cast_nonneg n : (0 : ℝ) ≤ n)])
 
-/-- On `T`, the barycentric coordinates lie in `[0, 1]`. -/
 theorem baryCoord_mem_Icc (T : Affine.Simplex ℝ (Fin n → ℝ) n) {x : Fin n → ℝ}
     (hx : x ∈ T.closedInterior) (i : Fin (n + 1)) : baryCoord T.points x i ∈ Set.Icc (0 : ℝ) 1 := by
   rw [← Affine.Simplex.convexHull_eq_closedInterior] at hx
@@ -245,7 +183,6 @@ theorem baryCoord_mem_Icc (T : Affine.Simplex ℝ (Fin n → ℝ) n) {x : Fin n 
   have : 0 ≤ ∑ j ∈ univ.erase i, refBary y j := sum_nonneg fun j _ => hy j
   linarith
 
-/-- **Bound of the Whitney forms on `T`**: `|φ_g(x)_s| ≤ k! (k + 1) (n (n + 1) ‖B_T⁻¹‖)^k`. -/
 theorem abs_whitneyForm_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ} {g : Finset (Fin (n + 1))}
     (hg : #g = k + 1) {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) (s : Finset (Fin n)) :
     |whitneyForm T.points g x s| ≤ k.factorial * ((k + 1) * (n * ((n + 1) *
@@ -271,13 +208,9 @@ theorem abs_whitneyForm_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ} 
           _ = _ := one_mul _
     _ = (k + 1) * (n * G) ^ k := by rw [sum_const, hg, nsmul_eq_mul]; push_cast; ring
 
-/-! ### Constant forms are Whitney forms -/
-
 theorem const_mem_whitneySpace_simplex (T : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     {α : Finset (Fin n) → ℝ} (hα : IsDeg k α) : (fun _ => α) ∈ whitneySpace T.points k := by
   rw [whitneySpace_eq_p1MinusForms]; exact const_mem_p1MinusForms hα
-
-/-! ### The local interpolation error -/
 
 /-- The constant of the local estimate: `#{k-faces} · 2ⁿ k^k (k + 1) (n (n + 1))^k`. -/
 def whitneyConst (n k : ℕ) : ℝ :=
@@ -286,10 +219,6 @@ def whitneyConst (n k : ℕ) : ℝ :=
 theorem whitneyConst_nonneg (n k : ℕ) : 0 ≤ whitneyConst n k := by
   unfold whitneyConst; positivity
 
-/-- **Stability of the Whitney interpolation formula**: if the degree-`k` coefficients of `ω` are
-bounded by `M` on `T`, then at every point of `T`,
-`|Σ_g (∫_g ω) φ_g(x)_s| ≤ C_{n,k} (h_T ‖B_T⁻¹‖)^k M`: the face integrals are `O(h_T^k M)` and the
-Whitney forms `O(‖B_T⁻¹‖^k)`. No continuity of `ω` is needed. -/
 theorem abs_sum_simplexIntegral_mul_whitneyForm_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ)
     {ω : FormField n} {M : ℝ} (hM0 : 0 ≤ M)
     (hM : ∀ y ∈ T.closedInterior, ∀ t : Finset (Fin n), #t = k → |ω y t| ≤ M)
@@ -337,11 +266,8 @@ theorem abs_sum_simplexIntegral_mul_whitneyForm_le (T : Affine.Simplex ℝ (Fin 
           whitneyConst]
         ring
 
-/-- **Local interpolation error of the Whitney interpolant** ([Arnold2018], Ch. 7, the classical
-`C¹` form): for a `C¹` form `w` with `‖Dw‖ ≤ L` on `T`, at every point of `T` the degree-`k`
-coefficients satisfy `|(w - Π_T w)(x)_s| ≤ C_{n,k} (h_T ‖B_T⁻¹‖)^k h_T L`. Proof: with the
-constant form `c = w(x)` (degree-`k` part), `Π_T c = c`, so `(w - Π_T w)(x)_s = -Π_T(w - c)(x)_s`,
-and `|w - c| ≤ h_T L` on `T` (mean value theorem). -/
+/-- **Local interpolation error of the Whitney interpolant**: for `w ∈ C¹` with `‖Dw‖ ≤ L` on `T`,
+`|(w - Π_T w)(x)_s| ≤ C_{n,k} (h_T ‖B_T⁻¹‖)^k h_T L` for `x ∈ T`, `#s = k`. [Arnold2018], Ch. 7 -/
 theorem abs_sub_whitneyInterp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) {w : FormField n}
     (hw : ContDiff ℝ 1 w) {L : ℝ}
     (hL : ∀ y ∈ T.closedInterior, ‖fderiv ℝ w y‖ ≤ L) {x : Fin n → ℝ}
@@ -382,9 +308,6 @@ theorem abs_sub_whitneyInterp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k :
     _ ≤ L * D := mul_le_mul_of_nonneg_left hdist hL0
     _ = D * L := mul_comm _ _
 
-/-! ### The Whitney interpolant as a reference interpolant (`IsRefInterpolant`) -/
-
-/-- The face integral only depends on the degree-`k` coefficients on the face. -/
 theorem simplexIntegral_congr_card {k : ℕ} (p : Fin (k + 1) → Fin n → ℝ) {ω η : FormField n}
     (h : ∀ x ∈ refSimplex k, ∀ s : Finset (Fin n), #s = k →
       ω (simplexMap p x) s = η (simplexMap p x) s) :
@@ -397,9 +320,7 @@ theorem simplexIntegral_congr_card {k : ℕ} (p : Fin (k + 1) → Fin n → ℝ)
   · rw [isDeg_wedgeProd _ s univ (by rw [card_univ, Fintype.card_fin]; exact Ne.symm hs),
       mul_zero, mul_zero]
 
-/-- **The canonical interpolant of the lowest-order Whitney forms on the reference simplex**, in all
-degrees at once: `I g = Σ_k Σ_{k-faces f} (∫_f g) φ_f` (on `k`-forms, `Π_T̂` of `P₁⁻Λᵏ(T̂)`,
-`whitneyRefInterp_apply_of_card`). -/
+/-- The canonical interpolant `I g = Σ_k Σ_{k-faces f} (∫_f g) φ_f` on `T̂`, in all degrees. -/
 def whitneyRefInterp (g : (Fin n → ℝ) → Finset (Fin n) → ℝ) (x : Fin n → ℝ) :
     Finset (Fin n) → ℝ :=
   ∑ k ∈ range (n + 1), ∑ f : Faces n k,
@@ -415,8 +336,6 @@ theorem whitneyRefConst_nonneg (n : ℕ) : 0 ≤ whitneyRefConst n :=
   sum_nonneg fun k _ => mul_nonneg (whitneyConst_nonneg n k)
     (pow_nonneg (mul_nonneg (diam_nonneg _) (norm_nonneg _)) k)
 
-/-- The degree-`k` coefficient of `whitneyRefInterp g` is the face-integral formula of degree
-`k` (the Whitney forms of the other degrees vanish there). -/
 theorem whitneyRefInterp_apply_of_card (g : (Fin n → ℝ) → Finset (Fin n) → ℝ)
     (x : Fin n → ℝ) {s : Finset (Fin n)} {k : ℕ} (hs : #s = k) :
     whitneyRefInterp g x s = ∑ f : Faces n k,
@@ -427,7 +346,6 @@ theorem whitneyRefInterp_apply_of_card (g : (Fin n → ℝ) → Finset (Fin n) �
   rw [Finset.sum_eq_single_of_mem k hk fun k' _ hk' => sum_eq_zero fun f _ => by
     rw [isDeg_whitneyForm _ f.2 x s (by rw [hs]; exact Ne.symm hk'), mul_zero]]
 
-/-- On continuous `k`-forms the reference interpolant is `Π_T̂`. -/
 theorem whitneyRefInterp_apply_eq_whitneyInterp (g : contForms n) (x : Fin n → ℝ)
     {s : Finset (Fin n)} {k : ℕ} (hs : #s = k) :
     whitneyRefInterp g x s =
@@ -436,7 +354,6 @@ theorem whitneyRefInterp_apply_eq_whitneyInterp (g : contForms n) (x : Fin n →
   simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul]
   rfl
 
-/-- **`I` reproduces the constant forms** (all degrees). -/
 theorem whitneyRefInterp_const (c : Finset (Fin n) → ℝ) (x : Fin n → ℝ) :
     whitneyRefInterp (fun _ => c) x = c := by
   funext t
@@ -455,11 +372,6 @@ theorem whitneyRefInterp_const (c : Finset (Fin n) → ℝ) (x : Fin n → ℝ) 
   rw [e, whitneyInterp_inclusion]
   exact degPart_of_card c rfl
 
-/-- **The Whitney interpolant is a reference interpolant** in the sense of
-`Feec.FiniteElement.IsRefInterpolant` ([Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7): it is
-additive on `C¹` fields, reproduces `P₀` (the constant forms of all degrees,
-`whitneyRefInterp_const`), and is stable in the `C⁰(T̂)` norm,
-`sup_{T̂} ‖I g‖ ≤ C sup_{T̂} ‖g‖` (`r = 0`, `m = 0`, `C = whitneyRefConst n`). -/
 theorem isRefInterpolant_whitney (n : ℕ) :
     IsRefInterpolant n 0 0 (Finset (Fin n) → ℝ) whitneyRefInterp (whitneyRefConst n) where
   le_succ := Nat.zero_le _
@@ -498,11 +410,6 @@ theorem isRefInterpolant_whitney (n : ℕ) :
       (fun k _ => mul_nonneg (whitneyConst_nonneg n k)
         (pow_nonneg (mul_nonneg (diam_nonneg _) (norm_nonneg _)) k)) hk
 
-/-! ### The canonical interpolant of the Whitney element family -/
-
-/-- On each simplex, the global canonical interpolant of the Whitney element family is the
-canonical interpolant `Π_T` of `P₁⁻Λᵏ(T)` (the face integrals agree up to the orientation sign
-of the enumeration of each face). -/
 theorem whitney_globalInterp_apply (M : SimplicialMesh n) (k : ℕ) (w : contForms n)
     (T : M.simplices) :
     ((((whitneyElement n).globalInterp M k w : (whitneyElement n).Piecewise M k) T :
@@ -540,10 +447,7 @@ theorem whitney_globalInterp_apply (M : SimplicialMesh n) (k : ℕ) (w : contFor
       exact (simplexIntegral_whitneyInterp hp w ⟨f, hf⟩).symm
   exact congrArg Subtype.val h
 
-/-! ### Continuous forms as `L²` fields -/
-
-/-- The degree-`k` coefficients of a continuous form, as an element of `L²(Ω; Λᵏ)` (`Ω`
-bounded). -/
+/-- The degree-`k` coefficients of a continuous form as an element of `L²(Ω; Λᵏ)`. -/
 def formL2 {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (hb : Bornology.IsBounded Ω) (k : ℤ) :
     contForms n →ₗ[ℝ] L2F ℝ Ω (formIdx n k) where
   toFun w := Feec.Domain.toL2F fun s => memLp_of_continuous hΩ hb (continuous_formComp (k := k) w.2 s)
@@ -567,7 +471,6 @@ theorem coeFn_formL2 {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (hb : B
       fun x => (w : FormField n) x s.1 :=
   (memLp_of_continuous hΩ hb (continuous_formComp (k := k) w.2 s)).coeFn_toLp
 
-/-- `formL2` only sees the values on `Ω`. -/
 theorem formL2_congr {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (hb : Bornology.IsBounded Ω)
     (k : ℤ) {w w' : contForms n} (h : ∀ x ∈ Ω, (w : FormField n) x = (w' : FormField n) x) :
     formL2 hΩ hb k w = formL2 hΩ hb k w' := by
@@ -582,7 +485,6 @@ theorem _root_.Feec.Mesh.SimplicialMesh.isBounded_domain (M : SimplicialMesh n) 
   rw [← M.biUnion_closedInterior]
   exact (Bornology.isBounded_biUnion_finset M.simplices).2 fun T _ => T.isCompact_closedInterior.isBounded
 
-/-- The constant piecewise field of a continuous form is the form. -/
 theorem pieceL2_formComp_eq_formL2 (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain) (k : ℤ)
     (w : contForms n) :
     pieceL2 M M.domain (fun _ => formComp (k := k) (w : FormField n))
@@ -596,7 +498,6 @@ theorem pieceL2_formComp_eq_formL2 (M : SimplicialMesh n) (hΩ : MeasurableSet M
   rw [h1, h2, pieceFun_of_mem_interior M _ hT hxT]
   rfl
 
-/-- `‖v‖ ≤ #ι · B` in `L²(Ω; ℝ^ι)` if every component has norm `≤ B`. -/
 theorem L2F.norm_le_card_mul {Ω : Set (Fin n → ℝ)} {ι : Type*} [Fintype ι] (v : L2F ℝ Ω ι)
     {B : ℝ} (hB : 0 ≤ B) (h : ∀ i, ‖v i‖ ≤ B) : ‖v‖ ≤ Fintype.card ι * B := by
   have hsq : ‖v‖ ^ 2 ≤ (Fintype.card ι * B) ^ 2 := by
@@ -613,15 +514,11 @@ theorem L2F.norm_le_card_mul {Ω : Set (Fin n → ℝ)} {ι : Type*} [Fintype ι
             nlinarith
   exact (abs_le_of_sq_le_sq' hsq (by positivity)).2
 
-/-! ### The global interpolation error -/
-
 theorem _root_.Feec.FiniteElement.LocalElement.glue_apply (E : LocalElement n)
     (M : SimplicialMesh n) (k : ℤ) (u : E.Piecewise M k.toNat) :
     E.glue M k u = pieceL2 M M.domain (fun T => formComp (k := k) (E.extendPW M u T))
       (fun _ hT s => continuous_formComp (E.contDiff_extendPW M u hT).continuous s) := rfl
 
-/-- **A pointwise bound on the simplex interiors bounds the `L²` distance** between a continuous
-form and a glued piecewise field (any element family). -/
 theorem norm_formL2_sub_glue_le_of_forall (E : LocalElement n) (M : SimplicialMesh n)
     (hΩ : MeasurableSet M.domain) (k : ℕ) (w : contForms n) (u : E.Piecewise M k) {B : ℝ}
     (hB : 0 ≤ B)
@@ -656,10 +553,6 @@ section Global
 
 variable (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain)
 
-/-- **Global `L²` interpolation error of the Whitney complex** ([Arnold2018], Ch. 7, classical
-`C¹` form): on a mesh with `h_T ‖B_T⁻¹‖ ≤ C₀` and `h_T ≤ h` for every simplex, for a `C¹` form
-`w` with `‖Dw‖ ≤ L` on `cl Ω`,
-`‖w - Π_h w‖_{L²(Ω; Λᵏ)} ≤ #Λᵏ |Ω|^{1/2} C_{n,k} C₀^k h L`. -/
 theorem norm_formL2_sub_glue_le (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w) {L C₀ h : ℝ}
     (hC₀ : 0 ≤ C₀) (hh0 : 0 ≤ h) (hL0 : 0 ≤ L) (hL : ∀ y ∈ closure M.domain, ‖fderiv ℝ w y‖ ≤ L)
     (hC : ∀ T ∈ M.simplices,
@@ -712,8 +605,6 @@ theorem norm_formL2_sub_glue_le (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1
   · rw [measureUnivNNReal, Measure.restrict_apply_univ, ENNReal.toReal_ofNat, one_div]
     rfl
 
-/-- On a shape regular mesh (`Feec.Mesh.IsShapeRegular` with constants `C₀, c`), the shape bound
-`h_T ‖B_T⁻¹‖ ≤ C₀` holds for every simplex. -/
 theorem diam_mul_norm_symm_le_of_isShapeRegular {C₀ c : ℝ} (hC₀ : 0 ≤ C₀)
     (hreg : IsShapeRegular (↑M.simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) C₀ c)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n}
@@ -725,9 +616,8 @@ theorem diam_mul_norm_symm_le_of_isShapeRegular {C₀ c : ℝ} (hC₀ : 0 ≤ C�
   · calc _ ≤ diam T * (C₀ / diam T) := mul_le_mul_of_nonneg_left h h0.le
       _ = C₀ := by field_simp
 
-/-- **Global `L²` interpolation error on a shape regular mesh** ([Arnold2018], Ch. 7): with the
-constants `C₀, c` of `Feec.Mesh.IsShapeRegular` and `h_T ≤ h`,
-`‖w - Π_h w‖_{L²(Ω; Λᵏ)} ≤ #Λᵏ |Ω|^{1/2} C_{n,k} C₀^k h sup_{cl Ω} ‖Dw‖`. -/
+/-- **Global `L²` interpolation error on shape-regular meshes** (constants `C₀, c`, `h_T ≤ h`):
+`‖w - Π_h w‖_{L²(Ω; Λᵏ)} ≤ #Λᵏ |Ω|^{1/2} C_{n,k} C₀^k h sup_{cl Ω} ‖Dw‖`. [Arnold2018], Ch. 7 -/
 theorem norm_formL2_sub_glue_le_of_isShapeRegular (k : ℕ) {w : FormField n}
     (hw : ContDiff ℝ 1 w) {L C₀ c h : ℝ} (hC₀ : 0 ≤ C₀) (hh0 : 0 ≤ h) (hL0 : 0 ≤ L)
     (hL : ∀ y ∈ closure M.domain, ‖fderiv ℝ w y‖ ≤ L)
@@ -741,7 +631,6 @@ theorem norm_formL2_sub_glue_le_of_isShapeRegular (k : ℕ) {w : FormField n}
   norm_formL2_sub_glue_le M hΩ k hw hC₀ hh0 hL0 hL
     (fun _ hT => diam_mul_norm_symm_le_of_isShapeRegular M hC₀ hreg hT) hh
 
-/-- `d` of a `C^{m+1}` form is `C^m`. -/
 theorem contDiff_extDeriv {m : WithTop ℕ∞} {ω : FormField n} (hω : ContDiff ℝ (m + 1) ω) :
     ContDiff ℝ m (extDeriv ω) :=
   contDiff_pi.2 fun s => ContDiff.sum fun j _ =>

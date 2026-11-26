@@ -5,31 +5,17 @@ public import Feec.HilbertComplex.Approximation.CochainProjection
 /-!
 # The discrete Hodge decomposition and the harmonic gap
 
-For a finite-dimensional subcomplex `Vₕ` of a Hilbert complex, the discrete complex has closed
-range at every index, so the strong Hodge decomposition holds on `Vₕ`:
-`Vₕⁱ = 𝔅ₕⁱ ⊕ ℌₕⁱ ⊕ 𝔅ₕ*ⁱ`, `𝔷ₕⁱ = 𝔅ₕⁱ ⊕ ℌₕⁱ`, and `ℌₕⁱ ≅ 𝔷ₕⁱ / 𝔅ₕⁱ`. The discrete harmonic
-forms are in general *not* harmonic (`𝔅ₕ ⊆ 𝔅` but `𝔅ₕᗮ ⊉ 𝔅ᗮ`); a cochain projection controls the
-gap between `ℌ` and `ℌₕ`.
+The Hodge decomposition of a finite-dimensional subcomplex of a Hilbert complex, and the bound of
+the harmonic gap by a cochain projection.
 
 ## Main results
 
-* `Subcomplex.closedRangeAt`, `Subcomplex.dual_closedRangeAt`, `Subcomplex.hodge`: the discrete
-  Hodge decomposition (strong form, every index).
-* `Subcomplex.cyclesW_eq`: `𝔷ₕⁱ = 𝔅ₕⁱ ⊕ ℌₕⁱ` in `Wⁱ`.
-* `Subcomplex.cohomologyEquivHarmonic`: discrete cohomology `≅` discrete harmonic forms.
-* `CochainProjection.norm_sub_starProjection_harmonicW_le`: the **harmonic gap**
-  `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖` for `q ∈ ℌ`.
-
-The isomorphism `Hⁱ(H) ≅ Hⁱ(Vₕ)` induced by a cochain projection is in
-`Feec.HilbertComplex.Approximation.DiscreteCohomology`.
+* `Subcomplex.hodge`: `Vₕⁱ = 𝔅ₕⁱ ⊕ ℌₕⁱ ⊕ 𝔅ₕ*ⁱ`, orthogonally, at every index.
+* `CochainProjection.norm_sub_starProjection_harmonicW_le`: `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖` on `ℌ`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3–3.4 (discrete Hodge decomposition, Thm 3.5 gap estimate)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (approximation of harmonic forms)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -51,16 +37,13 @@ namespace Subcomplex
 
 variable (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
-/-- The discrete complex has closed range at every index. -/
 theorem closedRangeAt (i : ι) : S.toHilbertComplex.ClosedRangeAt i :=
   Submodule.closed_of_finiteDimensional _
 
-/-- The dual of the discrete complex has closed range at every index. -/
 theorem dual_closedRangeAt (i : ι) : S.toHilbertComplex.dual.ClosedRangeAt i :=
   Submodule.closed_of_finiteDimensional _
 
-/-- **Discrete Hodge decomposition**: `Vₕⁱ = 𝔅ₕⁱ ⊕ ℌₕⁱ ⊕ 𝔅ₕ*ⁱ`, pairwise orthogonal, at every
-index. -/
+/-- **Discrete Hodge decomposition**: `Vₕⁱ = 𝔅ₕⁱ ⊕ ℌₕⁱ ⊕ 𝔅ₕ*ⁱ`, pairwise orthogonal. -/
 theorem hodge (i : ι) :
     S.toHilbertComplex.boundaries i ⊔ S.toHilbertComplex.harmonic i ⊔
         S.toHilbertComplex.dual.boundaries i = ⊤ ∧
@@ -89,17 +72,15 @@ theorem map_harmonic (i : ι) :
     (S.toHilbertComplex.harmonic i).map (S.V i).subtype = S.harmonicW i :=
   S.map_subtype_eq (S.harmonicW_le_V i) fun _ => S.mem_harmonic_iff
 
-/-- **`𝔷ₕⁱ = 𝔅ₕⁱ ⊕ ℌₕⁱ`** (orthogonal), in `Wⁱ`. -/
 theorem cyclesW_eq (i : ι) : S.cyclesW i = S.boundariesW i ⊔ S.harmonicW i := by
   rw [← S.map_cycles, ← S.map_boundaries, ← S.map_harmonic, ← Submodule.map_sup,
     S.toHilbertComplex.boundaries_sup_harmonic (S.closedRangeAt i)]
 
-/-- **Discrete cohomology ≅ discrete harmonic forms**. -/
+/-- Discrete cohomology `≅` discrete harmonic forms. -/
 def cohomologyEquivHarmonic (i : ι) :
     S.toHilbertComplex.cohomology i ≃ₗ[𝕜] S.toHilbertComplex.harmonic i :=
   S.toHilbertComplex.cohomologyEquivHarmonic (S.closedRangeAt i)
 
-/-- On harmonic `q`, the orthogonal projections onto `𝔷ₕ` and `ℌₕ` agree. -/
 theorem starProjection_harmonicW_eq {i : ι} {q : W i} (hq : q ∈ H.harmonic i) :
     (S.harmonicW i).starProjection q = (S.cyclesW i).starProjection q := by
   set p := (S.cyclesW i).starProjection q
@@ -118,8 +99,7 @@ namespace CochainProjection
 
 variable {S} (P : S.CochainProjection)
 
-/-- **The harmonic gap**: for a harmonic `q`, `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖`. See [AFW2010],
-Thm 3.5; it enters the quasi-optimal estimate [AFW2010], Thm 3.9; cf. [AFW2006]. -/
+/-- **The harmonic gap**: `‖q - P_{ℌₕ} q‖ ≤ ‖q - π q‖` for harmonic `q` ([AFW2010], Thm 3.5). -/
 theorem norm_sub_starProjection_harmonicW_le {i : ι} {q : W i} (hq : q ∈ H.harmonic i) :
     ‖q - (S.harmonicW i).starProjection q‖ ≤ ‖q - P.π i q‖ := by
   rw [S.starProjection_harmonicW_eq hq, ← dist_eq_norm, ← dist_eq_norm,

@@ -6,47 +6,13 @@ public import Feec.Semigroup.Orbit
 /-!
 # Rational approximations of semigroups on Banach spaces
 
-Let `G` be a strongly continuous semigroup on a Banach space `E` over `𝕜 = ℝ` or `ℂ`, with
-generator `A`, and `r` a rational scheme of order `p`. With the resolvent `R = (1 - τA)⁻¹`, the
-operator `r(τA)` is `P(R) Q(R)⁻¹` (`RationalScheme.resolventStep`; `P(s) = sᴺ n(1 - 1/s)`,
-`Q(s) = sᴺ d(1 - 1/s)`, `Feec.TimeStepping.resolventEval`), the form that
-`Feec.TimeStepping.RationalScheme.step` takes on Hilbert spaces
-(`RationalScheme.step_eq_resolventStep`). On a Banach space the stability of `r(τA)` is not
-automatic (von Neumann's inequality fails off Hilbert spaces) and is a hypothesis, as in
-[BrennerThomee1979]. Here so are the invertibility of `Q(R)` and the boundedness of the remainder
-`ρ(τA)`, `ρ = (r - Tₚ)/z^{p+1}`; both follow from the Hille–Yosida estimates alone, for every
-rational scheme (`Feec.TimeStepping.RationalHilleYosida`: `Q(R)` is a product of factors
-`R (τA - ζ)` over the poles `ζ` of `r`, inverted by the resolvents at `ζ/τ`). Under the three
-hypotheses, **Brenner–Thomée's error bound** holds:
-
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`
-
-for `x ∈ D(A^{p+1})`, with `‖r(τA)ᵏ‖ ≤ Mₛ` (`k ≤ n`), `‖ρ(τA)‖ ≤ K₀` and `‖S(t)‖ ≤ M` on
-`[0, nτ]`.
-
-## Main results
-
-* `resolventEval_mul`, `resolventEval_add`: `P ↦ P(s) = sᴺ f(1 - 1/s)` is additive and
-  multiplicative (degrees add), proved by evaluation at the points `s ≠ 0`;
-* `RationalScheme.resolventStep_apply_eq`: **the expansion `r(τA) x = Tₚ(τA) x + (τA)^{p+1} ρ(τA) x`
-  on `D(A^{p+1})`**, from `n = d Tₚ + X^{p+1} ρ`, with `(R - 1) x = τ R A x` on `D(A)`;
-* `RationalScheme.norm_resolventStep_sub_S_le`: consistency,
-  `‖r(τA) x - S(τ) x‖ ≤ (K₀ + M/(p+1)!) τ^{p+1} ‖A^{p+1} x‖`;
-* **`RationalScheme.norm_resolventStep_pow_sub_S_le`**: Brenner–Thomée on Banach spaces, from
-  Taylor's formula and Lax–Richtmyer for semigroups (`C0Semigroup.norm_S_sub_taylor_le`,
-  `C0Semigroup.norm_pow_apply_sub_S_le`, `Feec.TimeStepping.Convergence`);
-* `RationalScheme.norm_step_pow_sub_S_le`: the same on Hilbert spaces for
-  `Feec.TimeStepping.RationalScheme.step`, given a resolvent of `A` at `1/τ`.
-
-On Hilbert spaces von Neumann's inequality discharges the three hypotheses: for contraction
-semigroups directly (`Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`), for
-quasi-contractive ones after a shift (`Feec.TimeStepping.RationalQuasi`).
+On Banach spaces, the scheme `r(τA) = P(R) Q(R)⁻¹`, `R = (1 - τA)⁻¹`, satisfies Brenner–Thomée's
+error bound when its powers and its remainder are bounded and `Q(R)` is invertible.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 9
-* [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -69,12 +35,10 @@ theorem resolventEval_add (N : ℕ) (f g : 𝕜[X]) (S : A) :
     resolventEval N (f + g) S = resolventEval N f S + resolventEval N g S := by
   simp only [resolventEval, coeff_add, add_smul, sum_add_distrib]
 
-/-- `sᴺ f(1 - 1/s)` commutes with algebra maps. -/
 theorem map_resolventEval {B : Type*} [Ring B] [Algebra 𝕜 B] (φ : A →ₐ[𝕜] B) (N : ℕ) (f : 𝕜[X])
     (S : A) : φ (resolventEval N f S) = resolventEval N f (φ S) := by
   simp [resolventEval, map_sum, map_smul, map_mul, map_pow, map_sub, map_one]
 
-/-- At `s ≠ 0` in the field, `sᴺ f(1 - 1/s)` is what it says. -/
 theorem eval_resolventEval_X {N : ℕ} {f : 𝕜[X]} (hf : f.natDegree ≤ N) {x : 𝕜} (hx : x ≠ 0) :
     (resolventEval N f (X : 𝕜[X])).eval x = x ^ N * f.eval (1 - x⁻¹) := by
   have h := map_resolventEval (Polynomial.aeval x) N f X
@@ -102,9 +66,6 @@ theorem commute_resolventEval (N M : ℕ) (f g : 𝕜[X]) (S : A) :
 
 variable [Infinite 𝕜]
 
-/-- **`sᴺ f(1 - 1/s)` is multiplicative**: for `deg f ≤ N`, `deg g ≤ M`,
-`P_{fg}^{N+M} = P_f^N P_g^M` (an identity of polynomials in `s`, checked at the infinitely many
-`s ≠ 0`). -/
 theorem resolventEval_mul {N M : ℕ} {f g : 𝕜[X]} (hf : f.natDegree ≤ N) (hg : g.natDegree ≤ M)
     (S : A) :
     resolventEval (N + M) (f * g) S = resolventEval N f S * resolventEval M g S := by
@@ -119,7 +80,6 @@ theorem resolventEval_mul {N M : ℕ} {f g : 𝕜[X]} (hf : f.natDegree ≤ N) (
   have := congrArg (Polynomial.aeval S) key
   rwa [map_mul, map_resolventEval, map_resolventEval, map_resolventEval, aeval_X] at this
 
-/-- Raising the degree: `P_f^{N+M} = Sᴹ P_f^N` for `deg f ≤ N`. -/
 theorem resolventEval_add_right {N : ℕ} {f : 𝕜[X]} (hf : f.natDegree ≤ N) (M : ℕ) (S : A) :
     resolventEval (N + M) f S = resolventEval N f S * S ^ M := by
   rw [← resolventEval_one (𝕜 := 𝕜) M S, ← resolventEval_mul hf (natDegree_one.le.trans (Nat.zero_le M)),
@@ -133,13 +93,11 @@ namespace RationalScheme
 
 variable (r : RationalScheme) {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
-/-- **`r(τA) = P(R) Q(R)⁻¹`** at `R = (1 - τA)⁻¹`, `P(s) = sᴺ n(1 - 1/s)`,
-`Q(s) = sᴺ d(1 - 1/s)`, `N = deg d` (`resolventEval`). -/
+/-- `r(τA) = P(R) Q(R)⁻¹` at `R = (1 - τA)⁻¹`, `P(s) = sᴺ n(1 - 1/s)`, `Q(s) = sᴺ d(1 - 1/s)`. -/
 def resolventStep (R : E →L[𝕜] E) : E →L[𝕜] E :=
   resolventEval r.den.natDegree (r.num.map (algebraMap ℝ 𝕜)) R *
     Ring.inverse (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) R)
 
-/-- On Hilbert spaces `RationalScheme.step` is the resolvent form, for every `A`. -/
 theorem step_eq_resolventStep {V : Type*} [NormedAddCommGroup V] [InnerProductSpace 𝕜 V]
     (A : V →ₗ.[𝕜] V) (τ : ℝ) :
     r.step A τ = r.resolventStep ((τ : 𝕜)⁻¹ • Operator.resolvent A (τ : 𝕜)⁻¹) :=
@@ -152,9 +110,6 @@ theorem coeff_map_expTaylor (p k : ℕ) :
     Finset.mem_range, Nat.lt_succ_iff]
   split_ifs <;> simp
 
-/-- **The polynomial identity behind the expansion**: for `r` of order `p`,
-`R^{p+1} P(R) = Q(R) P_{Tₚ}^{p+1}(R) + (R - 1)^{p+1} P_ρ(R)` (`n = d Tₚ + X^{p+1} ρ`, degrees
-`N = deg d`, `p + 1`). -/
 theorem resolventEval_num_mul_pow {p : ℕ} (hp : r.HasOrder p) (R : E →L[𝕜] E) :
     resolventEval r.den.natDegree (r.num.map (algebraMap ℝ 𝕜)) R * R ^ (p + 1) =
       resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) R *
@@ -176,8 +131,6 @@ theorem resolventEval_num_mul_pow {p : ℕ} (hp : r.HasOrder p) (R : E →L[𝕜
 
 variable {A : E →ₗ.[𝕜] E} {τ : ℝ} {R : E →L[𝕜] E}
 
-/-- `(R - 1)ʲ u₀ = τʲ Rʲ uⱼ` along a chain `u` in the graph of `A`, when `R (x - τ A x) = x`
-on `D(A)`. -/
 theorem sub_one_pow_apply (hR : ∀ x y, (x, y) ∈ A.graph → R (x - (τ : 𝕜) • y) = x) {k : ℕ} {u : ℕ → E}
     (hu : ∀ j < k, (u j, u (j + 1)) ∈ A.graph) :
     ∀ j ≤ k, ((R - 1) ^ j) (u 0) = (τ : 𝕜) ^ j • (R ^ j) (u j) := by
@@ -198,9 +151,6 @@ theorem sub_one_pow_apply (hR : ∀ x y, (x, y) ∈ A.graph → R (x - (τ : �
       _ = (τ : 𝕜) ^ (j + 1) • (R ^ (j + 1)) (u (j + 1)) := by
           rw [h1, map_smul, smul_smul, ← pow_succ, pow_succ]; rfl
 
-/-- **The expansion `r(τA) u₀ = Tₚ(τA) u₀ + (τA)^{p+1} ρ(τA) u₀` on `D(A^{p+1})`**: for `r` of
-order `p`, `R` injective with `R (x - τ A x) = x` on `D(A)` and `Q(R)` invertible,
-`r(τA) u₀ = Σ_{j≤p} τʲ/j! uⱼ + τ^{p+1} ρ(τA) u_{p+1}` for every chain `u` in the graph of `A`. -/
 theorem resolventStep_apply_eq {p : ℕ} (hp : r.HasOrder p)
     (hR : ∀ x y, (x, y) ∈ A.graph → R (x - (τ : 𝕜) • y) = x) (hinj : Function.Injective R)
     (hQ : IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) R)) {u : ℕ → E}
@@ -285,10 +235,6 @@ section Semigroup
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
 
-/-- **Consistency on a Banach space**: for `r` of order `p`, the resolvent `R = (1 - τA)⁻¹` of
-the generator (`R (x - τ A x) = x` on `D(A)`, `R` injective), `Q(R)` invertible, `‖ρ(τA)‖ ≤ K₀`
-and `‖S(t)‖ ≤ M` on `[0, τ]`: `‖r(τA) u₀ - S(τ) u₀‖ ≤ (K₀ + M/(p+1)!) τ^{p+1} ‖A^{p+1} u₀‖` on
-`D(A^{p+1})`. [BrennerThomee1979] -/
 theorem norm_resolventStep_sub_S_le {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 ≤ τ)
     {R : E →L[𝕜] E} (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x)
     (hinj : Function.Injective R)
@@ -319,16 +265,9 @@ theorem norm_resolventStep_sub_S_le {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (h�
         (norm_sub_le _ _).trans (add_le_add hρu hT)
     _ = _ := by ring
 
-/-- **Brenner–Thomée on Banach spaces**: let `G` be a strongly continuous semigroup with
-generator `A` on a Banach space, `‖S(t)‖ ≤ M` on `[0, nτ]`, `r` a rational scheme of order `p`,
-`R = (1 - τA)⁻¹` the resolvent (`R (x - τ A x) = x` on `D(A)`, `R` injective), `Q(R)` invertible,
-`r(τA) = P(R) Q(R)⁻¹` **stable**, `‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n`, and the remainder bounded,
-`‖ρ(τA)‖ ≤ K₀`. Then for `x ∈ D(A^{p+1})` (a chain `u` in the graph of `A`),
-`‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`. On Hilbert spaces von Neumann's
-inequality gives `Mₛ = 1` and `K₀ = sup_y |ρ(iy)|` for contraction semigroups
-(`Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`), and exponential bounds for
-quasi-contractive ones (`Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le`).
-[BrennerThomee1979]; [Thomee2006], Ch. 9 -/
+/-- **Brenner–Thomée on Banach spaces** ([BrennerThomee1979]; [Thomee2006], Ch. 9): for `r` of
+order `p`, `τ ≥ 0` and `Q(R)` invertible, if `‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n`, `‖ρ(τA)‖ ≤ K₀` and
+`‖S(t)‖ ≤ M` on `[0, nτ]`, then `‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`. -/
 theorem norm_resolventStep_pow_sub_S_le {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 ≤ τ)
     {R : E →L[𝕜] E} (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x)
     (hinj : Function.Injective R)
@@ -348,10 +287,6 @@ theorem norm_resolventStep_pow_sub_S_le {p : ℕ} (hp : r.HasOrder p) {τ : ℝ}
   exact G.norm_pow_apply_sub_S_le hτ hK hst hS
     (fun v hv => r.norm_resolventStep_sub_S_le G hp hτ hR hinj hQ hS1 hρ hv) hu
 
-/-- **Brenner–Thomée on Hilbert spaces, in the `step` form**: for `G` generated by `A`, `τ > 0`,
-`R` a resolvent of `A` at `1/τ` (so `(1/τ) R = (1 - τA)⁻¹`), `Q((1/τ) R)` invertible,
-`‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n`, `‖ρ(τA)‖ ≤ K₀` and `‖S(t)‖ ≤ M` on `[0, nτ]`:
-`‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖` on `D(A^{p+1})`. -/
 theorem norm_step_pow_sub_S_le {V : Type*} [NormedAddCommGroup V] [InnerProductSpace 𝕜 V]
     [NormedSpace ℝ V] [IsScalarTower ℝ 𝕜 V] (G : C0Semigroup 𝕜 V) {A : V →ₗ.[𝕜] V}
     (hG : G.generator = A) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {R : V →L[𝕜] V}

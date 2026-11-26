@@ -8,77 +8,16 @@ public import Feec.Models.BoundedDomain.MovingTSD
 /-!
 # Weber compactness and a complete set of eigenvectors on star-shaped domains
 
-A complete set of eigenvectors (`EigenDense`) for the wave group of the thesis' complex
-`H̊¹(Ω; ℝ³) → H̊(curl, Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` (`gradCurl`) was proved on cubes and boxes only
-(gap O3). By the criterion `eigenDense_gradCurl_of_weber` it follows from **Weber compactness**
-(`HasWeberCompactness Ω`: the box of `D(curl_min) ∩ D(div_max)` is precompact). This file proves
-Weber compactness, hence `EigenDense`, on every bounded domain star-shaped with respect to a ball
-(`StarDomain`), in particular on every ball and every bounded open convex set.
-
-## Proof
-
-1. **The gauge** `g_Ω(v) = inf {t > 0 : x₀ + v / t ∈ Ω}` (`StarDomain.gaugeFun`) of a domain
-   star-shaped with respect to `B(x₀, s₀)` with `cl Ω ⊆ B̄(x₀, R)` is positively homogeneous,
-   `‖v‖ / R ≤ g_Ω(v) ≤ ‖v‖ / s₀`, and `s₀⁻¹`-Lipschitz (`StarDomain.gaugeFun_le_add`: if
-   `w ∈ b (Ω - x₀)` then `v / t` lies on a segment from a point of `B(0, s₀)` to `w / b` for
-   `t = b + ‖v - w‖ / s₀ + ε`), and `Ω = {g_Ω(· - x₀) < 1}` (`StarDomain.mem_iff_gaugeFun_lt_one`).
-2. **The radial map** `Φ(x) = x₀ + (‖x - x₀‖ / g_Ω(x - x₀)) (x - x₀)` (`StarDomain.toCube`, an
-   instance of `radialMap`) is a bi-Lipschitz homeomorphism of `ℝ³` with explicit constants
-   (`norm_radial_sub_le`) mapping the cube `x₀ + (-1, 1)³` onto `Ω` (`StarDomain.mem_ball_iff`;
-   `ℝ³` carries the sup norm, so the cube is `Metric.ball x₀ 1`, `ball_eq_openCube`).
-3. **Transport** (`hasWeberCompactness_of_biLipschitz`): by `Feec.Domain.LipschitzPullback`, the
-   `1`-form pullback `Φ^*` maps the box of `D(curl_min(Ω)) ∩ D(div_max(Ω))` boundedly into
-   `{v ∈ D(curl_min(U)) : div (ε v) ∈ L²}` for the bounded, uniformly coercive coefficient
-   `ε = |det DΦ| DΦ⁻¹ DΦ⁻ᵀ` (`curl Φ^* = Φ^♭ curl`, `ε Φ^* = P`, `div P = |det DΦ| div ∘ Φ`).
-   That set is precompact by Weber's lemma with a coefficient on the cube
-   (`Feec.Operator.HasCompactPair.exists_isCompact_coeff` with `hasWeberCompactness_cube` and
-   Rellich), and `Φ^*` is bounded below, so the box itself is precompact.
+Every bounded domain star-shaped with respect to a ball, in particular every ball and every bounded
+open convex set, has Weber compactness, so the wave group of the grad–curl complex has a complete
+set of eigenvectors there.
 
 ## Main results
 
-* **`StarDomain.hasWeberCompactness`**, **`StarDomain.eigenDense_gradCurl`**.
-* `exists_starDomain_of_convex`, **`hasWeberCompactness_convex`**,
-  **`eigenDense_gradCurl_convex`** (every bounded open convex set),
-  **`eigenDense_gradCurl_ball`** (every Euclidean ball `euclBall c r`).
-* **`coreSub_le_stationary_ball_iff`**: on every ball, `K*` (for `K = {0} × L²(TSD) × L²(TSD)`)
-  is stationary iff there is no TSD eigenfield `u` with `curl u ∉ H̊(curl)`, with no hypothesis
-  (`Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with `EigenDense` discharged).
-* `hasWeberCompactness_of_biLipschitz`: Weber compactness passes along bi-Lipschitz
-  homeomorphisms of `ℝ³`; `StarDomain.gaugeFun_le_add`, `radialMap`.
-* Non-vacuity: `hasWeberCompactness_empty`.
-
-## Scope
-
-* **The ball and the TSD eigenfields.** In
-  `Feec.Counterexamples.BallEigenfields.coreSub_le_stationary_ball_of_maxwellRegularity` the
-  hypothesis `EigenDense` on the unit ball `ball3` is now a theorem: `ball3` is open, bounded and
-  convex, so `eigenDense_gradCurl_convex` applies. Only `MaxwellEigenfieldRegularity ball3`
-  remains there. The one-line corollary belongs to `Counterexamples` (`Models` does not import it)
-  and is not stated here.
-* **Lipschitz domains.** The strongest result proved: Weber compactness and `EigenDense` on every
-  bounded domain star-shaped with respect to a ball, and on its images under bi-Lipschitz
-  homeomorphisms of `ℝ³`. A bounded Lipschitz domain is a finite union of domains star-shaped with
-  respect to balls ([CostabelMcIntosh2010]). Weber compactness on it needs a partition of unity
-  subordinate to such a cover (smooth cut-offs preserve `H̊(curl)` and `H(div)` by the Leibniz
-  rules), which is not formalized.
-* **No boundary condition.** Rellich's theorem for `H¹(Ω)` (the maximal complex `gradCurlMax`)
-  would follow from the same transport once the chain rule for `H¹(Ω) ∘ Φ` is proved; not
-  formalized.
-
-## References
-
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], §4
-  (compactness of `H̊(curl) ∩ ε⁻¹ H(div)`)
-* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
-  Ch. I, §3 (`H(curl) ∩ H(div)`)
-* [M. Costabel, A. McIntosh, *On Bogovskiĭ and Regularized Poincaré Integral Operators for de Rham Complexes on Lipschitz Domains*][CostabelMcIntosh2010]
-  (Lipschitz domains as finite unions of domains star-shaped with respect to balls)
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.7 (Rellich–Kondrachov), §5.8
-  (Lipschitz functions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `hasWeberCompactness_of_biLipschitz`: Weber compactness passes along bi-Lipschitz maps of `ℝ³`.
+* `StarDomain.eigenDense_gradCurl`: a complete set of eigenvectors on star-shaped domains.
+* `eigenDense_gradCurl_ball`: a complete set of eigenvectors on every Euclidean ball.
+* `coreSub_le_stationary_ball_iff`: when `K*` is stationary on a ball.
 -/
 
 @[expose] public noncomputable section
@@ -91,10 +30,8 @@ namespace Feec.Models.StarShaped
 open Feec.Domain Feec.HilbertComplex Feec.Operator Feec.Models.BoundedDomain
 
 
-/-! ### Lipschitz gauges and radial maps -/
 
-/-- A **Lipschitz gauge** on `ℝ³`: positively homogeneous, `L`-Lipschitz and comparable to the
-(sup) norm, `a ‖v‖ ≤ g v ≤ b ‖v‖` with `a > 0`. -/
+/-- A Lipschitz gauge on `ℝ³`: positively homogeneous, Lipschitz, and comparable to the norm. -/
 structure IsLipGauge (g : R3 → ℝ) (a b L : ℝ) : Prop where
   a_pos : 0 < a
   smul : ∀ t : ℝ, 0 ≤ t → ∀ v, g (t • v) = t * g v
@@ -126,7 +63,7 @@ theorem b_pos : 0 < b := by
 
 end IsLipGauge
 
-/-- The **radial map** `v ↦ (h v / g v) v`, sending the level sets of `h` to those of `g`. -/
+/-- The radial map `v ↦ (h v / g v) v`, sending the level sets of `h` to those of `g`. -/
 def radial (g h : R3 → ℝ) (v : R3) : R3 := (h v / g v) • v
 
 variable {g h : R3 → ℝ} {a b L a' b' L' : ℝ}
@@ -242,8 +179,7 @@ theorem IsLipGauge.L_nonneg (hg : IsLipGauge g a b L) : 0 ≤ L := by
     simpa using congrFun h 0
   exact nonneg_of_mul_nonneg_left this hn
 
-/-- The radial bi-Lipschitz map `y ↦ x₀ + (h / g)(y - x₀) (y - x₀)` of `ℝ³`, with inverse
-`y ↦ x₀ + (g / h)(y - x₀) (y - x₀)`. -/
+/-- The radial bi-Lipschitz map `y ↦ x₀ + (h / g)(y - x₀) (y - x₀)` of `ℝ³`. -/
 def radialMap (x₀ : R3) (hg : IsLipGauge g a b L) (hh : IsLipGauge h a' b' L') : BiLipschitz where
   toFun y := x₀ + radial g h (y - x₀)
   invFun y := x₀ + radial h g (y - x₀)
@@ -271,7 +207,6 @@ theorem radialMap_mem_iff (x₀ : R3) (hg : IsLipGauge g a b L) (hh : IsLipGauge
   change h (x - x₀) < 1 ↔ g (x₀ + radial g h (x - x₀) - x₀) < 1
   rw [add_sub_cancel_left, gauge_radial hg hh]
 
-/-- The sup norm is a Lipschitz gauge. -/
 theorem isLipGauge_norm : IsLipGauge (fun v : R3 => ‖v‖) 1 1 1 where
   a_pos := one_pos
   smul t ht v := by rw [norm_smul, Real.norm_of_nonneg ht]
@@ -279,12 +214,8 @@ theorem isLipGauge_norm : IsLipGauge (fun v : R3 => ‖v‖) 1 1 1 where
   upper v := by rw [one_mul]
   lip v w := by rw [one_mul]; exact abs_norm_sub_norm_le v w
 
-/-- **Weber compactness is invariant under bi-Lipschitz maps.** If `Φ` is a bi-Lipschitz
-homeomorphism of `ℝ³` with `Φ(U) = Ω` (`U`, `Ω` bounded open) and `U` has Weber compactness, so
-has `Ω`: the `1`-form pullback `Φ^*` maps the box of `D(curl_min(Ω)) ∩ D(div_max(Ω))` into a box
-of `{v ∈ D(curl_min(U)) : div(ε v) ∈ L²}` with the coercive coefficient
-`ε = |det DΦ| DΦ⁻¹ DΦ⁻ᵀ` (`curl Φ^* = Φ^♭ curl`, `ε Φ^* = P`, `div P = |det DΦ| div ∘ Φ`), which is
-precompact by Weber's lemma with a coefficient on `U`, and `Φ^*` is bounded below. -/
+/-- If `Φ` is a bi-Lipschitz homeomorphism of `ℝ³` with `Φ(U) = Ω` (`U`, `Ω` bounded open) and `U`
+has Weber compactness, so has `Ω`. -/
 theorem hasWeberCompactness_of_biLipschitz (Φ : BiLipschitz) {U Ω : Set R3} (hU : IsOpen U)
     (hΩ : IsOpen Ω) (hUb : Bornology.IsBounded U) (hΩb : Bornology.IsBounded Ω)
     (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω) (hW : HasWeberCompactness U) : HasWeberCompactness Ω := by
@@ -360,8 +291,7 @@ variable {n : ℕ} (D : StarDomain n)
 /-- The domain centred at `x₀`: `{v | x₀ + v ∈ Ω}`. -/
 def centred : Set (Fin n → ℝ) := {v | D.x₀ + v ∈ D.Ω}
 
-/-- **The gauge of `Ω` about `x₀`**, `g_Ω(v) = inf {t > 0 : x₀ + v / t ∈ Ω}` (the Minkowski
-functional of `Ω - x₀`). -/
+/-- The gauge `g_Ω(v) = inf {t > 0 : x₀ + v / t ∈ Ω}` of `Ω` about `x₀`. -/
 def gaugeFun (v : Fin n → ℝ) : ℝ := gauge D.centred v
 
 theorem ball_subset_centred (hne : D.Ω.Nonempty) : Metric.ball 0 D.s₀ ⊆ D.centred := by
@@ -388,9 +318,6 @@ theorem le_gaugeFun (hne : D.Ω.Nonempty) (v : Fin n → ℝ) : ‖v‖ / D.R �
   rw [← gauge_closedBall D.R_pos.le v]
   exact gauge_mono (D.absorbent_centred hne) D.centred_subset_closedBall v
 
-/-- The key estimate of the Lipschitz bound: `g(v) ≤ g(w) + ‖v - w‖ / s₀`. If `w ∈ b Ω₀` then
-`v / t = (b / t) (w / b) + (1 - b / t) z` with `t = b + ‖v - w‖ / s₀ + ε` and `‖z‖ < s₀`, a point
-of the segment from `x₀ + z ∈ B(x₀, s₀)` to `x₀ + w / b ∈ Ω`. -/
 theorem gaugeFun_le_add (hne : D.Ω.Nonempty) (v w : Fin n → ℝ) :
     D.gaugeFun v ≤ D.gaugeFun w + ‖v - w‖ / D.s₀ := by
   have hs := D.s₀_pos
@@ -423,7 +350,6 @@ theorem gaugeFun_le_add (hne : D.Ω.Nonempty) (v w : Fin n → ℝ) :
   simp only [t] at hle
   linarith
 
-/-- **`Ω = {g_Ω(· - x₀) < 1}`.** -/
 theorem mem_iff_gaugeFun_lt_one (hne : D.Ω.Nonempty) (x : Fin n → ℝ) :
     x ∈ D.Ω ↔ D.gaugeFun (x - D.x₀) < 1 := by
   constructor
@@ -448,14 +374,12 @@ theorem mem_iff_gaugeFun_lt_one (hne : D.Ω.Nonempty) (x : Fin n → ℝ) :
 
 end StarDomain
 
-/-- Weber compactness of the empty set (`L²(∅) = 0`). -/
 theorem hasWeberCompactness_empty : HasWeberCompactness (∅ : Set R3) := by
   refine ⟨{0}, isCompact_singleton, fun u _ _ _ _ _ => ?_⟩
   refine PiLp.ext fun j => Lp.ext ?_
   exact (ae_restrict_iff' MeasurableSet.empty).2
     (Eventually.of_forall fun x hx => absurd hx (Set.notMem_empty x))
 
-/-- The sup-norm unit ball about `x₀` is the open cube `∏ (x₀ᵢ - 1, x₀ᵢ + 1)`. -/
 theorem ball_eq_openCube (x₀ : R3) :
     Metric.ball x₀ 1 = Feec.Models.Cube.Geometry.openCube (x₀ - 1) 2 := by
   ext x
@@ -475,7 +399,6 @@ namespace StarDomain
 
 variable (D : StarDomain 3)
 
-/-- The gauge of a star-shaped domain is a Lipschitz gauge, with `‖v‖ / R ≤ g(v) ≤ ‖v‖ / s₀`. -/
 theorem isLipGauge (hne : D.Ω.Nonempty) :
     IsLipGauge D.gaugeFun (1 / D.R) (1 / D.s₀) D.s₀⁻¹ where
   a_pos := one_div_pos.2 D.R_pos
@@ -489,8 +412,7 @@ theorem isLipGauge (hne : D.Ω.Nonempty) :
     rw [abs_le, inv_mul_eq_div]
     constructor <;> linarith
 
-/-- **The radial bi-Lipschitz map from the cube `x₀ + (-1, 1)³` onto `Ω`**,
-`x ↦ x₀ + (‖x - x₀‖_∞ / g_Ω(x - x₀)) (x - x₀)`. -/
+/-- The radial bi-Lipschitz map from the cube `x₀ + (-1, 1)³` onto `Ω`. -/
 def toCube (hne : D.Ω.Nonempty) : BiLipschitz :=
   radialMap D.x₀ (D.isLipGauge hne) isLipGauge_norm
 
@@ -499,9 +421,6 @@ theorem mem_ball_iff (hne : D.Ω.Nonempty) (x : R3) :
   rw [Metric.mem_ball, dist_eq_norm, D.mem_iff_gaugeFun_lt_one hne]
   exact radialMap_mem_iff D.x₀ (D.isLipGauge hne) isLipGauge_norm x
 
-/-- **Weber compactness on every domain star-shaped with respect to a ball**: transported from
-the cube `x₀ + (-1, 1)³` (`hasWeberCompactness_cube`) along the radial bi-Lipschitz map
-`StarDomain.toCube` (`hasWeberCompactness_of_biLipschitz`). -/
 theorem hasWeberCompactness : HasWeberCompactness D.Ω := by
   rcases D.Ω.eq_empty_or_nonempty with h | hne
   · rw [h]; exact hasWeberCompactness_empty
@@ -510,17 +429,13 @@ theorem hasWeberCompactness : HasWeberCompactness D.Ω := by
     exact hasWeberCompactness_of_biLipschitz (D.toCube hne) Metric.isOpen_ball D.isOpen
       Metric.isBounded_ball D.isBounded (D.mem_ball_iff hne) hW
 
-/-- **A complete set of eigenvectors on every domain star-shaped with respect to a ball**: the
-wave group of `H̊¹(Ω; ℝ³) → H̊(curl, Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` has a dense set of eigenvectors
-(`eigenDense_gradCurl_of_weber`). -/
+/-- On every domain star-shaped with respect to a ball, the grad–curl wave group has a dense set of
+eigenvectors. -/
 theorem eigenDense_gradCurl : (gradCurl ℝ D.isOpen).EigenDense :=
   eigenDense_gradCurl_of_weber D.isOpen D.isBounded D.hasWeberCompactness
 
 end StarDomain
 
-/-! ### Convex domains and balls -/
-
-/-- **A bounded open convex nonempty set is star-shaped with respect to a ball.** -/
 theorem exists_starDomain_of_convex {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hc : Convex ℝ Ω) (hne : Ω.Nonempty) : ∃ D : StarDomain 3, D.Ω = Ω := by
   obtain ⟨x₀, hx₀⟩ := hne
@@ -532,7 +447,6 @@ theorem exists_starDomain_of_convex {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornol
   rw [Metric.mem_closedBall, dist_eq_norm] at this
   exact this.trans (le_max_left _ _)
 
-/-- **Weber compactness on every bounded open convex set.** -/
 theorem hasWeberCompactness_convex {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hc : Convex ℝ Ω) : HasWeberCompactness Ω := by
   rcases Ω.eq_empty_or_nonempty with h | hne
@@ -540,7 +454,6 @@ theorem hasWeberCompactness_convex {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornolo
   · obtain ⟨D, rfl⟩ := exists_starDomain_of_convex hΩ hb hc hne
     exact D.hasWeberCompactness
 
-/-- **A complete set of eigenvectors on every bounded open convex set.** -/
 theorem eigenDense_gradCurl_convex {Ω : Set R3} (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hc : Convex ℝ Ω) : (gradCurl ℝ hΩ).EigenDense :=
   eigenDense_gradCurl_of_weber hΩ hb (hasWeberCompactness_convex hΩ hb hc)
@@ -579,17 +492,13 @@ theorem convex_euclBall (c : R3) (r : ℝ) : Convex ℝ (euclBall c r) := by
         · nlinarith
         · subst ha'; rw [zero_add] at hab; subst hab; linarith
 
-/-- **A complete set of eigenvectors on every Euclidean ball.** -/
+/-- A complete set of eigenvectors on every Euclidean ball. -/
 theorem eigenDense_gradCurl_ball (c : R3) (r : ℝ) :
     (gradCurl ℝ (isOpen_euclBall c r)).EigenDense :=
   eigenDense_gradCurl_convex _ (isBounded_euclBall c r) (convex_euclBall c r)
 
-/-- **`K*` on the ball is stationary iff there is no TSD eigenfield violating the electric
-boundary condition in the magnetic slot**, unconditionally: for
-`K = {0} × L²(TSD) × L²(TSD)` on `B = {|x - c| < r}`, `K* ⊆ stationary` iff there is no
-`ξ > 0` and nonzero `u ∈ L²(TSD) ∩ H̊(curl)` with `curl† curl u = ξ² u` and `curl u ∉ H̊(curl)`
-(`not_coreSub_le_stationary_iff` with its eigenvector hypothesis discharged by
-`eigenDense_gradCurl_ball`). -/
+/-- On a ball, `K*` for `K = {0} × L²(TSD) × L²(TSD)` is stationary iff no nonzero `u ∈ L²(TSD)`
+with `curl† curl u = ξ² u`, `ξ > 0`, has `curl u ∉ H̊(curl)`. -/
 theorem coreSub_le_stationary_ball_iff (c : R3) (r : ℝ) :
     (gradCurl ℝ (isOpen_euclBall c r)).coreSub (tsd (euclBall c r)) (tsd (euclBall c r)) ≤
         (gradCurl ℝ (isOpen_euclBall c r)).stationary ↔

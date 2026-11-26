@@ -9,36 +9,18 @@ public import Feec.ForMathlib.Calculus.SecondDifference
 /-!
 # The global `P₁` space: stiffness and lumped mass as integrals
 
-On a simplicial mesh `M`, the nodal values `u : ℝⁿ → ℝ` define the **global `P₁` function**
-`u_h = p1Global M u` of the global Whitney `0`-form space `P₁⁻Λ⁰(M)` (the Lagrange `P₁` space of
-`Feec.FiniteElement.WhitneyComplex`): on each simplex `T` it is the `P₁` interpolant `Πₜu`
-(`p1Form`), and the pieces agree at the shared vertices. Every element of `P₁⁻Λ⁰(M)` is of this
-form (`exists_p1Global_eq`), and `u_h` has vanishing boundary DOFs iff `u` vanishes at the
-vertices on the boundary of `cl Ω` (`p1Global_mem_globalSpace₀_iff`, by the pseudo-manifold
-property `StarGeom.exists_isBoundaryFacet_of_mem_vertexSet`), so the values at the free vertices
-are a linear isomorphism onto `P̊₁⁻Λ⁰(M)` (`p1GlobalEquiv₀`). Then
+On a simplicial mesh, the stiffness form and the lumped mass of the global `P₁` functions are `L²`
+integrals, and the `P₁` interpolant has error bounds in the maximum norm.
 
-* **`inner_glue_dPiecewise_p1Global`**: the elementwise stiffness form of
-  `Feec.FiniteElement.LumpedMass` is the `L²` inner product of the exterior derivatives of the
-  glued global functions, `a(u, w) = ⟪d u_h, d w_h⟫_{L²Λ¹(Ω)} = ∫_Ω ∇u_h · ∇w_h`
-  (`inner_maximal_p1Global`: `d` the exterior derivative of the `L²` de Rham complex);
-* **`inner_glue_p1Global_nodalIndicator_one`**: the lumped mass is the integral of the hat
-  function, `m(x) = ⟪φₓ, 1⟫_{L²(Ω)} = ∫_Ω φₓ`, the row sum of the consistent mass matrix: the vertex
-  quadrature is exact for `P₁` hat functions (`integral_baryCoord`: `∫_T λⱼ = |T| / (n + 1)`, by
-  the invariance of the integrals of the barycentric coordinates under the permutations of the
-  vertices, `integral_comp_baryCoord_perm`);
-* **in the maximum norm**: a `P₁` function attains its extreme values at the vertices,
-  `|Πₜu(x)| ≤ maxⱼ |u(pⱼ)|` on `T` (`abs_p1Interp_le`), and the `P₁` interpolation error of
-  `f ∈ C²` with `|∂ᵢ∂ₖ f| ≤ D` on `T` is `|f(x) - Πₜf(x)| ≤ n² D δ² / 2`, `δ` the diameter of `T`
-  in the maximum norm (`abs_sub_p1Interp_le`, Taylor's formula along the segments `x → pⱼ`);
-  together, `|f(x) - Πₜg(x)| ≤ ε + n² D δ² / 2` when `|f - g| ≤ ε` at the vertices
-  (`abs_sub_p1Interp_le_of_vertices`).
+## Main results
+
+* `inner_maximal_p1Global`: the stiffness form is `⟪d u_h, d w_h⟫_{L²Λ¹(Ω)}`.
+* `inner_glue_p1Global_nodalIndicator_one`: the lumped mass is `∫_Ω φₓ`.
+* `abs_sub_p1Interp_le_of_vertices`: the `P₁` interpolant of approximate vertex values.
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (the lumped mass method)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -54,9 +36,6 @@ open Feec.Mesh Feec.Domain ExteriorFibre
 
 variable {n : ℕ}
 
-/-! ### Barycentric coordinates: reproduction, reindexing, integrals -/
-
-/-- **Affine reproduction**: `x = Σᵢ λᵢ(x) pᵢ`. -/
 theorem sum_baryCoord_smul {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (x : Fin n → ℝ) : ∑ i, baryCoord p x i • p i = x := by
   have e : simplexMap p (Matrix.mulVec (edgeMatrix p)⁻¹ (x - p 0)) = x := by
@@ -68,7 +47,6 @@ theorem sum_baryCoord_smul {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edg
   rw [simplexMap_eq_sum]
   rfl
 
-/-- **Reindexing the vertices**: `λ^{p ∘ π}ᵢ = λ^p_{π i}`. -/
 theorem baryCoord_comp_perm {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (π : Equiv.Perm (Fin (n + 1))) (hpπ : IsUnit (edgeMatrix (p ∘ π)).det) (x : Fin n → ℝ)
     (i : Fin (n + 1)) : baryCoord (p ∘ π) x i = baryCoord p x (π i) := by
@@ -86,14 +64,10 @@ theorem baryCoord_comp_perm {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (ed
     · rfl
   · simp
 
-/-- `λ ∘ F_T = λ̂` for the affine map `F_T` of the reference simplex. -/
 theorem baryCoord_refMap (T : Affine.Simplex ℝ (Fin n → ℝ) n) (y : Fin n → ℝ) :
     baryCoord T.points (T.refMap y) = refBary y := by
   rw [← simplexMap_eq_refMap, baryCoord_simplexMap (isUnit_det_edgeMatrix T)]
 
-/-- **Permutation invariance of the integrals of the barycentric coordinates**: for every `F`,
-`∫_T F(λ_{π 0}, …, λ_{π n}) = ∫_T F(λ₀, …, λₙ)`. The left side is the integral over `T` with its
-vertices reindexed by `π`, which has the same volume, so both are `|det B_T| ∫_{T̂} F(λ̂)`. -/
 theorem integral_comp_baryCoord_perm (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (π : Equiv.Perm (Fin (n + 1))) (F : (Fin (n + 1) → ℝ) → ℝ) :
     ∫ x in T.closedInterior, F (fun k => baryCoord T.points x (π k)) =
@@ -120,8 +94,6 @@ theorem integral_comp_baryCoord_perm (T : Affine.Simplex ℝ (Fin n → ℝ) n)
         rw [integral_closedInterior_eq, integral_closedInterior_eq T, hdet]
         simp only [baryCoord_refMap]
 
-/-- **The integral of a barycentric coordinate**: `∫_T λⱼ = |T| / (n + 1)` (the vertex
-quadrature is exact for the `P₁` hat functions). -/
 theorem integral_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (n + 1)) :
     ∫ x in T.closedInterior, baryCoord T.points x j = volume.real T.closedInterior / (n + 1) := by
   have e := integral_comp_baryCoord_perm T (Equiv.swap 0 j) fun l => l 0
@@ -137,17 +109,13 @@ theorem integral_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (
         push_cast
         field_simp
 
-/-! ### The `P₁` interpolant as a Whitney `0`-form -/
-
-/-- The `0`-form `Πₜu dx_∅` of the `P₁` interpolant of the nodal values `u` on `p`, linear in
-`u`. -/
+/-- The `0`-form `Πₜu dx_∅` of the `P₁` interpolant of the nodal values `u` on `p`. -/
 def p1Form (p : Fin (n + 1) → Fin n → ℝ) : ((Fin n → ℝ) → ℝ) →ₗ[ℝ] FormField n :=
   (LinearMap.single ℝ (fun _ => ℝ) ∅).compLeft (Fin n → ℝ) ∘ₗ p1Interp p
 
 theorem p1Form_apply (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
     p1Form p u x = Pi.single ∅ (p1Interp p u x) := rfl
 
-/-- The Whitney `0`-form of the vertex `j` is the barycentric coordinate `λⱼ`. -/
 theorem whitneyForm_singleton (p : Fin (n + 1) → Fin n → ℝ) (j : Fin (n + 1)) :
     whitneyForm p {j} = fun x => Pi.single ∅ (baryCoord p x j) := by
   funext x s
@@ -166,7 +134,6 @@ theorem p1Form_mem_whitneySpace (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n 
   exact Submodule.sum_mem _ fun j _ => Submodule.smul_mem _ _
     (whitneyForm_mem_whitneySpace p ⟨{j}, card_singleton j⟩)
 
-/-- **The vertex DOF is the evaluation**: `∫_{x} w = w(x)_∅`. -/
 theorem whitneyFaceDof_singleton (x : Fin n → ℝ) (w : contForms n) :
     whitneyFaceDof {x} 0 w = (w : FormField n) x ∅ := by
   have hr : refSimplex 0 = Set.univ := by ext y; simp [mem_refSimplex_iff]
@@ -187,9 +154,6 @@ theorem whitneyFaceDof_singleton (x : Fin n → ℝ) (w : contForms n) :
     exact fun h => hs (Finset.card_eq_zero.1 h.symm)
   · intro h; exact absurd (mem_univ _) h
 
-/-! ### The global `P₁` function -/
-
-/-- The vertex values of the piece: `(Πₜu)(pⱼ) = u(pⱼ)`. -/
 theorem whitneyFaceDof_of_eq_p1Form (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → ℝ)
     {x : Fin n → ℝ} (hx : x ∈ vertexSet T) {w : contForms n}
     (hw : (w : FormField n) = p1Form T.points u) : whitneyFaceDof {x} 0 w = u x := by
@@ -197,8 +161,7 @@ theorem whitneyFaceDof_of_eq_p1Form (T : Affine.Simplex ℝ (Fin n → ℝ) n) (
   rw [whitneyFaceDof_singleton, hw]
   simp [p1Form_apply, p1Interp_vertex (isUnit_det_edgeMatrix T)]
 
-/-- **The global `P₁` function** `u_h` with nodal values `u`: the `P₁` interpolants `Πₜu` on the
-simplices `T` of `M`, an element of the global Whitney `0`-form (Lagrange `P₁`) space. -/
+/-- The global `P₁` function with nodal values `u`: `Πₜu` on every simplex `T`. -/
 def p1Global (M : SimplicialMesh n) :
     ((Fin n → ℝ) → ℝ) →ₗ[ℝ] (whitneyElement n).globalSpace M 0 where
   toFun u := ⟨fun T => ⟨p1Form T.1.points u, by exact p1Form_mem_whitneySpace _ _⟩,
@@ -216,7 +179,6 @@ theorem p1Global_apply (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) (T :
     (((p1Global M u : (whitneyElement n).Piecewise M 0) T : FormField n)) =
       p1Form T.1.points u := rfl
 
-/-- **Every global `P₁` function is `p1Global` of its nodal values.** -/
 theorem exists_p1Global_eq (M : SimplicialMesh n) (v : (whitneyElement n).globalSpace M 0) :
     ∃ u : (Fin n → ℝ) → ℝ, p1Global M u = v := by
   classical
@@ -236,8 +198,6 @@ theorem exists_p1Global_eq (M : SimplicialMesh n) (v : (whitneyElement n).global
   rw [dite_eq_left_of_eq_true (eq_true hex), ← hval _ hex.choose_spec]
   exact v.2 _ _ _ (singleton_subset_iff.2 hex.choose_spec) (singleton_subset_iff.2 hx) _
 
-/-- **`p1Global M u` is determined by the values of `u` at the vertices** of `M`, and determines
-them. -/
 theorem p1Global_eq_p1Global_iff (M : SimplicialMesh n) {u w : (Fin n → ℝ) → ℝ} :
     p1Global M u = p1Global M w ↔ ∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, u x = w x := by
   refine ⟨fun h T hT x hx => ?_, fun h => Subtype.ext (funext fun T => Subtype.ext ?_)⟩
@@ -250,9 +210,6 @@ theorem p1Global_eq_p1Global_iff (M : SimplicialMesh n) {u w : (Fin n → ℝ) �
     rw [p1Form_eq_sum, p1Form_eq_sum]
     exact sum_congr rfl fun j _ => by rw [h _ T.2 _ (mem_vertexSet.2 ⟨j, rfl⟩)]
 
-/-- **`u_h ∈ P̊₁⁻Λ⁰(M)` iff `u` vanishes at the vertices on the boundary** of `cl Ω`: the
-boundary vertices are the vertices of the boundary facets
-(`StarGeom.exists_isBoundaryFacet_of_mem_vertexSet`). -/
 theorem p1Global_mem_globalSpace₀_iff (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) :
     (p1Global M u : (whitneyElement n).Piecewise M 0) ∈ (whitneyElement n).globalSpace₀ M 0 ↔
       ∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, x ∈ frontier (closure M.domain) → u x = 0 := by
@@ -268,8 +225,7 @@ theorem p1Global_mem_globalSpace₀_iff (M : SimplicialMesh n) (u : (Fin n → �
     exact (whitneyFaceDof_of_eq_p1Form _ u (hFT hxF) rfl).trans
       (h T T.2 x (hFT hxF) (hF.2.2 (subset_convexHull ℝ _ (Finset.mem_coe.2 hxF))))
 
-/-- `x` **enumerates the free vertices** of `M`: injectively, the vertices of `M` off the
-boundary of `cl Ω`. -/
+/-- `x` enumerates injectively the vertices of `M` off the boundary of `cl Ω`. -/
 def IsFreeVertexEnum {ι : Type*} (M : SimplicialMesh n) (x : ι → Fin n → ℝ) : Prop :=
   Function.Injective x ∧ ∀ y, y ∈ Set.range x ↔
     (∃ T ∈ M.simplices, y ∈ vertexSet T) ∧ y ∉ frontier (closure M.domain)
@@ -282,8 +238,7 @@ theorem nodalFun_eq_zero_of_mem_frontier (hx : IsFreeVertexEnum M x) (U : ι →
     {y : Fin n → ℝ} (hy : y ∈ frontier (closure M.domain)) : nodalFun x U y = 0 :=
   sum_eq_zero fun i _ => ite_eq_right_iff.2 fun e => (((hx.2 y).1 ⟨i, e⟩).2 hy).elim
 
-/-- The global `P₁` function with the values `U` at the free vertices, `0` at the boundary
-vertices: an element of `P̊₁⁻Λ⁰(M)`. -/
+/-- The global `P₁` function with the values `U` at the free vertices and `0` at the others. -/
 def p1Global₀ (hx : IsFreeVertexEnum M x) :
     (ι → ℝ) →ₗ[ℝ] (whitneyElement n).globalSpace₀ M 0 where
   toFun U := ⟨p1Global M (nodalFun x U), (p1Global_mem_globalSpace₀_iff M _).2
@@ -298,9 +253,7 @@ def p1Global₀ (hx : IsFreeVertexEnum M x) :
 theorem p1Global₀_apply (hx : IsFreeVertexEnum M x) (U : ι → ℝ) :
     (p1Global₀ M hx U : (whitneyElement n).Piecewise M 0) = p1Global M (nodalFun x U) := rfl
 
-/-- **The nodal values at the free vertices are a linear isomorphism** `ℝ^ι ≃ P̊₁⁻Λ⁰(M)`: every
-`P₁` function with vanishing boundary DOFs is `p1Global` of its values at the free vertices,
-`0` at the boundary vertices. -/
+/-- `p1Global₀` as a linear isomorphism `ℝ^ι ≃ P̊₁⁻Λ⁰(M)`. -/
 def p1GlobalEquiv₀ (hx : IsFreeVertexEnum M x) :
     (ι → ℝ) ≃ₗ[ℝ] (whitneyElement n).globalSpace₀ M 0 := by
   refine LinearEquiv.ofBijective (p1Global₀ M hx) ⟨fun U V hUV => funext fun i => ?_, fun v => ?_⟩
@@ -324,9 +277,6 @@ theorem p1GlobalEquiv₀_apply (hx : IsFreeVertexEnum M x) (U : ι → ℝ) :
 
 end Nodes
 
-/-! ### Inner products of glued piecewise fields -/
-
-/-- The product of piecewise functions is piecewise. -/
 theorem pieceFun_mul (M : SimplicialMesh n)
     (v w : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
     pieceFun M v x * pieceFun M w x = pieceFun M (fun T x => v T x * w T x) x := by
@@ -339,7 +289,6 @@ theorem pieceFun_mul (M : SimplicialMesh n)
       fun u => Finset.sum_eq_zero fun T hT => Set.indicator_of_notMem (hx T hT) _
     rw [h0, h0, h0, mul_zero]
 
-/-- `∫_S Σ_T 𝟙_{int T} v_T = Σ_T ∫_T v_T` when the interiors of the elements lie in `S`. -/
 theorem setIntegral_pieceFun (M : SimplicialMesh n)
     {v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → ℝ}
     (hv : ∀ T ∈ M.simplices, Continuous (v T)) {S : Set (Fin n → ℝ)}
@@ -356,8 +305,6 @@ theorem setIntegral_pieceFun (M : SimplicialMesh n)
   exact setIntegral_congr_set (interior_ae_eq_of_null_frontier (μ := volume)
     (s := T.closedInterior) (Convex.addHaar_frontier volume (Feec.Mesh.convex_closedInterior T)))
 
-/-- `⟪u, w⟫_{L²(S)} = Σ_T Σᵢ ∫_T (u_T)ᵢ (w_T)ᵢ` for piecewise continuous fields, when the interiors
-of the elements lie in `S`. -/
 theorem inner_pieceL2 (M : SimplicialMesh n) {ι : Type*} [Fintype ι] {S : Set (Fin n → ℝ)}
     (hTS : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ S)
     {v w : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → ℝ}
@@ -375,9 +322,6 @@ theorem inner_pieceL2 (M : SimplicialMesh n) {ι : Type*} [Fintype ι] {S : Set 
   filter_upwards [coeFn_pieceL2 M S v hv i] with x hx
   rw [hx, starRingEnd_apply, star_trivial, pieceFun_mul]
 
-/-! ### The stiffness form and the lumped mass as integrals -/
-
-/-- `Σ_{s ∈ Λ¹} F(s) = Σⱼ F({j})`. -/
 theorem sum_formIdx_one {X : Type*} [AddCommMonoid X] (F : Finset (Fin n) → X) :
     ∑ s : formIdx n (((0 : ℕ) : ℤ) + 1), F s.1 = ∑ j, F {j} := by
   refine (Fintype.sum_equiv (Equiv.ofBijective (fun j : Fin n =>
@@ -386,7 +330,6 @@ theorem sum_formIdx_one {X : Type*} [AddCommMonoid X] (F : Finset (Fin n) → X)
   obtain ⟨j, hj⟩ := Finset.card_eq_one.1 (by have := s.2; push_cast at this; exact_mod_cast this)
   exact ⟨j, Subtype.ext hj.symm⟩
 
-/-- `Σ_{s ∈ Λ⁰} F(s) = F(∅)`. -/
 theorem sum_formIdx_zero {X : Type*} [AddCommMonoid X] (F : Finset (Fin n) → X) :
     ∑ s : formIdx n ((0 : ℕ) : ℤ), F s.1 = F ∅ := by
   rw [Fintype.sum_eq_single ⟨∅, by simp⟩]
@@ -395,7 +338,6 @@ theorem sum_formIdx_zero {X : Type*} [AddCommMonoid X] (F : Finset (Fin n) → X
   push_cast at h
   exact absurd (Subtype.ext (Finset.card_eq_zero.1 (by exact_mod_cast h))) hs
 
-/-- `∂ⱼ Πₜu = (∇Πₜu)ⱼ`. -/
 theorem partialDeriv_p1Interp (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ)
     (j : Fin n) (x : Fin n → ℝ) : partialDeriv j (p1Interp p u) x = p1Grad p u j := by
   have e : p1Interp p u = fun y => ∑ l, p1Grad p u l * y l + p1Interp p u 0 := by
@@ -407,14 +349,12 @@ theorem partialDeriv_p1Interp (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n �
   rw [e]
   exact congrFun (grad_affine (p1Grad p u) (p1Interp p u 0) x) j
 
-/-- `d Πₜu = Σⱼ (∇Πₜu)ⱼ dxⱼ`. -/
 theorem extDeriv_p1Form_singleton (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ)
     (x : Fin n → ℝ) (j : Fin n) : extDeriv (p1Form p u) x {j} = p1Grad p u j := by
   rw [extDeriv_apply, Finset.sum_singleton, Finset.erase_singleton]
   simp only [sgn, Finset.filter_singleton, lt_irrefl, ite_false, card_empty, pow_zero, one_mul]
   simpa [p1Form_apply] using partialDeriv_p1Interp p u j x
 
-/-- **The global `P₁` functions in `L²(Ω)`**: `⟪u_h, w_h⟫ = Σ_T ∫_T Πₜu Πₜw`. -/
 theorem inner_glue_p1Global (M : SimplicialMesh n)
     (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) (u w : (Fin n → ℝ) → ℝ) :
     ⟪(whitneyElement n).glue M (0 : ℕ) (p1Global M u : (whitneyElement n).Piecewise M 0),
@@ -432,8 +372,6 @@ theorem inner_glue_p1Global (M : SimplicialMesh n)
       (continuous_formComp ((whitneyElement n).contDiff_extendPW M _ hT).continuous s)).continuousOn
       |>.integrableOn_compact T.isCompact_closedInterior
 
-/-- **The stiffness form is the Dirichlet form of the global `P₁` space**:
-`a(u, w) = ⟪d u_h, d w_h⟫_{L²Λ¹(Ω)} = ∫_Ω ∇u_h · ∇w_h`, `d` elementwise. -/
 theorem inner_glue_dPiecewise_p1Global (M : SimplicialMesh n)
     (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) (u w : (Fin n → ℝ) → ℝ) :
     ⟪(whitneyElement n).glue M (((0 : ℕ) : ℤ) + 1)
@@ -473,15 +411,12 @@ theorem continuous_baryCoord (p : Fin (n + 1) → Fin n → ℝ) (j : Fin (n + 1
   rw [e]
   fun_prop
 
-/-- `Πₜ 1 = 1`. -/
 theorem p1Interp_one (p : Fin (n + 1) → Fin n → ℝ) (x : Fin n → ℝ) :
     p1Interp p (fun _ => 1) x = 1 := by
   simp [p1Interp_apply, sum_baryCoord]
 
-/-- **The lumped mass is the integral of the hat function**: `m(x) = ⟪φₓ, 1⟫_{L²(Ω)} = ∫_Ω φₓ`,
-the row sum `Σ_y ⟪φₓ, φ_y⟫` of the consistent mass matrix (`1 = Σ_y φ_y` in `P₁`): the vertex
-quadrature of `Feec.FiniteElement.lumpedMass` is exact for the hat functions. [Thomee2006],
-Ch. 15 -/
+/-- **The lumped mass is the integral of the hat function**:
+`m(x) = ⟪φₓ, 1⟫_{L²(Ω)} = ∫_Ω φₓ`. [Thomee2006], Ch. 15 -/
 theorem inner_glue_p1Global_nodalIndicator_one (M : SimplicialMesh n)
     (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) (x : Fin n → ℝ) :
     ⟪(whitneyElement n).glue M (0 : ℕ)
@@ -500,7 +435,6 @@ theorem inner_glue_p1Global_nodalIndicator_one (M : SimplicialMesh n)
     Finset.sum_ite, Finset.sum_const_zero, add_zero, Finset.sum_const, nsmul_eq_mul]
   ring
 
-/-- The interiors of the simplices of a Freudenthal mesh lie in the open box. -/
 theorem interior_subset_freudenthalMesh_domain (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ)
     [NeZero N] {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (freudenthalMesh b s hs N).simplices) :
@@ -516,10 +450,6 @@ section MaxNorm
 
 open Set
 
-/-! ### The `P₁` interpolant in the maximum norm -/
-
-/-- **A `P₁` function attains its maximum modulus at a vertex**: on `T`,
-`|Πₜu(x)| ≤ maxⱼ |u(pⱼ)|`. -/
 theorem abs_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : (Fin n → ℝ) → ℝ} {B : ℝ}
     (hB : ∀ j, |u (T.points j)| ≤ B) {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
     |p1Interp T.points u x| ≤ B := by
@@ -531,9 +461,6 @@ theorem abs_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : (Fin n �
         exact mul_le_mul_of_nonneg_right (hB j) (baryCoord_mem_Icc T hx j).1
     _ = B := by rw [← mul_sum, sum_baryCoord, mul_one]
 
-/-- **The `P₁` interpolation error in the maximum norm**: for `f ∈ C²` with
-`|∂ᵢ∂ₖ f| ≤ D` on `T` and `|y - z|_∞ ≤ δ` on `T`, `|f(x) - Πₜf(x)| ≤ n² D δ² / 2` on `T`
-(Taylor's formula along the segments `x → pⱼ`; `Σⱼ λⱼ(x)(pⱼ - x) = 0`). -/
 theorem abs_sub_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {f : (Fin n → ℝ) → ℝ}
     (hf : ContDiff ℝ 2 f) {D δ : ℝ}
     (hD : ∀ y ∈ T.closedInterior, ∀ i k, |partialDeriv k (partialDeriv i f) y| ≤ D)
@@ -604,9 +531,8 @@ theorem abs_sub_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {f : (Fin
         exact mul_le_mul_of_nonneg_left (hR j) (baryCoord_mem_Icc T hx j).1
     _ = _ := by rw [← sum_mul, sum_baryCoord, one_mul]
 
-/-- **The `P₁` interpolant of approximate vertex values**: for `f` as in `abs_sub_p1Interp_le`
-and `g` with `|f(pⱼ) - g(pⱼ)| ≤ ε` at the vertices, `|f(x) - Πₜg(x)| ≤ ε + n² D δ² / 2` on `T`
-(the `P₁` function `Πₜ(f - g)` attains its extrema at the vertices). -/
+/-- **`P₁` interpolation of approximate vertex values**: for `f ∈ C²` with `|∂ᵢ∂ₖ f| ≤ D` on `T`
+of diameter `≤ δ` and `|f - g| ≤ ε` at the vertices, `|f(x) - Πₜg(x)| ≤ ε + n² D δ² / 2` on `T`. -/
 theorem abs_sub_p1Interp_le_of_vertices (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     {f g : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) {D δ ε : ℝ}
     (hD : ∀ y ∈ T.closedInterior, ∀ i k, |partialDeriv k (partialDeriv i f) y| ≤ D)

@@ -6,32 +6,18 @@ public import Feec.Models.Cube.PolyRate
 /-!
 # The cubical finite element methods on the cube as conforming families
 
-For every degree vector `b` (`b_j ≥ 1`; `b = fun _ => r` is `Q_r⁻Λ`, the Nédélec elements on
-hexahedra of the first kind for `r ≥ 1` in degree `1`) and the cubical meshes of `Q = (0, ½)ⁿ` with
-`N + 1` cells per direction, the cubical complexes `FEM.qMinus n b N ⊆ HΛ(Q)`
-(`Feec.Models.Cube.CubicalSmoothingEstimates`) are a conforming family of `HΛ(Q)`, with no
-hypothesis:
+The cubical complexes `FEM.qMinus n b N` of [ArnoldBoffiBonizzoni2015] on `Q = (0, ½)ⁿ`, with the
+smoothed projections, are a conforming family with a Jackson estimate of order `h^{s+1}`.
 
-* **Interpolation error of order `h^{s+1}`** for `s + 1 ≤ b_j` ([ArnoldBoffiBonizzoni2015], §4):
-  the cellwise estimate of the global canonical interpolant
-  (`exists_norm_sub_cubeFieldGlobalInterp_le`, Bramble–Hilbert on the reference cube) in `L²`
-  and, as `Π_h` commutes with `d`, in the graph norm (`FEM.exists_mem_qMinus_le`); its form on
-  the regularity classes `FEM.IsCsForm` (`FEM.IsCsForm.exists_mem_qMinus_le`).
-* **Density** of the cubical spaces in `HΛ(Q)` and in `L²` (`FEM.eventually_exists_qMinus_graph`,
-  `FEM.tendsto_infDist_qMinus`), from the density of smooth forms.
-* **The conforming family** (`FEM.QMinusSmoothingEstimates.family`, `FEM.qMinusFamily`): the
-  smoothed projections `π_N = J_N⁻¹ Q_N` of `FEM.qMinusSmoothingEstimates_pMax`
-  (`Feec.HilbertComplex.ConformingFamily.ofSmoothing`), and **its Jackson estimate**
-  (`FEM.qMinusJackson`): `IsCsForm s` forms at the order `h^{s+1}`, `s + 1 ≤ min b`, so the
-  rated FEEC theorem (`Feec.HilbertComplex.ConformingFamily.feec_rated`) applies at every order.
+## Main results
+
+* `FEM.exists_mem_qMinus_le`: the interpolation error of order `h^{s+1}`.
+* `FEM.qMinusFamily`, `FEM.qMinusJackson`: the conforming family and its Jackson estimate.
 
 ## References
 
-* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §5 (the spaces `Q_r⁻Λᵏ(𝒯_h)`), §4 (approximation)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (conforming families: bounded cochain projections, approximation), §5.5 (smoothed
-  projections)
+* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -50,8 +36,6 @@ variable {n : ℕ} {b : Fin n → ℕ}
 
 /-! ### The global `L²` interpolation error -/
 
-/-- **A pointwise bound on the simplex interiors bounds the `L²` distance** between a continuous
-form and a glued cubical field. -/
 theorem norm_formL2_sub_cubeGlue_le_of_forall {L : ℝ} [Fact (0 < L)] {N : ℕ} [NeZero N] (k : ℕ)
     (w : contForms n) (u : CubeCell (fun _ : Fin n => N) → Koszul.PolyForm ℝ (Fin n)) {B : ℝ}
     (hB : 0 ≤ B)
@@ -88,8 +72,7 @@ theorem norm_formL2_sub_cubeGlue_le_of_forall {L : ℝ} [Fact (0 < L)] {N : ℕ}
     rfl
 
 variable (n) in
-/-- The constant of the `L²` interpolation error of `Q_b⁻Λᵏ` at the order `h^{s+1}`
-(`exists_norm_sub_cubeFieldGlobalInterp_le`, `0` unless `s + 1 ≤ b_j` for all `j`). -/
+/-- The constant of the `L²` interpolation error of `Q_b⁻Λᵏ` at the order `h^{s+1}`. -/
 def qMinusInterpConst (b : Fin n → ℕ) (s k : ℕ) : ℝ :=
   if h : ∀ j, s + 1 ≤ b j then
     Fintype.card (formIdx n k) * volume.real (cubeDomain n) ^ (1 / 2 : ℝ) *
@@ -102,7 +85,6 @@ theorem qMinusInterpConst_nonneg (b : Fin n → ℕ) (s k : ℕ) : 0 ≤ qMinusI
   · positivity
   · exact le_rfl
 
-/-- **The pointwise interpolation error on the cube** at the order `h_N^{s+1}`. -/
 theorem abs_sub_cubeFieldGlobalInterp_le {s k : ℕ} (hs : ∀ j, s + 1 ≤ b j) {N : ℕ}
     {w : FormField n} (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
     (hM : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M)
@@ -124,11 +106,8 @@ theorem abs_sub_cubeFieldGlobalInterp_le {s k : ℕ} (hs : ∀ j, s + 1 ≤ b j)
 
 variable [NeZero n]
 
-/-- **The `L²` and graph-norm interpolation error of the cubical spaces on the cube** at the order
-`h^{s+1}` ([ArnoldBoffiBonizzoni2015], §4): for a `C^{s+2}` degree-`k` form `w` with
-`‖D^{s+1} w‖ ≤ L` and `‖D^{s+1} dw‖ ≤ L'` on `cl Q` and `s + 1 ≤ b_j`, the canonical
-interpolant `v = Π_N w ∈ Vₕᵏ` satisfies `‖w - v‖ ≤ A_k h_N^{s+1} L` and
-`‖dw - dv‖ ≤ A_{k+1} h_N^{s+1} L'` (`d Π_h = Π_h d`). -/
+/-- **The interpolation error of the cubical spaces** ([ArnoldBoffiBonizzoni2015], §4): for
+`w ∈ C^{s+2}` and `s + 1 ≤ b_j`, some `v ∈ Vₕᵏ` has `‖w - v‖`, `‖dw - dv‖` of order `h^{s+1}`. -/
 theorem exists_mem_qMinus_le {s : ℕ} (hs : ∀ j, s + 1 ≤ b j) (N k : ℕ) {w : FormField n}
     (hw : ContDiff ℝ (s + 2) w) (hdeg : ∀ x, IsDeg k (w x)) {L L' : ℝ}
     (hL : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L)
@@ -198,8 +177,7 @@ theorem exists_mem_qMinus_le {s : ℕ} (hs : ∀ j, s + 1 ≤ b j) (N k : ℕ) {
 
 /-! ### Density of the cubical spaces -/
 
-/-- **Graph-norm density of the cubical spaces in `HΛᵏ(Q)`**: every `x ∈ D(d)` is the limit, in
-the graph norm, of points of the spaces `Vₕᵏ` of `Q_b⁻Λ` (`b_j ≥ 1`). -/
+/-- **Graph-norm density of the cubical spaces in `HΛᵏ(Q)`** (`b_j ≥ 1`). -/
 theorem eventually_exists_qMinus_graph (hb : ∀ j, 1 ≤ b j) (k : ℤ)
     (x : L2F ℝ (cubeDomain n) (formIdx n k)) (hx : x ∈ ((complex n).d k (k + 1)).domain) {ε : ℝ}
     (hε : 0 < ε) :
@@ -227,7 +205,6 @@ theorem eventually_exists_qMinus_graph (hb : ∀ j, 1 ≤ b j) (k : ℤ)
       (mul_nonneg (qMinusInterpConst_nonneg _ _ _) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)
         hL0)))⟩
 
-/-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (cubical spaces). -/
 theorem tendsto_infDist_qMinus (hb : ∀ j, 1 ≤ b j) (j : ℤ)
     (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((qMinus n b N).V j :
@@ -238,8 +215,7 @@ theorem tendsto_infDist_qMinus (hb : ∀ j, 1 ≤ b j) (j : ℤ)
 
 /-! ### The cubical complexes as a conforming family -/
 
-/-- **The conforming family of the smoothing estimates `hE`** ([AFW2010], §5.5): the cubical
-complexes with the smoothed projections `π_N = J_N⁻¹ Q_N` (`ConformingFamily.ofSmoothing`). -/
+/-- **The conforming family of the smoothing estimates `hE`** ([AFW2010], §5.5). -/
 def QMinusSmoothingEstimates.family {hb : ∀ j, 1 ≤ b j} {p : ℕ → SmoothingParam (Fin n → ℝ)}
     {C : ℝ} (hE : QMinusSmoothingEstimates b hb p C) : ConformingFamily (complex n) ℕ :=
   .ofSmoothing atTop (qMinus n b) (fun N => qMinusSmoothed hb N (p N) (hE.isMaximal N))
@@ -252,9 +228,7 @@ theorem qMinusSmoothingEstimates_exists (hb : ∀ j, 1 ≤ b j) :
   exact ⟨_, C, hC⟩
 
 variable (n) in
-/-- **The cubical finite element complexes `Q_b⁻Λ` of the cube** (`b_j ≥ 1`; `Q_r⁻Λ` for
-`b = fun _ => r`) with the smoothed projections (`qMinusSmoothingEstimates_exists`), a conforming
-family of `HΛ(Q)`. -/
+/-- **The cubical complexes `Q_b⁻Λ` of the cube**: a conforming family with smoothed projections. -/
 def qMinusFamily (hb : ∀ j, 1 ≤ b j) : ConformingFamily (complex n) ℕ :=
   (qMinusSmoothingEstimates_exists (n := n) hb).choose_spec.choose_spec.family
 
@@ -267,8 +241,6 @@ variable (n) in
 def qMinusInterpBound (b : Fin n → ℕ) (s : ℕ) (j : ℤ) : ℝ :=
   qMinusInterpConst n b s j.toNat + qMinusInterpConst n b s (j.toNat + 1)
 
-/-- **Degreewise interpolation error of order `s + 1`** on the regularity classes: for `x` with
-`IsCsForm s j L x` and `s + 1 ≤ b_i`, some `v ∈ Vₕʲ` has `‖x - v‖, ‖d (x - v)‖ ≤ B L h^{s+1}`. -/
 theorem IsCsForm.exists_mem_qMinus_le {s : ℕ} (hs : ∀ i, s + 1 ≤ b i) {j : ℤ} {L : ℝ}
     {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsCsForm s j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (qMinus n b N).V j,
@@ -298,9 +270,7 @@ theorem IsCsForm.exists_mem_qMinus_le {s : ℕ} (hs : ∀ i, s + 1 ≤ b i) {j :
   linarith
 
 variable (n) in
-/-- **The Jackson estimate of the cubical complexes**: forms of class `IsCsForm s` are
-approximated at the order `h_N^{s+1}` for every `s + 1 ≤ min_j b_j`
-(`IsCsForm.exists_mem_qMinus_le`; for `Q_r⁻Λ`, every order up to `h^r`). -/
+/-- **The Jackson estimate of the cubical complexes**, of order `h_N^{s+1}`, `s + 1 ≤ min_j b_j`. -/
 def qMinusJackson (hb : ∀ j, 1 ≤ b j) : (qMinusFamily n hb).Jackson ℕ where
   meshSize := meshSize
   meshSize_nonneg N := (meshSize_pos N).le

@@ -12,57 +12,24 @@ public import Feec.TimeStepping.Cayley
 /-!
 # Signed symmetrization of Crank–Nicolson block systems (MINRES)
 
-A Crank–Nicolson step of `M ẋ = -K x` solves `(M + s K) x' = (M - s K) x` (`s = Δt/2`), with `M`
-symmetric (the mass matrix) and `K` skew (the stiffness of `d - d*`). The matrix `M + s K` is
-not symmetric, so MINRES does not apply directly. If the unknowns carry signs `ε i = ±1` such
-that `M` couples only equal signs and `K` only opposite signs, as for a Hilbert complex graded by
-the parity of the form degree, then `diag(ε) (M + s K)` is symmetric and has the same solutions.
+For a Crank–Nicolson system `(M + s K) x' = (M - s K) x`, `M` symmetric, `K` skew, and signs `ε`
+with `M` coupling equal and `K` opposite signs, `diag(ε) (M + s K)` is symmetric.
 
 ## Main results
 
-* `TimeStepping.isSymm_diagonal_mul_add_smul`: `diag(ε) (M + s K)` is symmetric.
-* `TimeStepping.mulVec_diagonal_mul_iff`: the signed system has the same solutions.
-
-This holds for any number of blocks (any length of the complex) and any commutative ring;
-`TimeStepping.isHermitian_diagonal_mul_add_smul` is the Hermitian form over a star ring.
-
-## Crank–Nicolson for a bounded generator in a basis
-
-For a basis `b` of an inner product space over `ℝ` or `ℂ`, with Gram (mass) matrix `M` and
-stiffness `K i j = -⟪bᵢ, T bⱼ⟫` (`stiffness`) of a linear map `T`:
-
-* `isCNStep_iff_mulVec`: `u'` is a CN step from `u` for `u' = T u` iff
-  `(M + sK) c(u') = (M - sK) c(u)`;
-* `diagonal_mul_mulVec_iff_isCNStep`: the signed system `diag(ε) (M + sK) w = diag(ε) (M - sK) c(u)`
-  has the CN steps as solutions;
-* `isHermitian_signed_cn`: for a skew `T` and signs adapted to `b`, `diag(ε) (M + sK)` is
-  Hermitian. The crown's fully discrete Crank–Nicolson scheme reads through these
-  (`Feec.HilbertComplex.SkewFEEC.crankNicolson_signed`).
-
-## Three-block systems of the Einstein–Bianchi scheme (thesis Ch. 7)
-
-With block mass matrix `M = diag(M₀, M₁, M₂)` (`blockMass`) and stiffness
-`K = [[0, -Gᵀ, 0], [G, 0, Cᵀ], [0, -C, 0]]` (`blockStiffness`) on `n₀ ⊕ n₁ ⊕ n₂`:
-
-* `isUnit_blockMass_add_smul`: `M + sK` is invertible for SPD blocks and every `s`;
-  `dotProduct_mulVec_eq_of_cn`: the CN map conserves the `M`-energy.
-* **`not_isSymm_blockMass_add_smul`**: `M + sK` is not symmetric for `s ≠ 0` and nonzero
-  coupling, so MINRES does not apply to it directly.
-* **`isSymm_isUnit_indefinite_blockSign_mul`**: `J (M + sK)`, `J = diag(-I, I, -I)`, is
-  symmetric, nonsingular and indefinite; **`existsUnique_blockSign_mul_mulVec`**: its system has
-  the CN update as unique solution.
-* Block elimination: **`blockMass_add_smul_mulVec_eq_iff_schur`** and
-  **`posDef_schurComplement`**: the `E` Schur complement `M₁ + s²(G M₀⁻¹ Gᵀ + Cᵀ M₂⁻¹ C)` is SPD.
-* Assembly in bases (`testMatrix`, `blockCoord`): `isFullCNStep_iff_mulVec`, and
-  **`blockSign_mul_mulVec_iff_fullCNStep`**: the symmetrized system computes exactly the CN
-  iterate of `Feec.TimeStepping.fullCNStep`.
+* `isSymm_diagonal_mul_add_smul`: `diag(ε) (M + s K)` is symmetric.
+* `isHermitian_signed_cn`: the signed Crank–Nicolson system of a skew operator is Hermitian.
+* `isSymm_isUnit_indefinite_blockSign_mul`: for SPD blocks, `J (M + sK)` is symmetric, nonsingular
+  and, for nonempty blocks, indefinite.
+* `posDef_schurComplement`: for SPD blocks, the `E` Schur complement of the three-block system is
+  SPD.
+* `blockSign_mul_mulVec_iff_fullCNStep`: the symmetrized system computes the CN iterate.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (MINRES for the Crank–Nicolson systems)
+  Ch. 7
 * [C. C. Paige, M. A. Saunders, *Solution of sparse indefinite systems of linear equations*][PaigeSaunders1975]
-  (MINRES for symmetric indefinite systems)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -76,8 +43,6 @@ namespace Feec.TimeStepping
 variable {n R : Type*} [Fintype n] [DecidableEq n] [CommRing R]
 
 omit [Fintype n] [DecidableEq n] in
-/-- The entries of a signed matrix: if `M` couples only unknowns with equal signs and `K` only
-unknowns with opposite signs, then `ε j (M i j - s K i j) = ε i (M i j + s K i j)`. -/
 private theorem signed_entry (ε : n → R) {M K : Matrix n n R} (hMε : ∀ i j, M i j ≠ 0 → ε i = ε j)
     (hKε : ∀ i j, K i j ≠ 0 → ε i = -ε j) (s : R) (i j : n) :
     ε j * (M i j + s * -K i j) = ε i * (M i j + s * K i j) := by
@@ -91,9 +56,8 @@ private theorem signed_entry (ε : n → R) {M K : Matrix n n R} (hMε : ∀ i j
     · rw [hKε i j h]; ring
   linear_combination e1 + e2
 
-/-- **Signed symmetrization**: if `M` is symmetric and couples only unknowns with equal signs,
-and `K` is skew and couples only unknowns with opposite signs, then `diag(ε) (M + s K)` is
-symmetric. [QuennevilleBelair2015], Ch. 7 -/
+/-- **Signed symmetrization**: if symmetric `M` couples only equal signs and skew `K` only opposite
+signs, then `diag(ε) (M + s K)` is symmetric. [QuennevilleBelair2015], Ch. 7 -/
 theorem isSymm_diagonal_mul_add_smul (ε : n → R) {M K : Matrix n n R} (hM : M.IsSymm)
     (hK : Kᵀ = -K) (hMε : ∀ i j, M i j ≠ 0 → ε i = ε j) (hKε : ∀ i j, K i j ≠ 0 → ε i = -ε j)
     (s : R) : (diagonal ε * (M + s • K)).IsSymm := by
@@ -104,8 +68,6 @@ theorem isSymm_diagonal_mul_add_smul (ε : n → R) {M K : Matrix n n R} (hM : M
   rw [hMji, hKji]
   linear_combination signed_entry ε hMε hKε s i j
 
-/-- The signed system `diag(ε) A x = diag(ε) b` has the solutions of `A x = b` when
-`ε i² = 1`. [QuennevilleBelair2015], Ch. 7 -/
 theorem mulVec_diagonal_mul_iff (ε : n → R) (hε : ∀ i, ε i * ε i = 1) (A : Matrix n n R)
     (x b : n → R) : (diagonal ε * A) *ᵥ x = diagonal ε *ᵥ b ↔ A *ᵥ x = b := by
   have hεε : diagonal ε * diagonal ε = 1 := by
@@ -116,10 +78,6 @@ theorem mulVec_diagonal_mul_iff (ε : n → R) (hε : ∀ i, ε i * ε i = 1) (A
     simpa [mulVec_mulVec, ← Matrix.mul_assoc, hεε] using this
   · intro h; rw [← mulVec_mulVec, h]
 
-/-- **Signed Hermitian symmetrization**: if `M` is Hermitian and couples only unknowns with equal
-signs, `K` is skew-Hermitian and couples only unknowns with opposite signs, and the signs and `s`
-are self-adjoint, then `diag(ε) (M + s K)` is Hermitian (the complex form of
-`isSymm_diagonal_mul_add_smul`). [QuennevilleBelair2015], Ch. 7 -/
 theorem isHermitian_diagonal_mul_add_smul [StarRing R] (ε : n → R) {M K : Matrix n n R}
     (hM : M.IsHermitian) (hK : Kᴴ = -K) (hε : ∀ i, star (ε i) = ε i)
     (hMε : ∀ i j, M i j ≠ 0 → ε i = ε j) (hKε : ∀ i j, K i j ≠ 0 → ε i = -ε j) {s : R}
@@ -140,25 +98,21 @@ open scoped InnerProductSpace
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
 omit [DecidableEq n] in
-/-- Expansion of `⟪w, T y⟫` in the coordinates of `y`. -/
 theorem inner_map_eq_sum_repr (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) (w y : E) :
     ⟪w, T y⟫_𝕜 = ∑ j, b.repr y j * ⟪w, T (b j)⟫_𝕜 := by
   conv_lhs => rw [← b.sum_repr y, map_sum, inner_sum]
   simp only [map_smul, inner_smul_right]
 
 omit [DecidableEq n] in
-/-- Expansion of `⟪w, y⟫` in the coordinates of `y`. -/
 theorem inner_eq_sum_repr (b : Module.Basis n 𝕜 E) (w y : E) :
     ⟪w, y⟫_𝕜 = ∑ j, b.repr y j * ⟪w, b j⟫_𝕜 :=
   inner_map_eq_sum_repr b LinearMap.id w y
 
-/-- The **stiffness matrix** `K i j = -⟪bᵢ, T bⱼ⟫` of `T` in the basis `b`: tested against `b`,
-`u' = T u` reads `M c' = -K c` with the Gram (mass) matrix `M` and the coefficients `c` of `u`. -/
+/-- The **stiffness matrix** `K i j = -⟪bᵢ, T bⱼ⟫` of `T` in the basis `b`. -/
 def stiffness (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) : Matrix n n 𝕜 :=
   Matrix.of fun i j => -⟪b i, T (b j)⟫_𝕜
 
 omit [DecidableEq n] in
-/-- Testing in coordinates: `(⟪bᵢ, y⟫)ᵢ = M c(y)`. -/
 theorem inner_basis_eq_gram_mulVec (b : Module.Basis n 𝕜 E) (y : E) :
     (fun i => ⟪b i, y⟫_𝕜) = Matrix.gram 𝕜 b *ᵥ b.equivFun y := by
   funext i
@@ -166,7 +120,6 @@ theorem inner_basis_eq_gram_mulVec (b : Module.Basis n 𝕜 E) (y : E) :
   simp [mulVec, dotProduct, Matrix.gram_apply, mul_comm]
 
 omit [DecidableEq n] in
-/-- Testing `T y` in coordinates: `(⟪bᵢ, T y⟫)ᵢ = -K c(y)`. -/
 theorem inner_basis_apply_eq_neg_stiffness_mulVec (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E)
     (y : E) : (fun i => ⟪b i, T y⟫_𝕜) = -(stiffness b T *ᵥ b.equivFun y) := by
   funext i
@@ -174,9 +127,6 @@ theorem inner_basis_apply_eq_neg_stiffness_mulVec (b : Module.Basis n 𝕜 E) (T
   simp [mulVec, dotProduct, stiffness, mul_comm]
 
 omit [DecidableEq n] in
-/-- **A Crank–Nicolson step is the assembled system**: `u'` is a CN step from `u` with half step
-`s` for `u' = T u` iff `(M + sK) c(u') = (M - sK) c(u)` (Gram matrix `M`, stiffness `K`).
-[QuennevilleBelair2015], Ch. 7 -/
 theorem isCNStep_iff_mulVec (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) (s : ℝ) (u u' : E) :
     IsCNStep (T.toPMap ⊤) s u u' ↔
       (Matrix.gram 𝕜 b + (s : 𝕜) • stiffness b T) *ᵥ b.equivFun u' =
@@ -204,7 +154,6 @@ theorem isCNStep_iff_mulVec (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) (
     linear_combination this
 
 omit [Fintype n] [DecidableEq n] in
-/-- `K` is skew-Hermitian for a skew `T`. -/
 theorem conjTranspose_stiffness (b : Module.Basis n 𝕜 E) {T : E →ₗ[𝕜] E}
     (hT : ∀ x y, ⟪T x, y⟫_𝕜 = -⟪x, T y⟫_𝕜) : (stiffness b T)ᴴ = -stiffness b T := by
   ext i j
@@ -212,11 +161,8 @@ theorem conjTranspose_stiffness (b : Module.Basis n 𝕜 E) {T : E →ₗ[𝕜] 
     neg_neg, ← inner_conj_symm (b j), RCLike.star_def, RingHomCompTriple.comp_apply,
     RingHom.id_apply, hT]
 
-/-- **The signed Crank–Nicolson system is Hermitian** for a skew `T` and real signs `ε i = ±1`
-such that the basis functions with different signs are orthogonal and `T` couples only basis
-functions with opposite signs (a basis adapted to a grading by the parity of the degree):
-`diag(ε) (M + sK)` is Hermitian, so MINRES applies to it. [QuennevilleBelair2015], Ch. 7;
-[PaigeSaunders1975] -/
+/-- **The signed Crank–Nicolson system is Hermitian** for a skew `T` and signs `ε i = ±1` adapted to
+the basis, so MINRES applies to it. [QuennevilleBelair2015], Ch. 7; [PaigeSaunders1975] -/
 theorem isHermitian_signed_cn (b : Module.Basis n 𝕜 E) {T : E →ₗ[𝕜] E}
     (hT : ∀ x y, ⟪T x, y⟫_𝕜 = -⟪x, T y⟫_𝕜) (ε : n → ℝ)
     (hMε : ∀ i j, ⟪b i, b j⟫_𝕜 ≠ 0 → ε i = ε j) (hKε : ∀ i j, ⟪b i, T (b j)⟫_𝕜 ≠ 0 → ε i = -ε j)
@@ -227,9 +173,6 @@ theorem isHermitian_signed_cn (b : Module.Basis n 𝕜 E) {T : E →ₗ[𝕜] E}
     (fun i j hij => by rw [hKε i j (by simpa [stiffness] using hij), RCLike.ofReal_neg])
     (RCLike.conj_ofReal s)
 
-/-- **The signed system has the CN steps as solutions**: for signs with `ε i² = 1`, `w` solves
-`diag(ε) (M + sK) w = diag(ε) (M - sK) c(u)` iff `b.equivFun.symm w` is a CN step from `u`.
-[QuennevilleBelair2015], Ch. 7 -/
 theorem diagonal_mul_mulVec_iff_isCNStep (b : Module.Basis n 𝕜 E)
     (T : E →ₗ[𝕜] E) (s : ℝ) (ε : n → 𝕜) (hε : ∀ i, ε i * ε i = 1) (u : E) (w : n → 𝕜) :
     (diagonal ε * (Matrix.gram 𝕜 b + (s : 𝕜) • stiffness b T)) *ᵥ w =
@@ -260,8 +203,7 @@ def blockMass (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n₁ ℝ) (M₂ 
     | .inr (.inr i), .inr (.inr j) => M₂ i j
     | _, _ => 0
 
-/-- Stiffness matrix `K = [[0, -Gᵀ, 0], [G, 0, Cᵀ], [0, -C, 0]]` of `M ẋ = -K x` (`G` the
-discrete gradient, `C` the discrete curl; (4.14) in coordinates). -/
+/-- The stiffness matrix `K = [[0, -Gᵀ, 0], [G, 0, Cᵀ], [0, -C, 0]]` of `M ẋ = -K x`. -/
 def blockStiffness (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) :
     Matrix (BlockIdx n₀ n₁ n₂) (BlockIdx n₀ n₁ n₂) ℝ :=
   Matrix.of fun i j =>
@@ -283,7 +225,6 @@ def blockSign : Matrix (BlockIdx n₀ n₁ n₂) (BlockIdx n₀ n₁ n₂) ℝ :
 
 omit [Fintype n₀] [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁]
   [DecidableEq n₂] in
-/-- `K` is skew-symmetric. -/
 theorem transpose_blockStiffness (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) :
     (blockStiffness (n₀ := n₀) G C)ᵀ = -blockStiffness G C := by
   ext i j
@@ -291,7 +232,6 @@ theorem transpose_blockStiffness (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n�
 
 omit [Fintype n₀] [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁]
   [DecidableEq n₂] in
-/-- The block mass matrix is symmetric. -/
 theorem isSymm_blockMass {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ} {M₂ : Matrix n₂ n₂ ℝ}
     (h₀ : M₀.IsSymm) (h₁ : M₁.IsSymm) (h₂ : M₂.IsSymm) : (blockMass M₀ M₁ M₂).IsSymm := by
   ext i j
@@ -303,14 +243,11 @@ omit [Fintype n₀] [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableE
 theorem blockSigns_mul_self (i : BlockIdx n₀ n₁ n₂) : blockSigns i * blockSigns i = 1 := by
   rcases i with i | i | i <;> norm_num [blockSigns]
 
-/-- `J² = I`. -/
 theorem blockSign_mul_self :
     (blockSign : Matrix (BlockIdx n₀ n₁ n₂) (BlockIdx n₀ n₁ n₂) ℝ) * blockSign = 1 := by
   rw [blockSign, diagonal_mul_diagonal, ← diagonal_one]
   exact congrArg diagonal (funext blockSigns_mul_self)
 
-/-- **`J (M + sK)` is symmetric** (an instance of `isSymm_diagonal_mul_add_smul`: `M` couples
-equal signs, `K` opposite signs). See [QuennevilleBelair2015], Ch. 7. -/
 theorem isSymm_blockSign_mul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ} {M₂ : Matrix n₂ n₂ ℝ}
     (h₀ : M₀.IsSymm) (h₁ : M₁.IsSymm) (h₂ : M₂.IsSymm) (G : Matrix n₁ n₀ ℝ)
     (C : Matrix n₂ n₁ ℝ) (s : ℝ) :
@@ -322,13 +259,11 @@ theorem isSymm_blockSign_mul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n
       rcases i with i | i | i <;> rcases j with j | j | j <;>
         simp_all [blockStiffness, blockSigns]) s
 
-/-- The `J`-signed system has the solutions of the unsigned one (`J² = I`). -/
 theorem blockSign_mulVec_iff (A : Matrix (BlockIdx n₀ n₁ n₂) (BlockIdx n₀ n₁ n₂) ℝ)
     (x b : BlockIdx n₀ n₁ n₂ → ℝ) : (blockSign * A) *ᵥ x = blockSign *ᵥ b ↔ A *ᵥ x = b :=
   mulVec_diagonal_mul_iff _ blockSigns_mul_self A x b
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- `xᵀ K x = 0` for skew `K`. -/
 theorem dotProduct_mulVec_self_eq_zero {ι : Type*} [Fintype ι] {K : Matrix ι ι ℝ}
     (hK : Kᵀ = -K) (x : ι → ℝ) : x ⬝ᵥ (K *ᵥ x) = 0 := by
   have h : x ⬝ᵥ (K *ᵥ x) = -(x ⬝ᵥ (K *ᵥ x)) := by
@@ -337,8 +272,6 @@ theorem dotProduct_mulVec_self_eq_zero {ι : Type*} [Fintype ι] {K : Matrix ι 
   linarith
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- **The CN matrix `M + sK` is invertible** for SPD `M`, skew `K` and every real `s`: if
-`(M + sK) x = 0` then `xᵀ M x = 0`. See [QuennevilleBelair2015], Ch. 7. -/
 theorem det_add_smul_ne_zero {ι : Type*} [Fintype ι] [DecidableEq ι] {M K : Matrix ι ι ℝ}
     (hM : M.PosDef) (hK : Kᵀ = -K) (s : ℝ) : (M + s • K).det ≠ 0 := by
   intro hdet
@@ -352,8 +285,6 @@ theorem det_add_smul_ne_zero {ι : Type*} [Fintype ι] [DecidableEq ι] {M K : M
   linarith
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- **Energy conservation of the matrix CN step**: `(M + sK) x' = (M - sK) x` with `M`
-symmetric and `K` skew gives `x'ᵀ M x' = xᵀ M x`. See [QuennevilleBelair2015], Ch. 7. -/
 theorem dotProduct_mulVec_eq_of_cn {ι : Type*} [Fintype ι] {M K : Matrix ι ι ℝ} (hM : M.IsSymm)
     (hK : Kᵀ = -K) (s : ℝ) (x x' : ι → ℝ) (h : (M + s • K) *ᵥ x' = (M - s • K) *ᵥ x) :
     x' ⬝ᵥ (M *ᵥ x') = x ⬝ᵥ (M *ᵥ x) := by
@@ -370,7 +301,6 @@ theorem dotProduct_mulVec_eq_of_cn {ι : Type*} [Fintype ι] {M K : Matrix ι ι
   linarith
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- The block mass matrix is SPD when its blocks are. -/
 theorem posDef_blockMass {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ} {M₂ : Matrix n₂ n₂ ℝ}
     (h₀ : M₀.PosDef) (h₁ : M₁.PosDef) (h₂ : M₂.PosDef) : (blockMass M₀ M₁ M₂).PosDef := by
   have hq : ∀ x : BlockIdx n₀ n₁ n₂ → ℝ, x ⬝ᵥ (blockMass M₀ M₁ M₂ *ᵥ x) =
@@ -405,8 +335,6 @@ theorem posDef_blockMass {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ 
     rw [star_trivial] at this
     linarith
 
-/-- **The CN matrix of the full system is invertible** for SPD mass blocks and every `s`.
-See [QuennevilleBelair2015], (4.14), Ch. 7. -/
 theorem isUnit_blockMass_add_smul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
     {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.PosDef) (h₁ : M₁.PosDef) (h₂ : M₂.PosDef)
     (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ) :
@@ -416,7 +344,6 @@ theorem isUnit_blockMass_add_smul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n
 
 omit [Fintype n₀] [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁]
   [DecidableEq n₂] in
-/-- `(M + sK)ᵀ = M - sK` for symmetric mass blocks. -/
 theorem transpose_blockMass_add_smul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
     {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.IsSymm) (h₁ : M₁.IsSymm) (h₂ : M₂.IsSymm)
     (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ) :
@@ -440,9 +367,6 @@ theorem blockStiffness_eq_zero_iff (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n
 
 omit [Fintype n₀] [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁]
   [DecidableEq n₂] in
-/-- **The CN matrix is not symmetric** for `s ≠ 0` and nonzero coupling, so MINRES does not apply
-to the unsymmetrized CN system (the monolithic reading of the thesis' solver claim).
-See [QuennevilleBelair2015], Ch. 7 (l. 4284–4285). -/
 theorem not_isSymm_blockMass_add_smul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
     {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.IsSymm) (h₁ : M₁.IsSymm) (h₂ : M₂.IsSymm)
     {G : Matrix n₁ n₀ ℝ} {C : Matrix n₂ n₁ ℝ} {s : ℝ} (hs : s ≠ 0) (hGC : G ≠ 0 ∨ C ≠ 0) :
@@ -464,14 +388,12 @@ theorem isUnit_blockSign :
     IsUnit (blockSign : Matrix (BlockIdx n₀ n₁ n₂) (BlockIdx n₀ n₁ n₂) ℝ) :=
   ⟨⟨blockSign, blockSign, blockSign_mul_self, blockSign_mul_self⟩, rfl⟩
 
-/-- `J (M + sK)` is nonsingular for SPD mass blocks and every `s`. -/
 theorem isUnit_blockSign_mul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ} {M₂ : Matrix n₂ n₂ ℝ}
     (h₀ : M₀.PosDef) (h₁ : M₁.PosDef) (h₂ : M₂.PosDef) (G : Matrix n₁ n₀ ℝ)
     (C : Matrix n₂ n₁ ℝ) (s : ℝ) :
     IsUnit (blockSign * (blockMass M₀ M₁ M₂ + s • blockStiffness G C)) :=
   isUnit_blockSign.mul (isUnit_blockMass_add_smul h₀ h₁ h₂ G C s)
 
-/-- The diagonal of `J (M + sK)`: `-M₀`, `M₁`, `-M₂`. -/
 theorem blockSign_mul_diag (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n₁ ℝ) (M₂ : Matrix n₂ n₂ ℝ)
     (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ) :
     (∀ i, (blockSign * (blockMass M₀ M₁ M₂ + s • blockStiffness G C) :
@@ -485,7 +407,6 @@ theorem blockSign_mul_diag (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n�
   refine ⟨fun i => ?_, fun i => ?_, fun i => ?_⟩ <;>
     simp [blockSign, blockSigns, blockMass, blockStiffness, diagonal_mul]
 
-/-- The symmetrized CN system is equivalent to the CN system. -/
 theorem blockSign_mul_mulVec_iff (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n₁ ℝ)
     (M₂ : Matrix n₂ n₂ ℝ) (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ)
     (x x' : BlockIdx n₀ n₁ n₂ → ℝ) :
@@ -496,8 +417,6 @@ theorem blockSign_mul_mulVec_iff (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n�
   rw [← mulVec_mulVec x blockSign (blockMass M₀ M₁ M₂ - s • blockStiffness G C)]
   exact blockSign_mulVec_iff _ _ _
 
-/-- **Unique solvability of the symmetrized CN system** (SPD mass blocks, every `s`): its unique
-solution is the CN update `(M + sK)⁻¹ (M - sK) x`. See [QuennevilleBelair2015], Ch. 7. -/
 theorem existsUnique_blockSign_mul_mulVec {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
     {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.PosDef) (h₁ : M₁.PosDef) (h₂ : M₂.PosDef)
     (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ) (x : BlockIdx n₀ n₁ n₂ → ℝ) :
@@ -513,9 +432,7 @@ theorem existsUnique_blockSign_mul_mulVec {M₀ : Matrix n₀ n₀ ℝ} {M₁ : 
     rw [← hy, mulVec_mulVec, nonsing_inv_mul _ hdet, one_mulVec]
 
 /-- **The symmetrized CN matrix is symmetric, nonsingular and indefinite** (SPD blocks, every
-`s`, nonempty `E` block and nonempty `σ` or `B` block): the matrix properties for which MINRES,
-and not CG, is the Krylov method. Repair of the thesis' solver claim under the monolithic
-reading. See [QuennevilleBelair2015], Ch. 7 (l. 4284–4285). -/
+`s`, nonempty `E` block and nonempty `σ` or `B` block). [QuennevilleBelair2015], Ch. 7 -/
 theorem isSymm_isUnit_indefinite_blockSign_mul {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
     {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.PosDef) (h₁ : M₁.PosDef) (h₂ : M₂.PosDef)
     (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ) [Nonempty n₁]
@@ -553,7 +470,6 @@ def schurComplement (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n₁ ℝ) 
   M₁ + s ^ 2 • (G * M₀⁻¹ * Gᵀ + Cᵀ * M₂⁻¹ * C)
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- Block rows of `(M + sK) x`: `M₀ σ - s Gᵀ E`, `M₁ E + s G σ + s Cᵀ B`, `M₂ B - s C E`. -/
 theorem blockMass_add_smul_mulVec_eq_iff (M₀ : Matrix n₀ n₀ ℝ) (M₁ : Matrix n₁ n₁ ℝ)
     (M₂ : Matrix n₂ n₂ ℝ) (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ)
     (x r : BlockIdx n₀ n₁ n₂ → ℝ) :
@@ -596,10 +512,6 @@ theorem mulVec_eq_iff_eq_inv_mulVec {n : Type*} [Fintype n] [DecidableEq n] {M :
   · rintro rfl; rw [mulVec_mulVec, mul_nonsing_inv _ hdet, one_mulVec]
 
 omit [DecidableEq n₁] in
-/-- **Block elimination of the CN system**: for SPD `M₀`, `M₂`, `(M + sK) x = r` iff
-`σ = M₀⁻¹(r₀ + s Gᵀ E)`, `B = M₂⁻¹(r₂ + s C E)` and `S E = r₁ - s G M₀⁻¹ r₀ - s Cᵀ M₂⁻¹ r₂`, so
-a CN step is two mass solves around one solve with `S`. Supports the block-elimination reading
-of the thesis' solver claim. See [QuennevilleBelair2015], Ch. 7 (l. 4284–4285). -/
 theorem blockMass_add_smul_mulVec_eq_iff_schur {M₀ : Matrix n₀ n₀ ℝ} (M₁ : Matrix n₁ n₁ ℝ)
     {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.PosDef) (h₂ : M₂.PosDef) (G : Matrix n₁ n₀ ℝ)
     (C : Matrix n₂ n₁ ℝ) (s : ℝ) (x r : BlockIdx n₀ n₁ n₂ → ℝ) :
@@ -634,9 +546,7 @@ theorem blockMass_add_smul_mulVec_eq_iff_schur {M₀ : Matrix n₀ n₀ ℝ} (M�
     module
 
 omit [DecidableEq n₁] in
-/-- **The Schur complement is SPD** for SPD blocks and every `s`, so MINRES (and CG) apply to the
-`E` system of the block elimination; under this reading the thesis' solver claim holds as stated.
-See [QuennevilleBelair2015], Ch. 7 (l. 4284–4285). -/
+/-- **The Schur complement is SPD** for SPD blocks and every `s`. [QuennevilleBelair2015], Ch. 7 -/
 theorem posDef_schurComplement {M₀ : Matrix n₀ n₀ ℝ} {M₁ : Matrix n₁ n₁ ℝ}
     {M₂ : Matrix n₂ n₂ ℝ} (h₀ : M₀.PosDef) (h₁ : M₁.PosDef) (h₂ : M₂.PosDef)
     (G : Matrix n₁ n₀ ℝ) (C : Matrix n₂ n₁ ℝ) (s : ℝ) :
@@ -665,8 +575,7 @@ variable {V₀ V₁ V₂ : Type*}
   {n₀ n₁ n₂ : Type*} [Fintype n₀] [Fintype n₁] [Fintype n₂]
   [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂]
 
-/-- The matrix `(b' i, d (b j))` of a linear map tested against bases (the assembled discrete
-gradient `G` for `d = d₀`, the discrete curl `C` for `d = d₁`). -/
+/-- The matrix `(b' i, d (b j))` of a linear map `d` tested against bases. -/
 def testMatrix {W W' : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
     [NormedAddCommGroup W'] [InnerProductSpace ℝ W'] {m m' : Type*} (b : Module.Basis m ℝ W)
     (b' : Module.Basis m' ℝ W') (d : W →ₗ[ℝ] W') : Matrix m' m ℝ :=
@@ -693,8 +602,6 @@ theorem blockLoad_injective (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.B
   exact Prod.ext h0 (Prod.ext h1 h2)
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- **Assembly**: testing `cnLHS d₀ d₁ s x` against the bases gives `(M + sK) c(x)` with the Gram
-mass matrices and `G = testMatrix b₀ b₁ d₀`, `C = testMatrix b₁ b₂ d₁`. -/
 theorem blockLoad_cnLHS (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis n₁ ℝ V₁)
     (b₂ : Module.Basis n₂ ℝ V₂) (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ)
     (x : V₀ × V₁ × V₂) :
@@ -727,9 +634,6 @@ theorem blockLoad_cnLHS (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis
     ring_nf
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- **A CN step of (4.14) is the assembled linear system**
-`(M + sK) c(x') = (M - sK) c(x)` (Gram mass matrices, `G`, `C` the tested `d₀`, `d₁`).
-See [QuennevilleBelair2015], (4.14), Ch. 7. -/
 theorem isFullCNStep_iff_mulVec (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis n₁ ℝ V₁)
     (b₂ : Module.Basis n₂ ℝ V₂) (d₀ : V₀ →ₗ[ℝ] V₁) (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ)
     (x x' : V₀ × V₁ × V₂) :
@@ -743,9 +647,8 @@ theorem isFullCNStep_iff_mulVec (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Modu
   rw [isFullCNStep_iff_cnLHS, sub_eq_add_neg, ← neg_smul, ← blockLoad_cnLHS, ← blockLoad_cnLHS]
   exact (blockLoad_injective b₀ b₁ b₂).eq_iff.symm
 
-/-- **The MINRES system computes the CN iterate**: with the assembled matrices, `v` solves the
-symmetrized system `J(M + sK) v = J(M - sK) c(x)` iff `v = c(fullCNStep d₀ d₁ s x)`. Repair of
-the thesis' solver claim. See [QuennevilleBelair2015], Ch. 7 (l. 4284–4285). -/
+/-- **The MINRES system computes the CN iterate**: `v` solves `J(M + sK) v = J(M - sK) c(x)` iff
+`v = c(fullCNStep d₀ d₁ s x)`. [QuennevilleBelair2015], Ch. 7 -/
 theorem blockSign_mul_mulVec_iff_fullCNStep (b₀ : Module.Basis n₀ ℝ V₀)
     (b₁ : Module.Basis n₁ ℝ V₁) (b₂ : Module.Basis n₂ ℝ V₂) (d₀ : V₀ →ₗ[ℝ] V₁)
     (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) (x : V₀ × V₁ × V₂) (v : BlockIdx n₀ n₁ n₂ → ℝ) :
@@ -768,7 +671,6 @@ theorem blockSign_mul_mulVec_iff_fullCNStep (b₀ : Module.Basis n₀ ℝ V₀)
 
 omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂]
   [Fintype n₀] [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- `testMatrix b b' d = 0` iff `d = 0`. -/
 theorem testMatrix_eq_zero_iff {W W' : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
     [NormedAddCommGroup W'] [InnerProductSpace ℝ W'] {m m' : Type*} [Fintype m']
     (b : Module.Basis m ℝ W) (b' : Module.Basis m' ℝ W') (d : W →ₗ[ℝ] W') :
@@ -781,8 +683,6 @@ theorem testMatrix_eq_zero_iff {W W' : Type*} [NormedAddCommGroup W] [InnerProdu
 
 omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂] [Fintype n₀]
   [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- **The assembled CN matrix of (4.14) is not symmetric** for `s ≠ 0` once `d₀ ≠ 0` or
-`d₁ ≠ 0`. See [QuennevilleBelair2015], Ch. 7 (l. 4284–4285). -/
 theorem not_isSymm_assembled (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis n₁ ℝ V₁)
     (b₂ : Module.Basis n₂ ℝ V₂) {d₀ : V₀ →ₗ[ℝ] V₁} {d₁ : V₁ →ₗ[ℝ] V₂} {s : ℝ} (hs : s ≠ 0)
     (hd : d₀ ≠ 0 ∨ d₁ ≠ 0) :
@@ -793,8 +693,6 @@ theorem not_isSymm_assembled (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.
     (hd.imp (mt (testMatrix_eq_zero_iff b₀ b₁ d₀).1) (mt (testMatrix_eq_zero_iff b₁ b₂ d₁).1))
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
-/-- **The reduced system (4.15)**: with an empty `σ` block, a reduced CN step is the assembled
-system for the states `(0, E, B)`. See [QuennevilleBelair2015], (4.15), Ch. 7. -/
 theorem isReducedCNStep_iff_mulVec [IsEmpty n₀] (b₀ : Module.Basis n₀ ℝ V₀)
     (b₁ : Module.Basis n₁ ℝ V₁) (b₂ : Module.Basis n₂ ℝ V₂) (d₀ : V₀ →ₗ[ℝ] V₁)
     (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) (E E' : V₁) (B B' : V₂) :
@@ -810,9 +708,6 @@ theorem isReducedCNStep_iff_mulVec [IsEmpty n₀] (b₀ : Module.Basis n₀ ℝ 
   simp only [IsFullCNStep, IsReducedCNStep, add_zero, map_zero, zero_add]
   exact ⟨fun h => ⟨(hV0 _).trans (hV0 _).symm, h⟩, fun h => h.2⟩
 
-/-- **MINRES for the reduced system (4.15)**: with an empty `σ` block, `v` solves the
-symmetrized system iff `v = c(0, E', B')` for the reduced CN step `(E, B) ↦ (E', B')`.
-See [QuennevilleBelair2015], Ch. 7 (l. 4284–4285). -/
 theorem blockSign_mul_mulVec_iff_reducedCNStep [IsEmpty n₀] (b₀ : Module.Basis n₀ ℝ V₀)
     (b₁ : Module.Basis n₁ ℝ V₁) (b₂ : Module.Basis n₂ ℝ V₂) (d₀ : V₀ →ₗ[ℝ] V₁)
     (d₁ : V₁ →ₗ[ℝ] V₂) (s : ℝ) (E : V₁) (B : V₂) (v : BlockIdx n₀ n₁ n₂ → ℝ) :

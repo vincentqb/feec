@@ -8,44 +8,13 @@ public import Feec.HilbertComplex.CompressCompact
 /-!
 # A complete set of eigenvectors on cubes, and `K*` for the thesis' complex on cubes
 
-`Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` decides, on a bounded open `Ω ⊆ ℝ³`,
-whether the invariant core `K*` of `K = {0} × L²(TSD) × L²(TSD)` contains a moving datum, under
-the hypothesis `EigenDense` (a dense set of eigenvectors of `L²`) for the wave group of the
-thesis' complex `H̊¹(Ω) → H̊(curl, Ω) → L²(Ω)`. This file states that hypothesis **on cubes**:
-`Q = (0, ½)³` and every open cube `∏ (bᵢ, bᵢ + s)` are boxes with equal sides, so it is the box
-result `Feec.Models.Box.eigenDense_complexBox` (the compression of the anisotropic torus
-grad–curl complex, whose Fourier modes are an eigenbasis).
-
-This discharges the hypothesis of `gradCurl_coreSub_spectral` on every open cube
-(`Ident.eigenDense_gradCurl_cube`; on `Q` itself, `RowWise.eigenDense_gradCurl_Q`), with the
-unconditional corollaries `RowWise.gradCurl_coreSub_spectral_Q` and
-`Ident.gradCurl_coreSub_spectral_cube`. The same holds for the mirror complexes
-(`Feec.Models.Cube.Mirror`) on the cube `Q` and every open cube (`Mirror.eigenDense_complexQ`,
-`Mirror.eigenDense_complexCube`; on boxes `Feec.Models.Box.Mirror.eigenDense_complexBoxM`): on
-`Q` the mirror complex is a compression of the torus complex
-(`Feec.HilbertComplex.eigenDense_compress`), and on an open cube it is the transport of the one on
-`Q` along the affine pull-back, with constant chain-rule factor `1/(2s)`; `EigenDense` passes to
-such transports (`HilbertComplex.eigenDense_transport_const`, from
-`HilbertComplex.wave_transport_const`).
-
-Nothing is claimed for other domains.
+The wave groups of `H̊¹ → H̊(curl) → L²` and of the mirror complexes have a dense set of
+eigenvectors on `Q = (0, ½)³` and on every open cube, which describes `K*` there.
 
 ## Main results
 
-* `HilbertComplex.eigenDense_transport_const`.
-* **`RowWise.eigenDense_cubeComplex`**, `Ident.eigenDense_complexCube`,
-  **`RowWise.eigenDense_gradCurl_Q`**, **`Ident.eigenDense_gradCurl_cube`**.
-* **`RowWise.gradCurl_coreSub_spectral_Q`**, **`Ident.gradCurl_coreSub_spectral_cube`**.
-* `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (the compactness property
-  and the eigenvalue problem of the Hodge Laplacian)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `RowWise.gradCurl_coreSub_spectral_Q`, `Ident.gradCurl_coreSub_spectral_cube`: `K*`.
+* `Mirror.eigenDense_complexQ`, `Mirror.eigenDense_complexCube`: the mirror complexes.
 -/
 
 open scoped InnerProductSpace
@@ -64,9 +33,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedSpace ℝ (W' i)] [∀ i, IsScalarTower ℝ 𝕜 (W' i)]
   (H : HilbertComplex 𝕜 c W) {e : ∀ i, W i ≃L[𝕜] W' i} {s : ℝ}
 
-/-- **`EigenDense` passes to transports with a constant real chain-rule factor `κ ≠ 0`** along
-uniformly scaled isometries: `L' e = κ e L` maps eigenvectors of `L²` (eigenvalue `-ω²`) to
-eigenvectors of `L'²` (eigenvalue `-(κω)²`). -/
 theorem eigenDense_transport_const (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) {κ : ℝ} (hκ : κ ≠ 0)
     (hD : H.waveGroup.EigenDense) :
@@ -90,18 +56,14 @@ open Geometry (Q)
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
-/-- **The wave group of the thesis' complex on `Q` has a dense set of eigenvectors**: `Q` is the
-box `∏ (0, ½)` (`Feec.Models.Box.eigenDense_complexBox`). -/
 theorem eigenDense_cubeComplex : cubeComplex.waveGroup.EigenDense :=
   Box.eigenDense_complexBox (a := 0) (ℓ := fun _ => 1 / 2) fun _ => one_half_pos
 
-/-- **The eigenvector hypothesis of `gradCurl_coreSub_spectral` holds on `Q = (0, ½)³`.** -/
 theorem eigenDense_gradCurl_Q : (gradCurl ℝ Geometry.isOpen_Q).EigenDense :=
   eigenDense_cubeComplex
 
-/-- **`K*` on `Q = (0, ½)³` for the thesis' complex**, unconditionally
-(`Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` with its eigenvector hypothesis
-discharged by `eigenDense_gradCurl_Q`). -/
+/-- **`K*` on `Q = (0, ½)³` for the thesis' complex**: its characterization by `coreSub`, and
+`K*` consists of stationary data iff there is no nonzero TSD eigenfield. -/
 theorem gradCurl_coreSub_spectral_Q :
     (∀ x, (∀ t, 0 ≤ t → (gradCurl ℝ Geometry.isOpen_Q).toHilbertComplex.waveGroup.S t x ∈
         HilbertComplex.totalSub
@@ -137,9 +99,6 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 variable {b : R3} {s : ℝ}
 
-/-- **The wave group of the thesis' complex on every open cube `∏ (bᵢ, bᵢ + s)` has a dense set
-of eigenvectors**: the cube is the box with equal sides
-(`Feec.Models.Box.eigenDense_complexBox`). -/
 theorem eigenDense_complexCube (hs : 0 < s) : (complexCube b s).waveGroup.EigenDense :=
   Box.eigenDense_complexBox (a := b) (ℓ := fun _ => s) fun _ => hs
 
@@ -148,9 +107,8 @@ theorem eigenDense_gradCurl_cube (hs : 0 < s) :
     (gradCurl ℝ (Geometry.isOpen_openCube b s)).EigenDense :=
   eigenDense_complexCube hs
 
-/-- **`K*` on every open cube `∏ (bᵢ, bᵢ + s)` for the thesis' complex**, unconditionally
-(`Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` with its eigenvector hypothesis
-discharged by `eigenDense_gradCurl_cube`). -/
+/-- **`K*` on every open cube `∏ (bᵢ, bᵢ + s)` for the thesis' complex**: its characterization by
+`coreSub`, and `K*` consists of stationary data iff there is no nonzero TSD eigenfield. -/
 theorem gradCurl_coreSub_spectral_cube (hs : 0 < s) :
     (∀ x, (∀ t, 0 ≤ t →
         (gradCurl ℝ (Geometry.isOpen_openCube b s)).toHilbertComplex.waveGroup.S t x ∈

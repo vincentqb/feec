@@ -6,52 +6,13 @@ public import Feec.Models.Cube.MirrorWeakSymmetryFEM
 /-!
 # Hodge theory of `HΛ_J((0, ½)ⁿ)` and its finite element subcomplexes
 
-For a set `J` of directions, `FEM.complexPart n J = HΛ_J(Q)` is the `L²` de Rham complex of the cube
-`Q = (0, ½)ⁿ` (`FEM.cubeDomain n`) with vanishing tangential traces on the faces normal to the
-directions of `J` (`Feec.Models.Cube.DeRhamIdent.HQpartZ`). This file states its Hodge theory in
-the form consumed by the finite element method, and builds its conforming finite element
-subcomplexes.
+The Poincaré inequality, closed range and harmonic forms of `FEM.complexPart n J = HΛ_J(Q)` on
+`Q = (0, ½)ⁿ`, and its finite element subcomplexes `FEM.polyPartial`, `FEM.whitneyPartial`.
 
-**Hodge theory** (from the identification with the mixed parity class,
-`Feec.Models.Cube.DeRhamIdent.HQpart_eq_compress`): the Poincaré inequality
-`‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ` (`norm_le_of_mem_orthogonal_cycles_part`), closed
-range (`closedRangeAt_part`), and the harmonic forms `ℌᵏ = 0` for `k ≠ |J|` and
-`ℌ^{|J|} = ℝ · dx_J` (`harmonic_eq_bot_part`, `harmonic_card_eq_span_part`). For `J = ∅` the complex is
-`FEM.complex n = HΛ(Q)`, for `J = univ` it is `FEM.complexMin n = H̊Λ(Q)`.
+## Main results
 
-**Finite element subcomplexes.** The partial-boundary spaces `Λ_{h,Γ}ᵏ`
-(`Feec.FiniteElement.LocalElement.globalSpacePartial`) with `Γ = partialFaces J`, the vertex sets
-lying in a face `{x_j ∈ {0, ½}}`, `j ∈ J`, are **conforming in `D(d_J)`**
-(`glue_mem_dPart`): integration by parts on the mesh
-(`Feec.FiniteElement.sum_integral_conj_apply_mul_eq`) gives Green's identity
-`Feec.Models.Cube.DeRhamIdent.GreenForJ` for the glued fields (`greenForJ_pieceL2`), since on a
-boundary facet (which lies in a face of `Q`, `exists_plane_of_isBoundaryFacet`, with normal
-`± e_i`, `isFaceNormal_eq_zero`) either `i ∈ J` and the tangential trace vanishes (the degrees of
-freedom vanish), or `i ∉ J` and the normal component of the test form vanishes; the
-identification with the torus (`Feec.Models.Cube.DeRhamIdent.mem_dPart_of_JfJ`) then puts the
-glued field in `D(d_J)`. With `d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ}ᵏ⁺¹` they form subcomplexes of `HΛ_J(Q)`
-(`LocalElement.subcomplexPart`), on the Freudenthal meshes of the cube for every admissible
-sequence `S` (`FEM.polyPartial n S N J`) and for the Whitney forms (`FEM.whitneyPartial n N J`).
-
-* `J = ∅`: `polyPartial ∅` has the spaces of `FEM.poly`;
-* `J = univ`: it has the spaces of `FEM.polyMin` (`polyPartial_univ_V`): every boundary facet lies in a face of `Q`
-  (`isBoundaryFacet_subset_partialFaces_univ`), and on the Freudenthal meshes every face lying in
-  a face of `Q` lies in a boundary facet (`exists_isBoundaryFacet_of_plane`), so
-  `Λ_{h,Γ_univ} = Λ̊_h` (`globalSpacePartial_univ_eq`).
-* **Monotonicity and non-vacuity**: the spaces decrease with `J` (`polyPartial_V_anti`), so
-  `V̊_h ⊆ V_{h,Γ_J}` (`polyMin_V_le_polyPartial_V`), and on `(0, ½)³` they are nonzero in every
-  degree for every `J` (`lagrangeP2_polyPartial_V_ne_bot`).
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (the de Rham complex with boundary conditions), §5 (finite element subcomplexes)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (boundary conditions on
-  part of the boundary), Ch. 7 (finite element spaces)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.3, (6.5) (the mirror scheme)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `norm_le_of_mem_orthogonal_cycles_part`: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`.
+* `glue_mem_dPart`: the glued partial-boundary spaces are conforming in `D(d_J)`.
 -/
 
 open scoped InnerProductSpace Topology Finset
@@ -66,8 +27,7 @@ open Feec.Models.Cube.DeRhamIdent (HQpartZ dPart Hpart)
 
 variable (n : ℕ)
 
-/-- **`HΛ_J(Q)`**: the de Rham complex of the cube with vanishing tangential traces on the faces
-normal to the directions of `J`. -/
+/-- **`HΛ_J(Q)`**: vanishing tangential traces on the faces normal to the directions of `J`. -/
 abbrev complexPart (J : Finset (Fin n)) :
     HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ (cubeDomain n) (formIdx n k) :=
   HQpartZ (isOpen_cubeDomain n) (cubeDomain_subset_Q n) J
@@ -78,8 +38,7 @@ theorem complexPart_d (J : Finset (Fin n)) (k : ℤ) :
     (complexPart n J).d k (k + 1) = dPart (cubeDomain n) J k :=
   DeRhamIdent.HQpartZ_d _ _ J k
 
-/-- **The Poincaré inequality of `HΛ_J(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` for `z ∈ D(d) ∩ (𝔷ⁱ)ᗮ`, in
-every degree. -/
+/-- **The Poincaré inequality of `HΛ_J(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`. -/
 theorem norm_le_of_mem_orthogonal_cycles_part (J : Finset (Fin n)) {i j : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (z : ((complexPart n J).d i j).domain)
     (hz : (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈ ((complexPart n J).cycles i)ᗮ) :
@@ -131,8 +90,7 @@ instance finiteDimensional_harmonic_part (J : Finset (Fin n)) (k : ℤ) :
 /-! ### The faces with a boundary condition and the boundary facets -/
 
 variable (n) in
-/-- **The faces with a boundary condition**: the vertex sets lying in one of the faces
-`{x_j = 0}`, `{x_j = ½}` of `Q̄ = [0, ½]ⁿ`, `j ∈ J`. -/
+/-- **The faces with a boundary condition**: vertex sets in a face `{x_j ∈ {0, ½}}`, `j ∈ J`. -/
 def partialFaces (J : Finset (Fin n)) : Set (Finset (Fin n → ℝ)) :=
   {F | ∃ j ∈ J, (∀ v ∈ F, v j = 0) ∨ ∀ v ∈ F, v j = 1 / 2}
 
@@ -148,7 +106,6 @@ theorem closure_cubeDomain_eq : closure (cubeDomain n) = closedCube n := by
   funext i
   exact closure_Ioo (by norm_num)
 
-/-- A point of the boundary of `[0, ½]ⁿ` lies in a face. -/
 theorem exists_face_of_mem_frontier {x : Fin n → ℝ} (hx : x ∈ frontier (closedCube n)) :
     ∃ i, x i = 0 ∨ x i = 1 / 2 := by
   have hc : x ∈ closedCube n :=
@@ -161,7 +118,6 @@ theorem exists_face_of_mem_frontier {x : Fin n → ℝ} (hx : x ∈ frontier (cl
   exact hi fun i _ => ⟨lt_of_le_of_ne (hc i trivial).1 (Ne.symm (h i).1),
     lt_of_le_of_ne (hc i trivial).2 (h i).2⟩
 
-/-- **A boundary facet of a mesh of `[0, ½]ⁿ` lies in a face of the cube.** -/
 theorem exists_plane_of_isBoundaryFacet {M : SimplicialMesh n}
     (hM : closure M.domain = closedCube n) {F : Finset (Fin n → ℝ)} (hF : M.IsBoundaryFacet F)
     (hne : F.Nonempty) : ∃ i, (∀ v ∈ F, v i = 0) ∨ ∀ v ∈ F, v i = 1 / 2 := by
@@ -195,8 +151,6 @@ theorem exists_plane_of_isBoundaryFacet {M : SimplicialMesh n}
       sub_nonneg.2 (hv w hw i trivial).2).1 hs v hvF
     linarith
 
-/-- **The normals of a facet lying in a coordinate hyperplane** `{x_i = a}` are multiples of
-`e_i`. -/
 theorem isFaceNormal_eq_zero [NeZero n] {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {F : Finset (Fin n → ℝ)} (hFT : F ⊆ vertexSet T) (hc : #F = n) {i : Fin n} {a : ℝ}
     (hF : ∀ v ∈ F, v i = a) {ν : Fin n → ℝ} (hν : IsFaceNormal F ν) {l : Fin n} (hl : l ≠ i) :
@@ -245,8 +199,6 @@ theorem isFaceNormal_eq_zero [NeZero n] {T : Affine.Simplex ℝ (Fin n → ℝ) 
 
 /-! ### Green's identity for glued fields on a mesh of the cube -/
 
-/-- **Integration of a piecewise function against a continuous function** over a set containing
-the interiors of the elements: `∫_S (Σ_T 𝟙_{int T} v_T) f = Σ_T ∫_T v_T f`. -/
 theorem integral_pieceFun_mul_of_subset (M : SimplicialMesh n)
     {v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → ℝ}
     (hv : ∀ T ∈ M.simplices, Continuous (v T)) {S : Set (Fin n → ℝ)}
@@ -270,7 +222,6 @@ theorem integral_pieceFun_mul_of_subset (M : SimplicialMesh n)
   exact setIntegral_congr_set (interior_ae_eq_of_null_frontier (μ := volume)
     (s := T.closedInterior) (Convex.addHaar_frontier volume (Feec.Mesh.convex_closedInterior T)))
 
-/-- `⟪u, ψ⟫ = Σ_T Σᵢ ∫_T (u_T)ᵢ ψᵢ` for a piecewise field `u` and a continuous `L²` field `ψ`. -/
 theorem inner_pieceL2_toL2F (M : SimplicialMesh n) {ι : Type} [Fintype ι]
     {S : Set (Fin n → ℝ)}
     (hTS : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ S)
@@ -286,7 +237,6 @@ theorem inner_pieceL2_toL2F (M : SimplicialMesh n) {ι : Type} [Fintype ι]
   filter_upwards [coeFn_pieceL2 M S v hv i] with x hx
   simp [hx]
 
-/-- The interiors of the elements of a mesh of `Q` lie in `Q`. -/
 theorem interior_subset_Q {M : SimplicialMesh n} (hM : M.domain = Geometry.Q (Fin n))
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices) :
     interior T.closedInterior ⊆ Geometry.Q (Fin n) := by
@@ -299,9 +249,6 @@ theorem closure_eq_closedCube {M : SimplicialMesh n} (hM : M.domain = Geometry.Q
     closure M.domain = closedCube n := by
   rw [hM, ← cubeDomain_eq_Q, closure_cubeDomain_eq]
 
-/-- **The boundary term vanishes** on a boundary facet `F` of a mesh of `Q`: if the tangential
-trace of `α` vanishes on `F` when `F` lies in a face normal to `J`, then `φ(x) (ν ∧ α)_t = 0`
-for the admissible `φ` (vanishing on the faces normal to `t ∖ J`) and the normals `ν` of `F`. -/
 theorem boundary_term_eq_zero [NeZero n] {M : SimplicialMesh n}
     (hM : M.domain = Geometry.Q (Fin n)) (J : Finset (Fin n)) {k : ℕ} {F : Finset (Fin n → ℝ)}
     (hF : M.IsBoundaryFacet F) {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hFT : F ⊆ vertexSet T)
@@ -343,7 +290,6 @@ theorem boundary_term_eq_zero [NeZero n] {M : SimplicialMesh n}
         ring
       rw [h0, mul_zero]
 
-/-- **Green's identity for the glued fields of `Λ_{h,Γ_J}ᵏ`** on a mesh of `Q`. -/
 theorem greenForJ_pieceL2 [NeZero n] (E : LocalElement n) {M : SimplicialMesh n}
     (hM : M.domain = Geometry.Q (Fin n)) (J : Finset (Fin n)) (k : ℕ)
     (u : E.globalSpacePartial M (partialFaces n J) k) :
@@ -414,8 +360,6 @@ theorem greenForJ_pieceL2 [NeZero n] (E : LocalElement n) {M : SimplicialMesh n}
   rw [extDerivOp_apply_formComp (hdeg T hT) j x]
   rfl
 
-/-- **Conformity of `Λ_{h,Γ_J}ᵏ` in `D(d_J)`** on a mesh of `Q`: the glued field lies in the
-domain of `d_J`, which is the elementwise exterior derivative. -/
 theorem pieceL2_mem_dPart [NeZero n] (E : LocalElement n) {M : SimplicialMesh n}
     (hM : M.domain = Geometry.Q (Fin n)) (J : Finset (Fin n)) (k : ℕ)
     (u : E.globalSpacePartial M (partialFaces n J) k) :
@@ -432,8 +376,7 @@ theorem pieceL2_mem_dPart [NeZero n] (E : LocalElement n) {M : SimplicialMesh n}
     fun m => DeRhamIdent.coeff_d_of_greenForJ hG m
   exact ⟨h, DeRhamIdent.injective_JfJ J (k + 1) e⟩
 
-/-- **Conformity of the glued spaces `V_{h,Γ_J}ᵏ` in `D(d_J)`**, with `d_J` the elementwise
-exterior derivative. -/
+/-- **Conformity of the glued spaces `V_{h,Γ_J}ᵏ` in `D(d_J)`.** -/
 theorem glue_mem_dPart [NeZero n] (E : LocalElement n) {M : SimplicialMesh n}
     (hM : M.domain = Geometry.Q (Fin n)) (J : Finset (Fin n)) (k : ℕ)
     (u : E.globalSpacePartial M (partialFaces n J) k) :
@@ -491,9 +434,7 @@ theorem dPart_apply_mem_VPartial [NeZero n] (E : LocalElement n) {M : Simplicial
     rw [this, LinearPMap.map_zero]
     exact Submodule.zero_mem _
 
-/-- **The finite element subcomplex `V_{h,Γ_J} ⊆ HΛ_J`** of an element family on a mesh of `Q`:
-the glued partial-boundary spaces with `Γ = partialFaces J` are conforming in `D(d_J)`
-(`glue_mem_dPart`) and closed under `d` (`LocalElement.dPiecewise_mem_globalSpacePartial`). -/
+/-- **The finite element subcomplex `V_{h,Γ_J} ⊆ HΛ_J`** of an element family on a mesh of `Q`. -/
 def subcomplexPart [NeZero n] (E : LocalElement n) (M : SimplicialMesh n)
     (hM : M.domain = Geometry.Q (Fin n)) (J : Finset (Fin n)) :
     (HQpartZ (isOpen_of_eq_Q hM) hM.le J).Subcomplex where
@@ -523,13 +464,11 @@ instance [NeZero n] (E : LocalElement n) (M : SimplicialMesh n)
     FiniteDimensional ℝ ((subcomplexPart E M hM J).V k) :=
   Submodule.finiteDimensional_of_le (E.VPartial_le_V M _ k)
 
-/-- **`J = ∅`: the partial spaces are the full spaces** `V_h`. -/
 theorem VPartial_empty (E : LocalElement n) (M : SimplicialMesh n) (k : ℤ) :
     E.VPartial M (partialFaces n ∅) k = E.V M k := by
   unfold LocalElement.VPartial LocalElement.V
   rw [partialFaces_empty, E.globalSpacePartial_empty]
 
-/-- **Every boundary facet of a mesh of `Q` carries a boundary condition for `J = univ`.** -/
 theorem isBoundaryFacet_subset_partialFaces_univ [NeZero n] {M : SimplicialMesh n}
     (hM : M.domain = Geometry.Q (Fin n)) :
     {F | M.IsBoundaryFacet F} ⊆ partialFaces n Finset.univ := by
@@ -569,9 +508,6 @@ section BoundaryFaces
 
 variable {n : ℕ}
 
-/-- **On the Freudenthal meshes of the cube, every face lying in a face of the cube is contained
-in a boundary facet** (`FEM.exists_boundaryFacet_of_lower`, `FEM.exists_boundaryFacet_of_upper`;
-the empty face lies in the boundary facets of the corner simplex). -/
 theorem exists_isBoundaryFacet_of_plane [NeZero n] (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hg : g ⊆ vertexSet T)
     {i : Fin n} (hgc : (∀ v ∈ g, v i = 0) ∨ ∀ v ∈ g, v i = 1 / 2) :
@@ -592,7 +528,6 @@ theorem exists_isBoundaryFacet_of_plane [NeZero n] (N : ℕ) {T : Affine.Simplex
     · obtain ⟨T'', hT'', F, hF, hFT, hgF, -⟩ := exists_boundaryFacet_of_upper m σ i hg h hne
       exact ⟨T'', hT'', F, hF, hFT, hgF⟩
 
-/-- **`J = univ` on the Freudenthal meshes: vanishing boundary DOFs are the partial spaces.** -/
 theorem globalSpacePartial_univ_eq [NeZero n] (E : LocalElement n) (N k : ℕ) :
     E.globalSpacePartial (mesh n N) (partialFaces n Finset.univ) k =
       E.globalSpace₀ (mesh n N) k := by
@@ -617,9 +552,7 @@ end BoundaryFaces
 variable [NeZero n]
 
 variable (n) in
-/-- **The finite element subcomplex of `HΛ_J(Q)` of the admissible sequence `S`** on the
-level-`(N + 1)` Freudenthal mesh of the cube: `P_{r_k}Λᵏ` / `P_{r_k}⁻Λᵏ` with vanishing degrees of
-freedom on the faces lying in `{x_j ∈ {0, ½}}`, `j ∈ J`. -/
+/-- **The finite element subcomplex of `HΛ_J(Q)`** of the sequence `S` on the Freudenthal mesh. -/
 def polyPartial (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) : (complexPart n J).Subcomplex :=
   partialSubcomplexOfEq (mesh_domain n N) _ _ (isOpen_cubeDomain n) (cubeDomain_subset_Q n) J
     (subcomplexPart (polyElement n S) (mesh n N) (mesh_domain_eq_Q N) J)
@@ -629,9 +562,7 @@ instance (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
   finiteDimensional_partialSubcomplexOfEq _ _ _ _ _ _ _ k
 
 variable (n) in
-/-- **The Whitney subcomplex of `HΛ_J(Q)`** (Lagrange `P₁`, Nédélec, Raviart–Thomas, piecewise
-constants with vanishing degrees of freedom on the faces normal to `J`) on the level-`(N + 1)`
-Freudenthal mesh of the cube. -/
+/-- **The Whitney subcomplex of `HΛ_J(Q)`** on the level-`(N + 1)` Freudenthal mesh. -/
 def whitneyPartial (N : ℕ) (J : Finset (Fin n)) : (complexPart n J).Subcomplex :=
   partialSubcomplexOfEq (mesh_domain n N) _ _ (isOpen_cubeDomain n) (cubeDomain_subset_Q n) J
     (subcomplexPart (whitneyElement n) (mesh n N) (mesh_domain_eq_Q N) J)
@@ -640,14 +571,11 @@ instance (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
     FiniteDimensional ℝ ((whitneyPartial n N J).V k) :=
   finiteDimensional_partialSubcomplexOfEq _ _ _ _ _ _ _ k
 
-/-- **`J = univ`: `polyPartial` has the spaces of `FEM.polyMin`** (vanishing DOFs on every face
-lying in the boundary). -/
+/-- **`J = univ`: `polyPartial` has the spaces of `FEM.polyMin`.** -/
 theorem polyPartial_univ_V (S : PolySeq) (N : ℕ) (k : ℤ) :
     (polyPartial n S N Finset.univ).V k = (polyMin n S N).V k :=
   partialSubcomplexOfEq_V_eq_minimal _ _ _ _ _ _ _ _
     (fun k => VPartial_univ_eq (polyElement n S) N k) k
-
-/-! ### The bottom row of the mirror scheme -/
 
 open MirrorWeakSymmetry (Ebot mirrorFaces)
 
@@ -658,8 +586,6 @@ theorem partialFaces_mono {J J' : Finset (Fin n)} (h : J ⊆ J') :
     partialFaces n J ⊆ partialFaces n J' := fun _ ⟨j, hj, hF⟩ => ⟨j, h hj, hF⟩
 
 omit [NeZero n] in
-/-- **`Λ_{h,Γ_J}` decreases with `J`**: more directions with a boundary condition, fewer free
-degrees of freedom. -/
 theorem VPartial_anti (E : LocalElement n) (M : SimplicialMesh n) {J J' : Finset (Fin n)}
     (h : J ⊆ J') (k : ℤ) :
     E.VPartial M (partialFaces n J') k ≤ E.VPartial M (partialFaces n J) k := by
@@ -682,12 +608,10 @@ theorem partialSubcomplexOfEq_V_ne_bot {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = 
     (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).V k ≠ ⊥ := by
   subst h; exact hV
 
-/-- **`polyPartial` decreases with `J`.** -/
 theorem polyPartial_V_anti (S : PolySeq) (N : ℕ) {J J' : Finset (Fin n)} (h : J ⊆ J')
     (k : ℤ) : (polyPartial n S N J').V k ≤ (polyPartial n S N J).V k :=
   partialSubcomplexOfEq_V_le _ _ _ _ _ _ _ k (VPartial_anti (polyElement n S) (mesh n N) h k)
 
-/-- **`V̊_h ⊆ V_{h,Γ_J} ⊆ V_h`** for the spaces of an admissible sequence. -/
 theorem polyMin_V_le_polyPartial_V (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (k : ℤ) :
     (polyMin n S N).V k ≤ (polyPartial n S N J).V k := by
   rw [← polyPartial_univ_V]; exact polyPartial_V_anti S N (Finset.subset_univ J) k
@@ -698,10 +622,6 @@ theorem polyPartial_V_ne_bot_of_V₀ (S : PolySeq) (N : ℕ) (J : Finset (Fin n)
   rw [← hb, subcomplexPart_V, ← VPartial_univ_eq]
   exact VPartial_anti (polyElement n S) (mesh n N) (Finset.subset_univ J) k
 
-/-- **Non-vacuity of the partial-boundary subcomplexes** (second row of Tables 5.1/6.1, every
-`J`): on every Freudenthal mesh of `(0, ½)³`, the spaces `P₂Λ⁰`, `P₂⁻Λ¹`, `P₁Λ²`, `P₀Λ³` with
-vanishing degrees of freedom on the faces normal to `J` are nonzero; they contain the interior
-spaces (`PolySeq.lagrangeP2_V₀_ne_bot`). -/
 theorem lagrangeP2_polyPartial_V_ne_bot (N k : ℕ) (hk : k ≤ 3) (J : Finset (Fin 3)) :
     (polyPartial 3 PolySeq.lagrangeP2 N J).V k ≠ ⊥ :=
   polyPartial_V_ne_bot_of_V₀ _ N J k (PolySeq.lagrangeP2_V₀_ne_bot N k hk)

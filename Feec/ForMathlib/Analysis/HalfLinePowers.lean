@@ -6,45 +6,13 @@ import Feec.ForMathlib.Analysis.Inequalities
 /-!
 # Powers of measures on the half-line whose atom may have modulus one
 
-For `μ = a δ₀ + g` in the half-line algebra with `|μ̂| ≤ 1`, the power bound
-`Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le` bounds `‖gₙ‖₂` by `‖g‖₂/(1 - |a|)` and
-needs `|a| < 1`. For `|a| = 1` (Crank–Nicolson, the Gauss methods) `‖gₙ‖₂` grows like `√n`: the
-density of `μⁿ` has a spike of height `≈ n` on `[0, 1/n]` (frequencies `|ξ| ≲ n`, where
-`μ̂ⁿ - aⁿ` need not be small), and Carlson's inequality applied to `gₙ` at once gives only
-`n^{3/4}`. Here the bound `∫ |gₙ| ≤ C √n` is proved for every `|a| ≤ 1`
-(**`HalfLineAlgebra.integral_norm_pow_snd_le`**, `HalfLineAlgebra.variation_pow_le`), under the
-decay `|μ̂(ξ) - a| ≤ C₁ |ν̂(ξ)|`, `|μ̂'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²` (`ν̂(ξ) = 1/(1 + 2πiξ)`), which
-every rational scheme has (`Feec.TimeStepping.RationalScheme.exists_decay`).
-
-The proof localizes in frequency with the exponential measures `ν_c = c e^{-ct} dt`
-(`HalfLineAlgebra.expMeasure`, `ν̂_c = c/(c + 2πiξ)`): with `2^J > n ≥ 2^{J-1}`,
-
-  `δ₀ = ν₁ + Σ_{j<J} (ν_{2^{j+1}} - ν_{2^j}) + (δ₀ - ν_{2^J})`,
-
-an identity in the algebra, so `gₙ` is the sum of the pieces `gₙ ν₁`, `gₙ (ν_{2c} - ν_c)` and
-`gₙ (δ₀ - ν_{2^J})`. Carlson's inequality in Fourier variables
-(`HalfLineAlgebra.integral_norm_snd_pow_four_le`: `(∫ |f|)⁴ ≤ 4π² ‖f̂‖₂² ‖f̂'/2π‖₂²`, by
-Plancherel) is applied to each piece, with the pointwise bounds `|ĝₙ| ≤ 2`, `|ĝₙ| ≤ n |ĝ|`,
-`|ĝₙ'| ≤ n |ĝ'|` and the explicit integrals `∫ (c² + (2πξ)²)⁻¹ dξ = 1/(2c)`
-(`HalfLineAlgebra.integral_weight`): the low piece contributes `O(√n)`, the dyadic piece at
-`c = 2^j` contributes `O(√n 2^{-j/4})`, the high piece `O(n^{1/4})`
-(`integral_norm_snd_mul_low_pow_four_le`, `…_mid_…`, `…_high_…`). Whether this is the
-argument of [BrennerThomee1979] was not checked (the paper was not accessible here).
-
-## Main results
-
-* `HalfLineAlgebra.moment` (`μ̂' = -2πi moment μ`, `HalfLineAlgebra.hasDerivAt_fourier`),
-  `moment_mul`, `norm_moment_pow_le`;
-* `HalfLineAlgebra.integral_norm_snd_pow_four_le` (Carlson in Fourier variables);
-* `HalfLineAlgebra.expMeasure`, `fourier_expMeasure`, `moment_expMeasure`,
-  `HalfLineAlgebra.weight`, `integral_weight`;
-* **`HalfLineAlgebra.integral_norm_pow_snd_le`**, **`HalfLineAlgebra.variation_pow_le`**:
-  `‖μⁿ‖ ≤ 1 + C √n`, `C = HalfLineAlgebra.powerConst C₁ C₂`.
+For `μ = a δ₀ + g` with `|μ̂| ≤ 1`, `|μ̂(ξ) - a| ≤ C₁ |ν̂(ξ)|` and `|μ̂'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²`,
+where `ν̂(ξ) = 1/(1 + 2πiξ)`, the density `gₙ` of `μⁿ` satisfies `∫ |gₙ| ≤ C √n` for every
+`|a| ≤ 1` (after [BrennerThomee1979]).
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [L. Larsson, L. Maligranda, J. Pečarić, L.-E. Persson, *Multiplicative Inequalities of Carlson Type and Interpolation*][LarssonMaligrandaPecaricPersson2006]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -59,8 +27,7 @@ namespace HalfLineAlgebra
 
 /-! ### The first moment in Fourier variables -/
 
-/-- The Fourier transform of the first moment `t g(t)` of the density `g` of `μ = a δ₀ + g`; it
-is `(i/2π) μ̂'` (`hasDerivAt_fourier`). -/
+/-- The Fourier transform `(i/2π) μ̂'` of the first moment `t g(t)` of the density of `μ`. -/
 def moment (μ : HalfLineAlgebra) (ξ : ℝ) : ℂ := 𝓕 (fun t : ℝ => t • μ.snd t) ξ
 
 theorem hasDerivAt_fourier (μ : HalfLineAlgebra) (ξ : ℝ) :
@@ -91,7 +58,6 @@ theorem moment_sub (μ ν : HalfLineAlgebra) (ξ : ℝ) :
   have hc : (-2 * (Real.pi : ℂ) * Complex.I) ≠ 0 := by simp [Real.pi_ne_zero]
   exact mul_left_cancel₀ hc (by linear_combination h1.unique h2)
 
-/-- `‖(μⁿ)^‸'‖ ≤ n ‖μ̂'‖` when `|μ̂| ≤ 1`. -/
 theorem norm_moment_pow_le {μ : HalfLineAlgebra} {ξ : ℝ} (hσ : ‖fourier ξ μ‖ ≤ 1) (n : ℕ) :
     ‖moment (μ ^ n) ξ‖ ≤ n * ‖moment μ ξ‖ := by
   induction n with
@@ -107,8 +73,6 @@ theorem norm_moment_pow_le {μ : HalfLineAlgebra} {ξ : ℝ} (hσ : ‖fourier �
             exact mul_le_mul_of_nonneg_right this (norm_nonneg _)
       _ ≤ (n + 1 : ℕ) * ‖moment μ ξ‖ := by push_cast; nlinarith [norm_nonneg (moment μ ξ)]
 
-/-- **Carlson's inequality in Fourier variables**: for `μ = g(t) dt` (no atom),
-`(∫ |g|)⁴ ≤ 4π² ‖μ̂‖₂² ‖μ̂'/2π‖₂²`. -/
 theorem integral_norm_snd_pow_four_le {μ : HalfLineAlgebra} (hμ : μ.fst = 0) :
     (∫ t, ‖μ.snd t‖) ^ 4 ≤
       4 * Real.pi ^ 2 * (∫ ξ, ‖fourier ξ μ‖ ^ 2) * ∫ ξ, ‖moment μ ξ‖ ^ 2 := by
@@ -138,8 +102,7 @@ private theorem hasDerivAt_inv_add (c ξ : ℝ) (hc : 0 < c) :
   convert hf.inv hne using 1
   field_simp
 
-/-- **The exponential measure** `ν_c = c e^{-ct} dt` (`c > 0`), a probability measure with
-`ν̂_c(ξ) = c/(c + 2πiξ)`. -/
+/-- The exponential measure `ν_c = c e^{-ct} dt`, `c > 0`, with `ν̂_c(ξ) = c/(c + 2πiξ)`. -/
 def expMeasure (c : ℝ) (hc : 0 < c) : HalfLineAlgebra :=
   inr ((c : ℂ) • HalfLineKernel.exp c (by simpa using hc))
 
@@ -201,7 +164,6 @@ theorem integrable_weight {c : ℝ} (hc : 0 < c) : Integrable (weight c) := by
   congr 1
   field_simp
 
-/-- `∫ (c² + (2πξ)²)⁻¹ dξ = 1/(2c)`. -/
 theorem integral_weight {c : ℝ} (hc : 0 < c) : ∫ ξ, weight c ξ = 1 / (2 * c) := by
   have hT : 0 < c / (2 * Real.pi) := by positivity
   have h : weight c = fun ξ => (c ^ 2)⁻¹ * (1 + (ξ / (c / (2 * Real.pi))) ^ 2)⁻¹ := by
@@ -222,7 +184,6 @@ theorem norm_moment_expMeasure_sq (c : ℝ) (hc : 0 < c) (ξ : ℝ) :
   rw [moment_expMeasure, norm_mul, mul_pow, norm_pow, ← pow_mul, mul_comm 2 2, pow_mul,
     norm_inv_add_sq, Complex.norm_real, Real.norm_eq_abs, sq_abs]
 
-/-- `1 - ν̂_c = 2πiξ/(c + 2πiξ)`. -/
 theorem norm_one_sub_fourier_expMeasure_sq (c : ℝ) (hc : 0 < c) (ξ : ℝ) :
     ‖fourier ξ (1 - expMeasure c hc)‖ ^ 2 = (2 * Real.pi * ξ) ^ 2 * weight c ξ := by
   have h : fourier ξ (1 - expMeasure c hc) =
@@ -233,7 +194,6 @@ theorem norm_one_sub_fourier_expMeasure_sq (c : ℝ) (hc : 0 < c) (ξ : ℝ) :
   rw [h, norm_mul, norm_mul, mul_pow, mul_pow, norm_inv_add_sq, Complex.norm_I, one_pow,
     mul_one, Complex.norm_real, Real.norm_eq_abs, sq_abs]
 
-/-- `ν̂_{2c} - ν̂_c = c · 2πiξ / ((2c + 2πiξ)(c + 2πiξ))`. -/
 theorem norm_fourier_expMeasure_sub_sq (c : ℝ) (hc : 0 < c) (ξ : ℝ) :
     ‖fourier ξ (expMeasure (2 * c) (by positivity) - expMeasure c hc)‖ ^ 2 =
       c ^ 2 * (2 * Real.pi * ξ) ^ 2 * weight (2 * c) ξ * weight c ξ := by
@@ -255,8 +215,6 @@ theorem norm_fourier_expMeasure_sub_sq (c : ℝ) (hc : 0 < c) (ξ : ℝ) :
 
 /-! ### The pieces of a Littlewood–Paley decomposition -/
 
-/-- **One piece**: for `x` without atom and any `m`, Carlson's inequality bounds `∫ |(x m)ₛ|` by
-`L²` bounds of `x̂ m̂` and of its derivative `(x m)^‸' ∝ x̂' m̂ + x̂ m̂'`. -/
 theorem integral_norm_snd_mul_pow_four_le {x m : HalfLineAlgebra} (hx : x.fst = 0)
     {GA GB : ℝ → ℝ} (hA : Integrable GA) (hB : Integrable GB)
     (hGA : ∀ ξ, ‖fourier ξ x * fourier ξ m‖ ^ 2 ≤ GA ξ)
@@ -282,7 +240,6 @@ section Pieces
 variable {x : HalfLineAlgebra} {α β : ℝ} (hx : x.fst = 0)
 include hx
 
-/-- **The low-frequency piece** `x ν₁`. -/
 theorem integral_norm_snd_mul_low_pow_four_le (hβ : 0 ≤ β) (hx2 : ∀ ξ, ‖fourier ξ x‖ ^ 2 ≤ 4)
     (hxβ : ∀ ξ, ‖moment x ξ‖ ^ 2 ≤ β * weight 1 ξ ^ 2) :
     (∫ t, ‖(x * expMeasure 1 one_pos).snd t‖) ^ 4 ≤ 8 * Real.pi ^ 2 * (β + 4) := by
@@ -308,7 +265,6 @@ theorem integral_norm_snd_mul_low_pow_four_le (hβ : 0 ≤ β) (hx2 : ∀ ξ, �
       _ ≤ (2 * β * (1 * 1) + 8 * 1) * weight 1 ξ := by gcongr
       _ = _ := by ring
 
-/-- **A dyadic piece** `x (ν_{2c} - ν_c)`. -/
 theorem integral_norm_snd_mul_mid_pow_four_le (hβ : 0 ≤ β) (hx2 : ∀ ξ, ‖fourier ξ x‖ ^ 2 ≤ 4)
     (hxβ : ∀ ξ, ‖moment x ξ‖ ^ 2 ≤ β * weight 1 ξ ^ 2) {c : ℝ} (hc : 0 < c) :
     (∫ t, ‖(x * (expMeasure (2 * c) (by positivity) - expMeasure c hc)).snd t‖) ^ 4 ≤
@@ -368,7 +324,6 @@ theorem integral_norm_snd_mul_mid_pow_four_le (hβ : 0 ≤ β) (hx2 : ∀ ξ, �
           16 * (1 * weight c ξ + 1 * weight c ξ) := by gcongr
       _ = _ := by field_simp; ring
 
-/-- **The high-frequency piece** `x (1 - ν_Λ)`. -/
 theorem integral_norm_snd_mul_high_pow_four_le (hα : 0 ≤ α) (hβ : 0 ≤ β)
     (hxα : ∀ ξ, ‖fourier ξ x‖ ^ 2 ≤ α * weight 1 ξ)
     (hxβ : ∀ ξ, ‖moment x ξ‖ ^ 2 ≤ β * weight 1 ξ ^ 2) {Λ : ℝ} (hΛ : 0 < Λ) :
@@ -435,7 +390,6 @@ theorem integral_norm_snd_sum_le {ι : Type*} (s : Finset ι) (y : ι → HalfLi
     rw [Finset.sum_insert hi, Finset.sum_insert hi]
     exact (integral_norm_snd_add_le _ _).trans (add_le_add_right ih _)
 
-/-- `|σⁿ - aⁿ| ≤ n |σ - a|` for `|σ|, |a| ≤ 1`. -/
 private theorem norm_pow_sub_pow_le_mul {σ a : ℂ} (hσ : ‖σ‖ ≤ 1) (ha : ‖a‖ ≤ 1) (n : ℕ) :
     ‖σ ^ n - a ^ n‖ ≤ n * ‖σ - a‖ := by
   induction n with
@@ -455,13 +409,11 @@ theorem norm_fourier_resolvent_sq (ξ : ℝ) : ‖fourier ξ resolvent‖ ^ 2 = 
   rw [fourier_resolvent, ← norm_inv_add_sq]
   simp
 
-/-- `ν̂' = -2πi ν̂²`. -/
 theorem hasDerivAt_fourier_resolvent (ξ : ℝ) :
     HasDerivAt (fun ξ => fourier ξ resolvent)
       (-2 * Real.pi * Complex.I * fourier ξ resolvent ^ 2) ξ := by
   simpa [fourier_resolvent] using hasDerivAt_inv_add 1 ξ one_pos
 
-/-- `ν̂(ξ) = 1/(1 + 2πiξ)` lies on the circle `|s - 1/2| = 1/2`. -/
 theorem norm_fourier_resolvent_sub_half (ξ : ℝ) : ‖fourier ξ resolvent - 1 / 2‖ ≤ 1 / 2 := by
   rw [fourier_resolvent]
   have hne : (1 : ℂ) + 2 * Real.pi * ξ * Complex.I ≠ 0 := by
@@ -489,7 +441,6 @@ theorem dyadicRatio_lt_one : dyadicRatio < 1 := by
   rw [dyadicRatio, Real.sqrt_lt' one_pos, one_pow, Real.sqrt_lt' one_pos]
   norm_num
 
-/-- If `|μ̂| ≤ 1` and `μ̂(ξ) - a = O(ν̂(ξ))`, the atom `a = μ̂(∞)` has `|a| ≤ 1`. -/
 theorem norm_fst_le_one (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourier ξ μ‖ ≤ 1) {C₁ : ℝ}
     (h1 : ∀ ξ, ‖fourier ξ μ - μ.fst‖ ≤ C₁ * ‖fourier ξ resolvent‖) : ‖μ.fst‖ ≤ 1 := by
   refine le_of_forall_pos_le_add fun ε hε => ?_
@@ -514,8 +465,7 @@ theorem norm_fst_le_one (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourier ξ μ�
         rw [div_le_iff₀ (by positivity)]
         nlinarith [abs_nonneg C₁]
 
-/-- **The constant of the `√n` bound**, `C = K₀ + K₁/(1 - ρ) + K₂` with
-`K₀⁴ = 8π² (C₂² + 4)`, `K₁⁴ = 4π² (C₂²/2 + 32)`, `K₂⁴ = 2π² C₁² (C₁² + C₂²)`, `ρ⁴ = 1/2`. -/
+/-- The constant `C = K₀ + K₁/(1 - ρ) + K₂` of the `√n` bound. -/
 def powerConst (C₁ C₂ : ℝ) : ℝ :=
   √(√(8 * Real.pi ^ 2 * (C₂ ^ 2 + 4))) +
     √(√(4 * Real.pi ^ 2 * (C₂ ^ 2 / 2 + 32))) / (1 - dyadicRatio) +
@@ -532,14 +482,8 @@ private theorem sqrt_sqrt_pow_four {K : ℝ} (hK : 0 ≤ K) : √(√K) ^ 4 = K 
 private theorem sqrt_pow_four (n : ℕ) : √(n : ℝ) ^ 4 = (n : ℝ) ^ 2 := by
   rw [show (4 : ℕ) = 2 * 2 from rfl, pow_mul, Real.sq_sqrt (Nat.cast_nonneg _)]
 
-/-- **The power bound for measures with an atom of modulus at most one**: let
-`μ = a δ₀ + g` with `|μ̂| ≤ 1`, `|μ̂(ξ) - a| ≤ C₁ |ν̂(ξ)|` and `|μ̂'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²`
-(`ν̂(ξ) = 1/(1 + 2πiξ)`, `fourier_resolvent`). Then the density `gₙ` of `μⁿ` satisfies
-`∫ |gₙ| ≤ C √n` (`C = powerConst C₁ C₂`), whether or not `|a| < 1`. Proof: split
-`1 = ν₁ + Σ_{j<J} (ν_{2^{j+1}} - ν_{2^j}) + (1 - ν_{2^J})` (`ν_c = c e^{-ct} dt`,
-`2^J > n ≥ 2^{J-1}`) and apply Carlson's inequality to each piece of `gₙ`
-(`integral_norm_snd_mul_low_pow_four_le`, `…_mid_…`, `…_high_…`): the `j`-th contributes
-`O(√n 2^{-j/4})`. -/
+/-- If `|μ̂| ≤ 1`, `|μ̂(ξ) - a| ≤ C₁ |ν̂(ξ)|` and `|μ̂'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²`, the density `gₙ` of
+`μⁿ` satisfies `∫ |gₙ| ≤ C √n`, `C = powerConst C₁ C₂`. -/
 theorem integral_norm_pow_snd_le (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourier ξ μ‖ ≤ 1)
     {C₁ C₂ : ℝ} (h1 : ∀ ξ, ‖fourier ξ μ - μ.fst‖ ≤ C₁ * ‖fourier ξ resolvent‖)
     (h2 : ∀ ξ, ‖moment μ ξ‖ ≤ C₂ * ‖fourier ξ resolvent‖ ^ 2) (n : ℕ) :
@@ -663,8 +607,8 @@ theorem integral_norm_pow_snd_le (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourie
     _ = powerConst C₁ C₂ * √n := by
         rw [powerConst]; field_simp
 
-/-- **The total variation of `μⁿ` is at most `1 + C √n`** under the hypotheses of
-`integral_norm_pow_snd_le`. -/
+/-- If `|μ̂| ≤ 1`, `|μ̂(ξ) - a| ≤ C₁ |ν̂(ξ)|` and `|μ̂'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²`, the total variation
+of `μⁿ` is at most `1 + C √n`, `C = powerConst C₁ C₂`. -/
 theorem variation_pow_le (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourier ξ μ‖ ≤ 1)
     {C₁ C₂ : ℝ} (h1 : ∀ ξ, ‖fourier ξ μ - μ.fst‖ ≤ C₁ * ‖fourier ξ resolvent‖)
     (h2 : ∀ ξ, ‖moment μ ξ‖ ≤ C₂ * ‖fourier ξ resolvent‖ ^ 2) (n : ℕ) :

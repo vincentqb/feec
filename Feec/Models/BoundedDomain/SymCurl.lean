@@ -5,46 +5,21 @@ public import Feec.Domain.Constrained
 public import Feec.HilbertComplex.ShortDual
 
 /-!
-# The Hessian–curl complex on a bounded domain (thesis complex (4.16))
+# The Hessian–curl complex on a bounded domain
 
-On an open `Ω ⊆ ℝ³` let `L²(Ω; S)` and `L²(Ω; T)` be the symmetric and the trace-free matrix
-fields (`symSub`, `trSub`). The thesis' complex (4.16) for Prop 4.19 is
-`H̊²(Ω) --grad grad--> H̊(curl, Ω; S) --curl--> L²(Ω; T)`, the realizations of the Hessian and of
-the row-wise curl along the embeddings `L²(Ω) ↪ L²(Ω; 𝕜^{Unit})`, `L²(S), L²(T) ↪ L²(Ω; 𝕜³ˣ³)`
-(`Feec.Domain.ConstCoeffOp.minimalVia`): `hessCurl`. The complex with the dual boundary
-conditions, `H̊(sym curl, Ω; T) --sym curl--> H̊(div div, Ω; S) --div div--> L²(Ω)`, is
-`symCurlDivDiv`.
+On an open `Ω ⊆ ℝ³`, the complex (4.16) of [QuennevilleBelair2015], §4.11 (`hessCurl`),
+`H̊²(Ω) --grad grad--> H̊(curl, Ω; S) --curl--> L²(Ω; T)`, the complex with the dual boundary
+conditions (`symCurlDivDiv`), and its dual with no boundary conditions (`hessCurlMax`).
 
-The constrained test fields are dense (`denseVia_symSub`, `denseVia_trSub`, `denseVia_scalar`:
-the symmetric and deviatoric parts are self-adjoint projections preserving test fields), and the
-curl of a symmetric field is trace-free (`trace_curl_eq_zero_of_symm`).
+## Main results
 
-Dualizing `symCurlDivDiv` (`Feec.ShortHilbertComplex.dual`) gives the complex with the
-maximal boundary conditions, `H²(Ω) --grad grad--> H(curl, Ω; S) --curl--> L²(Ω; T)`
-(`hessCurlMax`); the minimal operators are restrictions of the maximal ones
-(`hessCurl_d₀_le_hessCurlMax_d₀`, `hessCurl_d₁_le_hessCurlMax_d₁`), and smooth fields up to the
-boundary lie in the maximal domains with their classical values (`smooth_mem_hessCurlMax_d₀`,
-`smoothField_mem_hessCurlMax_d₁`, `smoothField_mem_adjoint_hessCurl_d₁`).
-
-The pieces of [QuennevilleBelair2015], Lemma 3.5 for (4.16): `curl` maps `L²(TSD) ∩ H̊(curl, S)`
-into `L²(TSD) ∩ L²(T)` (`hessCurl_d₁_mem_tsdT`), `curl†` maps `L²(TSD) ∩ D(curl†)` into
-`L²(TSD) ∩ L²(S)` (`adjoint_hessCurl_d₁_mem_tsdS`), and a field of `L²(TSD)` with a weak curl
-in `L²(TSD)` has a symmetric curl (`symm_of_weakCurl_tsd`). The divergence-free constraint
-propagates ([QuennevilleBelair2015], Prop. 4.16: `hessCurl_divFree_propagates`) and the reduced
-system is well posed ([QuennevilleBelair2015], Prop. 4.18:
-`hessCurl_existsUnique_reducedSolution`).
-
-`H̊(curl, S) ⊆ H̊(curl, M)` with the same curl (`Feec.Domain.ConstCoeffOp.minimalVia_graph_map`),
-so the zero-mean theorem of `Feec.Models.BoundedDomain.GradCurl` applies to symmetric TSD fields,
-and **TSD propagation fails for (4.16)** on every nonempty bounded open `Ω` for the constraint
-spaces `tsdS`, `tsdT` (`Feec.Counterexamples.BoundedSymTSD.tsd_not_propagates`, the bounded-domain
-refutation of thesis Prop 4.19).
+* `hessCurl_d₁_mem_tsdT`, `adjoint_hessCurl_d₁_mem_tsdS`: `curl` and `curl†` preserve `L²(TSD)`.
+* `hessCurl_divFree_propagates`: `σ ≡ 0` and `div div E ≡ 0` propagate.
+* `hessCurl_existsUnique_reducedSolution`: the reduced system is well posed.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Lemma 3.5, Prop. 4.16, Prop. 4.18, §4.11 (Prop. 4.19, complex (4.16))
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §8 (Hessian and div-div complexes)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -116,7 +91,6 @@ theorem matCLM_apply (M : Ix → Ix → 𝕜) (u : L2F 𝕜 Ω Ix) (ij : Ix) :
     matCLM M u ij = ∑ kl, M ij kl • u kl := by
   simp [matCLM]
 
-/-- `matCLM` acts pointwise on test fields. -/
 theorem matCLM_testField (M : Ix → Ix → 𝕜) {Φ : Ix → R3 → 𝕜} (hΦ : IsTestField Ω Φ) :
     ∃ hΨ : IsTestField Ω (fun ij x => ∑ kl, M ij kl * Φ kl x),
       matCLM M (testField hΦ) = testField hΨ := by
@@ -231,7 +205,6 @@ theorem denseVia_scalar (hΩ : IsOpen Ω) : ConstCoeffOp.DenseVia (L2.toL2F 𝕜
 
 /-! ## Pointwise identities -/
 
-/-- The Hessian is symmetric (Schwarz). -/
 theorem hessOp_apply_swap {h : Unit → R3 → 𝕜} (hh : ∀ u, ContDiff ℝ ∞ (h u)) (i j : Fin 3) :
     (hessOp 3 : ConstCoeffOp R3 𝕜 _ _).apply h (i, j) =
       (hessOp 3 : ConstCoeffOp R3 𝕜 _ _).apply h (j, i) := by
@@ -239,7 +212,6 @@ theorem hessOp_apply_swap {h : Unit → R3 → 𝕜} (hh : ∀ u, ContDiff ℝ �
   rw [hessOp_apply, hessOp_apply]
   exact fderiv_fderiv_comm ((hh ()).of_le (by simp)) _ _ x
 
-/-- The curl of a pointwise symmetric field is trace-free. -/
 theorem trace_curl_eq_zero_of_symm {Φ : Ix → R3 → 𝕜} (hs : ∀ i j, Φ (i, j) = Φ (j, i))
     (x : R3) : ∑ i, (curlOp 3 : ConstCoeffOp R3 𝕜 _ _).apply Φ (i, i) x = 0 := by
   simp only [Fin.sum_univ_three, curlOp_apply]
@@ -247,7 +219,6 @@ theorem trace_curl_eq_zero_of_symm {Φ : Ix → R3 → 𝕜} (hs : ∀ i j, Φ (
   rw [hs 0 2, hs 0 1, hs 1 2]
   ring
 
-/-- The sum of the diagonal components of a test field is the class of the pointwise sum. -/
 theorem sum_diag_testField {Φ : Ix → R3 → 𝕜} (hΦ : IsTestField Ω Φ) :
     ∑ i, testField hΦ (i, i) = toL2 (IsTest.sum Finset.univ fun i _ => hΦ (i, i)) := by
   refine Lp.ext ?_
@@ -268,14 +239,12 @@ theorem testField_mem_symSub {Φ : Ix → R3 → 𝕜} (hΦ : IsTestField Ω Φ)
   simp only [testField_apply]
   exact toL2_congr _ _ (hs i j)
 
-/-- The Hessian maps scalar test functions to symmetric test fields. -/
 theorem hess_mapsTo (φ : Unit → R3 → 𝕜) (hφ : IsTestField Ω φ) (x : L2 𝕜 Ω)
     (_ : L2.toL2F 𝕜 Ω x = testField hφ) :
     ∃ y : symSub 𝕜 Ω, ((symSub 𝕜 Ω).subtypeₗᵢ y : L2F 𝕜 Ω Ix) =
       testField ((hessOp 3 : ConstCoeffOp R3 𝕜 _ _).isTestField_apply hφ) :=
   ⟨⟨_, testField_mem_symSub _ (hessOp_apply_swap fun u => (hφ u).contDiff)⟩, rfl⟩
 
-/-- `curl` maps symmetric test fields to trace-free test fields (Lemma 3.5). -/
 theorem curl_mapsTo (hΩ : IsOpen Ω) (Φ : Ix → R3 → 𝕜) (hΦ : IsTestField Ω Φ)
     (x : symSub 𝕜 Ω) (hx : ((symSub 𝕜 Ω).subtypeₗᵢ x : L2F 𝕜 Ω Ix) = testField hΦ) :
     ∃ y : trSub 𝕜 Ω, ((trSub 𝕜 Ω).subtypeₗᵢ y : L2F 𝕜 Ω Ix) =
@@ -302,9 +271,7 @@ theorem curl_mapsTo (hΩ : IsOpen Ω) (Φ : Ix → R3 → 𝕜) (hΦ : IsTestFie
 /-! ## The complex (4.16) -/
 
 variable (𝕜) in
-/-- **The thesis' complex (4.16)** `H̊²(Ω) --grad grad--> H̊(curl, Ω; S) --curl--> L²(Ω; T)`:
-the realizations of the Hessian and of the curl along the scalar and the symmetric/trace-free
-embeddings. [QuennevilleBelair2015], Prop 4.19 -/
+/-- The complex (4.16), `H̊²(Ω) → H̊(curl, Ω; S) → L²(Ω; T)`. [QuennevilleBelair2015], (4.16) -/
 def hessCurl (hΩ : IsOpen Ω) : ShortHilbertComplex 𝕜 (L2 𝕜 Ω) (symSub 𝕜 Ω) (trSub 𝕜 Ω) where
   d₀ := (hessOp 3).minimalVia (L2.toL2F 𝕜 Ω) (symSub 𝕜 Ω).subtypeₗᵢ
   d₁ := (curlOp 3).minimalVia (symSub 𝕜 Ω).subtypeₗᵢ (trSub 𝕜 Ω).subtypeₗᵢ
@@ -319,20 +286,17 @@ def hessCurl (hΩ : IsOpen Ω) : ShortHilbertComplex 𝕜 (L2 𝕜 Ω) (symSub �
   comp := ConstCoeffOp.minimalVia_comp _ _ _ _ isComplexPair_hess_curl (denseVia_symSub hΩ)
     (denseVia_trSub hΩ)
 
-/-- **`H̊(curl, S) ⊆ H̊(curl, M)`** with the same curl. -/
 theorem hessCurl_d₁_graph_map (hΩ : IsOpen Ω) (x : (hessCurl 𝕜 hΩ).d₁.domain) :
     (((x : symSub 𝕜 Ω) : L2F 𝕜 Ω Ix), (((hessCurl 𝕜 hΩ).d₁ x : trSub 𝕜 Ω) : L2F 𝕜 Ω Ix)) ∈
       ((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).minimal Ω).graph :=
   (curlOp 3).minimalVia_graph_map _ _ hΩ (denseVia_trSub hΩ) x
 
-/-- **`D(d₁†) = H(sym curl, T)`** for (4.16): weak curl against symmetric test fields. -/
 theorem mem_adjoint_hessCurl_d₁_domain_iff (hΩ : IsOpen Ω) {v : trSub 𝕜 Ω} :
     v ∈ (hessCurl 𝕜 hΩ).d₁†.domain ↔ ∃ w : symSub 𝕜 Ω,
       ∀ p ∈ (curlOp 3 : ConstCoeffOp R3 𝕜 _ _).testGraphVia (symSub 𝕜 Ω).subtypeₗᵢ
         (trSub 𝕜 Ω).subtypeₗᵢ, ⟪w, p.1⟫_𝕜 = ⟪v, p.2⟫_𝕜 :=
   (curlOp 3).mem_adjoint_minimalVia_domain_iff _ _ (denseVia_trSub hΩ) (hessCurl 𝕜 hΩ).dense₁
 
-/-- **`D(d₀†) = H(div div, S)`** for (4.16): weak double divergence against test functions. -/
 theorem mem_adjoint_hessCurl_d₀_domain_iff (hΩ : IsOpen Ω) {v : symSub 𝕜 Ω} :
     v ∈ (hessCurl 𝕜 hΩ).d₀†.domain ↔ ∃ w : L2 𝕜 Ω,
       ∀ p ∈ (hessOp 3 : ConstCoeffOp R3 𝕜 _ _).testGraphVia (L2.toL2F 𝕜 Ω)
@@ -365,7 +329,6 @@ section DualComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜] {Ω : Set R3}
 
-/-- `sym curl` maps trace-free test fields to symmetric test fields. -/
 theorem symCurl_mapsTo (φ : Ix → R3 → 𝕜) (hφ : IsTestField Ω φ) (x : trSub 𝕜 Ω)
     (_ : ((trSub 𝕜 Ω).subtypeₗᵢ x : L2F 𝕜 Ω Ix) = testField hφ) :
     ∃ y : symSub 𝕜 Ω, ((symSub 𝕜 Ω).subtypeₗᵢ y : L2F 𝕜 Ω Ix) =
@@ -373,7 +336,6 @@ theorem symCurl_mapsTo (φ : Ix → R3 → 𝕜) (hφ : IsTestField Ω φ) (x : 
   ⟨⟨_, testField_mem_symSub _ fun i j => funext fun z => by
     rw [symCurlOp_apply, symCurlOp_apply, add_comm]⟩, rfl⟩
 
-/-- `div div` maps symmetric test fields to scalar test functions. -/
 theorem divdiv_mapsTo (Ψ : Ix → R3 → 𝕜) (hΨ : IsTestField Ω Ψ) (x : symSub 𝕜 Ω)
     (_ : ((symSub 𝕜 Ω).subtypeₗᵢ x : L2F 𝕜 Ω Ix) = testField hΨ) :
     ∃ y : L2 𝕜 Ω, L2.toL2F 𝕜 Ω y =
@@ -382,10 +344,7 @@ theorem divdiv_mapsTo (Ψ : Ix → R3 → 𝕜) (hΨ : IsTestField Ω Ψ) (x : s
     (WithLp.ext_iff 2).2 (funext fun _ => rfl)⟩
 
 variable (𝕜) in
-/-- **The complex with the dual boundary conditions**
-`H̊(sym curl, Ω; T) --sym curl--> H̊(div div, Ω; S) --div div--> L²(Ω)`: the realizations of
-`sym curl` and `div div` along the trace-free, symmetric and scalar embeddings (the adjoint
-complex (4.17) with the boundary conditions moved to it). [QuennevilleBelair2015], (4.17) -/
+/-- The complex `H̊(sym curl, Ω; T) --sym curl--> H̊(div div, Ω; S) --div div--> L²(Ω)`. -/
 def symCurlDivDiv (hΩ : IsOpen Ω) : ShortHilbertComplex 𝕜 (trSub 𝕜 Ω) (symSub 𝕜 Ω) (L2 𝕜 Ω) where
   d₀ := symCurlOp.minimalVia (trSub 𝕜 Ω).subtypeₗᵢ (symSub 𝕜 Ω).subtypeₗᵢ
   d₁ := (divdivOp 3).minimalVia (symSub 𝕜 Ω).subtypeₗᵢ (L2.toL2F 𝕜 Ω)
@@ -401,13 +360,7 @@ def symCurlDivDiv (hΩ : IsOpen Ω) : ShortHilbertComplex 𝕜 (trSub 𝕜 Ω) (
     (denseVia_symSub hΩ) (denseVia_scalar hΩ)
 
 variable (𝕜) in
-/-- **The complex (4.16) with the boundary conditions printed in Prop 4.19**
-`H²(Ω) --grad grad--> H(curl, Ω; S) --curl--> L²(Ω; T)` (no boundary conditions): the dual of
-`symCurlDivDiv`, `d₀ = (div div)†`, `d₁ = (sym curl)†`. Its adjoints are `div div` on
-`H̊(div div, S)` and `sym curl` on `H̊(sym curl, T)` (`adjoint_hessCurlMax_d₀`,
-`adjoint_hessCurlMax_d₁`), so its wave operator has the data space
-`H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)` of the statement of Prop 4.19.
-[QuennevilleBelair2015], Prop. 4.19 (§4.11) -/
+/-- The dual of `symCurlDivDiv`, `H²(Ω) → H(curl, Ω; S) → L²(Ω; T)`. -/
 abbrev hessCurlMax (hΩ : IsOpen Ω) : ShortHilbertComplex 𝕜 (L2 𝕜 Ω) (symSub 𝕜 Ω) (trSub 𝕜 Ω) :=
   (symCurlDivDiv 𝕜 hΩ).dual
 
@@ -419,8 +372,6 @@ theorem adjoint_hessCurlMax_d₁ (hΩ : IsOpen Ω) :
     (hessCurlMax 𝕜 hΩ).d₁† = (symCurlDivDiv 𝕜 hΩ).d₀ :=
   (symCurlDivDiv 𝕜 hΩ).adjoint_dual_d₁
 
-/-- **`D(d₀) = H²(Ω)`** for `hessCurlMax` (no boundary condition): `f` has a weak Hessian in
-`L²(S)`, tested against symmetric test fields. -/
 theorem mem_hessCurlMax_d₀_domain_iff (hΩ : IsOpen Ω) {f : L2 𝕜 Ω} :
     f ∈ (hessCurlMax 𝕜 hΩ).d₀.domain ↔ ∃ H : symSub 𝕜 Ω,
       ∀ p ∈ (divdivOp 3 : ConstCoeffOp R3 𝕜 _ _).testGraphVia (symSub 𝕜 Ω).subtypeₗᵢ
@@ -428,15 +379,12 @@ theorem mem_hessCurlMax_d₀_domain_iff (hΩ : IsOpen Ω) {f : L2 𝕜 Ω} :
   (divdivOp 3).mem_adjoint_minimalVia_domain_iff _ _ (denseVia_scalar hΩ)
     (symCurlDivDiv 𝕜 hΩ).dense₁
 
-/-- **`D(d₁) = H(curl, S)`** for `hessCurlMax` (no boundary condition): `E` has a weak curl in
-`L²(T)`, tested against trace-free test fields. -/
 theorem mem_hessCurlMax_d₁_domain_iff (hΩ : IsOpen Ω) {E : symSub 𝕜 Ω} :
     E ∈ (hessCurlMax 𝕜 hΩ).d₁.domain ↔ ∃ C : trSub 𝕜 Ω,
       ∀ p ∈ (symCurlOp : ConstCoeffOp R3 𝕜 _ _).testGraphVia (trSub 𝕜 Ω).subtypeₗᵢ
         (symSub 𝕜 Ω).subtypeₗᵢ, ⟪C, p.1⟫_𝕜 = ⟪E, p.2⟫_𝕜 :=
   symCurlOp.mem_adjoint_minimalVia_domain_iff _ _ (denseVia_symSub hΩ) (symCurlDivDiv 𝕜 hΩ).dense₀
 
-/-- The value of `d₀` of `hessCurlMax` is the weak Hessian. -/
 theorem hessCurlMax_d₀_apply_eq (hΩ : IsOpen Ω) (f : (hessCurlMax 𝕜 hΩ).d₀.domain)
     {H : symSub 𝕜 Ω} (hH : ∀ p ∈ (divdivOp 3 : ConstCoeffOp R3 𝕜 _ _).testGraphVia
       (symSub 𝕜 Ω).subtypeₗᵢ (L2.toL2F 𝕜 Ω), ⟪H, p.1⟫_𝕜 = ⟪(f : L2 𝕜 Ω), p.2⟫_𝕜) :
@@ -444,7 +392,6 @@ theorem hessCurlMax_d₀_apply_eq (hΩ : IsOpen Ω) (f : (hessCurlMax 𝕜 hΩ).
   (divdivOp 3 : ConstCoeffOp R3 𝕜 _ _).adjoint_minimalVia_apply_eq (symSub 𝕜 Ω).subtypeₗᵢ
     (L2.toL2F 𝕜 Ω) (denseVia_scalar hΩ) (symCurlDivDiv 𝕜 hΩ).dense₁ f hH
 
-/-- The value of `d₁` of `hessCurlMax` is the weak curl. -/
 theorem hessCurlMax_d₁_apply_eq (hΩ : IsOpen Ω) (E : (hessCurlMax 𝕜 hΩ).d₁.domain)
     {C : trSub 𝕜 Ω} (hC : ∀ p ∈ (symCurlOp : ConstCoeffOp R3 𝕜 _ _).testGraphVia
       (trSub 𝕜 Ω).subtypeₗᵢ (symSub 𝕜 Ω).subtypeₗᵢ, ⟪C, p.1⟫_𝕜 = ⟪(E : symSub 𝕜 Ω), p.2⟫_𝕜) :
@@ -454,18 +401,16 @@ theorem hessCurlMax_d₁_apply_eq (hΩ : IsOpen Ω) (E : (hessCurlMax 𝕜 hΩ).
 
 end DualComplex
 
-/-! ## Comparison of the two placements of the boundary conditions -/
+/-! ## Minimal and maximal boundary conditions -/
 
 section Compare
 
 variable {𝕜 : Type*} [RCLike 𝕜] {Ω : Set R3}
 
-/-- Symmetric fields pair with `sym M` as with `M`. -/
 theorem inner_symProj_of_mem (E : symSub 𝕜 Ω) (u : L2F 𝕜 Ω Ix) :
     ⟪(E : L2F 𝕜 Ω Ix), symProj u⟫_𝕜 = ⟪(E : L2F 𝕜 Ω Ix), u⟫_𝕜 := by
   rw [← inner_symProj, symProj_eq_self E.2]
 
-/-- `sym curl φ = sym (curl φ)` on test fields. -/
 theorem testField_symCurl {φ : Ix → R3 → 𝕜} (hφ : IsTestField Ω φ) :
     testField ((symCurlOp : ConstCoeffOp R3 𝕜 _ _).isTestField_apply hφ) =
       symProj (testField ((curlOp 3 : ConstCoeffOp R3 𝕜 _ _).isTestField_apply hφ)) := by
@@ -474,8 +419,6 @@ theorem testField_symCurl {φ : Ix → R3 → 𝕜} (hφ : IsTestField Ω φ) :
   exact testField_congr _ _ (funext fun ij => funext fun x => by rw [symCurlOp,
       ConstCoeffOp.postComp_apply])
 
-/-- **`H̊(curl, S) ⊆ H(curl, S)`**: the curl of (4.16) is a restriction of the weak curl of the
-complex with the printed boundary conditions. -/
 theorem hessCurl_d₁_le_hessCurlMax_d₁ (hΩ : IsOpen Ω) :
     (hessCurl 𝕜 hΩ).d₁ ≤ (hessCurlMax 𝕜 hΩ).d₁ := by
   have key : ∀ u : (hessCurl 𝕜 hΩ).d₁.domain,
@@ -512,7 +455,6 @@ theorem hessCurl_d₁_le_hessCurlMax_d₁ (hΩ : IsOpen Ω) :
     subst hy
     exact e.symm
 
-/-- **`H̊²(Ω) ⊆ H²(Ω)`**: the Hessian of (4.16) is a restriction of the weak Hessian. -/
 theorem hessCurl_d₀_le_hessCurlMax_d₀ (hΩ : IsOpen Ω) :
     (hessCurl 𝕜 hΩ).d₀ ≤ (hessCurlMax 𝕜 hΩ).d₀ := by
   have key : ∀ u : (hessCurl 𝕜 hΩ).d₀.domain,
@@ -549,19 +491,14 @@ theorem hessCurl_d₀_le_hessCurlMax_d₀ (hΩ : IsOpen Ω) :
   subst hy
   exact e.symm
 
-/-- `H̊(sym curl, T) ⊆ H(sym curl, T)` with the same `sym curl`: `d₁†` of the printed
-placement is a restriction of `d₁†` of (4.16). -/
 theorem adjoint_hessCurlMax_d₁_le (hΩ : IsOpen Ω) :
     (hessCurlMax 𝕜 hΩ).d₁† ≤ (hessCurl 𝕜 hΩ).d₁† :=
   LinearPMap.adjoint_le_adjoint_of_le (hessCurl 𝕜 hΩ).dense₁ (hessCurl_d₁_le_hessCurlMax_d₁ hΩ)
 
-/-- `H̊(div div, S) ⊆ H(div div, S)` with the same `div div`. -/
 theorem adjoint_hessCurlMax_d₀_le (hΩ : IsOpen Ω) :
     (hessCurlMax 𝕜 hΩ).d₀† ≤ (hessCurl 𝕜 hΩ).d₀† :=
   LinearPMap.adjoint_le_adjoint_of_le (hessCurl 𝕜 hΩ).dense₀ (hessCurl_d₀_le_hessCurlMax_d₀ hΩ)
 
-/-- **`ker (grad grad)† = H(div div, S, 0)`** for (4.16): `B ⊥ ∇²φ` for every test function `φ`
-(no boundary condition). -/
 theorem mem_ker_adjoint_hessCurl_d₀_iff (hΩ : IsOpen Ω) {B : symSub 𝕜 Ω} :
     B ∈ (hessCurl 𝕜 hΩ).d₀†.ker ↔ ∀ (φ : Unit → R3 → 𝕜) (hφ : IsTestField Ω φ),
       ⟪(B : L2F 𝕜 Ω Ix), testField ((hessOp 3 : ConstCoeffOp R3 𝕜 _ _).isTestField_apply hφ)⟫_𝕜 =
@@ -591,7 +528,6 @@ theorem mem_ker_adjoint_hessCurl_d₀_iff (hΩ : IsOpen Ω) {B : symSub 𝕜 Ω}
     exact LinearPMap.mem_ker_iff.2 ⟨⟨B, hmem⟩, rfl,
       (hessOp 3).adjoint_minimalVia_apply_eq _ _ (denseVia_symSub hΩ) (hessCurl 𝕜 hΩ).dense₀ _ key⟩
 
-/-- Symmetric test fields lie in `D(d₁) ∩ D(d₀†)` of (4.16). -/
 theorem testField_mem_hessCurl_d₁_domain (hΩ : IsOpen Ω) {Φ : Ix → R3 → 𝕜}
     (hΦ : IsTestField Ω Φ) (hs : ∀ i j, Φ (i, j) = Φ (j, i)) :
     (⟨testField hΦ, testField_mem_symSub hΦ hs⟩ : symSub 𝕜 Ω) ∈ (hessCurl 𝕜 hΩ).d₁.domain := by
@@ -615,8 +551,6 @@ theorem testField_mem_adjoint_hessCurl_d₀ (hΩ : IsOpen Ω) {Φ : Ix → R3 �
         _).formalAdj.isTestField_apply hΦ)
       ((divdivOp 3 : ConstCoeffOp R3 𝕜 _ _).isTestField_apply hΦ) (by rw [hessOp_formalAdj])]
 
-/-- Symmetric test fields lie in `D(d₁) ∩ D(d₀†) = H(curl, S) ∩ H̊(div div, S)` of the printed
-placement. -/
 theorem testField_mem_hessCurlMax_d₁_domain (hΩ : IsOpen Ω) {Φ : Ix → R3 → 𝕜}
     (hΦ : IsTestField Ω Φ) (hs : ∀ i j, Φ (i, j) = Φ (j, i)) :
     (⟨testField hΦ, testField_mem_symSub hΦ hs⟩ : symSub 𝕜 Ω) ∈ (hessCurlMax 𝕜 hΩ).d₁.domain :=
@@ -658,14 +592,12 @@ theorem isTestField_diagOf {Ω : Set R3} {g : R3 → ℝ} (hg : IsTest Ω g) :
     IsTestField Ω (diagOf g) := fun ij => by
   unfold diagOf; split_ifs; exacts [hg, IsTest.zero]
 
-/-- `curl (g I) = skewOf (-∇g)` is skew. -/
 theorem curlM_diagOf (g : R3 → ℝ) (ij : Ix) (x : R3) :
     curlM (diagOf g) ij x = skewOf (fun i y => -partialDeriv i g y) ij x := by
   obtain ⟨a, b⟩ := ij
   simp only [curlM, diagOf, skewOf, pd_ite_zero]
   fin_cases a <;> fin_cases b <;> simp
 
-/-- `∂_k ((f + g)/2) = (∂_k f + ∂_k g)/2`. -/
 theorem pd_avg {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)
     (x : R3) : partialDeriv k (fun y => (f y + g y) / 2) x =
       (partialDeriv k f x + partialDeriv k g x) / 2 := by
@@ -676,7 +608,6 @@ theorem pd_avg {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiab
   rw [this, partialDeriv_const_mul ((hf.add hg) _), partialDeriv_add' hf hg, Pi.add_apply]
   ring
 
-/-- `curl sym ∇ψ = ½ (∇ curl ψ)ᵀ` (rows `½ ∂_a curl ψ`). -/
 theorem curlM_symF_gradM {ψ : Fin 3 → R3 → ℝ} (hψ : ∀ i, ContDiff ℝ ∞ (ψ i)) (ab : Ix)
     (x : R3) : curlM (symF (gradM ψ)) ab x = (partialDeriv ab.1 (fun y =>
       partialDeriv (ab.2 + 1) (ψ (ab.2 + 2)) y - partialDeriv (ab.2 + 2)
@@ -713,7 +644,6 @@ theorem isTestField_devF {Ω : Set R3} {Ψ : Ix → R3 → ℝ} (hΨ : IsTestFie
     ring
   exact fun ij => (hΨ ij).sub (isTestField_diagOf hg ij)
 
-/-- `curl dev Ψ = curl Ψ - curl (⅓ (tr Ψ) I)`. -/
 theorem curlM_devF {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, Differentiable ℝ (Ψ ij))
     (hg : Differentiable ℝ fun y => (∑ k, Ψ (k, k) y) / 3) (ij : Ix) (x : R3) :
     curlM (devF Ψ) ij x =
@@ -757,13 +687,11 @@ theorem smoothField_mem_trSub (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {�
   rw [Finset.sum_congr rfl fun i _ => h1 i]
   exact htr x
 
-/-- `smoothField` depends only on the field. -/
 theorem smoothField_congr {hΩ : IsOpen Ω} {hb : Bornology.IsBounded Ω} {ι : Type*}
     {Ψ Ψ' : ι → R3 → ℝ} (hΨ : ∀ i, Continuous (Ψ i)) (hΨ' : ∀ i, Continuous (Ψ' i))
     (h : Ψ = Ψ') : smoothField hΩ hb Ψ hΨ = smoothField hΩ hb Ψ' hΨ' := by
   subst h; rfl
 
-/-- `sym` of a smooth field is the smooth field of its symmetric part. -/
 theorem symProj_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {F : Ix → R3 → ℝ}
     (hF : ∀ ij, Continuous (F ij)) :
     symProj (smoothField hΩ hb F hF) = smoothField hΩ hb (symF F) (continuous_symF hF) := by
@@ -782,7 +710,6 @@ theorem symProj_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {F :
   simp only [symF]
   ring
 
-/-- Symmetric fields pair with `Ψ` as with its symmetric part. -/
 theorem sum_integral_mul_symF (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {v : L2F ℝ Ω Ix}
     (hv : v ∈ symSub ℝ Ω) {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, Continuous (Ψ ij)) :
     ∑ ij, ∫ x, v ij x * symF Ψ ij x ∂volume.restrict Ω =
@@ -790,7 +717,6 @@ theorem sum_integral_mul_symF (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {v
   rw [← inner_smoothField hΩ hb _ (continuous_symF hΨ), ← inner_smoothField hΩ hb _ hΨ,
     ← symProj_smoothField, ← inner_symProj, symProj_eq_self hv]
 
-/-- Green's formula for the curl against a `C¹` field with no boundary condition. -/
 theorem inner_testField_curl_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {φ : Ix → R3 → ℝ} (hφ : IsTestField Ω φ) {Ψ : Ix → R3 → ℝ}
     (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
@@ -807,8 +733,6 @@ theorem inner_testField_curl_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBou
   exact MemLp.toLp_congr (m2 ij) (memLp_of_continuous hΩ.measurableSet hb
     (continuous_curlM hΨ ij)) (Eventually.of_forall fun x => by rw [← curlM_eq_formalAdj_apply])
 
-/-- Green's formula for `div div` against a smooth function with no boundary condition:
-`⟪div div Ψ, φ⟫ = ⟪Ψ, ∇²φ⟫`. -/
 theorem inner_testField_divdiv_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {Ψ : Ix → R3 → ℝ} (hΨ : IsTestField Ω Ψ) {φ : R3 → ℝ} (hφ : ContDiff ℝ ∞ φ) :
     ⟪testField ((divdivOp 3 : ConstCoeffOp R3 ℝ Ix Unit).isTestField_apply hΨ),
@@ -839,8 +763,6 @@ section Domains
 
 variable {Ω : Set R3}
 
-/-- **`C¹` trace-free fields lie in `D(d₁†) = H(sym curl, T)`** for (4.16) (no boundary
-condition), with `d₁† Ψ = sym curl Ψ`. -/
 theorem smoothField_mem_adjoint_hessCurl_d₁ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) (htr : ∀ x, ∑ i, Ψ (i, i) x = 0) :
     ∃ h : (⟨smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous),
@@ -868,8 +790,6 @@ theorem smoothField_mem_adjoint_hessCurl_d₁ (hΩ : IsOpen Ω) (hb : Bornology.
   exact ⟨hmem, congrArg Subtype.val ((curlOp 3 : ConstCoeffOp R3 ℝ _ _).adjoint_minimalVia_apply_eq
     _ _ (denseVia_trSub hΩ) (hessCurl ℝ hΩ).dense₁ ⟨_, hmem⟩ key)⟩
 
-/-- **`C¹` symmetric fields lie in `D(d₁) = H(curl, S)`** for `hessCurlMax` (no boundary
-condition: constants, linear fields, Hessians of polynomials), with `d₁ Ψ = curl Ψ`. -/
 theorem smoothField_mem_hessCurlMax_d₁ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) (hs : ∀ i j, Ψ (i, j) = Ψ (j, i)) :
     ∃ h : (⟨smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous),
@@ -904,8 +824,6 @@ theorem hessL2_mem_symSub (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : 
   smoothField_mem_symSub hΩ hb _ fun i j => funext fun x =>
     (partialDeriv_comm (hφ.of_le (by simp)) i j x).symm
 
-/-- **Smooth functions lie in `D(d₀) = H²(Ω)`** for `hessCurlMax` (no boundary condition: e.g.
-all polynomials), with `d₀ φ = ∇²φ`. -/
 theorem smooth_mem_hessCurlMax_d₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : R3 → ℝ}
     (hφ : ContDiff ℝ ∞ φ) :
     ∃ h : (memLp_of_continuous hΩ.measurableSet hb hφ.continuous).toLp φ ∈
@@ -929,13 +847,12 @@ theorem smooth_mem_hessCurlMax_d₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
 
 end Domains
 
-/-! ## Lemma 3.5 for the complex (4.16) -/
+/-! ## `curl` and `curl†` preserve `L²(TSD)` -/
 
 section Lemma35
 
 variable {Ω : Set R3}
 
-/-- `⟪C, g I⟫ = ⟪tr C, g⟫`. -/
 theorem inner_testField_diagOf (C : L2F ℝ Ω Ix) {g : R3 → ℝ} (hg : IsTest Ω g) :
     ⟪C, testField (isTestField_diagOf hg)⟫_ℝ = ⟪∑ i, C (i, i), toL2 hg⟫_ℝ := by
   rw [inner_testField_eq, sum_inner, Fintype.sum_prod_type]
@@ -947,7 +864,6 @@ theorem inner_testField_diagOf (C : L2F ℝ Ω Ix) {g : R3 → ℝ} (hg : IsTest
     simp [diagOf, Ne.symm hj]
   · simp
 
-/-- `⟪B, curl Φ⟫ = Σ ∫ B : curl Φ`. -/
 theorem inner_testField_curl_eq (B : L2F ℝ Ω Ix) {Φ : Ix → R3 → ℝ} (hΦ : IsTestField Ω Φ) :
     ⟪B, testField ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply hΦ)⟫_ℝ =
       ∑ ij, ∫ x, B ij x * curlM Φ ij x ∂volume.restrict Ω := by
@@ -961,7 +877,6 @@ theorem isTestField_symF {Ψ : Ix → R3 → ℝ} (hΨ : IsTestField Ω Ψ) : Is
     simp only [symF, Pi.add_apply]
     ring
 
-/-- `sym` of a test field is the test field of its symmetric part. -/
 theorem symProj_testField {Ψ : Ix → R3 → ℝ} (hΨ : IsTestField Ω Ψ) :
     symProj (testField hΨ) = testField (isTestField_symF hΨ) := by
   obtain ⟨hΨ', e⟩ := matCLM_testField (Ω := Ω) (symMat 3) hΨ
@@ -974,8 +889,6 @@ theorem symProj_testField {Ψ : Ix → R3 → ℝ} (hΨ : IsTestField Ω Ψ) :
 theorem isTestField_gradM {ψ : Fin 3 → R3 → ℝ} (hψ : IsTestField Ω ψ) :
     IsTestField Ω (gradM ψ) := fun ij => (hψ ij.1).fderiv_apply _
 
-/-- **`L²(TSD) ⊆ ker (grad grad)† = H(div div, S, 0)`** for (4.16) (row-wise divergence-free
-fields are `div div`-free). -/
 theorem tsdS_le_ker (hΩ : IsOpen Ω) : tsdS Ω ≤ (hessCurl ℝ hΩ).d₀†.ker := fun B hB =>
   (mem_ker_adjoint_hessCurl_d₀_iff hΩ).2 fun φ hφ => by
     have hψ : IsTestField Ω fun i : Fin 3 => fun y => fderiv ℝ (φ ()) y (coordDir i) :=
@@ -986,7 +899,6 @@ theorem tsdS_le_ker (hΩ : IsOpen Ω) : tsdS Ω ≤ (hessCurl ℝ hΩ).d₀†.k
     rw [e]
     exact hB.2.2 _ hψ
 
-/-- The weak identity of `curl_min` against test fields: `⟪curl u, Φ⟫ = ⟪u, curl Φ⟫`. -/
 theorem inner_minimal_curl_testField (hΩ : IsOpen Ω)
     (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (Φ : Ix → R3 → ℝ)
     (hΦ : IsTestField Ω Φ) :
@@ -998,9 +910,6 @@ theorem inner_minimal_curl_testField (hΩ : IsOpen Ω)
   rwa [testField_congr _ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).isTestField_apply hΦ)
     (curlOp_formalAdj_apply Φ)] at e
 
-/-- **The curl of a symmetric field in `H̊(curl)` is trace-free**: test against `Ψ = g I`, whose
-curl is skew, so `∫ tr (curl u) g = ∫ u : curl (g I) = 0`. Part of [QuennevilleBelair2015],
-Lemma 3.5 (§3.4). -/
 theorem trace_minimal_curl_eq_zero (hΩ : IsOpen Ω)
     (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
     (hu : ∀ i j, (u : L2F ℝ Ω Ix) (i, j) = (u : L2F ℝ Ω Ix) (j, i)) :
@@ -1011,9 +920,6 @@ theorem trace_minimal_curl_eq_zero (hΩ : IsOpen Ω)
   simp only [curlM_diagOf]
   exact sum_integral_mul_skewOf_eq_zero hu _
 
-/-- **Lemma 3.5 for `curl_min`**: `curl (L²(TSD) ∩ H̊(curl)) ⊆ L²(TSD)` (symmetric by
-`curl_symm_of_mem_tsd`; trace-free as `curl (g I)` is skew, `trace_minimal_curl_eq_zero`;
-divergence-free as `curl ∘ grad = 0`). [QuennevilleBelair2015], Lemma 3.5 (§3.4) -/
 theorem minimal_curl_mem_tsd (hΩ : IsOpen Ω)
     (u : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hu : (u : L2F ℝ Ω Ix) ∈ tsd Ω) :
     (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω u ∈ tsd Ω := by
@@ -1022,8 +928,7 @@ theorem minimal_curl_mem_tsd (hΩ : IsOpen Ω)
   rw [hid, testField_congr _ IsTestField.zero
     (isComplexPair_grad_curl φ fun i => (hφ i).contDiff), testField_zero, inner_zero_right]
 
-/-- **`curl (H̊(curl, S) ∩ L²(TSD)) ⊆ L²(TSD)`** for (4.16) (Lemma 3.5, the thesis' third
-itemized check in the proof of Prop 4.19). [QuennevilleBelair2015], Lemma 3.5, Prop. 4.19 -/
+/-- `curl (H̊(curl, S) ∩ L²(TSD)) ⊆ L²(TSD)`. [QuennevilleBelair2015], Lemma 3.5 (adapted) -/
 theorem hessCurl_d₁_mem_tsdT (hΩ : IsOpen Ω) (u : (hessCurl ℝ hΩ).d₁.domain)
     (hu : (u : symSub ℝ Ω) ∈ tsdS Ω) : (hessCurl ℝ hΩ).d₁ u ∈ tsdT Ω := by
   obtain ⟨z, hz1, hz2⟩ := (LinearPMap.mem_graph_iff _).1 (hessCurl_d₁_graph_map hΩ u)
@@ -1032,7 +937,6 @@ theorem hessCurl_d₁_mem_tsdT (hΩ : IsOpen Ω) (u : (hessCurl ℝ hΩ).d₁.do
   rw [hz2] at h
   exact h
 
-/-- The adjoint identity of (4.16) against symmetric test fields: `⟪d₁† ρ, Φ⟫ = ⟪ρ, curl Φ⟫`. -/
 theorem adjoint_hessCurl_d₁_inner_testField (hΩ : IsOpen Ω) (ρ : (hessCurl ℝ hΩ).d₁†.domain)
     {Φ : Ix → R3 → ℝ} (hΦ : IsTestField Ω Φ) (hs : ∀ i j, Φ (i, j) = Φ (j, i)) :
     ⟪(((hessCurl ℝ hΩ).d₁† ρ : symSub ℝ Ω) : L2F ℝ Ω Ix), testField hΦ⟫_ℝ =
@@ -1048,10 +952,7 @@ theorem adjoint_hessCurl_d₁_inner_testField (hΩ : IsOpen Ω) (ρ : (hessCurl 
   rw [← hy]
   exact e
 
-/-- **`curl† (H(sym curl, T) ∩ L²(TSD)) ⊆ L²(TSD)`** for (4.16) (Lemma 3.5): `d₁† ρ` is
-symmetric, trace-free (`⟪d₁† ρ, g I⟫ = ⟪ρ, curl (g I)⟫ = 0`, `curl (g I)` skew) and
-divergence-free (`⟪d₁† ρ, ∇ψ⟫ = ⟪ρ, curl sym ∇ψ⟫ = ½ ⟪ρ, (∇ curl ψ)ᵀ⟫ = 0`).
-[QuennevilleBelair2015], Lemma 3.5, Prop. 4.19 -/
+/-- `curl† (H(sym curl, T) ∩ L²(TSD)) ⊆ L²(TSD)`. [QuennevilleBelair2015], Lemma 3.5 (adapted) -/
 theorem adjoint_hessCurl_d₁_mem_tsdS (hΩ : IsOpen Ω) (ρ : (hessCurl ℝ hΩ).d₁†.domain)
     (hρ : (ρ : trSub ℝ Ω) ∈ tsdT Ω) : (hessCurl ℝ hΩ).d₁† ρ ∈ tsdS Ω := by
   have hDs : ∀ i j, (((hessCurl ℝ hΩ).d₁† ρ : symSub ℝ Ω) : L2F ℝ Ω Ix) (i, j) =
@@ -1088,9 +989,6 @@ theorem adjoint_hessCurl_d₁_mem_tsdS (hΩ : IsOpen Ω) (ρ : (hessCurl ℝ hΩ
     simp only [Equiv.prodComm_apply, Prod.swap_prod_mk, w]
     rw [hρs j k]
 
-/-- **Lemma 3.5 (symmetry part), weak form with no boundary condition**: if `B ∈ L²(TSD)` and
-`C` satisfies `∫ C : Ψ = ∫ B : curl Ψ` for the trace-free test fields `Ψ = e_j × ψ`, then `C` is
-symmetric. [QuennevilleBelair2015], Lemma 3.5 (§3.4) -/
 theorem symm_of_weakCurl_tsd (hΩ : IsOpen Ω) {B C : L2F ℝ Ω Ix} (hB : B ∈ tsd Ω)
     (h : ∀ ψ : Fin 3 → R3 → ℝ, IsTestField Ω ψ →
       ∑ ij, ∫ x, C ij x * skewOf ψ ij x ∂volume.restrict Ω =
@@ -1117,17 +1015,14 @@ theorem symm_of_weakCurl_tsd (hΩ : IsOpen Ω) {B C : L2F ℝ Ω Ix} (hB : B ∈
 
 end Lemma35
 
-/-! ## What propagates for (4.16): Props 4.16 and 4.18 -/
+/-! ## What propagates for (4.16) -/
 
 section Propagation
 
 variable {𝕜 : Type*} [RCLike 𝕜] {Ω : Set R3}
 
-/-- **Prop 4.16 for the complex (4.16) on `Ω`** (unconditional): for data `(0, E₀, B₀) ∈ D(L)`
-with `div div E₀ = 0` weakly (e.g. TSD data, `tsdS_le_ker`), the Hodge wave equation has a
-classical solution on `[a, b]`, unique among strong solutions, and for all `t`: `σ(t) = 0` and
-`div div E(t) = 0` weakly (`⟪E(t), ∇²φ⟫ = 0` for every test function `φ`). An instance of
-`Feec.ShortHilbertComplex.reducingSubcomplex_divFreeSub`. [QuennevilleBelair2015], Prop. 4.16 -/
+/-- For `(0, E₀, B₀) ∈ D(L)`, `div div E₀ = 0`, the Hodge wave equation of `hessCurl` has a unique
+classical solution, with `σ ≡ 0`, `div div E ≡ 0`. [QuennevilleBelair2015], Prop 4.16 (adapted) -/
 theorem hessCurl_divFree_propagates (hΩ : IsOpen Ω)
     {U₀ : PiLp 2 (ShortHilbertComplex.W3 (L2 𝕜 Ω) (symSub 𝕜 Ω) (trSub 𝕜 Ω))}
     (hU₀ : U₀ ∈ (hessCurl 𝕜 hΩ).wave.domain) (h0 : (U₀ 0 : L2 𝕜 Ω) = 0)
@@ -1147,12 +1042,8 @@ theorem hessCurl_divFree_propagates (hΩ : IsOpen Ω)
   obtain ⟨h0', h1', -⟩ := (ShortHilbertComplex.mem_totalSub_divFreeSub _).1 (hK t ht)
   exact ⟨h0', (mem_ker_adjoint_hessCurl_d₀_iff hΩ).1 h1'⟩
 
-/-- **Prop 4.18 for the complex (4.16) on `Ω`** (unconditional): for `E₀ ∈ H̊(curl, S)` with
-`div div E₀ = 0` and `B₀ ∈ H(sym curl, T)`, the reduced system `Ė = -sym curl B`, `Ḃ = curl E`
-has a solution, unique among strong solutions, `div div E = 0` for all time, and `(0, E, B)`
-solves the Hodge wave equation. An instance of
-`Feec.ShortHilbertComplex.existsUnique_reducedSolution_divFree`.
-[QuennevilleBelair2015], Prop. 4.18 -/
+/-- For `E₀ ∈ H̊(curl, S)`, `div div E₀ = 0`, `B₀ ∈ H(sym curl, T)`, the system `Ė = -sym curl B`,
+`Ḃ = curl E` has a unique solution. [QuennevilleBelair2015], Prop 4.18 (adapted) -/
 theorem hessCurl_existsUnique_reducedSolution (hΩ : IsOpen Ω) {E₀ : symSub 𝕜 Ω}
     {B₀ : trSub 𝕜 Ω} (hE₀ : E₀ ∈ (hessCurl 𝕜 hΩ).d₁.domain)
     (hE₀k : E₀ ∈ (hessCurl 𝕜 hΩ).d₀†.ker) (hB₀ : B₀ ∈ (hessCurl 𝕜 hΩ).d₁†.domain) (a b : ℝ) :

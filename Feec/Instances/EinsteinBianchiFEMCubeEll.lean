@@ -6,32 +6,18 @@ public import Feec.Instances.EinsteinBianchiFEMElliptic
 /-!
 # The thesis' scheme (6.5) on the cube: convergence from best approximation plus consistency
 
-For the approximating FEEC discretization `standardCubeApprox` of the thesis' scheme (6.5) with
-the thesis' boundary conditions (`Feec.Instances.EinsteinBianchiFEMCube`), this file builds the
-**elliptic core** `standardCubeEllCore`: data `D(L²)` (dense), with the elliptic projection (6.4)
-of the classical solution `Feec.EinsteinBianchi.BoundedConvergence.exactOfStrong` of the orbit as
-comparison trajectory (`Feec.Instances.EinsteinBianchi.FEM.ellTraj`). Its consistency defect
-`Πₕ' - Lₕ Πₕ` (not shown to be nonzero) is bounded by the projection errors of the state and of
-its time derivative (`norm_ellDefect_le`). The two hypotheses of the core are discharged by the
-Strang bound of (6.4) (`norm_sub_ellTraj_le`, with `Feec.BGG.Stability` of the cube data,
-`bggStability_curlPotentialConst`) and by the convergence of the smoothed projections
-(`eventually_cubeClose`), of the consistency constants (`eventually_cubeFEM_K0`,
-`eventually_cubeFEM_K1`); the model convergence theorem `cubeWave_converges` is not used. The
-comparison of a datum on `[0, T]` uses the orbit on the horizon `T + 1`.
+The elliptic core `standardCubeEllCore` of the scheme (6.5) of [QuennevilleBelair2015], §6.3 on the
+cube has the data `D(L²)` and the elliptic projection (6.4) of the classical solution as comparison
+trajectory.
 
-The verdict of the approximating FEEC theorem on this core is read through the complex-level front
-end (`Feec.Instances.EinsteinBianchiFEMComplex`, `standardCubeComplex`).
+## Main results
 
-**Faithfulness caveat.** As for `standardCubeApprox`: faithful to `cubeWave` (`S₀,ₕ = π¹S⁰` with
-the smoothed projections), not to the canonical-interpolant variant. That the defect is nonzero
-for some datum is not formalized.
+* `norm_cEll_defect_le`: the consistency defect is bounded by the projection errors.
+* `eventually_cErr_le`: the projection errors tend to `0` uniformly on `[0, T]`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.4)), §6.3 ((6.5), Table 6.1)
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  Thm 3.9, Thm 3.10 (elliptic analogue)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -55,8 +41,6 @@ open Feec.BGG.Discrete (strangConst)
 /-! ### The orbit of a datum of `D(L²)` as a classical solution of (6.2) -/
 
 set_option maxHeartbeats 4000000 in
-/-- **The orbit of a datum of `D(L²)`**, read in the forms model, is a strong solution whose `L`
-is a strong solution and whose `L²` is continuous, on `[0, T]`. -/
 theorem exists_cubeOrbit {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     (T : ℝ) : ∃ V : ℝ → WS, Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V ∧
@@ -96,7 +80,7 @@ theorem cubeOrbit_spec {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3
       ∀ t ∈ Icc 0 T, totalE.symm (matrixComplex.waveGroup.S t x) = cubeOrbit hx T t :=
   (exists_cubeOrbit hx T).choose_spec
 
-/-- **The classical solution of (6.2) of a datum of `D(L²)`** (cube data, no source). -/
+/-- The classical solution of (6.2) of a datum of `D(L²)`. -/
 def cubeExact {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     (T : ℝ) : Feec.BGG.ExactWave bggSegment T (srcFun 0) :=
@@ -111,8 +95,7 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-/-- The elliptic projection (6.4) at level `N` of the classical solution of `x` (horizon `T + 1`),
-as a hidden state. -/
+/-- The elliptic projection (6.4) at level `N` of the classical solution, as a hidden state. -/
 abbrev cEll (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     (T t : ℝ) : cubeHidden hT hB N :=
@@ -151,8 +134,6 @@ theorem norm_cEll_defect_le (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 �
     (fun t _ v => srcFun_zero_apply t v) (Icc_sub_Ico_add_one ht))
 
 set_option maxHeartbeats 1000000 in
-/-- The energy error of a hidden state against a classical solution, through the reading map of
-the cube. -/
 theorem norm_vec_sub_cubeFE (N : ℕ) {T : ℝ} (s : Feec.BGG.ExactWave bggSegment T (srcFun 0))
     (t : ℝ) (v : cubeHidden hT hB N) :
     ‖(exactWave_toSolution s).vec t - cubeFE hT hB N v‖ =
@@ -178,8 +159,6 @@ theorem norm_vec_sub_cubeFE (N : ℕ) {T : ℝ} (s : Feec.BGG.ExactWave bggSegme
   exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 hsq
 
 set_option maxHeartbeats 2000000 in
-/-- **The approximation error of the elliptic trajectory** through the reading map is its
-projection error. -/
 theorem norm_sub_cubeEmb_cEll (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     {T t : ℝ} (ht : t ∈ Icc 0 T) :
@@ -247,7 +226,7 @@ theorem cubeEllP'_of_mem (T : ℝ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (
     (N : ℕ) : cubeEllP' hT hB T x N = cEll' hT hB N hx T :=
   funext fun _ => dite_eq_left hx
 
-/-- **The elliptic comparison** of the thesis' scheme on `[0, T]`. -/
+/-- The elliptic comparison of the scheme on the cube on `[0, T]`. -/
 def cubeEllCmp (T : ℝ) : (standardCubeApprox hT hB).Comparison T where
   Data := matrixComplex.wave.domainSq
   p := cubeEllP hT hB T
@@ -285,9 +264,7 @@ theorem norm_sub_cubeEllCmp_le (T : ℝ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2
 abbrev cubeStrangK : ℝ := √(2 * (strangConst (2 * Real.pi)⁻¹ + 1))
 
 set_option maxHeartbeats 1000000 in
-/-- **The projection errors tend to `0` uniformly on `[0, T]`** (the smoothed projections converge
-on the compact trajectories, `eventually_cubeClose`; `K₀ → 0` on the represented multipliers,
-`eventually_cubeFEM_K0`; `K₁ → 0`, `eventually_cubeFEM_K1`). -/
+/-- **The projection errors tend to `0` uniformly on `[0, T]`.** -/
 theorem eventually_cErr_le {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
@@ -344,9 +321,7 @@ theorem eventually_cErr_le {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDoma
 
 /-! ### The elliptic core -/
 
-/-- **The elliptic core of the thesis' scheme**: `D(L²)` with the elliptic projection (6.4) of the
-classical solution of the orbit as comparison trajectory (bounded consistency defect);
-no convergence theorem of the scheme is used. -/
+/-- The elliptic core of the scheme on the cube. -/
 def standardCubeEllCore : (standardCubeApprox hT hB).Core where
   Data := matrixComplex.wave.domainSq
   cmp T := cubeEllCmp hT hB T

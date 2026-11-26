@@ -11,61 +11,18 @@ public import Feec.HilbertComplex.RestrictScalars
 /-!
 # The cube with tensorial mirror boundary conditions: TSD data propagate
 
-With the thesis' row-wise boundary conditions only stationary TSD data propagate on the cube
-(`Feec.Models.Cube.Parity`, `Feec.Models.Cube.Static`): row-wise conditions give `E_{ab}` and
-`E_{ba}` different parities. The **mirror conditions** let the reflection `x_k ↦ -x_k` of the
-torus `𝕋³` act on vectors by `D_k = diag(s_k)` and on matrices by `M ↦ ± D_k M D_k`
-(`s_k(a) = -1` if `a = k`, `1` otherwise). On the Fourier side of the torus grad–curl complex
-`Feec.Models.Torus.GradCurl.complex` these are the fibre symmetries `n ↦ flip_k n`,
-`v ↦ D_k v`, `E ↦ D_k E D_k`, `B ↦ -D_k B D_k` (`symmetries`): the symbols intertwine
-(`grad_flip`, `curl_flip`), and the TSD fibres are permuted (`matR_mem_tsd`). So the torus
-constraint `{0} × L²(TSD) × L²(TSD)` is invariant under the generated action of `(ℤ/2)³` and
-descends to every complex built from the fixed fields (`Feec.HilbertComplex.Action`,
-`Feec.HilbertComplex.ScaledEmbedding.reducingSubcomplex_comap`). Constraint propagation,
-existence and uniqueness, and `K* = K` follow from the general theorems
-(`Feec.HilbertComplex.ReducingSubcomplex.propagates`, `.existsUnique_mem`, `.invariantCore_eq`).
-
-Three realizations are treated, over `ℂ`:
-
-* the **parity model** `Mirror.complex`: the subcomplex of the torus complex fixed by the mirror
-  action (the method of images);
-* the **cube `Q = (0, ½)³`** `Mirror.complexQ`: genuine fields
-  `L²(Q; ℂ³) → L²(Q; ℂ³ˣ³) → L²(Q; ℂ³ˣ³)`, the compression of the torus complex along the mirror
-  extensions (`Mirror.J`, `Feec.Models.Cube.MirrorExt.extF`; a scaled embedding with scale `8`,
-  `Mirror.embeddingQ`). Its differentials are the weak gradient and curl on `Q`, between the
-  minimal and the maximal realizations (`Feec.Models.Cube.MirrorDirichlet`); the boundary
-  conditions are `σ · n = 0` and `E_{nτ} = 0` (encoded by the parities), the constraint is
-  `{0} × TSD × TSD` with the wall conditions `E_{τn} = 0`, `B_{nn} = 0` (`Mirror.tsdQ`,
-  `Mirror.mem_tsdQ_one`);
-* **every open cube** `∏ (bᵢ, bᵢ + s)` (`Mirror.complexCube`), the transport of `complexQ` along
-  the pull-back by `x ↦ (x - b)/(2s)` (`Feec.Domain.pullF`, chain-rule factor `(2s)⁻¹`).
-
-A non-stationary TSD datum, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, shows that the constraint has
-dynamical content in every realization (`Mirror.exists_nonstationary`, `_Q`, `_Cube`).
-
-## Main definitions
-
-* `Mirror.symmetries`, `Mirror.action`, `Mirror.complex`, `Mirror.constraint`.
-* `Mirror.J`, `Mirror.complexQ`, `Mirror.embeddingQ`, `Mirror.tsdQ`.
-* `Mirror.complexCube`, `Mirror.embeddingCube`, `Mirror.tsdCube`.
+With the mirror conditions the TSD constraint reduces the mirror cube complexes, so TSD data
+propagate in the parity model, on `Q = (0, ½)³` and on every open cube.
 
 ## Main results
 
-* **`Mirror.reducingSubcomplex`**, `Mirror.propagates`, `Mirror.existsUnique_mem`,
-  `Mirror.invariantCore_eq`, `Mirror.exists_nonstationary`.
-* **`Mirror.reducingSubcomplexQ`**, `Mirror.propagatesQ`, `Mirror.existsUnique_memQ`,
-  `Mirror.invariantCore_eqQ`, `Mirror.exists_nonstationaryQ`; `Mirror.range_J`
-  (the mirror extensions are onto the fixed fields).
-* **`Mirror.reducingSubcomplexCube`**, `Mirror.propagatesCube`, `Mirror.existsUnique_memCube`,
-  `Mirror.invariantCore_eqCube`, `Mirror.exists_nonstationaryCube`, and the cases `(0, π)³`,
-  `(0, 1)³`.
+* `Mirror.reducingSubcomplexQ`, `Mirror.reducingSubcomplexCube`: the TSD constraint reduces them.
+* `Mirror.existsUnique_memQ`: existence, uniqueness and TSD propagation on `Q`.
+* `Mirror.exists_nonstationaryQ`: a non-stationary TSD datum on `Q`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17, (4.14), (4.15)); Ch. 7 (the unit cube)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -87,8 +44,7 @@ open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_comm flipAt_neg)
 /-- The parity of the component `σ_a` of a mirror vector in `x_k`: `s_k(a)` (`σ · n = 0`). -/
 def cV (a k : Fin 3) : ℂ := sgn k a
 
-/-- The parity of the entry `E_{ab}` of a mirror tensor in `x_k`: `s_k(a) s_k(b)`
-(`E_{nτ} = 0`). -/
+/-- The parity `s_k(a) s_k(b)` of the entry `E_{ab}` of a mirror tensor in `x_k`. -/
 def cE (p : Fin 3 × Fin 3) (k : Fin 3) : ℂ := sgn k p.1 * sgn k p.2
 
 /-- The parity of the entry `B_{ab}` of a mirror pseudo-tensor in `x_k`: `-s_k(a) s_k(b)`. -/
@@ -129,7 +85,6 @@ theorem curl_flip (k : Fin 3) (n : Fin 3 → ℤ) (M : Mat) :
   linear_combination (Complex.I * sgn k a * (Fourier.Torus.freq n c : ℂ) * M (a, d)) *
     leviCivita3_sgn k b c d
 
-/-- The TSD fibres are permuted by the reflections. -/
 theorem matR_mem_tsd (k : Fin 3) (n : Fin 3 → ℤ) {s : Fin 3 × Fin 3 → ℂ}
     (hs : ∀ p, s p = s (p.2, p.1)) (hd : ∀ a, s (a, a) = s (0, 0))
     (hsgn : ∀ p, s p = s (0, 0) * (sgn k p.1 * sgn k p.2)) {M : Mat}
@@ -190,31 +145,25 @@ def symmetries : (Fourier.Torus.symbolComplex gradCurl).Symmetries (Fin 3) where
 abbrev action : Models.Torus.GradCurl.complex.Action (Multiplicative (Fin 3 → ZMod 2)) :=
   symmetries.toAction
 
-/-- **The mirror cube complex** (parity model): the fields of the torus complex with the mirror
-parities, i.e. the fixed complex of `action` (method of images). -/
+/-- **The mirror cube complex** (parity model): the fixed complex of `action`. -/
 abbrev complex := action.fixedComplex
 
-/-- The fields with the mirror parities are those fixed by each reflection. -/
 theorem mem_fixed_iff {i : Fin 3} {x : Models.Torus.GradCurl.Space i} :
     x ∈ action.fixed i ↔ ∀ k, symLp (symmetries.R k) (fib k i) x = x :=
   symmetries.mem_fixed_toAction
 
-/-- The fixed vector fields are the coefficient sequences with the parities `cV`. -/
 theorem mem_fixed_zero {x : Models.Torus.GradCurl.Space 0} :
     x ∈ action.fixed 0 ↔ x ∈ fieldParity cV :=
   mem_fixed_iff.trans (mem_fieldParity_iff_symLp cV_sq).symm
 
-/-- The fixed matrix fields of the second slot have the tensor parities `cE`. -/
 theorem mem_fixed_one {x : Models.Torus.GradCurl.Space 1} :
     x ∈ action.fixed 1 ↔ x ∈ fieldParity cE :=
   mem_fixed_iff.trans (mem_fieldParity_iff_symLp cE_sq).symm
 
-/-- The fixed matrix fields of the third slot have the pseudo-tensor parities `cB`. -/
 theorem mem_fixed_two {x : Models.Torus.GradCurl.Space 2} :
     x ∈ action.fixed 2 ↔ x ∈ fieldParity cB :=
   mem_fixed_iff.trans (mem_fieldParity_iff_symLp cB_sq).symm
 
-/-- The TSD constraint fibres are permuted by the reflections. -/
 theorem fib_mem_tsdK (k i : Fin 3) (n : Fin 3 → ℤ) {v : W3 Vec Mat Mat i}
     (hv : v ∈ tsdK i (Fourier.Torus.freq (flipAt k n))) :
     fib k i v ∈ tsdK i (Fourier.Torus.freq n) := by
@@ -230,7 +179,6 @@ theorem fib_mem_tsdK (k i : Fin 3) (n : Fin 3 → ℤ) {v : W3 Vec Mat Mat i}
   · exact matR_mem_tsd k n (s := fun p => cB p k) (fun p => by simp only [cB]; ring)
       (fun a => by simp only [cB, sgn_mul_self]) (fun p => by simp only [cB, sgn_mul_self]; ring) hv
 
-/-- The mirror action preserves the TSD constraint `{0} × L²(TSD) × L²(TSD)`. -/
 theorem act_mem_constraint (g : Multiplicative (Fin 3 → ZMod 2)) (i : Fin 3)
     {x : Models.Torus.GradCurl.Space i} (hx : x ∈ Models.Torus.GradCurl.constraint i) :
     action.act g i x ∈ Models.Torus.GradCurl.constraint i :=
@@ -241,24 +189,16 @@ theorem act_mem_constraint (g : Multiplicative (Fin 3 → ZMod 2)) (i : Fin 3)
 abbrev constraint (i : Fin 3) : Submodule ℂ (action.fixed i) :=
   (Models.Torus.GradCurl.constraint i).comap (action.fixed i).subtype
 
-/-- **The TSD constraint reduces the mirror cube complex** (the projection hypothesis of
-Prop 4.17 holds with mirror boundary conditions).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   action.reducingSubcomplex_comap_fixed Models.Torus.GradCurl.reducingSubcomplex
     act_mem_constraint
 
-/-- **Prop 4.17 on the cube with mirror boundary conditions** (parity model, any time interval,
-with forcing): TSD data and forcing give strong solutions that stay TSD.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => action.fixed i}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ totalSub constraint) (hF : ∀ t ∈ Icc a b, F t ∈ totalSub constraint) :
     ∀ t ∈ Icc a b, U t ∈ totalSub constraint :=
   reducingSubcomplex.propagates hU h0 hF
 
-/-- Prop 4.17 on the mirror cube with existence and uniqueness (parity model).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem existsUnique_mem {U₀ : PiLp 2 fun i => action.fixed i} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ totalSub constraint) {F : ℝ → PiLp 2 fun i => action.fixed i} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -269,8 +209,6 @@ theorem existsUnique_mem {U₀ : PiLp 2 fun i => action.fixed i} (hU₀ : U₀ �
         EqOn V U (Icc a b) :=
   reducingSubcomplex.existsUnique_mem hU₀ hU₀K hF hFK
 
-/-- `K* = K` on the mirror cube (parity model): the constraint is its own invariant core.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem invariantCore_eq :
     complex.waveGroup.invariantCore (totalSub constraint) = totalSub constraint :=
   reducingSubcomplex.invariantCore_eq
@@ -367,8 +305,6 @@ theorem cosE_mem_constraint : cosE ∈ Models.Torus.GradCurl.constraint 1 := by
   · exact M0_mem_tsd h
   · exact Submodule.zero_mem _
 
-/-- `curl (2 cos(2π x₃) diag(1, -1, 0)) ≠ 0`: the `(0, 1)` entry of `curl_{ξ(k₀)} M₀` is
-`2π i`. -/
 theorem curl_M0_ne : curl (Fourier.Torus.freq k0) M0 ≠ 0 := by
   intro h
   have := congrArg (fun M : Mat => M (0, 1)) h
@@ -412,7 +348,6 @@ theorem curl_cosE_apply :
   rw [coe_cosE]
   simp [cosCoeff]
 
-/-- **`L (0, E₀, 0) ≠ 0`**: its `B`-component is `curl E₀ ≠ 0`. -/
 theorem wave_cosState_ne :
     Models.Torus.GradCurl.complex.wave ⟨cosState, cosState_mem_domain⟩ ≠ 0 := by
   intro h
@@ -441,9 +376,6 @@ theorem cosState_mem_constraint (i : Fin 3) :
 def cosStateFixed : PiLp 2 fun i => action.fixed i :=
   WithLp.toLp 2 fun i => ⟨cosState i, cosState_mem_fixed i⟩
 
-/-- **A non-stationary TSD datum propagates on the mirror cube** (parity model):
-`(0, 2 cos(2π x₃) diag(1, -1, 0), 0)` lies in `D(L) ∩ K` and is not stationary.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem exists_nonstationary :
     ∃ y ∈ complex.wave.domain, y ∈ totalSub constraint ∧ y ∉ complex.waveGroup.stationary := by
   obtain ⟨h1, h2⟩ := action.reducingSubcomplex_fixed.not_mem_stationary
@@ -463,8 +395,7 @@ abbrev MQ : Type := Domain.L2F ℂ (Q (Fin 3)) (Fin 3 × Fin 3)
 /-- The spaces `L²(Q; ℂ³)`, `L²(Q; ℂ³ˣ³)`, `L²(Q; ℂ³ˣ³)` of the mirror complex on `Q`. -/
 abbrev SpaceQ (i : Fin 3) : Type := W3 VQ MQ MQ i
 
-/-- **The mirror extensions** `L²(Q) → ℓ²(ℤ³)`: `σ_a` extended with parity `s_k(a)`, `E_{ab}`
-with `s_k(a) s_k(b)`, `B_{ab}` with `-s_k(a) s_k(b)` in `x_k`, then Fourier coefficients. -/
+/-- **The mirror extensions** `L²(Q) → ℓ²(ℤ³)`, by the mirror parities and Fourier coefficients. -/
 def J : ∀ i : Fin 3, SpaceQ i →L[ℂ] Models.Torus.GradCurl.Space i
   | 0 => extF (c := cV) cV_sq
   | 1 => extF (c := cE) cE_sq
@@ -473,7 +404,6 @@ def J : ∀ i : Fin 3, SpaceQ i →L[ℂ] Models.Torus.GradCurl.Space i
 theorem two_pow_card : ((2 ^ Fintype.card (Fin 3) : ℝ) : ℂ) = ((8 : ℝ) : ℂ) := by
   norm_num [Fintype.card_fin]
 
-/-- **The mirror extensions multiply inner products by `8`.** -/
 theorem inner_J (i : Fin 3) (x y : SpaceQ i) :
     ⟪J i x, J i y⟫_ℂ = ((8 : ℝ) : ℂ) * ⟪x, y⟫_ℂ := by
   fin_cases i
@@ -483,7 +413,6 @@ theorem inner_J (i : Fin 3) (x y : SpaceQ i) :
 
 theorem eight_pos : (0 : ℝ) < 8 := by norm_num
 
-/-- **The mirror extensions are onto the fields with the mirror parities.** -/
 theorem range_J (i : Fin 3) :
     LinearMap.range (J i : SpaceQ i →ₗ[ℂ] Models.Torus.GradCurl.Space i) = action.fixed i := by
   ext x
@@ -502,16 +431,13 @@ instance (i : Fin 3) : (LinearMap.range
     (J i : SpaceQ i →ₗ[ℂ] Models.Torus.GradCurl.Space i)).HasOrthogonalProjection := by
   rw [range_J]; infer_instance
 
-/-- The ranges of the mirror extensions form a reducing subcomplex (the fixed fields). -/
 theorem reducingSubcomplex_range :
     Models.Torus.GradCurl.complex.ReducingSubcomplex fun i =>
       LinearMap.range (J i : SpaceQ i →ₗ[ℂ] Models.Torus.GradCurl.Space i) := by
   convert action.reducingSubcomplex_fixed using 1
   exact funext range_J
 
-/-- **The mirror complex of genuine fields on `Q`**:
-`L²(Q; ℂ³) --grad--> L²(Q; ℂ³ˣ³) --curl--> L²(Q; ℂ³ˣ³)` with `σ · n = 0` and `E_{nτ} = 0`, the
-compression of the torus complex along the mirror extensions (`d = J⁻¹ d_{𝕋³} J`). -/
+/-- **The mirror complex of genuine fields on `Q`**, the compression of the torus complex by `J`. -/
 abbrev complexQ : HilbertComplex ℂ ComplexShape.fin3 SpaceQ :=
   Models.Torus.GradCurl.complex.compress J eight_pos inner_J reducingSubcomplex_range
 
@@ -519,7 +445,6 @@ abbrev complexQ : HilbertComplex ℂ ComplexShape.fin3 SpaceQ :=
 def embeddingQ : ScaledEmbedding complexQ Models.Torus.GradCurl.complex :=
   ScaledEmbedding.ofCompress eight_pos inner_J reducingSubcomplex_range
 
-/-- `J d = d_{𝕋³} J`. -/
 theorem J_complexQ_d {i j : Fin 3} (x : (complexQ.d i j).domain) :
     J j (complexQ.d i j x) = Models.Torus.GradCurl.complex.d i j
       ⟨J i x, (HilbertComplex.mem_compress_domain_iff eight_pos inner_J _).1 x.2⟩ :=
@@ -534,7 +459,6 @@ theorem mem_complexQ_adjoint_domain_iff {i j : Fin 3} {y : SpaceQ j} :
       J j y ∈ ((Models.Torus.GradCurl.complex.d i j)†).domain :=
   HilbertComplex.mem_adjoint_compress_iff eight_pos inner_J reducingSubcomplex_range
 
-/-- `J d† = d_{𝕋³}† J`. -/
 theorem J_complexQ_adjoint {i j : Fin 3} (y : ((complexQ.d i j)†).domain) :
     J i ((complexQ.d i j)† y) = (Models.Torus.GradCurl.complex.d i j)†
       ⟨J j y, mem_complexQ_adjoint_domain_iff.1 y.2⟩ :=
@@ -576,7 +500,6 @@ theorem cE_eq_update₂ (a b : Fin 3) :
   funext k
   fin_cases a <;> fin_cases b <;> fin_cases k <;> simp [cE, cB, sgn, Function.update]
 
-/-- The coefficients of the extension of a test field. -/
 theorem coeff_extPi_testField {P : Type*} [Fintype P] [DecidableEq P] {c : P → Fin 3 → ℂ}
     (hc : ∀ p k, c p k * c p k = 1) {Φ : P → R3 → ℂ} (hΦ : IsTestField (Q (Fin 3)) Φ)
     (n : Fin 3 → ℤ) (p : P) :
@@ -590,9 +513,6 @@ theorem coeff_extPi_testField' {P : Type*} [Fintype P] [DecidableEq P] {c : P �
       WithLp.toLp 2 fun p => mFourierCoeff (Geometry.ext (c p) (Φ p)) n :=
   PiLp.ext fun p => coeff_extPi_testField hc hΦ n p
 
-/-- The curl of extensions: the coefficient identity for the row-wise curl, for parities with
-`c_out (a, b) = c_in (a, b + 2)` and `c_in (a, b + 1)` with the parity of `x_{b+1}`, resp.
-`x_{b+2}`, reversed. -/
 theorem coeff_ext_curl {cin cout : Fin 3 × Fin 3 → Fin 3 → ℂ}
     (h₁ : ∀ a b, cout (a, b) = Function.update (cin (a, b + 2)) (b + 1) (-cin (a, b + 2) (b + 1)))
     (h₂ : ∀ a b, cout (a, b) = Function.update (cin (a, b + 1)) (b + 2) (-cin (a, b + 1) (b + 2)))
@@ -616,8 +536,6 @@ variable {cv : Fin 3 → Fin 3 → ℂ} {cm cm' : Fin 3 × Fin 3 → Fin 3 → �
   (hcv : ∀ a k, cv a k * cv a k = 1) (hcm : ∀ p k, cm p k * cm p k = 1)
   (hcm' : ∀ p k, cm' p k * cm' p k = 1)
 
-/-- **`grad` commutes with extensions of test fields** whenever the matrix parities are the
-vector parities with the parity of the differentiated variable reversed. -/
 theorem grad_extF_testField (h : ∀ a b, cm (a, b) = Function.update (cv a) b (-cv a b))
     {φ : Fin 3 → R3 → ℂ} (hφ : IsTestField (Q (Fin 3)) φ) :
     ∃ h : extF hcv (testField hφ) ∈ (Models.Torus.GradCurl.complex.d 0 1).domain,
@@ -633,7 +551,6 @@ theorem grad_extF_testField (h : ∀ a b, cm (a, b) = Function.update (cv a) b (
   rw [e, mFourierCoeff_ext_fderiv' b (h a b) (hφ a), Fourier.Torus.freq_apply]
   push_cast; ring
 
-/-- **`div` commutes with extensions of test fields** (`grad† = -div` on `𝕋³`). -/
 theorem adjoint_grad_extF_testField (h : ∀ a b, cv a = Function.update (cm (a, b)) b (-cm (a, b) b))
     {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
     ∃ h : extF hcm (testField hΨ) ∈ ((Models.Torus.GradCurl.complex.d 0 1)†).domain,
@@ -656,8 +573,6 @@ theorem adjoint_grad_extF_testField (h : ∀ a b, cv a = Function.update (cm (a,
     Fourier.Torus.freq_apply]
   push_cast; ring
 
-/-- **`curl` commutes with extensions of test fields** (tensor parities in, pseudo-tensor parities
-out, or conversely). -/
 theorem curl_extF_testField
     (h₁ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 2)) (b + 1) (-cm (a, b + 2) (b + 1)))
     (h₂ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 1)) (b + 2) (-cm (a, b + 1) (b + 2)))
@@ -672,7 +587,6 @@ theorem curl_extF_testField
   rw [coeff_extPi_testField, gradCurl_m12, coeff_ext_curl h₁ h₂ hΦ n a b,
     coeff_extPi_testField']
 
-/-- **`curl† = curl` commutes with extensions of test fields.** -/
 theorem adjoint_curl_extF_testField
     (h₁ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 2)) (b + 1) (-cm (a, b + 2) (b + 1)))
     (h₂ : ∀ a b, cm' (a, b) = Function.update (cm (a, b + 1)) (b + 2) (-cm (a, b + 1) (b + 2)))
@@ -704,32 +618,24 @@ theorem adjoint_curl_extF_testField
   rw [apply_eq_of_eq hadj _ ⟨_, h⟩ rfl]
   exact e
 
-/-- **`grad ∘ J₀ = J₁ ∘ grad` on test fields**: the mirror extension of a test vector field lies
-in `H¹(𝕋³)` and its gradient is the mirror extension of the gradient. -/
 theorem grad_J_testField {φ : Fin 3 → R3 → ℂ} (hφ : IsTestField (Q (Fin 3)) φ) :
     ∃ h : J 0 (testField hφ) ∈ (Models.Torus.GradCurl.complex.d 0 1).domain,
       Models.Torus.GradCurl.complex.d 0 1 ⟨_, h⟩ =
         J 1 (testField ((gradOp 3 3 : ConstCoeffOp R3 ℂ _ _).isTestField_apply hφ)) :=
   grad_extF_testField cV_sq cE_sq cE_eq_update hφ
 
-/-- **`curl ∘ J₁ = J₂ ∘ curl` on test fields.** -/
 theorem curl_J_testField {Φ : Fin 3 × Fin 3 → R3 → ℂ} (hΦ : IsTestField (Q (Fin 3)) Φ) :
     ∃ h : J 1 (testField hΦ) ∈ (Models.Torus.GradCurl.complex.d 1 2).domain,
       Models.Torus.GradCurl.complex.d 1 2 ⟨_, h⟩ =
         J 2 (testField ((curlOp 3 : ConstCoeffOp R3 ℂ _ _).isTestField_apply hΦ)) :=
   curl_extF_testField cE_sq cB_sq cB_eq_update₁ cB_eq_update₂ hΦ
 
-/-- **`div ∘ J₁ = J₀ ∘ div` on test fields**: the mirror extension of a test matrix field (tensor
-parities) lies in `D(grad†) = H(div; 𝕋³)` and `grad† = -div` maps it to the mirror extension of
-`-div`. -/
 theorem adjoint_grad_J_testField {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
     ∃ h : J 1 (testField hΨ) ∈ ((Models.Torus.GradCurl.complex.d 0 1)†).domain,
       (Models.Torus.GradCurl.complex.d 0 1)† ⟨_, h⟩ =
         J 0 (testField ((gradOp 3 3 : ConstCoeffOp R3 ℂ _ _).formalAdj.isTestField_apply hΨ)) :=
   adjoint_grad_extF_testField cV_sq cE_sq cV_eq_update hΨ
 
-/-- **`curl† ∘ J₂ = J₁ ∘ curl` on test fields** (`curl† = curl`, pseudo-tensor parities in,
-tensor parities out). -/
 theorem adjoint_curl_J_testField {Ψ : Fin 3 × Fin 3 → R3 → ℂ} (hΨ : IsTestField (Q (Fin 3)) Ψ) :
     ∃ h : J 2 (testField hΨ) ∈ ((Models.Torus.GradCurl.complex.d 1 2)†).domain,
       (Models.Torus.GradCurl.complex.d 1 2)† ⟨_, h⟩ =
@@ -749,7 +655,6 @@ theorem cB_eq_update (a b : Fin 3) : cB (a, b) = Function.update (cPV a) b (-cPV
   funext k
   fin_cases a <;> fin_cases b <;> fin_cases k <;> simp [cB, cPV, sgn, Function.update]
 
-/-- **TSD fields are divergence-free**: `L²(TSD) ⊆ ker grad† = ker div` on `𝕋³`. -/
 theorem constraint_le_ker_adjoint :
     Models.Torus.GradCurl.constraint 1 ≤ ((Models.Torus.GradCurl.complex.d 0 1)†).ker := by
   intro u hu
@@ -774,10 +679,6 @@ variable {cv : Fin 3 → Fin 3 → ℂ} {cm : Fin 3 × Fin 3 → Fin 3 → ℂ}
   (hcv : ∀ a k, cv a k * cv a k = 1) (hcm : ∀ p k, cm p k * cm p k = 1)
 
 include hcv in
-/-- **A field on `Q` whose extension is TSD on `𝕋³` is TSD on `Q`**: symmetric, trace-free and
-weakly divergence-free (`⟪E, grad φ⟫ = 0` for every test field `φ`, no boundary condition), for
-parities `cm` symmetric in the indices, constant on the diagonal, and obtained from vector
-parities `cv` by `grad`. -/
 theorem tsd_of_extF_mem (hsym : ∀ a b, cm (a, b) = cm (b, a)) (hdiag : ∀ a, cm (a, a) = cm (0, 0))
     (hgrad : ∀ a b, cm (a, b) = Function.update (cv a) b (-cv a b)) {E : MQ}
     (hE : extF hcm E ∈ Models.Torus.GradCurl.constraint 1) :
@@ -821,16 +722,13 @@ theorem tsd_of_extF_mem (hsym : ∀ a b, cm (a, b) = cm (b, a)) (hdiag : ∀ a, 
 
 end TSD
 
-/-- **The constraint on `Q`**: the pull-back `{0} × J₁⁻¹ L²(TSD) × J₂⁻¹ L²(TSD)` of the torus
-constraint, TSD fields on `Q` with the wall conditions `E_{τn} = 0`, `B_{nn} = 0`
-(`mem_tsdQ_one`). -/
+/-- **The constraint on `Q`**: the pull-back of the torus constraint along the mirror extensions. -/
 abbrev tsdQ (i : Fin 3) : Submodule ℂ (SpaceQ i) :=
   (Models.Torus.GradCurl.constraint i).comap (J i : SpaceQ i →ₗ[ℂ] Models.Torus.GradCurl.Space i)
 
 instance (i : Fin 3) : (tsdQ i).HasOrthogonalProjection :=
   embeddingQ.comap_hasOrthogonalProjection i _
 
-/-- The first slot of the constraint is `{0}`. -/
 theorem mem_tsdQ_zero {σ : VQ} : σ ∈ tsdQ 0 ↔ σ = 0 := by
   constructor
   · intro h
@@ -840,8 +738,6 @@ theorem mem_tsdQ_zero {σ : VQ} : σ ∈ tsdQ 0 ↔ σ = 0 := by
     exact embeddingQ.J_injective 0 (h0.trans (_root_.map_zero _).symm)
   · rintro rfl; exact Submodule.zero_mem _
 
-/-- **The electric constraint on `Q` consists of TSD fields**: symmetric, trace-free and weakly
-divergence-free in `Q` (and, by construction, divergence-free across the faces: `E_{τn} = 0`). -/
 theorem mem_tsdQ_one {E : MQ} (hE : E ∈ tsdQ 1) :
     (∀ i j, E (i, j) = E (j, i)) ∧ ∑ i, E (i, i) = 0 ∧
       ∀ φ : Fin 3 → Feec.Models.BoundedDomain.R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -850,8 +746,6 @@ theorem mem_tsdQ_one {E : MQ} (hE : E ∈ tsdQ 1) :
   tsd_of_extF_mem cV_sq cE_sq (fun a b => funext fun k => by simp only [cE]; ring)
     (fun a => funext fun k => by simp only [cE, sgn_mul_self]) cE_eq_update hE
 
-/-- **The magnetic constraint on `Q` consists of TSD fields** (with `B_{nn} = 0` across the
-faces). -/
 theorem mem_tsdQ_two {B : MQ} (hB : B ∈ tsdQ 2) :
     (∀ i j, B (i, j) = B (j, i)) ∧ ∑ i, B (i, i) = 0 ∧
       ∀ φ : Fin 3 → Feec.Models.BoundedDomain.R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -860,7 +754,6 @@ theorem mem_tsdQ_two {B : MQ} (hB : B ∈ tsdQ 2) :
   tsd_of_extF_mem cPV_sq cB_sq (fun a b => funext fun k => by simp only [cB]; ring)
     (fun a => funext fun k => by simp only [cB, sgn_mul_self]) cB_eq_update hB
 
-/-- The TSD projections preserve the fixed fields, i.e. the range of `J`. -/
 theorem exists_J_eq_starProjection (i : Fin 3) (x : SpaceQ i) :
     ∃ y, J i y = (Models.Torus.GradCurl.constraint i).starProjection (J i x) := by
   have hx : J i x ∈ action.fixed i := range_J i ▸ LinearMap.mem_range_self _ x
@@ -869,25 +762,19 @@ theorem exists_J_eq_starProjection (i : Fin 3) (x : SpaceQ i) :
   obtain ⟨y, hy⟩ := h
   exact ⟨y, hy⟩
 
-/-- **TSD reduces the mirror complex on `Q`** (pull-back of the torus constraint along the
-mirror extensions).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **TSD reduces the mirror complex on `Q`** ([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem reducingSubcomplexQ : complexQ.ReducingSubcomplex tsdQ :=
   embeddingQ.reducingSubcomplex_comap Models.Torus.GradCurl.reducingSubcomplex
     exists_J_eq_starProjection
 
-/-- **Prop 4.17 on `Q` with mirror boundary conditions**: TSD data and forcing give TSD
-solutions (any time interval).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem propagatesQ {a b : ℝ} {F U : ℝ → PiLp 2 SpaceQ}
     (hU : Evolution.IsStrongSolution complexQ.wave (Icc a b) F U) (h0 : U a ∈ totalSub tsdQ)
     (hF : ∀ t ∈ Icc a b, F t ∈ totalSub tsdQ) : ∀ t ∈ Icc a b, U t ∈ totalSub tsdQ :=
   reducingSubcomplexQ.propagates hU h0 hF
 
-/-- Prop 4.17 on `Q` with existence and uniqueness: for `(0, E₀, B₀) ∈ D(L)` with `E₀`, `B₀`
-in the constraint, the Hodge wave equation (4.14) has a classical solution, unique among strong
-solutions, with `σ ≡ 0` and `E`, `B` TSD for all time.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **Existence and uniqueness of TSD solutions on `Q`**: for data in `D(L) ∩ K` and admissible
+forcing in `K`, a classical solution, unique among strong solutions, that stays in `K`
+([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem existsUnique_memQ {U₀ : PiLp 2 SpaceQ} (hU₀ : U₀ ∈ complexQ.wave.domain)
     (hU₀S : U₀ ∈ totalSub tsdQ) {F : ℝ → PiLp 2 SpaceQ} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complexQ.wave a b F)
@@ -898,8 +785,7 @@ theorem existsUnique_memQ {U₀ : PiLp 2 SpaceQ} (hU₀ : U₀ ∈ complexQ.wave
         EqOn V U (Icc a b) :=
   reducingSubcomplexQ.existsUnique_mem hU₀ hU₀S hF hFS
 
-/-- `K* = K` on `Q`.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- `K* = K` on `Q` ([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem invariantCore_eqQ : complexQ.waveGroup.invariantCore (totalSub tsdQ) = totalSub tsdQ :=
   reducingSubcomplexQ.invariantCore_eq
 
@@ -935,7 +821,6 @@ theorem cosStateQ_mem_domain : cosStateQ ∈ complexQ.wave.domain :=
 theorem cosEQ_mem_domain : cosEQ ∈ (complexQ.d 1 2).domain := by
   rw [← cosStateQ_one]; exact cosStateQ_mem_domain.1 1 2
 
-/-- **`curl E₀ ≠ 0` on `Q`.** -/
 theorem complexQ_d_cosEQ_ne : complexQ.d 1 2 ⟨cosEQ, cosEQ_mem_domain⟩ ≠ 0 := by
   intro h
   have h1 := J_complexQ_d (i := 1) (j := 2) ⟨cosEQ, cosEQ_mem_domain⟩
@@ -946,9 +831,8 @@ theorem complexQ_d_cosEQ_ne : complexQ.d 1 2 ⟨cosEQ, cosEQ_mem_domain⟩ ≠ 0
   rw [← curl_cosE_apply, h2]
   exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) k0
 
-/-- **A non-stationary TSD datum on `Q`**: `(0, (2 cos(2π x₃) diag(1, -1, 0))|_Q, 0)` lies in
-`D(L) ∩ K` and is not stationary.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **A non-stationary TSD datum on `Q`**: some `y ∈ D(L) ∩ K` is not stationary
+([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem exists_nonstationaryQ :
     ∃ y ∈ complexQ.wave.domain, y ∈ totalSub tsdQ ∧ y ∉ complexQ.waveGroup.stationary := by
   have hd : HilbertComplex.totalJ J cosStateQ ∈ Models.Torus.GradCurl.complex.wave.domain :=
@@ -972,7 +856,6 @@ variable {b : R3} {s : ℝ} (hs : 0 < s)
 
 theorem inv_two_mul_ne (hs : 0 < s) : (2 * s)⁻¹ ≠ 0 := inv_ne_zero (by positivity)
 
-/-- `T x = (x - b)/(2s)` maps the open cube `∏ (bᵢ, bᵢ + s)` onto `Q`. -/
 theorem preimage_aff_Q (hs : 0 < s) (b : R3) :
     Domain.aff (2 * s)⁻¹ (-((2 * s)⁻¹ • b)) ⁻¹' Q (Fin 3) = openCube b s := by
   have h2s : 0 < 2 * s := by positivity
@@ -1025,9 +908,7 @@ def kappa (s : ℝ) : Fin 3 → Fin 3 → ℂ := fun _ _ => (((2 * s)⁻¹ : ℝ
 theorem kappa_ne_zero (hs : 0 < s) (i j : Fin 3) : kappa s i j ≠ 0 :=
   RCLike.ofReal_ne_zero.2 (inv_two_mul_ne hs)
 
-/-- **The mirror complex on the open cube** `∏ (bᵢ, bᵢ + s)`: the transport of `complexQ` along the
-pull-back by `x ↦ (x - b)/(2s)`, with the chain-rule factor `(2s)⁻¹`; the boundary conditions are
-`σ · n = 0`, `E_{nτ} = 0` on the faces. -/
+/-- **The mirror complex on the open cube** `∏ (bᵢ, bᵢ + s)`, the transport of `complexQ`. -/
 abbrev complexCube (b : R3) (s : ℝ) (hs : 0 < s) :
     HilbertComplex ℂ ComplexShape.fin3 (SpaceCube b s) :=
   complexQ.transport (eCube b s hs) (kappa s) (kappa_ne_zero hs)
@@ -1037,32 +918,26 @@ def embeddingCube : ScaledEmbedding (complexCube b s hs) complexQ :=
   ScaledEmbedding.ofTransportSymm (eCube b s hs) (kappa s) (kappa_ne_zero hs)
     (fun _ => (Domain.jac (E := R3) (2 * s)⁻¹)⁻¹) (fun _ => jac_inv_pos hs) (inner_eCube hs)
 
-/-- The constraint on the cube: the fields whose transplant to `Q` satisfies the constraint
-`tsdQ` (TSD with the mirror wall conditions). -/
+/-- The constraint on the cube: the fields whose transplant to `Q` lies in `tsdQ`. -/
 abbrev tsdCube (b : R3) (s : ℝ) (hs : 0 < s) (i : Fin 3) : Submodule ℂ (SpaceCube b s i) :=
   (tsdQ i).comap ((eCube b s hs i).symm : SpaceCube b s i →ₗ[ℂ] SpaceQ i)
 
 instance (i : Fin 3) : (tsdCube b s hs i).HasOrthogonalProjection :=
   (embeddingCube hs).comap_hasOrthogonalProjection i _
 
-/-- **TSD reduces the mirror complex on every open cube.**
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **TSD reduces the mirror complex on every open cube**
+([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem reducingSubcomplexCube : (complexCube b s hs).ReducingSubcomplex (tsdCube b s hs) :=
   (embeddingCube hs).reducingSubcomplex_comap reducingSubcomplexQ fun i x =>
     ⟨eCube b s hs i ((tsdQ i).starProjection ((eCube b s hs i).symm x)),
       (eCube b s hs i).symm_apply_apply _⟩
 
-/-- **Prop 4.17 on every open cube with mirror boundary conditions**: TSD data and forcing give
-TSD solutions; in particular on `(0, π)³` and on the unit cube `(0, 1)³` meshed in Ch. 7.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (SpaceCube b s)}
     (hU : Evolution.IsStrongSolution (complexCube b s hs).wave (Icc a c) F U)
     (h0 : U a ∈ totalSub (tsdCube b s hs)) (hF : ∀ t ∈ Icc a c, F t ∈ totalSub (tsdCube b s hs)) :
     ∀ t ∈ Icc a c, U t ∈ totalSub (tsdCube b s hs) :=
   (reducingSubcomplexCube hs).propagates hU h0 hF
 
-/-- Prop 4.17 on every open cube, with existence and uniqueness.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem existsUnique_memCube {U₀ : PiLp 2 (SpaceCube b s)}
     (hU₀ : U₀ ∈ (complexCube b s hs).wave.domain) (hU₀S : U₀ ∈ totalSub (tsdCube b s hs))
     {F : ℝ → PiLp 2 (SpaceCube b s)} {a c : ℝ}
@@ -1074,15 +949,11 @@ theorem existsUnique_memCube {U₀ : PiLp 2 (SpaceCube b s)}
         EqOn V U (Icc a c) :=
   (reducingSubcomplexCube hs).existsUnique_mem hU₀ hU₀S hF hFS
 
-/-- `K* = K` on every open cube.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem invariantCore_eqCube :
     (complexCube b s hs).waveGroup.invariantCore (totalSub (tsdCube b s hs)) =
       totalSub (tsdCube b s hs) :=
   (reducingSubcomplexCube hs).invariantCore_eq
 
-/-- Prop 4.17 with mirror boundary conditions on `(0, π)³`.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem existsUnique_memCube_pi {U₀ : PiLp 2 (SpaceCube 0 Real.pi)}
     (hU₀ : U₀ ∈ (complexCube 0 Real.pi Real.pi_pos).wave.domain)
     (hU₀S : U₀ ∈ totalSub (tsdCube 0 Real.pi Real.pi_pos)) {F : ℝ → PiLp 2 (SpaceCube 0 Real.pi)}
@@ -1096,9 +967,6 @@ theorem existsUnique_memCube_pi {U₀ : PiLp 2 (SpaceCube 0 Real.pi)}
         (Icc a c) F V → EqOn V U (Icc a c) :=
   existsUnique_memCube Real.pi_pos hU₀ hU₀S hF hFS
 
-/-- Prop 4.17 with mirror boundary conditions on the unit cube `(0, 1)³` (the domain meshed in
-Ch. 7; the Ch. 7 test solution, with time-dependent boundary values, is not covered).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected), Ch. 7. -/
 theorem existsUnique_memCube_unit {U₀ : PiLp 2 (SpaceCube 0 1)}
     (hU₀ : U₀ ∈ (complexCube 0 1 one_pos).wave.domain)
     (hU₀S : U₀ ∈ totalSub (tsdCube 0 1 one_pos)) {F : ℝ → PiLp 2 (SpaceCube 0 1)}
@@ -1118,8 +986,6 @@ theorem totalMap_symm_cosStateCube :
     HilbertComplex.totalMap (fun i => (eCube b s hs i).symm) (cosStateCube b s hs) = cosStateQ :=
   PiLp.ext fun i => (eCube b s hs i).symm_apply_apply _
 
-/-- **A non-stationary TSD datum on every open cube.**
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem exists_nonstationaryCube :
     ∃ y ∈ (complexCube b s hs).wave.domain, y ∈ totalSub (tsdCube b s hs) ∧
       y ∉ (complexCube b s hs).waveGroup.stationary := by
@@ -1151,8 +1017,6 @@ theorem gradOp_isHomogeneous :
   simp only [Domain.gradOp] at ht
   split_ifs at ht <;> simp_all
 
-/-- **TSD fields pull back to TSD fields**: the conditions symmetric, trace-free and weakly
-divergence-free on `Q` transfer to the cube `∏ (bᵢ, bᵢ + s)` along `T x = (x - b)/(2s)`. -/
 theorem tsd_of_pullCube {E₀ : MQ}
     (h : (∀ i j, E₀ (i, j) = E₀ (j, i)) ∧ ∑ i, E₀ (i, i) = 0 ∧
       ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,

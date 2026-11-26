@@ -6,36 +6,13 @@ public import Feec.ForMathlib.Calculus.SecondDifference
 /-!
 # Consistency of one-step schemes along trajectories
 
-`Feec.TimeStepping.IsConsistent` measures a scheme `P` against the flow `e^{τL}` in operator form,
-`‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖`, so the global error of `Pⁿ v` is controlled by
-`‖L^{p+1} v‖`. On finite element spaces `‖Lₕ‖` grows as `h → 0`, and a bound on `‖Lₕ^{p+1} vₕ‖`
-uniform in `h` is not available for the usual discrete initial values. The classical way out
-([Thomee2006], Ch. 1 and 7) tests the scheme on a **smooth comparison trajectory** instead (the
-Ritz projection of the exact solution): the local error of `P` on a curve `q` is the quadrature
-remainder of `q`, bounded by its `(p + 1)`-st time derivative, plus the defect `q' - L q`. This
-file states that property and proves it for the θ-schemes.
-
-## Main results
-
-* **Quadrature remainders** with right derivatives (`norm_thetaRule_le`, `norm_trapezoid_le`): for
-  `f` with right derivatives `f₁, f₂(, f₃)` on `[a, b)`,
-  `‖f(b) - f(a) - (b - a) (θ f₁(b) + (1 - θ) f₁(a))‖ ≤ (θ + 1/2) (b - a)² sup ‖f₂‖` (`θ ≥ 0`) and
-  `‖f(b) - f(a) - (b - a)/2 (f₁(b) + f₁(a))‖ ≤ (b - a)³/12 sup ‖f₃‖` (the sharp constant).
-* `norm_le_norm_sub_smul_apply`: `‖e‖ ≤ ‖e - c L e‖` for dissipative `L` and `c ≥ 0`.
-* `IsTrajConsistent L P τ p K`: for every curve `q₀` on `[a, a + τ]` with right derivatives
-  `q₁, …, q_{p+1}`, `‖q_{p+1}‖ ≤ B` and `‖q₁ - L q₀‖ ≤ D`,
-  `‖q₀(a + τ) - P q₀(a)‖ ≤ K τ^{p+1} B + τ D`.
-* `norm_sub_thetaStep_le`: the local error of the θ-scheme (`0 < θ ≤ 1`) is at most the θ-rule
-  remainder plus `τ D`; hence **`isTrajConsistent_thetaStep`** (order `1`, `K = θ + 1/2`) and
-  **`isTrajConsistent_thetaStep_half`** (Crank–Nicolson, order `2`, `K = 1/12`), uniformly in the
-  bounded dissipative `L`.
+Consistency along smooth trajectories: for the θ-schemes (`0 < θ ≤ 1`) of bounded dissipative
+operators, the local error on a curve `q` is at most a quadrature remainder of `q` plus `τ` times a
+bound of the defect `q' - L q`.
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1 (the
-  Ritz projection of the exact solution as comparison function, backward Euler and
-  Crank–Nicolson), Ch. 7 (single step methods)
-* [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1, Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -53,8 +30,6 @@ section Quadrature
 
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
 
-/-- **The θ-rule remainder** (`θ ≥ 0`): for `f` with right derivatives `f₁`, `f₂` on `[a, b)`
-and `‖f₂‖ ≤ B`, `‖f(b) - f(a) - (b - a) (θ f₁(b) + (1 - θ) f₁(a))‖ ≤ (θ + 1/2) (b - a)² B`. -/
 theorem norm_thetaRule_le {f f₁ f₂ : ℝ → X} {a b θ B : ℝ} (hab : a ≤ b) (hθ : 0 ≤ θ)
     (hf : ContinuousOn f (Icc a b)) (hf₁ : ContinuousOn f₁ (Icc a b))
     (h1 : ∀ t ∈ Ico a b, HasDerivWithinAt f (f₁ t) (Ici t) t)
@@ -85,8 +60,6 @@ theorem norm_thetaRule_le {f f₁ f₂ : ℝ → X} {a b θ B : ℝ} (hab : a �
     convert hg using 2; norm_num
   nlinarith
 
-/-- **The backward Euler remainder**: for `f` with derivatives `f₁`, `f₂` on `[a, a + τ]` and
-`‖f₂‖ ≤ B`, `‖f(a + τ) - f(a) - τ f₁(a + τ)‖ ≤ 3/2 τ² B` (`norm_thetaRule_le`, `θ = 1`). -/
 theorem norm_sub_sub_smul_le {f f₁ f₂ : ℝ → X} {a τ B : ℝ} (hτ : 0 ≤ τ)
     (hf : ∀ t ∈ Icc a (a + τ), HasDerivAt f (f₁ t) t)
     (hf₁ : ∀ t ∈ Icc a (a + τ), HasDerivAt f₁ (f₂ t) t) (hB : ∀ t ∈ Icc a (a + τ), ‖f₂ t‖ ≤ B) :
@@ -101,9 +74,6 @@ theorem norm_sub_sub_smul_le {f f₁ f₂ : ℝ → X} {a τ B : ℝ} (hτ : 0 �
   simp only [add_sub_cancel_left, one_smul, sub_self, zero_smul, add_zero] at hq
   convert hq using 2; norm_num
 
-/-- **The trapezoidal (Crank–Nicolson) remainder**, with the sharp constant: for `f` with right
-derivatives `f₁`, `f₂`, `f₃` on `[a, b)` and `‖f₃‖ ≤ B`,
-`‖f(b) - f(a) - (b - a)/2 (f₁(b) + f₁(a))‖ ≤ (b - a)³ B / 12`. -/
 theorem norm_trapezoid_le {f f₁ f₂ f₃ : ℝ → X} {a b B : ℝ} (hab : a ≤ b)
     (hf : ContinuousOn f (Icc a b)) (hf₁ : ContinuousOn f₁ (Icc a b))
     (hf₂ : ContinuousOn f₂ (Icc a b))
@@ -156,7 +126,6 @@ variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [InnerProductSpac
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
-/-- `1 - c L` does not decrease norms for dissipative `L` and `c ≥ 0`: `‖e‖ ≤ ‖e - c L e‖`. -/
 theorem norm_le_norm_sub_smul_apply (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {c : ℝ} (hc : 0 ≤ c)
     (e : X) : ‖e‖ ≤ ‖e - (c : 𝕜) • L e‖ := by
   have h1 : ‖e‖ ^ 2 ≤ RCLike.re ⟪e - (c : 𝕜) • L e, e⟫ := by
@@ -168,10 +137,7 @@ theorem norm_le_norm_sub_smul_apply (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {
   push Not at hlt
   nlinarith [norm_nonneg (e - (c : 𝕜) • L e)]
 
-/-- A scheme `P` is **consistent of order `p` with constant `K` along trajectories** of
-`u' = L u` with time step `τ`: for every curve `q 0` on `[a, a + τ]` with right derivatives
-`q 1, …, q (p + 1)` (`q j` the `j`-th), `‖q (p + 1)‖ ≤ B` and defect `‖q 1 - L (q 0)‖ ≤ D`,
-`‖q 0 (a + τ) - P (q 0 a)‖ ≤ K τ^{p+1} B + τ D`. [Thomee2006], Ch. 1 and 7 -/
+/-- `P` is consistent of order `p` with constant `K` along trajectories of `u' = L u`. -/
 def IsTrajConsistent (L P : X →L[𝕜] X) (τ : ℝ) (p : ℕ) (K : ℝ) : Prop :=
   ∀ (q : ℕ → ℝ → X) (a B D : ℝ),
     (∀ j ≤ p, ContinuousOn (q j) (Icc a (a + τ))) →
@@ -182,10 +148,6 @@ def IsTrajConsistent (L P : X →L[𝕜] X) (τ : ℝ) (p : ℕ) (K : ℝ) : Pro
 
 variable [CompleteSpace X]
 
-/-- **The local error of the θ-scheme** (`0 < θ ≤ 1`, `τ > 0`, `L` bounded dissipative): for
-states `y`, `u` with velocities `y₁`, `u₁` and defects `‖y₁ - L y‖, ‖u₁ - L u‖ ≤ D`,
-`‖y - r_θ(τ L) u‖ ≤ ‖y - u - τ (θ y₁ + (1 - θ) u₁)‖ + τ D`: the θ-rule remainder plus the
-defect. -/
 theorem norm_sub_thetaStep_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ τ : ℝ} (hθ : 0 < θ)
     (hθ1 : θ ≤ 1) (hτ : 0 < τ) {y u y₁ u₁ : X} {D : ℝ} (hy : ‖y₁ - L y‖ ≤ D)
     (hu : ‖u₁ - L u‖ ≤ D) :

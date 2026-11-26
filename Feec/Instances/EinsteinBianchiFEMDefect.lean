@@ -6,67 +6,20 @@ public import Feec.Instances.EinsteinBianchiGauss
 /-!
 # The cochain defect of the scheme (6.5)
 
-The scheme (6.5) of [QuennevilleBelair2015], §6.3, is an approximating family of discrete
-differential spaces (`Feec.HilbertComplex.ApproxComplexCrime`) whose discrete BGG differential
-`𝐝ₕ (σ, u, M, ρ) = (0, -d̃ Φ(σ, 0), S₁,ₕ u, d̃ u)` (`Feec.Instances.EinsteinBianchi.FEM.diffGen`) is
-built with `S₀,ₕ = π¹S⁰` and `S₁,ₕ = π²S¹`, so the reading maps are not cochain maps. In
-`Feec.Instances.EinsteinBianchiFEMComplex` the cochain defect
-`Feec.HilbertComplex.ApproxComplexCrime.Family.cochainDefect` is absorbed by the Galerkin identity
-of (6.4) and not computed. This file computes it and bounds it: `O(h)` for the thesis' boundary
-conditions, `0` on TSD states for mirror boundary conditions.
-
-**The formula.** Along a source-free classical solution `(σ, φ, u, M, ρ, ℓ)` of (6.2), the
-cochain defect pairs with a hidden state `v = (σᵥ, uᵥ, Mᵥ, ρᵥ)` as
-`⟪κₕ, v⟫ = -ℓ((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M, (S₁ - S₁,ₕ) uᵥ⟫`, `S₀ - S₀,ₕ = (I - π¹) S⁰`,
-`S₁ - S₁,ₕ = (I - π²) S¹` (`cochainDefectForm`): exactly the two consistency functionals whose
-norms `K₀`, `K₁` enter the Strang bound of (6.4) (`Feec.BGG.Discrete.strangData`), evaluated at
-the discrete potential `Φ(σᵥ, 0)` of `Γₕ` (`S₀,ₕ Φ(σᵥ, 0) = dσᵥ`, `defectPhi`) and at `uᵥ`. At the
-energy level this is the identity `⟪ξ, 𝐝ₕ v⟫ + ⟪σ', σᵥ⟫ + ⟪d̃ φ + u', uᵥ⟫ = κ(v)`
-(`cochainDefectForm_eq`, from (6.2a) at `(σᵥ, Φ(σᵥ, 0))` and (6.2b) at `uᵥ`), whose middle terms
-are `-⟪𝐝* ξ, v⟫` in the energy components: on a three-term complex
-`⟪𝐝* y, z⟫ = -⟪(L y)₀, z₀⟫ + ⟪(𝐝 y)₁ - (L y)₁, z₁⟫`
-(`Feec.HilbertComplex.inner_dual_totalD_fin3`).
+The cochain defect of the discrete BGG differential of the scheme (6.5) of
+[QuennevilleBelair2015], §6.3 pairs with a hidden state `v` as
+`κ(v) = -ℓ((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M, (S₁ - S₁,ₕ) uᵥ⟫` along a classical solution.
 
 ## Main results
 
-* `cochainDefectForm_eq`: the weak cochain defect identity, for any discrete BGG segment;
-  `abs_cochainDefectForm_le`: `|κ(v)| ≤ (K₀ √(1 + C_P²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)` (dual discrete
-  graph norm), with the consistency constants of the Strang bound and a Poincaré constant of `d̃`;
-  `cochainDefectForm_eq_zero`, `cochainDefectForm_eq_zero_of`: it vanishes when the consistency
-  functionals vanish, in particular when `ℓ(t) = 0` and `M(t) = 0`.
-* **The thesis' boundary conditions** (`standardCubeComplex`):
-  `inner_standardCube_cochainDefect`: the cochain defect of the family at the exact state
-  `e^{tL} x`, `x ∈ D(L²)`, **is** the formula, for the classical solution `cubeExact` of the orbit
-  (the degree-`1` part of `𝐝` goes through the forms model, `inner_formsTotalD_part1`, and the
-  unitary transport `Feec.HilbertComplex.inner_totalD_map_of_eq`);
-  `exists_standardCube_cochainDefect_le_mesh`: it is `O(h)` in the dual discrete graph norm,
-  `|⟪κₙ, v⟫| ≤ (C₀ Λ + K c) h_N (‖v‖ + ‖𝐝ₙ v‖)`, at every time at which the multiplier is an `L²`
-  functional (`|ℓ(t) μ| ≤ Λ ‖μ‖`) and `M(t) ∈ D(d₁*)` with `‖M(t)‖, ‖d₁* M(t)‖ ≤ c` (these
-  regularity hypotheses are assumed, not derived from the datum);
-  `eventually_standardCube_cochainDefect_le`: it tends to `0` uniformly on `[0, T]` for every
-  datum of `D(L²)` (`K₀, K₁ → 0`).
-* **Mirror boundary conditions** (`mirrorFamily`, the family of `mirrorComplex` built directly
-  from the discretization): `mirrorFamily_cochainDefect_eq_zero` (and
-  `mirrorComplex_cochainDefect_eq_zero`): the cochain defect **vanishes** at every TSD state of
-  `D(L)`, with the reason: a TSD state has no degree-`0` part and no `M`-slot and a
-  divergence-free `E`; so `𝐝 y` has no degree-`1` part, `L y` (TSD again) no degree-`0` part,
-  the gradient `-d̃ Φ(σᵥ, 0)` of `𝐝ₕ v` pairs to `0` with `E`, the crime `S₁ - S₁,ₕ` only meets
-  the vanishing `M`-slot, and the rest cancels by `E' = -d₁† (0, B)` (`mirror_realDefect_eq_zero`,
-  `inner_rowsW1L_wave_add`); in the language of the formula, TSD solutions have `ℓ ≡ 0` and
-  `M ≡ 0`. This is the `K₀ = K₁ = 0` of the mirror Strang bound, now at the level of the family.
-
-**Not proved.** That the cochain defect is nonzero for some mesh and datum: by the formula it
-would need `ℓ(t)((I - π¹) S⁰ Φ(σᵥ, 0)) ≠ 0` or `⟪M(t), (I - π²) S¹ uᵥ⟫ ≠ 0` for the smoothed
-cochain projections of the thesis' boundary conditions, an explicit finite element computation.
-The `O(h)` bound for the thesis' boundary conditions assumes the regularity of `ℓ(t)` and
-`M(t)`.
+* `abs_cochainDefectForm_le`: `|κ(v)| ≤ (K₀ √(1 + C_P²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)`.
+* `exists_standardCube_cochainDefect_le_mesh`: on the cube, the cochain defect is `O(h)` for
+  multipliers bounded in `L²` and `M(t) ∈ D(d₁*)`.
+* `mirrorFamily_cochainDefect_eq_zero`: for mirror boundary conditions it vanishes at TSD states.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.2), (6.4)), §6.3 ((6.5))
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (§3.3, Thm 3.10)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -86,18 +39,15 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W : Fin 3 → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 ComplexShape.fin3 W)
 
-/-- `𝐝` has no degree-`0` component on a three-term complex. -/
 theorem totalD_apply_zero_fin3 (x : H.totalD.domain) : (H.totalD x) 0 = 0 := by
   rw [totalD_apply]
   exact Finset.sum_eq_zero fun i _ => H.apply_eq_zero_of_not_rel (by simp) _
 
-/-- The degree-`1` component of `𝐝` on a three-term complex: `(𝐝 x)₁ = d₀₁ x₀`. -/
 theorem totalD_apply_one_fin3 (x : H.totalD.domain) :
     (H.totalD x) 1 = H.d 0 1 ⟨(x : PiLp 2 W) 0, x.2 0 1⟩ := by
   rw [totalD_apply, Fin.sum_univ_three, H.apply_eq_zero_of_not_rel (i := 1) (j := 1) (by simp),
     H.apply_eq_zero_of_not_rel (i := 2) (j := 1) (by simp), add_zero, add_zero]
 
-/-- `𝐝*` has no degree-`2` component on a three-term complex. -/
 theorem dual_totalD_apply_two_fin3 (y : H.dual.totalD.domain) : (H.dual.totalD y) 2 = 0 := by
   rw [totalD_apply]
   refine Finset.sum_eq_zero fun i _ => H.dual.apply_eq_zero_of_not_rel ?_ _
@@ -106,25 +56,19 @@ theorem dual_totalD_apply_two_fin3 (y : H.dual.totalD.domain) : (H.dual.totalD y
   omega
 
 omit [∀ i, CompleteSpace (W i)] in
-/-- The inner product of `PiLp 2 W` over three degrees. -/
 theorem inner_fin3 (z w : PiLp 2 W) : ⟪z, w⟫_𝕜 = ⟪z 0, w 0⟫_𝕜 + ⟪z 1, w 1⟫_𝕜 + ⟪z 2, w 2⟫_𝕜 := by
   rw [PiLp.inner_apply, Fin.sum_univ_three]
 
 omit [∀ i, CompleteSpace (W i)] in
-/-- Testing against a vector of degree `1`. -/
 theorem inner_eq_of_deg1_fin3 {z w : PiLp 2 W} (h0 : w 0 = 0) (h2 : w 2 = 0) :
     ⟪z, w⟫_𝕜 = ⟪z 1, w 1⟫_𝕜 := by
   rw [inner_fin3, h0, h2, inner_zero_right, inner_zero_right, zero_add, add_zero]
 
 omit [∀ i, CompleteSpace (W i)] in
-/-- Testing against a vector of degree `0`. -/
 theorem inner_eq_of_deg0_fin3 {z w : PiLp 2 W} (h1 : w 1 = 0) (h2 : w 2 = 0) :
     ⟪z, w⟫_𝕜 = ⟪z 0, w 0⟫_𝕜 := by
   rw [inner_fin3, h1, h2, inner_zero_right, inner_zero_right, add_zero, add_zero]
 
-/-- **`𝐝* y` from `L y` and `𝐝 y`** on a three-term complex, for `y ∈ D(L)`:
-`⟪𝐝* y, z⟫ = -⟪(L y)₀, z₀⟫ + ⟪(𝐝 y)₁ - (L y)₁, z₁⟫` (`L = 𝐝 - 𝐝*`, `(𝐝 y)₀ = 0`,
-`(𝐝* y)₂ = 0`). -/
 theorem inner_dual_totalD_fin3 (y : H.wave.domain) (z : PiLp 2 W) :
     ⟪H.dual.totalD ⟨y, y.2.2⟩, z⟫_𝕜 = -⟪(H.wave y) 0, z 0⟫_𝕜 +
       ⟪(H.totalD ⟨y, y.2.1⟩) 1 - (H.wave y) 1, z 1⟫_𝕜 := by
@@ -133,14 +77,12 @@ theorem inner_dual_totalD_fin3 (y : H.wave.domain) (z : PiLp 2 W) :
   rw [inner_fin3, dual_totalD_apply_two_fin3, inner_zero_left, add_zero, e, PiLp.sub_apply,
     PiLp.sub_apply, totalD_apply_zero_fin3, zero_sub, inner_neg_left]
 
-/-- `⟪𝐝* y, z⟫ = -⟪(L y)₁, z₁⟫` when `(L y)₀ = 0` and `(𝐝 y)₁ = 0`. -/
 theorem inner_dual_totalD_fin3_of (y : H.wave.domain) (h0 : (H.wave y) 0 = 0)
     (h1 : (H.totalD ⟨y, y.2.1⟩) 1 = 0) (z : PiLp 2 W) :
     ⟪H.dual.totalD ⟨y, y.2.2⟩, z⟫_𝕜 = -⟪(H.wave y) 1, z 1⟫_𝕜 := by
   rw [inner_dual_totalD_fin3, h0, h1, inner_zero_left, neg_zero, zero_add, zero_sub,
     inner_neg_left]
 
-/-- `(𝐝 y)₂ = (L y)₂` on a three-term complex (`(𝐝* y)₂ = 0`). -/
 theorem totalD_apply_two_eq_wave_fin3 (y : H.wave.domain) :
     (H.totalD ⟨y, y.2.1⟩) 2 = (H.wave y) 2 := by
   rw [wave_eq_sub, PiLp.sub_apply, dual_totalD_apply_two_fin3, sub_zero]
@@ -155,8 +97,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)] [∀ i, CompleteSpace (W' i)]
 
-/-- **Unitary transport conjugates the total differentials**, weakly: for `H' = H.map u`,
-`⟪𝐝' y, u z⟫ = ⟪𝐝 (u⁻¹ y), z⟫`. -/
 theorem inner_totalD_map_of_eq {H : HilbertComplex 𝕜 c W} {H' : HilbertComplex 𝕜 c W'}
     {u : ∀ i, W i ≃ₗᵢ[𝕜] W' i} (hH : H' = H.map u) (y : H'.totalD.domain) (z : PiLp 2 W) :
     ∃ hy : (totalIso u).symm (y : PiLp 2 W') ∈ H.totalD.domain,
@@ -224,8 +164,7 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h] [FiniteDimensional ℝ Q.Wt2h]
   (hdinj : Function.Injective Q.toSegmentH.dt0) (hS : Function.Surjective Q.toSegmentH.S0)
 
-/-- The discrete potential `Φ(σ, 0) ∈ Ṽₕ⁰` of the degree-`0` part of a hidden state:
-`S₀,ₕ Φ(σ, 0) = dσ` (`S0_phiMap`), `d̃ Φ(σ, 0) ⊥ d̃(ker S₀,ₕ)`. -/
+/-- The discrete potential `Φ(σ, 0) ∈ Ṽₕ⁰` of the degree-`0` part of a hidden state. -/
 def defectPhi (v : HiddenState Q.toSegmentH) : Q.Vt0h :=
   phiMap Q.toSegmentH hdinj hS (v.toEState.σ, 0)
 
@@ -236,19 +175,13 @@ theorem S0h_defectPhi (v : HiddenState Q.toSegmentH) :
 
 variable {T : ℝ} {g : ℝ → Vt1 →ₗ[ℝ] ℝ}
 
-/-- **The cochain defect form** of the discrete BGG differential `𝐝ₕ` against an exact solution
-of (6.2): `κ(v) = -ℓ((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M, (S₁ - S₁,ₕ) uᵥ⟫`, with `S₀,ₕ = π¹S⁰`,
-`S₁,ₕ = π²S¹`, so `S₀ - S₀,ₕ = (I - π¹) S⁰`, `S₁ - S₁,ₕ = (I - π²) S¹`. -/
+/-- The cochain defect form `κ(v) = -ℓ((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M, (S₁ - S₁,ₕ) uᵥ⟫`. -/
 def cochainDefectForm (s : ExactWave D T g) (t : ℝ) (v : HiddenState Q.toSegmentH) : ℝ :=
   -s.ℓ t ((D.S0 - Q.S0h) (defectPhi Q hdinj hS v : Vt0)) -
     ⟪s.M t, (D.S1 - Q.S1h) (v.toEState.u : Vt1)⟫
 
-/-- **The weak cochain defect identity** of the scheme [QuennevilleBelair2015], (6.5): along a
-source-free exact solution of (6.2), for every hidden state `v`,
-`⟪ξ, 𝐝ₕ v⟫ + ⟪σ', σᵥ⟫ + ⟪d̃ φ + u', uᵥ⟫ = -ℓ((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M, (S₁ - S₁,ₕ) uᵥ⟫`
-(from (6.2a) at `(σᵥ, Φ(σᵥ, 0))`, (6.2b) at `uᵥ`, and `S₀,ₕ Φ(σᵥ, 0) = dσᵥ`). The middle terms
-are `-⟪𝐝* ξ, v⟫` read in the energy components (`(𝐝* ξ)₀ = -σ'`, `(𝐝* ξ)₁ = -d̃ φ - u'`), so
-the left side is the pairing of the cochain defect with `v`. -/
+/-- **The weak cochain defect identity** along a source-free exact solution of (6.2).
+[QuennevilleBelair2015], (6.5) -/
 theorem cochainDefectForm_eq (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t v = 0)
     {t : ℝ} (ht : t ∈ Ico 0 T) (v : HiddenState Q.toSegmentH) :
     ⟪exState s t, coeH Q (diffGen Q.toSegmentH hdinj hS v).toEState⟫ +
@@ -272,7 +205,6 @@ theorem cochainDefectForm_eq (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ 
   simp only [LinearMap.sub_apply, inner_sub_right, inner_add_left, map_sub] at hℓ ha ⊢
   linarith
 
-/-- The components of `𝐝ₕ v = (0, -d̃ Φ(σᵥ, 0), S₁,ₕ uᵥ, d̃ uᵥ)`, in norms. -/
 theorem norm_diffGen_sq (v : HiddenState Q.toSegmentH) :
     ‖diffGen Q.toSegmentH hdinj hS v‖ ^ 2 = ‖D.dt0 (defectPhi Q hdinj hS v : Vt0)‖ ^ 2 +
       ‖Q.S1h (v.toEState.u : Vt1)‖ ^ 2 + ‖D.dt1 (v.toEState.u : Vt1)‖ ^ 2 := by
@@ -287,8 +219,6 @@ theorem norm_dt0_defectPhi_le (v : HiddenState Q.toSegmentH) :
   refine le_of_pow_le_pow_left₀ two_ne_zero (norm_nonneg _) ?_
   rw [h]; nlinarith [sq_nonneg ‖Q.S1h (v.toEState.u : Vt1)‖, sq_nonneg ‖D.dt1 (v.toEState.u : Vt1)‖]
 
-/-- The `h`-dependent graph norm of `uᵥ` is at most the discrete graph norm of `v`:
-`‖uᵥ‖² + ‖S₁,ₕ uᵥ‖² + ‖d̃ uᵥ‖² ≤ ‖v‖² + ‖𝐝ₕ v‖²`. -/
 theorem gnSq_le (v : HiddenState Q.toSegmentH) :
     Q.gnSq (v.toEState.u : Vt1) ≤ ‖v‖ ^ 2 + ‖diffGen Q.toSegmentH hdinj hS v‖ ^ 2 := by
   have h := norm_diffGen_sq Q hdinj hS v
@@ -300,10 +230,8 @@ theorem gnSq_le (v : HiddenState Q.toSegmentH) :
   nlinarith [sq_nonneg ‖v.toEState.σ‖, sq_nonneg ‖v.toEState.M‖, sq_nonneg ‖v.toEState.ρ‖,
     sq_nonneg ‖D.dt0 (defectPhi Q hdinj hS v : Vt0)‖]
 
-/-- **The cochain defect form is bounded by the consistency constants** of the Strang bound of
-(6.4), in the dual discrete graph norm: with a Poincaré inequality `‖φ‖ ≤ C_P ‖d̃ φ‖` on `Ṽ⁰`
-and `|ℓ((S₀ - S₀,ₕ) ψ)| ≤ K₀ ‖ψ‖_{H(d̃)}`, `|⟪M, (S₁ - S₁,ₕ) w⟫| ≤ K₁ ‖w‖_{Γₕ}` on the finite
-element spaces, `|κ(v)| ≤ (K₀ √(1 + C_P²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)`. -/
+/-- **The cochain defect form is bounded by the consistency constants**:
+`|κ(v)| ≤ (K₀ √(1 + C_P²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)`. -/
 theorem abs_cochainDefectForm_le (s : ExactWave D T g) (t : ℝ) {Cp K0 K1 : ℝ} (hK0' : 0 ≤ K0)
     (hK1' : 0 ≤ K1) (hP : ∀ φ : Vt0, ‖φ‖ ≤ Cp * ‖D.dt0 φ‖)
     (hK0 : ∀ ψ ∈ Q.Vt0h, |s.ℓ t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
@@ -344,8 +272,6 @@ theorem abs_cochainDefectForm_le (s : ExactWave D T g) (t : ℝ) {Cp K0 K1 : ℝ
     _ = (K0 * √(1 + Cp ^ 2) + K1) * n := by ring
 
 omit [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Wt2h] in
-/-- **The cochain defect form vanishes when the consistency functionals vanish**:
-`ℓ((S₀ - S₀,ₕ) ψ) = 0` on `Ṽₕ⁰` and `⟪M, (S₁ - S₁,ₕ) w⟫ = 0` on `Ṽₕ¹`. -/
 theorem cochainDefectForm_eq_zero (s : ExactWave D T g) (t : ℝ)
     (hℓ : ∀ ψ ∈ Q.Vt0h, s.ℓ t ((D.S0 - Q.S0h) ψ) = 0)
     (hM : ∀ w ∈ Q.Vt1h, ⟪s.M t, (D.S1 - Q.S1h) w⟫ = 0) (v : HiddenState Q.toSegmentH) :
@@ -354,8 +280,6 @@ theorem cochainDefectForm_eq_zero (s : ExactWave D T g) (t : ℝ)
   rw [hℓ _ (defectPhi Q hdinj hS v).2, hM _ v.toEState.u.2, neg_zero, sub_zero]
 
 omit [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.W2h] [FiniteDimensional ℝ Q.Wt2h] in
-/-- In particular **it vanishes when the multiplier and `M` vanish** (`ℓ(t) = 0`, `M(t) = 0`), as
-for the mirror TSD solutions. -/
 theorem cochainDefectForm_eq_zero_of (s : ExactWave D T g) {t : ℝ} (hℓ : s.ℓ t = 0)
     (hM : s.M t = 0) (v : HiddenState Q.toSegmentH) :
     cochainDefectForm Q hdinj hS s t v = 0 :=
@@ -364,7 +288,7 @@ theorem cochainDefectForm_eq_zero_of (s : ExactWave D T g) {t : ℝ} (hℓ : s.�
 
 end Energy
 
-/-! ### The thesis' boundary conditions: the cochain defect of `standardCubeComplex` -/
+/-! ### The cochain defect of `standardCubeComplex` -/
 
 section Cube
 
@@ -408,9 +332,6 @@ theorem cubeEmb_part1_two (N : ℕ) (v : cubeHidden hT hB N) :
     (cubeEmb hT hB N v.part1) 2 = 0 := cubeEmb_part0_two hT hB N v
 
 set_option maxHeartbeats 4000000 in
-/-- **The degree-`1` part of `𝐝` in the forms model, against a discrete reading**: for
-`V ∈ D(L)`, `⟪𝐝 V, ι(0, uᵥ, 0, 0)⟫ = -⟪d̃ φ(V), uᵥ⟫` (`(𝐝 V)₁ = d₀ V₀ = -d̃ φ(V)`,
-`projK_comp1_waveOf`, `incl1_dt0_φOf`). -/
 theorem inner_formsTotalD_part1 {V : WS} (hV : V ∈ formsShort.wave.domain)
     (hV' : V ∈ formsComplex.totalD.domain) (N : ℕ) (v : cubeHidden hT hB N) :
     ⟪formsComplex.totalD ⟨V, hV'⟩, vecInv (cubeFE hT hB N v.part1)⟫ =
@@ -434,13 +355,11 @@ theorem inner_formsTotalD_part1 {V : WS} (hV : V ∈ formsShort.wave.domain)
   exact (inner_neg_left (𝕜 := ℝ) (incl1 (bggSegment.dt0 (rp (φOf V)))) _).trans
     (congrArg Neg.neg (inner_wv_U1 _ _).symm)
 
-/-- The exact orbit stays in `D(L)`. -/
 theorem matrix_waveGroup_mem_domain {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     (t : ℝ) : matrixComplex.waveGroup.S t x ∈ matrixComplex.wave.domain :=
   waveGroup_mem_domain matrixComplex (LinearPMap.domainSq_le_domain hx) t
 
-/-- `L e^{tL} x = e^{tL} L x`. -/
 theorem matrix_wave_waveGroup {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) (t : ℝ) :
@@ -450,7 +369,6 @@ theorem matrix_wave_waveGroup {x : PiLp 2 (ShortHilbertComplex.W3
     (waveExt_waveGroup matrixComplex (LinearPMap.domainSq_le_domain hx) t)
 
 set_option maxHeartbeats 2000000 in
-/-- **The degree-`0` part of `L y`** against the reading: `⟪(L y)₀, (ι v)₀⟫ = ⟪σ', σᵥ⟫`. -/
 theorem inner_matrix_wave_cubeEmb_zero (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) {T t : ℝ} (ht : t ∈ Icc 0 T)
@@ -464,7 +382,6 @@ theorem inner_matrix_wave_cubeEmb_zero (N : ℕ) {x : PiLp 2 (ShortHilbertComple
   simp [exState']
 
 set_option maxHeartbeats 4000000 in
-/-- **The degree-`1` part of `L y`** against the reading: `⟪(L y)₁, (ι v)₁⟫ = ⟪u', uᵥ⟫`. -/
 theorem inner_matrix_wave_cubeEmb_one (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) {T t : ℝ} (ht : t ∈ Icc 0 T)
@@ -478,8 +395,6 @@ theorem inner_matrix_wave_cubeEmb_one (N : ℕ) {x : PiLp 2 (ShortHilbertComplex
   simp [exState']
 
 set_option maxHeartbeats 2000000 in
-/-- **The degree-`1` part of `𝐝 y`** against the reading, through the forms model:
-`⟪(𝐝 y)₁, (ι v)₁⟫ = -⟪d̃ φ, uᵥ⟫`. -/
 theorem inner_matrix_totalD_cubeEmb_one (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) {T t : ℝ} (ht : t ∈ Icc 0 T)
@@ -502,11 +417,7 @@ theorem inner_matrix_totalD_cubeEmb_one (N : ℕ) {x : PiLp 2 (ShortHilbertCompl
     -⟪bggSegment.dt0 (rp (φOf (cubeOrbit hx (T + 1) t))), _⟫
   rw [hspec]
 
-/-- **The cochain defect of the thesis' scheme (6.5)**, computed: for the discrete BGG differential
-`𝐝ₕ = cubeD` (with `S₀,ₕ = π¹S⁰`) and the reading map `cubeEmb`, along the exact orbit
-`y = e^{tL} x` of `x ∈ D(L²)`, for every hidden state `v`,
-`⟪κₕ(y), v⟫ = -ℓ(t)((S₀ - S₀,ₕ) Φ(σᵥ, 0)) - ⟪M(t), (S₁ - S₁,ₕ) uᵥ⟫`, where `(σ, φ, u, M, ρ, ℓ)` is
-the classical solution of (6.2) of the orbit (`cubeExact`, horizon `T + 1`). -/
+/-- **The cochain defect of the scheme (6.5) on the cube** at the exact orbit is the form `κ`. -/
 theorem inner_standardCube_cochainDefect (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) {T t : ℝ} (ht : t ∈ Icc 0 T)
@@ -546,20 +457,17 @@ theorem inner_standardCube_cochainDefect (N : ℕ) {x : PiLp 2 (ShortHilbertComp
   linarith [hsplit, hB0, hB1, hD1, hA, hE, hadd]
 
 set_option synthInstance.maxHeartbeats 400000 in
-/-- Shortcut instance (synthesis under the removed `W3` instances is expensive). -/
+/-- The real normed space structure of `Wv U0`, as a shortcut instance. -/
 local instance instNormedSpaceWvU0 : NormedSpace ℝ (Wv U0) := inferInstance
 
 set_option synthInstance.maxHeartbeats 400000 in
-/-- Shortcut instance. -/
+/-- The real normed space structure of `Wv U1`, as a shortcut instance. -/
 local instance instNormedSpaceWvU1 : NormedSpace ℝ (Wv U1) := inferInstance
 
-/-- The Poincaré constant `(2π)⁻¹` of `d̃` on the cube enters as `√(1 + (2π)⁻²)`. -/
+/-- The constant `√(1 + (2π)⁻²)`, from the Poincaré constant `(2π)⁻¹` of `d̃` on the cube. -/
 abbrev cubeDefectConst : ℝ := √(1 + ((2 * Real.pi)⁻¹) ^ 2)
 
 set_option maxHeartbeats 400000 in
-/-- **The cochain defect of (6.5) is bounded by the consistency constants**: if
-`|ℓ((S₀ - S₀,ₕ) ψ)| ≤ K₀ ‖ψ‖_{H(d̃)}` and `|⟪M, (S₁ - S₁,ₕ) w⟫| ≤ K₁ ‖w‖_{Γₕ}` at time `t`, then
-`|⟪κₕ(e^{tL} x), v⟫| ≤ (K₀ √(1 + (2π)⁻²) + K₁) (‖v‖ + ‖𝐝ₕ v‖)`. -/
 theorem abs_inner_standardCube_cochainDefect_le (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) {T t : ℝ} (ht : t ∈ Icc 0 T)
@@ -579,15 +487,8 @@ theorem abs_inner_standardCube_cochainDefect_le (N : ℕ) {x : PiLp 2 (ShortHilb
     (cubeWave_S0_surjective hT hB N) (cubeExact hx (T + 1)) t hK0' hK1' seg_poinct0 hK0 hK1 v
 
 set_option maxHeartbeats 1000000 in
-/-- **The `O(h)` weak bound of the cochain defect of (6.5) along smooth exact solutions** (thesis'
-boundary conditions): there are constants `C₀, K ≥ 0` such that, whenever at time `t` the
-multiplier of the exact solution is an `L²` functional, `|ℓ(t) μ| ≤ Λ ‖μ‖`, and `M(t) ∈ D(d₁*)`
-with `‖M(t)‖ ≤ c`, `|⟪M(t), d₁ w⟫| ≤ c ‖w‖`, the cochain defect of the exact state
-`e^{tL} x` is `O(h)` in the dual discrete graph norm:
-`|⟪κₙ(e^{tL} x), v⟫| ≤ (C₀ Λ + K c) h_N (‖v‖ + ‖𝐝ₙ v‖)`. The constants come from
-`‖(S₀ - S₀,ₕ) ψ‖ ≤ C h ‖ψ‖_{H(d̃)}` (`cubeFEM_happ0`, `(I - π¹)S⁰` on the smoothed
-projections) and `exists_cubeFEM_K1` (`(I - π²)S¹`), with the Poincaré constant `(2π)⁻¹` of `d̃`
-(`seg_poinct0`). The regularity of `ℓ(t)` and `M(t)` is assumed, not derived from the datum. -/
+/-- **The cochain defect of (6.5) on the cube is `O(h)`** in the dual discrete graph norm, for
+multipliers bounded in `L²` and `M(t) ∈ D(d₁*)`. -/
 theorem exists_standardCube_cochainDefect_le_mesh :
     ∃ C₀ K : ℝ, 0 ≤ C₀ ∧ 0 ≤ K ∧ ∀ (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
@@ -623,10 +524,8 @@ theorem exists_standardCube_cochainDefect_le_mesh :
   ring
 
 set_option maxHeartbeats 2000000 in
-/-- **The cochain defect of (6.5) tends to `0`** at every exact state of a datum of `D(L²)`,
-uniformly on `[0, T]`, in the dual discrete graph norm (the consistency constants tend to `0`:
-`eventually_cubeFEM_K0` on the represented multipliers, `eventually_cubeFEM_K1` on the compact
-trajectory of `M`). -/
+/-- **The cochain defect of (6.5) on the cube tends to `0`** along the orbit of a datum of `D(L²)`,
+uniformly on `[0, T]`. -/
 theorem eventually_standardCube_cochainDefect_le {x : PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))}
     (hx : x ∈ matrixComplex.wave.domainSq) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
@@ -670,8 +569,6 @@ open Feec.Models.Cube.WeakSymmetry (W0 W1 W2 Wv)
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-/-- **The real pairing with a real state, by slots**:
-`⟪y, Rt z⟫ = ⟪Re y₀, z_σ⟫ + ⟪Re y₁, z_u⟫ + ⟪Re y_M, z_M⟫ + ⟪Re y_B, z_ρ⟫`. -/
 theorem inner_mirrorReEmb_right (y : PiLp 2 SpaceQ) (z : REnergy) :
     ⟪y, mirrorReEmb z⟫_ℝ = ⟪re0 (slot0 y), z.σ⟫ + ⟪rowsW1L (slot1 y), z.u⟫ +
       ⟪reM (slotM y), z.M⟫ + ⟪rowsW2L (slotB y), z.ρ⟫ := by
@@ -695,9 +592,6 @@ theorem inner_mirrorReEmb_right (y : PiLp 2 SpaceQ) (z : REnergy) :
   rw [hz] at e
   linarith
 
-/-- **`⟪u', v⟫ + ⟪ρ, d̃ v⟫ = 0` at every TSD state of `D(L)`**, in `L²` form (the equation
-`E' = -d₁† (0, B)`; `Feec.Models.Cube.MirrorWeakSymmetry.inner_rowsBU_wave_add` without
-`L x ∈ D(L)`). -/
 theorem inner_rowsW1L_wave_add (x : complexQ.wave.domain)
     (hx : (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ) (v : BU1) :
     ⟪rowsW1L (stEL (complexQ.wave x)), bIncl1 v⟫_ℝ + ⟪rowsW2L (stBL x), bD1 v⟫_ℝ = 0 := by
@@ -731,7 +625,6 @@ theorem mirrorEmb_part1_two (N : ℕ) (v : mirrorHidden hT hB N) :
   rfl
 
 
-/-- The real pairing with a read hidden state, by slots. -/
 theorem inner_mirrorEmb_right (N : ℕ) (y : PiLp 2 SpaceQ) (v : mirrorHidden hT hB N) :
     ⟪y, mirrorEmb hT hB N v⟫_ℝ =
       ⟪re0 (slot0 y), (((v.toEState.σ : (mirrorFEM hT hB N).V0h) : TU0) : W0)⟫_ℝ +
@@ -753,7 +646,6 @@ theorem mirrorDiffGen_ρ (N : ℕ) (a : mirrorHidden hT hB N) :
     (((HiddenState.toEState (mirrorDiffGen hT hB N a)).ρ : (mirrorFEM hT hB N).Wt2h) : Wv W2) =
       bD1 ((a.toEState.u : (mirrorFEM hT hB N).Vt1h) : BU1) := rfl
 
-/-- The pairing of a state with `M`-slot `0` and divergence-free `E` with `ι 𝐝ₕ a`. -/
 theorem inner_mirrorEmb_mirrorDiffGen (N : ℕ) (y : PiLp 2 SpaceQ)
     (hM : (WithLp.ofLp (y 2 : W2Q)).1 = 0) (a : mirrorHidden hT hB N) :
     ⟪y, mirrorEmb hT hB N (mirrorDiffGen hT hB N a)⟫_ℝ =
@@ -780,11 +672,6 @@ theorem inner_mirrorEmb_mirrorDiffGen (N : ℕ) (y : PiLp 2 SpaceQ)
 
 set_option synthInstance.maxHeartbeats 400000 in
 set_option maxHeartbeats 4000000 in
-/-- **The real part of the cochain defect of the mirror scheme vanishes at TSD states**: for
-`y ∈ D(L) ∩ tsdQℝ` and every real hidden state `a`, `⟪y, ι 𝐝ₕ a⟫ + ⟪(L y)₁, (ι a)₁⟫ = 0`
-(`ι = mirrorEmb`). The degree-`1` part of `𝐝ₕ a` is a gradient `-d̃ Φ(σₐ, 0)`, orthogonal to the
-divergence-free `E` of `y`; the `M`-slot of `y` vanishes; and the remaining terms cancel by
-`E' = -d₁† (0, B)` (`inner_rowsW1L_wave_add`). -/
 theorem mirror_realDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) (a : mirrorHidden hT hB N) :
     ⟪(y : PiLp 2 SpaceQ), mirrorEmb hT hB N (mirrorDiffGen hT hB N a)⟫_ℝ +
@@ -811,21 +698,17 @@ theorem mirror_realDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
   have e1 := inner_mirrorEmb_mirrorDiffGen hT hB N (y : PiLp 2 SpaceQ) hM a
   linarith [e1, t2, hpt, hgr]
 
-/-- Multiplication by `i` moves across the real inner product of a mirror slot:
-`⟪x, i y⟫_ℝ = ⟪-i x, y⟫_ℝ`. -/
 theorem real_inner_I_smul_spaceQ (i : Fin 3) (x y : SpaceQ i) :
     ⟪x, Complex.I • y⟫_ℝ = ⟪-Complex.I • x, y⟫_ℝ := by
   rw [real_inner_eq_re_inner_spaceQ, real_inner_eq_re_inner_spaceQ, inner_smul_right,
     inner_smul_left]
   simp
 
-/-- The same on mirror states. -/
 theorem real_inner_I_smul (x y : PiLp 2 SpaceQ) :
     ⟪x, Complex.I • y⟫_ℝ = ⟪-Complex.I • x, y⟫_ℝ := by
   rw [PiLp.inner_apply, PiLp.inner_apply]
   exact Finset.sum_congr rfl fun i _ => real_inner_I_smul_spaceQ i (x i) (y i)
 
-/-- `L (-i y) = -i L y` on the real mirror complex. -/
 theorem complexQℝ_wave_negI (y : complexQℝ.wave.domain) :
     ∃ h : -Complex.I • (y : PiLp 2 SpaceQ) ∈ complexQℝ.wave.domain,
       complexQℝ.wave ⟨_, h⟩ = -Complex.I • complexQℝ.wave y := by
@@ -840,7 +723,6 @@ theorem complexQℝ_wave_negI (y : complexQℝ.wave.domain) :
 theorem negI_smul_mem_tsdQℝ {y : PiLp 2 SpaceQ} (hy : y ∈ tsdQℝ) : -Complex.I • y ∈ tsdQℝ :=
   (totalSub tsdQ).smul_mem (-Complex.I) hy
 
-/-- A TSD state of `D(L)` has no degree-`1` part of `𝐝 y` (its degree-`0` part vanishes). -/
 theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
     (complexQℝ.totalD ⟨y, y.2.1⟩) 1 = 0 := by
@@ -848,24 +730,18 @@ theorem complexQℝ_totalD_one_of_tsd (y : complexQℝ.wave.domain)
   rw [totalD_apply_one_fin3]
   exact LinearPMap.apply_mk_eq_zero _ _ h0
 
-/-- `L y` of a TSD state of `D(L)` has no degree-`0` part (TSD reduces `L`). -/
 theorem complexQℝ_wave_zero_of_tsd (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
     (complexQℝ.wave y) 0 = 0 :=
   (Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 (isReducing_tsdQℝ.mapsTo y hyK)).1
 
-/-- **The discrete differential spaces of the mirror scheme**, built directly from the
-discretization: the hidden spaces of `mirrorFEMApprox` with `𝐝ₕ ⊕ 𝐝ₕ` (`mirrorD`), its reading
-maps and left inverses (`ApproxComplexCrime.Family.ofApproxFEEC`). It is the family of
-`mirrorComplex` (by `rfl`, `mirrorComplex_toFamily`), named so that the computation below does not
-unfold the elliptic core. -/
+/-- The discrete differential spaces of the mirror scheme, the family of `mirrorComplex`. -/
 def mirrorFamily : ApproxComplexCrime.Family complexQℝ ℕ :=
   ApproxComplexCrime.Family.ofApproxFEEC (mirrorFEMApprox hT hB)
     (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
 
 theorem mirrorComplex_toFamily : (mirrorComplex hT hB).toFamily = mirrorFamily hT hB := rfl
 
-/-- The reading and the differential of the complexified family on a pair. -/
 theorem mirrorFamily_incl_D (N : ℕ) (a b : mirrorHidden hT hB N) :
     (mirrorFamily hT hB).incl N (WithLp.toLp 2 (a, b)) =
         mirrorEmb hT hB N a + mulI (mirrorEmb hT hB N b) ∧
@@ -874,14 +750,7 @@ theorem mirrorFamily_incl_D (N : ℕ) (a b : mirrorHidden hT hB N) :
           mulI (mirrorEmb hT hB N (mirrorDiffGen hT hB N b)) := ⟨rfl, rfl⟩
 
 set_option maxHeartbeats 8000000 in
-/-- **The cochain defect of the mirror scheme vanishes at every TSD state of `D(L)`**: for the
-family `mirrorFamily` (the discrete BGG differential `𝐝ₕ ⊕ 𝐝ₕ` with `S₀,ₕ = π¹S⁰` on real and
-imaginary parts, the reading `ι(a, b) = mirrorEmb a + i mirrorEmb b`), `κₙ(y) = 0` for
-`y ∈ D(L) ∩ tsdQℝ`. The reason: a TSD state has no degree-`0` part and no `M`-slot, and its `E`
-is divergence-free; so `𝐝 y` has no degree-`1` part, `L y` (again TSD) no degree-`0` part, the
-gradient `-d̃ Φ(σᵥ, 0)` of `𝐝ₕ v` pairs to `0` with `E`, the crime `S₁ - S₁,ₕ` only meets the
-vanishing `M`-slot, and the rest cancels by `E' = -d₁† (0, B)` (`mirror_realDefect_eq_zero`). In
-the language of the formula (`cochainDefectForm`): TSD solutions have `ℓ ≡ 0` and `M ≡ 0`. -/
+/-- **The cochain defect of the mirror scheme vanishes at every TSD state of `D(L)`.** -/
 theorem mirrorFamily_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
     (mirrorFamily hT hB).cochainDefect N y = 0 := by
@@ -916,8 +785,6 @@ theorem mirrorFamily_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domai
   refine Eq.trans ?_ (inner_zero_left (𝕜 := ℝ) _).symm
   linarith
 
-/-- **The cochain defect of `mirrorComplex` vanishes at every TSD state of `D(L)`**: its family is
-`mirrorFamily` (`mirrorComplex_toFamily`), so this is `mirrorFamily_cochainDefect_eq_zero`. -/
 theorem mirrorComplex_cochainDefect_eq_zero (N : ℕ) (y : complexQℝ.wave.domain)
     (hyK : (y : PiLp 2 SpaceQ) ∈ tsdQℝ) :
     (mirrorComplex hT hB).toFamily.cochainDefect N y = 0 :=

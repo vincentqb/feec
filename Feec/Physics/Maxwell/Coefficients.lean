@@ -7,48 +7,9 @@ public import Mathlib.MeasureTheory.Function.Holder
 /-!
 # Concrete media: multiplication by scalar and matrix fields
 
-Concrete `Maxwell.Medium`s on the `L²` fields `ℓ²(ι; L²(μ))` (e.g. `L²(Ω; 𝕜^ι)`, `L2F`):
-
-* **isotropic** media: the permittivity and permeability are multiplication by measurable scalar
-  fields `ε(x)`, `μ(x)` with `a ≤ ε(x), μ(x) ≤ b` (`0 < a`) a.e., acting componentwise. The
-  factors are built pointwise, `e = √ε`, `m = √μ`, so this works over `ℝ` as well as over `ℂ`
-  (no functional calculus is needed), and the medium's `ε`, `μ` are exactly the multiplication
-  operators (`Maxwell.Medium.isotropic_ε_apply`, `Maxwell.Medium.isotropic_μ_apply`);
-* **anisotropic** media (over `ℂ`): multiplication by Hermitian `L^∞` matrix fields that are
-  uniformly positive a.e. is bounded, self-adjoint and uniformly positive
-  (`MeasureTheory.Lp.isSelfAdjoint_matMul`, `MeasureTheory.Lp.le_re_inner_matMul`), hence a
-  medium by `Maxwell.Medium.exists_eq` (`Maxwell.Medium.exists_anisotropic`).
-
-All results of `Feec.Physics.Maxwell.Media` and `Feec.Physics.Maxwell.Ohmic` (well-posedness,
-energy conservation and decay, propagation of the weighted Gauss laws `div (ε E) = 0`,
-`div (μ H) = 0`) then hold for such media, e.g. on every open `Ω ⊆ ℝ³` with PEC or PMC.
-
-## Main definitions
-
-* `MeasureTheory.Lp.mulL2 G`: multiplication by `G ∈ L^∞` on `L²`, with `‖mulL2 G‖ ≤ ‖G‖`.
-* `MeasureTheory.Lp.diagL T`: the componentwise action of `T` on `ℓ²`-sums of copies.
-* `MeasureTheory.Lp.matMul A`: multiplication by a matrix field, `(A u)_j = Σ_i A_{ji} u_i`.
-* `Maxwell.isotropicFactor`: multiplication by `√s` for a measurable field `a ≤ s ≤ b`, an
-  isomorphism with inverse multiplication by `1/√s`.
-* `Maxwell.Medium.isotropic`: the isotropic medium with factors `√ε`, `√μ`.
-
-## Main results
-
-* `MeasureTheory.Lp.inner_mulL2`: `⟪G u, v⟫ = ⟪u, Ḡ v⟫`.
-* `MeasureTheory.Lp.isSelfAdjoint_matMul`, `MeasureTheory.Lp.le_re_inner_matMul`.
-* `Maxwell.Medium.isotropic_ε_apply`, `Maxwell.Medium.isotropic_μ_apply`:
-  `(ε E)_j = ε(x) E_j(x)` and `(μ H)_j = μ(x) H_j(x)` a.e.
-* `Maxwell.norm_isotropicFactor_mul_norm_symm_le`, `Maxwell.Medium.isotropic_cond_le`: the
-  condition numbers of `√s` and of the isotropic medium are at most `√(b / a)`.
-* `Maxwell.Medium.exists_anisotropic`.
-
-## References
-
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (evolution problems)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §6.1 (variable coefficients, weighted `L²` inner products)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+Isotropic media, whose permittivity and permeability are multiplication by measurable scalar
+fields `0 < a ≤ ε(x), μ(x) ≤ b`, and anisotropic media over `ℂ`, multiplication by uniformly
+coercive Hermitian `L^∞` matrix fields (`Medium.isotropic`, `Medium.exists_anisotropic`).
 -/
 
 open scoped InnerProductSpace ENNReal ComplexConjugate
@@ -77,8 +38,6 @@ theorem coeFn_mulL2 (G : Lp 𝕜 ∞ μ) (u : Lp 𝕜 2 μ) :
 theorem norm_mulL2_le (G : Lp 𝕜 ∞ μ) : ‖mulL2 G‖ ≤ ‖G‖ :=
   LinearMap.mkContinuous_norm_le _ (norm_nonneg G) _
 
-/-- **The adjoint of a multiplication** is multiplication by the conjugate:
-`⟪G u, v⟫ = ⟪u, G' v⟫` for `G' = Ḡ` a.e. -/
 theorem inner_mulL2 {G G' : Lp 𝕜 ∞ μ} (h : ∀ᵐ x ∂μ, G' x = conj (G x)) (u v : Lp 𝕜 2 μ) :
     ⟪mulL2 G u, v⟫_𝕜 = ⟪u, mulL2 G' v⟫_𝕜 := by
   rw [L2.inner_def, L2.inner_def]
@@ -100,8 +59,6 @@ theorem norm_ofBound_le (g : α → 𝕜) (hg : AEStronglyMeasurable g μ) {C : 
     (hC : ∀ᵐ x ∂μ, ‖g x‖ ≤ C) : ‖ofBound g hg C hC‖ ≤ C := by
   rw [ofBound, Lp.norm_toLp, eLpNorm_exponent_top hg]
   exact ENNReal.toReal_le_of_le_ofReal hC₀ (eLpNormEssSup_le_of_ae_bound hC)
-
-/-! ### Componentwise action on `ℓ²`-sums -/
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {ι : Type*} [Fintype ι]
 
@@ -132,8 +89,7 @@ section Matrix
 
 variable {ι : Type*} [Fintype ι]
 
-/-- **Multiplication by a matrix field** `A = (A_{ji}) ∈ L^∞(μ)^{ι×ι}` on `ℓ²(ι; L²(μ))`:
-`(A u)_j = Σ_i A_{ji} u_i`. -/
+/-- Multiplication by a matrix field `A` on `ℓ²(ι; L²(μ))`: `(A u)_j = Σ_i A_{ji} u_i`. -/
 def matMul (A : ι → ι → Lp 𝕜 ∞ μ) :
     PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) :=
   ((PiLp.continuousLinearEquiv 2 𝕜 (fun _ : ι => Lp 𝕜 2 μ)).symm :
@@ -151,7 +107,6 @@ theorem inner_matMul (A : ι → ι → Lp 𝕜 ∞ μ) (u v : PiLp 2 (fun _ : �
   rw [PiLp.inner_apply]
   simp_rw [matMul_apply, sum_inner]
 
-/-- A **Hermitian** matrix field (`A_{ij} = conj A_{ji}` a.e.) gives a symmetric multiplication. -/
 theorem inner_matMul_eq_inner {A : ι → ι → Lp 𝕜 ∞ μ}
     (hA : ∀ i j, ∀ᵐ x ∂μ, A i j x = conj (A j i x)) (u v : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ)) :
     ⟪matMul A u, v⟫_𝕜 = ⟪u, matMul A v⟫_𝕜 := by
@@ -165,9 +120,8 @@ theorem isSelfAdjoint_matMul {A : ι → ι → Lp 𝕜 ∞ μ}
     (hA : ∀ i j, ∀ᵐ x ∂μ, A i j x = conj (A j i x)) : IsSelfAdjoint (matMul A) :=
   ContinuousLinearMap.isSelfAdjoint_iff_isSymmetric.2 fun u v => inner_matMul_eq_inner hA u v
 
-/-- **Pointwise coercivity gives coercivity**: if `c |v|² ≤ re ⟪A(x) v, v⟫` for all `v ∈ 𝕜^ι`
-and a.e. `x`, then `c ‖u‖² ≤ re ⟪A u, u⟫` on `ℓ²(ι; L²)` (for `c = 0`: a nonnegative field
-gives a nonnegative operator). -/
+/-- Pointwise coercivity gives coercivity: if `c |v|² ≤ re ⟪A(x) v, v⟫` for all `v ∈ 𝕜^ι` and
+a.e. `x`, then `c ‖u‖² ≤ re ⟪A u, u⟫` on `ℓ²(ι; L²)`. -/
 theorem le_re_inner_matMul {A : ι → ι → Lp 𝕜 ∞ μ} {c : ℝ}
     (hc : ∀ᵐ x ∂μ, ∀ v : ι → 𝕜,
       c * ∑ j, ‖v j‖ ^ 2 ≤ RCLike.re (∑ j, conj (∑ i, A j i x * v i) * v j))
@@ -273,8 +227,7 @@ theorem sqrtField_mul_invSqrtField :
   rw [mul_comm, h]
 
 variable (𝕜 ι) in
-/-- The **factor** `e = √s` of the multiplication by a scalar field `a ≤ s ≤ b` (`0 < a`), acting
-componentwise on `ℓ²(ι; L²(μ))`: an isomorphism with inverse `1/√s`. -/
+/-- Multiplication by `√s`, for a scalar field `0 < a ≤ s ≤ b`, componentwise on `ℓ²(ι; L²(μ))`. -/
 def isotropicFactor : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) ≃L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) :=
   ContinuousLinearEquiv.equivOfInverse (diagL (mulL2 (sqrtField 𝕜 hs hab)))
     (diagL (mulL2 (invSqrtField 𝕜 hs ha hab)))
@@ -293,21 +246,18 @@ def isotropicFactor : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) ≃L[𝕜] PiLp 2 (fun
         x h1 h2 h3
       rw [h1, h2, ← mul_assoc, h3, one_mul])
 
-/-- `‖√s‖ ≤ √b`. -/
 theorem norm_isotropicFactor_le :
     ‖(isotropicFactor 𝕜 ι hs ha hab :
       PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))‖ ≤ √b :=
   (Lp.norm_diagL_le _).trans
     ((Lp.norm_mulL2_le _).trans (Lp.norm_ofBound_le _ _ (Real.sqrt_nonneg b) _))
 
-/-- `‖1/√s‖ ≤ 1/√a`. -/
 theorem norm_isotropicFactor_symm_le :
     ‖((isotropicFactor 𝕜 ι hs ha hab).symm :
       PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))‖ ≤ (√a)⁻¹ :=
   (Lp.norm_diagL_le _).trans
     ((Lp.norm_mulL2_le _).trans (Lp.norm_ofBound_le _ _ (inv_nonneg.2 (Real.sqrt_nonneg a)) _))
 
-/-- **The condition number of the factor** `√s` is at most `√(b / a)`. -/
 theorem norm_isotropicFactor_mul_norm_symm_le :
     ‖(isotropicFactor 𝕜 ι hs ha hab :
       PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))‖ *
@@ -317,7 +267,6 @@ theorem norm_isotropicFactor_mul_norm_symm_le :
   exact mul_le_mul (norm_isotropicFactor_le hs ha hab) (norm_isotropicFactor_symm_le hs ha hab)
     (norm_nonneg _) (Real.sqrt_nonneg b)
 
-/-- The factor `√s` is **self-adjoint**. -/
 theorem adjoint_isotropicFactor :
     ContinuousLinearMap.adjoint (isotropicFactor 𝕜 ι hs ha hab :
       PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ)) =
@@ -328,7 +277,6 @@ theorem adjoint_isotropicFactor :
   filter_upwards [coeFn_sqrtField (𝕜 := 𝕜) hs hab] with x h
   rw [h, RCLike.conj_ofReal]
 
-/-- `(√s)† √s` is **multiplication by `s`**: `((√s)† √s u)_j = s u_j` a.e. -/
 theorem adjoint_isotropicFactor_comp_apply (u : PiLp 2 (fun _ : ι => Lp 𝕜 2 μ)) (j : ι) :
     (ContinuousLinearMap.adjoint (isotropicFactor 𝕜 ι hs ha hab :
       PiLp 2 (fun _ : ι => Lp 𝕜 2 μ) →L[𝕜] PiLp 2 (fun _ : ι => Lp 𝕜 2 μ))
@@ -349,9 +297,7 @@ variable {κ : Type*} [Fintype κ]
   (ha : 0 < a) (hεb : ∀ᵐ x ∂μ, a ≤ ε x ∧ ε x ≤ b) (hμb : ∀ᵐ x ∂μ, a ≤ μ' x ∧ μ' x ≤ b)
 
 variable (𝕜 ι κ) in
-/-- The **isotropic inhomogeneous medium** with permittivity `ε(x)` and permeability `μ(x)`,
-measurable scalar fields with `a ≤ ε(x), μ(x) ≤ b`, `0 < a`, acting componentwise on the
-electric fields `ℓ²(ι; L²)` and the magnetic fields `ℓ²(κ; L²)`: factors `e = √ε`, `m = √μ`. -/
+/-- The isotropic medium with permittivity `ε(x)` and permeability `μ(x)`, `0 < a ≤ ε, μ ≤ b`. -/
 def Medium.isotropic :
     Medium 𝕜 (PiLp 2 (fun _ : ι => Lp 𝕜 2 μ)) (PiLp 2 (fun _ : κ => Lp 𝕜 2 μ)) where
   e := isotropicFactor 𝕜 ι hε ha hεb
@@ -374,10 +320,8 @@ theorem Medium.isotropic_cond_le : (Medium.isotropic 𝕜 ι κ hε hμ ha hεb 
 
 /-! ### Anisotropic media (over `ℂ`) -/
 
-/-- **Anisotropic inhomogeneous media are media** (over `ℂ`): for Hermitian matrix fields
-`A = ε(x)`, `B = μ(x)` in `L^∞` with `c |v|² ≤ re ⟪A(x) v, v⟫`, `c |v|² ≤ re ⟪B(x) v, v⟫`
-(`c > 0`) a.e., there is a `Maxwell.Medium` whose permittivity and permeability are the
-multiplication operators (factors `e = ε^{1/2}`, `m = μ^{1/2}`, `Maxwell.Medium.exists_eq`). -/
+/-- Over `ℂ`, Hermitian `L^∞` matrix fields `ε(x)`, `μ(x)`, uniformly coercive a.e., are the
+permittivity and permeability of a `Maxwell.Medium`. -/
 theorem Medium.exists_anisotropic {κ : Type*} [Fintype κ] {A : ι → ι → Lp ℂ ∞ μ}
     {B : κ → κ → Lp ℂ ∞ μ} (hA : ∀ i j, ∀ᵐ x ∂μ, A i j x = conj (A j i x))
     (hB : ∀ i j, ∀ᵐ x ∂μ, B i j x = conj (B j i x)) {c : ℝ} (hc : 0 < c)

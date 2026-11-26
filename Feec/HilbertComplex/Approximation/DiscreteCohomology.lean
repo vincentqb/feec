@@ -6,64 +6,19 @@ public import Feec.HilbertComplex.Approximation.QuasiOptimal
 /-!
 # Discrete cohomology: a cochain projection is an isomorphism on cohomology
 
-Let `Vₕ` be a finite-dimensional subcomplex of a Hilbert complex `H` and `π` a cochain projection
-onto `Vₕ`. Since `π` maps cycles to discrete cycles and boundaries to discrete boundaries, it
-induces a map `Hⁱ(H) → Hⁱ(Vₕ)` on cohomology (`CochainProjection.cohomologyMap`), and since `π`
-fixes `Vₕ` this map is **onto** (`cohomologyMap_surjective`): every discrete cycle is a cycle.
-If `H` has closed range at `i` and `π` moves no harmonic form by its own length,
-
-`‖q - π q‖ < ‖q‖`  for `0 ≠ q ∈ ℌⁱ`,
-
-the map is also **one-to-one** (`cohomologyMap_injective`): write a cycle `z = b + q` with
-`b ∈ 𝔅ⁱ`, `q ∈ ℌⁱ`; if `π z ∈ 𝔅ₕⁱ` then `π q ∈ 𝔅ₕⁱ ⊆ 𝔅ⁱ ⊥ q`, and the strict gap forces `q = 0`.
-Hence `Hⁱ(Vₕ) ≅ Hⁱ(H)` (`CochainProjection.cohomologyEquiv`) and
-`dim ℌₕⁱ = dim ℌⁱ` (`finrank_harmonicW_eq`); in particular `ℌⁱ` is finite-dimensional. No bound
-on `π` is needed for the isomorphism itself.
-
-The strict gap holds as soon as the harmonic gap `μ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - π q‖` is below
-`1` (`norm_sub_π_lt_of_harmonicGap_lt_one`), so for a family of subcomplexes whose harmonic gap
-tends to zero the discrete cohomology is **eventually the continuous cohomology**
-(`eventually_finrank_cohomology_eq`, `eventually_finrank_harmonicW_eq`). The harmonic gap tends to
-zero for uniformly `W`-bounded projections approximating a finite-dimensional `ℌ`
-(`CochainProjection.tendsto_harmonicGap`: `‖q - π q‖ ≤ (1 + C) dist(q, Vₕ)`, and a basis of `ℌ`
-makes the convergence uniform on the unit ball). So **every conforming family**
-(`Feec.HilbertComplex.ConformingFamily`: bounded commuting projections and the approximation
-property in `W`, a strengthening of the `V`-bounds of [AFW2010], §3.3) has, wherever `H` has
-closed range and finite-dimensional harmonic forms, eventually the cohomology of `H`, through the
-isomorphisms induced by its projections (`ConformingFamily.eventually_bijective_cohomologyMap`).
-The isomorphism criterion itself (`CochainProjection.cohomologyMap_injective`) needs no bound.
-
-## Main definitions
-
-* `Subcomplex.CochainProjection.cyclesMap`: `π : 𝔷ⁱ → 𝔷ₕⁱ`.
-* `Subcomplex.CochainProjection.cohomologyMap`: the induced map `Hⁱ(H) → Hⁱ(Vₕ)`.
-* `Subcomplex.CochainProjection.cohomologyEquiv`: `Hⁱ(H) ≃ Hⁱ(Vₕ)` under the strict gap.
+A cochain projection onto a finite-dimensional subcomplex induces an isomorphism on cohomology
+where the complex has closed range and `‖q - π q‖ < ‖q‖` on `ℌⁱ \ 0`; hence conforming families
+eventually have the cohomology of the complex.
 
 ## Main results
 
-* `CochainProjection.cohomologyMap_surjective`, **`CochainProjection.cohomologyMap_injective`**.
-* **`CochainProjection.finrank_cohomology_eq`**, **`CochainProjection.finrank_harmonicW_eq`**,
-  `CochainProjection.finiteDimensional_harmonic`.
-* `CochainProjection.norm_sub_π_lt_of_harmonicGap_lt_one`.
-* `CochainProjection.norm_sub_π_le_infDist`, `CochainProjection.tendsto_harmonicGap_of_tendsto`,
-  **`CochainProjection.tendsto_harmonicGap`**.
-* `CochainProjection.norm_sub_π_le_add` (`x ↦ ‖x − π x‖` is `(1 + C)`-Lipschitz),
-  `CochainProjection.eventually_forall_norm_sub_π_le` (uniform convergence on compact sets).
-* **`CochainProjection.eventually_finrank_cohomology_eq`**,
-  `CochainProjection.eventually_finrank_harmonicW_eq`: along any filter on which the harmonic gap
-  tends to zero.
-* `ConformingFamily.tendsto_harmonicGap`, **`ConformingFamily.eventually_bijective_cohomologyMap`**,
-  `ConformingFamily.eventually_finrank_cohomology_eq`,
-  `ConformingFamily.eventually_finrank_harmonicW_eq`: every conforming family.
+* `CochainProjection.cohomologyMap_injective`: injectivity under closed range and the strict gap.
+* `CochainProjection.tendsto_harmonicGap`: the harmonic gap of bounded projections tends to zero.
+* `ConformingFamily.eventually_bijective_cohomologyMap`: eventually `Hⁱ(H) ≅ Hⁱ(Vₕ)`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.4 (a cochain projection with `‖q - π q‖ < ‖q‖` on `ℌ \ 0` induces an isomorphism on
-  cohomology), Thm 3.5 (the gap between `ℌ` and `ℌₕ`), §5.6 (finite element de Rham complexes)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5.2, §5.4 (canonical and smoothed cochain projections onto the finite element de Rham complexes)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -73,9 +28,6 @@ open LinearPMap Filter Topology
 
 @[expose] public noncomputable section
 
-/-- **Uniform convergence on compact sets**: a family `F h` of functions, Lipschitz in `x` with a
-common constant and tending to `0` pointwise along `l`, tends to `0` uniformly on every compact
-set. -/
 theorem IsCompact.eventually_forall_le_of_lipschitz {E κ : Type*} [PseudoMetricSpace E]
     {K : Set E} (hK : IsCompact K) {l : Filter κ} {F : κ → E → ℝ} {B : ℝ} (hB : 0 ≤ B)
     (hlip : ∀ h x y, F h x ≤ F h y + B * dist x y)
@@ -111,7 +63,7 @@ section Single
 
 variable {S : H.Subcomplex} [∀ i, FiniteDimensional 𝕜 (S.V i)] (P : S.CochainProjection)
 
-/-- `π` on the cycles, valued in the discrete cycles `𝔷ₕⁱ` (the cycles of `S.toHilbertComplex`). -/
+/-- `π` on the cycles, valued in the discrete cycles. -/
 def cyclesMap (i : ι) : H.cycles i →ₗ[𝕜] S.toHilbertComplex.cycles i where
   toFun z := ⟨⟨P.π i z, P.mem i z⟩, S.mem_cycles_iff.2 (S.cyclesW_le_cycles i (P.mem_cyclesW z.2))⟩
   map_add' x y := by ext; simp
@@ -120,12 +72,10 @@ def cyclesMap (i : ι) : H.cycles i →ₗ[𝕜] S.toHilbertComplex.cycles i whe
 @[simp] theorem coe_cyclesMap_apply (i : ι) (z : H.cycles i) :
     ((P.cyclesMap i z : S.V i) : W i) = P.π i z := rfl
 
-/-- **The map induced on cohomology** `Hⁱ(H) → Hⁱ(Vₕ)`, `[z] ↦ [π z]`. [AFW2010], §3.3 -/
+/-- The map `Hⁱ(H) → Hⁱ(Vₕ)`, `[z] ↦ [π z]`, induced on cohomology. -/
 def cohomologyMap (i : ι) : H.cohomology i →ₗ[𝕜] S.toHilbertComplex.cohomology i :=
   Submodule.mapQ _ _ (P.cyclesMap i) fun _ hz => S.mem_boundaries_iff.2 (P.mem_boundariesW hz)
 
-/-- **The induced map on cohomology is onto**: a discrete cycle `z` is a cycle with `π z = z`.
-[AFW2010], §3.3 -/
 theorem cohomologyMap_surjective (i : ι) : Function.Surjective (P.cohomologyMap i) := by
   intro y
   obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ y
@@ -135,8 +85,8 @@ theorem cohomologyMap_surjective (i : ι) : Function.Surjective (P.cohomologyMap
   ext
   exact P.proj i _ (x : S.V i).2
 
-/-- **The induced map on cohomology is one-to-one** under closed range and the strict gap
-`‖q - π q‖ < ‖q‖` on `ℌⁱ \ 0`. [AFW2010], Thm 3.4 -/
+/-- **The induced map on cohomology is one-to-one** under closed range and `‖q - π q‖ < ‖q‖` on
+`ℌⁱ \ 0` ([AFW2010], Thm 3.4). -/
 theorem cohomologyMap_injective {i : ι} (hi : H.ClosedRangeAt i)
     (hgap : ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - P.π i q‖ < ‖q‖) :
     Function.Injective (P.cohomologyMap i) := by
@@ -165,8 +115,7 @@ theorem cohomologyMap_injective {i : ι} (hi : H.ClosedRangeAt i)
     add_zero]
   exact hb
 
-/-- **A cochain projection is an isomorphism on cohomology** `Hⁱ(H) ≃ Hⁱ(Vₕ)` under closed range
-and the strict gap `‖q - π q‖ < ‖q‖` on `ℌⁱ \ 0`. [AFW2010], Thm 3.4 -/
+/-- The isomorphism `Hⁱ(H) ≃ Hⁱ(Vₕ)` induced by `π` under closed range and the strict gap. -/
 def cohomologyEquiv {i : ι} (hi : H.ClosedRangeAt i)
     (hgap : ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - P.π i q‖ < ‖q‖) :
     H.cohomology i ≃ₗ[𝕜] S.toHilbertComplex.cohomology i :=
@@ -176,14 +125,11 @@ def cohomologyEquiv {i : ι} (hi : H.ClosedRangeAt i)
     (hgap : ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - P.π i q‖ < ‖q‖) (x : H.cohomology i) :
     P.cohomologyEquiv hi hgap x = P.cohomologyMap i x := rfl
 
-/-- **`dim Hⁱ(Vₕ) = dim Hⁱ(H)`**. [AFW2010], Thm 3.4 -/
 theorem finrank_cohomology_eq {i : ι} (hi : H.ClosedRangeAt i)
     (hgap : ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - P.π i q‖ < ‖q‖) :
     Module.finrank 𝕜 (S.toHilbertComplex.cohomology i) = Module.finrank 𝕜 (H.cohomology i) :=
   (P.cohomologyEquiv hi hgap).finrank_eq.symm
 
-/-- **`dim ℌₕⁱ = dim ℌⁱ`**: the discrete harmonic forms have the dimension of the harmonic
-forms. [AFW2010], Thm 3.4, Thm 3.5 -/
 theorem finrank_harmonicW_eq {i : ι} (hi : H.ClosedRangeAt i)
     (hgap : ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - P.π i q‖ < ‖q‖) :
     Module.finrank 𝕜 (S.harmonicW i) = Module.finrank 𝕜 (H.harmonic i) := by
@@ -191,8 +137,6 @@ theorem finrank_harmonicW_eq {i : ι} (hi : H.ClosedRangeAt i)
     ← (S.cohomologyEquivHarmonic i).finrank_eq, P.finrank_cohomology_eq hi hgap,
     (H.cohomologyEquivHarmonic hi).finrank_eq]
 
-/-- A cochain projection onto a finite-dimensional subcomplex with the strict gap forces `ℌⁱ` to be
-finite-dimensional. -/
 theorem finiteDimensional_harmonic {i : ι} (hi : H.ClosedRangeAt i)
     (hgap : ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - P.π i q‖ < ‖q‖) :
     FiniteDimensional 𝕜 (H.harmonic i) :=
@@ -200,14 +144,12 @@ theorem finiteDimensional_harmonic {i : ι} (hi : H.ClosedRangeAt i)
   (H.cohomologyEquivHarmonic hi).finiteDimensional
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- A harmonic gap below `1` is the strict gap. -/
 theorem norm_sub_π_lt_of_harmonicGap_lt_one {i : ι} {μ : ℝ}
     (hμ : ∀ q ∈ H.harmonic i, ‖q - P.π i q‖ ≤ μ * ‖q‖) (h : P.harmonicGap i < 1) {q : W i}
     (hq : q ∈ H.harmonic i) (hq0 : q ≠ 0) : ‖q - P.π i q‖ < ‖q‖ :=
   (P.norm_sub_le_harmonicGap_mul hμ hq).trans_lt (mul_lt_of_lt_one_left (norm_pos_iff.2 hq0) h)
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- A cochain projection bounded by `C` in `W` moves harmonic forms by at most `(1 + C) ‖q‖`. -/
 theorem norm_sub_π_le_of_norm_le {i : ι} {C : ℝ} (hπ : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) (q : W i) :
     ‖q - P.π i q‖ ≤ (1 + C) * ‖q‖ :=
   (norm_sub_le _ _).trans (by linarith [hπ q])
@@ -220,7 +162,6 @@ section HarmonicGap
 
 variable {S : H.Subcomplex}
 
-/-- `‖x - π x‖ ≤ (1 + C) dist(x, Vₕ)` for a cochain projection bounded by `C` (in `W`). -/
 theorem norm_sub_π_le_infDist (P : S.CochainProjection) {i : ι} {C : ℝ} (hC : 0 ≤ C)
     (hπ : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) (x : W i) :
     ‖x - P.π i x‖ ≤ (1 + C) * Metric.infDist x (S.V i : Set (W i)) := by
@@ -240,7 +181,6 @@ theorem norm_sub_π_le_infDist (P : S.CochainProjection) {i : ι} {C : ℝ} (hC 
     exact key v hv
   rwa [div_le_iff₀' h1] at h2
 
-/-- `x ↦ ‖x - π x‖` is `(1 + C)`-Lipschitz for a cochain projection bounded by `C` (in `W`). -/
 theorem norm_sub_π_le_add (P : S.CochainProjection) {i : ι} {C : ℝ}
     (hπ : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) (x y : W i) :
     ‖x - P.π i x‖ ≤ ‖y - P.π i y‖ + (1 + C) * dist x y := by
@@ -252,9 +192,6 @@ theorem norm_sub_π_le_add (P : S.CochainProjection) {i : ι} {C : ℝ}
   have := hπ (x - y)
   linarith
 
-/-- **The harmonic gap tends to zero as soon as `πₕ q → q` on `ℌʲ`**, for a finite-dimensional
-harmonic space `ℌʲ`: in a basis `(bₖ)` of `ℌʲ`, `μₕ ≤ Σₖ ‖cₖ‖ ‖bₖ - πₕ bₖ‖`, `cₖ` the
-coordinate functionals. -/
 theorem tendsto_harmonicGap_of_tendsto {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
     (P : ∀ h, (S h).CochainProjection) {j : ι} [FiniteDimensional 𝕜 (H.harmonic j)]
     (hconv : ∀ q ∈ H.harmonic j, Tendsto (fun h => ‖q - (P h).π j q‖) l (𝓝 0)) :
@@ -301,11 +238,8 @@ theorem tendsto_harmonicGap_of_tendsto {κ : Type*} {l : Filter κ} {S : κ → 
           ring
   exact squeeze_zero (fun h => (P h).harmonicGap_nonneg j) hle hg
 
-/-- **The harmonic gap tends to zero** (cf. [AFW2010], Thm 3.5 and §3.4): for a family of
-subcomplexes `Vₕ` with cochain projections uniformly bounded in `W` by `C`, approximating every
-harmonic form (`dist(q, Vₕ) → 0`), and a finite-dimensional harmonic space `ℌʲ`,
-`μₕ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - πₕ q‖ → 0` (`tendsto_harmonicGap_of_tendsto`, with
-`‖q - πₕ q‖ ≤ (1 + C) dist(q, Vₕ)`). -/
+/-- **The harmonic gap tends to zero** for cochain projections uniformly bounded in `W` with
+`dist(q, Vₕ) → 0` on a finite-dimensional `ℌʲ` (cf. [AFW2010], Thm 3.5). -/
 theorem tendsto_harmonicGap {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
     (P : ∀ h, (S h).CochainProjection) {j : ι} [FiniteDimensional 𝕜 (H.harmonic j)] {C : ℝ}
     (hC : 0 ≤ C) (hπ : ∀ h x, ‖(P h).π j x‖ ≤ C * ‖x‖)
@@ -320,7 +254,7 @@ theorem tendsto_harmonicGap {κ : Type*} {l : Filter κ} {S : κ → H.Subcomple
 
 end HarmonicGap
 
-/-! ### Families of subcomplexes with vanishing harmonic gap -/
+/-! ### Families of subcomplexes whose harmonic gap tends to zero -/
 
 section Family
 
@@ -330,22 +264,17 @@ variable {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex} [∀ h i, Finite
 include hπ hgap
 
 omit [∀ h i, FiniteDimensional 𝕜 ((S h).V i)] in
-/-- Eventually along `l`, the strict gap holds. -/
 theorem eventually_norm_sub_π_lt :
     ∀ᶠ h in l, ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - (P h).π i q‖ < ‖q‖ :=
   (hgap.eventually (gt_mem_nhds one_pos)).mono fun h h1 _ hq hq0 =>
     (P h).norm_sub_π_lt_of_harmonicGap_lt_one (fun q _ => (P h).norm_sub_π_le_of_norm_le (hπ h) q)
       h1 hq hq0
 
-/-- **The discrete cohomology is eventually the cohomology**: for `W`-bounded cochain projections
-whose harmonic gap tends to zero along `l` (`tendsto_harmonicGap`), and `H` with closed range at
-`i`, `dim Hⁱ(Vₕ) = dim Hⁱ(H)` eventually. [AFW2010], Thm 3.4 and the remark after it -/
 theorem eventually_finrank_cohomology_eq (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in l, Module.finrank 𝕜 ((S h).toHilbertComplex.cohomology i) =
       Module.finrank 𝕜 (H.cohomology i) :=
   (eventually_norm_sub_π_lt P hπ hgap).mono fun h hh => (P h).finrank_cohomology_eq hi hh
 
-/-- **`dim ℌₕⁱ = dim ℌⁱ` eventually.** [AFW2010], Thm 3.4, Thm 3.5 -/
 theorem eventually_finrank_harmonicW_eq (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in l, Module.finrank 𝕜 ((S h).harmonicW i) = Module.finrank 𝕜 (H.harmonic i) :=
   (eventually_norm_sub_π_lt P hπ hgap).mono fun h hh => (P h).finrank_harmonicW_eq hi hh
@@ -354,9 +283,6 @@ end Family
 
 /-! ### Uniform convergence on compact sets -/
 
-/-- **Uniform convergence of bounded cochain projections on compact sets**: if `‖πₕ‖ ≤ C` and
-`πₕ x → x` along `l` for every `x ∈ Wⁱ`, then `‖x − πₕ x‖ ≤ ε` for all `x ∈ K`, `K` compact,
-eventually along `l` (`x ↦ ‖x − πₕ x‖` is `(1 + C)`-Lipschitz, `norm_sub_π_le_add`). -/
 theorem eventually_forall_norm_sub_π_le {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
     (P : ∀ h, (S h).CochainProjection) {i : ι} {C : ℝ} (hC : 0 ≤ C)
     (hπ : ∀ h x, ‖(P h).π i x‖ ≤ C * ‖x‖)
@@ -375,35 +301,27 @@ namespace ConformingFamily
 
 variable {κ : Type*} (F : ConformingFamily H κ) {i : ι} [FiniteDimensional 𝕜 (H.harmonic i)]
 
-/-- **The harmonic gap of a conforming family tends to zero** where `ℌⁱ` is finite-dimensional
-(`CochainProjection.tendsto_harmonicGap`). [AFW2010], Thm 3.5 -/
 theorem tendsto_harmonicGap : Tendsto (fun h => (F.π h).harmonicGap i) F.l (𝓝 0) :=
   Subcomplex.CochainProjection.tendsto_harmonicGap F.π (zero_le_one.trans F.one_le_projBound)
     (fun h => F.norm_π_le h i) fun q _ => F.approx i q
 
-/-- For a conforming family and a finite-dimensional `ℌⁱ`, the strict gap
-`‖q - πₕ q‖ < ‖q‖` on `ℌⁱ \ 0` holds eventually: the harmonic gap tends to zero
-(`tendsto_harmonicGap`). [AFW2010], Thm 3.5 -/
 theorem eventually_norm_sub_π_lt :
     ∀ᶠ h in F.l, ∀ q ∈ H.harmonic i, q ≠ 0 → ‖q - (F.π h).π i q‖ < ‖q‖ :=
   Subcomplex.CochainProjection.eventually_norm_sub_π_lt F.π (fun h => F.norm_π_le h i)
     F.tendsto_harmonicGap
 
-/-- **A conforming family eventually has the cohomology of the complex**: if `H` has closed range
-at `i` and `ℌⁱ` is finite-dimensional, the projections `πₕ` eventually induce isomorphisms
-`Hⁱ(H) ≅ Hⁱ(Vₕ)`, `[z] ↦ [πₕ z]`. [AFW2010], Thm 3.4, Thm 3.5 -/
+/-- **A conforming family eventually has the cohomology of the complex** where `H` has closed range
+at `i` and `ℌⁱ` is finite-dimensional ([AFW2010], Thm 3.4, Thm 3.5). -/
 theorem eventually_bijective_cohomologyMap (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in F.l, Function.Bijective ((F.π h).cohomologyMap i) :=
   F.eventually_norm_sub_π_lt.mono fun h hh =>
     ⟨(F.π h).cohomologyMap_injective hi hh, (F.π h).cohomologyMap_surjective i⟩
 
-/-- **`dim Hⁱ(Vₕ) = dim Hⁱ(H)` eventually**, for every conforming family. [AFW2010], Thm 3.4 -/
 theorem eventually_finrank_cohomology_eq (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in F.l, Module.finrank 𝕜 ((F.V h).toHilbertComplex.cohomology i) =
       Module.finrank 𝕜 (H.cohomology i) :=
   F.eventually_norm_sub_π_lt.mono fun h hh => (F.π h).finrank_cohomology_eq hi hh
 
-/-- **`dim ℌₕⁱ = dim ℌⁱ` eventually**, for every conforming family. [AFW2010], Thm 3.4, Thm 3.5 -/
 theorem eventually_finrank_harmonicW_eq (hi : H.ClosedRangeAt i) :
     ∀ᶠ h in F.l, Module.finrank 𝕜 ((F.V h).harmonicW i) = Module.finrank 𝕜 (H.harmonic i) :=
   F.eventually_norm_sub_π_lt.mono fun h hh => (F.π h).finrank_harmonicW_eq hi hh

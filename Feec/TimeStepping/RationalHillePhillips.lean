@@ -6,45 +6,13 @@ public import Feec.Semigroup.HillePhillips
 /-!
 # Rational approximations of bounded semigroups: the `√n` stability bound
 
-Let `r = n/d` be a rational scheme (`Feec.TimeStepping.RationalScheme`, no poles in
-`re z ≤ 0`). In the half-line algebra (`Feec.HalfLineAlgebra`), `Q(ν) = νᴺ d(1 - 1/ν)` is
-invertible (`isUnit_resolventEval_den_resolvent`: `Q` factors into `ν - sⱼ`, and `1 - 1/sⱼ` is a
-pole of `r`), so `r` has a **Hille–Phillips measure** `μ_r = P(ν) Q(ν)⁻¹`
-(`RationalScheme.hpMeasure`), with `μ̂_r(ξ) = r(-2πiξ)` and atom `r(∞)`. For a bounded semigroup
-`‖S(t)‖ ≤ M` on a complex Banach space, `r(τA) = P(R) Q(R)⁻¹ = Φ(μ_r)`
-(`hillePhillips_hpMeasure`), `R = (1 - τA)⁻¹` the Laplace transform of the semigroup. Hence
-
-* `Q(R)` is invertible and `‖r(τA)‖ ≤ M ‖μ_r‖` for every `r` (`norm_resolventStep_le`); in
-  particular the remainder `ρ(τA)` is bounded;
-* **Brenner–Thomée's stability bound** `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for strongly A-stable `r`
-  (`IsStronglyAStable`: `|r(iy)| ≤ 1`, `|r(∞)| < 1`), from the total variation bound
-  `‖μ_rⁿ‖ ≤ 1 + C_r √n` (`variation_hpMeasure_pow_le`,
-  `Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`);
-* hence the hypotheses of the Lax–Richtmyer form `RationalScheme.norm_resolventStep_pow_sub_S_le`,
-  and **an error bound with the `√n` loss of the stability bound**: the stability bound times
-  order-`p` consistency, `O(√n nτ τᵖ)` for `x ∈ D(A^{p+1})`, i.e. of order `p - 1/2` at fixed
-  `T = nτ`. It is stated over `ℝ` or `ℂ` in `Feec.TimeStepping.RationalHillePhillipsReal`
-  (`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent`, for every `R = (1 - τA)⁻¹`).
-  The sources' smooth-data estimate has no `√n`: `O(τᵖ)` for `x ∈ D(A^{p+2})`
-  [HershKato1979] (per its abstract), and `O(nτ τᵖ) ‖A^{p+1} x‖` for `x ∈ D(A^{p+1})`
-  [BrennerThomee1979]; the latter, for every A-stable `r`, is
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`
-  (`Feec.TimeStepping.RationalSharp`), with `S(nτ)` reached through translates of kernels;
-  over `ℝ` or `ℂ`, `RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`.
-
-The bound `C √n` holds for every A-acceptable `r` in [BrennerThomee1979]; the Fourier
-argument here uses `|r(∞)| < 1` (it bounds `‖gₙ‖₂` uniformly in `n`), which covers the L-stable
-schemes but not the Gauss/diagonal Padé schemes (`|r(∞)| = 1`); every A-stable `r` is covered,
-by a dyadic decomposition of `μ_rⁿ`, in `Feec.TimeStepping.RationalAStable`. The measure `μ_r` is
-complex, so this file is on complex Banach spaces; real ones are reached by complexification in
-`Feec.TimeStepping.RationalHillePhillipsReal`.
+`r(τA)` is the Hille–Phillips operator of the measure `μ_r` of `r`; hence `‖r(τA)‖ ≤ M ‖μ_r‖`, and
+`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` with an explicit `C_r` for strongly A-stable `r`.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
 * [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -57,15 +25,12 @@ namespace Feec
 
 namespace TimeStepping
 
-/-- `sᴺ f(1 - 1/s)` at `s = 0` is `f_N (-1)ᴺ`. -/
 theorem resolventEval_zero (N : ℕ) (f : ℂ[X]) :
     resolventEval N f (0 : ℂ) = f.coeff N * (-1) ^ N := by
   rw [resolventEval, sum_range_succ, sum_eq_zero fun k hk => by
     rw [zero_pow (by have := mem_range.1 hk; omega)]; simp]
   simp
 
-/-- At an algebra homomorphism into a field, `sᴺ f(1 - 1/s)` is evaluation of the polynomial
-`resolventEval N f X`. -/
 theorem resolventEval_eq_eval {A : Type*} [Ring A] [Algebra ℂ A] (N : ℕ) (f : ℂ[X]) (S : A) :
     resolventEval N f S = aeval S (resolventEval N f (X : ℂ[X])) := by
   rw [map_resolventEval, aeval_X]
@@ -88,8 +53,6 @@ theorem eval_denPoly_zero_ne_zero : r.denPoly.eval 0 ≠ 0 := by
   rw [eval_denPoly_zero]
   simp [leadingCoeff_eq_zero, r.den_ne_zero]
 
-/-- **The roots of `Q`**: `s ≠ 0`, and `1 - 1/s` is a pole of `r`, so it has positive real
-part. -/
 theorem re_pos_of_isRoot {s : ℂ} (hs : r.denPoly.IsRoot s) : s ≠ 0 ∧ 0 < (1 - s⁻¹).re := by
   have hs0 : s ≠ 0 := fun h => r.eval_denPoly_zero_ne_zero (by subst h; exact hs)
   refine ⟨hs0, not_le.1 fun hre => r.aeval_den_ne_zero _ hre ?_⟩
@@ -98,8 +61,6 @@ theorem re_pos_of_isRoot {s : ℂ} (hs : r.denPoly.IsRoot s) : s ≠ 0 ∧ 0 < (
   rw [← eval_map_algebraMap]
   exact h.resolve_left (pow_ne_zero _ hs0)
 
-/-- **`Q(ν)` is invertible in the half-line algebra**: `Q` factors into `s - sⱼ` over its roots, and
-`ν - sⱼ` is invertible since `1 - 1/sⱼ` is a pole of `r` (`re > 0`). -/
 theorem isUnit_resolventEval_den_resolvent :
     IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ ℂ)) HalfLineAlgebra.resolvent) := by
   rw [resolventEval_eq_eval, ← denPoly]
@@ -115,15 +76,12 @@ theorem isUnit_resolventEval_den_resolvent :
   rw [← neg_sub]
   exact (HalfLineAlgebra.isUnit_algebraMap_sub_resolvent hs0 hre).neg
 
-/-- **The Hille–Phillips measure of `r`**: `μ_r = P(ν) Q(ν)⁻¹` in the half-line algebra, with
-`ν = e^{-t} dt`; its Fourier–Stieltjes transform is `r(-2πiξ)` (`fourier_hpMeasure`) and
-`r(τA) = Φ(μ_r)` for every bounded semigroup (`hillePhillips_hpMeasure`). -/
+/-- The Hille–Phillips measure `μ_r = P(ν) Q(ν)⁻¹` of `r`, with `ν = e^{-t} dt`. -/
 def hpMeasure : HalfLineAlgebra :=
   resolventEval r.den.natDegree (r.num.map (algebraMap ℝ ℂ)) HalfLineAlgebra.resolvent *
     Ring.inverse (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ ℂ))
       HalfLineAlgebra.resolvent)
 
-/-- Algebra homomorphisms carry `μ_r` to `P(φ ν) Q(φ ν)⁻¹`. -/
 theorem map_hpMeasure {B : Type*} [Ring B] [Algebra ℂ B] (φ : HalfLineAlgebra →ₐ[ℂ] B) :
     φ r.hpMeasure = resolventEval r.den.natDegree (r.num.map (algebraMap ℝ ℂ))
       (φ HalfLineAlgebra.resolvent) * Ring.inverse (resolventEval r.den.natDegree
@@ -131,7 +89,6 @@ theorem map_hpMeasure {B : Type*} [Ring B] [Algebra ℂ B] (φ : HalfLineAlgebra
   rw [hpMeasure, map_mul, r.isUnit_resolventEval_den_resolvent.map_ringInverse φ,
     map_resolventEval, map_resolventEval]
 
-/-- **`μ̂_r(ξ) = r(-2πiξ)`**. -/
 theorem fourier_hpMeasure (ξ : ℝ) :
     HalfLineAlgebra.fourier ξ r.hpMeasure = r.eval (-(2 * Real.pi * ξ * Complex.I)) := by
   set s : ℂ := (1 + 2 * Real.pi * ξ * Complex.I)⁻¹
@@ -148,7 +105,6 @@ theorem fourier_hpMeasure (ξ : ℝ) :
     Ring.inverse_eq_inv', eval, mul_inv, div_eq_mul_inv]
   field_simp
 
-/-- The atom of `μ_r` is `r(∞) = n_N / d_N`. -/
 theorem fst_hpMeasure :
     r.hpMeasure.fst = (r.num.coeff r.den.natDegree / r.den.leadingCoeff : ℝ) := by
   have h := r.map_hpMeasure (fstHom ℂ HalfLineKernel)
@@ -174,16 +130,11 @@ theorem norm_fourier_hpMeasure_le {r : RationalScheme} (hr : r.IsAStable) (ξ : 
   convert hr (-(2 * Real.pi * ξ)) using 3
   push_cast; ring
 
-/-- **Brenner–Thomée's constant** `C_r = K^{1/4}`, `K = 4π² ‖g‖₂² ‖t g‖₂² / (1 - |r(∞)|)²` for
-`μ_r = r(∞) δ₀ + g`. -/
+/-- Brenner–Thomée's constant `C_r` of a strongly A-stable scheme. -/
 def stabilityConst : ℝ :=
   √(√(4 * Real.pi ^ 2 * (∫ t, ‖r.hpMeasure.snd t‖ ^ 2) * (∫ t, ‖t • r.hpMeasure.snd t‖ ^ 2) /
     (1 - ‖r.hpMeasure.fst‖) ^ 2))
 
-/-- **The total variation of `μ_rⁿ` is at most `1 + C_r √n`** for strongly A-stable `r`
-(`Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`). Every A-stable `r` is covered by
-`variation_hpMeasure_pow_le_sqrtConst`; this form is kept for its explicit constant
-`C_r = stabilityConst r` (`sqrtConst r` there comes from compactness). -/
 theorem variation_hpMeasure_pow_le {r : RationalScheme} (hr : r.IsStronglyAStable) (n : ℕ) :
     (r.hpMeasure ^ n).variation ≤ 1 + r.stabilityConst * √n := by
   have ha := norm_fst_hpMeasure_lt hr
@@ -219,14 +170,13 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E
   (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
 
 /-- **`r(τA)` is the Hille–Phillips operator of `μ_r`**: `r(τA) = Φ(μ_r)` for the semigroup
-`S(τ ·)`, with `R = (1 - τA)⁻¹` its Laplace transform (`C0Semigroup.laplaceResolvent`). -/
+`S(τ ·)`, with `R = (1 - τA)⁻¹` its Laplace transform. -/
 theorem hillePhillips_hpMeasure {τ : ℝ} (hτ : 0 ≤ τ) :
     (G.dilate τ hτ).hillePhillips (G.norm_dilate_S_le hM hτ) r.hpMeasure =
       r.resolventStep (G.laplaceResolvent hM τ hτ) := by
   rw [map_hpMeasure]
   rfl
 
-/-- `Q(R)` is invertible for every rational scheme (no stability needed). -/
 theorem isUnit_resolventEval_den_laplaceResolvent {τ : ℝ} (hτ : 0 ≤ τ) :
     IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ ℂ))
       (G.laplaceResolvent hM τ hτ)) := by
@@ -234,20 +184,15 @@ theorem isUnit_resolventEval_den_laplaceResolvent {τ : ℝ} (hτ : 0 ≤ τ) :
     ((G.dilate τ hτ).hillePhillips (G.norm_dilate_S_le hM hτ))
   rwa [map_resolventEval] at this
 
-/-- **The Hille–Phillips bound**: `‖r(τA)‖ ≤ M ‖μ_r‖` for every rational scheme and every
-bounded semigroup, `‖S(t)‖ ≤ M`; in particular the remainder `ρ(τA)` is bounded uniformly in
-`τ`. [HillePhillips1957] -/
+/-- **The Hille–Phillips bound**: `‖r(τA)‖ ≤ M ‖μ_r‖` for every rational scheme and every bounded
+semigroup `‖S(t)‖ ≤ M`. [HillePhillips1957] -/
 theorem norm_resolventStep_le {τ : ℝ} (hτ : 0 ≤ τ) :
     ‖r.resolventStep (G.laplaceResolvent hM τ hτ)‖ ≤ M * r.hpMeasure.variation := by
   rw [← r.hillePhillips_hpMeasure G hM hτ]
   exact (G.dilate τ hτ).norm_hillePhillips_le _ _
 
-/-- **Brenner–Thomée's stability bound** [BrennerThomee1979]: for a strongly
-A-stable rational scheme `r` and a bounded semigroup, `‖S(t)‖ ≤ M`, on a complex Banach space,
-`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for all `τ ≥ 0` and `n`, with `C_r` depending only on `r`
-(`RationalScheme.stabilityConst`). Every A-stable `r` is covered by
-`norm_resolventStep_pow_le_of_isAStable`; this form is kept for its explicit constant
-(`sqrtConst r` there comes from compactness). -/
+/-- **Brenner–Thomée's stability bound**: for strongly A-stable `r` and a bounded semigroup on a
+complex Banach space, `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)`, `C_r = stabilityConst r`. [BrennerThomee1979] -/
 theorem norm_resolventStep_pow_le {r : RationalScheme} (hr : r.IsStronglyAStable) {τ : ℝ}
     (hτ : 0 ≤ τ) (n : ℕ) :
     ‖r.resolventStep (G.laplaceResolvent hM τ hτ) ^ n‖ ≤ M * (1 + r.stabilityConst * √n) := by

@@ -7,76 +7,16 @@ public import Mathlib.MeasureTheory.Measure.Haar.InnerProductSpace
 public import Mathlib.Analysis.SpecialFunctions.Integrals.Basic
 
 /-!
-# Prop 4.19 with the boundary conditions as printed fails on the unit ball
+# The Hessian–curl complex on the unit ball: TSD data leave the constraint
 
-The complex (4.16) with the boundary conditions of the data space printed in Prop 4.19 is
-`Feec.Models.BoundedDomain.hessCurlMax`, the dual of
-`H̊(sym curl, T) --sym curl--> H̊(div div, S) --div div--> L²(Ω)`:
-`H²(Ω) --grad grad--> H(curl, S) --curl--> L²(T)` (no boundary conditions), whose adjoints are
-`div div` on `H̊(div div, S)` and `sym curl` on `H̊(sym curl, T)`, so
-`D(L) = H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)`. For
-`K = {0} × L²(TSD) × L²(TSD)`, `Feec.Counterexamples.BoundedSymTSD` shows on every bounded domain
-that the projection and density hypotheses of Prop 4.19 fail and that `L` maps `D(L) ∩ K` into
-`K`; it leaves the conclusion (TSD propagation) open. This file decides the conclusion on one
-domain: on the Euclidean unit ball `B = {x₀² + x₁² + x₂² < 1}` (`ball3`; `R3` carries the sup
-norm, so `B` is not `Metric.ball 0 1`) **TSD does not propagate**.
-
-## The counterexample
-
-* **Datum** `x₀ = (0, E₀, 0)`, `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x = (-x₁, x₀, 0)`
-  (`eF`, `E0`, `x0`): a linear field, symmetric, trace-free, divergence-free, with
-  `xᵀ E₀ x = 0` and the constant curl `curl E₀ = diag(-1, -1, 2)` (`curlM_eF`).
-* **`E₀ ∈ H̊(div div, S)`** (`E0_mem_divdivD`). With the radial cutoffs `χ_n(x) = η_n(|x|²)`
-  (`chi`, built from `Real.smoothTransition`), `div div (χ_n E₀) = E₀ : ∇²χ_n + 2 ∇χ_n · div E₀`
-  vanishes identically, since `∇²χ_n = 4 η_n'' x xᵀ + 2 η_n' I`, `tr E₀ = 0`, `xᵀ E₀ x = 0`
-  (`divdivF_chi_eF`); and `χ_n E₀ → E₀` in `L²` (`tendsto_testFieldS_psiN`). So
-  `x₀ ∈ D(L) ∩ K` (`x0_mem_domL`, `x0_mem_Kc`).
-* **Test vector** `N = (0, 0, curl Q)` (`Nvec`), `Q = sym ∇v` (`qExp = symF gExp`),
-  `v = (1 - |x|²)(-x₁x₂, x₀x₂, 0)` (`vF`). `v ∈ H̊¹(B)` in the sense needed: `∇(χ_n v) → ∇v` in
-  `L²`, because `(1 - s) η_n'(s)` stays bounded (`abs_mul_deriv_eta_le`, `tendsto_pd_chi_vF`).
-  Hence `⟪C, Q⟫ = ⟪C, ∇v⟫ = 0` for every `C ∈ L²(TSD)` (`sum_integral_mul_qExp_eq_zero`), and for
-  `y = (0, E, B) ∈ D(L) ∩ K`, `⟪y, N⟫ = ⟪B, curl Q⟫ = ⟪sym curl B, Q⟫ = 0`, as
-  `sym curl B ∈ L²(TSD)` (Lemma 3.5,
-  `Feec.Counterexamples.BoundedSymTSD.adjoint_hessCurlMax_d₁_mem_tsdS`): `N ⊥ D(L) ∩ K`
-  (`inner_Nvec_eq_zero`).
-* **The pairing** `⟪L x₀, N⟫ = ⟪curl E₀, curl Q⟫ = 3 ∫_B (1 - 2x₀² - 2x₁² - 3x₂²)`
-  (`inner_negL_x0`, `inner_curlE0_curlQ`, `sum_Mc_curlM_qExp`), bounded by
-  `3 ∫_B (1 - 2|x|²) = -(3/5) |B| < 0` via the radial moment `∫_B |x|² = (3/5) |B|`
-  (`integral_rho_ball3`, from `MeasureTheory.integral_fun_norm_addHaar`) (`inner_negL_x0_lt`).
-* **Criterion** (`not_propagate_of_inner`, any short complex): if `N ⊥ D(L) ∩ K` and
-  `⟪L x₀, N⟫ ≠ 0`, every strong solution from `x₀` leaves `K` on every `[0, T]`, `T > 0`.
-
-## Main results
-
-* **`tsd_not_propagates`**, **`not_propagates`**: the TSD datum
-  `x₀ ∈ D(L) ∩ K` has, on every `[0, T]`, `T > 0`, a unique strong solution (the wave group
-  orbit), and it leaves `K = {0} × L²(TSD) × L²(TSD)`; `x₀` also lies in the variant
-  `{0} × (L²(TSD) ∩ ker d₀†) × L²(TSD)` (`Feec.Counterexamples.BoundedSymTSD.tsdSKer`).
-
-## Correction
-
-[QuennevilleBelair2015], Prop. 4.19 (§4.11), read with its printed data space
-`H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)` and `K = {0} × L²(TSD) × L²(TSD)`: the
-conclusion is false on the unit ball of `ℝ³`. With the placement of the boundary conditions used
-in the proof (`Feec.Models.BoundedDomain.hessCurl`) it is false on every bounded domain
-(`Feec.Counterexamples.BoundedSymTSD.tsd_not_propagates`), so on the unit ball the conclusion of
-Prop 4.19 fails with either placement.
-
-## Scope
-
-* Only the unit ball centred at `0` is treated. The same construction applies to every ball
-  `{|x - c| < R}` (with `u = e₃ × (x - c)` and `v = (R² - |x - c|²)(…)`); this is not
-  formalized. Whether the conclusion fails on every bounded domain is not decided.
-* Not decided either: whether `K* ≠ {0}` on `B`, and whether the constant magnetic field
-  `(0, 0, diag(1, -1, 0))` is orthogonal to `D(L) ∩ K`; here the obstruction is `curl Q`, not a
-  constant.
+For the complex `hessCurlMax` with the data space of [QuennevilleBelair2015], Prop 4.19, on the
+Euclidean unit ball, every strong solution from the TSD datum `(0, E₀, 0)`, `E₀ = e₃ uᵀ + u e₃ᵀ`,
+`u = e₃ × x`, leaves `{0} × L²(TSD) × L²(TSD)`.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Lemma 3.5), §4.11 ((4.16)–(4.18), Prop 4.19)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011]
+  §3.4, §4.11
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -106,7 +46,6 @@ theorem differentiable_rho : Differentiable ℝ rho := by
 theorem contDiff_rho : ContDiff ℝ ∞ rho := by
   unfold rho; fun_prop
 
-/-- `∂_k |x|² = 2 x_k`. -/
 theorem pd_rho (k : Fin 3) (x : R3) : partialDeriv k rho x = 2 * x k := by
   have h := fun a : Fin 3 => (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x).mul
     (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x)
@@ -114,7 +53,6 @@ theorem pd_rho (k : Fin 3) (x : R3) : partialDeriv k rho x = 2 * x k := by
   rw [HasFDerivAt.partialDeriv_eq h']
   fin_cases k <;> simp <;> ring
 
-/-- Chain rule: `∂_k η(|x|²) = 2 η'(|x|²) x_k`. -/
 theorem pd_comp_rho {η : ℝ → ℝ} (hη : Differentiable ℝ η) (k : Fin 3) (x : R3) :
     partialDeriv k (fun y => η (rho y)) x = deriv η (rho x) * (2 * x k) := by
   have h1 := fun a : Fin 3 => (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x).mul
@@ -142,8 +80,7 @@ theorem norm_le_one_of_rho_le {x : R3} (hx : rho x ≤ 1) : ‖x‖ ≤ 1 :=
   (pi_norm_le_iff_of_nonneg zero_le_one).2 fun i => by
     rw [Real.norm_eq_abs]; exact abs_le_one_of_rho_le hx i
 
-/-- The Euclidean unit ball `{|x| < 1}` (`R3` carries the sup norm, so this is not
-`Metric.ball 0 1`). -/
+/-- The Euclidean unit ball `{x₀² + x₁² + x₂² < 1}`. -/
 def ball3 : Set R3 := {x | rho x < 1}
 
 theorem isOpen_ball3 : IsOpen ball3 := isOpen_lt continuous_rho continuous_const
@@ -159,8 +96,7 @@ theorem zero_mem_ball3 : (0 : R3) ∈ ball3 := by
 
 theorem ball3_nonempty : ball3.Nonempty := ⟨0, zero_mem_ball3⟩
 
-/-- The radial profile `η_n(s) = χ((n + 2)(1 - s) - 1)`: `1` for `s ≤ 1 - 2/(n + 2)`, `0` for
-`s ≥ 1 - 1/(n + 2)` (`χ = Real.smoothTransition`). -/
+/-- The radial profile `η_n(s) = χ((n + 2)(1 - s) - 1)`, `χ = Real.smoothTransition`. -/
 def eta (n : ℕ) (s : ℝ) : ℝ := Real.smoothTransition (((n : ℝ) + 2) * (1 - s) - 1)
 
 /-- The radial cutoff `χ_n(x) = η_n(|x|²)`. -/
@@ -203,7 +139,6 @@ theorem eta_nonneg (n : ℕ) (s : ℝ) : 0 ≤ eta n s := Real.smoothTransition.
 
 theorem eta_le_one (n : ℕ) (s : ℝ) : eta n s ≤ 1 := Real.smoothTransition.le_one _
 
-/-- **The cutoff gradient is `O(1/(1 - s))`**: `|(1 - s) η_n'(s)| ≤ 2 D`, `D` a bound of `|χ'|`. -/
 theorem abs_mul_deriv_eta_le {D : ℝ} (hD : ∀ s, |dχ s| ≤ D) (n : ℕ) (s : ℝ) :
     |(1 - s) * deriv (eta n) s| ≤ 2 * D := by
   have hD0 : 0 ≤ D := (abs_nonneg _).trans (hD 0)
@@ -224,7 +159,6 @@ theorem contDiff_chi (n : ℕ) : ContDiff ℝ ∞ (chi n) := (contDiff_eta n).co
 theorem differentiable_chi (n : ℕ) : Differentiable ℝ (chi n) :=
   (contDiff_chi n).differentiable (by simp)
 
-/-- `χ_n ∈ C_c^∞(B)`. -/
 theorem isTest_chi (n : ℕ) : IsTest ball3 (chi n) := by
   set c : ℝ := 1 - 1 / ((n : ℝ) + 2)
   have hpos : (0 : ℝ) < (n : ℝ) + 2 := by linarith [two_le_mul n]
@@ -250,7 +184,6 @@ theorem pd_chi (n : ℕ) (k : Fin 3) (x : R3) :
     partialDeriv k (chi n) x = deriv (eta n) (rho x) * (2 * x k) :=
   pd_comp_rho (differentiable_eta n) k x
 
-/-- On `B`, eventually `η_n = 1` and `η_n' = 0` near `|x|²`. -/
 theorem eventually_eta_eq_one {x : R3} (hx : x ∈ ball3) :
     ∀ᶠ n : ℕ in atTop, eta n (rho x) = 1 ∧ deriv (eta n) (rho x) = 0 := by
   have hx' : 0 < 1 - rho x := by have : rho x < 1 := hx; linarith
@@ -269,8 +202,6 @@ theorem tendsto_chi {x : R3} (hx : x ∈ ball3) : Tendsto (fun n => chi n x) atT
 
 /-! ## Bounded pointwise convergence gives `L²` convergence -/
 
-/-- On a set of finite measure, uniformly bounded pointwise convergence of `L²` functions implies
-convergence in `L²(Ω)` (dominated convergence for `∫ |F_n - f|²`). -/
 theorem tendsto_toLp_of_bound {Ω : Set R3} (hΩm : MeasurableSet Ω) (hfin : volume Ω ≠ ⊤)
     {F : ℕ → R3 → ℝ} {f : R3 → ℝ} (hF : ∀ n, MemLp (F n) 2 (volume.restrict Ω))
     (hf : MemLp f 2 (volume.restrict Ω)) {C : ℝ} (hC : ∀ n, ∀ x ∈ Ω, |F n x - f x| ≤ C)
@@ -320,8 +251,7 @@ theorem pd_linF (c : Fin 3 → ℝ) (k : Fin 3) (x : R3) : partialDeriv k (linF 
   rw [HasFDerivAt.partialDeriv_eq h']
   fin_cases k <;> simp
 
-/-- Coefficients of the electric datum `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x = (-x₁, x₀, 0)`:
-`E₀_{02} = E₀_{20} = -x₁`, `E₀_{12} = E₀_{21} = x₀`, all other entries `0`. -/
+/-- The coefficient of `x_m` in the entry `ij` of `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x`. -/
 def ecoef (ij : Ix) (m : Fin 3) : ℝ :=
   if (ij = (0, 2) ∨ ij = (2, 0)) ∧ m = 1 then -1
   else if (ij = (1, 2) ∨ ij = (2, 1)) ∧ m = 0 then 1 else 0
@@ -336,7 +266,6 @@ theorem eF_symm (i j : Fin 3) : eF (i, j) = eF (j, i) := by
 theorem eF_trace (x : R3) : ∑ i, eF (i, i) x = 0 := by
   simp [eF, ecoef, linF, Fin.sum_univ_three]
 
-/-- `E₀` is divergence-free: `Σ_j ∂_j E₀_{ij} = 0`. -/
 theorem sum_pd_eF (i : Fin 3) (x : R3) : ∑ j, partialDeriv j (eF (i, j)) x = 0 := by
   simp only [eF, pd_linF]
   fin_cases i <;> simp [ecoef, Fin.sum_univ_three]
@@ -344,15 +273,13 @@ theorem sum_pd_eF (i : Fin 3) (x : R3) : ∑ j, partialDeriv j (eF (i, j)) x = 0
 /-- The constant `curl E₀ = diag(-1, -1, 2)`. -/
 def Mc (ij : Ix) : ℝ := if ij.1 = ij.2 then (if ij.1 = 2 then 2 else -1) else 0
 
-/-- `curl E₀ = diag(-1, -1, 2)`. -/
 theorem curlM_eF (ij : Ix) (x : R3) : curlM eF ij x = Mc ij := by
   obtain ⟨i, k⟩ := ij
   simp only [curlM, eF, pd_linF]
   fin_cases i <;> fin_cases k <;> norm_num [ecoef, Mc]
 
-/-! ## `E₀ ∈ H̊(div div, S)`: radial cutoffs commute with `div div` on `E₀` -/
+/-! ## `E₀ ∈ H̊(div div, S)` -/
 
-/-- The Hessian of the radial cutoff: `∂_i ∂_j η(|x|²) = 4 η''(|x|²) x_i x_j + 2 η'(|x|²) δ_ij`. -/
 theorem pd_pd_chi (n : ℕ) (i j : Fin 3) (x : R3) :
     partialDeriv i (partialDeriv j (chi n)) x =
       deriv (deriv (eta n)) (rho x) * (2 * x i) * (2 * x j) +
@@ -365,7 +292,6 @@ theorem pd_pd_chi (n : ℕ) (i j : Fin 3) (x : R3) :
   rw [e, partialDeriv_mul hf hg i, pd_comp_rho (differentiable_deriv_eta n),
     partialDeriv_const_mul (by fun_prop) 2 i, partialDeriv_apply_coord]
 
-/-- Product rule twice for `χ_n · (c · x)`. -/
 theorem pd_pd_chi_mul_linF (n : ℕ) (c : Fin 3 → ℝ) (i j : Fin 3) (x : R3) :
     partialDeriv i (partialDeriv j (fun y => chi n y * linF c y)) x =
       partialDeriv i (partialDeriv j (chi n)) x * linF c x +
@@ -385,8 +311,6 @@ theorem pd_pd_chi_mul_linF (n : ℕ) (c : Fin 3 → ℝ) (i j : Fin 3) (x : R3) 
       partialDeriv_const]
   ring
 
-/-- **`div div (χ_n E₀) = 0`**: `div E₀ = 0`, and `E₀ : ∇²χ_n = 0` because `E₀` is trace-free and
-`xᵀ E₀ x = 0`. -/
 theorem divdivF_chi_eF (n : ℕ) (u : Unit) (x : R3) :
     (divdivOp 3 : ConstCoeffOp R3 ℝ Ix Unit).apply (fun ij y => chi n y * eF ij y) u x = 0 := by
   rw [divdivOp_apply]
@@ -395,7 +319,6 @@ theorem divdivF_chi_eF (n : ℕ) (u : Unit) (x : R3) :
   simp [Fintype.sum_prod_type, Fin.sum_univ_three, ecoef, linF]
   ring
 
-/-- A cutoff times a smooth function is a test function on `B`. -/
 theorem isTest_chi_mul (n : ℕ) {g : R3 → ℝ} (hg : ContDiff ℝ ∞ g) :
     IsTest ball3 (fun y => chi n y * g y) :=
   ⟨(contDiff_chi n).mul hg, (isTest_chi n).hasCompactSupport.mul_right,
@@ -411,17 +334,15 @@ theorem contDiff_one_eF (ij : Ix) : ContDiff ℝ 1 (eF ij) := (contDiff_linF _).
 
 /-! ## The datum `x₀ = (0, E₀, 0)` on the unit ball -/
 
-/-- `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x`, as an element of `L²(B; S)`. -/
+/-- `E₀` as an element of `L²(B; S)`. -/
 def E0 : symSub ℝ ball3 :=
   ⟨smoothField isOpen_ball3 isBounded_ball3 eF (fun ij => (contDiff_one_eF ij).continuous),
     smoothField_mem_symSub isOpen_ball3 isBounded_ball3 _ eF_symm⟩
 
-/-- **`E₀ ∈ L²(TSD)`**: symmetric, trace-free and divergence-free. -/
 theorem E0_mem_TSDS : E0 ∈ tsdS ball3 :=
   smoothField_mem_tsd isOpen_ball3 isBounded_ball3 contDiff_one_eF
     (fun i j x _ => by rw [eF_symm]) (fun x _ => eF_trace x) fun i x _ => sum_pd_eF i x
 
-/-- **`E₀ ∈ H(curl, S) = D(d₁)`**, with `d₁ E₀ = curl E₀ = diag(-1, -1, 2)`. -/
 theorem E0_mem_d1 :
     ∃ h : E0 ∈ (hessCurlMax ℝ isOpen_ball3).d₁.domain,
       (((hessCurlMax ℝ isOpen_ball3).d₁ ⟨E0, h⟩ : trSub ℝ ball3) : L2F ℝ ball3 Ix) =
@@ -441,7 +362,6 @@ theorem divdivTestField_psiN (n : ℕ) :
     (divdivOp 3 : ConstCoeffOp R3 ℝ Ix Unit).apply (psiN n) = 0 :=
   funext fun u => funext fun x => divdivF_chi_eF n u x
 
-/-- `χ_n E₀ → E₀` in `L²(B; S)`. -/
 theorem tendsto_testFieldS_psiN :
     Tendsto (fun n => (⟨testField (isTest_psiN n), testField_mem_symSub _ (psiN_symm n)⟩ :
       symSub ℝ ball3)) atTop (𝓝 E0) := by
@@ -461,8 +381,6 @@ theorem tendsto_testFieldS_psiN :
     nlinarith [abs_nonneg (chi n x - 1), abs_nonneg (eF ij x)]
   · simpa [psiN] using (tendsto_chi hx).mul_const (eF ij x)
 
-/-- **`E₀ ∈ H̊(div div, S)`**, with `div div E₀ = 0`: `E₀` is the `L²` limit of
-`χ_n E₀ ∈ C_c^∞(B; S)`, and `div div (χ_n E₀) = 0` exactly. -/
 theorem E0_mem_divdivD : E0 ∈ (symCurlDivDiv ℝ isOpen_ball3).d₁.domain := by
   have hcl : IsClosed ((symCurlDivDiv ℝ isOpen_ball3).d₁.graph :
       Set (symSub ℝ ball3 × L2 ℝ ball3)) := (symCurlDivDiv ℝ isOpen_ball3).closed₁
@@ -603,8 +521,6 @@ theorem pd0_q21 (x : R3) : partialDeriv 0 (qExp (2, 1)) x =
     -(3 * (x 0 * x 0) + x 1 * x 1 + 3 * (x 2 * x 2) - 1) / 2 := by
   rw [← qExp_symm]; exact pd0_q12 x
 
-/-- `curl Q` paired with `curl E₀ = diag(-1, -1, 2)`, pointwise:
-`Σ_{ij} (curl E₀)_{ij} (curl Q)_{ij} = 3 (1 - 2x₀² - 2x₁² - 3x₂²)`. -/
 theorem sum_Mc_curlM_qExp (x : R3) :
     ∑ ij : Ix, Mc ij * curlM qExp ij x =
       3 * (1 - 2 * (x 0 * x 0) - 2 * (x 1 * x 1) - 3 * (x 2 * x 2)) := by
@@ -613,13 +529,10 @@ theorem sum_Mc_curlM_qExp (x : R3) :
   simp
   ring
 
-/-- A continuous function is bounded on `B`. -/
 theorem exists_bound_ball3 {g : R3 → ℝ} (hg : Continuous g) : ∃ C, ∀ x ∈ ball3, |g x| ≤ C := by
   obtain ⟨C, hC⟩ := isBounded_ball3.isCompact_closure.exists_bound_of_continuousOn hg.continuousOn
   exact ⟨C, fun x hx => by simpa [Real.norm_eq_abs] using hC x (subset_closure hx)⟩
 
-/-- `∂_j (χ_n v_i) → ∂_j v_i` in `L²(B)`: `v ∈ H̊¹(B)`, and the cutoff term
-`2 η_n'(|x|²) (1 - |x|²) x_j p_i` stays bounded. -/
 theorem tendsto_pd_chi_vF (i j : Fin 3) :
     Tendsto (fun n => (memLp_of_continuous isOpen_ball3.measurableSet isBounded_ball3
       (((isTest_chi_mul n (contDiff_vF i)).contDiff.of_le
@@ -663,8 +576,6 @@ theorem tendsto_pd_chi_vF (i j : Fin 3) :
     rw [hF, chi, hn.1, hn.2]
     ring
 
-/-- **`Q = sym ∇v` is orthogonal to `L²(TSD)`**: for every `C ∈ L²(TSD)`, `⟪C, Q⟫ = ⟪C, ∇v⟫ = 0`,
-because `v ∈ H̊¹(B)` (the `L²(TSD)` divergence condition is tested against `χ_n v ∈ C_c^∞`). -/
 theorem sum_integral_mul_qExp_eq_zero {C : L2F ℝ ball3 Ix} (hC : C ∈ tsd ball3) :
     ∑ ij, ∫ x, C ij x * qExp ij x ∂volume.restrict ball3 = 0 := by
   rw [qExp_eq_symF, sum_integral_mul_symF isOpen_ball3 isBounded_ball3 hC.1
@@ -702,7 +613,6 @@ theorem integral_Ioi_radial (k : ℕ) :
   field_simp
   ring
 
-/-- `∫_{ℝ³} F(|x|) dx` for the Euclidean norm, transported to `R3 = Fin 3 → ℝ`. -/
 theorem integral_ball3_radial (k : ℕ) :
     ∫ x in ball3, (rho x) ^ k =
       3 * volume.real (Metric.ball (0 : EuclideanSpace ℝ (Fin 3)) 1) * (1 / (2 * (k : ℝ) + 3)) := by
@@ -740,7 +650,6 @@ theorem volume_real_ball3 :
     Nat.cast_zero, mul_zero, zero_add] at h
   exact h
 
-/-- **`∫_B |x|² = (3/5) |B|`**. -/
 theorem integral_rho_ball3 : ∫ x in ball3, rho x = 3 / 5 * volume.real ball3 := by
   have h := integral_ball3_radial 1
   simp only [pow_one, Nat.cast_one] at h
@@ -751,7 +660,7 @@ theorem integrable_ball3 {f : R3 → ℝ} (hf : Continuous f) : Integrable f (vo
   (hf.continuousOn.integrableOn_compact isBounded_ball3.isCompact_closure).mono_set subset_closure
 
 
-/-! ## A generic refutation criterion -/
+/-! ## A criterion for leaving `K` -/
 
 section Criterion
 
@@ -760,9 +669,8 @@ variable {W0 W1 W2 : Type}
     [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
 
-/-- **Refutation criterion**: if `N ⊥ D(L) ∩ K` and `⟪L x₀, N⟫ ≠ 0`, then every strong solution
-of `U' = L U` from `x₀` leaves `K` on every `[0, T]`, `T > 0` (strong solutions take values in
-`D(L)`, and `t ↦ ⟪U(t), N⟫` would vanish on `[0, T]` with derivative `⟪L x₀, N⟫` at `0`). -/
+/-- If `N ⊥ D(L) ∩ K` and `⟪L x₀, N⟫ ≠ 0`, then every strong solution of `U' = L U` from `x₀`
+leaves `K` on every `[0, T]`, `T > 0`. -/
 theorem not_propagate_of_inner (S : ShortHilbertComplex ℝ W0 W1 W2)
     {K : Set (PiLp 2 (ShortHilbertComplex.W3 W0 W1 W2))}
     (N : PiLp 2 (ShortHilbertComplex.W3 W0 W1 W2))
@@ -787,7 +695,6 @@ theorem not_propagate_of_inner (S : ShortHilbertComplex ℝ W0 W1 W2)
   rw [e] at hm
   exact hc hm
 
-/-- For `x = (0, E, 0) ∈ D(L)` and `N = (0, 0, N₂)`: `⟪L x, N⟫ = ⟪d₁ E, N₂⟫`. -/
 theorem inner_negL_ini (S : ShortHilbertComplex ℝ W0 W1 W2) {E : W1}
     (hx : ShortHilbertComplex.mk3 (0 : W0) E (0 : W2) ∈ S.wave.domain) (hE : E ∈ S.d₁.domain)
     (N₂ : W2) :
@@ -801,7 +708,7 @@ theorem inner_negL_ini (S : ShortHilbertComplex ℝ W0 W1 W2) {E : W1}
 
 end Criterion
 
-/-! ## The refutation on the unit ball -/
+/-! ## The unit ball -/
 
 /-- `Q = sym ∇v`, as an element of `L²(B; S)`. -/
 def Qs : symSub ℝ ball3 :=
@@ -819,7 +726,6 @@ theorem Qs_mem_d1 :
 def Nvec : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ ball3) (symSub ℝ ball3) (trSub ℝ ball3)) :=
   ShortHilbertComplex.mk3 0 0 ((hessCurlMax ℝ isOpen_ball3).d₁ ⟨Qs, Qs_mem_d1.1⟩)
 
-/-- `⟪C, Q⟫ = 0` for `C ∈ L²(TSD)`. -/
 theorem inner_Qs_eq_zero {C : symSub ℝ ball3} (hC : C ∈ tsdS ball3) : ⟪C, Qs⟫_ℝ = 0 := by
   rw [Submodule.coe_inner]
   change ⟪(C : L2F ℝ ball3 Ix), smoothField isOpen_ball3 isBounded_ball3 qExp
@@ -827,9 +733,6 @@ theorem inner_Qs_eq_zero {C : symSub ℝ ball3} (hC : C ∈ tsdS ball3) : ⟪C, 
   rw [inner_smoothField]
   exact sum_integral_mul_qExp_eq_zero hC
 
-/-- **`N ⊥ D(L) ∩ K`**: for `y = (0, E, B) ∈ D(L)` with `B ∈ L²(TSD)`,
-`⟪y, N⟫ = ⟪B, curl Q⟫ = ⟪sym curl B, Q⟫ = 0`, since `sym curl B ∈ L²(TSD)` (Lemma 3.5) and
-`Q = sym ∇v` with `v ∈ H̊¹(B)`. -/
 theorem inner_Nvec_eq_zero
     (y : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ ball3) (symSub ℝ ball3) (trSub ℝ ball3)))
     (hy : y ∈ (hessCurlMax ℝ isOpen_ball3).wave.domain)
@@ -848,14 +751,12 @@ theorem inner_Nvec_eq_zero
   rw [e] at h
   exact h
 
-/-- `⟪L x₀, N⟫ = ⟪curl E₀, curl Q⟫`. -/
 theorem inner_negL_x0 :
     ⟪(hessCurlMax ℝ isOpen_ball3).wave ⟨x0, x0_mem_domL⟩, Nvec⟫_ℝ =
       ⟪(hessCurlMax ℝ isOpen_ball3).d₁ ⟨_, E0_mem_d1.1⟩,
         (hessCurlMax ℝ isOpen_ball3).d₁ ⟨_, Qs_mem_d1.1⟩⟫_ℝ :=
   inner_negL_ini _ x0_mem_domL E0_mem_d1.1 _
 
-/-- `⟪curl E₀, curl Q⟫ = 3 ∫_B (1 - 2x₀² - 2x₁² - 3x₂²)`. -/
 theorem inner_curlE0_curlQ :
     ⟪(hessCurlMax ℝ isOpen_ball3).d₁ ⟨_, E0_mem_d1.1⟩,
         (hessCurlMax ℝ isOpen_ball3).d₁ ⟨_, Qs_mem_d1.1⟩⟫_ℝ =
@@ -870,7 +771,6 @@ theorem inner_curlE0_curlQ :
   rw [← integral_finsetSum _ fun ij _ => hint ij]
   simp only [sum_Mc_curlM_qExp]
 
-/-- **`⟪L x₀, N⟫ ≤ -(3/5) |B| < 0`**. -/
 theorem inner_negL_x0_lt :
     ⟪(hessCurlMax ℝ isOpen_ball3).wave ⟨x0, x0_mem_domL⟩, Nvec⟫_ℝ ≤
       -(3 / 5 * volume.real ball3) := by
@@ -897,11 +797,8 @@ theorem inner_negL_x0_ne_zero :
   rw [h0] at h
   linarith
 
-/-- **The conclusion of Prop 4.19 fails for the boundary conditions as printed, on the unit
-ball** (`hessCurlMax`, `D(L) = H² × (H(curl, S) ∩ H̊(div div, S)) × H̊(sym curl, T)`): the TSD
-datum `(σ₀, E₀, B₀) = (0, E₀, 0)`, `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x`, lies in `D(L) ∩ K`,
-`K = {0} × L²(TSD) × L²(TSD)`, and for every `T > 0` every strong solution of the Hodge wave
-equation on `[0, T]` from it leaves `K`. [QuennevilleBelair2015], Prop. 4.19 (§4.11) -/
+/-- On the unit ball, every strong solution of the Hodge wave equation of `hessCurlMax` from the
+TSD datum `x₀ = (0, E₀, 0) ∈ D(L) ∩ K` leaves `K = {0} × L²(TSD) × L²(TSD)`. -/
 theorem tsd_not_propagates :
     E0 ∈ tsdS ball3 ∧ x0 ∈ (hessCurlMax ℝ isOpen_ball3).wave.domain ∧
       x0 ∈ HilbertComplex.totalSub
@@ -916,12 +813,8 @@ theorem tsd_not_propagates :
     not_propagate_of_inner _ Nvec (fun y hy hK => inner_Nvec_eq_zero y hy hK) x0_mem_domL
       inner_negL_x0_ne_zero⟩
 
-/-- **Unconditional form**: on every `[0, T]`, `T > 0`, the Hodge wave equation of
-`hessCurlMax` on the unit ball has a strong solution from `x₀ = (0, E₀, 0)` (the wave group
-orbit), it is unique, and it leaves `K = {0} × L²(TSD) × L²(TSD)`; `x₀` also lies in the variant
-`K = {0} × (L²(TSD) ∩ ker d₀†) × L²(TSD)`, which has the same data in `D(L)`
-(`Feec.Counterexamples.BoundedSymTSD.mem_totalSub_tsdSKer_iff`).
-[QuennevilleBelair2015], Prop. 4.19 (§4.11), with the boundary conditions of its data space -/
+/-- On every `[0, T]`, `T > 0`, the Hodge wave equation of `hessCurlMax` on the unit ball has a
+unique strong solution from `x₀`, and it leaves `K`. -/
 theorem not_propagates :
     E0 ∈ tsdS ball3 ∧ x0 ∈ (hessCurlMax ℝ isOpen_ball3).wave.domain ∧
       x0 ∈ HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ ball3))

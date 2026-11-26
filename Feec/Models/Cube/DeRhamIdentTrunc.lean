@@ -5,38 +5,8 @@ public import Feec.Models.Cube.DeRhamIdentForms
 /-!
 # The parity extension reflects the domains of `d`: Fourier truncation and traces
 
-If the parity extension `Jf rel k u` of a `k`-form on `Q = (0, ½)ⁿ` lies in the domain of the torus
-exterior derivative (`d_ξ (Jf u)(m) = y(m)` with `y ∈ ℓ²`), then `u` lies in the domain of `d` on
-`Q` with the boundary condition of its class:
-
-* relative class: `u ∈ H̊Λᵏ(Q)` (`mem_minimal_of_Jf`);
-* absolute class: `u ∈ HΛᵏ(Q)` (`mem_maximal_of_Jf`).
-
-The Fourier truncations `x_N` of `Jf u` (to `|m|_∞ ≤ N`, `trunc`) stay in the real parity class
-(`realPar_trunc`) and converge in the graph norm (`tendsto_trunc`, `symbol_trunc`). Their
-restrictions to `Q` are restrictions of real trigonometric polynomials (`Jinvf_eq_toL2F`), smooth
-with bounded derivatives; in the relative class their tangential components vanish on the faces
-(`trigLift_eq_zero_of_face`), so the cut-off argument puts them in `H̊Λᵏ(Q)`
-(`mem_closure_extDerivOp_of_tangential`); in the absolute class they are smooth, hence in
-`HΛᵏ(Q)`. The forward computation (`coeff_d_minimal`, `coeff_d_maximal`) identifies their
-differentials with the restrictions of the truncations of `y`, and closedness of `d` passes to the
-limit.
-
-## Main results
-
-* `trunc`, `coeFn_trunc`, `tendsto_trunc`, `realPar_trunc`, `symbol_trunc`.
-* `trigLift`, `Jinvf_eq_toL2F`, `trigLift_eq_zero_of_face`.
-* **`mem_closure_extDerivOp_of_tangential`**.
-* **`mem_minimal_of_Jf`**, **`mem_maximal_of_Jf`**.
-
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.4 (cut-off arguments)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the cube by the method of images)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+If the parity extension of a `k`-form on `Q = (0, ½)ⁿ` lies in the torus domain of `d`, the form
+lies in `H̊Λᵏ(Q)` or `HΛᵏ(Q)` (`mem_minimal_of_Jf`, `mem_maximal_of_Jf`).
 -/
 
 open scoped InnerProductSpace ComplexConjugate ContDiff Topology
@@ -51,7 +21,7 @@ open Feec.Domain (formIdx formExt formExt_of_card formExt_val extDerivOp L2F L2 
 open Feec.Fourier.Exterior (Form Lam)
 open Feec.Fourier.Torus (bandN finite_bandN)
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 /-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
@@ -89,7 +59,6 @@ theorem neg_mem_bandN {N : ℕ} {m : Fin n → ℤ} : -m ∈ bandN N ↔ m ∈ b
   simp [bandN]
 
 open scoped Classical in
-/-- **Truncation preserves the real parity classes.** -/
 theorem realPar_trunc {rel : Bool} {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealPar rel k x)
     (N : ℕ) : RealPar rel k (trunc N k x) := by
@@ -104,7 +73,6 @@ theorem realPar_trunc {rel : Bool} {k : ℕ}
     · simp [hm, mt (Fourier.Torus.flipAt_mem_bandN j).1 hm]
 
 open scoped Classical in
-/-- **Truncation commutes with the symbol.** -/
 theorem symbol_trunc {k : ℕ} {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))}
     {y : Lp (Form ℂ (Fin n) (k + 1)) 2 (Measure.count : Measure (Fin n → ℤ))}
     (h : ∀ m, (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (Feec.Fourier.Torus.freq m)
@@ -140,8 +108,7 @@ theorem isSmooth_trigPoly (f : lp (fun _ : Fin n → ℤ => ℂ) 2) (S : Finset 
   rw [e]
   exact ContDiff.sum fun m _ => contDiff_const.mul (isSmooth_mFourier m)
 
-/-- The real lift `y ↦ Re P_s(proj y)` of the trigonometric polynomial of a coefficient sequence on
-the finite set `S`, component `s`. -/
+/-- The real lift `y ↦ Re P_s(proj y)` of the trigonometric polynomial of a sequence on `S`. -/
 def trigLift (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)))
     (S : Finset (Fin n → ℤ)) (s : formIdx n (k : ℤ)) (y : Fin n → ℝ) : ℝ :=
   (trigPoly (mFourierBasis.repr (physF k x s)) S (proj y)).re
@@ -184,8 +151,6 @@ theorem memLp_trigLift (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count :
   Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn
     (contDiff_trigLift k x S s).continuous
 
-/-- **The restriction of a finitely supported coefficient sequence is the restriction of its real
-trigonometric polynomials.** -/
 theorem Jinvf_eq_toL2F {k : ℕ} {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))}
     {S : Finset (Fin n → ℤ)} (hS : ∀ m ∉ S, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
     Jinvf k x = toL2F (memLp_trigLift k x S) := by
@@ -206,8 +171,6 @@ theorem Jinvf_eq_toL2F {k : ℕ} {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count :
   rw [h1, h2, h3]
   exact h4.symm
 
-/-- **Odd trigonometric polynomials vanish on the faces**: in the relative class the tangential
-components (`j ∉ s`) of the lift vanish on `{y_j ∈ {0, ½}}`. -/
 theorem trigLift_eq_zero_of_face {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealPar true k x)
     {S : Finset (Fin n → ℤ)} (hSr : ∀ j, ∀ m ∈ S, Fourier.Torus.flipAt j m ∈ S)
@@ -235,10 +198,7 @@ theorem formExt_chi_mul {k : ℤ} (ψ : formIdx n k → (Fin n → ℝ) → ℝ)
   · rfl
   · funext y; simp
 
-/-- **Smooth forms with vanishing tangential trace lie in `H̊Λ(Q)`**: a smooth `k`-form on `ℝⁿ`,
-bounded with bounded first derivatives, whose tangential components vanish on the faces
-(`ψ_s = 0` on `{y_j ∈ {0, ½}}` for `j ∉ s`), restricts to `Q` in the closure of the graph of `d`
-on test forms. -/
+/-- **Smooth forms with vanishing tangential trace lie in `H̊Λ(Q)`.** -/
 theorem mem_closure_extDerivOp_of_tangential {k : ℤ} {ψ : formIdx n k → (Fin n → ℝ) → ℝ}
     (hψ : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) {M : ℝ} (hM : ∀ s y, |ψ s y| ≤ M) {L : ℝ}
     (hL0 : 0 ≤ L) (hL : ∀ s j y, |fderiv ℝ (ψ s) y (Pi.single j 1)| ≤ L)
@@ -301,7 +261,6 @@ theorem flipAt_mem_bandS {N : ℕ} (j : Fin n) {m : Fin n → ℤ} (hm : m ∈ b
   (Set.Finite.mem_toFinset _).2
     ((Fourier.Torus.flipAt_mem_bandN j).2 ((Set.Finite.mem_toFinset _).1 hm))
 
-/-- Bounds for the lifts of the truncations. -/
 theorem trigLift_bounds (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)))
     (S : Finset (Fin n → ℤ)) :
     ∃ M L : ℝ, 0 ≤ L ∧ (∀ s y, |trigLift k x S s y| ≤ M) ∧
@@ -327,9 +286,7 @@ theorem memLp_d_trigLift (k : ℕ)
     ((extDerivOp ℝ n (k : ℤ)).continuous_apply (Feec.Domain.extDerivOp_isOrderLE (k : ℤ))
       (fun s => (contDiff_trigLift k x S s).of_le (by exact_mod_cast le_top)) t)
 
-/-- **`J⁻¹ (HΛ(𝕋ⁿ) ∩ relative parity class) ⊆ H̊Λ(Q)`**: if the coefficients of the extension of `u`
-are mapped by the torus symbol onto an `ℓ²` sequence `y`, then `u ∈ D(d_min)` and
-`Jf (d_min u) = y`. -/
+/-- **`J⁻¹ (HΛ(𝕋ⁿ) ∩ relative parity class) ⊆ H̊Λ(Q)`**, with `Jf (d_min u) = y`. -/
 theorem mem_minimal_of_Jf {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     {y : Lp (Form ℂ (Fin n) (k + 1)) 2 (Measure.count : Measure (Fin n → ℤ))}
     (h : ∀ m, (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (Feec.Fourier.Torus.freq m)
@@ -376,9 +333,7 @@ theorem mem_minimal_of_Jf {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ
   rw [← coeff_d_minimal true k ⟨u, hu⟩ m]
   exact h m
 
-/-- **`J⁻¹ (HΛ(𝕋ⁿ) ∩ absolute parity class) ⊆ HΛ(Q)`**: if the coefficients of the extension of `u`
-are mapped by the torus symbol onto an `ℓ²` sequence `y`, then `u ∈ D(d_max)` and
-`Jf (d_max u) = y`. -/
+/-- **`J⁻¹ (HΛ(𝕋ⁿ) ∩ absolute parity class) ⊆ HΛ(Q)`**, with `Jf (d_max u) = y`. -/
 theorem mem_maximal_of_Jf {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     {y : Lp (Form ℂ (Fin n) (k + 1)) 2 (Measure.count : Measure (Fin n → ℤ))}
     (h : ∀ m, (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (Feec.Fourier.Torus.freq m)

@@ -6,27 +6,17 @@ public import Feec.Physics.Maxwell.Forms
 /-!
 # Maxwell's equations for differential forms as instances of the FEEC theorem
 
-Maxwell's equations for `(k + 1)`-form electric fields on an open `Ω ⊆ ℝⁿ` with a perfect
-electric conductor, `σ' = -d†E`, `E' = dσ - d†B`, `B' = dE`, are the Hodge wave equation of the
-short complex `H̊Λᵏ(Ω) → H̊Λᵏ⁺¹(Ω) → L²Λᵏ⁺²(Ω)` of the minimal realizations of the exterior
-derivative (`Feec.Maxwell.pecForms`; `d = d_min`, `d† = (dᵗ)_max = -δ`, the weak codifferential,
-`Feec.Domain.deRham_dual_minimalComplex_d`), with the Gauss laws `σ = 0`, `d†E = 0`, `d_min B = 0`
-as constraint (complex fields). For every constrained FEEC discretization of this complex with the
-Gauss laws as constraint, the verdict of the constrained FEEC theorem holds, the Gauss laws reduce
-`L` (`ShortHilbertComplex.reducingSubcomplex_divFreeSub`), propagate along strong solutions with
-forcing in them (`Feec.Maxwell.pecForms_gauss_propagates`), and the Gauss residual of the discrete
-solutions tends to `0` (`formsFEEC`).
+Maxwell's equations for `(k + 1)`-form electric fields on an open `Ω ⊆ ℝⁿ` with a perfect electric
+conductor are the Hodge wave equation of `H̊Λᵏ(Ω) → H̊Λᵏ⁺¹(Ω) → L²Λᵏ⁺²(Ω)` with the Gauss laws as
+constraint; every constrained FEEC discretization with this constraint has the Maxwell verdict.
 
-**Scope.** No discretization of `pecForms` is constructed here, so `formsFEEC` is a statement
-about every one that will be. The constructed discretizations of PEC Maxwell,
-`Feec.Instances.Maxwell.cubePEC` and `cubePolyPEC` on the cube, are of a window of `H̊Λ(Q)` whose
-degrees are indexed `k + ↑i`; its identification with `pecForms` on `Q` is open.
+## Main results
+
+* `formsFEEC`: every constrained FEEC discretization with the Gauss laws satisfies `Verdict`.
 
 ## References
 
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, Ch. 8
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.9 (Prop. 4.16), Thms 4.6, 4.14
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -42,21 +32,15 @@ open Feec.Domain (L2F formIdx)
 
 variable {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) [Fact (IsOpen Ω)] (k : ℤ) {κ : Type*}
 
-/-- **The Gauss laws** `σ = 0`, `d†E = 0`, `d_min B = 0` of Maxwell's equations for forms with a
-perfect electric conductor. -/
+/-- The Gauss laws `σ = 0`, `d†E = 0`, `d_min B = 0` of Maxwell's equations for forms. -/
 abbrev gauss : Submodule ℂ (FormSpace ℂ Ω k) :=
   totalSub ((pecForms ℂ hΩ k).divFreeSub (magneticPECForms ℂ Ω k))
 
-/-- **The FEEC theorem for Maxwell's equations for forms** with a perfect electric conductor on an
-open `Ω ⊆ ℝⁿ`, in degree `k`, for a constrained FEEC discretization `G` with the Gauss laws: the
-verdict of the constrained FEEC theorem, the Gauss laws reduce `L`, propagate along strong solutions
-with forcing in them, and the Gauss residual of the discrete solutions from `D(L)` data satisfying
-them tends to `0` uniformly on `[0, T]`. [QuennevilleBelair2015], Thms 4.6, 4.14, Prop. 4.16 -/
+/-- **The FEEC verdict for Maxwell's equations for forms**, with the clauses of the Gauss laws. -/
 structure Verdict (G : ConstrainedFEEC (pecForms ℂ hΩ k).toHilbertComplex κ) : Prop
     extends G.Verdict where
-  /-- the Gauss laws reduce `L` -/
   isReducing : (pecForms ℂ hΩ k).wave.IsReducing G.K
-  /-- they propagate along strong solutions with forcing in them -/
+  /-- the Gauss laws propagate along strong solutions with forcing in them -/
   gauss_propagates {t₀ t₁ : ℝ} {F U : ℝ → FormSpace ℂ Ω k}
     (hU : Evolution.IsStrongSolution (pecForms ℂ hΩ k).wave (Icc t₀ t₁) F U) (h0 : U t₀ ∈ G.K)
     (hF : ∀ t ∈ Icc t₀ t₁, F t ∈ G.K) : ∀ t ∈ Icc t₀ t₁, U t ∈ G.K
@@ -67,10 +51,8 @@ structure Verdict (G : ConstrainedFEEC (pecForms ℂ hΩ k).toHilbertComplex κ)
       (fun h t => infDist ((pecForms ℂ hΩ k).toHilbertComplex.totalD.graphFst
         (G.discrete h (waveLift _ x) t)) (G.K : Set (FormSpace ℂ Ω k))) (fun _ => 0) G.l (Icc 0 T)
 
-/-- **The FEEC theorem for Maxwell's equations for forms**: `constrainedFEEC` for every
-discretization with the Gauss laws (none is constructed yet), which reduce `L`
-(`ShortHilbertComplex.reducingSubcomplex_divFreeSub`) and propagate
-(`Feec.Maxwell.pecForms_gauss_propagates`). [QuennevilleBelair2015], Thms 4.6, 4.14, Prop. 4.16 -/
+/-- **The FEEC theorem for Maxwell's equations for forms**: every constrained FEEC discretization
+with the Gauss laws satisfies `Verdict`. [QuennevilleBelair2015], Thms 4.6, 4.14, Prop. 4.16 -/
 theorem formsFEEC (G : ConstrainedFEEC (pecForms ℂ hΩ k).toHilbertComplex κ)
     (hK : G.K = gauss hΩ k) : Verdict hΩ k G :=
   have hr : (pecForms ℂ hΩ k).wave.IsReducing G.K := by

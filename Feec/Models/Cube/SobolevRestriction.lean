@@ -5,24 +5,12 @@ public import Feec.Models.Cube.SobolevRateHigh
 /-!
 # Restrictions of `Hᵐ(ℝⁿ)` to the cube lie in `Hᵐ(Q)`
 
-`Feec.Models.Cube.SobolevRateHigh` proves the finite element rates for the spaces `Hˢ(Q)` of
-restrictions to `Q = (0, ½)ⁿ` of forms of `Hˢ(𝕋ⁿ)` on the period-`1` torus
-(`Feec.Models.Cube.Sobolev.sobolevQ`). **`exists_qNorm_le`**: the restriction to `Q` of every
-form whose coefficients lie in `Hᵐ(ℝⁿ)` (`IsWeakDeriv`: weak derivatives in `L²(ℝⁿ)` along all
-words of length `≤ m`) lies in `Hᵐ(Q)`, with `‖u‖_{Hᵐ(Q)} ≤ C ‖U‖_{Hᵐ(ℝⁿ)}`. The proof
-multiplies by a cutoff `χ = 1` near `cl Q` supported in the cell `(-¼, ¾]ⁿ` (Leibniz's rule for
-weak derivatives along words, `leibniz`), periodizes (`perCell`), tests the weak derivatives
-against the smooth functions of the torus (`hasWeakDerivT_perCell`), and bounds the Fourier norm
-by the pure derivatives (`Feec.Models.Cube.Sobolev.sobSum_le`). This is the backward direction
-for `Hᵐ(Q)` given an extension to `ℝⁿ` (the extension operator itself is not formalized).
+The restriction to the cube `Q = (0, ½)ⁿ` of a form whose coefficients have weak derivatives in
+`L²(ℝⁿ)` up to order `m + 1` lies in `H^{m+1}(Q)`, with a bound on its norm.
 
-## References
+## Main results
 
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2 (weak derivatives)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.1
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `exists_qNorm_le`: the restrictions of `H^{m+1}(ℝⁿ)` forms lie in `H^{m+1}(Q)`, with a bound.
 -/
 
 open scoped ContDiff
@@ -38,8 +26,7 @@ variable {n : ℕ}
 
 /-! ### Weak derivatives on `ℝⁿ` -/
 
-/-- `v` is the **weak derivative** `∂^l f` on `ℝⁿ`: `∫ f ∂^l φ = (-1)^{|l|} ∫ v φ` for every test
-function `φ`. -/
+/-- The weak derivative `v = ∂^l f` on `ℝⁿ`: `∫ f ∂^l φ = (-1)^{|l|} ∫ v φ` for test functions. -/
 def IsWeakDeriv (l : List (Fin n)) (f v : (Fin n → ℝ) → ℝ) : Prop :=
   ∀ φ : (Fin n → ℝ) → ℝ, Feec.Domain.IsTest (univ : Set (Fin n → ℝ)) φ →
     ∫ y, f y * iterPartial l φ y = (-1) ^ l.length * ∫ y, v y * φ y
@@ -122,7 +109,6 @@ theorem integral_add_sq_le {f g : (Fin n → ℝ) → ℝ} (hf : MemLp f 2 volum
         rw [integral_add (hf.integrable_sq.const_mul 2) (hg.integrable_sq.const_mul 2),
           integral_const_mul, integral_const_mul]
 
-/-- **Leibniz's rule, first order**: `∂_j (χ f) = ∂_j χ f + χ ∂_j f` weakly. -/
 theorem isWeakDeriv_mul_single {χ f g : (Fin n → ℝ) → ℝ} (hχ : IsT χ) (hf : MemLp f 2 volume)
     (hg : MemLp g 2 volume) {j : Fin n} (h : IsWeakDeriv [j] f g) :
     IsWeakDeriv [j] (fun y => χ y * f y)
@@ -156,10 +142,6 @@ theorem isWeakDeriv_mul_single {χ f g : (Fin n → ℝ) → ℝ} (hχ : IsT χ)
   rw [e1] at e
   linarith
 
-/-- **Leibniz's rule for weak derivatives along words**: for a test function `χ` and `U = D []`
-with weak derivatives `D l'` in `L²(ℝⁿ)` along the words `|l'| ≤ |l|`, of squared norms `≤ L²`,
-the product `χ U` has a weak derivative `E` along `l`, measurable, vanishing off `tsupport χ`,
-with `∫ E² ≤ K L²`, `K` depending only on `χ` and `l`. -/
 theorem leibniz (l : List (Fin n)) : ∀ χ : (Fin n → ℝ) → ℝ, IsT χ →
     ∃ K : ℝ, 0 ≤ K ∧ ∀ (D : List (Fin n) → (Fin n → ℝ) → ℝ) (L : ℝ),
       (∀ l' : List (Fin n), l'.length ≤ l.length → StronglyMeasurable (D l') ∧
@@ -203,7 +185,6 @@ theorem leibniz (l : List (Fin n)) : ∀ χ : (Fin n → ℝ) → ℝ, IsT χ �
     · refine (integral_add_sq_le hE₁ hE₂).trans ?_
       nlinarith
 
-/-- **Weak derivatives against complex test functions** (real and imaginary parts). -/
 theorem IsWeakDeriv.complex {l : List (Fin n)} {f v : (Fin n → ℝ) → ℝ} (hf : MemLp f 2 volume)
     (hv : MemLp v 2 volume) (h : IsWeakDeriv l f v) {Ψ : (Fin n → ℝ) → ℂ}
     (hΨ : Feec.Domain.IsTest (univ : Set (Fin n → ℝ)) Ψ) :
@@ -237,7 +218,7 @@ section Torus
 
 open UnitAddTorus Feec.Fourier.TorusWeak Feec.Models.Cube.Sobolev
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 local instance : IsProbabilityMeasure (volume : Measure UnitAddCircle) :=
@@ -259,7 +240,6 @@ theorem measurePreserving_coe_cell :
     rw [AddCircle.volume_eq_smul_haarAddCircle, ENNReal.ofReal_one, one_smul]; rfl
   exact e ▸ h
 
-/-- `proj : ℝⁿ → 𝕋ⁿ` is measure preserving from the cell. -/
 theorem measurePreserving_proj_cell :
     MeasurePreserving (proj (d := Fin n)) (volume.restrict cell) volume := by
   have h := measurePreserving_pi (fun _ : Fin n => volume.restrict (Ioc (-(1 / 4) : ℝ) (3 / 4)))
@@ -342,7 +322,6 @@ theorem norm_toLp_perCell_sq {W : (Fin n → ℝ) → ℝ} (hWm : StronglyMeasur
   refine setIntegral_eq_integral_of_forall_compl_eq_zero fun y hy => ?_
   rw [hW0 y fun h => hy (cutoffSupport_subset_cell h)]; simp
 
-/-- `(∂^l φ) ∘ proj = ∂^l (φ ∘ proj)` for smooth `φ` on `𝕋ⁿ`. -/
 theorem iterPartialT_proj {φ : UnitAddTorus (Fin n) → ℂ} (hφ : IsSmooth φ) (l : List (Fin n)) :
     iterPartialT l φ ∘ proj = iterPartial l (φ ∘ proj) := by
   induction l with
@@ -357,9 +336,6 @@ theorem iterPartialT_proj {φ : UnitAddTorus (Fin n) → ℂ} (hφ : IsSmooth φ
 /-- The outer cutoff `ψ = 1` on `B̄(c, 15/32) ⊇ cutoffSupport`. -/
 def ψc : ContDiffBump (cellCenter (n := n)) := ⟨15 / 32, 1 / 2, by norm_num, by norm_num⟩
 
-/-- **Weak derivatives of a periodized function**: if `W`, supported in `cutoffSupport`, has the
-weak derivative `E` (supported in `cutoffSupport`) along `l` on `ℝⁿ`, then its periodization has
-the weak derivative `perCell E` along `l` on `𝕋ⁿ`. -/
 theorem hasWeakDerivT_perCell {l : List (Fin n)} {W E : (Fin n → ℝ) → ℝ}
     (hWm : StronglyMeasurable W) (hEm : StronglyMeasurable E) (hW : MemLp W 2 volume)
     (hE : MemLp E 2 volume) (hW0 : ∀ y ∉ cutoffSupport, W y = 0)
@@ -432,10 +408,8 @@ theorem Q_subset_cell : Feec.Models.Cube.Geometry.Q (Fin n) ⊆ cell := fun y hy
     (Metric.closedBall_subset_closedBall (by norm_num) (Q_subset_closedBall hy))
 
 open Feec.Models.Cube.DeRhamIdent Feec.Models.Cube.Geometry in
-/-- **Restrictions of `H^{m+1}(ℝⁿ)` forms lie in `H^{m+1}(Q)`**: if the coefficients of
-`u ∈ L²(Q; Λᵏ)` are the restrictions of `D t []` whose weak derivatives `D t l`, `|l| ≤ m + 1`, lie
-in `L²(ℝⁿ)` with `∫ (D t l)² ≤ L²`, then `u ∈ H^{m+1}(Q)` and `‖u‖_{H^{m+1}(Q)} ≤ C L`, `C`
-depending only on `n`, `k`, `m`. -/
+/-- **Restrictions of `H^{m+1}(ℝⁿ)` forms lie in `H^{m+1}(Q)`**: `‖u‖_{H^{m+1}(Q)} ≤ C L` for the
+restriction `u` of a form whose weak derivatives up to order `m + 1` have `L²` norms `≤ L`. -/
 theorem exists_qNorm_le (k m : ℕ) : ∃ C : ℝ, 0 ≤ C ∧
     ∀ (u : Feec.Domain.L2F ℝ (Feec.Models.Cube.Geometry.Q (Fin n)) (Feec.Domain.formIdx n (k : ℤ)))
       (D : Feec.Domain.formIdx n (k : ℤ) → List (Fin n) → (Fin n → ℝ) → ℝ) (L : ℝ), 0 ≤ L →

@@ -6,51 +6,19 @@ public import Feec.HilbertComplex.HodgeLaplacian
 /-!
 # Ritz projections: one object for cores and rate classes
 
-The comparison trajectories of the dissipative FEEC theorem (`Feec.HilbertComplex.dissipFEEC`)
-are, in every instance, a **Ritz projection** of the exact orbit: `pₕ(t) = Rₕ ℓ(S(t) x)` for
-bounded `Rₕ : G → Xₕ` on an auxiliary normed space `G` into which the exact states are lifted by
-`ℓ` (the identity, the graph of `𝐝`, the resolvent shift `1 - A`, …), with a **defect identity**
+A Ritz projection `pₕ(t) = Rₕ ℓ(S(t) x)` of the exact orbit, for a lift `ℓ` of the exact states and
+bounded `Rₕ` with a defect identity, gives a core and rate classes of the dissipative FEEC theorem.
 
-`Rₕ ℓ(A y) - Lₕ Rₕ ℓ(y) = Δₕ ℓ(A y) + Δₕ' ℓ(y)`
+## Main definitions
 
-for bounded `Δₕ`, `Δₕ'`. This file states that object once and derives the core and the rate class
-from it.
-
-* A **lift** (`DissipFEEC.Lift`) is the exact side: a subspace of data `D ⊆ D(A)` kept by `S(t)`,
-  a lift `ℓ : E → G` along whose orbits `t ↦ ℓ(S(t) x)` is `C¹` with derivative `ℓ(S(t) A x)`,
-  and a bounded reading `ρ : G → E` with `ρ ℓ = 1` on `D`. `Lift.ofDomain` is the identity lift
-  of `D(A)`; `Lift.graph` is the graph lift `ℓ y = (y, A y)` of `D(A²)` (dense,
-  `LinearPMap.IsMDissipative.dense_sqDomain`), for Ritz projections that see `A y` (the heat
-  equation, `Feec.HilbertComplex.Approximation.HeatFEEC`).
-* A **Ritz projection** (`DissipFEEC.Ritz`, fields `R`, `Δ`, `Δ'`, `defect_eq`, `bound`) is the
-  discrete side, uniformly bounded. Its comparison is `Ritz.cmp`, its consistency defect is
-  `Δₕ ℓ(S(t) A x) + Δₕ' ℓ(S(t) x)` (`Ritz.cmp_defect`).
-* **Cores** (`Ritz.toCore`): `ιₕ Rₕ → ρ` and `Δₕ, Δₕ' → 0` strongly give the core `D`
-  (uniformity on `[0, T]` from the compactness of the lifted orbits); for the identity lift this
-  is the Trotter–Kato bridge `DissipFEEC.Core.ofOperator` (`Ritz.ofOperator`).
-* **Rate classes** (`Ritz.orbitRateClass`): estimates of `‖S(t) x - ιₕ Rₕ ℓ(S(t) x)‖` and of the
-  defects along the orbits of the data give a rate class with the comparison `Ritz.cmp`; the
-  conforming rate classes of the wave and the crime rate classes are of this form. From static
-  estimates (`Ritz.toRateClass`): a **regularity scale** (`DissipFEEC.RegScale`: regular states
-  `𝒮` with a norm `‖·‖_𝒮`, data whose orbits stay in `𝒮` with
-  `‖S(t) x‖_𝒮 ≤ M ‖x‖_c` on `[0, T]`) and **static** estimates on `𝒮`,
-  `‖y - ιₕ Rₕ ℓ y‖ ≤ C_s hᵅ ‖y‖_𝒮` and `‖Δₕ ℓ(A y)‖ + ‖Δₕ' ℓ y‖ ≤ C_d hᵅ ‖y‖_𝒮`, give a rate class
-  with `C = C_s M`, `C' = C_d M`: the dynamic rate is the static one along the orbit. Two scales:
-  `RegScale.trajectory` (regularity assumed along the orbit) and `RegScale.domainPow` (the graph
-  norm of `Aᵏ` on `D(Aᵏ)`, kept with `M = 1` because `S(t)` commutes with `A` and is a
-  contraction: no hypothesis along the orbit).
-
-## Main results
-
-* `DissipFEEC.Ritz.toCore`, `DissipFEEC.Ritz.orbitRateClass`, `DissipFEEC.Ritz.toRateClass`;
-* `DissipFEEC.RegScale.domainPow`: `D(Aᵏ)` with its graph norm is a regularity scale with `M = 1`.
+* `DissipFEEC.Lift`: lifts of the exact states.
+* `DissipFEEC.Ritz`: Ritz projections, with their core `Ritz.toCore`.
+* `DissipFEEC.Ritz.orbitRateClass`, `DissipFEEC.Ritz.toRateClass`: their rate classes.
 
 ## References
 
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.4 (Trotter–Kato approximation theorems)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983]
 * [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
-  (the Ritz projection as comparison function)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -71,14 +39,12 @@ variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerP
 
 /-! ### The exact flow on the domain -/
 
-/-- `S(t)` commutes with `A` on `D(A)` (`t ≥ 0`), in terms of the extension `genExt A`. -/
 theorem S_genExt {x : E} (hx : x ∈ A.domain) {t : ℝ} (ht : 0 ≤ t) :
     F.S t (genExt A x) = genExt A (F.S t x) := by
   have hm : F.S t x ∈ A.domain := F.isMDissipative.semigroup_mem_domain ⟨x, hx⟩ ht
   rw [genExt_of_mem hx, genExt_of_mem hm]
   exact (F.isMDissipative.apply_semigroup ⟨x, hx⟩ ht).symm
 
-/-- `S(t)` is a contraction (`t ≥ 0`). -/
 theorem norm_S_apply_le {t : ℝ} (ht : 0 ≤ t) (x : E) : ‖F.S t x‖ ≤ ‖x‖ :=
   ((F.S t).le_opNorm x).trans (by
     simpa [S_def] using mul_le_mul_of_nonneg_right
@@ -86,9 +52,7 @@ theorem norm_S_apply_le {t : ℝ} (ht : 0 ≤ t) (x : E) : ‖F.S t x‖ ≤ ‖
 
 /-! ### Lifts and Ritz projections -/
 
-/-- A **lift** of the exact states into a normed space `G`: data `D ⊆ D(A)` kept by `S(t)`, a lift
-`ℓ : E → G` (meaningful on `D`), along whose orbits `t ↦ ℓ(S(t) x)` is continuous on `[0, ∞)` with
-right derivative `ℓ(S(t) A x)`, and a bounded reading `ρ : G → E` with `ρ ℓ = 1` on `D`. -/
+/-- A lift of the exact states: data `D ⊆ D(A)`, a lift `ℓ : E → G`, a reading `ρ`, `ρ ℓ = 1`. -/
 structure Lift (G : Type*) [NormedAddCommGroup G] [NormedSpace 𝕜 G] [NormedSpace ℝ G] where
   /-- the data -/
   Data : Submodule 𝕜 E
@@ -124,8 +88,6 @@ theorem mem_sqDomain_iff {x : E} : x ∈ A.sqDomain ↔ x ∈ A.domain ∧ genEx
     fun ⟨hx, h⟩ => ⟨hx, (genExt_of_mem hx) ▸ h⟩⟩
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **`D(A²)` is dense** for an m-dissipative `A`: the resolvent `R = (1 - A)⁻¹` maps the dense
-`D(A)` into `D(A²)` and `E` onto `D(A)`. -/
 theorem _root_.LinearPMap.IsMDissipative.dense_sqDomain (hA : A.IsMDissipative) :
     Dense (A.sqDomain : Set E) := by
   have hR := hA.isResolvent_one
@@ -148,9 +110,7 @@ theorem _root_.LinearPMap.IsMDissipative.dense_sqDomain (hA : A.IsMDissipative) 
   rw [dense_iff_closure_eq, ← Set.univ_subset_iff, ← hA.dense_domain.closure_eq]
   exact closure_minimal h2 isClosed_closure
 
-/-- The **graph lift** of `D(A²)`: `G = E × E`, `ℓ y = (y, A y)`, with a bounded reading `ρ`,
-`ρ (y, A y) = y` on `D(A²)` (e.g. `ρ = fst`). Along the orbits, `ℓ (S(t) x) = (S(t) x, S(t) A x)`
-has derivative `(S(t) A x, S(t) A² x)`. -/
+/-- The graph lift `ℓ y = (y, A y)` of `D(A²)`, with a reading `ρ`, `ρ (y, A y) = y`. -/
 def Lift.graph (read : E × E →L[𝕜] E) (hread : ∀ y ∈ A.sqDomain, read (y, genExt A y) = y) :
     F.Lift (E × E) where
   Data := A.sqDomain
@@ -187,8 +147,7 @@ def Lift.graph (read : E × E →L[𝕜] E) (hread : ∀ y ∈ A.sqDomain, read 
     (Lift.graph F read hread).lift y = (y, genExt A y) := rfl
 
 variable {F} in
-/-- The comparison trajectories `pₕ(t) = Rₕ ℓ(S(t) x)` of bounded `Rₕ : G → Xₕ` on the data of the
-lift, with derivatives `Rₕ ℓ(S(t) A x)`. -/
+/-- The comparison trajectories `pₕ(t) = Rₕ ℓ(S(t) x)` of bounded `Rₕ : G → Xₕ`. -/
 def Lift.cmp (Λ : F.Lift G) (R : ∀ h, G →L[𝕜] F.X h) (T : ℝ) : F.Comparison T where
   Data := Λ.Data
   p x h t := R h (Λ.lift (F.S t x))
@@ -202,9 +161,7 @@ def Lift.cmp (Λ : F.Lift G) (R : ∀ h, G →L[𝕜] F.X h) (T : ℝ) : F.Compa
       (Λ.hasDerivWithinAt x hx t ht.1)
 
 variable {F} in
-/-- A **Ritz projection** for the lift `Λ`: uniformly bounded `Rₕ : G → Xₕ` with a defect identity
-`Rₕ ℓ(A y) - Lₕ Rₕ ℓ(y) = Δₕ ℓ(A y) + Δₕ' ℓ(y)` on the data, `Δₕ`, `Δₕ'` uniformly bounded.
-[Wheeler1973]; [Pazy1983], §3.4 -/
+/-- A Ritz projection: `Rₕ ℓ(A y) - Lₕ Rₕ ℓ y = Δₕ ℓ(A y) + Δₕ' ℓ y`, all bounded. [Wheeler1973] -/
 structure Ritz (Λ : F.Lift G) where
   /-- the projection -/
   R : ∀ h, G →L[𝕜] F.X h
@@ -230,11 +187,9 @@ theorem bound_Δ : ∃ C, ∀ h, ‖𝓡.Δ h‖ ≤ C ∧ ‖𝓡.Δ' h‖ ≤ 
   let ⟨C, hC⟩ := 𝓡.bound
   ⟨C, fun h => (hC h).2⟩
 
-/-- The comparison trajectories `pₕ(t) = Rₕ ℓ(S(t) x)` of a Ritz projection, with derivatives
-`Rₕ ℓ(S(t) A x)`, on the data of the lift (`Lift.cmp`). -/
+/-- The comparison trajectories `pₕ(t) = Rₕ ℓ(S(t) x)` of a Ritz projection. -/
 def cmp (T : ℝ) : F.Comparison T := Λ.cmp 𝓡.R T
 
-/-- **The consistency defect of a Ritz projection** is `Δₕ ℓ(S(t) A x) + Δₕ' ℓ(S(t) x)`. -/
 theorem cmp_defect (T : ℝ) {x : E} (hx : x ∈ Λ.Data) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
     (𝓡.cmp T).defect x h t =
       𝓡.Δ h (Λ.lift (F.S t (genExt A x))) + 𝓡.Δ' h (Λ.lift (F.S t x)) := by
@@ -242,9 +197,7 @@ theorem cmp_defect (T : ℝ) {x : E} (hx : x ∈ Λ.Data) (h : κ) {t : ℝ} (ht
   rw [F.S_genExt (Λ.le_domain hx) ht]
   exact 𝓡.defect_eq h _ (Λ.S_mem x hx t ht)
 
-/-- **The core of a Ritz projection**: `ιₕ Rₕ g → ρ g` and `Δₕ g, Δₕ' g → 0` for every `g ∈ G`
-give the core `D` of the lift; uniformity on `[0, T]` comes from the compactness of the lifted
-orbits. [Pazy1983], §3.4 -/
+/-- The core of a Ritz projection with `ιₕ Rₕ → ρ` and `Δₕ, Δₕ' → 0` strongly. [Pazy1983], §3.4 -/
 def toCore (happrox : ∀ g, Tendsto (fun h => F.incl h (𝓡.R h g)) F.l (𝓝 (Λ.read g)))
     (hΔ0 : ∀ g, Tendsto (fun h => ‖𝓡.Δ h g‖) F.l (𝓝 0))
     (hΔ'0 : ∀ g, Tendsto (fun h => ‖𝓡.Δ' h g‖) F.l (𝓝 0)) : F.Core where
@@ -265,9 +218,7 @@ def toCore (happrox : ∀ g, Tendsto (fun h => F.incl h (𝓡.R h g)) F.l (𝓝 
 
 end Ritz
 
-/-- The Ritz projection of the identity lift given by bounded `Rₕ : E → Xₕ` with a defect identity
-`Rₕ (A y) - Lₕ Rₕ y = Δₕ (A y) + Δₕ' y` on `D(A)`: its comparison is `Comparison.ofOperator` and
-its core is the Trotter–Kato bridge `Core.ofOperator`. -/
+/-- The Ritz projection of the identity lift given by a defect identity on `D(A)`. -/
 def Ritz.ofOperator (R Δ Δ' : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h‖ ≤ C)
     (hΔ : ∃ C, ∀ h, ‖Δ h‖ ≤ C ∧ ‖Δ' h‖ ≤ C)
     (hdef : ∀ h (y : A.domain), R h (A y) - F.L h (R h y) = Δ h (A y) + Δ' h y) :
@@ -287,8 +238,7 @@ def Ritz.ofOperator (R Δ Δ' : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, �
 
 /-! ### Regularity scales and rate classes -/
 
-/-- A **regularity scale** on `[0, T]`: regular states `𝒮` with a norm `‖·‖_𝒮`, and data whose
-orbits stay in `𝒮` with `‖S(t) x‖_𝒮 ≤ M ‖x‖_c` for `t ∈ [0, T]`. -/
+/-- A regularity scale on `[0, T]`: normed regular states and data whose orbits stay in them. -/
 structure RegScale (T : ℝ) where
   /-- the regular states -/
   Reg : Set E
@@ -303,8 +253,7 @@ structure RegScale (T : ℝ) where
   mem : ∀ x ∈ Data, ∀ t ∈ Icc 0 T, F.S t x ∈ Reg
   regNorm_le : ∀ x ∈ Data, ∀ t ∈ Icc 0 T, regNorm (F.S t x) ≤ M * classNorm x
 
-/-- The **trajectory scale**: data in `D` whose orbit on `[0, T]` stays in `𝒮` with
-`‖S(t) x‖_𝒮 ≤ c(x)`, `M = 1` (the regularity is assumed along the orbit). -/
+/-- The trajectory scale: data whose orbits on `[0, T]` stay in the regular states, `M = 1`. -/
 def RegScale.trajectory (T : ℝ) (D Reg : Set E) (regNorm classNorm : E → ℝ) : F.RegScale T where
   Reg := Reg
   regNorm := regNorm
@@ -322,13 +271,11 @@ def iterDomainNorm (A : E →ₗ.[𝕜] E) (k : ℕ) (y : E) : ℝ :=
   ∑ j ∈ Finset.range (k + 1), ‖(genExt A)^[j] y‖
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- On `D(Aᵏ)` the iterates `Aʲ y`, `j ≤ k`, are a chain in the graph of `A`. -/
 theorem mem_graph_of_mem_iterDomain {k : ℕ} {y : E} (hy : y ∈ iterDomain A k) :
     ∀ j < k, ((genExt A)^[j] y, (genExt A)^[j + 1] y) ∈ A.graph := fun j hj => by
   rw [Function.iterate_succ_apply', genExt_of_mem (hy j hj)]
   exact A.mem_graph ⟨_, hy j hj⟩
 
-/-- `S(t)` keeps `D(Aᵏ)` and commutes with `Aʲ` on it, `j ≤ k` (`t ≥ 0`). -/
 theorem iterate_genExt_S {k : ℕ} {x : E} (hx : x ∈ iterDomain A k) {t : ℝ} (ht : 0 ≤ t) :
     ∀ j ≤ k, (genExt A)^[j] (F.S t x) = F.S t ((genExt A)^[j] x) := by
   intro j hj
@@ -349,9 +296,7 @@ theorem iterDomainNorm_S_le {k : ℕ} {x : E} (hx : x ∈ iterDomain A k) {t : �
     rw [F.iterate_genExt_S hx ht j (Nat.lt_succ_iff.1 (Finset.mem_range.1 hj))]
     exact F.norm_S_apply_le ht _
 
-/-- **The domain scale**: `D(Aᵏ)` with the graph norm of `Aᵏ`, data `D ∩ D(Aᵏ)`, `M = 1`. No
-regularity is assumed along the orbit: `S(t)` keeps `D(Aᵏ)`, commutes with `A` and is a
-contraction. -/
+/-- **The domain scale**: `D(Aᵏ)` with the graph norm of `Aᵏ`, data `D ∩ D(Aᵏ)`, `M = 1`. -/
 def RegScale.domainPow (T : ℝ) (D : Set E) (k : ℕ) : F.RegScale T where
   Reg := iterDomain A k
   regNorm := iterDomainNorm A k
@@ -363,10 +308,7 @@ def RegScale.domainPow (T : ℝ) (D : Set E) (k : ℕ) : F.RegScale T where
 
 variable {F} {Λ : F.Lift G}
 
-/-- **The rate class of a Ritz projection**, from estimates along the orbits: on data `D` of the
-lift, `‖S(t) x - ιₕ Rₕ ℓ(S(t) x)‖ ≤ C hᵅ ‖x‖_c` and
-`‖Δₕ ℓ(S(t) A x)‖ + ‖Δₕ' ℓ(S(t) x)‖ ≤ C' hᵅ ‖x‖_c` on `[0, T]` give a rate class with the
-comparison `Ritz.cmp` (its consistency defect is `Ritz.cmp_defect`). -/
+/-- The rate class of a Ritz projection from estimates along the orbits of its data. -/
 def Ritz.orbitRateClass (𝓡 : F.Ritz Λ) {T : ℝ} (D : Set E) (hD : D ⊆ Λ.Data)
     (classNorm : E → ℝ) (meshSize : κ → ℝ) (α C C' : ℝ)
     (happrox : ∀ x ∈ D, ∀ h, ∀ t ∈ Icc 0 T,
@@ -386,9 +328,7 @@ def Ritz.orbitRateClass (𝓡 : F.Ritz Λ) {T : ℝ} (D : Set E) (hD : D ⊆ Λ.
     rw [e, 𝓡.cmp_defect T (hD hx) h ht.1]
     exact (norm_add_le _ _).trans (hdefect x hx h t ht)
 
-/-- **The rate class of a Ritz projection on a regularity scale**: static estimates on the regular
-states, `‖y - ιₕ Rₕ ℓ y‖ ≤ C_s hᵅ ‖y‖_𝒮` and `‖Δₕ ℓ(A y)‖ + ‖Δₕ' ℓ y‖ ≤ C_d hᵅ ‖y‖_𝒮`, give a
-rate class on the data of the scale (`Ritz.orbitRateClass`), with `C = C_s M` and `C' = C_d M`. -/
+/-- The rate class of a Ritz projection from static estimates on a regularity scale. -/
 def Ritz.toRateClass (𝓡 : F.Ritz Λ) {T : ℝ} (𝒮 : F.RegScale T) (hD : 𝒮.Data ⊆ Λ.Data)
     (meshSize : κ → ℝ) (hmesh : ∀ h, 0 ≤ meshSize h) (α Cs Cd : ℝ) (hCs : 0 ≤ Cs)
     (hCd : 0 ≤ Cd)

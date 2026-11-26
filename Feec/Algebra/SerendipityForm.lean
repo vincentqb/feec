@@ -5,64 +5,14 @@ public import Feec.Algebra.CubicalForm
 /-!
 # The serendipity polynomial forms `S_rΛᵏ` of the cube
 
-The second cubical family of [ArnoldAwanou2014], the analogue for cubes of the full polynomial
-family `P_rΛᵏ`, is built from the *superlinear degree* of a monomial form,
-
-  `sdeg (x^α dx_s) = |α| - #{j ∉ s | α_j = 1}`,
-
-the degree ignoring the variables which enter linearly and do not enter the alternator
-([ArnoldAwanou2014], §2: `sdeg = deg - ldeg`). With `M_rΛᵏ` the span of the monomial `k`-forms of
-superlinear degree `≤ r`, the serendipity forms are
-
-  `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ`  (`M_{-1}Λ^{k+1} = 0`).
-
-This is the space `P_rΛᵏ + J_rΛᵏ + d J_{r+1}Λ^{k-1}` of [ArnoldAwanou2014], (17): by
-[ArnoldAwanou2014], Prop 3.1, `J_rΛᵏ = κ M_{r-1}Λ^{k+1}` restricted to the polynomial degrees
-`≥ r`, and the parts of lower degree, `κ` and `d κ` of forms of `M_{r-1}` and `M_r` of degree
-`< r` and `≤ r`, lie in `P_rΛᵏ`. For `k = 0` it is the serendipity space of all polynomials of
-superlinear degree `≤ r`.
-
-## Main definitions
-
-* `Feec.Koszul.superlinDeg s α`: the superlinear degree of `x^α dx_s`;
-* `Feec.Koszul.superlinForm R d r k`: `M_rΛᵏ`, the `k`-forms whose coefficient `ω_s` is supported
-  on the exponents of superlinear degree `≤ r`;
-* `Feec.Koszul.serendipityForm R d r k`: `S_rΛᵏ`.
-
-## Main results
-
-* `extDeriv_mem_superlinForm`, `koszul_mem_superlinForm`: `d M_rΛᵏ ⊆ M_rΛ^{k+1}`,
-  `κ M_rΛ^{k+1} ⊆ M_{r+1}Λᵏ` ([ArnoldAwanou2014], Lemma 2.2);
-* `extDeriv_mem_serendipityForm`: **`d S_{r+1}Λᵏ ⊆ S_rΛ^{k+1}`**, the subcomplex property
-  ([ArnoldAwanou2014], Thm 3.3; `isSubcomplex_serendipityForm`);
-* `serendipityForm_mono`: **`S_rΛᵏ ⊆ S_{r+1}Λᵏ`** ([ArnoldAwanou2014], Thm 3.4);
-* `superlinForm_le_serendipityForm`, `serendipityForm_le_superlinForm`:
-  **`M_rΛᵏ ⊆ S_{r+1}Λᵏ`**, **`S_rΛᵏ ⊆ M_{r+1}Λᵏ`** (the second inclusion is the degree property,
-  [ArnoldAwanou2014], Thm 3.2); `serendipityForm_zero`: **`S_rΛ⁰ = M_rΛ⁰`** (`r ≥ 1`), the
-  serendipity space, and `serendipityForm_zero_le_cubeFormMinus`: `S_rΛ⁰ ⊆ Q_rΛ⁰`;
-* `cubeTrace_mem_serendipityForm`: **stability under traces** `tr_f S_rΛᵏ ⊆ S_rΛᵏ` on every
-  coordinate plane `f` (the stability half of [ArnoldAwanou2014], Thm 3.5), and
-  `image_cubeTrace_serendipityForm`: the traces of `S_rΛᵏ` on `f` are the trace-fixed forms of
-  `S_rΛᵏ`. That these are the serendipity forms of the face ([ArnoldAwanou2014], (27)) is not
-  proved.
-
-## Implementation notes
-
-Every space is defined by monomial supports, coefficientwise, as `Q_b⁻Λᵏ`
-(`Feec.Algebra.CubicalForm`); the forms on a coordinate plane are the forms fixed by its trace
-`Feec.Koszul.cubeTrace`. The trace property is proved without induction on the form degree: the
-trace commutes with `κ` up to a form of `M_rΛᵏ` (`cubeTrace_koszul_sub_mem_superlinForm`), and
-`M_rΛᵏ ⊆ S_{r+1}Λᵏ` by the homotopy formula.
-
-The dimension, `dim S_rΛᵏ = dim M_rΛᵏ`, is in `Feec.Algebra.SerendipityFormDim`. The degrees of
-freedom and their unisolvence ([ArnoldAwanou2014], (21), Thm 3.6 (2)) are not formalized, nor the
-trimmed serendipity forms `S_r⁻Λᵏ` [GilletteKloefkorn2019].
+The serendipity forms `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ` of the cube, after
+[ArnoldAwanou2014], (17), where `M_rΛᵏ` is spanned by the monomial forms of superlinear degree
+`≤ r`: a subcomplex, increasing in `r`, contained in `M_{r+1}Λᵏ` and, over a field of
+characteristic zero, stable under the traces on coordinate planes.
 
 ## References
 
-* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
-  §2 (linear degree, Lemma 2.2), §3 ((17), Prop 3.1, Thms 3.2–3.5)
-* [A. Gillette, T. Kloefkorn, *Trimmed serendipity finite element differential forms*][GilletteKloefkorn2019]
+* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -79,25 +29,21 @@ variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d] [Fintype d]
 
 /-! ### Superlinear degree -/
 
-/-- The superlinear degree `|α| - #{j ∉ s | α_j = 1}` of the monomial form `x^α dx_s`: the degree
-not counting the variables entering linearly outside the alternator. -/
+/-- The superlinear degree `|α| - #{j ∉ s | α_j = 1}` of the monomial form `x^α dx_s`. -/
 def superlinDeg (s : Finset d) (α : d →₀ ℕ) : ℕ := ∑ j, if j ∉ s ∧ α j = 1 then 0 else α j
 
 /-- The exponents `α` with `x^α dx_s` of superlinear degree `≤ r`. -/
 def superlinSupport (r : ℕ) (s : Finset d) : Set (d →₀ ℕ) := {α | superlinDeg s α ≤ r}
 
-/-- A termwise bound with one extra unit at `j`. -/
 private theorem sum_le_sum_add_one {f g : d → ℕ} (j : d) (h : ∀ i, f i ≤ g i + if i = j then 1 else 0) :
     ∑ i, f i ≤ ∑ i, g i + 1 := by
   calc ∑ i, f i ≤ ∑ i, (g i + if i = j then 1 else 0) := sum_le_sum fun i _ => h i
     _ = ∑ i, g i + 1 := by rw [sum_add_distrib, sum_ite_eq' univ j]; simp
 
-/-- The superlinear degree is at most the degree. -/
 theorem superlinDeg_le (s : Finset d) (α : d →₀ ℕ) : superlinDeg s α ≤ α.sum fun _ e => e := by
   rw [Finsupp.sum_fintype _ _ fun _ => rfl]
   exact sum_le_sum fun j _ => by split_ifs <;> omega
 
-/-- `∂ⱼ` (`j ∈ s`, from `dx_{s ∖ j}` to `dx_s`) does not raise the superlinear degree. -/
 theorem superlinDeg_sub_single_le {s : Finset d} {j : d} (hj : j ∈ s) (α : d →₀ ℕ) :
     superlinDeg s (α - Finsupp.single j 1) ≤ superlinDeg (s.erase j) α := by
   refine sum_le_sum fun i _ => ?_
@@ -105,8 +51,6 @@ theorem superlinDeg_sub_single_le {s : Finset d} {j : d} (hj : j ∈ s) (α : d 
   · subst hi; simp [hj]; split_ifs <;> omega
   · simp [hi]
 
-/-- Multiplication by `x_j` (`j ∉ s`, from `dx_{s ∪ j}` to `dx_s`) raises the superlinear degree
-by at most one. -/
 theorem superlinDeg_add_single_le {s : Finset d} {j : d} (hj : j ∉ s) (α : d →₀ ℕ) :
     superlinDeg s (α + Finsupp.single j 1) ≤ superlinDeg (insert j s) α + 1 := by
   refine sum_le_sum_add_one j fun i => ?_
@@ -115,8 +59,6 @@ theorem superlinDeg_add_single_le {s : Finset d} {j : d} (hj : j ∉ s) (α : d 
   · simp [hi]
 
 omit [CommRing R] in
-/-- The substitution `x_j = c` (`f j = some c`) does not raise the superlinear degree, even when
-the fixed directions `t ∖ s` are dropped from the alternator. -/
 theorem superlinDeg_filter_le {f : d → Option R} {s t : Finset d} (hs : s ⊆ t)
     (hst : ∀ j ∈ t, j ∉ s → f j ≠ none) (γ : d →₀ ℕ) :
     superlinDeg s (γ.filter fun j => (f j).isNone) ≤ superlinDeg t γ := by
@@ -133,8 +75,7 @@ theorem superlinSupport_mono {r r' : ℕ} (h : r ≤ r') (s : Finset d) :
 
 
 variable (R d) in
-/-- `M_rΛᵏ`: the `k`-forms spanned by the monomial forms of superlinear degree `≤ r`.
-[ArnoldAwanou2014], §2 -/
+/-- `M_rΛᵏ`: the span of the monomial `k`-forms of superlinear degree `≤ r`. -/
 def superlinForm (r k : ℕ) : Submodule R (PolyForm R d) := supportForm R d k (superlinSupport r)
 
 theorem mem_superlinForm {r k : ℕ} {ω : PolyForm R d} :
@@ -145,8 +86,6 @@ theorem superlinForm_mono {r r' : ℕ} (h : r ≤ r') (k : ℕ) :
     superlinForm R d r k ≤ superlinForm R d r' k :=
   supportForm_mono (fun s => superlinSupport_mono h s) k
 
-/-- A monomial form of superlinear degree `≤ r` has degree `≤ r` in the variables of the
-alternator and `≤ r + 1` in the others. -/
 theorem superlinSupport_subset_cubeSupport (r : ℕ) (s : Finset d) :
     superlinSupport r s ⊆ cubeSupport (fun _ => r + 1) s := fun α (hα : superlinDeg s α ≤ r) j => by
   have := (single_le_sum (f := fun i => if i ∉ s ∧ α i = 1 then 0 else α i)
@@ -158,7 +97,6 @@ theorem superlinSupport_subset_cubeSupport (r : ℕ) (s : Finset d) :
     · simp [hj, h1]
     · simp only [hj, h1, not_false_eq_true, and_false, ↓reduceIte] at this ⊢; omega
 
-/-- `M_rΛᵏ ⊆ Q_{r+1}⁻Λᵏ`. -/
 theorem superlinForm_le_cubeFormMinus (r k : ℕ) :
     superlinForm R d r k ≤ cubeFormMinus R (fun _ => r + 1) k :=
   supportForm_mono (superlinSupport_subset_cubeSupport r) k
@@ -166,21 +104,16 @@ theorem superlinForm_le_cubeFormMinus (r k : ℕ) :
 instance {K : Type*} [Field K] (r k : ℕ) : FiniteDimensional K (superlinForm K d r k) :=
   Submodule.finiteDimensional_of_le (superlinForm_le_cubeFormMinus r k)
 
-/-- `dim M_rΛᵏ = Σ_{#s = k} #{α | sdeg (x^α dx_s) ≤ r}`, the number of monomial `k`-forms of
-superlinear degree `≤ r`. -/
 theorem finrank_superlinForm {K : Type*} [Field K] (r k : ℕ) :
     Module.finrank K (superlinForm K d r k) =
       ∑ s ∈ powersetCard k univ, Nat.card (superlinSupport (d := d) r s) :=
   finrank_supportForm fun s =>
     (Set.toFinite (cubeSupport (fun _ => r + 1) s)).subset (superlinSupport_subset_cubeSupport r s)
 
-/-- **`P_rΛᵏ ⊆ M_rΛᵏ`**: the superlinear degree is at most the degree. -/
 theorem polyForm_le_superlinForm (r k : ℕ) : polyForm R d r k ≤ superlinForm R d r k :=
   fun ω hω => ⟨hω.1, fun s => restrictSupport_mono R (fun α hα => (superlinDeg_le s α).trans hα)
     (show ω s ∈ restrictTotalDegree d R r from (mem_restrictTotalDegree _ _ _).2 (hω.2 s))⟩
 
-/-- **`d M_rΛᵏ ⊆ M_rΛ^{k+1}`**: `d` lowers the degree by one and the linear degree by at most one.
-[ArnoldAwanou2014], §2 -/
 theorem extDeriv_mem_superlinForm {r k : ℕ} {ω : PolyForm R d} (h : ω ∈ superlinForm R d r k) :
     extDeriv ω ∈ superlinForm R d r (k + 1) :=
   ⟨IsDeg.extDeriv h.1, fun s => Submodule.sum_mem _ fun j hj => sgn_mul_mem j s
@@ -188,8 +121,6 @@ theorem extDeriv_mem_superlinForm {r k : ℕ} {ω : PolyForm R d} (h : ω ∈ su
       (superlinDeg_sub_single_le hj α).trans hα) (h.2 _))⟩
 
 omit [LinearOrder d] [Fintype d] in
-/-- Multiplication by `x_j` maps `restrictSupport S` into `restrictSupport T` when raising `α_j`
-by one maps `S` into `T`. -/
 theorem X_mul_mem_restrictSupport {S T : Set (d →₀ ℕ)} (j : d)
     (h : ∀ α ∈ S, α + Finsupp.single j 1 ∈ T) {p : MvPolynomial d R}
     (hp : p ∈ restrictSupport R S) : X j * p ∈ restrictSupport R T :=
@@ -197,8 +128,6 @@ theorem X_mul_mem_restrictSupport {S T : Set (d →₀ ℕ)} (j : d)
     rw [LinearMap.mulLeft_apply, X, monomial_mul_monomial, one_mul]
     exact (monomial_mem_restrictSupport R).2 (Or.inl (by rw [add_comm]; exact h α hα))) hp
 
-/-- **`κ M_rΛ^{k+1} ⊆ M_{r+1}Λᵏ`**: `κ` raises the degree by one and does not lower the linear
-degree. [ArnoldAwanou2014], Lemma 2.2 -/
 theorem koszul_mem_superlinForm {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ superlinForm R d r (k + 1)) : koszul ω ∈ superlinForm R d (r + 1) k := by
   refine ⟨IsDeg.koszul h.1, fun s => Submodule.sum_mem _ fun j hj => ?_⟩
@@ -207,9 +136,7 @@ theorem koszul_mem_superlinForm {r k : ℕ} {ω : PolyForm R d}
     (superlinDeg_add_single_le (mem_compl.1 hj) α).trans (Nat.add_le_add_right hα 1)) (h.2 _))
 
 variable (R d) in
-/-- **The serendipity forms** `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ`, the space
-`P_rΛᵏ + J_rΛᵏ + d J_{r+1}Λ^{k-1}` of [ArnoldAwanou2014], (17); the middle summand is absent for
-`r = 0` (`M_{-1} = 0`: `J_0Λᵏ = 0`). -/
+/-- The serendipity forms `S_rΛᵏ = P_rΛᵏ + κ M_{r-1}Λ^{k+1} + d κ M_rΛᵏ`. -/
 def serendipityForm (r k : ℕ) : Submodule R (PolyForm R d) :=
   polyForm R d r k ⊔
     (if r = 0 then ⊥ else (superlinForm R d (r - 1) (k + 1)).map (koszulₗ R d)) ⊔
@@ -227,7 +154,6 @@ theorem extDeriv_koszul_mem_serendipityForm {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ superlinForm R d r k) : extDeriv (koszul ω) ∈ serendipityForm R d r k :=
   Submodule.mem_sup_right (Submodule.mem_map_of_mem (Submodule.mem_map_of_mem h))
 
-/-- Membership in `S_rΛᵏ` by its three summands. -/
 theorem serendipityForm_induction {r k : ℕ} {P : PolyForm R d → Prop}
     (h0 : ∀ ω ∈ polyForm R d r k, P ω)
     (h1 : ∀ r', r' + 1 = r → ∀ ω ∈ superlinForm R d r' (k + 1), P (koszul ω))
@@ -243,8 +169,7 @@ theorem serendipityForm_induction {r k : ℕ} {P : PolyForm R d → Prop}
   · obtain ⟨β, hβ, rfl⟩ := hb
     exact h1 (r - 1) (by omega) β hβ
 
-/-- **The degree property** `S_rΛᵏ ⊆ M_{r+1}Λᵏ`: every monomial of a serendipity form has
-superlinear degree `≤ r + 1`. [ArnoldAwanou2014], Thm 3.2 -/
+/-- `S_rΛᵏ ⊆ M_{r+1}Λᵏ` ([ArnoldAwanou2014], Thm 3.2). -/
 theorem serendipityForm_le_superlinForm (r k : ℕ) :
     serendipityForm R d r k ≤ superlinForm R d (r + 1) k := fun ω h =>
   serendipityForm_induction
@@ -259,7 +184,7 @@ theorem serendipityForm_le_superlinForm (r k : ℕ) :
 instance {K : Type*} [Field K] (r k : ℕ) : FiniteDimensional K (serendipityForm K d r k) :=
   Submodule.finiteDimensional_of_le (serendipityForm_le_superlinForm r k)
 
-/-- **The subcomplex property** `d S_{r+1}Λᵏ ⊆ S_rΛ^{k+1}`. [ArnoldAwanou2014], Thm 3.3 -/
+/-- `d S_{r+1}Λᵏ ⊆ S_rΛ^{k+1}` ([ArnoldAwanou2014], Thm 3.3). -/
 theorem extDeriv_mem_serendipityForm {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ serendipityForm R d (r + 1) k) : extDeriv ω ∈ serendipityForm R d r (k + 1) :=
   serendipityForm_induction
@@ -268,14 +193,12 @@ theorem extDeriv_mem_serendipityForm {r k : ℕ} {ω : PolyForm R d}
     (fun _ _ => by rw [extDeriv_extDeriv]; exact Submodule.zero_mem _)
     (fun ω η hω hη => by rw [extDeriv_add]; exact add_mem hω hη) h
 
-/-- `S_{r+2}Λᵏ → S_{r+1}Λ^{k+1} → S_rΛ^{k+2}` is a subcomplex of the polynomial de Rham complex.
-[ArnoldAwanou2014], Thm 3.3 -/
 theorem isSubcomplex_serendipityForm (r k : ℕ) :
     IsSubcomplex (serendipityForm R d (r + 2) k) (serendipityForm R d (r + 1) (k + 1))
       (serendipityForm R d r (k + 2)) :=
   ⟨fun _ h => extDeriv_mem_serendipityForm h, fun _ h => extDeriv_mem_serendipityForm h⟩
 
-/-- **The inclusion property** `S_rΛᵏ ⊆ S_{r'}Λᵏ` (`r ≤ r'`). [ArnoldAwanou2014], Thm 3.4 -/
+/-- `S_rΛᵏ ⊆ S_{r'}Λᵏ` for `r ≤ r'` ([ArnoldAwanou2014], Thm 3.4). -/
 theorem serendipityForm_mono {r r' : ℕ} (h : r ≤ r') (k : ℕ) :
     serendipityForm R d r k ≤ serendipityForm R d r' k :=
   sup_le_sup (sup_le_sup (polyForm_mono h k) (by
@@ -288,7 +211,6 @@ theorem serendipityForm_mono {r r' : ℕ} (h : r ≤ r') (k : ℕ) :
 
 /-! ### `0`-forms: the serendipity space -/
 
-/-- `κ (p dx_j) = x_j p`. -/
 theorem koszul_single_singleton (j : d) (p : MvPolynomial d R) :
     koszul (Pi.single {j} p : PolyForm R d) = Pi.single ∅ (X j * p) := by
   funext t
@@ -305,15 +227,12 @@ theorem koszul_single_singleton (j : d) (p : MvPolynomial d R) :
       exact ht (card_eq_zero.1 (by omega))
     rw [Pi.single_eq_of_ne this, mul_zero]
 
-/-- A termwise bound with one unit to spare at `j`. -/
 private theorem sum_add_one_le {f g : d → ℕ} (j : d) (h : ∀ i, f i + (if i = j then 1 else 0) ≤ g i) :
     ∑ i, f i + 1 ≤ ∑ i, g i := by
   calc ∑ i, f i + 1 = ∑ i, (f i + if i = j then 1 else 0) := by
         rw [sum_add_distrib, sum_ite_eq' univ j]; simp
     _ ≤ ∑ i, g i := sum_le_sum fun i _ => h i
 
-/-- Moving a superlinear variable `x_j` (`α_j ≥ 2`, `j ∈ s`) into the alternator, from
-`x^α dx_{s ∖ j}` to `x^{α - e_j} dx_s`, lowers the superlinear degree. -/
 theorem superlinDeg_sub_single_add_one {s : Finset d} {α : d →₀ ℕ} {j : d} (hjs : j ∈ s)
     (hj : 2 ≤ α j) : superlinDeg s (α - Finsupp.single j 1) + 1 ≤ superlinDeg (s.erase j) α :=
   sum_add_one_le j fun i => by
@@ -321,14 +240,10 @@ theorem superlinDeg_sub_single_add_one {s : Finset d} {α : d →₀ ℕ} {j : d
     · subst hi; simp [hjs]; split_ifs <;> omega
     · simp [hi]
 
-/-- A monomial form of weight `α_i + [i ∈ s] ≤ 1` in each variable has superlinear degree `0`. -/
 theorem superlinDeg_eq_zero {s : Finset d} {α : d →₀ ℕ}
     (h : ∀ i, α i + (if i ∈ s then 1 else 0) ≤ 1) : superlinDeg s α = 0 :=
   sum_eq_zero fun i _ => by have := h i; split_ifs at this ⊢ <;> simp_all; omega
 
-/-- **`S_rΛ⁰ = M_rΛ⁰`** (`r ≥ 1`): the serendipity `0`-forms are the polynomials of superlinear
-degree `≤ r`, the serendipity space ([ArnoldAwanou2014], §3; a monomial `x^α` of degree `> r` is
-`κ(x^{α - e_j} dx_j)`, `j` superlinear if some is). -/
 theorem serendipityForm_zero {r : ℕ} (hr : 1 ≤ r) :
     serendipityForm R d r 0 = superlinForm R d r 0 := by
   refine le_antisymm (fun ω h => serendipityForm_induction
@@ -372,8 +287,6 @@ theorem serendipityForm_zero {r : ℕ} (hr : 1 ≤ r) :
         · simp [hi]; omega]
       exact Nat.zero_le _)
 
-/-- **`S_rΛ⁰ ⊆ Q_rΛ⁰`** (`r ≥ 1`): a polynomial of superlinear degree `≤ r` has degree
-`≤ r` in each variable. -/
 theorem serendipityForm_zero_le_cubeFormMinus {r : ℕ} (hr : 1 ≤ r) :
     serendipityForm R d r 0 ≤ cubeFormMinus R (fun _ => r) 0 := by
   rw [serendipityForm_zero hr]
@@ -392,7 +305,6 @@ theorem serendipityForm_zero_le_cubeFormMinus {r : ℕ} (hr : 1 ≤ r) :
 
 /-! ### Traces -/
 
-/-- `tr_f (x_q p) = x_q tr_f p` in a free direction, `c tr_f p` in a direction fixed at `x_q = c`. -/
 theorem faceSubst_X_mul (f : d → Option R) (q : d) (p : MvPolynomial d R) :
     faceSubst f (X q * p) = (f q).elim (X q) C * faceSubst f p := by
   have : faceSubst f ∘ₗ LinearMap.mulLeft R (X q) =
@@ -433,7 +345,6 @@ theorem faceSubst_X_mul (f : d → Option R) (q : d) (p : MvPolynomial d R) :
   exact LinearMap.congr_fun this p
 
 omit [LinearOrder d] in
-/-- The substitution does not raise the total degree. -/
 theorem totalDegree_faceSubst_le (f : d → Option R) (p : MvPolynomial d R) :
     (faceSubst f p).totalDegree ≤ p.totalDegree := by
   rw [← mem_restrictTotalDegree]
@@ -446,7 +357,6 @@ theorem totalDegree_faceSubst_le (f : d → Option R) (p : MvPolynomial d R) :
 theorem IsDeg.cubeTrace {k : ℕ} {ω : PolyForm R d} (h : IsDeg k ω) (f : d → Option R) :
     IsDeg k (cubeTrace f ω) := fun s hs => by simp [Koszul.cubeTrace, h s hs]
 
-/-- `tr_f P_rΛᵏ ⊆ P_rΛᵏ`. -/
 theorem cubeTrace_mem_polyForm (f : d → Option R) {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ polyForm R d r k) : cubeTrace f ω ∈ polyForm R d r k :=
   ⟨IsDeg.cubeTrace h.1 f, fun s => by
@@ -455,7 +365,6 @@ theorem cubeTrace_mem_polyForm (f : d → Option R) {r k : ℕ} {ω : PolyForm R
     · exact (totalDegree_faceSubst_le f _).trans (h.2 s)
     · simp⟩
 
-/-- `tr_f M_rΛᵏ ⊆ M_rΛᵏ`. -/
 theorem cubeTrace_mem_superlinForm (f : d → Option R) {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ superlinForm R d r k) : cubeTrace f ω ∈ superlinForm R d r k :=
   ⟨IsDeg.cubeTrace h.1 f, fun s => by
@@ -465,9 +374,6 @@ theorem cubeTrace_mem_superlinForm (f : d → Option R) {r k : ℕ} {ω : PolyFo
         (fun _ hj hj' => absurd hj hj') γ).trans hγ) (h.2 s)
     · exact Submodule.zero_mem _⟩
 
-/-- **The trace commutes with `κ` up to `M_rΛᵏ`**: `tr_f κω - κ tr_f ω ∈ M_rΛᵏ` for
-`ω ∈ M_rΛ^{k+1}` (the components `x_q ω_{s ∪ q}`, `q` fixed at `x_q = c`, become `c ω_{s ∪ q}`).
-[ArnoldAwanou2014], Thm 3.5 -/
 theorem cubeTrace_koszul_sub_mem_superlinForm (f : d → Option R) {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ superlinForm R d r (k + 1)) :
     cubeTrace f (koszul ω) - koszul (cubeTrace f ω) ∈ superlinForm R d r k := by
@@ -506,8 +412,6 @@ theorem cubeTrace_koszul_sub_mem_superlinForm (f : d → Option R) {r k : ℕ} {
 
 variable {K : Type*} [Field K] [CharZero K]
 
-/-- **`M_rΛᵏ ⊆ S_{r+1}Λᵏ`**: by the homotopy formula, a monomial form `μ` of degree `j` is
-`(j + k)⁻¹ (κ dμ + d κμ)` with `dμ ∈ M_rΛ^{k+1}` and `μ ∈ M_{r+1}Λᵏ`. -/
 theorem superlinForm_le_serendipityForm (r k : ℕ) :
     superlinForm K d r k ≤ serendipityForm K d (r + 1) k := by
   refine supportForm_le_of_single fun s hs α hα => ?_
@@ -536,11 +440,8 @@ theorem superlinForm_le_serendipityForm (r k : ℕ) :
       (extDeriv_koszul_mem_serendipityForm (superlinForm_mono r.le_succ k hμ))
       (koszul_mem_serendipityForm (extDeriv_mem_superlinForm hμ)))
 
-/-- **The trace property** `tr_f S_rΛᵏ ⊆ S_rΛᵏ` on every coordinate plane
-`f = {x_j = c_j : f j = some c_j}`: `tr_f κ M_{r-1}Λ^{k+1} ⊆ κ M_{r-1}Λ^{k+1} + M_{r-1}Λᵏ`,
-`tr_f dκ M_rΛᵏ = d tr_f κ M_rΛᵏ ⊆ dκ M_rΛᵏ + d M_rΛ^{k-1}`, and `M_{r-1}Λᵏ ⊆ S_rΛᵏ`,
-`d M_rΛ^{k-1} ⊆ d S_{r+1}Λ^{k-1} ⊆ S_rΛᵏ`. This is the stability half of [ArnoldAwanou2014],
-Thm 3.5; that the traces are the serendipity forms `S_rΛᵏ(f)` of the face is not proved. -/
+/-- In characteristic zero, `tr_f S_rΛᵏ ⊆ S_rΛᵏ` on every coordinate plane `f`
+([ArnoldAwanou2014], Thm 3.5 (adapted)). -/
 theorem cubeTrace_mem_serendipityForm (f : d → Option K) {r k : ℕ} {ω : PolyForm K d}
     (h : ω ∈ serendipityForm K d r k) : cubeTrace f ω ∈ serendipityForm K d r k :=
   serendipityForm_induction
@@ -564,10 +465,6 @@ theorem cubeTrace_mem_serendipityForm (f : d → Option K) {r k : ℕ} {ω : Pol
           (extDeriv_koszul_mem_serendipityForm (cubeTrace_mem_superlinForm f hb)))
     (fun ω η hω hη => by rw [cubeTrace_add]; exact add_mem hω hη) h
 
-/-- **The traces of `S_rΛᵏ` on a coordinate plane `f` are the trace-fixed forms of `S_rΛᵏ`**
-(those living on `f`: no `dx_j` and no `x_j` in the fixed directions), from the stability
-`tr_f S_rΛᵏ ⊆ S_rΛᵏ` and `tr_f ∘ tr_f = tr_f`. Identifying them with the serendipity forms of
-the face, in its free coordinates ([ArnoldAwanou2014], (27)), is not proved. -/
 theorem image_cubeTrace_serendipityForm (f : d → Option K) (r k : ℕ) :
     cubeTrace f '' (serendipityForm K d r k : Set (PolyForm K d)) =
       {θ | θ ∈ serendipityForm K d r k ∧ cubeTrace f θ = θ} := by

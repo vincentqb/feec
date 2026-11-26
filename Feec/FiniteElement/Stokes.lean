@@ -5,38 +5,14 @@ public import Feec.FiniteElement.SimplexIntegral
 /-!
 # The divergence theorem and Stokes' theorem on simplices
 
-On the reference simplex `T̂_{m+1} ⊆ ℝ^{m+1}` the boundary consists of the slanted face
-`{Σ x̂ = 1}` (opposite the vertex `v̂₀ = 0`), parametrized by the barycentric map
-`λ̂ : T̂_m → ℝ^{m+1}`, and of the coordinate faces `{x̂ⱼ = 0}` (opposite `v̂ⱼ₊₁ = eⱼ`),
-parametrized by `ŷ ↦ (ŷ with 0 inserted at j)`. Integrating `∂ⱼ` first along the coordinate `j`
-(Fubini on the slices, `Feec.FiniteElement.setIntegral_refSimplex_succ`) and then using the
-fundamental theorem of calculus gives the slanted and the `j`-th coordinate face; a vertex
-permutation of `T̂_m` (`Feec.FiniteElement.setIntegral_refSimplex_comp_permMap`) brings the
-slanted face to the barycentric parametrization. This is the technique of Mathlib's divergence
-theorem on boxes (`MeasureTheory.integral_divergence_of_hasFDerivAt_off_countable`), adapted to
-the simplex.
-
-The pullback then transports the result to every affine simplex: for a `C¹` form `ω` on a
-neighbourhood of an oriented affine `(k+1)`-simplex `p` in `ℝⁿ`,
-
-  `∫_p dω = Σ_{i=0}^{k+1} (-1)^i ∫_{∂_i p} ω`,   `∂_i p = (p₀, …, p̂ᵢ, …, p_{k+1})`.
+For a `C¹` form `ω` near an oriented affine `(k+1)`-simplex `p`, `∫_p dω = Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ω`;
+for the flux form of a vector field this is the divergence theorem on an `n`-simplex.
 
 ## Main results
 
-* `setIntegral_refSimplex_partialDeriv`:
-  `∫_{T̂} ∂ⱼ h = ∫_{T̂_m} h ∘ λ̂ - ∫_{T̂_m} h(· with 0 at j)`;
-* `setIntegral_refSimplex_extDeriv`: Stokes' theorem on the reference simplex;
-* `simplexIntegral_extDeriv`: **Stokes' theorem on an affine simplex**;
-* `setIntegral_image_simplexMap_divergence`: the divergence theorem on an affine `n`-simplex
-  of `ℝⁿ`, `± ∫_T div F = Σᵢ (-1)ⁱ ∫_{∂ᵢ T} ι_F vol`.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (Stokes' theorem)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `setIntegral_refSimplex_extDeriv`: Stokes' theorem on the reference simplex.
+* `simplexIntegral_extDeriv`: Stokes' theorem on an affine simplex.
+* `setIntegral_image_simplexMap_divergence`: the divergence theorem on an affine `n`-simplex.
 -/
 
 open Finset MeasureTheory
@@ -48,8 +24,6 @@ namespace Feec.FiniteElement
 open ExteriorFibre
 
 variable {n m k : ℕ}
-
-/-! ### The faces of the reference simplex -/
 
 theorem continuous_refBary : Continuous (refBary : (Fin m → ℝ) → Fin (m + 1) → ℝ) :=
   continuous_pi continuous_refBary_apply
@@ -68,8 +42,6 @@ theorem continuous_insertNth_const (j : Fin (m + 1)) (c : ℝ) :
     Continuous fun y : Fin m → ℝ => Fin.insertNth (α := fun _ => ℝ) j c y :=
   continuous_const.finInsertNth j continuous_id
 
-/-- The slanted face read along the coordinate `j` is the barycentric map up to a cyclic
-permutation of the coordinates. -/
 theorem insertNth_one_sub_sum (j : Fin (m + 1)) (y : Fin m → ℝ) :
     Fin.insertNth j (1 - ∑ i, y i) y = refBary y ∘ Fin.cycleRange j := by
   funext i
@@ -77,7 +49,6 @@ theorem insertNth_one_sub_sum (j : Fin (m + 1)) (y : Fin m → ℝ) :
   · simp [Fin.cycleRange_self]
   · simp [Fin.cycleRange_succAbove]
 
-/-- The slanted face: `∫_{T̂_m} G(ŷ with 1 - Σŷ inserted at j) dŷ = ∫_{T̂_m} G(λ̂(ŷ)) dŷ`. -/
 theorem setIntegral_refSimplex_insertNth_one_sub_sum (j : Fin (m + 1))
     (G : (Fin (m + 1) → ℝ) → ℝ) :
     ∫ y in refSimplex m, G (Fin.insertNth j (1 - ∑ i, y i) y) =
@@ -109,11 +80,6 @@ theorem continuous_insertNth_one_sub_sum (j : Fin (m + 1)) :
   Continuous.finInsertNth (A := fun _ => ℝ) j
     (continuous_const.sub (continuous_finsetSum _ fun i _ => continuous_apply i)) continuous_id
 
-/-! ### Partial derivatives on the reference simplex -/
-
-/-- **Fundamental theorem of calculus on the reference simplex**: for `h` of class `C¹` on a
-neighbourhood of `T̂_{m+1}`,
-`∫_{T̂_{m+1}} ∂ⱼ h = ∫_{T̂_m} h(λ̂(ŷ)) dŷ - ∫_{T̂_m} h(ŷ with 0 inserted at j) dŷ`. -/
 theorem setIntegral_refSimplex_partialDeriv (j : Fin (m + 1)) {h : (Fin (m + 1) → ℝ) → ℝ}
     {U : Set (Fin (m + 1) → ℝ)} (hU : IsOpen U) (hTU : refSimplex (m + 1) ⊆ U)
     (hh : ContDiffOn ℝ 1 h U) :
@@ -153,8 +119,6 @@ theorem setIntegral_refSimplex_partialDeriv (j : Fin (m + 1)) {h : (Fin (m + 1) 
   · refine ContinuousOn.intervalIntegrable ?_
     exact hcont.comp (continuous_insertNth_left j y).continuousOn hmem
 
-/-! ### Pullbacks to the faces of the reference simplex -/
-
 theorem map_succAboveOrderEmb_univ (j : Fin (m + 1)) :
     (univ : Finset (Fin m)).map (Fin.succAboveOrderEmb j).toEmbedding = univ.erase j := by
   ext i
@@ -162,8 +126,6 @@ theorem map_succAboveOrderEmb_univ (j : Fin (m + 1)) :
   · simp [Fin.succAbove_ne]
   · simp [Fin.succAbove_ne]
 
-/-- The coordinate face `{x̂ⱼ = 0}` (opposite `v̂ⱼ₊₁`): its parametrization inserts `0` at `j`
-and the pullback picks the coefficient of `dx̂_{univ ∖ j}`. -/
 theorem simplexIntegral_refFace_succ (j : Fin (m + 1)) (η : FormField (m + 1)) :
     simplexIntegral (refVertex (m + 1) ∘ (j.succ).succAbove) η =
       ∫ y in refSimplex m, η (Fin.insertNth j 0 y) (univ.erase j) := by
@@ -193,7 +155,6 @@ theorem simplexIntegral_refFace_succ (j : Fin (m + 1)) (η : FormField (m + 1)) 
     pullback_eq_restrict (Fin.succAboveOrderEmb j) hB', ExteriorFibre.restrict,
     map_succAboveOrderEmb_univ]
 
-/-- The coefficients of the pullback to the slanted face: `Σⱼ (-1)ʲ α_{univ ∖ j}`. -/
 theorem pullback_refFace_zero_apply_univ (α : Finset (Fin (m + 1)) → ℝ) :
     pullback (fun (a : Fin (m + 1)) (l : Fin m) =>
       (Pi.single l.succ (1 : ℝ) : Fin (m + 1) → ℝ) a - (Pi.single 0 (1 : ℝ) : Fin (m + 1) → ℝ) a)
@@ -239,8 +200,6 @@ theorem pullback_refFace_zero_apply_univ (α : Finset (Fin (m + 1)) → ℝ) :
     rw [sgn_univ]
     simp [Fin.val_succ, pow_succ]
 
-/-- The slanted face (opposite `v̂₀`): its parametrization is the barycentric map `λ̂` and the
-pullback is `Σⱼ (-1)ʲ η_{univ ∖ j}`. -/
 theorem simplexIntegral_refFace_zero (η : FormField (m + 1)) :
     simplexIntegral (refVertex (m + 1) ∘ (0 : Fin (m + 2)).succAbove) η =
       ∫ y in refSimplex m, ∑ j : Fin (m + 1), (-1) ^ (j : ℕ) * η (refBary y) (univ.erase j) := by
@@ -264,8 +223,6 @@ theorem simplexIntegral_refFace_zero (η : FormField (m + 1)) :
   simp only [simplexIntegral, affinePullback_apply, hmap]
   rw [hB]
   simp only [pullback_refFace_zero_apply_univ]
-
-/-! ### Stokes' theorem -/
 
 /-- **Stokes' theorem on the reference simplex**: for a form `η` of class `C¹` on a
 neighbourhood of `T̂_{m+1}`, `∫_{T̂_{m+1}} (dη)_{univ} = Σᵢ (-1)ⁱ ∫_{∂ᵢ T̂} η`. -/
@@ -299,9 +256,8 @@ theorem setIntegral_refSimplex_extDeriv {η : FormField (m + 1)} {U : Set (Fin (
   simp only [hs, neg_mul, sum_neg_distrib, mul_sub, sum_sub_distrib]
   ring
 
-/-- **Stokes' theorem on an affine simplex**: for an oriented affine `(k+1)`-simplex
-`p = (p₀, …, p_{k+1})` in `ℝⁿ` and a form `ω` of class `C¹` on an open neighbourhood `U` of the
-simplex, `∫_p dω = Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ω`, where `∂ᵢ p = p ∘ succAbove i` omits the vertex `pᵢ`. -/
+/-- **Stokes' theorem on an affine simplex**: for a form `ω` of class `C¹` on an open neighbourhood
+of `p`, `∫_p dω = Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ω` with `∂ᵢ p = p ∘ succAbove i`. -/
 theorem simplexIntegral_extDeriv (p : Fin (k + 2) → Fin n → ℝ) {ω : FormField n}
     {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hpU : simplexMap p '' refSimplex (k + 1) ⊆ U)
     (hω : ContDiffOn ℝ 1 ω U) :
@@ -327,10 +283,7 @@ theorem simplexIntegral_extDeriv (p : Fin (k + 2) → Fin n → ℝ) {ω : FormF
     funext l; exact (simplexMap_refVertex p _).symm
   rw [hq, simplexIntegral_comp_affine]
 
-/-! ### The divergence theorem on an affine `n`-simplex -/
-
-/-- The flux form `ι_F vol = Σⱼ (-1)ʲ Fⱼ dx₀ ∧ ⋯ ∧ dxⱼ^ ∧ ⋯ ∧ dxₘ` of a vector field `F` on
-`ℝ^{m+1}`: its integral over an oriented face is the flux of `F` through the face. -/
+/-- The flux form `ι_F vol = Σⱼ (-1)ʲ Fⱼ dx₀ ∧ ⋯ ∧ dxⱼ^ ∧ ⋯ ∧ dxₘ` of a vector field `F`. -/
 def fluxForm (F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ) : FormField (m + 1) :=
   fun x s => ∑ j, if s = univ.erase j then (-1) ^ (j : ℕ) * F j x else 0
 
@@ -354,7 +307,6 @@ theorem contDiffOn_fluxForm {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ} 
   · exact contDiffOn_const.mul (hF j)
   · exact contDiffOn_const
 
-/-- `d (ι_F vol) = div F vol`. -/
 theorem extDeriv_fluxForm_apply_univ {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ}
     {x : Fin (m + 1) → ℝ} (hF : ∀ j, DifferentiableAt ℝ (F j) x) :
     extDeriv (fluxForm F) x univ = ∑ j, partialDeriv j (F j) x := by
@@ -366,10 +318,8 @@ theorem extDeriv_fluxForm_apply_univ {F : Fin (m + 1) → (Fin (m + 1) → ℝ) 
     ← two_mul, pow_mul]
   simp
 
-/-- **The divergence theorem on an affine `n`-simplex** `T = F_p(T̂)` of `ℝⁿ` (`n = m + 1`): for a
-vector field `F` of class `C¹` on a neighbourhood of `T`,
-`det B_p · ∫_T div F = |det B_p| · Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ι_F vol`. For a positively oriented simplex
-(`det B_p > 0`) this is `∫_T div F = Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ι_F vol`. -/
+/-- **The divergence theorem on an affine `n`-simplex** `T = F_p(T̂)`: for `F` of class `C¹` near
+`T`, `det B_p · ∫_T div F = |det B_p| · Σᵢ (-1)ⁱ ∫_{∂ᵢ p} ι_F vol`. -/
 theorem setIntegral_image_simplexMap_divergence (p : Fin (m + 2) → Fin (m + 1) → ℝ)
     (hp : (Matrix.of (simplexMatrix p)).det ≠ 0) {F : Fin (m + 1) → (Fin (m + 1) → ℝ) → ℝ}
     {U : Set (Fin (m + 1) → ℝ)} (hU : IsOpen U) (hpU : simplexMap p '' refSimplex (m + 1) ⊆ U)

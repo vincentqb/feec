@@ -9,60 +9,19 @@ public import Mathlib.MeasureTheory.Function.UniformIntegrable
 /-!
 # Conformity of piecewise smooth fields on simplicial meshes
 
-Let `M` be a conforming simplicial mesh of an open set `Ω ⊆ ℝⁿ` (`n ≥ 1`) and `A` a first-order
-constant-coefficient operator (`Feec.Domain.ConstCoeffOp`, `A.IsOrderLE 1`) with principal symbol
-`σ_A(ν)` (`ConstCoeffOp.symbol`; `(σ_A(ν) w)ⱼ = Σᵢ Σ_{([v], c) ∈ Aⱼᵢ} c (v · ν) wᵢ`, no factor `i`).
-A field `u` given on each closed element `T` by a field `u_T` that is `C¹` up to the boundary
-(modelled by `C¹` fields on `ℝⁿ`; a `C¹` field on a neighbourhood of `T` extends by a cut-off)
-whose **`A`-traces** `σ_A(ν) u_T` agree from both sides of every interior facet (for the normals
-`ν` of the facet, `IsFaceNormal`) lies in the domain of the maximal realization `A_max(Ω)`, and
-`A_max u` is the elementwise `A u_T`. If moreover the `A`-traces vanish on the boundary facets,
-the extension of `u` by zero lies in `D(A_max(ℝⁿ)) = D(A_min(ℝⁿ))`, and, when `Ω` is strictly
-star-shaped (e.g. convex, in particular a cube), `u ∈ D(A_min(Ω))`.
-
-The proof of the first statement is elementwise integration by parts: for a test field `φ`,
-`Σⱼ conj (A u)ⱼ φⱼ - Σᵢ conj uᵢ (Aᵗ φ)ᵢ = div G` with `G · ν = Σⱼ φⱼ conj (σ_A(ν) u)ⱼ`, and the
-divergence theorem on the mesh (`Feec.FiniteElement.sum_setIntegral_divergence_eq_zero`): the face
-terms cancel across interior facets by the trace condition and vanish on boundary facets, where
-`φ = 0`, then `Feec.Domain.ConstCoeffOp.mem_maximal_domain_iff`. For the minimal domain, the
-dilates `x ↦ u(x₀ + s (x - x₀))` (`s > 1`) of the extension by zero lie in `D(A_max(ℝⁿ))` with
-compact support in `Ω`, hence in `D(A_min(Ω))` (`Feec.Domain.ConstCoeffOp.mem_minimal_of_support_subset`),
-and converge to `u` in the graph norm as `s → 1`; `A_min` is closed.
-
-## Main definitions
-
-* `ConstCoeffOp.symbol A ν`, `ConstCoeffOp.symbolApply A ν w`: the principal symbol.
-* `ConstCoeffOp.greenField A u φ`: the vector field of the elementwise integration by parts.
-* `Feec.FiniteElement.pieceFun M v`: the piecewise function `Σ_T 𝟙_{int T} v_T`, and
-  `Feec.FiniteElement.pieceL2 M S u`: the piecewise field as an element of `L²(S; 𝕜^ι)`.
-* `Feec.FiniteElement.TangentialTraceEq F k α β`: `α` and `β` agree on `k`-tuples of vectors
-  tangent to `F`.
-* `ConstCoeffOp.scale A s`, `Feec.FiniteElement.dilL2`: the operator and the fields under the
-  homothety `x ↦ x₀ + s (x - x₀)`.
+For a first-order operator `A`, a piecewise `C¹` field whose `A`-traces agree across the interior
+facets lies in `D(A_max(Ω))`, and in `D(A_min(Ω))` if they vanish on the boundary facets and `Ω` is
+strictly star-shaped.
 
 ## Main results
 
-* `ConstCoeffOp.conj_apply_mul_sub_eq_sum_partialDeriv`, `sum_mul_greenField`: pointwise
-  integration by parts and the normal component of `G`.
-* `sum_integral_conj_apply_mul_eq`: integration by parts on a mesh.
-* `pieceL2_mem_maximal_domain`: **conformity**, `u ∈ D(A_max(Ω))`, `A_max u = (A u_T)_T`.
-* `pieceL2_univ_mem_maximal_domain`: vanishing boundary `A`-traces, extension by zero.
-* `pieceL2_mem_minimal_domain`: `u ∈ D(A_min(Ω))` for strictly star-shaped `Ω`.
-* The exterior derivative: `extDerivOp_pieceL2_mem_maximal_domain` (`ν ∧ u` continuous), from
-  `symbolApply_extDerivOp` (`σ_d(ν) = ν ∧ ·`).
-* Real `k`-forms: `extDeriv_pieceL2_mem_maximal_domain` and `extDeriv_pieceL2_mem_minimal_domain`
-  (continuous resp. vanishing tangential traces), with `d_max` the elementwise classical exterior
-  derivative `Feec.FiniteElement.extDeriv` (`extDerivOp_apply_formComp`), via
-  `wedge_eq_of_tangentialTraceEq` (equal tangential traces give `ν ∧ α = ν ∧ β`) and
-  `Feec.ExteriorFibre.wedge_eq_zero_of_pullback_eq_zero`.
+* `pieceL2_mem_maximal_domain`, `pieceL2_mem_minimal_domain`: the maximal and the minimal domain.
+* `extDeriv_pieceL2_mem_maximal_domain`: tangentially continuous `k`-forms lie in `HΛᵏ(Ω)`.
+* `extDeriv_pieceL2_mem_minimal_domain`: with vanishing boundary traces, in `H̊Λᵏ(Ω)`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (piecewise smooth forms with single-valued traces lie in `HΛᵏ`)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -97,8 +56,7 @@ theorem dirPair_eq_sum (vs : List (Fin n → ℝ)) (ν : Fin n → ℝ) :
 def symbolEntry (P : List (List (Fin n → ℝ) × 𝕜)) (ν : Fin n → ℝ) : 𝕜 :=
   (P.map fun t => t.2 * (dirPair t.1 ν : 𝕜)).sum
 
-/-- The **principal symbol** `σ_A(ν)` of a (first-order) operator: the matrix
-`(σ_A(ν))ⱼᵢ = Σ_{([v], c) ∈ Aⱼᵢ} c (v · ν)` (no factor `i`). -/
+/-- The principal symbol `(σ_A(ν))ⱼᵢ = Σ_{([v], c) ∈ Aⱼᵢ} c (v · ν)`, with no factor `i`. -/
 def symbol (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (ν : Fin n → ℝ) (j : κ) (i : ι) : 𝕜 :=
   symbolEntry (A.coeff j i) ν
 
@@ -116,7 +74,6 @@ theorem symbolEntry_cons (t : List (Fin n → ℝ) × 𝕜) (P : List (List (Fin
     symbolEntry ([] : List (List (Fin n → ℝ) × 𝕜)) ν = 0 := by
   simp [symbolEntry]
 
-/-- The symbol is linear in `ν`. -/
 theorem symbolEntry_eq_sum (P : List (List (Fin n → ℝ) × 𝕜)) (ν : Fin n → ℝ) :
     symbolEntry P ν = ∑ l, (ν l : 𝕜) * symbolEntry P (Pi.single l 1) := by
   induction P with
@@ -130,7 +87,6 @@ theorem symbolEntry_eq_sum (P : List (List (Fin n → ℝ) × 𝕜)) (ν : Fin n
 
 /-! ### Pointwise integration by parts -/
 
-/-- Leibniz rule for `conj f * g`. -/
 theorem fderiv_conj_mul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {f g : E → 𝕜} {x : E}
     (hf : DifferentiableAt ℝ f x) (hg : DifferentiableAt ℝ g x) (v : E) :
     fderiv ℝ (fun y => conj (f y) * g y) x v =
@@ -145,7 +101,6 @@ theorem fderiv_conj_mul {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {
     smul_eq_mul]
   ring
 
-/-- `∂_v h = Σₗ vₗ ∂ₗ h`. -/
 theorem fderiv_apply_eq_sum_partialDeriv' {h : (Fin n → ℝ) → 𝕜} (x v : Fin n → ℝ) :
     fderiv ℝ h x v = ∑ l, (v l : 𝕜) * partialDeriv l h x := by
   conv_lhs => rw [← Finset.univ_sum_single v]
@@ -155,8 +110,6 @@ theorem fderiv_apply_eq_sum_partialDeriv' {h : (Fin n → ℝ) → 𝕜} (x v : 
       funext j; by_cases h : j = l <;> simp [h], map_smul,
     partialDeriv, RCLike.real_smul_eq_coe_mul]
 
-/-- **Integration by parts for one scalar entry of order `≤ 1`**, pointwise:
-`conj (P f) g - conj f (Pᵗ g) = Σₗ conj (σ_P(eₗ)) ∂ₗ (conj f g)`. -/
 theorem conj_applyEntry_mul_sub (P : List (List (Fin n → ℝ) × 𝕜))
     (hP : ∀ t ∈ P, t.1.length ≤ 1) {f g : (Fin n → ℝ) → 𝕜} {x : Fin n → ℝ}
     (hf : DifferentiableAt ℝ f x) (hg : DifferentiableAt ℝ g x) :
@@ -195,8 +148,7 @@ theorem conj_applyEntry_mul_sub (P : List (List (Fin n → ℝ) × 𝕜))
 
 variable [Fintype ι] [Fintype κ]
 
-/-- The vector field `G` of the elementwise integration by parts:
-`Gₗ = Σⱼ Σᵢ conj (σ_A(eₗ))ⱼᵢ conj uᵢ φⱼ`. -/
+/-- The field `Gₗ = Σⱼ Σᵢ conj (σ_A(eₗ))ⱼᵢ conj uᵢ φⱼ` of the elementwise integration by parts. -/
 def greenField (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (u : ι → (Fin n → ℝ) → 𝕜)
     (φ : κ → (Fin n → ℝ) → 𝕜) (l : Fin n) (y : Fin n → ℝ) : 𝕜 :=
   ∑ j, ∑ i, conj (A.symbol (Pi.single l 1) j i) * (conj (u i y) * φ j y)
@@ -211,8 +163,6 @@ theorem partialDeriv_const_mul' {f : (Fin n → ℝ) → 𝕜} {x : Fin n → �
     partialDeriv l (fun y => c * f y) x = c * partialDeriv l f x := by
   rw [partialDeriv, fderiv_const_mul hf c]; rfl
 
-/-- **Elementwise integration by parts, pointwise**: for a first-order operator `A`,
-`Σⱼ conj (A u)ⱼ φⱼ - Σᵢ conj uᵢ (Aᵗ φ)ᵢ = div G`, `G = greenField A u φ`. -/
 theorem conj_apply_mul_sub_eq_sum_partialDeriv (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ)
     (hA : A.IsOrderLE 1) {u : ι → (Fin n → ℝ) → 𝕜} {φ : κ → (Fin n → ℝ) → 𝕜} {x : Fin n → ℝ}
     (hu : ∀ i, DifferentiableAt ℝ (u i) x) (hφ : ∀ j, DifferentiableAt ℝ (φ j) x) :
@@ -240,7 +190,6 @@ theorem conj_apply_mul_sub_eq_sum_partialDeriv (A : ConstCoeffOp (Fin n → ℝ)
   simp only [fun j i => conj_applyEntry_mul_sub (A.coeff j i) (hA j i) (hu i) (hφ j)]
   exact (Finset.sum_congr rfl fun j _ => Finset.sum_comm).trans Finset.sum_comm
 
-/-- The normal component of `greenField`: `G · ν = Σⱼ φⱼ conj (σ_A(ν) u)ⱼ`. -/
 theorem sum_mul_greenField (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (u : ι → (Fin n → ℝ) → 𝕜)
     (φ : κ → (Fin n → ℝ) → 𝕜) (ν : Fin n → ℝ) (y : Fin n → ℝ) :
     ∑ l, (ν l : 𝕜) * A.greenField u φ l y =
@@ -265,9 +214,6 @@ end Feec.Domain.ConstCoeffOp
 
 namespace Feec.ExteriorFibre
 
-/-- **Tangential traces and the symbol of `d`**: if the pullback of a fibre form `α` along the
-(linearly independent) edge vectors `B` of a hyperplane vanishes, then `ν ∧ α = 0` for every
-normal `ν` of the hyperplane. -/
 theorem wedge_eq_zero_of_pullback_eq_zero {m : ℕ} (B : Fin (m + 1) → Fin m → ℝ)
     (hB : LinearIndependent ℝ fun l i => B i l) (ν : Fin (m + 1) → ℝ)
     (hν : ∀ l, ∑ i, ν i * B i l = 0) {α : Finset (Fin (m + 1)) → ℝ}
@@ -381,7 +327,6 @@ theorem symbolEntry_extDerivOp_coeff {k : ℤ} (t : formIdx n (k + 1)) (r : form
   rw [← Finset.sum_map_toList]
   simp [Function.comp_def, dirPair_coordDir]
 
-/-- The symbol of `d` is exterior multiplication: `σ_d(ν) w = ν ∧ w`. -/
 theorem symbolApply_extDerivOp {k : ℤ} (ν : Fin n → ℝ) (w : formIdx n k → 𝕜)
     (t : formIdx n (k + 1)) :
     (extDerivOp 𝕜 n k).symbolApply ν w t = wedge (fun j => (ν j : 𝕜)) (formExt w) t.1 := by
@@ -410,7 +355,6 @@ def pieceFun {F : Type*} [AddCommMonoid F] (M : SimplicialMesh n)
     (v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → F) (x : Fin n → ℝ) : F :=
   ∑ T ∈ M.simplices, (interior T.closedInterior).indicator (v T) x
 
-/-- On the interior of an element, the piecewise function is the element function. -/
 theorem pieceFun_of_mem_interior {F : Type*} [AddCommMonoid F] (M : SimplicialMesh n)
     (v : Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → F) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ M.simplices) {x : Fin n → ℝ} (hx : x ∈ interior T.closedInterior) :
@@ -471,7 +415,6 @@ theorem coeFn_pieceL2 (M : SimplicialMesh n) (S : Set (Fin n → ℝ))
     (pieceL2 M S v hv i : (Fin n → ℝ) → 𝕜) =ᵐ[volume.restrict S] pieceFun M fun T => v T i :=
   (memLp_pieceFun M (v := fun T => v T i) (fun T hT => hv T hT i) S).coeFn_toLp
 
-/-- `⟪u, φ⟫ = Σ_T Σᵢ ∫_T conj (u_T)ᵢ φᵢ` for a piecewise field `u` and a test field `φ`. -/
 theorem inner_pieceL2_testField (M : SimplicialMesh n) {S : Set (Fin n → ℝ)}
     {v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
     (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i)) {φ : ι → (Fin n → ℝ) → 𝕜}
@@ -488,10 +431,6 @@ theorem inner_pieceL2_testField (M : SimplicialMesh n) {S : Set (Fin n → ℝ)}
 
 /-! ### Integration by parts on a mesh -/
 
-/-- **Integration by parts on a mesh.** For a first-order operator `A`, a piecewise `C¹` field
-`u` whose `A`-traces agree across the interior facets, and a `C¹` field `φ` whose pairing with
-the `A`-traces vanishes on the boundary facets:
-`Σ_T Σⱼ ∫_T conj (A u_T)ⱼ φⱼ = Σ_T Σᵢ ∫_T conj (u_T)ᵢ (Aᵗ φ)ᵢ`. -/
 theorem sum_integral_conj_apply_mul_eq {m : ℕ} [Fintype κ]
     (A : ConstCoeffOp (Fin (m + 1) → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh (m + 1))
     {u : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1) → ι → (Fin (m + 1) → ℝ) → 𝕜}
@@ -534,11 +473,8 @@ theorem notMem_of_mem_frontier_closure {E : Type*} [TopologicalSpace E] {Ω : Se
 
 /-! ### Conformity: membership in the maximal domain -/
 
-/-- **Conformity of piecewise `C¹` fields** ([AFW2006], §5). Let `M` be a simplicial mesh of an
-open `Ω ⊆ ℝⁿ`, `A` a first-order constant-coefficient operator, and `u` a field given on each
-closed element `T` by a `C¹` field `u_T`. If the `A`-traces `σ_A(ν) u_T` agree from both sides
-of every interior facet (for the normals `ν` of the facet), then `u ∈ D(A_max(Ω))` and
-`A_max u` is the elementwise `A u_T`. -/
+/-- If the `A`-traces `σ_A(ν) u_T` of a piecewise `C¹` field agree across the interior facets, then
+`u ∈ D(A_max(Ω))` and `A_max u` is the elementwise `A u_T` ([AFW2006], §5). -/
 theorem pieceL2_mem_maximal_domain [NeZero n] [Fintype κ]
     (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh n)
     (hΩ : IsOpen M.domain) {u : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
@@ -566,9 +502,6 @@ theorem pieceL2_mem_maximal_domain [NeZero n] [Fintype κ]
   have hmem := (A.mem_maximal_domain_iff hΩ).2 ⟨_, key⟩
   exact ⟨hmem, A.maximal_apply_eq hΩ ⟨_, hmem⟩ key⟩
 
-/-- **Extension by zero.** If moreover the `A`-traces vanish on the boundary facets, the
-extension of `u` by zero lies in `D(A_max(ℝⁿ))`, with `A_max` the elementwise `A u_T`
-(extended by zero). -/
 theorem pieceL2_univ_mem_maximal_domain [NeZero n] [Fintype κ]
     (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh n)
     {u : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
@@ -610,8 +543,6 @@ theorem pieceL2_congr (M : SimplicialMesh n) (S : Set (Fin n → ℝ))
 
 /-! ### Instances: grad, curl, div, and the exterior derivative -/
 
-/-- **`HΛᵏ`-conformity**, symbol form: piecewise `C¹` `k`-forms (with values in `𝕜`) whose
-traces `ν ∧ u` agree across the interior facets lie in `D(d_max(Ω))`. -/
 theorem extDerivOp_pieceL2_mem_maximal_domain [NeZero n] {k : ℤ} (M : SimplicialMesh n)
     (hΩ : IsOpen M.domain)
     {u : Affine.Simplex ℝ (Fin n → ℝ) n → formIdx n k → (Fin n → ℝ) → 𝕜}
@@ -631,9 +562,7 @@ theorem extDerivOp_pieceL2_mem_maximal_domain [NeZero n] {k : ℤ} (M : Simplici
 
 /-! ### Real `k`-forms: tangential traces and the classical exterior derivative -/
 
-/-- `α` and `β` have the same **tangential trace** on the face spanned by `F`: they agree on all
-`k`-tuples of vectors tangent to `F`, `α(v₁, …, v_k) = β(v₁, …, v_k)` for `vₗ ∈ vec span F`
-(the columns of `V`; `α(V) = (V^* α)_{univ}`). -/
+/-- `α` and `β` have the same tangential trace on `F`: they agree on `k`-tuples tangent to `F`. -/
 def TangentialTraceEq (F : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → ℝ) : Prop :=
   ∀ V : Fin n → Fin k → ℝ, (∀ l, (fun i => V i l) ∈ vectorSpan ℝ (F : Set (Fin n → ℝ))) →
     pullback V α univ = pullback V β univ
@@ -644,7 +573,6 @@ theorem wedge_sub_right {d : Type*} [LinearOrder d] (ξ : d → ℝ) (α β : Fi
   simp only [wedge_apply, Pi.sub_apply, mul_sub, Finset.sum_sub_distrib]
 
 open Feec.Mesh in
-/-- The edge vectors of a facet of an `n`-simplex are linearly independent. -/
 theorem linearIndependent_simplexMatrix_faceEnum {m : ℕ}
     {T : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1)} {F : Finset (Fin (m + 1) → ℝ)}
     (hF : F ⊆ vertexSet T) (hc : F.card = m + 1) :
@@ -669,8 +597,6 @@ theorem linearIndependent_simplexMatrix_faceEnum {m : ℕ}
   simp [simplexMatrix]
 
 open Feec.Mesh in
-/-- **Equal tangential traces give equal `d`-traces**: on a facet `F` of an `n`-simplex, two
-`k`-forms with the same tangential trace satisfy `ν ∧ α = ν ∧ β` for every normal `ν`. -/
 theorem wedge_eq_of_tangentialTraceEq {m : ℕ} {T : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1)}
     {F : Finset (Fin (m + 1) → ℝ)} (hF : F ⊆ vertexSet T) (hc : F.card = m + 1) {k : ℕ}
     {α β : Finset (Fin (m + 1)) → ℝ} (hα : IsDeg k α) (hβ : IsDeg k β)
@@ -718,8 +644,6 @@ theorem formExt_formComp {k : ℕ} {η : FormField n} {x : Fin n → ℝ} (hη :
   · rfl
   · exact (hη r (fun h' => h (by rw [h']))).symm
 
-/-- **The bridge to the classical exterior derivative**: on the components of a `k`-form field,
-`extDerivOp` is `Feec.FiniteElement.extDeriv`. -/
 theorem extDerivOp_apply_formComp {k : ℕ} {η : FormField n} (hη : ∀ x, IsDeg k (η x))
     (t : formIdx n ((k : ℤ) + 1)) (x : Fin n → ℝ) :
     (extDerivOp ℝ n k).apply (formComp η) t x = extDeriv η x t.1 := by
@@ -736,9 +660,8 @@ theorem continuous_formComp {k : ℤ} {η : FormField n} (hη : Continuous η) (
     Continuous (formComp η s) :=
   (continuous_apply s.1).comp hη
 
-/-- **`HΛᵏ`-conformity of piecewise smooth real `k`-forms** ([AFW2006], §5): if the tangential
-traces of the `η_T` agree on every interior facet, then `η ∈ HΛᵏ(Ω) = D(d_max)` and
-`d_max η` is the elementwise classical exterior derivative. -/
+/-- Piecewise `C¹` real `k`-forms whose tangential traces agree on every interior facet lie in
+`HΛᵏ(Ω) = D(d_max)`, and `d_max` is the elementwise exterior derivative ([AFW2006], §5). -/
 theorem extDeriv_pieceL2_mem_maximal_domain [NeZero n] (k : ℕ) (M : SimplicialMesh n)
     (hΩ : IsOpen M.domain) {η : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n}
     (hη : ∀ T ∈ M.simplices, ContDiff ℝ 1 (η T)) (hdeg : ∀ T ∈ M.simplices, ∀ x, IsDeg k (η T x))
@@ -773,8 +696,7 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] {𝕜 : Type*} [
 
 /-! ### Dilations and the minimal domain -/
 
-/-- `A_s`: the operator with each `k`-th order coefficient multiplied by `sᵏ`, so that
-`A_s (f ∘ h) = (A f) ∘ h` for the homothety `h(y) = x₀ + s⁻¹ (y - x₀)`. -/
+/-- `A_s`: the operator with each `k`-th order coefficient multiplied by `sᵏ`. -/
 def scale (A : ConstCoeffOp E 𝕜 ι κ) (s : ℝ) : ConstCoeffOp E 𝕜 ι κ where
   coeff j i := (A.coeff j i).map fun t => (t.1, (s : 𝕜) ^ t.1.length * t.2)
 
@@ -802,7 +724,6 @@ theorem applyEntry_map_scale (P : List (List E × 𝕜)) (s : ℝ) (f : E → �
       (P.map fun t => (s : 𝕜) ^ t.1.length * t.2 * iterDeriv t.1 f x).sum := by
   simp [applyEntry, List.map_map, Function.comp_def]
 
-/-- Chain rule for the homothety `h(y) = x₀ + r (y - x₀)`. -/
 theorem iterDeriv_comp_homothety {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     {f : E → F} (hf : ContDiff ℝ ∞ f) (x₀ : E) (r : ℝ) (vs : List E) (y : E) :
     iterDeriv vs (fun y => f (x₀ + r • (y - x₀))) y =
@@ -879,7 +800,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι κ : Type*} {n : ℕ}
 /-- The homothety `x ↦ x₀ + s (x - x₀)`. -/
 def homothety (x₀ : Fin n → ℝ) (s : ℝ) (x : Fin n → ℝ) : Fin n → ℝ := x₀ + s • (x - x₀)
 
-/-- Change of variables under a homothety: `∫ F(x₀ + s (x - x₀)) dx = |sⁿ|⁻¹ ∫ F`. -/
 theorem integral_comp_homothety {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     (f : (Fin n → ℝ) → F) (x₀ : Fin n → ℝ) (s : ℝ) :
     ∫ x, f (homothety x₀ s x) = |(s ^ n)⁻¹| • ∫ x, f x := by
@@ -978,9 +898,6 @@ theorem _root_.Feec.Domain.IsTest.comp_homothety {f : (Fin n → ℝ) → 𝕜} 
   intro y hy
   exact ⟨homothety x₀ s y, subset_tsupport _ hy, homothety_inv_homothety x₀ hs y⟩
 
-/-- **Dilates of zero extensions.** Under the hypotheses of the zero-extension theorem, the
-dilate `x ↦ u(x₀ + s (x - x₀))` lies in `D(A_max(ℝⁿ))`, with `A_max` the dilate of the
-elementwise `A_s u_T` (`A_s` with first-order coefficients multiplied by `s`). -/
 theorem dilL2_mem_maximal_univ {m : ℕ} [Fintype κ]
     (A : ConstCoeffOp (Fin (m + 1) → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh (m + 1))
     {u : Affine.Simplex ℝ (Fin (m + 1) → ℝ) (m + 1) → ι → (Fin (m + 1) → ℝ) → 𝕜}
@@ -1058,7 +975,6 @@ theorem measurable_pieceFun (M : SimplicialMesh n)
   exact Finset.measurable_sum _ fun T hT =>
     (hv T hT).measurable.indicator isOpen_interior.measurableSet
 
-/-- Almost every point of `Ω` lies in the interior of an element. -/
 theorem ae_mem_interior (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain) :
     ∀ᵐ x ∂volume.restrict M.domain, ∃ T ∈ M.simplices, x ∈ interior T.closedInterior := by
   have hnull : volume (⋃ T ∈ M.simplices, frontier T.closedInterior) = 0 :=
@@ -1084,9 +1000,6 @@ theorem norm_pieceFun_le (M : SimplicialMesh n)
   · rw [Set.indicator_of_mem hy]; exact hC T hT y (interior_subset hy)
   · rw [Set.indicator_of_notMem hy, norm_zero]; exact hC0 T hT
 
-/-- **Continuity of dilations on piecewise fields**: for a family `v_s` of piecewise fields
-depending continuously on `s`, the dilates `x ↦ v_{s_k}(x₀ + s_k (x - x₀))` converge in
-`L²(Ω)` to `v₁` as `s_k → 1`. -/
 theorem tendsto_eLpNorm_pieceFun_homothety (M : SimplicialMesh n) (hΩ : MeasurableSet M.domain)
     {v : ℝ → Affine.Simplex ℝ (Fin n → ℝ) n → (Fin n → ℝ) → 𝕜}
     (hv : ∀ T ∈ M.simplices, Continuous fun p : ℝ × (Fin n → ℝ) => v p.1 T p.2)
@@ -1175,14 +1088,8 @@ theorem restrictL2F_dilL2 (M : SimplicialMesh n) (S : Set (Fin n → ℝ))
 
 variable [Fintype ι]
 
-/-- **Vanishing `A`-traces give the minimal domain** (`Ω` strictly star-shaped). Under the
-hypotheses of `pieceL2_mem_maximal_domain`, if moreover the `A`-traces vanish on the boundary
-facets and `Ω` is strictly star-shaped with respect to `x₀`
-(`x₀ + t (x - x₀) ∈ Ω` for `x ∈ closure Ω`, `0 ≤ t < 1`; e.g. `Ω` convex, or star-shaped with
-respect to a ball), then `u ∈ D(A_min(Ω))`. Proof: the dilates of the extension by zero lie in
-`D(A_max(ℝⁿ))` and are supported in compact subsets of `Ω`, hence in `D(A_min(Ω))`
-(`Feec.Domain.ConstCoeffOp.mem_minimal_of_support_subset`); they converge to `u` in the graph
-norm, and `A_min` is closed. -/
+/-- If the `A`-traces of a piecewise `C¹` field `u` agree across the interior facets and vanish on
+the boundary facets, and `Ω` is strictly star-shaped, then `u ∈ D(A_min(Ω))`. -/
 theorem pieceL2_mem_minimal_domain [NeZero n] [Fintype κ]
     (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) (hA : A.IsOrderLE 1) (M : SimplicialMesh n)
     (hΩ : IsOpen M.domain) {u : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → 𝕜}
@@ -1279,9 +1186,8 @@ open Feec.Domain Feec.Mesh ConstCoeffOp ExteriorFibre
 
 variable {n : ℕ}
 
-/-- **`H̊Λᵏ`-conformity of piecewise smooth real `k`-forms** (`Ω` strictly star-shaped): if the
-tangential traces agree on the interior facets and vanish on the boundary facets, then
-`ω ∈ H̊Λᵏ(Ω) = D(d_min)`, and `d_min ω` is the elementwise exterior derivative. -/
+/-- Piecewise `C¹` real `k`-forms whose tangential traces agree on the interior facets and vanish
+on the boundary facets lie in `H̊Λᵏ(Ω) = D(d_min)` for `Ω` strictly star-shaped. -/
 theorem extDeriv_pieceL2_mem_minimal_domain [NeZero n] (k : ℕ) (M : SimplicialMesh n)
     (hΩ : IsOpen M.domain) {η : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n}
     (hη : ∀ T ∈ M.simplices, ContDiff ℝ 1 (η T)) (hdeg : ∀ T ∈ M.simplices, ∀ x, IsDeg k (η T x))

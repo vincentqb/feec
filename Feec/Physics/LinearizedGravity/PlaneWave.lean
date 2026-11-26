@@ -8,32 +8,12 @@ public import Mathlib.Analysis.SpecialFunctions.Pow.Real
 /-!
 # Gravitational plane waves in four-dimensional Minkowski space
 
-The thesis-specific part of linearized gravity (§2.8): Minkowski space `η = diag(-1,1,1,1)`,
-the general linearized Einstein operator `Hjet η4 η4` of `Feec.Physics.LinearizedGravity.Einstein`,
-plane waves `h̄ = A f(k·x)` (Prop 2.5), the TT gauge (2.12)–(2.13) and its two degrees of
-freedom, the gauge change to TT (Prop 2.6, corrected), and the geodesic deviation of a TT wave
-((2.15), corrected; (2.15a–c)).
-
-## Main results
-
-* `plane_wave` (**Prop 2.5**): `□h̄ = 0`, Lorentz gauge and `H(h) = 0` for `h̄ = A f(k·x)`.
-* `isTT_iff`, `finrank_ttSub` (**(2.13)**): TT amplitudes are `ttAmp A₊ Aₓ`, a 2-dimensional
-  space.
-* `tt_gauge`, `tt_gauge_fun` (**Prop 2.6, corrected**); `exists_ttGauge` (the existence
-  statement, with an explicit `C³` gauge vector built by the fundamental theorem of calculus).
-* `tt_accel`, `tt_accel_fun` (**(2.15), corrected**); `Rjet_tt`, `Rjet_tt_support`,
-  `Rjet_ttWave` (**(2.15a–c)**).
-* `einstein_const_bounds`: `8πG/c⁴ ≈ 2.08·10⁻⁴³` (the thesis' `5·10⁻⁴⁴` is `2πG/c⁴`).
-* The counterexamples to the printed statements (Prop 2.4(b), the gauge vector of Prop 2.6, the
-  accelerations after (2.15)) are in `Feec.Counterexamples.LinearizedGravity`.
+Plane waves, the TT gauge (2.12)–(2.13) and its two degrees of freedom, the gauge change to TT,
+and the geodesic deviation and Riemann components of a TT wave ([QuennevilleBelair2015], §2.8).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §2.4 (coupling constant), §2.8 (Props 2.4–2.6, (2.12)–(2.15))
-* [R. M. Wald, *General Relativity*][Wald1984], §4.4
-* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008], pp. 44–45
-  (geodesic deviation of a TT wave; Fig 2.1 of the thesis, a ring of particles, is p. 45)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -45,9 +25,7 @@ open scoped ContDiff
 
 namespace Feec.LinearizedGravity
 
-/-! ### The Minkowski metric matrix -/
-
-/-- The Minkowski metric matrix `η = diag(-1, 1, 1, 1)` (its own inverse). [QuennevilleBelair2015], §2.2 -/
+/-- The Minkowski metric matrix `η = diag(-1, 1, 1, 1)`. -/
 abbrev η4 : Matrix (Fin 4) (Fin 4) ℝ := Matrix.diagonal (Metric.minkowski4 ℝ)
 
 theorem η4_apply (a b : Fin 4) : η4 a b = if a = b then Metric.minkowski4 ℝ a else 0 :=
@@ -85,10 +63,7 @@ def kTT (κ : ℝ) : Fin 4 → ℝ := ![-κ, 0, 0, κ]
 /-- Observer `u^a = (1, 0, 0, 0)` (contravariant). -/
 def uObs : Fin 4 → ℝ := ![1, 0, 0, 0]
 
-/-- The TT conditions (2.12) on a constant amplitude: symmetric, `A_ab k^b = 0`,
-`A_ab u^b = 0`, `η^{ab} A_ab = 0`.
-
-See [QuennevilleBelair2015], §2.8, (2.12); cf. [Wald1984], §4.4. -/
+/-- The TT conditions (2.12): symmetric, `A_ab k^b = 0`, `A_ab u^b = 0`, `η^{ab} A_ab = 0`. -/
 structure IsTT (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) : Prop where
   symm : ∀ a b, A a b = A b a
   lorentz : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0
@@ -98,20 +73,14 @@ structure IsTT (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) : Prop where
 /-- The `+`/`×` amplitude (2.13). -/
 def ttAmp (Ap Ax : ℝ) : Matrix (Fin 4) (Fin 4) ℝ := !![0, 0, 0, 0; 0, Ap, Ax, 0; 0, Ax, -Ap, 0; 0, 0, 0, 0]
 
-/-- The `+`/`×` amplitudes (2.13) satisfy the TT conditions (2.12). -/
 lemma ttAmp_isTT (κ Ap Ax : ℝ) : IsTT κ (ttAmp Ap Ax) where
   symm a b := by fin_cases a <;> fin_cases b <;> rfl
   lorentz a := by fin_cases a <;> simp [ttAmp, raise, kTT, Fin.sum_univ_four]
   transverse a := by fin_cases a <;> simp [ttAmp, uObs, Fin.sum_univ_four]
   traceless := by simp [trace_η4, ttAmp, Fin.sum_univ_four, Metric.minkowski4]
 
-/-- **Thesis (2.13)**: for `κ ≠ 0`, the TT conditions (2.12) hold iff `A` has the `+`/`×`
-form, with `A₊ = A₁₁`, `Aₓ = A₁₂`.
-
-Thesis gap: `κ ≠ 0` is needed; it is only implicit in the thesis (`k^a = k(1,0,0,1)`, later
-divided by `k`).
-
-See [QuennevilleBelair2015], §2.8, (2.12)–(2.13); cf. [Wald1984], §4.4. -/
+/-- For `κ ≠ 0`, the TT conditions (2.12) hold iff `A` has the `+`/`×` form, with `A₊ = A₁₁`,
+`Aₓ = A₁₂`. [QuennevilleBelair2015], (2.13) (adapted) -/
 theorem isTT_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Matrix (Fin 4) (Fin 4) ℝ) : IsTT κ A ↔ A = ttAmp (A 1 1) (A 1 2) := by
   refine ⟨fun h => ?_, fun h => h ▸ ttAmp_isTT κ _ _⟩
   have hu : ∀ a, A a 0 = 0 := fun a => by
@@ -144,18 +113,11 @@ def ttLin : (Fin 2 → ℝ) →ₗ[ℝ] Matrix (Fin 4) (Fin 4) ℝ where
 /-- The space of TT amplitudes. -/
 def ttSpace : Submodule ℝ (Matrix (Fin 4) (Fin 4) ℝ) := LinearMap.range ttLin
 
-/-- **Thesis (2.12)–(2.13)**: for `κ ≠ 0`, `ttSpace` is exactly the set of TT amplitudes.
-
-See [QuennevilleBelair2015], (2.12)–(2.13). -/
 theorem mem_ttSpace_iff {κ : ℝ} (hκ : κ ≠ 0) (A : Matrix (Fin 4) (Fin 4) ℝ) : A ∈ ttSpace ↔ IsTT κ A := by
   constructor
   · rintro ⟨p, rfl⟩; exact ttAmp_isTT κ _ _
   · intro h; exact ⟨![A 1 1, A 1 2], by simpa [ttLin] using ((isTT_iff hκ A).1 h).symm⟩
 
-/-- **Thesis (2.13)**, "only two degrees of freedom": the TT amplitudes form a
-2-dimensional space.
-
-See [QuennevilleBelair2015], (2.13); cf. [Wald1984], §4.4. -/
 theorem finrank_ttSpace : Module.finrank ℝ ttSpace = 2 := by
   have hinj : Function.Injective ttLin := by
     intro p q h
@@ -180,44 +142,29 @@ def ttSub (κ : ℝ) : Submodule ℝ (Matrix (Fin 4) (Fin 4) ℝ) where
       fun a => by simp [mul_assoc, ← mul_sum, hA.transverse a],
       by have := hA.traceless; simp only [trace_η4] at this ⊢; simp [mul_left_comm _ c, ← mul_sum, this]⟩
 
-/-- **Thesis (2.13)**, "only two degrees of freedom", stated directly: for `κ ≠ 0` the space
-`{A | A satisfies (2.12)}` has dimension `2`.
-
-See [QuennevilleBelair2015], (2.13); cf. [Wald1984], §4.4. -/
+/-- For `κ ≠ 0`, the amplitudes satisfying (2.12) form a space of dimension 2.
+[QuennevilleBelair2015], (2.13) -/
 theorem finrank_ttSub {κ : ℝ} (hκ : κ ≠ 0) : Module.finrank ℝ (ttSub κ) = 2 := by
   have : ttSub κ = ttSpace := by
     ext A; exact (mem_ttSpace_iff hκ A).symm
   rw [this, finrank_ttSpace]
 
-/-- Amplitude after the gauge change `ξ_a = B_a g(k·x)`, `g' = f`:
-`A'_ab = A_ab − k_a B_b − k_b B_a + η_ab (k^c B_c)`. -/
+/-- The amplitude after the gauge change `ξ_a = B_a g(k·x)`, `g' = f`. -/
 def gaugeAmp (k : Fin 4 → ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) (B : Fin 4 → ℝ) :
     Matrix (Fin 4) (Fin 4) ℝ := Matrix.of fun a b => A a b - k a * B b - k b * B a + η4 a b * dot η4 k B
 
-/-- Corrected gauge vector (covariant): `B₀ = −(A₀₀ + τ/2)/(2κ)`, `B_j = (k_j B₀ − A_j0)/κ`,
-`τ = Metric.trace η4 A`. -/
+/-- The gauge vector `B₀ = −(A₀₀ + τ/2)/(2κ)`, `B_j = (k_j B₀ − A_j0)/κ`, `τ = tr_η A`. -/
 def Bcorr (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) : Fin 4 → ℝ :=
   let B0 := -(A 0 0 + Metric.trace η4 A / 2) / (2 * κ)
   fun j => if j = 0 then B0 else (kTT κ j * B0 - A j 0) / κ
 
-/-- The thesis' gauge vector: `B₀ = (A₀₀ + τ/2)/(2κ)`, `B_j = (A_j0 − k_j B₀)/κ`, read as
-**covariant** components `B_a`. (The thesis writes `B^a` but mixes index positions; the
-contravariant reading fails too, on the same witness of
-`Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed`.) -/
+/-- The gauge vector of [QuennevilleBelair2015], Prop 2.6, read as covariant components. -/
 def BPrinted (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) : Fin 4 → ℝ :=
   let B0 := (A 0 0 + Metric.trace η4 A / 2) / (2 * κ)
   fun j => if j = 0 then B0 else (A j 0 - kTT κ j * B0) / κ
 
-/-- **Thesis Prop 2.6, corrected** (algebraic core): for `κ ≠ 0` and `A` symmetric with
-`A_ab k^b = 0`, the gauge vector `Bcorr` produces a TT amplitude, namely
-`A' = ttAmp ((A₁₁ − A₂₂)/2) A₁₂`.
-
-Correction: the thesis' derivation uses `η₀₀ = +1`, `k₀ = +κ`, contradicting (−+++); its
-`B` has the wrong sign and fails
-(`Feec.Counterexamples.LinearizedGravity.not_isTT_gaugeAmp_printed`). The resulting amplitudes
-`A'₊ = (A₁₁ − A₂₂)/2`, `A'ₓ = A₁₂` are not recorded in the thesis.
-
-See [QuennevilleBelair2015], Prop 2.6; cf. [Wald1984], §4.4. -/
+/-- For `κ ≠ 0` and `A` symmetric with `A_ab k^b = 0`, the gauge vector `Bcorr` produces the TT
+amplitude `A' = ttAmp ((A₁₁ − A₂₂)/2) A₁₂`. [QuennevilleBelair2015], Prop 2.6 (adapted) -/
 theorem tt_gauge {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ} (hA : ∀ i j, A i j = A j i)
     (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) :
     gaugeAmp (kTT κ) A (Bcorr κ A) = ttAmp ((A 1 1 - A 2 2) / 2) (A 1 2) ∧
@@ -243,13 +190,6 @@ theorem tt_gauge {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ} (h
 /-- Relative acceleration `a^i = −R^i_{0j0} v^j` (particles at rest, separation `v^j`). -/
 def accelJ (D : Jet2 (Fin 4) ℝ) (v : Fin 4 → ℝ) (i : Fin 4) : ℝ := -∑ j, Metric.minkowski4 ℝ i * Rjet D i 0 j 0 * v j
 
-/-- **Thesis (2.15), corrected**: for the 2-jet `k_i k_j A_ab s` of the TT plane wave
-(`s = f''(k·x)`), `a¹ = (κ²/2)(A₊v¹ + Aₓv²) s`, `a² = (κ²/2)(Aₓv¹ − A₊v²) s`, `a⁰ = a³ = 0`.
-
-Correction: the thesis gives `−(κ²/2)(…) f(k·x)` (sign, and `f` for `f''`).
-
-See [QuennevilleBelair2015], §2.8, (2.15); cf. [Alcubierre2008], pp. 44–45
-(followed by the thesis). -/
 theorem tt_accel (κ Ap Ax s : ℝ) (v : Fin 4 → ℝ) :
     let D : Jet2 (Fin 4) ℝ := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
     accelJ D v 1 = κ ^ 2 / 2 * (Ap * v 1 + Ax * v 2) * s ∧
@@ -265,8 +205,7 @@ def IsLong (i : Fin 4) : Prop := i = 0 ∨ i = 3
 
 instance (i : Fin 4) : Decidable (IsLong i) := inferInstanceAs (Decidable (_ ∨ _))
 
-/-- The 2-jet of a TT-gauge field depending only on `(x⁰, x³)`: `∂_i ∂_j h_ab = 0` unless
-`i, j ∈ {0, 3}`, and `h_ab = 0` unless `a, b ∈ {1, 2}`. -/
+/-- The 2-jet of a TT-gauge field depending only on `(x⁰, x³)`. -/
 structure IsTTJet (D : Jet2 (Fin 4) ℝ) : Prop where
   long_i : ∀ i j a b, ¬ IsLong i → D i j a b = 0
   long_j : ∀ i j a b, ¬ IsLong j → D i j a b = 0
@@ -279,12 +218,6 @@ lemma IsTTJet.support {D : Jet2 (Fin 4) ℝ} (hD : IsTTJet D) {i j a b : Fin 4} 
     by_contra hc
   exacts [h (hD.long_i _ _ _ _ hc), h (hD.long_j _ _ _ _ hc)]
 
-/-- **Thesis (2.15a–c)**: in TT gauge, for `i, j ∈ {1, 2}`,
-`R_{αiβj} = −½ ∂_α ∂_β h_ij` (exactly, at the jet level). The thesis restricts to
-`α, β ∈ {0, 3}`; for other `α, β` both sides vanish.
-
-See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008], p. 44 (geodesic deviation of a TT
-wave, followed by the thesis). -/
 theorem Rjet_tt {D : Jet2 (Fin 4) ℝ} (hD : IsSymJet2 D) (hT : IsTTJet D) {α β i j : Fin 4}
     (hi : ¬ IsLong i) (hj : ¬ IsLong j) :
     Rjet D α i β j = -(1/2) * D α β i j := by
@@ -293,11 +226,6 @@ theorem Rjet_tt {D : Jet2 (Fin 4) ℝ} (hD : IsSymJet2 D) (hT : IsTTJet D) {α �
     invOf_eq_inv]
   ring
 
-/-- **Thesis (2.15)**, "the only non-zero components": in TT gauge, `R_abcd = 0` unless each
-of the pairs `(a, b)` and `(c, d)` has exactly one longitudinal index. With pair-skewness
-(`Rjet_pairSkew`) every non-zero component is thus `±R_{αiβj}`, given by `Rjet_tt`.
-
-See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008], p. 44. -/
 theorem Rjet_tt_support {D : Jet2 (Fin 4) ℝ} (hT : IsTTJet D) {a b c d : Fin 4}
     (h : Rjet D a b c d ≠ 0) : (IsLong a ↔ ¬ IsLong b) ∧ (IsLong c ↔ ¬ IsLong d) := by
   by_contra hm
@@ -311,8 +239,6 @@ theorem Rjet_tt_support {D : Jet2 (Fin 4) ℝ} (hT : IsTTJet D) {a b c d : Fin 4
   rw [z c b d a (by tauto), z c a b d (by tauto), z d b c a (by tauto), z d a b c (by tauto)]
   ring
 
-/-- The 2-jet `k_i k_j A_ab s` of the TT plane wave `ttAmp A₊ Aₓ · f(k·x)` (`s = f''`) is a
-symmetric TT jet. -/
 lemma ttWaveJet_props (κ Ap Ax s : ℝ) :
     IsSymJet2 (fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s) ∧
       IsTTJet (fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s) := by
@@ -323,11 +249,8 @@ lemma ttWaveJet_props (κ Ap Ax s : ℝ) :
   · intro i j a b h; fin_cases a <;> simp [IsLong] at h ⊢ <;> fin_cases b <;> simp [ttAmp]
   · intro i j a b h; fin_cases b <;> simp [IsLong] at h ⊢ <;> fin_cases a <;> simp [ttAmp]
 
-/-- **Thesis (2.15a–c)** for the TT plane wave (cf. the components `C_{αiβj}` in §2.9):
-`R_{α1β1} = −½ k_α k_β A₊ s`, `R_{α2β2} = ½ k_α k_β A₊ s`, `R_{α1β2} = −½ k_α k_β Aₓ s`,
-with `s = f''(k·x)` (valid for all `α, β`; both sides vanish unless `α, β ∈ {0, 3}`).
-
-See [QuennevilleBelair2015], (2.15a–c); cf. [Alcubierre2008], p. 44. -/
+/-- For the TT plane wave, `R_{α1β1} = −½ k_α k_β A₊ s`, `R_{α2β2} = ½ k_α k_β A₊ s`,
+`R_{α1β2} = −½ k_α k_β Aₓ s`, `s = f''(k·x)`. [QuennevilleBelair2015], (2.15a–c) -/
 theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
     let D : Jet2 (Fin 4) ℝ := fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s
     Rjet D α 1 β 1 = -(1/2) * kTT κ α * kTT κ β * Ap * s ∧
@@ -343,9 +266,8 @@ theorem Rjet_ttWave (κ Ap Ax s : ℝ) (α β : Fin 4) :
 
 /-! ## The coupling constant (§2.4) -/
 
-/-- **Thesis §2.4 constant, corrected**: with `G = 6.67430·10⁻¹¹` and `c = 299792458` (SI),
-`8πG/c⁴ ∈ (2.07, 2.09)·10⁻⁴³ s²/(m·kg)`, whereas the thesis' value `≈ 5·10⁻⁴⁴` is
-`2πG/c⁴ ∈ (5.1, 5.3)·10⁻⁴⁴`. [QuennevilleBelair2015], §2.4 (corrected) -/
+/-- With `G = 6.67430·10⁻¹¹` and `c = 299792458` (SI), `8πG/c⁴ ∈ (2.07, 2.09)·10⁻⁴³` and
+`2πG/c⁴ ∈ (5.1, 5.3)·10⁻⁴⁴` (in `s²/(m·kg)`). [QuennevilleBelair2015], §2.4 (adapted) -/
 theorem einstein_const_bounds :
     let G : ℝ := 6.67430e-11
     let c : ℝ := 299792458
@@ -368,7 +290,6 @@ def phaseL (k : Fin 4 → ℝ) : (Fin 4 → ℝ) →L[ℝ] ℝ := ∑ c, k c •
 @[simp] theorem phaseL_apply (k : Fin 4 → ℝ) (y : Fin 4 → ℝ) : phaseL k y = ∑ c, k c * y c := by
   simp [phaseL]
 
-/-- Chain rule: `∂_i (c f(k·x)) = c k_i f'(k·x)`. -/
 theorem partialDeriv_wave {f : ℝ → ℝ} (hf : Differentiable ℝ f) (c : ℝ) (k : Fin 4 → ℝ)
     (i : Fin 4) (x : Fin 4 → ℝ) :
     partialDeriv i (fun y => c * f (phaseL k y)) x = c * k i * deriv f (phaseL k x) := by
@@ -378,7 +299,6 @@ theorem partialDeriv_wave {f : ℝ → ℝ} (hf : Differentiable ℝ f) (c : ℝ
   simp [Pi.single_apply]
   ring
 
-/-- The 2-jet of a plane wave `M_ab f(k·x)`: `∂_i ∂_j = k_i k_j M_ab f''(k·x)`. -/
 theorem jet2_wave {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (M : Matrix (Fin 4) (Fin 4) ℝ)
     (k : Fin 4 → ℝ) (x : Fin 4 → ℝ) :
     jet2 (fun y => Matrix.of fun a b => M a b * f (phaseL k y)) x =
@@ -395,12 +315,8 @@ theorem jet2_wave {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (M : Matrix (Fin 4) 
   simp only [Pi.smul_apply, Matrix.smul_apply, symbolJet_apply, smul_eq_mul]
   ring
 
-/-- **Thesis Prop 2.5** (plane waves), with genuine derivatives: for a null covector `k`
-(`k·k = 0`), a constant symmetric amplitude with `A_ab k^b = 0` and `f ∈ C²`, the field
-`h̄_ab = A_ab f(k·x)` satisfies `□h̄ = 0` and the Lorentz gauge `∂^a h̄_ab = 0`, and the
-perturbation `h` with trace reversal `h̄` (`h = trRev h̄`, `Metric.trRev_trRev`) solves the
-vacuum linearized equations `H(h) = 0`. (`k` is covariant, `k·k = η^{ij} k_i k_j`, and the
-phase is `k_c x^c`.) [QuennevilleBelair2015], Prop 2.5 -/
+/-- For a null `k`, a constant symmetric `A` with `A_ab k^b = 0` and `f ∈ C²`, `h̄ = A f(k·x)`
+satisfies `□h̄ = 0`, the Lorentz gauge and `H(trRev h̄) = 0`. [QuennevilleBelair2015], Prop 2.5 -/
 theorem plane_wave {k : Fin 4 → ℝ} (hk : dot η4 k k = 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ a b, A a b = A b a) (hker : ∀ a, ∑ b, A a b * raise k b = 0) {f : ℝ → ℝ}
     (hf : ContDiff ℝ 2 f) :
@@ -442,10 +358,6 @@ theorem plane_wave {k : Fin 4 → ℝ} (hk : dot η4 k k = 0) {A : Matrix (Fin 4
 
 /-! ### Prop 2.6 and (2.15) for genuine plane-wave fields -/
 
-/-- **Thesis Prop 2.6, corrected** (field level): with `ξ_b = B_b g(k·x)`, `g' = f`,
-`B = Bcorr κ A`, the gauge-transformed field `h̄ - (2∂_(a ξ_b) - η_ab ∂·ξ)` is the TT plane
-wave `ttAmp ((A₁₁ - A₂₂)/2) A₁₂ · f(k·x)`. Only `g` differentiable with `deriv g = f` is needed
-(the thesis takes `g ∈ C³`); `κ ≠ 0` is explicit. [QuennevilleBelair2015], Prop 2.6 (corrected) -/
 theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ i j, A i j = A j i) (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f g : ℝ → ℝ}
     (hg : Differentiable ℝ g) (hgf : deriv g = f) (y : Fin 4 → ℝ) :
@@ -462,11 +374,9 @@ theorem tt_gauge_fun {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ
   rw [this]
   ring
 
-/-- **Thesis (2.15), corrected** (field level): for the TT plane wave
-`h_ab = ttAmp A₊ Aₓ · f(k·x)` with `f ∈ C²`, `a¹ = (κ²/2)(A₊v¹ + Aₓv²) f''(k·x)` and
-`a² = (κ²/2)(Aₓv¹ - A₊v²) f''(k·x)`. [QuennevilleBelair2015], (2.15) (corrected); cf.
-[Alcubierre2008], pp. 44–45 (the computation the thesis follows, and its Fig 2.1 on a ring of
-particles; the correction concerns the thesis' printed accelerations). -/
+/-- For the TT plane wave `ttAmp A₊ Aₓ · f(k·x)`, `f ∈ C²`, the relative accelerations are
+`a¹ = (κ²/2)(A₊v¹ + Aₓv²) f''(k·x)` and `a² = (κ²/2)(Aₓv¹ - A₊v²) f''(k·x)`.
+[QuennevilleBelair2015], (2.15) (adapted) -/
 theorem tt_accel_fun (κ Ap Ax : ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) (v : Fin 4 → ℝ)
     (x : Fin 4 → ℝ) :
     let D := jet2 (fun y => Matrix.of fun a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) x
@@ -485,10 +395,9 @@ theorem tt_accel_fun (κ Ap Ax : ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) 
 
 /-! ### Prop 2.6: existence of the TT gauge -/
 
-/-- The antiderivative `g(t) = ∫₀ᵗ f` used to build the gauge vector of Prop 2.6. -/
+/-- The antiderivative `g(t) = ∫₀ᵗ f`. -/
 def antideriv (f : ℝ → ℝ) : ℝ → ℝ := fun t => ∫ s in (0 : ℝ)..t, f s
 
-/-- FTC: `g' = f` for continuous `f`. -/
 theorem deriv_antideriv {f : ℝ → ℝ} (hf : Continuous f) : deriv (antideriv f) = f :=
   funext fun t => Continuous.deriv_integral f hf 0 t
 
@@ -496,13 +405,12 @@ theorem differentiable_antideriv {f : ℝ → ℝ} (hf : Continuous f) :
     Differentiable ℝ (antideriv f) := fun t =>
   (hf.integral_hasStrictDerivAt 0 t).hasDerivAt.differentiableAt
 
-/-- If `f ∈ C²` then `g = ∫₀ f ∈ C³`. -/
 theorem contDiff_antideriv {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f) : ContDiff ℝ 3 (antideriv f) := by
   have hc : Continuous f := hf.continuous
   exact (contDiff_succ_iff_deriv (𝕜 := ℝ) (f := antideriv f) (n := 2)).mpr
     ⟨differentiable_antideriv hc, by simp, by rw [deriv_antideriv hc]; exact hf⟩
 
-/-- The gauge vector of Prop 2.6 (corrected): `ξ_b(z) = (Bcorr κ A)_b · g(k·z)`, `g = ∫₀ f`. -/
+/-- The gauge vector `ξ_b(z) = (Bcorr κ A)_b · g(k·z)`, `g = ∫₀ f`. -/
 def ttGaugeVec (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) (f : ℝ → ℝ) : Fin 4 → (Fin 4 → ℝ) → ℝ :=
   fun b z => Bcorr κ A b * antideriv f (phaseL (kTT κ) z)
 
@@ -513,7 +421,6 @@ theorem contDiff_ttGaugeVec (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) {f : ℝ
 theorem dot_kTT (κ : ℝ) : dot η4 (kTT κ) (kTT κ) = 0 := by
   simp [dot_η4, kTT, Fin.sum_univ_four, Metric.minkowski4]
 
-/-- The gauge vector of Prop 2.6 is a residual gauge: `□ξ_b = 0` (`k` is null). -/
 theorem box_ttGaugeVec (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) {f : ℝ → ℝ} (hf : ContDiff ℝ 2 f)
     (b : Fin 4) (x : Fin 4 → ℝ) : box η4 (ttGaugeVec κ A f b) x = 0 := by
   have hc : Continuous f := hf.continuous
@@ -531,12 +438,8 @@ theorem box_ttGaugeVec (κ : ℝ) (A : Matrix (Fin 4) (Fin 4) ℝ) {f : ℝ → 
     rw [dot_η4, sum_mul]; exact sum_congr rfl fun _ _ => by ring
   rw [this, dot_kTT, zero_mul]
 
-/-- **Thesis Prop 2.6, repaired** (existence of the TT gauge for a plane wave): for `κ ≠ 0`,
-`A` symmetric with `A_ab k^b = 0` and every `f ∈ C²` there are a `C³` gauge vector `ξ`
-(explicitly `ttGaugeVec κ A f`, with minus the printed `B`) and an amplitude
-`A' = ttAmp ((A₁₁ - A₂₂)/2) A₁₂` satisfying the TT conditions (2.12) such that
-`h̄ - (2∂_(a ξ_b) - η_ab ∂^c ξ_c) = A' f(k·x)`; the new field is a plane-wave solution of
-Prop 2.5 (`□h̄' = 0`, `∂^a h̄'_ab = 0`, `H(trRev h̄') = 0`). [QuennevilleBelair2015], Prop 2.6 (corrected) -/
+/-- For `κ ≠ 0`, `A` symmetric with `A_ab k^b = 0` and `f ∈ C²`, the `C³` gauge vector `ttGaugeVec`
+takes `A f(k·x)` to a TT plane wave. [QuennevilleBelair2015], Prop 2.6 (adapted) -/
 theorem exists_ttGauge {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ i j, A i j = A j i) (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f : ℝ → ℝ}
     (hf : ContDiff ℝ 2 f) :
@@ -555,10 +458,6 @@ theorem exists_ttGauge {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) �
   refine ⟨_, rfl, contDiff_ttGaugeVec κ A hf, _, hIs, rfl, fun y => ?_, hbox, hdiv, hH⟩
   exact tt_gauge_fun hκ hA hker (differentiable_antideriv hc) (deriv_antideriv hc) y
 
-/-- **Thesis Prop 2.6, repaired**, on the metric perturbation `h = trRev h̄` (the gauge freedom
-`h ↦ h - 2∂_(a ξ_b)` of (2.5)): with the gauge vector of `exists_ttGauge`, the trace reversal
-of `h - ∂_a ξ_b - ∂_b ξ_a` is the TT plane wave `ttAmp ((A₁₁ - A₂₂)/2) A₁₂ · f(k·x)`.
-[QuennevilleBelair2015], Prop 2.6 (corrected), (2.5) -/
 theorem trRev_sub_gauge_eq_ttAmp {κ : ℝ} (hκ : κ ≠ 0) {A : Matrix (Fin 4) (Fin 4) ℝ}
     (hA : ∀ i j, A i j = A j i) (hker : ∀ a, ∑ b, A a b * raise (kTT κ) b = 0) {f : ℝ → ℝ}
     (hf : ContDiff ℝ 2 f) (y : Fin 4 → ℝ) :

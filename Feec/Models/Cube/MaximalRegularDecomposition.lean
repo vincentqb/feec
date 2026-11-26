@@ -6,37 +6,12 @@ public import Feec.Models.Cube.Sobolev
 /-!
 # The regular decompositions of `HΛ((0, ½)ⁿ)`
 
-On the cube `Q = (0, ½)ⁿ` the maximal `L²` de Rham complex `HΛ(Q)` (no boundary condition) has
-the **regular decompositions** of [ArnoldHu2021], §2, Theorem 3: every `u ∈ HΛᵏ⁺¹(Q)` is
-`d p + w` with `p ∈ HΛᵏ(Q)` and every coefficient of `w` in `H¹(Q)`
-(**`deRham_hasRegularDecomposition_Q`**; in three dimensions `H(curl) = grad H¹ + H¹`,
-`H(div) = curl H(curl) + H¹`, `L² = div H(div) + H¹`). Through the vector proxies the same holds
-for the de Rham complexes of `Q ⊆ ℝ³` with values in `ℝᵐ`, and through the real and imaginary
-parts with values in `𝕜ᵐ`, every `RCLike 𝕜` (`deRhamVec_hasRegularDecomposition_Q`), the rows of
-the Hessian, elasticity and div-div diagrams.
-
-**Proof.** `HΛ(Q)` has closed range (the Poincaré inequality `HQmax_norm_le`), so `u` splits as
-`b + v`, `b` the orthogonal projection onto `R(dᵏ)`, `b = d p`, and `v ⊥ R(dᵏ)` lies in
-`D((dᵏ)*)` and in `D(dᵏ⁺¹)`. Through the identification of `HΛ(Q)` with the absolute parity class
-of the torus de Rham complex (`HQmax_eq_compress`), **Gaffney's identity on the torus**
-(`gaffney_RT`, the fibre Cartan identity `|ξ|² |v|² = |ξ ∧ v|² + |ι_ξ v|²`) puts the extension
-of `v` in `H¹(𝕋ⁿ)` (`memSob_one_of_mem_HQmax`), so `v ∈ H¹(Q)` (`sobolevQ`), whose coefficients
-have their weak gradients in `L²(Q)` (`mem_sobolevQ_one_iff`, `sobolevQ_one_le_fieldH1`).
-
-## Main results
-
-* `gaffney_RT`; **`memSob_one_of_mem_HQmax`** (Gaffney in the absolute class);
-  `zeroF_mem_fieldH1`, `sobolevQ_one_le_fieldH1`; `mem_HQmax_domain_next`.
-* **`deRham_hasRegularDecomposition_Q`**, **`deRhamVec_hasRegularDecomposition_Q`**.
+On `Q = (0, ½)ⁿ` the complex `HΛ(Q)` has the regular decompositions of [ArnoldHu2021], §2,
+Theorem 3 (`deRham_hasRegularDecomposition_Q`), and so do its `𝕜ᵐ`-valued versions on `Q ⊆ ℝ³`.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2, Theorem 3 (regular
-  decompositions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (Hodge decomposition, closed range), §4.3 (Gaffney's inequality)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -55,10 +30,8 @@ variable {n : ℕ}
 
 /-! ### Gaffney's identity in the absolute class -/
 
-/-- **Gaffney's identity on the real torus window**: a sequence in the domains of the outgoing
-differential and of the adjoint of the incoming one lies in `H¹(𝕋ⁿ)`, with
-`Σ_m (1 + |ξ_m|²) |y(m)|² = ‖y‖² + ‖d y‖² + ‖d* y‖²` (the fibre Cartan identity
-`|ξ|² |v|² = |ξ ∧ v|² + |ι_ξ v|²`, `Feec.Models.Torus.DeRham.window_cartan`). -/
+/-- **Gaffney's identity on the torus window**:
+`Σ_m (1 + |ξ_m|²) |y(m)|² = ‖y‖² + ‖d y‖² + ‖d* y‖²`. -/
 theorem gaffney_RT (a : Fin (Fintype.card (Fin n) + 1)) {y : TW n a}
     (h1 : y ∈ ((RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)).domain)
     (h2 : y ∈ (((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain) :
@@ -117,9 +90,6 @@ theorem gaffney_RT (a : Fin (Fintype.card (Fin n) + 1)) {y : TW n a}
       (summable_norm_sq _), (summable_norm_sq _).tsum_add (summable_norm_sq _),
       ← norm_sq_eq_tsum, ← norm_sq_eq_tsum, ← norm_sq_eq_tsum]
 
-/-- **Gaffney in the absolute class `HΛ(Q)`** (window form): a form on `Q` in the domain of the
-outgoing maximal differential and of the adjoint of the incoming one has its absolute parity
-extension in `H¹(𝕋ⁿ)`. Through `HQmax_eq_compress` this is `gaffney_RT`. -/
 theorem memSob_one_of_mem_HQmax {a b c : Fin (Fintype.card (Fin n) + 1)}
     (hb : (ComplexShape.window (Fintype.card (Fin n) + 1)).next a = b)
     (hc : (ComplexShape.window (Fintype.card (Fin n) + 1)).prev a = c) {x : WQ n a}
@@ -133,7 +103,6 @@ theorem memSob_one_of_mem_HQmax {a b c : Fin (Fintype.card (Fin n) + 1)}
 
 /-! ### `H¹(Q)` forms are `H¹` fields -/
 
-/-- `0`-forms in `D(d_max)` are `H¹` fields: `∂ⱼ f = (d f)_{j}`. -/
 theorem zeroF_mem_fieldH1 {f : L2 ℝ (Q (Fin n))}
     (hf : zeroF f ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain) :
     zeroF f ∈ fieldH1 ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ)) := by
@@ -148,8 +117,6 @@ theorem zeroF_mem_fieldH1 {f : L2 ℝ (Q (Fin n))}
   rw [show rl.1 = ⟨∅, by simp⟩ from Subtype.ext (Finset.card_eq_zero.1 (by exact_mod_cast rl.1.2))]
   exact (extDerivOp_zero_apply g rl.2 x).symm
 
-/-- **`H¹(Q)` forms are `H¹` fields**: every coefficient of `u ∈ H¹(Q; Λᵏ)` has its weak gradient
-in `L²(Q)` (`mem_sobolevQ_one_iff`). -/
 theorem sobolevQ_one_le_fieldH1 (k : ℕ) :
     sobolevQ n k 1 ≤ fieldH1 ℝ (Q (Fin n)) (formIdx n (k : ℤ)) := by
   intro u hu
@@ -172,8 +139,6 @@ theorem sobolevQ_one_le_fieldH1 (k : ℕ) :
 
 /-! ### The regular decompositions -/
 
-/-- `u ∈ D(dᵃ_max)` is in the domain of the outgoing window differential of `HΛ(Q)` (`0` at the
-top degree). -/
 theorem mem_HQmax_domain_next {m : ℕ} (hm : m + 1 < Fintype.card (Fin n) + 1)
     {u : L2F ℝ (Q (Fin n)) (formIdx n ((m : ℤ) + 1))}
     (hu : u ∈ ((extDerivOp ℝ n ((m : ℤ) + 1)).maximal (Q (Fin n))).domain) :
@@ -189,10 +154,8 @@ theorem mem_HQmax_domain_next {m : ℕ} (hm : m + 1 < Fintype.card (Fin n) + 1)
       change m + 1 + 1 = _ at hr; omega)]
     exact Submodule.mem_top
 
-/-- **The regular decompositions of `HΛ(Q)`** ([ArnoldHu2021], §2, Theorem 3, on the cube
-`Q = (0, ½)ⁿ`): every `u ∈ HΛᵏ⁺¹(Q)`, `k ≥ 0`, is `d p + w` with `p ∈ HΛᵏ(Q)` and `w` an `H¹`
-field. `w` is the component of `u` orthogonal to the closed range `R(dᵏ)`; it lies in
-`D(dᵏ⁺¹) ∩ D((dᵏ)*)`, hence in `H¹(Q)` by Gaffney (`memSob_one_of_mem_HQmax`). -/
+/-- **The regular decompositions of `HΛ(Q)`** ([ArnoldHu2021], §2, Theorem 3): every
+`u ∈ HΛᵏ⁺¹(Q)` is `d p + w` with `p ∈ HΛᵏ(Q)` and `w` an `H¹` field. -/
 theorem deRham_hasRegularDecomposition_Q :
     (deRham ℝ n).HasRegularDecomposition (Q (Fin n)) 0 := by
   intro i hi u hu
@@ -241,10 +204,7 @@ theorem deRham_hasRegularDecomposition_Q :
   rw [hpb]
   exact sobolevQ_one_le_fieldH1 (m + 1) ⟨_, hsob, Jinvf_Jf false (m + 1) _⟩
 
-/-- **The regular decompositions of the de Rham complexes of `Q ⊆ ℝ³` with values in `𝕜ᵐ`**
-(vector proxies, row by row, `Feec.Domain.deRhamVec_hasRegularDecomposition`; from `ℝ` to `𝕜`
-through the real and imaginary parts,
-`Feec.Domain.ConstCoeffComplex.HasRegularDecomposition.ofReal`). -/
+/-- **The regular decompositions of the de Rham complexes of `Q ⊆ ℝ³` with values in `𝕜ᵐ`.** -/
 theorem deRhamVec_hasRegularDecomposition_Q {𝕜 : Type*} [RCLike 𝕜] (m : ℕ) :
     (deRhamVec 𝕜 m).HasRegularDecomposition (Q (Fin 3)) 0 :=
   deRhamVec_ofReal (𝕜 := 𝕜) m ▸

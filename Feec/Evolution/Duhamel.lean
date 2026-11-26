@@ -10,33 +10,14 @@ public import Mathlib.MeasureTheory.Integral.Prod
 /-!
 # Duhamel's formula for a strongly continuous semigroup
 
-For a strongly continuous semigroup `G` on a Banach space `E` over `𝕜 = ℝ` or `ℂ`, with
-generator `A`, the **mild solution** (Duhamel's formula) of `U' = A U + F`, `U a = U₀` is
-`Evolution.mild G.S a U₀ F t = S(t - a) U₀ + ∫ₐᵗ S(t - s) F(s) ds`.
-
-## Main results
-
-The orbit calculus of `C0Semigroup` (`extS`, joint continuity, `mapsTo_domain`,
-`hasDerivWithinAt_apply`, convolutions) is in `Feec.Semigroup.Orbit`; Hille's theorem
-(`LinearPMap.integral_mem_graph_of_isClosed`) is in `Feec.ForMathlib.LinearPMap.Integral`.
-
-Duhamel's formula:
-
-* `C0Semigroup.integral_mem_graph`: **the domain property, once**: for admissible forcing
-  (`ForcingClass.admissible`), `∫ₐᵗ S(t - s) F(s) ds ∈ D(A)` with `A`-image continuous in `t`
-  (`L¹(a,b; D(A))` branch: Hille; `W^{1,1}` branch: Fubini and `A ∫₀ᵘ S = S u - 1`).
-* `C0Semigroup.isClassicalSolution_mild`: the mild solution is a classical solution.
-* `Evolution.IsStrongSolution.eq_mild`: every strong solution with continuous forcing is the mild
-  solution (`s ↦ S(t - s) U(s)` has derivative `S(t - s) F(s)`).
+For a strongly continuous semigroup with generator `A`, the mild solution
+`S(t - a) U₀ + ∫ₐᵗ S(t - s) F(s) ds` of `U' = A U + F` is a classical solution for `U₀ ∈ D(A)` and
+admissible forcing, and every strong solution with continuous forcing is the mild solution.
 
 ## References
 
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2 (Thm 2.4: generators), §4.2 (Thm 2.4, Cor 2.5: classical solutions)
-* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §II.1, §VI.7
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (Thm 4.3)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -54,11 +35,6 @@ namespace C0Semigroup
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
   [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
 
-/-- **The domain property of Duhamel's integral, once**: for admissible forcing
-(`F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))`), `∫ₐᵗ S(t - s) F(s) ds ∈ D(A)` for
-`t ∈ [a,b]`, with an `A`-image continuous on `[a,b]`. Explicitly the image is
-`∫ₐᵗ S(t - s) A F(s) ds` in the `L¹(D(A))` case and `S(t - a) F(a) - F(t) + ∫ₐᵗ S(t - s) g(s) ds`
-in the `W^{1,1}` case (`g` the weak derivative). Cf. [Pazy1983], Thm 4.2.4, Cor 4.2.5. -/
 theorem integral_mem_graph {F : ℝ → E} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible G.generator a b F) :
     ∃ V : ℝ → E, ContinuousOn V (Icc a b) ∧
@@ -150,8 +126,7 @@ namespace Evolution
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedSpace ℝ E]
 
-/-- **Duhamel's formula**: the mild solution of `U' = A U + F`, `U a = U₀`, for the propagator
-`S`: `mild S a U₀ F t = S(t - a) U₀ + ∫ₐᵗ S(t - s) F(s) ds`. -/
+/-- **Duhamel's formula** `mild S a U₀ F t = S(t - a) U₀ + ∫ₐᵗ S(t - s) F(s) ds`. -/
 def mild (S : ℝ → E →L[𝕜] E) (a : ℝ) (U₀ : E) (F : ℝ → E) (t : ℝ) : E :=
   S (t - a) U₀ + ∫ s in a..t, S (t - s) (F s)
 
@@ -170,7 +145,6 @@ omit [CompleteSpace E] [IsScalarTower ℝ 𝕜 E] in
 @[simp] theorem mild_self (a : ℝ) (U₀ : E) (F : ℝ → E) : Evolution.mild G.S a U₀ F a = U₀ :=
   Evolution.mild_self G.map_zero a U₀ F
 
-/-- `A ∫ₐᵗ v = v t - ∫ₐᵗ F` for the Duhamel term `v t = ∫ₐᵗ S(t - s) F(s) ds`. -/
 theorem integral_conv_mem_graph {F : ℝ → E} {a t : ℝ} (hat : a ≤ t)
     (hF : IntegrableOn F (Ioc a t)) :
     (∫ s in a..t, ∫ r in a..s, G.S (s - r) (F r),
@@ -231,10 +205,8 @@ theorem integral_conv_mem_graph {F : ℝ → E} {a t : ℝ} (hat : a ≤ t)
     ((intervalIntegrable_iff_integrableOn_Ioc_of_le hat).2 (G.integrableOn_S_sub hat hF))
     ((intervalIntegrable_iff_integrableOn_Ioc_of_le hat).2 hF)]
 
-/-- **Duhamel's formula gives a classical solution**: for `U₀ ∈ D(A)` and admissible forcing
-`F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))`, the mild solution
-`t ↦ S(t - a) U₀ + ∫ₐᵗ S(t - s) F(s) ds` is a classical solution of `U' = A U + F` on `[a,b]`.
-[QuennevilleBelair2015], Thm 4.3 (existence). Cf. [Pazy1983], Thm 4.2.4, Cor 4.2.5. -/
+/-- **Duhamel's formula gives a classical solution** for `U₀ ∈ D(A)` and admissible forcing.
+[QuennevilleBelair2015], Thm 4.3 (adapted); [Pazy1983], Thm 4.2.4, Cor 4.2.5 -/
 theorem isClassicalSolution_mild {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain) {F : ℝ → E} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible G.generator a b F) :
     Evolution.IsClassicalSolution G.generator (Icc a b) F (Evolution.mild G.S a U₀ F) := by
@@ -287,10 +259,7 @@ theorem isClassicalSolution_mild {U₀ : E} (hU₀ : U₀ ∈ G.generator.domain
   rw [← add_assoc] at this
   exact this.congr_of_mem (fun τ _ => rfl) ht
 
-/-- **Every strong solution is the mild solution**: if `U` is a strong solution of
-`U' = A U + F` on `[a,b]` with `F` continuous, then `U t = S(t - a) U(a) + ∫ₐᵗ S(t - s) F(s) ds`
-on `[a,b]`. Proof: `s ↦ S(t - s) U(s)` has derivative `S(t - s) F(s)` on `(a,t)`.
-Cf. [Pazy1983], Thm 4.1.3. -/
+/-- **Every strong solution with continuous forcing is the mild solution.** [Pazy1983], Thm 4.1.3 -/
 theorem _root_.Feec.Evolution.IsStrongSolution.eq_mild {G : C0Semigroup 𝕜 E} {F U : ℝ → E}
     {a b : ℝ} (hU : Evolution.IsStrongSolution G.generator (Icc a b) F U)
     (hF : ContinuousOn F (Icc a b)) : ∀ t ∈ Icc a b, U t = Evolution.mild G.S a (U a) F t := by

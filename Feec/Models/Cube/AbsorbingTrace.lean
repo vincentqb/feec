@@ -6,35 +6,8 @@ public import Feec.Models.BoundedDomain.Interior
 /-!
 # Tangential traces and Green's formula for the row-wise curl on the cube
 
-On the cube `Q = (0, ½)³` the boundary consists of the six faces `{x_m = s}`, `m : Fin 3`,
-`s ∈ {0, ½}` (`face (m, s)`, with `s = ½` for `true`), each parametrized by the open square
-`Sq = (0, ½)²` through `Fin.insertNth m s` (`faceMap`). The outward normal of `face (m, s)` is
-`± e_m` (`faceSign`).
-
-* **The boundary space** `Bdry = L²(Sq)^{faces × rows × tangential slots}` (`Bdry`): for every face
-  `(m, s)`, every row `i` and every tangential direction `j = m.succAbove j'`, one `L²` function on
-  the square. It is `L²(∂Q; ℝ^{3×3}_τ)`: the tangential parts of matrix fields on `∂Q`.
-* **Tangential traces** of continuous fields `Φ : Ix → ℝ³ → ℝ`: `tanTrace Φ (m, s) i j' = Φ_{i,j}`
-  on the face (`j = m.succAbove j'`), and the **flux trace**
-  `fluxTrace Ψ (m, s) i j' = ± (Ψ_i × e_m)_j` (the boundary datum dual to the tangential trace in
-  Green's formula).
-* **Green's formula** (`inner_curl_sub_inner_curl`): for `C¹` fields `Φ`, `Ψ` on `ℝ³`,
-  `⟪curl Φ, Ψ⟫_{L²(Q)} - ⟪Φ, curl Ψ⟫_{L²(Q)} = ⟪tanTrace Φ, fluxTrace Ψ⟫_{Bdry}`, i.e.
-  `∫_Q (curl Φ · Ψ - Φ · curl Ψ) = ∫_{∂Q} Σᵢ (n × Φᵢ) · Ψᵢ`, from the divergence theorem on the box
-  for `Σᵢ Φᵢ × Ψᵢ` (`integral_sum_pd_eq_faces`).
-* **Flux traces separate boundary data** (`eq_zero_of_forall_inner_fluxTrace`): a `β ∈ Bdry`
-  orthogonal to the flux traces of all smooth fields is `0` (fields supported near one face, equal
-  to a test function of the square on it), i.e. flux traces span a dense subspace. The analogous
-  density of tangential traces is not proved.
-
-## References
-
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], §3.5 (traces of
-  `H(curl)`, Green's formula)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (boundary conditions on the cube)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The boundary space `L²(∂Q; ℝ^{3×3}_τ)` of `Q = (0, ½)³`, the tangential and flux traces, and
+Green's formula for the row-wise curl (`inner_curl_sub_inner_curl`).
 -/
 
 open scoped InnerProductSpace ContDiff
@@ -73,8 +46,7 @@ theorem Q_ae_eq_Icc {n : ℕ} :
   rw [this]
   exact Measure.univ_pi_Ioo_ae_eq_Icc
 
-/-- **The divergence theorem on the cube**: for a `C¹` vector field `F` on `ℝ³`,
-`∫_Q Σ_m ∂_m F_m = Σ_m (∫_{x_m = ½} F_m - ∫_{x_m = 0} F_m)`. -/
+/-- **The divergence theorem on the cube** for `C¹` vector fields on `ℝ³`. -/
 theorem integral_sum_pd_eq_faces {F : Fin 3 → R3 → ℝ} (hF : ∀ m, ContDiff ℝ 1 (F m)) :
     ∫ x in Q (Fin 3), ∑ m, partialDeriv m (F m) x =
       ∑ m, ((∫ y in Sq, F m (faceMap (m, true) y)) - ∫ y in Sq, F m (faceMap (m, false) y)) := by
@@ -111,7 +83,6 @@ theorem contDiff_curlFlux {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, ContDiff �
   unfold curlFlux
   exact ContDiff.sum fun i _ => ((hΦ _).mul (hΨ _)).sub ((hΦ _).mul (hΨ _))
 
-/-- **The pointwise Green identity**: `div (Σᵢ Φᵢ × Ψᵢ) = Σᵢ (curl Φᵢ · Ψᵢ - Φᵢ · curl Ψᵢ)`. -/
 theorem sum_pd_curlFlux {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, Differentiable ℝ (Φ ij))
     (hΨ : ∀ ij, Differentiable ℝ (Ψ ij)) (x : R3) :
     ∑ m, partialDeriv m (curlFlux Φ Ψ m) x =
@@ -134,9 +105,6 @@ theorem sum_pd_curlFlux {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, Differentiabl
     show (2 : Fin 3) + 1 = 0 from rfl, show (2 : Fin 3) + 2 = 1 from rfl]
   ring
 
-/-- **Green's formula for the row-wise curl on the cube** (classical form): for `C¹` fields,
-`∫_Q Σ (curl Φ · Ψ - Φ · curl Ψ) = Σ_m (∫_{x_m = ½} F_m - ∫_{x_m = 0} F_m)`,
-`F_m = Σᵢ (Φᵢ × Ψᵢ)_m`. -/
 theorem integral_curl_green {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, ContDiff ℝ 1 (Φ ij))
     (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
     ∫ x in Q (Fin 3), ∑ ij : Ix, (curlM Φ ij x * Ψ ij x - Φ ij x * curlM Ψ ij x) =
@@ -188,8 +156,7 @@ abbrev BIx := Face × Fin 3 × Fin 2
 /-- The tangential direction `m.succAbove j'` of slot `j'` on face `(m, s)`. -/
 def tanDir (f : Face) (j' : Fin 2) : Fin 3 := f.1.succAbove j'
 
-/-- **The boundary space** `L²(∂Q; ℝ^{3×3}_τ)`: one `L²(Sq)` function per face, row and
-tangential slot. -/
+/-- **The boundary space** `L²(∂Q; ℝ^{3×3}_τ)`: one `L²(Sq)` function per face, row and slot. -/
 abbrev Bdry := L2F ℝ Sq BIx
 
 /-- The tangential component `Φ_{i,j}` on the face, for the slot `(f, i, j')`. -/
@@ -207,8 +174,7 @@ def tanTrace {Φ : Ix → R3 → ℝ} (hΦ : ∀ ij, Continuous (Φ ij)) : Bdry 
 @[simp] theorem tanTrace_apply {Φ : Ix → R3 → ℝ} (hΦ : ∀ ij, Continuous (Φ ij)) (b : BIx) :
     tanTrace hΦ b = cL2 measurableSet_Q isBounded_Q (continuous_tanFun hΦ b) := rfl
 
-/-- The flux value `(Ψᵢ × e_m)_j` for a tangential `j`: `Ψ_{i,m+2}` at `j = m + 1`, `-Ψ_{i,m+1}`
-at `j = m + 2`. -/
+/-- The flux value `(Ψᵢ × e_m)_j` for a tangential direction `j`. -/
 def fluxVal (Ψ : Ix → R3 → ℝ) (m i j : Fin 3) (x : R3) : ℝ :=
   if j = m + 1 then Ψ (i, m + 2) x else -Ψ (i, m + 1) x
 
@@ -225,8 +191,7 @@ theorem continuous_fluxFun {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, Continuous (�
     Continuous (fluxFun Ψ b) :=
   continuous_const.mul ((continuous_fluxVal hΨ _ _ _).comp (continuous_faceMap b.1))
 
-/-- **The flux trace** `± (Ψᵢ × e_m)_τ` on the face `(m, ±)`: the boundary datum paired with the
-tangential trace in Green's formula. -/
+/-- **The flux trace** `± (Ψᵢ × e_m)_τ` on the face `(m, ±)`. -/
 def fluxTrace {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, Continuous (Ψ ij)) : Bdry :=
   WithLp.toLp 2 fun b => cL2 measurableSet_Q isBounded_Q (continuous_fluxFun hΨ b)
 
@@ -322,14 +287,12 @@ theorem cL2_eq_zero {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω
     cL2 hΩ hb hf = 0 := by
   subst h0; exact MemLp.toLp_zero _
 
-/-- A field vanishing off `Q` has zero tangential trace. -/
 theorem tanTrace_eq_zero {Φ : Ix → R3 → ℝ} (hΦ : ∀ ij, Continuous (Φ ij))
     (h0 : ∀ ij, ∀ x ∉ Q (Fin 3), Φ ij x = 0) : tanTrace hΦ = 0 := by
   ext1 b
   rw [tanTrace_apply, PiLp.zero_apply]
   exact cL2_eq_zero _ _ _ (funext fun y => h0 _ _ (faceMap_notMem_Q b.1 y))
 
-/-- A field vanishing off `Q` has zero flux trace. -/
 theorem fluxTrace_eq_zero {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, Continuous (Ψ ij))
     (h0 : ∀ ij, ∀ x ∉ Q (Fin 3), Ψ ij x = 0) : fluxTrace hΨ = 0 := by
   ext1 b
@@ -338,7 +301,6 @@ theorem fluxTrace_eq_zero {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, Continuous (Ψ
   simp only [fluxFun, fluxVal, Pi.zero_apply]
   split_ifs <;> simp [h0 _ _ (faceMap_notMem_Q b.1 y)]
 
-/-- The coordinate `x_{m'}` of `faceMap (m', s') y`, `m' ≠ m`, puts `removeNth m` off the square. -/
 theorem removeNth_faceMap_notMem {m : Fin 3} {f : Face} (hf : f.1 ≠ m) (y : Fin 2 → ℝ) :
     Fin.removeNth m (faceMap f y) ∉ Sq := by
   intro h
@@ -372,7 +334,6 @@ theorem contDiff_faceExt (m : Fin 3) (s : Bool) {φ : (Fin 2 → ℝ) → ℝ}
   exact (hφ.comp hr).mul ((contDiff_sideCut s).comp
     (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Fin 3 => ℝ) m).contDiff)
 
-/-- On the faces, `φ̃` is `φ` on `(m, s)` and vanishes elsewhere (`φ` vanishing off `Sq`). -/
 theorem faceExt_faceMap (m : Fin 3) (s : Bool) {φ : (Fin 2 → ℝ) → ℝ}
     (hφ : ∀ y ∉ Sq, φ y = 0) (f : Face) (y : Fin 2 → ℝ) :
     faceExt m s φ (faceMap f y) = if f = (m, s) then φ y else 0 := by
@@ -392,9 +353,8 @@ theorem faceExt_faceMap (m : Fin 3) (s : Bool) {φ : (Fin 2 → ℝ) → ℝ}
     · exact absurd (congrArg Prod.fst h) hm
     · rfl
 
-/-- The field attached to the face of `b = ((m, s), i, j')` whose flux trace is `φ` in the
-slot `b` and `0` in the other slots (`φ̃ = faceExt m s φ`): `Ψ_{i,m+2} = ± φ̃` if `j = m + 1`,
-`Ψ_{i,m+1} = ∓ φ̃` if `j = m + 2`. -/
+/-- The field whose flux trace is `φ` in the slot `b` and `0` in the other slots, for `φ` vanishing
+off `Sq`. -/
 def fluxField (b : BIx) (φ : (Fin 2 → ℝ) → ℝ) : Ix → R3 → ℝ := fun ij x =>
   if tanDir b.1 b.2.2 = b.1.1 + 1 then
     (if ij = (b.2.1, b.1.1 + 2) then faceSign b.1.2 * faceExt b.1.1 b.1.2 φ x else 0)
@@ -413,7 +373,6 @@ theorem contDiff_fluxField (b : BIx) {φ : (Fin 2 → ℝ) → ℝ} (hφ : ContD
 theorem faceSign_mul_self (s : Bool) : faceSign s * faceSign s = 1 := by
   cases s <;> simp [faceSign]
 
-/-- A tangential direction is `m + 1` or `m + 2`, and these are distinct. -/
 theorem tanDir_eq_or (f : Face) (j' : Fin 2) :
     tanDir f j' = f.1 + 1 ∨ tanDir f j' = f.1 + 2 := by
   obtain ⟨m, s⟩ := f
@@ -423,8 +382,6 @@ theorem tanDir_eq_or (f : Face) (j' : Fin 2) :
 theorem add_one_ne_add_two (m : Fin 3) : m + 1 ≠ m + 2 := by
   fin_cases m <;> decide
 
-/-- **The flux trace of `fluxField b φ` is `φ` in the slot `b` and `0` elsewhere** (for `φ`
-vanishing off the square). -/
 theorem fluxFun_fluxField (b : BIx) {φ : (Fin 2 → ℝ) → ℝ} (hφ : ∀ y ∉ Sq, φ y = 0)
     (b' : BIx) (y : Fin 2 → ℝ) : fluxFun (fluxField b φ) b' y = if b' = b then φ y else 0 := by
   obtain ⟨⟨m, s⟩, i, j'⟩ := b
@@ -460,8 +417,7 @@ theorem fluxFun_fluxField (b : BIx) {φ : (Fin 2 → ℝ) → ℝ} (hφ : ∀ y 
     simp only [hext, mul_zero, neg_zero, hb]
     split_ifs <;> first | contradiction | simp_all
 
-/-- **Flux traces of smooth fields separate `L²(∂Q; τ)`**: a boundary datum orthogonal to the flux
-traces of all `C¹` fields vanishes. -/
+/-- **Flux traces of `C¹` fields separate `L²(∂Q; τ)`.** -/
 theorem eq_zero_of_forall_inner_fluxTrace {β : Bdry}
     (h : ∀ (Ψ : Ix → R3 → ℝ) (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)),
       ⟪β, fluxTrace fun ij => (hΨ ij).continuous⟫_ℝ = 0) : β = 0 := by

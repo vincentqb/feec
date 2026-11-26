@@ -6,46 +6,15 @@ public import Feec.ForMathlib.LinearPMap.GraphSpace
 /-!
 # Constant-coefficient differential operators and their `L²` realizations
 
-Let `E` be a finite-dimensional real normed space with an additive Haar measure (`ℝⁿ`), `Ω ⊆ E`
-open, and `𝕜 = ℝ` or `ℂ`. A **constant-coefficient differential operator** from `𝕜^ι`-valued to
-`𝕜^κ`-valued fields is a matrix of finite sums of constant multiples of iterated directional
-derivatives,
-
-  `(A f)ⱼ = Σᵢ Σ_{(v₁ ⋯ v_k, c) ∈ coeff j i} c · ∂_{v₁} ⋯ ∂_{v_k} fᵢ`
-
-(`Feec.Domain.ConstCoeffOp`); grad, curl, div, sym grad, Hessian, inc, div div, the exterior
-derivative on `k`-forms, … are instances, of any order and in any dimension. Its **formal
-adjoint** `A.formalAdj` has entries `(-1)^k conj c · ∂_{v_k} ⋯ ∂_{v₁}`, and
-`A.formalAdj.formalAdj = A` holds exactly.
+A constant-coefficient differential operator is a matrix of finite sums of constant multiples of
+iterated directional derivatives; on an open `Ω` it has a minimal realization `A_min`, the closure
+on `C_c^∞(Ω)`, and a maximal (weak) realization `A_max = ((Aᵗ)_min)†` in `L²(Ω)`.
 
 ## Main results
 
-* `integral_conj_iterDeriv_mul`, `ConstCoeffOp.green`: integration by parts against a test
-  field, with **no boundary condition** on the other factor (any smooth field on `E`):
-  `Σⱼ ∫ conj (A φ)ⱼ ψⱼ = Σᵢ ∫ conj φᵢ (Aᵗ ψ)ᵢ`.
-* `ConstCoeffOp.minimal A Ω`: the **minimal realization**, the closure in `L²(Ω)` of `A` on
-  `C_c^∞(Ω; 𝕜^ι)` (the "`H̊`" boundary condition); closed (`isClosed_minimal`) and densely
-  defined (`dense_minimal_domain`), equal to `A` on test fields (`minimal_testField`). Its
-  graph-closure identity `minimal_green` tests against smooth fields with no boundary condition.
-* `ConstCoeffOp.maximal A Ω`: the **maximal (weak) realization**: `u ∈ D(A_max)` iff
-  `A u ∈ L²(Ω)` in the sense of distributions on `Ω` (`mem_maximal_domain_iff`), with no
-  boundary condition; closed and densely defined, `A_min ≤ A_max`
-  (`minimal_le_maximal`), and smooth fields with `ψ, A ψ ∈ L²(Ω)` lie in `D(A_max)`
-  (`smooth_mem_maximal_domain`).
-* **Duality** `adjoint_minimal : (A_min)† = (Aᵗ)_max` and
-  `adjoint_maximal : (A_max)† = (Aᵗ)_min`. These subsume the hand-built graph closures of the
-  bounded-domain models (`curl`, `grad`, `curl` on symmetric fields, `hess`, …) and their
-  `mem_adjoint_*_iff` lemmas.
-
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.1
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (`H̊` and `H` realizations)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the complexes on bounded domains)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.green`: Green's formula against a `C^N` field with no boundary condition.
+* `ConstCoeffOp.mem_maximal_domain_iff`: `D(A_max)` is the weak domain.
+* `ConstCoeffOp.adjoint_minimal`, `ConstCoeffOp.adjoint_maximal`: `(A_min)† = (Aᵗ)_max`, and dually.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap
@@ -89,7 +58,6 @@ theorem contDiff_iterDeriv {f : E → F} (hf : ContDiff ℝ ∞ f) (vs : List E)
   | nil => exact hf
   | cons v vs ih => exact (ih.fderiv_right (m := ∞) (by simp)).clm_apply contDiff_const
 
-/-- `∂^{vs} f ∈ C^M` for `f ∈ C^N`, `#vs + M ≤ N`. -/
 theorem contDiff_iterDeriv_of_le {N M : ℕ} {f : E → F} (hf : ContDiff ℝ N f) (vs : List E)
     (h : vs.length + M ≤ N) : ContDiff ℝ M (iterDeriv vs f) := by
   induction vs generalizing M with
@@ -158,8 +126,6 @@ section IBP
 variable [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] {𝕜 : Type*} [RCLike 𝕜]
 
-/-- One integration by parts: `∫ conj (∂_v f) g = -∫ conj f ∂_v g` for a test function `f` and a
-`C¹` function `g` (no boundary condition on `g`). -/
 theorem integral_conj_fderiv_mul {Ω : Set E} {f g : E → 𝕜} (hf : IsTest Ω f)
     (hg : ContDiff ℝ 1 g) (v : E) :
     ∫ x, conj (fderiv ℝ f x v) * g x = -∫ x, conj (f x) * fderiv ℝ g x v := by
@@ -182,8 +148,6 @@ theorem integral_conj_fderiv_mul {Ω : Set E} {f g : E → 𝕜} (hf : IsTest Ω
   simp only [hcd] at h
   rw [h, neg_neg]
 
-/-- **Iterated integration by parts**: `∫ conj (∂^{vs} f) g = (-1)^k ∫ conj f ∂^{rev vs} g` for a
-test function `f` and a `C^k` function `g` (no boundary condition on `g`), `k = #vs`. -/
 theorem integral_conj_iterDeriv_mul {Ω : Set E} {f g : E → 𝕜} (hf : IsTest Ω f) (vs : List E)
     (hg : ContDiff ℝ vs.length g) :
     ∫ x, conj (iterDeriv vs f x) * g x =
@@ -208,8 +172,7 @@ end IBP
 /-! ## Constant-coefficient operators -/
 
 variable (E) in
-/-- A constant-coefficient differential operator from `𝕜^ι`-valued to `𝕜^κ`-valued fields on
-`E`: `(A f)ⱼ = Σᵢ Σ_{(vs, c) ∈ coeff j i} c · ∂^{vs} fᵢ`. -/
+/-- A constant-coefficient differential operator `(A f)ⱼ = Σᵢ Σ_{(vs, c)} c · ∂^{vs} fᵢ`. -/
 structure ConstCoeffOp (𝕜 : Type*) [RCLike 𝕜] (ι κ : Type*) where
   /-- the entries: lists of (directions, coefficient) -/
   coeff : κ → ι → List (List E × 𝕜)
@@ -399,8 +362,6 @@ theorem _root_.Feec.Domain.IsTest.integrable_conj_mul {Ω : Set E} {f g : E → 
   (hf.conjugate.continuous.mul hg).integrable_of_hasCompactSupport
     hf.conjugate.hasCompactSupport.mul_right
 
-/-- Green's formula for a scalar entry of order `≤ N`, against a `C^N` function with no
-boundary condition. -/
 theorem integral_conj_applyEntry_mul {N : ℕ} (P : List (List E × 𝕜))
     (hP : ∀ t ∈ P, t.1.length ≤ N) {Ω : Set E} {f g : E → 𝕜} (hf : IsTest Ω f)
     (hg : ContDiff ℝ N g) :
@@ -434,9 +395,7 @@ theorem integral_conj_applyEntry_mul {N : ℕ} (P : List (List E × 𝕜))
 
 variable [Fintype ι] [Fintype κ]
 
-/-- **Green's formula** for a constant-coefficient operator of order `≤ N`, against a `C^N`
-field `ψ` on `E` with **no boundary condition**:
-`Σⱼ ∫ conj (A φ)ⱼ ψⱼ = Σᵢ ∫ conj φᵢ (Aᵗ ψ)ᵢ` for `φ ∈ C_c^∞`. -/
+/-- **Green's formula** against `C^N` fields with no boundary condition, `A` of order `≤ N`. -/
 theorem green (A : ConstCoeffOp E 𝕜 ι κ) {N : ℕ} (hA : A.IsOrderLE N) {Ω : Set E}
     {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) {ψ : κ → E → 𝕜} (hψ : ∀ j, ContDiff ℝ N (ψ j)) :
     ∑ j, ∫ x, conj (A.apply φ j x) * ψ j x =
@@ -461,7 +420,6 @@ theorem green (A : ConstCoeffOp E 𝕜 ι κ) {N : ℕ} (hA : A.IsOrderLE N) {Ω
   exact Finset.sum_congr rfl fun i _ => Finset.sum_congr rfl fun j _ =>
     integral_conj_applyEntry_mul _ (hA j i) (hφ i) (hψ j)
 
-/-- Green's formula against a smooth field `ψ` on `E` (no boundary condition). -/
 theorem green_smooth (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set E} {φ : ι → E → 𝕜}
     (hφ : IsTestField Ω φ) {ψ : κ → E → 𝕜} (hψ : ∀ j, ContDiff ℝ ∞ (ψ j)) :
     ∑ j, ∫ x, conj (A.apply φ j x) * ψ j x =
@@ -477,7 +435,7 @@ section Realization
 variable [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] [Fintype κ] {Ω : Set E}
 
-/-- A smooth field with `L²(Ω)` components, as an element of `L²(Ω; 𝕜^ι)`. -/
+/-- A field with `L²(Ω)` components, as an element of `L²(Ω; 𝕜^ι)`. -/
 def _root_.Feec.Domain.toL2F {ψ : ι → E → 𝕜} (hψ : ∀ i, MemLp (ψ i) 2 (volume.restrict Ω)) :
     L2F 𝕜 Ω ι :=
   WithLp.toLp 2 fun i => (hψ i).toLp (ψ i)
@@ -492,7 +450,6 @@ theorem _root_.Feec.Domain.inner_toL2F (u : L2F 𝕜 Ω ι) {ψ : ι → E → �
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] in
-/-- A field with a component that vanishes nowhere is nonzero in `L²(Ω)` when `|Ω| ≠ 0`. -/
 theorem _root_.Feec.Domain.toL2F_ne_zero {ψ : ι → E → 𝕜}
     (hψ : ∀ i, MemLp (ψ i) 2 (volume.restrict Ω)) (hΩ : volume Ω ≠ 0) {i : ι}
     (hi : ∀ x, ψ i x ≠ 0) : toL2F hψ ≠ 0 := fun h => hΩ <| by
@@ -503,7 +460,6 @@ theorem _root_.Feec.Domain.toL2F_ne_zero {ψ : ι → E → 𝕜}
   rwa [Filter.eventually_false_iff_eq_bot, ae_eq_bot, Measure.restrict_eq_zero] at hae
 
 omit [FiniteDimensional ℝ E] in
-/-- `⟪φ, ψ⟫_{L²(Ω)} = Σᵢ ∫_E conj φᵢ ψᵢ` for a test field `φ` (the integrand vanishes off `Ω`). -/
 theorem _root_.Feec.Domain.inner_testField_toL2F {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ)
     {ψ : ι → E → 𝕜} (hψ : ∀ i, MemLp (ψ i) 2 (volume.restrict Ω)) :
     ⟪testField hφ, toL2F hψ⟫_𝕜 = ∑ i, ∫ x, conj (φ i x) * ψ i x := by
@@ -542,7 +498,6 @@ def testGraph : Submodule 𝕜 (L2F 𝕜 Ω ι × L2F 𝕜 Ω κ) where
       (A.apply_smul c fun i => (hφ i).contDiff), testField_smul]
     rfl
 
-/-- Green's formula in `L²(Ω)` for test fields against smooth `L²(Ω)` fields. -/
 theorem inner_testField_apply {N : ℕ} (hA : A.IsOrderLE N) {φ : ι → E → 𝕜}
     (hφ : IsTestField Ω φ) {ψ : κ → E → 𝕜}
     (hψs : ∀ j, ContDiff ℝ N (ψ j)) (hψ : ∀ j, MemLp (ψ j) 2 (volume.restrict Ω))
@@ -551,7 +506,6 @@ theorem inner_testField_apply {N : ℕ} (hA : A.IsOrderLE N) {φ : ι → E → 
   rw [inner_testField_toL2F, inner_testField_toL2F]
   exact A.green hA hφ hψs
 
-/-- Green's formula in `L²(Ω)` between test fields: `⟪A φ, ψ⟫ = ⟪φ, Aᵗ ψ⟫`. -/
 theorem inner_testField_apply_testField {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ)
     {ψ : κ → E → 𝕜} (hψ : IsTestField Ω ψ) :
     ⟪testField (A.isTestField_apply hφ), testField hψ⟫_𝕜 =
@@ -559,9 +513,6 @@ theorem inner_testField_apply_testField {φ : ι → E → 𝕜} (hφ : IsTestFi
   A.inner_testField_apply A.isOrderLE_order hφ
     (fun j => (hψ j).contDiff.of_le (by exact_mod_cast le_top)) _ _
 
-/-- The graph-closure identity: for `(u, w)` in the closure of the test graph and a `C^N` field
-`ψ` on `E` (`N ≥` the order of `A`) with `ψ, Aᵗ ψ ∈ L²(Ω)` (no boundary condition),
-`⟪w, ψ⟫ = ⟪u, Aᵗ ψ⟫`. -/
 theorem closure_testGraph_inner {N : ℕ} (hA : A.IsOrderLE N) {u : L2F 𝕜 Ω ι} {w : L2F 𝕜 Ω κ}
     (h : (u, w) ∈ (A.testGraph Ω).topologicalClosure) {ψ : κ → E → 𝕜}
     (hψs : ∀ j, ContDiff ℝ N (ψ j)) (hψ : ∀ j, MemLp (ψ j) 2 (volume.restrict Ω))
@@ -576,14 +527,12 @@ theorem closure_testGraph_inner {N : ℕ} (hA : A.IsOrderLE N) {u : L2F 𝕜 Ω 
     exact A.inner_testField_apply hA hφ hψs hψ hAψ
   exact closure_minimal hsub hS h
 
-/-- The graph-closure identity against test fields. -/
 theorem closure_testGraph_inner_testField {u : L2F 𝕜 Ω ι} {w : L2F 𝕜 Ω κ}
     (h : (u, w) ∈ (A.testGraph Ω).topologicalClosure) {φ : κ → E → 𝕜} (hφ : IsTestField Ω φ) :
     ⟪w, testField hφ⟫_𝕜 = ⟪u, testField (A.formalAdj.isTestField_apply hφ)⟫_𝕜 :=
   A.closure_testGraph_inner A.isOrderLE_order h
     (fun j => (hφ j).contDiff.of_le (by exact_mod_cast le_top)) _ _
 
-/-- `A` on `C_c^∞(Ω)` is closable. -/
 theorem testGraph_closable (hΩ : IsOpen Ω) :
     ∀ x ∈ (A.testGraph Ω).topologicalClosure, x.1 = 0 → x.2 = 0 := by
   rintro ⟨u, w⟩ hx (h0 : u = 0)
@@ -592,8 +541,7 @@ theorem testGraph_closable (hΩ : IsOpen Ω) :
   rw [A.closure_testGraph_inner_testField hx hφ, inner_zero_left]
 
 variable (Ω) in
-/-- The **minimal realization** `A_min` of `A` in `L²(Ω)`: the closure of `A` on `C_c^∞(Ω)`
-(the `H̊` boundary condition). -/
+/-- The **minimal realization** `A_min`: the closure of `A` on `C_c^∞(Ω)`. -/
 def minimal : L2F 𝕜 Ω ι →ₗ.[𝕜] L2F 𝕜 Ω κ := (A.testGraph Ω).topologicalClosure.toLinearPMap
 
 theorem minimal_graph (hΩ : IsOpen Ω) :
@@ -617,7 +565,6 @@ theorem testField_mem_minimal_domain (hΩ : IsOpen Ω) {φ : ι → E → 𝕜} 
     testField hφ ∈ (A.minimal Ω).domain :=
   LinearPMap.mem_domain_of_mem_graph (A.testField_mem_graph_minimal hΩ hφ)
 
-/-- On test fields the minimal realization is the classical operator. -/
 theorem minimal_testField (hΩ : IsOpen Ω) {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
     A.minimal Ω ⟨testField hφ, A.testField_mem_minimal_domain hΩ hφ⟩ =
       testField (A.isTestField_apply hφ) :=
@@ -632,16 +579,12 @@ theorem dense_minimal_domain (hΩ : IsOpen Ω) :
     Dense ((A.minimal Ω).domain : Set (L2F 𝕜 Ω ι)) :=
   (dense_testFieldSub hΩ ι).mono (A.testFieldSub_le_minimal_domain hΩ)
 
-/-- Green's formula on `D(A_min)` against smooth fields with **no boundary condition**:
-`⟪A_min u, ψ⟫ = ⟪u, Aᵗ ψ⟫` whenever `ψ, Aᵗ ψ ∈ L²(Ω)` (e.g. `Ω` bounded). This is the boundary
-term `∫_{∂Ω}` vanishing for the `H̊` boundary condition. -/
 theorem minimal_green (hΩ : IsOpen Ω) {N : ℕ} (hA : A.IsOrderLE N) (u : (A.minimal Ω).domain)
     {ψ : κ → E → 𝕜} (hψs : ∀ j, ContDiff ℝ N (ψ j)) (hψ : ∀ j, MemLp (ψ j) 2 (volume.restrict Ω))
     (hAψ : ∀ i, MemLp (A.formalAdj.apply ψ i) 2 (volume.restrict Ω)) :
     ⟪A.minimal Ω u, toL2F hψ⟫_𝕜 = ⟪(u : L2F 𝕜 Ω ι), toL2F hAψ⟫_𝕜 :=
   A.closure_testGraph_inner hA (A.mem_closure_minimal hΩ u) hψs hψ hAψ
 
-/-- An identity tested on `C_c^∞` extends to `D(A_min)`. -/
 theorem inner_minimal_of_forall_testField (hΩ : IsOpen Ω) {w : L2F 𝕜 Ω ι} {u : L2F 𝕜 Ω κ}
     (h : ∀ φ : ι → E → 𝕜, ∀ hφ : IsTestField Ω φ,
       ⟪w, testField hφ⟫_𝕜 = ⟪u, testField (A.isTestField_apply hφ)⟫_𝕜)
@@ -655,13 +598,10 @@ theorem inner_minimal_of_forall_testField (hΩ : IsOpen Ω) {w : L2F 𝕜 Ω ι}
   exact closure_minimal hsub hS (A.mem_closure_minimal hΩ x)
 
 variable (Ω) in
-/-- The **maximal (weak) realization** `A_max = ((Aᵗ)_min)†` of `A` in `L²(Ω)`: `u ∈ D(A_max)`
-iff `A u ∈ L²(Ω)` in the sense of distributions on `Ω`, with no boundary condition
-(`mem_maximal_domain_iff`). -/
+/-- The **maximal (weak) realization** `A_max = ((Aᵗ)_min)†`. -/
 def maximal : L2F 𝕜 Ω ι →ₗ.[𝕜] L2F 𝕜 Ω κ := (A.formalAdj.minimal Ω)†
 
-/-- **`D(A_max)` is the weak domain**: `u ∈ D(A_max)` iff there is `w ∈ L²(Ω)` with
-`⟪w, φ⟫ = ⟪u, Aᵗ φ⟫` for all `φ ∈ C_c^∞(Ω)`; then `A_max u = w`. -/
+/-- **`D(A_max)` is the weak domain**: `u ∈ D(A_max)` iff `A u ∈ L²(Ω)` weakly. -/
 theorem mem_maximal_domain_iff (hΩ : IsOpen Ω) {u : L2F 𝕜 Ω ι} :
     u ∈ (A.maximal Ω).domain ↔ ∃ w : L2F 𝕜 Ω κ, ∀ φ : κ → E → 𝕜, ∀ hφ : IsTestField Ω φ,
       ⟪w, testField hφ⟫_𝕜 = ⟪u, testField (A.formalAdj.isTestField_apply hφ)⟫_𝕜 := by
@@ -676,7 +616,6 @@ theorem mem_maximal_domain_iff (hΩ : IsOpen Ω) {u : L2F 𝕜 Ω ι} :
     exact LinearPMap.mem_adjoint_domain_of_exists _
       ⟨w, A.formalAdj.inner_minimal_of_forall_testField hΩ hw⟩
 
-/-- The value of `A_max` is the weak `A`. -/
 theorem maximal_apply_eq (hΩ : IsOpen Ω) (u : (A.maximal Ω).domain) {w : L2F 𝕜 Ω κ}
     (hw : ∀ φ : κ → E → 𝕜, ∀ hφ : IsTestField Ω φ,
       ⟪w, testField hφ⟫_𝕜 = ⟪(u : L2F 𝕜 Ω ι), testField (A.formalAdj.isTestField_apply hφ)⟫_𝕜) :
@@ -684,7 +623,6 @@ theorem maximal_apply_eq (hΩ : IsOpen Ω) (u : (A.maximal Ω).domain) {w : L2F 
   LinearPMap.adjoint_apply_eq (A.formalAdj.dense_minimal_domain hΩ) u
     (A.formalAdj.inner_minimal_of_forall_testField hΩ hw)
 
-/-- The defining identity of `A_max` against test fields. -/
 theorem maximal_inner_testField (hΩ : IsOpen Ω) (u : (A.maximal Ω).domain) {φ : κ → E → 𝕜}
     (hφ : IsTestField Ω φ) :
     ⟪A.maximal Ω u, testField hφ⟫_𝕜 =
@@ -697,7 +635,6 @@ theorem maximal_inner_testField (hΩ : IsOpen Ω) (u : (A.maximal Ω).domain) {�
 theorem isClosed_maximal (hΩ : IsOpen Ω) : (A.maximal Ω).IsClosed :=
   LinearPMap.adjoint_isClosed (A.formalAdj.dense_minimal_domain hΩ)
 
-/-- `(Aᵗ)_min` and `A_min` are formal adjoints. -/
 theorem isFormalAdjoint_minimal (hΩ : IsOpen Ω) :
     (A.formalAdj.minimal Ω).IsFormalAdjoint (A.minimal Ω) := by
   intro x y
@@ -706,7 +643,6 @@ theorem isFormalAdjoint_minimal (hΩ : IsOpen Ω) :
       (A.mem_closure_minimal hΩ y) hφ) x
   rw [← inner_conj_symm, ← h, inner_conj_symm]
 
-/-- `A_min ≤ A_max`. -/
 theorem minimal_le_maximal (hΩ : IsOpen Ω) : A.minimal Ω ≤ A.maximal Ω :=
   (A.isFormalAdjoint_minimal hΩ).le_adjoint (A.formalAdj.dense_minimal_domain hΩ)
 
@@ -729,8 +665,6 @@ theorem testField_formalAdj_formalAdj {φ : ι → E → 𝕜} (hφ : IsTestFiel
     testField (A.formalAdj.formalAdj.isTestField_apply hφ) = testField (A.isTestField_apply hφ) :=
   testField_congr _ _ (by rw [formalAdj_formalAdj])
 
-/-- **`D((A_min)†)` is the weak domain of `Aᵗ`**: `v ∈ D((A_min)†)` iff there is `w` with
-`⟪w, φ⟫ = ⟪v, A φ⟫` for all `φ ∈ C_c^∞(Ω)` (no boundary condition on `v`). -/
 theorem mem_adjoint_minimal_domain_iff (hΩ : IsOpen Ω) {v : L2F 𝕜 Ω κ} :
     v ∈ (A.minimal Ω)†.domain ↔ ∃ w : L2F 𝕜 Ω ι, ∀ φ : ι → E → 𝕜, ∀ hφ : IsTestField Ω φ,
       ⟪w, testField hφ⟫_𝕜 = ⟪v, testField (A.isTestField_apply hφ)⟫_𝕜 := by
@@ -738,14 +672,12 @@ theorem mem_adjoint_minimal_domain_iff (hΩ : IsOpen Ω) {v : L2F 𝕜 Ω κ} :
   refine exists_congr fun w => forall_congr' fun φ => forall_congr' fun hφ => ?_
   rw [A.testField_formalAdj_formalAdj hφ]
 
-/-- The value of `(A_min)†` is the weak `Aᵗ`. -/
 theorem adjoint_minimal_apply_eq (hΩ : IsOpen Ω) (v : (A.minimal Ω)†.domain) {w : L2F 𝕜 Ω ι}
     (hw : ∀ φ : ι → E → 𝕜, ∀ hφ : IsTestField Ω φ,
       ⟪w, testField hφ⟫_𝕜 = ⟪(v : L2F 𝕜 Ω κ), testField (A.isTestField_apply hφ)⟫_𝕜) :
     (A.minimal Ω)† v = w :=
   LinearPMap.adjoint_apply_eq (A.dense_minimal_domain hΩ) v (A.inner_minimal_of_forall_testField hΩ hw)
 
-/-- The defining identity of `(A_min)†` against test fields. -/
 theorem adjoint_minimal_inner_testField (hΩ : IsOpen Ω) (v : (A.minimal Ω)†.domain)
     {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
     ⟪(A.minimal Ω)† v, testField hφ⟫_𝕜 = ⟪(v : L2F 𝕜 Ω κ), testField (A.isTestField_apply hφ)⟫_𝕜 := by
@@ -754,8 +686,6 @@ theorem adjoint_minimal_inner_testField (hΩ : IsOpen Ω) (v : (A.minimal Ω)†
   rw [A.minimal_testField hΩ hφ] at this
   exact this
 
-/-- `C^N` fields (`N ≥` the order of `A`) with `ψ, A ψ ∈ L²(Ω)` lie in `D(A_max)` (no boundary condition), and
-`A_max ψ = A ψ`. -/
 theorem smooth_mem_maximal_domain (hΩ : IsOpen Ω) {N : ℕ} (hA : A.IsOrderLE N)
     {ψ : ι → E → 𝕜} (hψs : ∀ i, ContDiff ℝ N (ψ i)) (hψ : ∀ i, MemLp (ψ i) 2 (volume.restrict Ω))
     (hAψ : ∀ j, MemLp (A.apply ψ j) 2 (volume.restrict Ω)) :

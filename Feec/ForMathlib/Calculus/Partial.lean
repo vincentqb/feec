@@ -9,40 +9,9 @@ public import Mathlib.Analysis.Distribution.ContDiffMapSupportedIn
 /-!
 # Coordinate partial derivatives
 
-For `f : (ι → 𝕜) → F` with `ι` finite, `partialDeriv i f x = f'(x) eᵢ` is the derivative of `f`
-at `x` along the `i`-th coordinate vector `eᵢ = Pi.single i 1` (junk `0` where `f` is not
-differentiable). It is the common definition behind the partial derivatives `∂ₖ` used for fields
-on `ℝⁿ`, space-time `ℝ¹⁺ⁿ`, and their components.
-
-* Algebra: `partialDeriv_add`, `_sub`, `_const_mul` (pointwise; primed: as functions),
-  `_neg`, `_const_smul`, `_mul`, `_sum`, `_const`, `_zero`,
-  `partialDeriv_apply_coord` (`∂ₖ xₐ = δₖₐ`), composition with continuous linear maps
-  (`ContinuousLinearMap.partialDeriv_comp`);
-* Fréchet and one-variable derivatives: `HasFDerivAt.partialDeriv_eq`,
-  `DifferentiableAt.hasDerivAt_comp_add_smul_single` (`∂ᵢ f (x + t eᵢ)` is the derivative of
-  `s ↦ f (x + s eᵢ)` at `t`), `DifferentiableAt.hasDerivAt_comp_add_single`,
-  `DifferentiableAt.hasDerivAt_partialDeriv` (at `0`);
-* Locality: `Filter.EventuallyEq.partialDeriv_eq`;
-* Regularity and support: `ContDiff.partialDeriv`, `ContDiff.partialDeriv_infty`,
-  `ContDiff.continuous_partialDeriv`,
-  `ContDiff.differentiable_partialDeriv`, `partialDeriv_partialDeriv` (`∂ᵢ∂ⱼ f = f'' eᵢ eⱼ`),
-  iterated derivatives on coordinate vectors of `Cᵖ` functions as iterated partial derivatives,
-  `Dᵖ f(x)(e_{r 0}, …, e_{r (p-1)}) = ∂_{r 0} ⋯ ∂_{r (p-1)} f(x)`
-  (`iteratedFDeriv_apply_single_eq_foldr`, one partial derivative at a time by
-  `iteratedFDeriv_succ_apply_single`; the pure ones `Dᵖ f(x)(eᵢ, …, eᵢ) = ∂ᵢᵖ f(x)`,
-  `iteratedFDeriv_apply_single_eq_iterate`),
-  `HasCompactSupport.partialDeriv`, `tsupport_partialDeriv_subset`,
-  `eq_zero_of_partialDeriv_eq_zero` (compact support and `∇f = 0` give `f = 0`);
-* **Schwarz**: `partialDeriv_comm` (partial derivatives of a `C²` function commute);
-* **The Laplacian** `laplacian f = Σᵢ ∂ᵢ∂ᵢ f` (`laplacian_apply`);
-* **Integration by parts**: `integral_partialDeriv_mul_eq_neg` (`∫ ∂ᵢ f · g = -∫ f · ∂ᵢ g` for
-  `C¹` functions with `f` compactly supported).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+For `f : (ι → 𝕜) → F` with `ι` finite, the partial derivative `∂ᵢ f x = f'(x) eᵢ`: its algebra,
+regularity, iterated derivatives on coordinate vectors, the Laplacian `Σᵢ ∂ᵢ∂ᵢ f`, Schwarz's
+theorem and integration by parts.
 -/
 
 open Set Filter Topology MeasureTheory
@@ -68,13 +37,10 @@ theorem partialDeriv_fun (i : ι) (f : (ι → 𝕜) → F) :
     partialDeriv i f = fun x => fderiv 𝕜 f x (Pi.single i 1) := rfl
 
 omit [Fintype ι] in
-/-- `∂ᵢ f x = f'(eᵢ)` from a Fréchet derivative `f'` at `x`. -/
 theorem HasFDerivAt.partialDeriv_eq {f : (ι → 𝕜) → F} {f' : (ι → 𝕜) →L[𝕜] F} {x : ι → 𝕜}
     (h : HasFDerivAt f f' x) (i : ι) : partialDeriv i f x = f' (Pi.single i 1) := by
   rw [partialDeriv, h.fderiv]
 
-/-- **Derivative along a coordinate line**: `s ↦ f (x + s eᵢ)` has derivative
-`∂ᵢ f (x + t eᵢ)` at `t`. -/
 theorem DifferentiableAt.hasDerivAt_comp_add_smul_single {f : (ι → 𝕜) → F} {x : ι → 𝕜} {i : ι}
     {t : 𝕜} (hf : DifferentiableAt 𝕜 f (x + t • Pi.single i 1)) :
     HasDerivAt (fun s : 𝕜 => f (x + s • Pi.single i 1))
@@ -83,7 +49,6 @@ theorem DifferentiableAt.hasDerivAt_comp_add_smul_single {f : (ι → 𝕜) → 
     simpa using ((hasDerivAt_id t).smul_const (Pi.single i (1 : 𝕜) : ι → 𝕜)).const_add x
   exact hf.hasFDerivAt.comp_hasDerivAt t hl
 
-/-- `s ↦ f (x + sᵢ)` (`sᵢ = Pi.single i s`) has derivative `∂ᵢ f (x + tᵢ)` at `t`. -/
 theorem DifferentiableAt.hasDerivAt_comp_add_single {f : (ι → 𝕜) → F} {x : ι → 𝕜} {i : ι}
     {t : 𝕜} (hf : DifferentiableAt 𝕜 f (x + Pi.single i t)) :
     HasDerivAt (fun s : 𝕜 => f (x + Pi.single i s)) (partialDeriv i f (x + Pi.single i t)) t := by
@@ -92,22 +57,17 @@ theorem DifferentiableAt.hasDerivAt_comp_add_single {f : (ι → 𝕜) → F} {x
   simpa only [← e] using
     (show DifferentiableAt 𝕜 f (x + t • Pi.single i 1) by rwa [← e]).hasDerivAt_comp_add_smul_single
 
-/-- `∂ᵢ f x` is the derivative of `s ↦ f (x + s eᵢ)` at `s = 0`: the line derivative of `f` at
-`x` along `eᵢ` (`HasFDerivAt.hasLineDerivAt`). -/
 theorem DifferentiableAt.hasDerivAt_partialDeriv {f : (ι → 𝕜) → F} {x : ι → 𝕜}
     (hf : DifferentiableAt 𝕜 f x) (i : ι) :
     HasDerivAt (fun s : 𝕜 => f (x + s • Pi.single i 1)) (partialDeriv i f x) 0 :=
   hf.hasFDerivAt.hasLineDerivAt (Pi.single i 1)
 
 omit [Fintype ι] in
-/-- Partial derivatives only depend on the germ of `f`. -/
 theorem Filter.EventuallyEq.partialDeriv_eq {f g : (ι → 𝕜) → F} {x : ι → 𝕜}
     (h : f =ᶠ[𝓝 x] g) (i : ι) : partialDeriv i f x = partialDeriv i g x := by
   rw [partialDeriv, partialDeriv, h.fderiv_eq]
 
 omit [DecidableEq ι] in
-/-- The derivative in any direction is the combination of the partial derivatives:
-`f'(x) v = Σⱼ vⱼ ∂ⱼ f(x)`. -/
 theorem fderiv_apply_eq_sum_partialDeriv [DecidableEq ι] (f : (ι → 𝕜) → 𝕜) (x v : ι → 𝕜) :
     fderiv 𝕜 f x v = ∑ j, v j * partialDeriv j f x := by
   conv_lhs => rw [pi_eq_sum_univ v]
@@ -116,8 +76,6 @@ theorem fderiv_apply_eq_sum_partialDeriv [DecidableEq ι] (f : (ι → 𝕜) →
   congr 2
   funext i
   simp [Pi.single_apply, eq_comm]
-
-/-! ### Algebra -/
 
 omit [Fintype ι] in
 @[simp] theorem partialDeriv_const (i : ι) (c : F) (x : ι → 𝕜) :
@@ -139,12 +97,10 @@ theorem partialDeriv_sub {f g : (ι → 𝕜) → F} {x : ι → 𝕜} (hf : Dif
     partialDeriv i (fun y => f y - g y) x = partialDeriv i f x - partialDeriv i g x := by
   rw [partialDeriv, fderiv_fun_sub hf hg]; rfl
 
-/-- `∂ᵢ (f + g) = ∂ᵢ f + ∂ᵢ g` as functions. -/
 theorem partialDeriv_add' {f g : (ι → 𝕜) → F} (hf : Differentiable 𝕜 f) (hg : Differentiable 𝕜 g)
     (i : ι) : partialDeriv i (f + g) = partialDeriv i f + partialDeriv i g :=
   funext fun _ => partialDeriv_add (hf _) (hg _) i
 
-/-- `∂ᵢ (f - g) = ∂ᵢ f - ∂ᵢ g` as functions. -/
 theorem partialDeriv_sub' {f g : (ι → 𝕜) → F} (hf : Differentiable 𝕜 f) (hg : Differentiable 𝕜 g)
     (i : ι) : partialDeriv i (f - g) = partialDeriv i f - partialDeriv i g :=
   funext fun _ => partialDeriv_sub (hf _) (hg _) i
@@ -161,7 +117,6 @@ theorem partialDeriv_const_mul {f : (ι → 𝕜) → 𝕜} {x : ι → 𝕜} (h
     (c : 𝕜) (i : ι) : partialDeriv i (fun y => c * f y) x = c * partialDeriv i f x :=
   partialDeriv_const_smul hf c i
 
-/-- `∂ᵢ (c f) = c ∂ᵢ f` as functions. -/
 theorem partialDeriv_const_mul' {f : (ι → 𝕜) → 𝕜} (hf : Differentiable 𝕜 f) (c : 𝕜) (i : ι) :
     partialDeriv i (fun y => c * f y) = fun y => c * partialDeriv i f y :=
   funext fun _ => partialDeriv_const_mul (hf _) c i
@@ -171,7 +126,6 @@ theorem partialDeriv_sum {α : Type*} (s : Finset α) {f : α → (ι → 𝕜) 
     partialDeriv i (fun y => ∑ a ∈ s, f a y) x = ∑ a ∈ s, partialDeriv i (f a) x := by
   rw [partialDeriv, fderiv_fun_sum hf]; simp [partialDeriv]
 
-/-- Product rule (scalar-valued, `𝕜`-normed algebra codomain). -/
 theorem partialDeriv_mul {𝔸 : Type*} [NormedCommRing 𝔸] [NormedAlgebra 𝕜 𝔸]
     {f g : (ι → 𝕜) → 𝔸} {x : ι → 𝕜} (hf : DifferentiableAt 𝕜 f x)
     (hg : DifferentiableAt 𝕜 g x) (i : ι) :
@@ -183,43 +137,33 @@ theorem partialDeriv_mul {𝔸 : Type*} [NormedCommRing 𝔸] [NormedAlgebra �
   ring
 
 omit [Fintype ι] in
-/-- `∂ₖ xₐ = δₖₐ`. -/
 theorem partialDeriv_apply_coord (a k : ι) (x : ι → 𝕜) :
     partialDeriv k (fun y : ι → 𝕜 => y a) x = if k = a then 1 else 0 := by
   rw [(hasFDerivAt_apply a x).partialDeriv_eq]
   simp [Pi.single_apply, eq_comm]
 
-/-- Partial derivatives commute with continuous linear maps. -/
 theorem ContinuousLinearMap.partialDeriv_comp (L : F →L[𝕜] G) {f : (ι → 𝕜) → F} {x : ι → 𝕜}
     (hf : DifferentiableAt 𝕜 f x) (i : ι) :
     partialDeriv i (fun y => L (f y)) x = L (partialDeriv i f x) := by
   rw [show (fun y => L (f y)) = L ∘ f from rfl,
     (L.hasFDerivAt.comp x hf.hasFDerivAt).partialDeriv_eq]; rfl
 
-/-! ### Regularity and support -/
-
-/-- Partial derivatives of `C^{m+1}` functions are `C^m`. -/
 theorem ContDiff.partialDeriv {f : (ι → 𝕜) → F} {m n : WithTop ℕ∞} (hf : ContDiff 𝕜 n f)
     (hmn : m + 1 ≤ n) (i : ι) : ContDiff 𝕜 m (_root_.partialDeriv i f) :=
   (hf.fderiv_right hmn).clm_apply contDiff_const
 
-/-- Partial derivatives of smooth functions are smooth. -/
 theorem ContDiff.partialDeriv_infty {f : (ι → 𝕜) → F} (hf : ContDiff 𝕜 ∞ f) (i : ι) :
     ContDiff 𝕜 ∞ (_root_.partialDeriv i f) :=
   hf.partialDeriv (by simp) i
 
-/-- Partial derivatives of `C¹` functions are continuous. -/
 theorem ContDiff.continuous_partialDeriv {f : (ι → 𝕜) → F} (hf : ContDiff 𝕜 1 f) (i : ι) :
     Continuous (_root_.partialDeriv i f) :=
   (hf.continuous_fderiv one_ne_zero).clm_apply continuous_const
 
-/-- Partial derivatives of `C²` functions are differentiable. -/
 theorem ContDiff.differentiable_partialDeriv {f : (ι → 𝕜) → F} {n : WithTop ℕ∞}
     (hf : ContDiff 𝕜 n f) (hn : 2 ≤ n) (i : ι) : Differentiable 𝕜 (_root_.partialDeriv i f) :=
   (hf.partialDeriv (m := 1) (by simpa [one_add_one_eq_two] using hn) i).differentiable one_ne_zero
 
-/-- Second partial derivatives are entries of the second derivative:
-`∂ᵢ ∂ⱼ f x = f''(x) eᵢ eⱼ`. -/
 theorem partialDeriv_partialDeriv {f : (ι → 𝕜) → F} {x : ι → 𝕜}
     (hf : DifferentiableAt 𝕜 (fderiv 𝕜 f) x) (i j : ι) :
     partialDeriv i (partialDeriv j f) x =
@@ -227,9 +171,6 @@ theorem partialDeriv_partialDeriv {f : (ι → 𝕜) → F} {x : ι → 𝕜}
   rw [partialDeriv_fun j f, partialDeriv, fderiv_clm_apply hf (differentiableAt_const _)]
   simp
 
-/-- **Iterated derivatives on coordinate vectors, one partial derivative at a time**: for `f` of
-class `Cᵏ` and `p < k`,
-`D^{p+1} f(x)(e_{r 0}, …, e_{r p}) = ∂_{r 0} (D^p f(·)(e_{r 1}, …, e_{r p}))(x)`. -/
 theorem iteratedFDeriv_succ_apply_single {f : (ι → 𝕜) → F} {k : WithTop ℕ∞} (hf : ContDiff 𝕜 k f)
     {p : ℕ} (hp : (p : WithTop ℕ∞) < k) (r : Fin (p + 1) → ι) (x : ι → 𝕜) :
     iteratedFDeriv 𝕜 (p + 1) f x (fun l => Pi.single (r l) 1) =
@@ -238,8 +179,6 @@ theorem iteratedFDeriv_succ_apply_single {f : (ι → 𝕜) → F} {k : WithTop 
     fderiv_continuousMultilinear_apply_const_apply (hf.differentiable_iteratedFDeriv hp x)]
   rfl
 
-/-- **Iterated derivatives on coordinate vectors are iterated partial derivatives**: for `f` of
-class `Cᵏ` and `p ≤ k`, `Dᵖ f(x)(e_{r 0}, …, e_{r (p-1)}) = ∂_{r 0} ⋯ ∂_{r (p-1)} f(x)`. -/
 theorem iteratedFDeriv_apply_single_eq_foldr {f : (ι → 𝕜) → F} {k : WithTop ℕ∞}
     (hf : ContDiff 𝕜 k f) :
     ∀ {p : ℕ}, (p : WithTop ℕ∞) ≤ k → ∀ (r : Fin p → ι) (x : ι → 𝕜),
@@ -252,8 +191,6 @@ theorem iteratedFDeriv_apply_single_eq_foldr {f : (ι → 𝕜) → F} {k : With
     funext y
     exact iteratedFDeriv_apply_single_eq_foldr hf hlt.le _ y
 
-/-- **Pure iterated derivatives are iterated partial derivatives**: for `f` of class `Cᵏ` and
-`p ≤ k`, `Dᵖ f(x)(eᵢ, …, eᵢ) = ∂ᵢᵖ f(x)`. -/
 theorem iteratedFDeriv_apply_single_eq_iterate {f : (ι → 𝕜) → F} {k : WithTop ℕ∞}
     (hf : ContDiff 𝕜 k f) (i : ι) {p : ℕ} (hp : (p : WithTop ℕ∞) ≤ k) (x : ι → 𝕜) :
     iteratedFDeriv 𝕜 p f x (fun _ => Pi.single i 1) = (partialDeriv i)^[p] f x := by
@@ -276,13 +213,10 @@ theorem HasCompactSupport.partialDeriv {f : (ι → 𝕜) → F} (hf : HasCompac
   hf.fderiv_apply 𝕜 _
 
 omit [Fintype ι] in
-/-- `∂ᵢ f` vanishes outside the closed support of `f`. -/
 theorem partialDeriv_eq_zero_of_notMem_tsupport {f : (ι → 𝕜) → F} {x : ι → 𝕜}
     (hx : x ∉ tsupport f) (i : ι) : partialDeriv i f x = 0 :=
   image_eq_zero_of_notMem_tsupport fun h => hx (tsupport_partialDeriv_subset f i h)
 
-/-- A differentiable, compactly supported function on `𝕜ⁿ` (`n ≥ 1`) with vanishing partial
-derivatives is zero. -/
 theorem eq_zero_of_partialDeriv_eq_zero {𝕜' : Type*} [RCLike 𝕜'] [Nonempty ι]
     {F' : Type*} [NormedAddCommGroup F'] [NormedSpace 𝕜' F'] {f : (ι → 𝕜') → F'}
     (hf : Differentiable 𝕜' f) (hc : HasCompactSupport f) (h : ∀ i x, partialDeriv i f x = 0)
@@ -296,9 +230,6 @@ theorem eq_zero_of_partialDeriv_eq_zero {𝕜' : Type*} [RCLike 𝕜'] [Nonempty
   rw [is_const_of_fderiv_eq_zero hf hd x y]
   exact image_eq_zero_of_notMem_tsupport hy
 
-/-! ### Schwarz -/
-
-/-- **Schwarz**: partial derivatives of a `C²` function commute. -/
 theorem partialDeriv_comm {f : (ι → ℝ) → F} [NormedSpace ℝ F] (hf : ContDiff ℝ 2 f) (a b : ι)
     (x : ι → ℝ) : partialDeriv a (partialDeriv b f) x = partialDeriv b (partialDeriv a f) x := by
   have hd : Differentiable ℝ (fderiv ℝ f) :=
@@ -313,8 +244,6 @@ theorem partialDeriv_comm {f : (ι → ℝ) → F} [NormedSpace ℝ F] (hf : Con
   rw [e, e]
   exact (ContDiffAt.isSymmSndFDerivAt (hf.contDiffAt (x := x)) (by simp)) _ _
 
-/-! ### The Laplacian -/
-
 /-- The Laplacian `Δf = Σᵢ ∂ᵢ∂ᵢ f` of `f : (ι → 𝕜) → F`. -/
 def laplacian (f : (ι → 𝕜) → F) (x : ι → 𝕜) : F :=
   ∑ i, partialDeriv i (partialDeriv i f) x
@@ -322,10 +251,6 @@ def laplacian (f : (ι → 𝕜) → F) (x : ι → 𝕜) : F :=
 theorem laplacian_apply (f : (ι → 𝕜) → F) (x : ι → 𝕜) :
     laplacian f x = ∑ i, partialDeriv i (partialDeriv i f) x := rfl
 
-/-! ### Integration by parts -/
-
-/-- **Integration by parts**: `∫ ∂ᵢ f · g = -∫ f · ∂ᵢ g` for `C¹` functions `f, g : ℝⁿ → ℝ`
-with `f` compactly supported (Lebesgue measure on `ι → ℝ`). -/
 theorem integral_partialDeriv_mul_eq_neg {f g : (ι → ℝ) → ℝ} (hf : ContDiff ℝ 1 f)
     (hfs : HasCompactSupport f) (hg : ContDiff ℝ 1 g) (i : ι) :
     ∫ x, partialDeriv i f x * g x = -∫ x, f x * partialDeriv i g x := by
@@ -340,10 +265,6 @@ theorem integral_partialDeriv_mul_eq_neg {f g : (ι → ℝ) → ℝ} (hf : Cont
   simp only [partialDeriv]
   rw [this, neg_neg]
 
-/-! ### Separated products -/
-
-/-- **Partial derivatives of separated products**: for differentiable `Gⱼ : 𝕜 → 𝕜` and `Gᵢ' = gᵢ`,
-`∂ᵢ (c ∏ⱼ Gⱼ(xⱼ)) = c ∏ⱼ G̃ⱼ(xⱼ)` with `G̃ = G` except `G̃ᵢ = gᵢ`. -/
 theorem partialDeriv_const_mul_prod (c : 𝕜) {G : ι → 𝕜 → 𝕜} (hG : ∀ j, Differentiable 𝕜 (G j))
     {i : ι} {g : 𝕜 → 𝕜} (hi : ∀ y, HasDerivAt (G i) (g y) y) :
     partialDeriv i (fun y : ι → 𝕜 => c * ∏ j, G j (y j)) =

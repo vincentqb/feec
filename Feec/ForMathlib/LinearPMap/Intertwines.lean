@@ -5,22 +5,8 @@ public import Feec.ForMathlib.LinearPMap.Reducing
 /-!
 # Intertwining bounded maps
 
-`LinearPMap.Intertwines J A B` for `J : E →L[𝕜] F`, `A : E →ₗ.[𝕜] E`, `B : F →ₗ.[𝕜] F`:
-`J D(A) ⊆ D(B)` and `B J = J A` on `D(A)`. One predicate covers isometric transport,
-inclusion of a reducing subspace, and compression.
-
-## Main results
-
-* `Intertwines.id`, `Intertwines.comp`.
-* `Intertwines.adjoint`: if `e⁻¹ B = A e⁻¹` for a unitary `e`, then `e` intertwines `A†`
-  with `B†`.
-* `Intertwines.isSkewAdjoint_iff`: skew-adjointness is invariant under unitary equivalence.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+`LinearPMap.Intertwines J A B`: `J D(A) ⊆ D(B)` and `B J = J A` on `D(A)`; adjoints and
+skew-adjointness transfer along unitary equivalences.
 -/
 
 open scoped InnerProductSpace
@@ -42,7 +28,6 @@ structure Intertwines (J : E →L[𝕜] F) (A : E →ₗ.[𝕜] E) (B : F →ₗ
 theorem Intertwines.id (A : E →ₗ.[𝕜] E) : Intertwines (ContinuousLinearMap.id 𝕜 E) A A :=
   ⟨fun x => x.2, fun _ => rfl⟩
 
-/-- Evaluation of a partial map at equal points. -/
 theorem apply_congr' {R M N : Type*} [Ring R] [AddCommGroup M] [Module R M] [AddCommGroup N]
     [Module R N] (T : M →ₗ.[R] N) {x y : M} (hx : x ∈ T.domain) (hy : y ∈ T.domain)
     (h : x = y) : T ⟨x, hx⟩ = T ⟨y, hy⟩ := by
@@ -58,7 +43,6 @@ theorem Intertwines.comp {J : E →L[𝕜] F} {J' : F →L[𝕜] G} {A : E →�
 
 variable {A : E →ₗ.[𝕜] E} {B : F →ₗ.[𝕜] F} {e : E ≃ₗᵢ[𝕜] F}
 
-/-- For a unitary `e` intertwining `A` with `B` (both ways), `x ∈ D(B) ↔ e⁻¹ x ∈ D(A)`. -/
 theorem Intertwines.mem_domain_iff
     (h : Intertwines (e : E →L[𝕜] F) A B)
     (h' : Intertwines (e.symm : F →L[𝕜] E) B A) {x : F} :
@@ -73,8 +57,6 @@ theorem Intertwines.symm_symm (h : Intertwines (e : E →L[𝕜] F) A B) :
     Intertwines (e.symm.symm : E →L[𝕜] F) A B := by
   rw [LinearIsometryEquiv.symm_symm]; exact h
 
-/-- If, for a unitary `e`, `e⁻¹` intertwines `B` with `A`, then `e` intertwines `A†` with `B†`
-(for densely defined `B`). -/
 theorem Intertwines.adjoint [CompleteSpace E] [CompleteSpace F]
     (h' : Intertwines (e.symm : F →L[𝕜] E) B A) (hB : Dense (B.domain : Set F)) :
     Intertwines (e : E →L[𝕜] F) A† B† := by
@@ -96,7 +78,6 @@ theorem Intertwines.adjoint [CompleteSpace E] [CompleteSpace F]
     mem_adjoint_domain_of_exists _ ⟨_, key y⟩
   exact ⟨hmem, fun y => adjoint_apply_eq hB ⟨_, hmem y⟩ (key y)⟩
 
-/-- Skew-adjointness transfers along a unitary equivalence. -/
 theorem Intertwines.isSkewAdjoint [CompleteSpace E] [CompleteSpace F]
     (h : Intertwines (e : E →L[𝕜] F) A B)
     (h' : Intertwines (e.symm : F →L[𝕜] E) B A) (hA : A.IsSkewAdjoint) : B.IsSkewAdjoint := by
@@ -137,7 +118,6 @@ theorem Intertwines.isSkewAdjoint [CompleteSpace E] [CompleteSpace F]
       _ = -B ⟨e (e.symm y), hm2⟩ := congrArg Neg.neg e3.symm
       _ = (-B) ⟨y, hy'⟩ := by rw [neg_apply, apply_congr' B hm2 hy' hyy]
 
-/-- Skew-adjointness is invariant under unitary equivalence. -/
 theorem Intertwines.isSkewAdjoint_iff [CompleteSpace E] [CompleteSpace F]
     (h : Intertwines (e : E →L[𝕜] F) A B)
     (h' : Intertwines (e.symm : F →L[𝕜] E) B A) :

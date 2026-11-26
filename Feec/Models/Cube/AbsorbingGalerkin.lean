@@ -7,47 +7,14 @@ public import Mathlib.MeasureTheory.Measure.SeparableMeasure
 /-!
 # Semi-discrete Galerkin schemes for the absorbing problem on the cube
 
-The absorbing generator of `Feec.Models.Cube.Absorbing` is the impedance operator of the triple
-`impedanceTriple` (energy space `EnergySpace`, field, row-wise curl and tangential trace), so every
-conforming Galerkin family `Feec.ImpedanceTriple.GalerkinData` for it gives the semi-discrete
-scheme with the boundary term
+Galerkin schemes on dense-sequence spaces for the absorbing generator, as a dissipative FEEC
+discretization with constraint `tsdPair`.
 
-  `⟪Ėₕ, ι v'⟫ = -⟪Bₕ, curl v'⟫ - ⟪(vₕ)_τ, v'_τ⟫_{L²(∂Q)}`, `Ḃₕ = curl vₕ`, `Eₕ = ι vₕ`,
+## Main results
 
-with dissipative discrete generator and the discrete energy identity
-(`Feec.ImpedanceTriple.GalerkinData.norm_sq_galerkin_sol`), and, under the approximation property
-(`Feec.ImpedanceTriple.GalerkinData.Approximates`), the full `dissipFEEC` verdict
-(`Feec.ImpedanceTriple.GalerkinData.galerkin_verdict`), with the TSD constraint
-`tsdPair` as `K`.
-
-* **Existence** (`absorbingGalerkin`): the energy space and `L²(Q)` are separable
-  (`separableSpace_energySpace`), so dense-sequence spaces
-  (`Feec.ImpedanceTriple.GalerkinData.ofDenseSeq`; finite-dimensional, not finite element spaces)
-  form an approximating Galerkin family.
-* **`absorbingGalerkin_verdict`**: its `dissipFEEC` verdict, with a dense core: well-posedness,
-  the propagation criteria, convergence for every datum and every convergent family of discrete
-  initial values, the rate bound for every rate class (none is constructed), the residual in
-  both directions.
-* **`absorbingGalerkin_residual_not_invariant`**: since TSD is not invariant
-  (`not_invariant_tsdPair`), for every `T > 0` some TSD datum leaves `tsdPair` before `T`, and the
-  TSD residuals of every convergent semi-discrete solution tend to the positive distance of the
-  exact solution to `tsdPair`: the scheme converges, and **the constraint violation entering
-  through the absorbing boundary is resolved, not removed**.
-* **`absorbingGalerkin_energy`**: the discrete energy decreases by twice the discrete outgoing
-  flux.
-
-Finite element spaces on the Freudenthal meshes are not covered: their conformity
-(`Vₕ ⊆ EnergySpace`, i.e. tangential traces in `L²(∂Q)` and membership in the closure of smooth
-triples) and approximation in the energy norm (including the boundary term) are not proved, and no
-rate class is constructed.
-
-## References
-
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], §4.6 (the impedance problem)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.4 (Thm 4.2, single-space form)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `absorbingGalerkin_verdict`: the core is dense and the `dissipFEEC` verdict holds.
+* `absorbingGalerkin_residual_not_invariant`: for some TSD datum, the TSD residuals tend to a
+  positive limit.
 -/
 
 open scoped InnerProductSpace
@@ -65,7 +32,7 @@ private theorem fact_two_ne_top : Fact ((2 : ENNReal) ≠ ⊤) := ⟨ENNReal.ofN
 
 attribute [local instance] fact_two_ne_top
 
-/-- `L²(Q; ℝ^{3×3})` is separable (needed outside this file, where `2 ≠ ∞` is not an instance). -/
+/-- `L²(Q; ℝ^{3×3})` is separable. -/
 instance separableSpace_MQ : SeparableSpace MQ := inferInstance
 
 /-- **The energy space is separable** (a subspace of a finite product of `L²` spaces). -/
@@ -84,8 +51,7 @@ def galerkinData : ImpedanceTriple.GalerkinData impedanceTriple ℕ :=
 theorem approximates_galerkinData : galerkinData.Approximates :=
   ImpedanceTriple.GalerkinData.approximates_ofDenseSeq
 
-/-- **The semi-discrete Galerkin scheme for the absorbing problem**, as a dissipative FEEC
-discretization with constraint `tsdPair`. -/
+/-- **The semi-discrete Galerkin scheme** for the absorbing problem, with constraint `tsdPair`. -/
 def absorbingGalerkin : DissipFEEC absorbing ℕ :=
   galerkinData.galerkin tsdPair isClosed_tsdPair
 
@@ -93,8 +59,7 @@ def absorbingGalerkin : DissipFEEC absorbing ℕ :=
 def absorbingGalerkinCore : absorbingGalerkin.Core :=
   galerkinData.galerkinCore tsdPair isClosed_tsdPair approximates_galerkinData
 
-/-- **The verdict for the absorbing scheme**: the core is dense, and the `dissipFEEC` verdict
-holds with `K = tsdPair`. -/
+/-- **The absorbing scheme's verdict**: the core is dense and the `dissipFEEC` verdict holds. -/
 theorem absorbingGalerkin_verdict :
     absorbingGalerkinCore.Data.topologicalClosure = ⊤ ∧
       absorbingGalerkin.Verdict absorbingGalerkinCore :=
@@ -110,10 +75,8 @@ theorem absorbingGalerkin_converges (T : ℝ) (x : State) {v : ∀ n, absorbingG
     rw [absorbingGalerkin_verdict.1]; trivial
   exact absorbingGalerkin_verdict.2.converges hx hv T
 
-/-- **The TSD residual has a positive limit**: for every `T > 0` some TSD datum `x` leaves
-`tsdPair` at some `t ∈ [0, T]`, and for every family of discrete initial values with `ιₙ vₙ → x`
-(for instance `vₙ = πₙ x`), the TSD residuals `dist(ιₙ e^{t Lₙ} vₙ, tsdPair)` tend to
-`dist(S(t) x, tsdPair) > 0`. -/
+/-- **The TSD residual has a positive limit**: some TSD datum `x` leaves `tsdPair` at some `t ≤ T`,
+and the residuals of every convergent family tend to `dist(S(t) x, tsdPair) > 0`. -/
 theorem absorbingGalerkin_residual_not_invariant {T : ℝ} (hT : 0 < T) :
     ∃ x ∈ tsdPair, ∃ t ∈ Icc 0 T, absorbingSemigroup.S t x ∉ tsdPair ∧
       0 < infDist (absorbingSemigroup.S t x) (tsdPair : Set State) ∧
@@ -129,8 +92,7 @@ theorem absorbingGalerkin_residual_not_invariant {T : ℝ} (hT : 0 < T) :
     (isClosed_tsdPair.notMem_iff_infDist_pos ⟨0, tsdPair.zero_mem⟩).1 hout,
     hV.tendsto_incl_proj hx, fun v hv => hV.tendsto_infDist _ hx hv ht.1⟩
 
-/-- **The discrete energy identity** of the absorbing scheme: the semi-discrete energy decreases
-by twice the discrete outgoing flux `‖(vₙ)_τ‖²_{L²(∂Q)}`. -/
+/-- **The discrete energy identity**: the energy decreases by twice the discrete outgoing flux. -/
 theorem absorbingGalerkin_energy (n : ℕ) (x : absorbingGalerkin.X n) {t : ℝ} (ht : 0 ≤ t) :
     ‖absorbingGalerkin.sol n x t‖ ^ 2 = ‖absorbingGalerkin.incl n x‖ ^ 2 -
       2 * ∫ s in (0 : ℝ)..t,

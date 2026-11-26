@@ -6,17 +6,13 @@ public import Mathlib.Topology.Algebra.Module.FiniteDimension
 /-!
 # The finite difference Laplacian on a lattice domain
 
-For a finite set `G` of lattice points of `ℤ^ι` (the grid of unknowns) and a mesh size `h`, the
-classical `(2|ι| + 1)`-point **finite difference Laplacian** with homogeneous Dirichlet data is
-`(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²` for `p ∈ G`, the values off `G` taken
-to be `0` (`FiniteDifference.zeroExt`). On `ℝ^G` with the maximum norm it is a sub-Markov
-generator (`FiniteDifference.isSubMarkovGenerator_laplacian`): `Δₕ + 2|ι|/h²` is positive and
-`Δₕ 𝟙 ≤ 0`, so `e^{tΔₕ}` is positive and contractive in the maximum norm (the discrete maximum
-principle of the semidiscrete scheme).
+The `(2|ι| + 1)`-point finite difference Laplacian with homogeneous Dirichlet data on a finite set
+`G` of lattice points of `ℤ^ι` is a sub-Markov generator on `ℝ^G` with the maximum norm, the
+discrete maximum principle ([Thomee2006], Ch. 15).
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -53,8 +49,7 @@ theorem abs_zeroExt_le (U : G → ℝ) (q : ι → ℤ) : |zeroExt U q| ≤ ‖U
 variable [DecidableEq ι]
 
 variable (G) in
-/-- **The finite difference Laplacian** on the grid `G` with mesh size `h` and homogeneous
-Dirichlet data: `(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²`, `U = 0` off `G`. -/
+/-- The finite difference Laplacian `Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²`, `U = 0` off `G`. -/
 def laplacian (h : ℝ) : (G → ℝ) →L[ℝ] (G → ℝ) :=
   LinearMap.toContinuousLinearMap
     { toFun := fun U p => ∑ i, (zeroExt U ((p : ι → ℤ) + Pi.single i 1) - 2 * U p +
@@ -72,9 +67,7 @@ theorem laplacian_apply (h : ℝ) (U : G → ℝ) (p : G) :
     laplacian G h U p = ∑ i, (zeroExt U ((p : ι → ℤ) + Pi.single i 1) - 2 * U p +
       zeroExt U ((p : ι → ℤ) - Pi.single i 1)) / h ^ 2 := rfl
 
-/-- **The discrete maximum principle**: the finite difference Laplacian is a sub-Markov generator
-(`Δₕ + 2|ι|/h²` is positive and `Δₕ 𝟙 ≤ 0`), so `e^{tΔₕ}` is positive and contractive in the
-maximum norm. [Thomee2006], Ch. 15 -/
+/-- **The discrete maximum principle**: the difference Laplacian is a sub-Markov generator. -/
 theorem isSubMarkovGenerator_laplacian (G : Finset (ι → ℤ)) (h : ℝ) :
     IsSubMarkovGenerator (laplacian G h) where
   exists_shift := ⟨2 * Fintype.card ι / h ^ 2, by positivity, fun v hv p => by

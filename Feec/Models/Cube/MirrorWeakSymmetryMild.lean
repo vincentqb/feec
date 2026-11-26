@@ -6,32 +6,13 @@ public import Feec.Semigroup.DomainSq
 /-!
 # The mirror scheme (6.5) converges from every datum of the constraint
 
-`Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM` proves that the mirror scheme (6.5) of
-[QuennevilleBelair2015], §6.3, on the cube `Q = (0, ½)³` converges to the real part of the TSD
-solution `e^{tL} U₀` of the Ch. 6 system for data `U₀ ∈ D(L²)` in the constraint
-`{0} × L²(TSD) × ({0} × L²(TSD))`. This file removes the regularity: for every `x` in the
-constraint, with no domain hypothesis, the real part of the orbit `e^{tL} x` (a mild solution, a
-strong one when `x ∈ D(L)`) is the uniform limit on `[0, T]` of solutions of (6.5) without
-source (`mirror_waveFEM_of_mem_tsd`).
-
-The constraint reduces the wave operator (`Feec.Models.Cube.MirrorBGG.reducingSubcomplexQ`), so
-`D(L²)` is dense in it (`LinearPMap.IsSkewAdjoint.subset_closure_domainSq_inf`). At a datum `y`
-of `D(L²)` in the constraint close to `x` the scheme converges (`mirrorWave_converges` through
-`TSDDatum.exactWave`), and the real parts of the two orbits stay within `‖x - y‖` on `[0, T]`:
-the wave group is unitary, and the real parts of the fields are no larger than the state
-(`sq_norm_rowsW1L_add_sq_norm_rowsW2L_le`).
-
-## Main results
-
-* `sq_norm_rowsW1L_add_sq_norm_rowsW2L_le`: `‖Re E‖² + ‖Re B‖² ≤ ‖x‖²`.
-* **`mirror_waveFEM_of_mem_tsd`**.
+For every datum `x` of the TSD constraint on the cube `Q = (0, ½)³`, with no regularity, the real
+part of `e^{tL} x` is the uniform limit on `[0, T]` of solutions of the mirror scheme (6.5) of
+[QuennevilleBelair2015], §6.3, without source (`mirror_waveFEM_of_mem_tsd`).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 6 (§6.3 (6.5))
-* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §II.1 (cores and powers of generators)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -49,8 +30,6 @@ open Feec.HilbertComplex (totalSub)
 
 /-! ### The real fields of a state -/
 
-/-- **The real fields of a state are no larger than the state**: for `x = (σ, E, (M, B))`,
-`‖Re E‖² + ‖Re B‖² ≤ ‖x‖²` (rows as forms, `B` through the Hodge star). -/
 theorem sq_norm_rowsW1L_add_sq_norm_rowsW2L_le (x : PiLp 2 MirrorBGG.SpaceQ) :
     ‖rowsW1L (stEL x)‖ ^ 2 + ‖rowsW2L (stBL x)‖ ^ 2 ≤ ‖x‖ ^ 2 := by
   have h1 : ‖rowsW1L (stEL x)‖ ^ 2 ≤ ‖(x 1 : MQ)‖ ^ 2 := sq_norm_rowsW1L_le _
@@ -75,16 +54,8 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
 set_option maxHeartbeats 4000000 in
-/-- **The mirror scheme (6.5) converges to the real part of every solution from the constraint,
-with no regularity** ([QuennevilleBelair2015], Ch. 6, §6.3, (6.5)). Let `x` lie in the constraint
-`{0} × L²(TSD) × ({0} × L²(TSD))` of `Feec.Models.Cube.MirrorBGG.complexQ` (no domain hypothesis)
-and `T > 0`, and write `(0, E, (0, B))(t) = e^{tL} x`. For every `ε > 0` and all large `N`, the
-scheme (6.5) without source has a solution with
-`(‖σₕ‖² + ‖Re E − uₕ‖² + ‖Mₕ‖² + ‖Re B − ρₕ‖²)^{1/2}(t) ≤ ε` on `[0,T]` (the rows of the matrix
-fields as forms, `B` through the Hodge star). At a datum `y` of `D(L²)` in the constraint within
-`ε / 2` of `x` (`D(L²)` is dense in the constraint, which reduces `L`) the scheme converges as in
-`mirror_waveFEM`, and `e^{tL}` is unitary while `Re` is a contraction
-(`sq_norm_rowsW1L_add_sq_norm_rowsW2L_le`). -/
+/-- **The scheme (6.5) converges from every `x` in the constraint** ([QuennevilleBelair2015], §6.3):
+for all large `N` it has a solution within `ε` of the real part of `e^{tL} x` on `[0, T]`. -/
 theorem mirror_waveFEM_of_mem_tsd {x : PiLp 2 MirrorBGG.SpaceQ}
     (hx : x ∈ totalSub MirrorBGG.tsdQ) {T : ℝ} (hT0 : 0 < T) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop,

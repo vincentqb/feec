@@ -6,40 +6,14 @@ public import Mathlib.Analysis.RCLike.Basic
 /-!
 # The inf-sup condition
 
-For a bounded form `B : X →L[𝕜] Y →SL[σ] 𝕜` between normed spaces over `𝕜 = ℝ` or `ℂ`
-(`σ = RingHom.id 𝕜` for bilinear forms, `σ = starRingEnd 𝕜` for sesquilinear ones), the
-inf-sup condition with constant `γ > 0` is `γ ‖x‖ ≤ ‖B x‖ = sup_{y ≠ 0} |B x y| / ‖y‖`.
-
-## Main definitions
-
-* `Feec.Variational.InfSup B γ`: the inf-sup condition.
-* `Feec.Variational.SeparatingRight B`: `B x y = 0` for all `x` forces `y = 0` (the "dense range"
-  condition of Babuška–Nečas, on the second slot).
-* `Feec.Variational.restrict B K L`: the form on a trial subspace `K` and a test subspace `L`
-  (the Petrov–Galerkin form).
-
-## Main results
-
-* `InfSup.injective`, `InfSup.norm_le_of_apply_eq`: uniqueness and the stability bound
-  `‖x‖ ≤ γ⁻¹ ‖B x‖`.
-* `InfSup.le_opNorm`: `γ ≤ ‖B‖` on a nontrivial space.
-* `InfSup.of_testMap`, `InfSup.restrict_of_testMap`: a test map `T` with `‖T x‖ ≤ M ‖x‖` and
-  `c ‖x‖² ≤ re B x (T x)` gives the inf-sup constant `c / M`, on every pair of subspaces
-  `K, L` with `T K ⊆ L`. This is the proof pattern of the inf-sup condition for the Hodge wave
-  form and for the mixed Hodge Laplacian, at the continuous and at the discrete level.
+The inf-sup condition `γ ‖x‖ ≤ ‖B x‖` of a bounded bilinear or sesquilinear form `B` between normed
+spaces over `𝕜 = ℝ` or `ℂ`, its restriction to trial and test subspaces, and its proof by a test
+map.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.5 (inf-sup condition), Prop 4.13 (inf-sup by a test function)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 * [D. N. Arnold, *Lecture notes on Numerical Analysis of Partial Differential Equations*][ArnoldNotes2011]
-  (the inf-sup and dense range conditions, as followed in §4.5 of the thesis)
-* [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
-* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
-  Ch. 4
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -51,16 +25,13 @@ namespace Feec.Variational
 variable {𝕜 X Y : Type*} [RCLike 𝕜] {σ : 𝕜 →+* 𝕜} [RingHomIsometric σ]
   [NormedAddCommGroup X] [NormedSpace 𝕜 X] [NormedAddCommGroup Y] [NormedSpace 𝕜 Y]
 
-/-- The **inf-sup condition** with constant `γ > 0`: `γ ‖x‖ ≤ ‖B x‖` for every `x`, where
-`‖B x‖ = sup_{y ≠ 0} |B x y| / ‖y‖`. [QuennevilleBelair2015], §4.5, which follows
-[ArnoldNotes2011] for this definition. -/
+/-- The **inf-sup condition** `γ ‖x‖ ≤ ‖B x‖` with constant `γ > 0`. [QuennevilleBelair2015], §4.5;
+[ArnoldNotes2011] -/
 structure InfSup (B : X →L[𝕜] Y →SL[σ] 𝕜) (γ : ℝ) : Prop where
   pos : 0 < γ
   le : ∀ x, γ * ‖x‖ ≤ ‖B x‖
 
-/-- The **separation condition** on the second slot: `B x y = 0` for all `x` forces `y = 0`
-(the "dense range" condition of Babuška–Nečas). [QuennevilleBelair2015], §4.5, which follows
-[ArnoldNotes2011] for this definition. -/
+/-- `B x y = 0` for all `x` forces `y = 0`. [QuennevilleBelair2015], §4.5; [ArnoldNotes2011] -/
 def SeparatingRight (B : X →L[𝕜] Y →SL[σ] 𝕜) : Prop := ∀ y, (∀ x, B x y = 0) → y = 0
 
 /-- The restriction of `B` to a trial subspace `K` and a test subspace `L`. -/
@@ -73,7 +44,6 @@ def restrict (B : X →L[𝕜] Y →SL[σ] 𝕜) (K : Submodule 𝕜 X) (L : Sub
 
 variable {B : X →L[𝕜] Y →SL[σ] 𝕜} {γ : ℝ}
 
-/-- `‖B|_{K×L} x‖ ≤ ‖B‖ ‖z‖` as soon as `B x = B z` on the test space. -/
 theorem norm_restrict_apply_le_of_eq (K : Submodule 𝕜 X) (L : Submodule 𝕜 Y) (x : K) {z : X}
     (h : ∀ v ∈ L, B x v = B z v) : ‖restrict B K L x‖ ≤ ‖B‖ * ‖z‖ := by
   refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun v => ?_
@@ -87,7 +57,6 @@ theorem mono (h : InfSup B γ) {γ' : ℝ} (hγ' : 0 < γ') (hle : γ' ≤ γ) :
   ⟨hγ', fun x => (mul_le_mul_of_nonneg_right hle (norm_nonneg x)).trans (h.le x)⟩
 
 omit [RingHomIsometric σ] in
-/-- Stability: `‖x‖ ≤ γ⁻¹ ‖f‖` whenever `B x = f`. -/
 theorem norm_le_of_apply_eq (h : InfSup B γ) {x : X} {f : Y →SL[σ] 𝕜} (hx : B x = f) :
     ‖x‖ ≤ γ⁻¹ * ‖f‖ := by
   rw [le_inv_mul_iff₀ h.pos, ← hx]; exact h.le x
@@ -103,14 +72,11 @@ theorem eq_zero_of_apply_eq_zero (h : InfSup B γ) {x : X} (hx : B x = 0) : x = 
 theorem injective (h : InfSup B γ) : Function.Injective B := fun x x' hxx' =>
   sub_eq_zero.1 (h.eq_zero_of_apply_eq_zero (by rw [map_sub, hxx', sub_self]))
 
-/-- On a nontrivial space, `γ ≤ ‖B‖`. -/
 theorem le_opNorm [Nontrivial X] (h : InfSup B γ) : γ ≤ ‖B‖ := by
   obtain ⟨x, hx⟩ := exists_ne (0 : X)
   have hx' : 0 < ‖x‖ := norm_pos_iff.2 hx
   exact le_of_mul_le_mul_right ((h.le x).trans (B.le_opNorm x)) hx'
 
-/-- The inf-sup condition in the normalized "attained" form
-`∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ ‖x‖ ≤ |B x y|`. -/
 theorem of_forall_exists_norm_le_one (hγ : 0 < γ)
     (h : ∀ x, ∃ y, ‖y‖ ≤ 1 ∧ γ * ‖x‖ ≤ ‖B x y‖) : InfSup B γ := by
   refine ⟨hγ, fun x => ?_⟩
@@ -120,9 +86,6 @@ theorem of_forall_exists_norm_le_one (hγ : 0 < γ)
     _ ≤ ‖B x‖ * 1 := by gcongr
     _ = ‖B x‖ := mul_one _
 
-/-- **Test vectors of every size**: under the inf-sup condition, every `x` and `t ≥ 0` have a `y`
-with `‖y‖ ≤ t` and `(γ / 2) ‖x‖ t ≤ |B x y|`, a test-vector form of the inf-sup condition
-(cf. [AFW2010], Thm 3.2). A converse of `of_forall_exists_norm_le_one`. -/
 theorem exists_norm_le_mul_le (h : InfSup B γ) (x : X) {t : ℝ} (ht : 0 ≤ t) :
     ∃ y : Y, ‖y‖ ≤ t ∧ γ / 2 * ‖x‖ * t ≤ ‖B x y‖ := by
   rcases (norm_nonneg x).eq_or_lt with hx | hx
@@ -137,9 +100,8 @@ theorem exists_norm_le_mul_le (h : InfSup B γ) (x : X) {t : ℝ} (ht : 0 ≤ t)
         abs_of_nonneg ht]
       nlinarith
 
-/-- **Inf-sup by a test map.** If `T` satisfies `‖T x‖ ≤ M ‖x‖` and `c ‖x‖² ≤ re B x (T x)`,
-then `B` satisfies the inf-sup condition with constant `c / M`. `T` need not be linear.
-[QuennevilleBelair2015], Prop 4.13 -/
+/-- **Inf-sup by a test map**: `‖T x‖ ≤ M ‖x‖` and `c ‖x‖² ≤ re B x (T x)` give the inf-sup
+constant `c / M`. [QuennevilleBelair2015], Prop 4.13 -/
 theorem of_testMap (T : X → Y) {c M : ℝ} (hc : 0 < c) (hM : 0 < M)
     (hTM : ∀ x, ‖T x‖ ≤ M * ‖x‖) (hT : ∀ x, c * ‖x‖ ^ 2 ≤ RCLike.re (B x (T x))) :
     InfSup B (c / M) := by
@@ -154,11 +116,8 @@ theorem of_testMap (T : X → Y) {c M : ℝ} (hc : 0 < c) (hM : 0 < M)
   rw [div_mul_eq_mul_div, div_le_iff₀ hM]
   nlinarith
 
-/-- **Inf-sup by a test map on subspaces.** If `T` maps the trial space `K` into the test
-space `L`, `‖T x‖ ≤ M ‖x‖` and `c ‖x‖² ≤ re B x (T x)` on `K`, then the restriction of `B` to
-`K × L` satisfies the inf-sup condition with constant `c / M`. With `K = L = V` this is the
-continuous inf-sup condition, with `K = L = Vₕ` a subcomplex its discrete counterpart with the
-same constant. [QuennevilleBelair2015], Prop 4.13 -/
+/-- **Inf-sup by a test map on subspaces**, for `T` mapping the trial space `K` into the test
+space `L`. [QuennevilleBelair2015], Prop 4.13 -/
 theorem restrict_of_testMap (K : Submodule 𝕜 X) (L : Submodule 𝕜 Y) (T : X → Y)
     (hTK : ∀ x ∈ K, T x ∈ L) {c M : ℝ} (hc : 0 < c) (hM : 0 < M)
     (hTM : ∀ x ∈ K, ‖T x‖ ≤ M * ‖x‖) (hT : ∀ x ∈ K, c * ‖x‖ ^ 2 ≤ RCLike.re (B x (T x))) :

@@ -6,34 +6,18 @@ public import Feec.Domain.StarShapedSmoothing
 /-!
 # The smoothed canonical interpolant of an element family
 
-For an element family `E` on a conforming simplicial mesh `M` of an open `Ω ⊆ ℝⁿ` star-shaped
-with respect to a ball `B(x₀, s₀)`, and maximal-family smoothing parameters `p` (dilation factor
-`½ ≤ c < 1` about `x₀`, bump radius `< s₀ (1 - c) / 4`, `Feec.Domain.SmoothingParam.IsMaximal`):
+For an element family on a simplicial mesh of an open `Ω ⊆ ℝⁿ` star-shaped with respect to a ball,
+the glued canonical interpolant `Q = Π_h R` of the smoothed forms `R u` commutes with the exterior
+derivative: for maximal-family smoothing parameters it maps into `Vₕ ⊆ HΛ(Ω)`, for minimal-family
+parameters into `V̊ₕ ⊆ H̊Λ(Ω)`.
 
-* `smoothForm`: the smoothed `k`-form `x ↦ Σₛ cᵏ (ū ⋆ ρ)(x₀ + c (x - x₀)) dxₛ` of
-  `u ∈ L²(Ω; Λᵏ)`, smooth on `ℝⁿ`; `d` of it is the smoothed form of `d_max u` on `cl Ω`
-  (`extDeriv_smoothForm_of_maximal`: the pullback by the dilation commutes with `d`);
-* `LocalElement.smoothedInterp`: `Q = Π_h R`, the glued canonical interpolant of the smoothed
-  form; **`d_max Q u = Q d_max u`** (`LocalElement.maximal_smoothedInterp`, using that `Π_h`
-  commutes with `d` on smooth forms and only sees `cl Ω`, `LocalElement.globalInterp_congr`);
-* **`LocalElement.smoothedCommutingMap`**: `Q` as a `Feec.HilbertComplex.Subcomplex.CommutingMap`
-  into the finite element subcomplex `Vₕ ⊆ HΛ(Ω)`, the input of the smoothed-projection
-  construction `π = J⁻¹ Q` (`Feec.FiniteElement.SmoothedProjection`).
+## Main results
 
-**The vanishing-trace family.** For minimal-family parameters (`c > 1`, dilation towards the
-centre) the smoothed form is a test form on `Ω` (`smoothForm_eq_zero_of_minimal`), so its
-canonical interpolant has vanishing boundary DOFs (`LocalElement.globalInterp_mem_globalSpace₀`),
-and `d` of it is the smoothed form of `d_min u` everywhere (`extDeriv_smoothForm_of_minimal`):
-`LocalElement.smoothedCommutingMapMin` is a commuting map into `V̊ₕ ⊆ H̊Λ(Ω)`.
-
-The estimates that make `J⁻¹ Q` uniformly bounded are in `Feec.FiniteElement.SmoothingBasic`,
-`Feec.Models.StarShaped.Smoothing` and, on the cube, `Feec.Models.Cube.SmoothingEstimates`.
+* `LocalElement.maximal_smoothedInterp`, `LocalElement.minimal_smoothedInterp`: `d Q u = Q d u`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -49,14 +33,11 @@ open Feec.Domain Feec.Mesh Feec.ExteriorFibre
 
 variable {n : ℕ}
 
-/-! ## The smoothed form field -/
-
 section SmoothForm
 
 variable {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
 
-/-- The coefficients `cᵏ R̃ uₛ` of the smoothed `k`-form (pullback by the dilation, then
-mollification). -/
+/-- The coefficients `cᵏ R̃ uₛ` of the smoothed `k`-form. -/
 def smoothCoeff (p : SmoothingParam (Fin n → ℝ)) (k : ℤ) (u : L2F ℝ Ω (formIdx n k))
     (s : formIdx n k) : (Fin n → ℝ) → ℝ :=
   fun x => p.factor ^ k * smoothExt Ω p ((u s : L2 ℝ Ω) : (Fin n → ℝ) → ℝ) x
@@ -66,8 +47,7 @@ theorem contDiff_smoothCoeff (hΩ : MeasurableSet Ω) (k : ℤ) (u : L2F ℝ Ω 
     ContDiff ℝ ∞ (smoothCoeff p k u s) :=
   contDiff_const.mul (contDiff_smoothExt ((memLp_indicator hΩ _).locallyIntegrable (by norm_num)))
 
-/-- **The smoothed `k`-form** `x ↦ Σₛ cᵏ (R̃ uₛ)(x) dxₛ`, a smooth form field on `ℝⁿ`, as a
-linear map `L²(Ω; Λᵏ) → C¹Λᵏ`. -/
+/-- The smoothed `k`-form `x ↦ Σₛ cᵏ (R̃ uₛ)(x) dxₛ`, as a linear map `L²(Ω; Λᵏ) → C¹Λᵏ`. -/
 def smoothForm (p : SmoothingParam (Fin n → ℝ)) (hΩ : MeasurableSet Ω) (k : ℤ) :
     L2F ℝ Ω (formIdx n k) →ₗ[ℝ] c1Forms n where
   toFun u := ⟨fun x t => formExt (smoothCoeff p k u) t x,
@@ -112,8 +92,6 @@ theorem formComp_smoothForm (hΩ : MeasurableSet Ω) (k : ℕ) (u : L2F ℝ Ω (
   rw [formExt_val]
   rfl
 
-/-- **`d` of the smoothed form is the smoothed form of `d_max u`** on `cl Ω` (maximal family,
-`Ω` star-shaped with respect to `B(x₀, s₀)`): the pullback by the dilation commutes with `d`. -/
 theorem extDeriv_smoothForm_of_maximal (hΩ : MeasurableSet Ω) (hΩo : IsOpen Ω) {x₀ : Fin n → ℝ}
     {s₀ : ℝ}
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s₀)
@@ -134,9 +112,6 @@ theorem extDeriv_smoothForm_of_maximal (hΩ : MeasurableSet Ω) (hΩo : IsOpen �
     rw [h0, smoothForm_apply]
     simp [formExt, ht]
 
-/-- **`d` of the smoothed form is the smoothed form of `d_min u`** everywhere on `ℝⁿ` (any
-parameters): the zero extension of `u ∈ D(d_min)` has distributional `d` equal to the zero
-extension of `d_min u` (`Feec.Domain.apply_smoothExt_of_minimal`). -/
 theorem extDeriv_smoothForm_of_minimal (hΩ : MeasurableSet Ω) (hΩo : IsOpen Ω) (k : ℕ)
     (u : ((extDerivOp ℝ n k).minimal Ω).domain) (x : Fin n → ℝ) :
     extDeriv (smoothForm p hΩ k u : FormField n) x =
@@ -155,8 +130,6 @@ theorem extDeriv_smoothForm_of_minimal (hΩ : MeasurableSet Ω) (hΩo : IsOpen �
     rw [h0, smoothForm_apply]
     simp [formExt, ht]
 
-/-- **Minimal family: the smoothed form vanishes outside `Ω`** (it is a test form on `Ω`,
-`Feec.Domain.isTest_smoothExt`). -/
 theorem smoothForm_eq_zero_of_minimal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {x₀ : Fin n → ℝ} {s₀ : ℝ} (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω)
     (hp : p.IsMinimal x₀ s₀) (k : ℤ) (u : L2F ℝ Ω (formIdx n k)) {x : Fin n → ℝ} (hx : x ∉ Ω) :
@@ -173,14 +146,10 @@ theorem smoothForm_eq_zero_of_minimal (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
 
 end SmoothForm
 
-/-! ## The smoothed canonical interpolant of an element family -/
-
 namespace LocalElement
 
 variable (E : LocalElement n) (M : SimplicialMesh n)
 
-/-- **`Π_h` only sees values on `cl Ω`**: continuous forms agreeing on the closure of the meshed
-domain have the same canonical interpolant. -/
 theorem globalInterp_congr (k : ℕ) {w w' : contForms n}
     (h : ∀ x ∈ closure M.domain, (w : FormField n) x = (w' : FormField n) x) :
     E.globalInterp M k w = E.globalInterp M k w' := by
@@ -197,8 +166,7 @@ theorem globalInterp_congr (k : ℕ) {w w' : contForms n}
 
 variable (p : SmoothingParam (Fin n → ℝ))
 
-/-- **The smoothed canonical interpolant** `Q = Π_h R : L²(Ω; Λᵏ) → Vₕᵏ`: glue the canonical
-interpolant of the smoothed form ([AFW2010], §5.5); zero in negative degrees. -/
+/-- The smoothed canonical interpolant `Q = Π_h R : L²(Ω; Λᵏ) → Vₕᵏ`. [AFW2010], §5.5 -/
 def smoothedInterp (p : SmoothingParam (Fin n → ℝ)) (hΩ : MeasurableSet M.domain) :
     ∀ k : ℤ, L2F ℝ M.domain (formIdx n k) →ₗ[ℝ] L2F ℝ M.domain (formIdx n k)
   | Int.ofNat k => E.glue M k ∘ₗ (E.globalSpace M k).subtype ∘ₗ E.globalInterp M k ∘ₗ
@@ -217,9 +185,7 @@ theorem smoothedInterp_mem_V (hΩ : MeasurableSet M.domain) (k : ℤ)
   · exact ⟨_, rfl⟩
   · exact Submodule.zero_mem _
 
-/-- **`d_max Q u = Q d_max u`** (maximal family): the canonical interpolant commutes with `d` on
-smooth forms (`globalInterp_extDeriv`), sees only `cl Ω` (`globalInterp_congr`), and the
-smoother commutes with `d_max` there (`extDeriv_smoothForm_of_maximal`). -/
+/-- **`d_max Q u = Q d_max u`** (maximal family). -/
 theorem maximal_smoothedInterp [NeZero n] (hΩ : MeasurableSet M.domain) (hΩo : IsOpen M.domain)
     {x₀ : Fin n → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
@@ -244,9 +210,7 @@ theorem maximal_smoothedInterp [NeZero n] (hΩ : MeasurableSet M.domain) (hΩo :
   rw [h2]
   rfl
 
-/-- **The smoothed canonical interpolant as a commuting map** into the finite element subcomplex
-`Vₕ ⊆ HΛ(Ω)` (maximal family, `Ω` star-shaped with respect to `B(x₀, s₀)`): `Q = Π_h R` with
-`d Q = Q d` in every degree. -/
+/-- `Q = Π_h R` as a commuting map into `Vₕ ⊆ HΛ(Ω)` (maximal family). -/
 def smoothedCommutingMap [NeZero n] (hΩo : IsOpen M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
     (hp : p.IsMaximal x₀ s₀) : (E.subcomplex M hΩo).CommutingMap where
@@ -278,9 +242,6 @@ def smoothedCommutingMap [NeZero n] (hΩo : IsOpen M.domain) {x₀ : Fin n → �
     (E.smoothedCommutingMap M p hΩo hstar hp).Q i = E.smoothedInterp M p hΩo.measurableSet i :=
   rfl
 
-/-! ### The vanishing-trace family -/
-
-/-- **Minimal family: `Q = Π_h R` has vanishing boundary DOFs**, `Q u ∈ V̊ₕ`. -/
 theorem smoothedInterp_mem_V₀ (hΩo : IsOpen M.domain) (hb : Bornology.IsBounded M.domain)
     {x₀ : Fin n → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
@@ -292,8 +253,7 @@ theorem smoothedInterp_mem_V₀ (hΩo : IsOpen M.domain) (hb : Bornology.IsBound
       rfl⟩
   · exact Submodule.zero_mem _
 
-/-- **`d_min Q u = Q d_min u`** (minimal family): as `maximal_smoothedInterp`, with the smoother
-commuting with `d_min` everywhere (`extDeriv_smoothForm_of_minimal`) and `Q u ∈ V̊ₕ ⊆ D(d_min)`. -/
+/-- **`d_min Q u = Q d_min u`** (minimal family). -/
 theorem minimal_smoothedInterp [NeZero n] (hΩo : IsOpen M.domain)
     (hb : Bornology.IsBounded M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
@@ -327,9 +287,7 @@ theorem minimal_smoothedInterp [NeZero n] (hΩo : IsOpen M.domain)
   rw [h2]
   rfl
 
-/-- **The smoothed canonical interpolant as a commuting map** into the finite element subcomplex
-with vanishing boundary DOFs `V̊ₕ ⊆ H̊Λ(Ω)` (minimal family, `Ω` bounded, star-shaped with respect
-to `B(x₀, s₀)` and strictly star-shaped with respect to `y₀`): `d Q = Q d` in every degree. -/
+/-- `Q = Π_h R` as a commuting map into `V̊ₕ ⊆ H̊Λ(Ω)` (minimal family). -/
 def smoothedCommutingMapMin [NeZero n] (hΩo : IsOpen M.domain)
     (hb : Bornology.IsBounded M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)

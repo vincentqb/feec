@@ -9,67 +9,19 @@ public import Mathlib.MeasureTheory.Function.Jacobian
 /-!
 # Interpolation error on shape-regular simplicial meshes
 
-Every `n`-simplex `T` of `ℝⁿ` is `T = F_T(T̂)` with `F_T xh = B_T xh + p₀`
-(`Affine.Simplex.refMap`, `Affine.Simplex.linearEquiv`; `Feec.Mesh`). A reference interpolant
-`I` (`Feec.FiniteElement.IsRefInterpolant`) is transported to `T` through `F_T` and a fibre
-isomorphism `Φ_T : G ≃L[ℝ] G`: the identity for scalar functions, the pullback
-`ω ↦ ω ∘ (B_T, …, B_T)` for alternating `k`-forms, and for vector proxies
-the corresponding Piola map (covariant `û = B_Tᵀ u ∘ F_T` for `1`-forms, contravariant
-`û = det B_T · B_T⁻¹ u ∘ F_T` for `(n-1)`-forms), not the identity. All of these satisfy
-`‖Φ_T‖ ≤ A ‖B_T‖^k`, `‖Φ_T⁻¹‖ ≤ A ‖B_T⁻¹‖^k` with `A` depending only on `n` and `k`:
-`û = Φ_T ∘ u ∘ F_T` (`refPullback`) and `Π_T u = Φ_T⁻¹ ∘ (I û) ∘ F_T⁻¹` (`transportInterp`).
-
-The chain rule `D^j (u ∘ F_T)(xh) = D^j u(F_T xh) ∘ (B_T, …, B_T)` (`iteratedFDeriv_comp_refMap`)
-gives `‖D^j û‖ ≤ ‖Φ_T‖ ‖B_T‖^j ‖D^j u ∘ F_T‖`, and the reference estimate
-(`IsRefInterpolant.norm_sub_le`) transports to
-`sup_T ‖u - Π_T u‖ ≤ ‖Φ_T⁻¹‖ ‖Φ_T‖ (1 + C (m + 1)) ‖B_T‖^{r+1} sup_T ‖D^{r+1} u‖`
-(`norm_sub_transportInterp_le`) ([Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7).
-For a shape-regular family (`Feec.Mesh.IsShapeRegular`: `‖B_T‖ ≤ C₀ h_T`, `‖B_T⁻¹‖ ≤ C₀ / h_T`)
-this is
-`sup_T ‖u - Π_T u‖ ≤ A² C₀^{2k} (1 + C (m + 1)) (C₀ h_T)^{r+1} sup_T ‖D^{r+1} u‖`
-(`norm_sub_transportInterp_le_of_isShapeRegular`; [Ciarlet2002], Thm 3.1.5). With the chain rule for
-`F_T⁻¹` (`iteratedFDeriv_comp_refMapInv`), a reference estimate of order `j`
-(`HasRefDerivEstimate`) gives the derivative estimates
-`sup_T ‖D^j (u - Π_T u)‖ ≤ A² C₀^{2k} K C₀^{2j} (C₀ h_T)^{r+1-j} sup_T ‖D^{r+1} u‖`, `j ≤ r + 1`
-(`norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular`).
-
-On a mesh, a piecewise interpolant `Π_h u` is only required to equal `Π_T u` on the *interior*
-of each simplex, which is all that tangentially conforming (Whitney) or discontinuous
-interpolants satisfy; the simplex frontiers are null (`Convex.addHaar_frontier`), so almost
-every point of `closure Ω` lies in the interior of a simplex
-(`Feec.FiniteElement.ae_mem_interior`, in `Feec.FiniteElement.Conformity`).
-
-The change of variables `∫_T g = |det B_T| ∫_{T̂} g ∘ F_T` is `lintegral_closedInterior_eq`
-(and `volume_closedInterior_eq`: `|T| = |det B_T| |T̂|`). The sharper transport of Sobolev
-seminorms (`|v̂|_{m,p,T̂} ≤ C ‖B_T‖^m |det B_T|^{-1/p} |v|_{m,p,T}`) is not attempted, since
-this classical form has no Sobolev spaces. Constructing a conforming `Π_h` and instantiating `I`
-for Whitney forms are not done here: the hypotheses on the reference interpolant are stated
-explicitly in `IsRefInterpolant` and `HasRefDerivEstimate`. As in
-`Feec.FiniteElement.BrambleHilbert`, the value space `G` is in `Type`.
-
-## Main definitions
-
-* `Feec.FiniteElement.refMapInv T`: `F_T⁻¹`.
-* `Feec.FiniteElement.refPullback T Φ u`: `û = Φ ∘ u ∘ F_T`.
-* `Feec.FiniteElement.transportInterp T Φ I u`: `Π_T u = Φ⁻¹ ∘ I û ∘ F_T⁻¹`.
+Reference interpolants transported to shape-regular simplices have the error
+`sup_T ‖D^j (u - Π_T u)‖ ≤ C h_T^{r+1-j} sup_T ‖D^{r+1} u‖` ([Ciarlet2002], Thms 3.1.4–3.1.5;
+[Arnold2018], Ch. 7).
 
 ## Main results
 
-* `iteratedFDeriv_comp_affine`, `iteratedFDeriv_comp_refMap`, `iteratedFDeriv_comp_refMapInv`,
-  `norm_iteratedFDeriv_refPullback_le`: chain rules and scaling.
-* `lintegral_closedInterior_eq`, `volume_closedInterior_eq`: change of variables.
-* `norm_sub_transportInterp_le`, `norm_sub_transportInterp_le_of_isShapeRegular`: local
-  estimates.
-* `norm_iteratedFDeriv_sub_transportInterp_le`,
-  `norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular`: local derivative estimates.
+* `norm_sub_transportInterp_le_of_isShapeRegular`: the interpolation error.
+* `norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular`: the derivative estimates.
 
 ## References
 
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
-  (interpolation error for affine-equivalent families), Thm 3.1.5 (regular families)
-* [J. H. Bramble, S. R. Hilbert, *Estimation of Linear Functionals on Sobolev Spaces with Application to Fourier Transforms and Spline Interpolation*][BrambleHilbert1970]
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates on shape regular meshes)
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -112,8 +64,6 @@ theorem hasFDerivAt_refMap (T : Affine.Simplex ℝ (Fin n → ℝ) n) (x : Fin n
 
 /-! ### Chain rule and change of variables -/
 
-/-- **Chain rule** for an affine isomorphism `y ↦ L y + c`:
-`D^j (u ∘ (L · + c))(x) = D^j u(L x + c) ∘ (L, …, L)`. No smoothness is needed. -/
 theorem iteratedFDeriv_comp_affine (L : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ)) (c : Fin n → ℝ)
     (u : (Fin n → ℝ) → G) (j : ℕ) (x : Fin n → ℝ) :
     iteratedFDeriv ℝ j (fun y => u (L y + c)) x =
@@ -126,7 +76,6 @@ theorem iteratedFDeriv_comp_affine (L : (Fin n → ℝ) ≃L[ℝ] (Fin n → ℝ
     iteratedFDeriv_comp_add_right'] at h
   rw [hcomp, h]
 
-/-- **Chain rule** for `F_T`: `D^j (u ∘ F_T)(xh) = D^j u(F_T xh) ∘ (B_T, …, B_T)`. -/
 theorem iteratedFDeriv_comp_refMap (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → G)
     (j : ℕ) (x : Fin n → ℝ) :
     iteratedFDeriv ℝ j (fun y => u (T.refMap y)) x =
@@ -138,7 +87,6 @@ theorem refMapInv_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) (x : Fin n → �
     refMapInv T x = T.linearEquiv.symm x + -T.linearEquiv.symm (T.points 0) := by
   rw [refMapInv, map_sub, sub_eq_add_neg]
 
-/-- **Chain rule** for `F_T⁻¹`: `D^j (g ∘ F_T⁻¹)(x) = D^j g(F_T⁻¹ x) ∘ (B_T⁻¹, …, B_T⁻¹)`. -/
 theorem iteratedFDeriv_comp_refMapInv (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (g : (Fin n → ℝ) → G) (j : ℕ) (x : Fin n → ℝ) :
     iteratedFDeriv ℝ j (fun y => g (refMapInv T y)) x =
@@ -163,7 +111,6 @@ theorem iteratedFDeriv_refPullback (T : Affine.Simplex ℝ (Fin n → ℝ) n) (�
   have : refPullback T Φ u = Φ ∘ fun y => u (T.refMap y) := rfl
   rw [this, ContinuousLinearEquiv.iteratedFDeriv_comp_left, iteratedFDeriv_comp_refMap]
 
-/-- **Scaling of derivatives**: `‖D^j û(xh)‖ ≤ ‖Φ‖ ‖B_T‖^j ‖D^j u(F_T xh)‖`. -/
 theorem norm_iteratedFDeriv_refPullback_le (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (Φ : G ≃L[ℝ] G) (u : (Fin n → ℝ) → G) (j : ℕ) (x : Fin n → ℝ) :
     ‖iteratedFDeriv ℝ j (refPullback T Φ u) x‖ ≤
@@ -189,7 +136,6 @@ theorem mem_closedInterior_iff_refMapInv (T : Affine.Simplex ℝ (Fin n → ℝ)
   · rintro ⟨y, hy, rfl⟩; rwa [refMapInv_refMap]
   · intro h; exact ⟨_, h, refMap_refMapInv T x⟩
 
-/-- **Change of variables** on a simplex: `∫_T g = |det B_T| ∫_{T̂} g ∘ F_T`. -/
 theorem lintegral_closedInterior_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (g : (Fin n → ℝ) → ENNReal) :
     ∫⁻ x in T.closedInterior, g x =
@@ -201,7 +147,6 @@ theorem lintegral_closedInterior_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     lintegral_const_mul' _ _ ENNReal.ofReal_ne_top]
   rfl
 
-/-- `|T| = |det B_T| |T̂|`. -/
 theorem volume_closedInterior_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     volume T.closedInterior =
       ENNReal.ofReal |LinearMap.det T.linearPart| * volume (refSimplex n).closedInterior := by
@@ -217,9 +162,6 @@ def transportInterp (T : Affine.Simplex ℝ (Fin n → ℝ) n) (Φ : G ≃L[ℝ]
 
 variable {r m : ℕ} {I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G} {C : ℝ}
 
-/-- **Local interpolation error** ([Ciarlet2002], Thm 3.1.4, classical form): for `u` of class
-`C^{r+1}` near `T`,
-`sup_T ‖u - Π_T u‖ ≤ ‖Φ⁻¹‖ ‖Φ‖ (1 + C (m + 1)) ‖B_T‖^{r+1} sup_T ‖D^{r+1} u‖`. -/
 theorem norm_sub_transportInterp_le (hI : IsRefInterpolant n r m G I C)
     (T : Affine.Simplex ℝ (Fin n → ℝ) n) (Φ : G ≃L[ℝ] G) {u : (Fin n → ℝ) → G}
     {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U) (hTU : T.closedInterior ⊆ U)
@@ -248,7 +190,6 @@ theorem norm_sub_transportInterp_le (hI : IsRefInterpolant n r m G I C)
   rw [transportInterp, hux, ← map_sub]
   exact (ContinuousLinearMap.le_opNorm (Φ.symm : G →L[ℝ] G) _).trans (by gcongr)
 
-/-- `(C₀ h)^k (C₀ / h)^k ≤ C₀^{2k}`. -/
 theorem pow_mul_div_pow_le {C₀ h : ℝ} (hh : 0 ≤ h) (k : ℕ) :
     (C₀ * h) ^ k * (C₀ / h) ^ k ≤ C₀ ^ (2 * k) := by
   rw [← mul_pow, pow_mul]
@@ -258,8 +199,6 @@ theorem pow_mul_div_pow_le {C₀ h : ℝ} (hh : 0 ≤ h) (k : ℕ) :
     · simp [zero_pow hk.ne']; positivity
   · rw [show C₀ * h * (C₀ / h) = C₀ ^ 2 by field_simp]
 
-/-- The fibre-map constant on a shape-regular family: `‖Φ_T⁻¹‖ ‖Φ_T‖ ≤ A² C₀^{2k}` if
-`‖Φ_T‖ ≤ A ‖B_T‖^k` and `‖Φ_T⁻¹‖ ≤ A ‖B_T⁻¹‖^k`. -/
 theorem norm_symm_mul_norm_le_of_isShapeRegular {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}
     {C₀ c : ℝ} (hS : IsShapeRegular S C₀ c) {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ S)
     (Φ : G ≃L[ℝ] G) {A : ℝ} {k : ℕ}
@@ -280,8 +219,6 @@ theorem norm_symm_mul_norm_le_of_isShapeRegular {S : Set (Affine.Simplex ℝ (Fi
           (pow_nonneg ((norm_nonneg _).trans hB) k)) (sq_nonneg A)
     _ ≤ A ^ 2 * C₀ ^ (2 * k) := by gcongr; exact pow_mul_div_pow_le hh k
 
-/-- The geometric constant of the derivative estimates on a shape-regular family:
-`‖B_T⁻¹‖^j ‖B_T‖^{r+1} ≤ C₀^{2j} (C₀ h_T)^{r+1-j}` for `j ≤ r + 1`. -/
 theorem norm_symm_pow_mul_norm_pow_le_of_isShapeRegular
     {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C₀ c : ℝ} (hS : IsShapeRegular S C₀ c)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ S) {j r : ℕ} (hj : j ≤ r + 1) :
@@ -305,9 +242,7 @@ theorem norm_symm_pow_mul_norm_pow_le_of_isShapeRegular
     _ ≤ C₀ ^ (2 * j) * (C₀ * diam T) ^ (r + 1 - j) := by
         gcongr; exact pow_mul_div_pow_le hh j
 
-/-- **Local interpolation error on a shape-regular family**: if `‖B_T‖ ≤ C₀ h_T`,
-`‖B_T⁻¹‖ ≤ C₀ / h_T`, `‖Φ_T‖ ≤ A ‖B_T‖^k` and `‖Φ_T⁻¹‖ ≤ A ‖B_T⁻¹‖^k` (the scaling of `k`-form
-pullbacks), then
+/-- On a shape-regular family, with `‖Φ_T‖ ≤ A ‖B_T‖^k` and `‖Φ_T⁻¹‖ ≤ A ‖B_T⁻¹‖^k`:
 `sup_T ‖u - Π_T u‖ ≤ A² C₀^{2k} (1 + C (m + 1)) (C₀ h_T)^{r+1} sup_T ‖D^{r+1} u‖`. -/
 theorem norm_sub_transportInterp_le_of_isShapeRegular (hI : IsRefInterpolant n r m G I C)
     (hC : 0 ≤ C) {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {C₀ c : ℝ}
@@ -339,8 +274,6 @@ theorem norm_sub_transportInterp_le_of_isShapeRegular (hI : IsRefInterpolant n r
 
 /-! ### Derivative estimates -/
 
-/-- The interpolation error on `T` is the transported reference error:
-`u - Π_T u = Φ⁻¹ ∘ (û - I û) ∘ F_T⁻¹` on all of `ℝⁿ`. -/
 theorem sub_transportInterp_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) (Φ : G ≃L[ℝ] G)
     (I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G) (u : (Fin n → ℝ) → G) :
     (fun x => u x - transportInterp T Φ I u x) = fun x =>
@@ -348,9 +281,6 @@ theorem sub_transportInterp_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) (Φ : 
   funext x
   simp [transportInterp, refPullback, map_sub]
 
-/-- **Local derivative estimate**: if the reference interpolant has the order-`j` estimate with
-constant `K` (`HasRefDerivEstimate`), then on `T`
-`sup_T ‖D^j (u - Π_T u)‖ ≤ ‖Φ⁻¹‖ ‖B_T⁻¹‖^j K ‖Φ‖ ‖B_T‖^{r+1} sup_T ‖D^{r+1} u‖`. -/
 theorem norm_iteratedFDeriv_sub_transportInterp_le {j : ℕ} {K : ℝ}
     (hI : HasRefDerivEstimate n r j G I K) (T : Affine.Simplex ℝ (Fin n → ℝ) n) (Φ : G ≃L[ℝ] G)
     {u : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U)
@@ -385,8 +315,7 @@ theorem norm_iteratedFDeriv_sub_transportInterp_le {j : ℕ} {K : ℝ}
   rw [Finset.prod_const, Finset.card_univ, Fintype.card_fin, mul_comm]
   gcongr
 
-/-- **Local derivative estimate on a shape-regular family** (the classical form of
-[Ciarlet2002], Thm 3.1.5): for `j ≤ r + 1`,
+/-- The derivative estimates on a shape-regular family, `j ≤ r + 1` ([Ciarlet2002], Thm 3.1.5):
 `sup_T ‖D^j (u - Π_T u)‖ ≤ A² C₀^{2k} K C₀^{2j} (C₀ h_T)^{r+1-j} sup_T ‖D^{r+1} u‖`. -/
 theorem norm_iteratedFDeriv_sub_transportInterp_le_of_isShapeRegular {j : ℕ} {K : ℝ}
     (hI : HasRefDerivEstimate n r j G I K) (hK : 0 ≤ K) (hj : j ≤ r + 1)

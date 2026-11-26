@@ -6,61 +6,16 @@ public import Feec.HilbertComplex.Transport
 /-!
 # Spectral methods: reducing families and spectral families
 
-A **reducing family** (`Feec.HilbertComplex.ReducingFamily`) of a Hilbert complex `H` is a family
-of closed subspaces `B_N ⊆ D(L)` of `W = ⊕ Wⁱ` that reduce the wave operator `L = 𝐝 - 𝐝*`, on
-which `L` is bounded, and whose orthogonal projections `P_N` converge strongly to `1` (not
-necessarily finite-dimensional: frequency balls on `ℝᵈ`). Its **spectral Galerkin method**
-`ReducingFamily.toApprox` (`X_N = B_N` with the inner product of `W`, `ι_N` the inclusion,
-`π_N = P_N`, `L_N = L|_{B_N}`) is an approximating FEEC discretization
-(`Feec.HilbertComplex.ApproxFEEC`) without variational crime: it is exact on the bands
-(`ReducingFamily.toApprox_sol`: `ι_N e^{tL_N} π_N x = P_N e^{tL} x`), its core is all of `W`
-with zero consistency defect (`ReducingFamily.toCore`), and truncation estimates give rate
-classes with `C' = 0` (`ReducingFamily.rateClass`).
-
-**The FEEC theorem for reducing families** (`ReducingFamily.feec`, statement
-`ReducingFamily.Verdict`): for every closed constraint `K`, the verdict of the approximating FEEC
-theorem `approxFEEC` holds on all data, the error is the truncation error of the datum at every
-time, `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ = ‖x - P_N x‖` (so a truncation estimate
-`‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` is a time-uniform rate), and a constraint that reduces `L` and that the
-truncations preserve is preserved exactly (identically zero residual).
-
-A **spectral family** (`Feec.HilbertComplex.SpectralFamily`) is an increasing sequence of
-finite-dimensional reducing subcomplexes `B_N` of `H` whose orthogonal projections converge
-strongly to `1` (the Fourier bands of a symbol complex on a torus). It has two readings:
-
-* a reducing family (`ReducingFamily.ofSpectral`: a finite-dimensional reducing subspace lies in
-  the domain, `LinearPMap.IsReducingPair.le_domain`, and `L` is bounded on it), so the FEEC
-  theorem for reducing families applies;
-* a conforming family (`ConformingFamily.ofSpectral`: `V_N = B_N`, `π_N` the orthogonal projections,
-  commuting with `d` and of norm `1`), so the constrained FEEC theorem applies
-  (`SpectralFamily.toFEEC`), and on complexes over `ℕ` or `ℤ` the FEEC theorem
-  (`Feec.HilbertComplex.ConformingFamily.feec`); there `P_N` commutes with `L` and `e^{tL}`, so the
-  graph-norm truncation errors of the orbit are those of the datum
-  (`SpectralFamily.exists_mem_graphSub_le`), and the data whose truncation errors of `x`, `L x`,
-  `L² x` decay like `(N + 1)^{-α}` form rate classes on every horizon (`SpectralFamily.rateClass`),
-  containing every band-limited datum (`SpectralFamily.mem_rateData_of_mem`).
-
-Spectral families pull back along scaled embeddings whose range the projections preserve
-(`SpectralFamily.comap`).
-
-## Main definitions
-
-* `ReducingFamily`, `ReducingFamily.toApprox`, `ReducingFamily.toCore`,
-  `ReducingFamily.rateClass`, `ReducingFamily.Verdict`.
-* `SpectralFamily`, `ReducingFamily.ofSpectral`, `ConformingFamily.ofSpectral`,
-  `SpectralFamily.toFEEC`, `SpectralFamily.rateClass`, `SpectralFamily.comap`.
+The spectral Galerkin method of a reducing family, `B_N ⊆ D(L)` reducing `L = 𝐝 - 𝐝*`, `P_N → 1`,
+is exact on the bands. A spectral family is both a reducing family and a conforming family.
 
 ## Main results
 
-* **`ReducingFamily.feec`**; `ReducingFamily.toApprox_sol`, `ReducingFamily.norm_sub_toApprox_sol`,
-  `ReducingFamily.toApprox_sol_mem`.
+* `ReducingFamily.feec`: the FEEC theorem for reducing families.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 (subcomplexes), §4.12–4.13 (Galerkin approximation of the Hodge wave equation)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (approximation property, bounded cochain projections)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -79,9 +34,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
 
 /-! ### Reducing families -/
 
-/-- A **reducing family**: closed reducing subspaces `B_N ⊆ D(L)` on which `L` is bounded, with
-orthogonal projections converging strongly to `1` (spectral families, also infinite-dimensional
-bands). -/
+/-- A reducing family: closed reducing subspaces `B_N ⊆ D(L)`, `L` bounded on them, `P_N → 1`. -/
 structure ReducingFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the bands -/
   B : κ → Submodule 𝕜 (PiLp 2 W)
@@ -122,8 +75,7 @@ theorem restrictWave_skew (N : κ) (x y : S.B N) :
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- The spectral Galerkin method: `X_N = B_N`, `ι_N` the inclusion, `π_N` the orthogonal
-projection, `L_N = L|_{B_N}`. -/
+/-- The spectral Galerkin method: `X_N = B_N`, `π_N = P_N`, `L_N = L|_{B_N}`. -/
 def toApprox (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) :
     ApproxFEEC H κ where
   K := K
@@ -160,8 +112,6 @@ private theorem hasDerivAt_of_isometry {E F : Type*} [NormedAddCommGroup E] [Nor
     funext fun r => by rw [← _root_.map_smul, ← _root_.map_sub, ← _root_.map_sub, hg]
   rw [e]; exact h
 
-/-- The projected orbit `t ↦ P_N e^{tL} x = e^{tL} P_N x` is differentiable in `B_N`, with
-derivative `L_N` of it. -/
 theorem hasDerivAt_proj_orbit (N : κ) (x : PiLp 2 W) (t : ℝ) :
     HasDerivAt (fun s => (S.B N).orthogonalProjectionOnto (H.waveGroup.S s x))
       (S.restrictWave N ((S.B N).orthogonalProjectionOnto (H.waveGroup.S t x))) t := by
@@ -181,7 +131,6 @@ theorem hasDerivAt_proj_orbit (N : κ) (x : PiLp 2 W) (t : ℝ) :
   congr 2
   exact (S.waveGroup_starProjection N t x).symm
 
-/-- **The spectral Galerkin method is exact on the band**: `ι_N e^{tL_N} P_N x = P_N e^{tL} x`. -/
 theorem toApprox_sol (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) (N : κ)
     (x : PiLp 2 W) (t : ℝ) :
     (S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t =
@@ -229,9 +178,7 @@ def toCore (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) 
     exact Metric.tendstoUniformlyOn_iff.2 fun ε hε =>
       Eventually.of_forall fun _ _ _ => by rw [dist_self]; exact hε
 
-/-- **Rate classes from truncation rates** (`C' = 0`): a truncation estimate
-`‖x - P_N x‖ ≤ C hᵅ ‖x‖_c` gives the rate on every horizon (the truncation error is conserved by
-the wave group). -/
+/-- Rate classes from truncation rates `‖x - P_N x‖ ≤ C hᵅ ‖x‖_c`, with `C' = 0`. -/
 def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) (T : ℝ)
     (Data : Set (PiLp 2 W)) (classNorm : PiLp 2 W → ℝ) (meshSize : κ → ℝ) (α C : ℝ)
     (hrate : ∀ x ∈ Data, ∀ N, ‖x - (S.B N).starProjection x‖ ≤ C * meshSize N ^ α * classNorm x) :
@@ -252,8 +199,6 @@ def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)
     rw [comparison_defect, norm_zero]; simp
 
 
-/-- **The error is the truncation error of the datum**, at every time:
-`‖e^{tL} x - ι_N e^{tL_N} π_N x‖ = ‖x - P_N x‖` (`P_N` commutes with the unitary group `e^{tL}`). -/
 theorem norm_sub_toApprox_sol (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)))
     (N : κ) (x : PiLp 2 W) (t : ℝ) :
     ‖H.waveGroup.S t x - (S.toApprox K hK).sol N ((S.toApprox K hK).proj N x) t‖ =
@@ -261,8 +206,6 @@ theorem norm_sub_toApprox_sol (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K 
   change ‖_ - (S.toApprox K hK).sol N ((S.B N).orthogonalProjectionOnto x) t‖ = _
   rw [S.toApprox_sol, ← S.waveGroup_starProjection, ← _root_.map_sub, H.isIsometric_waveGroup t]
 
-/-- **Exact constraint preservation**: if `K` reduces `L` and the truncations `P_N` map `K` into
-itself, the discrete solutions of data in `K` stay in `K` for every `N` and every `t ∈ ℝ`. -/
 theorem toApprox_sol_mem {K : Submodule 𝕜 (PiLp 2 W)} (hK : IsClosed (K : Set (PiLp 2 W)))
     (hKr : H.wave.IsReducing K) (hP : ∀ N, ∀ x ∈ K, (S.B N).starProjection x ∈ K)
     {x : PiLp 2 W} (hx : x ∈ K) (N : κ) (t : ℝ) :
@@ -272,34 +215,24 @@ theorem toApprox_sol_mem {K : Submodule 𝕜 (PiLp 2 W)} (hK : IsClosed (K : Set
   exact hP N _ (C0Group.map_le_iff_forall.1
     ((H.isReducing_iff_waveGroup_invariant K).1 hKr) t x hx)
 
-/-- **The conclusions of the FEEC theorem for a reducing family** (`ReducingFamily.feec`) with a
-closed constraint `K`: those of the approximating FEEC theorem for the spectral Galerkin method
-`toApprox` with the core `toCore` (all data, zero consistency defect), and the exactness of the
-method on the bands. -/
+/-- The conclusions of the FEEC theorem for a reducing family with a closed constraint `K`. -/
 structure Verdict (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) : Prop
     extends toApprox : (S.toApprox K hK).Verdict (S.toCore K hK) where
   /-- the method is exact on the bands: `ι_N e^{tL_N} π_N x = P_N e^{tL} x` -/
   sol_eq (N : κ) (x : PiLp 2 W) (t : ℝ) :
     (S.toApprox K hK).sol N ((S.toApprox K hK).proj N x) t =
       (S.B N).starProjection (H.waveGroup.S t x)
-  /-- the error is the truncation error of the datum, at every time:
-  `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ = ‖x - P_N x‖` -/
+  /-- the error is the truncation error of the datum -/
   norm_sub_sol (N : κ) (x : PiLp 2 W) (t : ℝ) :
     ‖H.waveGroup.S t x - (S.toApprox K hK).sol N ((S.toApprox K hK).proj N x) t‖ =
       ‖x - (S.B N).starProjection x‖
-  /-- a constraint that reduces `L` and that the truncations map into itself is preserved
-  exactly: the residual vanishes identically -/
+  /-- reducing constraints kept by the truncations are preserved exactly -/
   sol_mem (hKr : H.wave.IsReducing K) (hP : ∀ N, ∀ x ∈ K, (S.B N).starProjection x ∈ K)
     {x : PiLp 2 W} (hx : x ∈ K) (N : κ) (t : ℝ) :
     (S.toApprox K hK).sol N ((S.toApprox K hK).proj N x) t ∈ K
 
-/-- **The FEEC theorem for reducing families.** For a reducing family `S` (closed reducing
-subspaces `B_N ⊆ D(L)` on which `L` is bounded, with projections converging strongly to `1`) and
-a closed constraint `K`, the spectral Galerkin method `X_N = B_N`, `π_N = P_N`, `L_N = L|_{B_N}`
-satisfies the approximating FEEC theorem on all data (core `W`, zero consistency defect), is exact
-on the bands (`ι_N e^{tL_N} π_N x = P_N e^{tL} x`), so its error is the truncation error
-`‖x - P_N x‖` of the datum at every time, and it preserves exactly every reducing constraint that
-the truncations preserve. [QuennevilleBelair2015], §4.12–4.13 -/
+/-- **The FEEC theorem for reducing families**: the spectral Galerkin method is exact on the bands
+and satisfies the approximating FEEC theorem on all data. [QuennevilleBelair2015], §4.12–4.13 -/
 theorem feec (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) :
     S.Verdict K hK :=
   ⟨approxFEEC _ _, S.toApprox_sol K hK, S.norm_sub_toApprox_sol K hK, S.toApprox_sol_mem hK⟩
@@ -308,9 +241,7 @@ end ReducingFamily
 
 /-! ### Spectral families -/
 
-/-- A **spectral family** of a Hilbert complex `H`: finite-dimensional reducing subcomplexes `B_N`
-whose orthogonal projections converge strongly to the identity (e.g. Fourier bands of a symbol
-complex). See [QuennevilleBelair2015], §4.12–4.13. -/
+/-- A spectral family: finite-dimensional reducing subcomplexes `B_N` with projections `→ 1`. -/
 structure SpectralFamily (H : HilbertComplex 𝕜 c W) where
   /-- the spaces of the family -/
   B : ℕ → ∀ i, Submodule 𝕜 (W i)
@@ -358,8 +289,7 @@ theorem tendsto_totalProj (x : PiLp 2 W) :
   exact ((PiLp.continuous_toLp 2 _).tendsto _).comp
     (tendsto_pi_nhds.2 fun i => S.tendsto i (x i))
 
-/-- **A spectral family is a conforming family**: `V_N = B_N`, `π_N` the orthogonal projections
-(norm `1`), along `N → ∞`; `dist(x, B_N) ≤ ‖x - P_N x‖ → 0`. -/
+/-- A spectral family as a conforming family: `V_N = B_N`, `π_N` the orthogonal projections. -/
 def _root_.Feec.HilbertComplex.ConformingFamily.ofSpectral : ConformingFamily H ℕ where
   l := atTop
   V := S.sub
@@ -372,8 +302,7 @@ def _root_.Feec.HilbertComplex.ConformingFamily.ofSpectral : ConformingFamily H 
     exact ⟨_, Submodule.starProjection_apply_mem (S.B N i) y,
       by rwa [dist_comm, dist_eq_norm] at hN⟩
 
-/-- **The constrained FEEC discretization of a spectral family** with a closed constraint `K`:
-`V_N = B_N`, `π_N` the orthogonal projections (norm `1`), along `N → ∞`. -/
+/-- The constrained FEEC discretization of a spectral family with a closed constraint `K`. -/
 def toFEEC (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) :
     ConstrainedFEEC H ℕ :=
   (ConformingFamily.ofSpectral S).withConstraint K hK
@@ -399,21 +328,16 @@ omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 theorem isReducing_wave (N : ℕ) : H.wave.IsReducing (totalSub (S.B N)) :=
   (S.reducing N).isReducing_wave
 
-/-- `P_N` commutes with the wave group. -/
 theorem waveGroup_P (N : ℕ) (t : ℝ) (x : PiLp 2 W) :
     H.waveGroup.S t (S.P N x) = S.P N (H.waveGroup.S t x) :=
   H.isIsometric_waveGroup.S_starProjection (fun s _ hy => (S.reducing N).waveGroup_mem s hy) t x
 
-/-- The truncation error is conserved by the wave group. -/
 theorem norm_waveGroup_sub_P (N : ℕ) (t : ℝ) (x : PiLp 2 W) :
     ‖H.waveGroup.S t x - S.P N (H.waveGroup.S t x)‖ = ‖x - S.P N x‖ := by
   rw [← S.waveGroup_P, ← _root_.map_sub]
   exact H.isIsometric_waveGroup t _
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- **The graph-norm truncation error** of `y ∈ D(L)`: for every `v ∈ Γ(𝐝)` over `y` there is
-`w ∈ B_N` with `‖v - w‖ ≤ ‖y - P_N y‖ + ‖L y - P_N L y‖` (`‖𝐝 z‖ ≤ ‖L z‖`, and `P_N` commutes
-with `𝐝` and `L`). -/
 theorem exists_mem_graphSub_le (N : ℕ) {y : PiLp 2 W} (hy : y ∈ H.wave.domain)
     (v : H.totalD.GraphSpace) (hv : H.totalD.graphFst v = y) :
     ∃ w ∈ (S.sub N).graphSub, ‖v - w‖ ≤
@@ -463,14 +387,12 @@ omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 theorem tail_nonneg (N : ℕ) (x : PiLp 2 W) : 0 ≤ S.tail N x := by
   unfold tail; positivity
 
-/-- **The approximation class of order `α`**: data `x ∈ D(L²)` whose truncation errors of `x`,
-`L x`, `L² x` are `O((N + 1)^{-α})`. -/
+/-- The approximation class of order `α`: `x ∈ D(L²)` with truncation errors `O((N + 1)^{-α})`. -/
 def rateData (α : ℝ) : Set (PiLp 2 W) :=
   {x | x ∈ H.wave.domain ∧ H.waveExt x ∈ H.wave.domain ∧
     BddAbove (range fun N : ℕ => ((N : ℝ) + 1) ^ α * S.tail N x)}
 
-/-- The norm of the approximation class: `sup_N (N + 1)^α (‖(1 - P_N) x‖ + ‖(1 - P_N) L x‖ +
-‖(1 - P_N) L² x‖)`. -/
+/-- The norm `sup_N (N + 1)^α tail_N(x)` of the approximation class. -/
 def rateNorm (α : ℝ) (x : PiLp 2 W) : ℝ := ⨆ N : ℕ, ((N : ℝ) + 1) ^ α * S.tail N x
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
@@ -484,9 +406,6 @@ theorem tail_le_rateNorm {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N
   exact hle
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- **Membership in the approximation class from a tail bound**: if `x ∈ D(L²)` and
-`tail_N(x) ≤ (N + 1)^{-α} B` for all `N`, then `x` lies in the class of order `α` with norm
-`≤ B`. -/
 theorem mem_rateData_of_tail_le {α B : ℝ} {x : PiLp 2 W} (hx : x ∈ H.wave.domain)
     (hLx : H.waveExt x ∈ H.wave.domain)
     (h : ∀ N : ℕ, S.tail N x ≤ (1 / ((N : ℝ) + 1)) ^ α * B) :
@@ -502,7 +421,6 @@ theorem mem_rateData_of_tail_le {α B : ℝ} {x : PiLp 2 W} (hx : x ∈ H.wave.d
   exact ⟨⟨hx, hLx, ⟨B, by rintro _ ⟨N, rfl⟩; exact htail N⟩⟩, ciSup_le htail⟩
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- The truncation error of `x` is bounded by its class norm: `‖x - P_N x‖ ≤ (N + 1)^{-α} ‖x‖_α`. -/
 theorem norm_sub_P_le_rateNorm {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData α) (N : ℕ) :
     ‖x - S.P N x‖ ≤ 1 * (1 / ((N : ℝ) + 1)) ^ α * S.rateNorm α x := by
   have h1 : ‖x - S.P N x‖ ≤ S.tail N x := by
@@ -511,8 +429,7 @@ theorem norm_sub_P_le_rateNorm {α : ℝ} {x : PiLp 2 W} (hx : x ∈ S.rateData 
       norm_nonneg (H.waveExt (H.waveExt x) - S.P N (H.waveExt (H.waveExt x)))]
   exact h1.trans (S.tail_le_rateNorm hx N)
 
-/-- **The rate class of a spectral discretization** on the horizon `[0, T]`: the approximation
-class of order `α`, with `h_N = 1/(N + 1)`, `C = 1` and the norm `rateNorm α`. -/
+/-- The rate class of a spectral discretization on `[0, T]`, with `h_N = 1/(N + 1)`. -/
 def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W))) (α T : ℝ) :
     (S.toFEEC K hK).RateClass T where
   Data := S.rateData α
@@ -542,13 +459,10 @@ def rateClass (K : Submodule 𝕜 (PiLp 2 W)) (hK : IsClosed (K : Set (PiLp 2 W)
     linarith
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- A finite-dimensional reducing subspace of the wave operator lies in `D(L)`. -/
 theorem totalSub_le_domain (M : ℕ) : totalSub (S.B M) ≤ H.wave.domain := by
   exact (S.isReducing_wave M).le_domain H.isSkewAdjoint_wave.dense_domain
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- **Band-limited data are in every approximation class**: if `x ∈ ∏ B_M`, then `x ∈ D(L²)` and
-the truncation errors vanish for `N ≥ M`. -/
 theorem mem_rateData_of_mem {M : ℕ} {x : PiLp 2 W} (hx : x ∈ totalSub (S.B M)) (α : ℝ) :
     x ∈ S.rateData α := by
   have hR := S.isReducing_wave M
@@ -581,7 +495,7 @@ end Rate
 
 section Reducing
 
-/-- `L` on the band `∏ B_N`, a bounded operator (the band is finite-dimensional). -/
+/-- `L` on the band `∏ B_N`, a bounded operator. -/
 def waveBand (N : ℕ) : totalSub (S.B N) →L[𝕜] PiLp 2 W :=
   LinearMap.toContinuousLinearMap
     { toFun := fun x => H.wave ⟨x, S.totalSub_le_domain N x.2⟩
@@ -592,14 +506,12 @@ def waveBand (N : ℕ) : totalSub (S.B N) →L[𝕜] PiLp 2 W :=
         change H.wave (a • ⟨x, S.totalSub_le_domain N x.2⟩) = _
         rw [LinearPMap.map_smul]; rfl }
 
-/-- The orthogonal projections onto the bands `∏ B_N` converge strongly to `1`. -/
 theorem tendsto_starProjection (x : PiLp 2 W) :
     Tendsto (fun N => (totalSub (S.B N)).starProjection x) atTop (𝓝 x) :=
   (S.tendsto_totalProj x).congr fun N => PiLp.ext fun i => by
     rw [totalSub_starProjection_apply, totalProj_apply]
 
-/-- **A spectral family is a reducing family**: the bands `∏ B_N` are finite-dimensional reducing
-subspaces in `D(L)` on which `L` is bounded, and their projections converge strongly to `1`. -/
+/-- A spectral family as a reducing family, with the bands `∏ B_N`. -/
 def _root_.Feec.HilbertComplex.ReducingFamily.ofSpectral : ReducingFamily H ℕ where
   B N := totalSub (S.B N)
   l := atTop
@@ -618,7 +530,6 @@ variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerPro
   [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex 𝕜 c W'}
 
 omit [Fintype ι] in
-/-- A scaled embedding scales norms by `√(scale i)`. -/
 theorem norm_scaledEmbedding_J (E : ScaledEmbedding H H') (i : ι) (x : W i) :
     ‖E.J i x‖ = √(E.scale i) * ‖x‖ := by
   have h := E.inner_J i x x
@@ -627,8 +538,7 @@ theorem norm_scaledEmbedding_J (E : ScaledEmbedding H H') (i : ι) (x : W i) :
   rw [← Real.sqrt_sq (norm_nonneg (E.J i x)), h', Real.sqrt_mul (E.scale_pos i).le,
     Real.sqrt_sq (norm_nonneg x)]
 
-/-- **Spectral families pull back along scaled embeddings** whose range the projections
-preserve: `J⁻¹ B'_N`. -/
+/-- The pull-back of a spectral family along a scaled embedding whose range it preserves. -/
 def comap (E : ScaledEmbedding H H') (S : SpectralFamily H')
     (hS : ∀ N i x, ∃ y, E.J i y = (S.B N i).starProjection (E.J i x)) : SpectralFamily H where
   B N i := (S.B N i).comap (E.J i : W i →ₗ[𝕜] W' i)

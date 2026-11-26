@@ -14,73 +14,21 @@ public import Mathlib.MeasureTheory.Measure.Lebesgue.EqHaar
 /-!
 # The Bramble–Hilbert lemma on the reference simplex (classical form)
 
-For a function `f` that is `C^{r+1}` on a neighbourhood of a convex set `K`, the Taylor
-polynomial `p = T_{r+1} f` of degree `≤ r` at a point `x₀ ∈ K`,
-`p x = ∑_{i ≤ r} (1/i!) D^i f(x₀)(x - x₀, …, x - x₀)`, satisfies
-`‖D^j (f - p)(x)‖ ≤ d^{r+1-j} sup_K ‖D^{r+1} f‖` on `K` for all `0 ≤ j ≤ r + 1`, where
-`d = sup_{y ∈ K} ‖y - x₀‖` (`norm_iteratedFDeriv_sub_taylorPoly_le`). This is the classical
-(`C^{r+1}`, sup-norm) form of the Bramble–Hilbert lemma ([BrambleHilbert1970];
-[Ciarlet2002], Thm 3.1.1 and §3.1; [Arnold2018], Ch. 7): polynomials of degree `≤ r`
-approximate `f` up to `|f|_{r+1}`. Sobolev spaces do not appear; all seminorms are suprema of
-iterated Fréchet derivatives.
-
-The proof is an induction on the order: `D (f - T_{k+1} f) = D f - T_k (D f)`
-(`hasFDerivAt_taylorPoly`), so the estimate for `D^{j+1}` is the estimate of order `k` for
-`D f`, and the case `j = 0` follows from the mean value inequality, since `f - T_{k+1} f`
-vanishes at `x₀`. The identity `D (T_{k+1} f) = T_k (D f)` uses the symmetry of the iterated
-derivatives `D^i f(x₀)`, `i ≤ k`, of a `C^k` function, which is proved here
-(`iteratedFDeriv_comp_perm_of_contDiffAt`) from Mathlib's symmetry of second derivatives;
-Mathlib states it only for analytic functions.
-
-On the reference simplex `T̂ = conv {0, e₀, …, e_{n-1}}` (`Feec.Mesh.refSimplex`) with the sup
-norm of `ℝⁿ = Fin n → ℝ` (Mathlib's norm), every two points are at distance `≤ 1`, so with
-`x₀` the barycenter the constant is `1`:
-`sup_{T̂} ‖D^j (f - p)‖ ≤ sup_{T̂} ‖D^{r+1} f‖`, `j ≤ r + 1`
-(`norm_iteratedFDeriv_sub_taylorPoly_refSimplex_le`). The polynomial space is
-`P_r(ℝⁿ; G)` (`polyFunctions n r G`), the span of the maps `x ↦ q(x) • c` with `q` an
-`MvPolynomial` of total degree `≤ r` and `c ∈ G`; the Taylor polynomial lies in it
-(`taylorPoly_mem_polyFunctions`). Values in a normed space `G` cover scalar functions,
-vector fields and differential forms (coefficients in a fibre space) at once.
-
-The abstract consequence ([Ciarlet2002], Thm 3.1.4): if a reference interpolant `I` is
-additive on `C^{r+1}` functions, reproduces `P_r` on `T̂`, and is stable,
-`sup_{T̂} ‖I g‖ ≤ C_I ∑_{j ≤ m} sup_{T̂} ‖D^j g‖` with `m ≤ r + 1` (`IsRefInterpolant`), then
-`sup_{T̂} ‖f - I f‖ ≤ (1 + C_I (m + 1)) sup_{T̂} ‖D^{r+1} f‖`
-(`IsRefInterpolant.norm_sub_le`), and the `L²(T̂)` version follows
-(`IsRefInterpolant.eLpNorm_sub_le`). The reference error estimate in higher seminorms,
-`sup_{T̂} ‖D^j (f - I f)‖ ≤ K sup_{T̂} ‖D^{r+1} f‖`, is the hypothesis `HasRefDerivEstimate`.
-Suprema are written as bounds: a hypothesis `∀ y ∈ T̂, ‖D^{r+1} f y‖ ≤ M` stands for
-`sup_{T̂} ‖D^{r+1} f‖ ≤ M`. The Taylor estimate passes from `f` to `D f`, so its domain and
-codomain live in one universe; from the reference simplex on, the value space `G` is in `Type`
-(this covers `ℝ`, `ℝⁿ` and the alternating forms on `ℝⁿ`).
-
-## Main definitions
-
-* `Feec.FiniteElement.taylorPoly f x₀ k`: the Taylor polynomial of degree `< k` of `f` at `x₀`.
-* `Feec.FiniteElement.polyFunctions n r G`: `P_r(ℝⁿ; G)`.
-* `Feec.FiniteElement.refBarycenter n`: the barycenter of `T̂`.
-* `Feec.FiniteElement.IsRefInterpolant n r m G I C`: hypotheses on a reference interpolant.
-* `Feec.FiniteElement.HasRefDerivEstimate n r j G I K`: the order-`j` reference error
-  estimate.
+Taylor polynomials give the classical (`C^{r+1}`, sup-norm) Bramble–Hilbert lemma
+([BrambleHilbert1970]; [Ciarlet2002], Thm 3.1.1; [Arnold2018], Ch. 7) and the error of reference
+interpolants.
 
 ## Main results
 
-* `iteratedFDeriv_comp_perm_of_contDiffAt`: the `k`-th derivative of a `C^k` function is
-  symmetric.
-* `hasFDerivAt_taylorPoly`: `D (T_{k+1} f) = T_k (D f)`.
-* `norm_iteratedFDeriv_sub_taylorPoly_le`: the Taylor estimate on a convex set, all orders
-  `j ≤ k`.
-* `norm_iteratedFDeriv_sub_taylorPoly_refSimplex_le`: **Bramble–Hilbert on `T̂`**.
-* `IsRefInterpolant.norm_sub_le`, `IsRefInterpolant.eLpNorm_sub_le`: the reference
-  interpolation error in `L^∞` and `L²`.
+* `norm_iteratedFDeriv_sub_taylorPoly_le`: the Taylor estimate on a convex set.
+* `norm_iteratedFDeriv_sub_taylorPoly_refSimplex_le`: the Bramble–Hilbert lemma on `T̂`.
+* `IsRefInterpolant.norm_sub_le`: the interpolation error of a reference interpolant.
 
 ## References
 
 * [J. H. Bramble, S. R. Hilbert, *Estimation of Linear Functionals on Sobolev Spaces with Application to Fourier Transforms and Spline Interpolation*][BrambleHilbert1970]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.1
-  (polynomial approximation), Thm 3.1.4 (error estimate for `P_r`-invariant interpolants), §3.1
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates)
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -100,10 +48,6 @@ section Symmetry
 variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
   [NormedSpace ℝ F]
 
-/-- The `k`-th iterated derivative of a function that is `C^k` at `x` is symmetric. (Mathlib's
-`ContDiffAt.iteratedFDeriv_comp_perm` assumes analyticity.) The permutations fixing `0` are
-handled by induction (the `(k-1)`-st derivative is symmetric near `x`), the transposition
-`(0 1)` by the symmetry of second derivatives, and these generate all permutations. -/
 theorem iteratedFDeriv_comp_perm_of_contDiffAt {k : ℕ} {f : E → F} {x : E}
     (hf : ContDiffAt ℝ k f x) (v : Fin k → E) (σ : Equiv.Perm (Fin k)) :
     iteratedFDeriv ℝ k f x (v ∘ σ) = iteratedFDeriv ℝ k f x v := by
@@ -190,15 +134,13 @@ section Taylor
 variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
   [NormedSpace ℝ F]
 
-/-- The Taylor polynomial of degree `< k` of `f` at `x₀`:
-`T_k f (x) = ∑_{i < k} (1/i!) D^i f(x₀)(x - x₀, …, x - x₀)`. -/
+/-- The Taylor polynomial `T_k f (x) = ∑_{i < k} (1/i!) D^i f(x₀)(x - x₀, …, x - x₀)`. -/
 def taylorPoly (f : E → F) (x₀ : E) (k : ℕ) (x : E) : F :=
   ∑ i ∈ Finset.range k, ((i.factorial : ℝ)⁻¹ • iteratedFDeriv ℝ i f x₀ (fun _ => x - x₀))
 
 theorem taylorPoly_zero (f : E → F) (x₀ : E) : taylorPoly f x₀ 0 = 0 := by
   funext x; simp [taylorPoly]
 
-/-- `T_{k+1} f (x₀) = f (x₀)`. -/
 theorem taylorPoly_self (f : E → F) (x₀ : E) (k : ℕ) :
     taylorPoly f x₀ (k + 1) x₀ = f x₀ := by
   rw [taylorPoly, Finset.sum_range_succ']
@@ -207,8 +149,6 @@ theorem taylorPoly_self (f : E → F) (x₀ : E) (k : ℕ) :
   rw [Finset.sum_eq_zero fun i _ => by
     rw [ContinuousMultilinearMap.map_coord_zero _ (0 : Fin (i + 1)) rfl, smul_zero], zero_add]
 
-/-- `D (T_{k+1} f) = T_k (D f)`, for `f` of class `C^k` at `x₀` (symmetry of `D^i f(x₀)` is
-used). -/
 theorem hasFDerivAt_taylorPoly {f : E → F} {x₀ : E} {k : ℕ} (hf : ContDiffAt ℝ k f x₀)
     (x : E) : HasFDerivAt (taylorPoly f x₀ (k + 1)) (taylorPoly (fderiv ℝ f) x₀ k x) x := by
   have hlin : ∀ i : ℕ, HasFDerivAt (fun y : E => fun _ : Fin i => y - x₀)
@@ -244,7 +184,6 @@ theorem hasFDerivAt_taylorPoly {f : E → F} {x₀ : E} {k : ℕ} (hf : ContDiff
   push_cast
   field_simp
 
-/-- Taylor polynomials are smooth. -/
 theorem contDiff_taylorPoly (f : E → F) (x₀ : E) (k : ℕ) {N : WithTop ℕ∞} :
     ContDiff ℝ N (taylorPoly f x₀ k) := by
   unfold taylorPoly
@@ -262,10 +201,8 @@ universe u
 variable {E' F' : Type u} [NormedAddCommGroup E'] [NormedSpace ℝ E'] [NormedAddCommGroup F']
   [NormedSpace ℝ F']
 
-/-- **Taylor estimate on a convex set, all orders.** If `f` is `C^k` on an open `U ⊇ K`, `K` is
-convex, `x₀ ∈ K`, `‖y - x₀‖ ≤ d` and `‖D^k f(y)‖ ≤ M` for `y ∈ K`, then
-`‖D^j (f - T_k f)(x)‖ ≤ d^{k-j} M` on `K` for every `j ≤ k`. (Domain and codomain lie in one
-universe because the induction passes from `f` to `D f`.) -/
+/-- The Taylor estimate on a convex set `K`: for `f` of class `C^k` near `K`, `x₀ ∈ K`,
+`‖D^j (f - T_k f)‖ ≤ d^{k-j} sup_K ‖D^k f‖` on `K` for `j ≤ k`, `d ≥ ‖y - x₀‖` on `K`. -/
 theorem norm_iteratedFDeriv_sub_taylorPoly_le {k : ℕ} {f : E' → F'} {U K : Set E'} {x₀ : E'}
     {d M : ℝ} (hU : IsOpen U) (hKU : K ⊆ U) (hK : Convex ℝ K) (hx₀ : x₀ ∈ K)
     (hf : ContDiffOn ℝ k f U) (hd : ∀ y ∈ K, ‖y - x₀‖ ≤ d)
@@ -320,14 +257,12 @@ open MvPolynomial
 
 variable {n : ℕ} {G : Type v} [NormedAddCommGroup G] [NormedSpace ℝ G]
 
-/-- `P_r(ℝⁿ; G)`: the span of the maps `x ↦ q(x) • c`, `q` a polynomial of total degree `≤ r`
-in the coordinates of `ℝⁿ = Fin n → ℝ` and `c ∈ G`. -/
+/-- `P_r(ℝⁿ; G)`: the span of the maps `x ↦ q(x) • c`, `q` of total degree `≤ r`, `c ∈ G`. -/
 def polyFunctions (n r : ℕ) (G : Type*) [NormedAddCommGroup G] [NormedSpace ℝ G] :
     Submodule ℝ ((Fin n → ℝ) → G) :=
   Submodule.span ℝ {g | ∃ q : MvPolynomial (Fin n) ℝ, q.totalDegree ≤ r ∧
     ∃ c : G, g = fun x => MvPolynomial.eval x q • c}
 
-/-- `x ↦ A(x - x₀, …, x - x₀)` is a polynomial of degree `≤ i` for an `i`-linear map `A`. -/
 theorem multilinear_diag_mem_polyFunctions {i r : ℕ} (hi : i ≤ r)
     (A : ContinuousMultilinearMap ℝ (fun _ : Fin i => Fin n → ℝ) G) (x₀ : Fin n → ℝ) :
     (fun x => A (fun _ => x - x₀)) ∈ polyFunctions n r G := by
@@ -350,7 +285,6 @@ theorem multilinear_diag_mem_polyFunctions {i r : ℕ} (hi : i ≤ r)
         (MvPolynomial.totalDegree_sub_C_le _ _).trans (MvPolynomial.totalDegree_X _).le
     _ ≤ r := by simpa using hi
 
-/-- The Taylor polynomial `T_{r+1} f` lies in `P_r`. -/
 theorem taylorPoly_mem_polyFunctions (f : (Fin n → ℝ) → G) (x₀ : Fin n → ℝ) (r : ℕ) :
     taylorPoly f x₀ (r + 1) ∈ polyFunctions n r G := by
   have : taylorPoly f x₀ (r + 1) = ∑ i ∈ Finset.range (r + 1),
@@ -362,7 +296,6 @@ theorem taylorPoly_mem_polyFunctions (f : (Fin n → ℝ) → G) (x₀ : Fin n �
 
 /-! ### Calculus of polynomial functions -/
 
-/-- Polynomial functions are smooth. -/
 theorem contDiff_eval (q : MvPolynomial (Fin n) ℝ) {N : WithTop ℕ∞} :
     ContDiff ℝ N fun y : Fin n → ℝ => eval y q := by
   induction q using MvPolynomial.induction_on with
@@ -381,7 +314,6 @@ theorem contDiff_of_mem_polyFunctions {r : ℕ} {p : (Fin n → ℝ) → G}
   | add f g _ _ hf hg => exact hf.add hg
   | smul a f _ hf => exact hf.const_smul a
 
-/-- Elements of `P_0` are constant. -/
 theorem fderiv_eq_zero_of_mem_polyFunctions_zero {p : (Fin n → ℝ) → G}
     (hp : p ∈ polyFunctions n 0 G) : fderiv ℝ p = 0 := by
   induction hp using Submodule.span_induction with
@@ -422,7 +354,6 @@ theorem refBarycenter_mem : refBarycenter n ∈ (refSimplex n).closedInterior :=
   rw [← div_eq_mul_inv, div_le_one (by positivity)]
   linarith
 
-/-- In the sup norm, points of `T̂` are at distance `≤ 1`. -/
 theorem norm_sub_le_one_of_mem_refSimplex {x y : Fin n → ℝ}
     (hx : x ∈ (refSimplex n).closedInterior) (hy : y ∈ (refSimplex n).closedInterior) :
     ‖x - y‖ ≤ 1 := by
@@ -433,9 +364,8 @@ theorem norm_sub_le_one_of_mem_refSimplex {x y : Fin n → ℝ}
   rw [Pi.sub_apply, Real.norm_eq_abs, abs_le]
   constructor <;> linarith [hx.1 i, hy.1 i, hle x hx.1 hx.2 i, hle y hy.1 hy.2 i]
 
-/-- **Bramble–Hilbert on the reference simplex** (classical form): for `f` of class `C^{r+1}` on an
-open neighbourhood of `T̂`, its Taylor polynomial `p ∈ P_r` at the barycenter satisfies
-`sup_{T̂} ‖D^j (f - p)‖ ≤ sup_{T̂} ‖D^{r+1} f‖` for `0 ≤ j ≤ r + 1` (sup norm on `ℝⁿ`). -/
+/-- The Bramble–Hilbert lemma on `T̂`: for `f` of class `C^{r+1}` near `T̂` and `p` its Taylor
+polynomial at the barycenter, `sup_{T̂} ‖D^j (f - p)‖ ≤ sup_{T̂} ‖D^{r+1} f‖` for `j ≤ r + 1`. -/
 theorem norm_iteratedFDeriv_sub_taylorPoly_refSimplex_le {r : ℕ} {f : (Fin n → ℝ) → G}
     {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U) (hTU : (refSimplex n).closedInterior ⊆ U)
     (hf : ContDiffOn ℝ (r + 1) f U)
@@ -447,30 +377,24 @@ theorem norm_iteratedFDeriv_sub_taylorPoly_refSimplex_le {r : ℕ} {f : (Fin n �
     (fun y hy => norm_sub_le_one_of_mem_refSimplex hy refBarycenter_mem) hM hx hj
   rwa [one_pow, one_mul] at h
 
-/-- Hypotheses on a reference interpolant `I` acting on `G`-valued functions on `ℝⁿ`, of order
-`r` with stability order `m ≤ r + 1` and stability constant `C`, for functions that are
-`C^{r+1}` near `T̂` ([Ciarlet2002], Thm 3.1.4): `I` is additive on such functions (on `T̂`),
-reproduces `P_r` on `T̂`, and `sup_{T̂} ‖I g‖ ≤ C ∑_{j ≤ m} sup_{T̂} ‖D^j g‖` (with the suprema
-written as bounds `B j`). For a Lagrange or Whitney-type interpolant, `m` is the highest order
-of derivative entering its degrees of freedom. -/
+/-- A reference interpolant ([Ciarlet2002], Thm 3.1.4): additive, exact on `P_r`, `C^m`-stable. -/
 structure IsRefInterpolant (n r m : ℕ) (G : Type*) [NormedAddCommGroup G] [NormedSpace ℝ G]
     (I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G) (C : ℝ) : Prop where
-  /-- The degrees of freedom use derivatives of order at most `r + 1`. -/
   le_succ : m ≤ r + 1
-  /-- Additivity on `C^{r+1}` functions, on `T̂`. -/
+  /-- additivity on `C^{r+1}` functions -/
   map_sub : ∀ V : Set (Fin n → ℝ), IsOpen V → (refSimplex n).closedInterior ⊆ V →
     ∀ f g, ContDiffOn ℝ (r + 1) f V → ContDiffOn ℝ (r + 1) g V →
     ∀ x ∈ (refSimplex n).closedInterior, I (f - g) x = I f x - I g x
-  /-- `I p = p` on `T̂` for `p ∈ P_r`. -/
+  /-- exactness on `P_r` -/
   apply_eq : ∀ p ∈ polyFunctions n r G, ∀ x ∈ (refSimplex n).closedInterior, I p x = p x
-  /-- Stability in the `C^m(T̂)` norm. -/
+  /-- stability in `C^m(T̂)` -/
   norm_le : ∀ V : Set (Fin n → ℝ), IsOpen V → (refSimplex n).closedInterior ⊆ V →
     ∀ g, ContDiffOn ℝ (r + 1) g V → ∀ B : ℕ → ℝ,
     (∀ j ≤ m, ∀ y ∈ (refSimplex n).closedInterior, ‖iteratedFDeriv ℝ j g y‖ ≤ B j) →
     ∀ x ∈ (refSimplex n).closedInterior, ‖I g x‖ ≤ C * ∑ j ∈ Finset.range (m + 1), B j
 
-/-- **Interpolation error on `T̂`** ([Ciarlet2002], Thm 3.1.4, classical form):
-`sup_{T̂} ‖f - I f‖ ≤ (1 + C (m + 1)) sup_{T̂} ‖D^{r+1} f‖`. -/
+/-- The interpolation error on `T̂`: `sup_{T̂} ‖f - I f‖ ≤ (1 + C (m + 1)) sup_{T̂} ‖D^{r+1} f‖`
+([Ciarlet2002], Thm 3.1.4, classical form). -/
 theorem IsRefInterpolant.norm_sub_le {r m : ℕ} {I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G} {C : ℝ}
     (hI : IsRefInterpolant n r m G I C) {f : (Fin n → ℝ) → G}
     {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U) (hTU : (refSimplex n).closedInterior ⊆ U)
@@ -498,10 +422,6 @@ theorem measurableSet_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) 
     MeasurableSet T.closedInterior :=
   T.isCompact_closedInterior.isClosed.measurableSet
 
-/-- **`L²(T̂)` interpolation error**, `eLpNorm` form:
-`‖f - I f‖_{L²(T̂)} ≤ |T̂|^{1/2} (1 + C (m + 1)) sup_{T̂} ‖D^{r+1} f‖`. Mathlib's `eLpNorm` is
-`∞` on non-measurable functions, hence the measurability hypothesis (the `lintegral` form needs
-none). -/
 theorem IsRefInterpolant.eLpNorm_sub_le {r m : ℕ} {I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G}
     {C : ℝ} (hI : IsRefInterpolant n r m G I C) {f : (Fin n → ℝ) → G}
     {U : Set (Fin n → ℝ)} {M : ℝ} (hU : IsOpen U) (hTU : (refSimplex n).closedInterior ⊆ U)
@@ -519,11 +439,7 @@ theorem IsRefInterpolant.eLpNorm_sub_le {r m : ℕ} {I : ((Fin n → ℝ) → G)
 
 /-! ### Derivative estimates for reference interpolants -/
 
-/-- `I` satisfies the **reference error estimate of order `j`** with constant `K`: for every `f`
-of class `C^{r+1}` on an open neighbourhood of `T̂`,
-`sup_{T̂} ‖D^j (f - I f)‖ ≤ K sup_{T̂} ‖D^{r+1} f‖` ([Ciarlet2002], Thm 3.1.4, `W^{j,∞}`
-seminorm in its classical form). This is the hypothesis transported to the physical simplex for
-the derivative estimates (`Feec.FiniteElement.norm_iteratedFDeriv_sub_transportInterp_le`). -/
+/-- The reference error estimate of order `j`: `sup ‖D^j (f - I f)‖ ≤ K sup ‖D^{r+1} f‖` on `T̂`. -/
 def HasRefDerivEstimate (n r j : ℕ) (G : Type*) [NormedAddCommGroup G] [NormedSpace ℝ G]
     (I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G) (K : ℝ) : Prop :=
   ∀ (V : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → G) (M : ℝ), IsOpen V →

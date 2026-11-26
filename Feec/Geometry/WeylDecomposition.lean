@@ -5,41 +5,13 @@ public import Feec.Geometry.Hodge2
 /-!
 # Algebraic Weyl tensors: block form, electric and magnetic parts, reconstruction
 
-In a four-dimensional Minkowski orthonormal frame. The thesis presents the Bel decomposition
-following [Friedrich1996] and [ACBY1997], and its linearized form following [Frauendiener2007]
-([QuennevilleBelair2015], §1.1, §3.2–3.3). Its uses for gravitational-wave extraction
-([Sperhake2007]; [Alcubierre2008], §8.6–8.9) and for visualising curvature ([Owen2011]) are
-motivation only and are not formalized.
-
-## Main definitions
-
-* `DoubleForm.IsWeyl C`: pair skew, first Bianchi, `η`-trace-free.
-* `DoubleForm.elec n C = (n^c n^d C_cadb)_ab` (electric part relative to `n`); the magnetic part
-  is `elec n (rdual C)`.
-* `DoubleForm.STF` (symmetric trace-free `3 × 3`), `DoubleForm.weylSpace`.
-
-## Main results
-
-* `weyl_iff` (Prop 3.3, corollary): Weyl ⇔ block matrix `[[E, B], [B, -E]]` with `E, B`
-  symmetric trace-free; `ldual_eq_rdual`: `*W = W*`; `IsWeyl.rdual`.
-* `electric_magnetic_props` (**Prop 3.1**): the electric and magnetic parts are symmetric,
-  trace-free and orthogonal to `n`, for every `n`.
-* `weyl_reconstruct`, `weyl_reconstruct_unit` (**(3.2)**): `W` is recovered from `E, B` for every
-  unit timelike `n` (via the homogenised identity `recon_hom`).
-* `finrank_weylSpace`: algebraic Weyl tensors in four dimensions form a 10-dimensional space.
+Algebraic Weyl tensors in a Minkowski orthonormal frame: their block form, their electric and
+magnetic parts, the reconstruction (3.2) and the dimension 10 of their space
+([QuennevilleBelair2015], §3.2–§3.3).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.2–3.3 (Props 3.1, 3.3, (3.2))
-* [L. Bel, *Définition d'une densité d'énergie et d'un état de radiation totale généralisée*][Bel1958]
-* [M. Alcubierre, *Introduction to 3+1 Numerical Relativity*][Alcubierre2008]
-* [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
-* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
-* [R. M. Wald, *General Relativity*][Wald1984]
-* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
-* [U. Sperhake, *Binary black-hole evolutions of excision and puncture data*][Sperhake2007]
-* [R. Owen, J. Brink, Y. Chen, J. D. Kaplan, G. Lovelace, K. D. Matthews, D. A. Nichols, M. A. Scheel, F. Zhang, A. Zimmerman, K. S. Thorne, *Frame-dragging vortexes and tidal tendexes attached to colliding black holes: visualizing the curvature of spacetime*][Owen2011]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -54,24 +26,14 @@ namespace Feec.DoubleForm
 
 /-! ### Algebraic Weyl tensors: the block form -/
 
-/-- An algebraic Weyl tensor in a Minkowski orthonormal frame: skew in each pair, first
-Bianchi identity, and `η`-trace-free. See [QuennevilleBelair2015], §3.2, which splits the
-Riemann tensor as `R = M + W` (Ricci part plus Weyl tensor) following [Alcubierre2008], p. 288
-and [Friedrich1996]; only the algebraic Weyl tensor is formalized here, not the splitting.
-Cf. [Wald1984]. -/
+/-- An algebraic Weyl tensor in a Minkowski frame: pair skew, first Bianchi and `η`-trace-free. -/
 structure IsWeyl (C : Tensor4) : Prop where
   pairSkew : PairSkew C
   bianchi : Bianchi1 C
   traceFree : ∀ b c, mtr C b c = 0
 
-/-- **Thesis Prop 3.3, corollary.** `C` is an algebraic Weyl tensor iff its bivector matrix is
-`[[E, B], [B, -E]]` with `E, B` symmetric and trace-free.
-
-Thesis gap: `tr B = 0` needs Prop 3.3(ii) together with `H = Bᵀ = B`; the thesis does not say
-so. Correction: the thesis introduces this matrix form with "Proposition 3.2 thus leads to";
-it follows from Prop 3.3. See [QuennevilleBelair2015], Prop 3.3 and the display after it;
-cf. [ACBY1997] for the nonlinear case; the linearized block form is that of
-[Frauendiener2007]. -/
+/-- `C` is an algebraic Weyl tensor iff its bivector matrix is `[[E, B], [B, -E]]` with `E`, `B`
+symmetric and trace-free. [QuennevilleBelair2015], Prop 3.3 (adapted) -/
 theorem weyl_iff (C : Tensor4) :
     IsWeyl C ↔ ∃ E B : Matrix (Fin 3) (Fin 3) ℝ, Eᵀ = E ∧ trace E = 0 ∧ Bᵀ = B ∧
       trace B = 0 ∧ C = ofBlocks E B B (-E) := by
@@ -91,20 +53,15 @@ theorem weyl_iff (C : Tensor4) :
     · rw [transpose_neg, hE]
     · rw [htrB]; ring
 
-/-- **Thesis §3.2 (omitted classical fact).** For an algebraic Weyl tensor the left and right
-duals coincide, `*W = W*`; both have block matrix `[[B, -E], [-E, -B]]`.
-See [QuennevilleBelair2015], §3.2. -/
 theorem ldual_eq_rdual {W : Tensor4} (hW : IsWeyl W) : ldual W = rdual W := by
   obtain ⟨E, B, -, -, -, -, rfl⟩ := (weyl_iff W).1 hW
   rw [ldual_ofBlocks, rdual_ofBlocks]
 
-/-- The right dual of an algebraic Weyl tensor is again one (`E ↦ B`, `B ↦ -E`). -/
 theorem IsWeyl.rdual {W : Tensor4} (hW : IsWeyl W) : IsWeyl (rdual W) := by
   obtain ⟨E, B, hE, htrE, hB, htrB, rfl⟩ := (weyl_iff W).1 hW
   rw [rdual_ofBlocks, weyl_iff]
   exact ⟨B, -E, hB, htrB, by rw [transpose_neg, hE], by rw [trace_neg, htrE, neg_zero], rfl⟩
 
-/-- A sum of a skew kernel against `n ⊗ n` vanishes. -/
 private theorem sum_sym_skew (n : Fin 4 → ℝ) (X : Fin 4 → Fin 4 → ℝ)
     (hX : ∀ a c, X a c = -X c a) : ∑ a, ∑ c, n a * n c * X a c = 0 := by
   have h : ∑ a, ∑ c, n a * n c * X a c = -∑ a, ∑ c, n a * n c * X a c := by
@@ -114,13 +71,10 @@ private theorem sum_sym_skew (n : Fin 4 → ℝ) (X : Fin 4 → Fin 4 → ℝ)
     rw [hX]; ring
   linarith
 
-/-- reorder a triple sum. -/
 private theorem sum3_rot (f : Fin 4 → Fin 4 → Fin 4 → ℝ) :
     ∑ a, ∑ c, ∑ d, f a c d = ∑ d, ∑ a, ∑ c, f a c d :=
   (Finset.sum_congr rfl fun _ _ => Finset.sum_comm).trans Finset.sum_comm
 
-/-- The electric part `E_{ab} = n^c n^d W_{cadb}` of an algebraic Weyl tensor is symmetric,
-`η`-trace-free and orthogonal to `n`, for every vector `n`. -/
 theorem electric_props {W : Tensor4} (hW : IsWeyl W) (n : Fin 4 → ℝ) :
     let E : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * W c a d b
     (∀ a b, E a b = E b a) ∧ ∑ a, Metric.minkowski4 ℝ a * E a a = 0 ∧
@@ -155,20 +109,8 @@ theorem electric_props {W : Tensor4} (hW : IsWeyl W) (n : Fin 4 → ℝ) :
   · rw [← horth a]
     exact Finset.sum_congr rfl fun b _ => by rw [hsym]; ring
 
-/-- **Thesis Prop 3.1.** For an algebraic Weyl tensor `W` and a vector `n`, the electric and
-magnetic tensors `E_{ab} = n^c n^d W_{cadb}`, `B_{ab} = n^c n^d W*_{cadb}` are symmetric,
-trace-free and orthogonal to `n`.
-
-Thesis gap: the thesis' proof of the symmetry of `B` uses the 3D contraction
-`ω^{baq} ω_{bef} = δ^a_e δ^q_f - δ^a_f δ^q_e`, which only holds with the spatial projector, and
-uses orthogonality before proving it. Here the proof instead goes through the block form
-(Prop 3.3): `W*` is again an algebraic Weyl tensor (`IsWeyl.rdual`, using `*W = W*`), so `B`
-is the electric part of `W*` and inherits its properties. Stated in a Minkowski orthonormal
-frame; `n` need not be unit timelike for these algebraic conclusions.
-
-See [QuennevilleBelair2015], Prop 3.1; the decomposition is due to [Bel1958]; the thesis
-follows [Friedrich1996] and [ACBY1997] (linearized: [Frauendiener2007]); cf.
-[Alcubierre2008]. -/
+/-- For an algebraic Weyl tensor `W` and any `n`, `n^c n^d W_{cadb}` and `n^c n^d W*_{cadb}` are
+symmetric, trace-free and orthogonal to `n`. [QuennevilleBelair2015], Prop 3.1 (adapted) -/
 theorem electric_magnetic_props {W : Tensor4} (hW : IsWeyl W) (n : Fin 4 → ℝ) :
     let E : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * W c a d b
     let B : Fin 4 → Fin 4 → ℝ := fun a b => ∑ c, ∑ d, n c * n d * rdual W c a d b
@@ -180,7 +122,6 @@ theorem electric_magnetic_props {W : Tensor4} (hW : IsWeyl W) (n : Fin 4 → ℝ
 
 /-! ### The reconstruction formula (3.2) -/
 
-/-- `ε_{abdc} = -ε_{abcd}`. -/
 theorem leviCivita4_swap34 (a b c d : Fin 4) : leviCivita4 ℝ a b d c = -leviCivita4 ℝ a b c d := by
   rw [leviCivita4_eq_int, leviCivita4_eq_int, ← Int.cast_neg]; congr 1; revert a b c d; decide
 
@@ -196,7 +137,6 @@ def lmet (a b : Fin 4) : ℝ := gη a b + 2 * nL a * nL b
 /-- `ω^e{}_{ab}` for the spatial volume form `ω_{bcd} = ω_{abcd} n^a`, `n = ∂_t`. -/
 def ωU (e a b : Fin 4) : ℝ := Metric.minkowski4 ℝ e * leviCivita4 ℝ 0 e a b
 
-/-- explicit table of `ω^e{}_{ab}`. -/
 theorem ωU_eq (e a b : Fin 4) : ωU e a b = (
     ![![![0, 0, 0, 0], ![0, 0, 0, 0], ![0, 0, 0, 0], ![0, 0, 0, 0]],
     ![![0, 0, 0, 0], ![0, 0, 0, 0], ![0, 0, 0, 1], ![0, 0, -1, 0]],
@@ -209,7 +149,6 @@ theorem ωU_eq (e a b : Fin 4) : ωU e a b = (
 def emb (E : Matrix (Fin 3) (Fin 3) ℝ) : Fin 4 → Fin 4 → ℝ :=
   ![![0, 0, 0, 0], ![0, E 0 0, E 0 1, E 0 2], ![0, E 1 0, E 1 1, E 1 2], ![0, E 2 0, E 2 1, E 2 2]]
 
-/-- `C_{0a0b}` for `C = ofBlocks E B H D` is the embedded `E`. -/
 theorem ofBlocks_0a0b (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     (fun a b => ofBlocks E B H D 0 a 0 b) = emb E := by
   funext a b; fin_cases a <;> fin_cases b <;> simp [ofBlocks, ofMat_apply, sgn, pidx, emb]
@@ -218,24 +157,20 @@ theorem ofBlocks_0a0b (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
 def nBω (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) : ℝ :=
   ∑ e, (nL c * B d e - nL d * B c e) / 2 * ωU e a b
 
-/-- right-hand side of (3.2):
-`2 [l_{a[c} E_{d]b} - l_{b[c} E_{d]a} - n_{[c} B_{d]e} ω^e{}_{ab} - n_{[a} B_{b]e} ω^e{}_{cd}]`. -/
+/-- The right-hand side of (3.2) for `n = ∂_t`. -/
 def recon (E B : Fin 4 → Fin 4 → ℝ) : Tensor4 := fun a b c d =>
   2 * ((lmet a c * E d b - lmet a d * E c b) / 2 - (lmet b c * E d a - lmet b d * E c a) / 2
     - nBω B c d a b - nBω B a b c d)
 
-/-- `n_{[c} B_{d]e} ω^e{}_{ab}` is skew in `(c, d)`. -/
 theorem nBω_swap_left (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) :
     nBω B d c a b = -nBω B c d a b := by
   rw [nBω, nBω, ← Finset.sum_neg_distrib]; exact Finset.sum_congr rfl fun e _ => by ring
 
-/-- `n_{[c} B_{d]e} ω^e{}_{ab}` is skew in `(a, b)`. -/
 theorem nBω_swap_right (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) :
     nBω B c d b a = -nBω B c d a b := by
   rw [nBω, nBω, ← Finset.sum_neg_distrib]
   exact Finset.sum_congr rfl fun e _ => by rw [ωU, ωU, leviCivita4_swap34]; ring
 
-/-- the right-hand side of (3.2) is a double 2-form. -/
 theorem pairSkew_recon (E B : Fin 4 → Fin 4 → ℝ) : PairSkew (recon E B) := by
   intro a b c d
   simp only [recon, nBω_swap_left B b a, nBω_swap_right B _ _ b a, nBω_swap_left B d c,
@@ -283,14 +218,6 @@ private theorem recon_inr_inr {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E)
     simp [toMat, recon, nBω, p, q, ωU_eq, emb, Fin.sum_univ_four, lmet, gη, nL, Metric.minkowski4] <;>
     linarith [hE' 0 1, hE' 0 2, hE' 1 2, hB' 0 1, hB' 0 2, hB' 1 2]
 
-/-- **Thesis eq. (3.2), special case `n = ∂_t`** (Bel reconstruction): an algebraic Weyl tensor
-is recovered from its electric and magnetic parts `E_{ab} = W_{0a0b}`, `B_{ab} = W*_{0a0b}`.
-
-Thesis gap: "a straightforward calculation" in the thesis; here it is checked on the 36
-bivector components. The sign of the `B`-terms requires the spatial volume form
-`ω_{bcd} = ω_{abcd} n^a` (as stated after (3.2)); the `n^d` convention used in the proof of
-Prop 3.1 has the opposite sign. The general unit timelike `n` is `weyl_reconstruct_unit`.
-See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958], [Friedrich1996] and [ACBY1997]. -/
 theorem weyl_reconstruct {W : Tensor4} (hW : IsWeyl W) :
     W = recon (fun a b => W 0 a 0 b) (fun a b => rdual W 0 a 0 b) := by
   obtain ⟨E, B, hE, htrE, hB, -, rfl⟩ := (weyl_iff W).1 hW
@@ -325,8 +252,7 @@ def nBωn (n : Fin 4 → ℝ) (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) : 
 def reconG (E : Fin 4 → Fin 4 → ℝ) : Tensor4 := fun a b c d =>
   2 * ((gη a c * E d b - gη a d * E c b) / 2 - (gη b c * E d a - gη b d * E c a) / 2)
 
-/-- the `n`-part of (3.2): `2 [2 n_a n_{[c} E_{d]b} - 2 n_b n_{[c} E_{d]a}`
-`- n_{[c} B_{d]e} ω^e{}_{ab} - n_{[a} B_{b]e} ω^e{}_{cd}]`. -/
+/-- The `n`-part of the right-hand side of (3.2). -/
 def reconR (n : Fin 4 → ℝ) (E B : Fin 4 → Fin 4 → ℝ) : Tensor4 := fun a b c d =>
   2 * ((2 * lowr n a * lowr n c * E d b - 2 * lowr n a * lowr n d * E c b) / 2
     - (2 * lowr n b * lowr n c * E d a - 2 * lowr n b * lowr n d * E c a) / 2
@@ -392,7 +318,6 @@ def elecT (n : Fin 4 → ℝ) (E B H D : Matrix (Fin 3) (Fin 3) ℝ) : Fin 4 →
         - B 2 1 * n 0 * n 1 - D 0 1 * n 1 * n 2 - D 1 0 * n 1 * n 2 + H 0 2 * n 0 * n 2
         - H 1 2 * n 0 * n 1]]
 
-/-- `elec` of a block tensor is the explicit table `elecT`. -/
 theorem elec_ofBlocks (n : Fin 4 → ℝ) (E B H D : Matrix (Fin 3) (Fin 3) ℝ) :
     elec n (ofBlocks E B H D) = elecT n E B H D := by
   funext a b
@@ -400,7 +325,6 @@ theorem elec_ofBlocks (n : Fin 4 → ℝ) (E B H D : Matrix (Fin 3) (Fin 3) ℝ)
   · simp [elec, elecT, Fin.sum_univ_four, ofBlocks, ofMat_apply, sgn, pidx]
     ring
 
-/-- explicit table of `ω^e{}_{ab}`. -/
 theorem ωUn_eq (n : Fin 4 → ℝ) (e a b : Fin 4) : ωUn n e a b = (
     ![![![0, 0, 0, 0], ![0, 0, n 3, -n 2], ![0, -n 3, 0, n 1], ![0, n 2, -n 1, 0]],
       ![![0, 0, n 3, -n 2], ![0, 0, 0, 0], ![-n 3, 0, 0, n 0], ![n 2, 0, -n 0, 0]],
@@ -410,10 +334,6 @@ theorem ωUn_eq (n : Fin 4 → ℝ) (e a b : Fin 4) : ωUn n e a b = (
   fin_cases e <;> fin_cases a <;> fin_cases b <;>
     simp [ωUn, Metric.minkowski4, leviCivita4_eq_int, leviCivita4Int, Fin.sum_univ_four]
 
-/-- Homogenised form of (3.2) on the 36 bivector components: for every `n` (no normalisation),
-`η(n,n)² W = R_n - η(n,n) G_n`, where `G_n`, `R_n` are the `g`- and `n`-parts of the right-hand
-side of (3.2) built from `E_n = elec n W`, `B_n = elec n W*`. Both sides are homogeneous of
-degree 4 in `n`, so this is the polynomial identity behind (3.2). -/
 theorem recon_hom (e₁ e₂ e₃ e₄ e₅ b₁ b₂ b₃ b₄ b₅ : ℝ) (n : Fin 4 → ℝ) (I J : Ix) :
     let E := stf e₁ e₂ e₃ e₄ e₅
     let B := stf b₁ b₂ b₃ b₄ b₅
@@ -434,18 +354,15 @@ theorem recon_hom (e₁ e₂ e₃ e₄ e₅ b₁ b₂ b₃ b₄ b₅ : ℝ) (n :
 /-- `l_{ab} = g_{ab} + 2 n_a n_b` for a general `n`. -/
 def lmetN (n : Fin 4 → ℝ) (a b : Fin 4) : ℝ := gη a b + 2 * lowr n a * lowr n b
 
-/-- right-hand side of (3.2) for a general `n`:
-`2 [l_{a[c} E_{d]b} - l_{b[c} E_{d]a} - n_{[c} B_{d]e} ω^e{}_{ab} - n_{[a} B_{b]e} ω^e{}_{cd}]`. -/
+/-- The right-hand side of (3.2) for a general `n`. -/
 def reconN (n : Fin 4 → ℝ) (E B : Fin 4 → Fin 4 → ℝ) : Tensor4 := fun a b c d =>
   2 * ((lmetN n a c * E d b - lmetN n a d * E c b) / 2
     - (lmetN n b c * E d a - lmetN n b d * E c a) / 2 - nBωn n B c d a b - nBωn n B a b c d)
 
-/-- `n_{[c} B_{d]e} ω^e{}_{ab}` is skew in `(c, d)`. -/
 theorem nBωn_swap_left (n : Fin 4 → ℝ) (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) :
     nBωn n B d c a b = -nBωn n B c d a b := by
   rw [nBωn, nBωn, ← Finset.sum_neg_distrib]; exact Finset.sum_congr rfl fun e _ => by ring
 
-/-- `n_{[c} B_{d]e} ω^e{}_{ab}` is skew in `(a, b)`. -/
 theorem nBωn_swap_right (n : Fin 4 → ℝ) (B : Fin 4 → Fin 4 → ℝ) (c d a b : Fin 4) :
     nBωn n B c d b a = -nBωn n B c d a b := by
   rw [nBωn, nBωn, ← Finset.sum_neg_distrib]
@@ -456,7 +373,6 @@ theorem nBωn_swap_right (n : Fin 4 → ℝ) (B : Fin 4 → Fin 4 → ℝ) (c d 
     exact congrArg _ (Finset.sum_congr rfl fun f _ => by rw [leviCivita4_swap34]; ring)
   rw [this]; ring
 
-/-- the general-`n` right-hand side of (3.2) is a double 2-form. -/
 theorem pairSkew_reconN (n : Fin 4 → ℝ) (E B : Fin 4 → Fin 4 → ℝ) :
     PairSkew (reconN n E B) := by
   intro a b c d
@@ -464,7 +380,6 @@ theorem pairSkew_reconN (n : Fin 4 → ℝ) (E B : Fin 4 → Fin 4 → ℝ) :
     nBωn_swap_left n B d c, nBωn_swap_right n B _ _ d c]
   constructor <;> ring
 
-/-- a symmetric trace-free `3 × 3` matrix is an `stf`. -/
 theorem eq_stf {E : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htr : trace E = 0) :
     E = stf (E 0 0) (E 0 1) (E 0 2) (E 1 1) (E 1 2) := by
   have hE' := fun i j => congrFun (congrFun hE i) j
@@ -473,16 +388,8 @@ theorem eq_stf {E : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htr : trace E =
   ext i j
   fin_cases i <;> fin_cases j <;> simp [stf] <;> linarith [hE' 0 1, hE' 0 2, hE' 1 2]
 
-/-- **Thesis eq. (3.2)** (Bel reconstruction) for an arbitrary unit timelike `n`
-(`η(n, n) = -1`, either time orientation), in a fixed Minkowski orthonormal frame:
-`W_{abcd} = 4 l_{[a[c} E_{d]b]} - 2 n_{[c} B_{d]e} ω^e{}_{ab} - 2 n_{[a} B_{b]e} ω^e{}_{cd}` with
-`E_{ab} = n^c n^d W_{cadb}`, `B_{ab} = n^c n^d W*_{cadb}` (the tensors of Prop 3.1),
-`l_{ab} = η_{ab} + 2 n_a n_b` and `ω_{bcd} = ω_{abcd} n^a`.
-
-Thesis gap: the thesis states (3.2) for a general `n` as "a straightforward calculation". Here it is
-proved without any frame change: `recon_hom` is the homogenised polynomial identity, valid for all
-`n`, and `η(n,n) = -1` specialises it. See [QuennevilleBelair2015], eq. (3.2); cf. [Bel1958],
-[Friedrich1996] and [ACBY1997]. -/
+/-- An algebraic Weyl tensor is recovered by (3.2) from its electric and magnetic parts relative
+to any unit timelike `n`. [QuennevilleBelair2015], (3.2) -/
 theorem weyl_reconstruct_unit {W : Tensor4} (hW : IsWeyl W) {n : Fin 4 → ℝ}
     (hn : nsq n = -1) : W = reconN n (elec n W) (elec n (rdual W)) := by
   obtain ⟨E, B, hE, htrE, hB, htrB, rfl⟩ := (weyl_iff W).1 hW
@@ -533,7 +440,6 @@ def stfEquiv : STF ≃ₗ[ℝ] (Fin 5 → ℝ) where
     ext i j; fin_cases i <;> fin_cases j <;> simp <;> linarith [hE 0 1, hE 0 2, hE 1 2]
   right_inv x := by funext k; fin_cases k <;> rfl
 
-/-- `dim STF = 5`. -/
 theorem finrank_STF : Module.finrank ℝ STF = 5 := by
   rw [stfEquiv.finrank_eq, Module.finrank_fin_fun]
 
@@ -565,20 +471,16 @@ def weylSpace : Submodule ℝ (Tensor4) where
             rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun a _ => by ring
         _ = 0 := by rw [this, mul_zero]
 
-/-- the `E`-block of a Weyl tensor is symmetric trace-free. -/
 theorem blkE_mem_STF {C : Tensor4} (hC : IsWeyl C) : blkE C ∈ STF := by
   obtain ⟨E, B, hE, htrE, -, -, rfl⟩ := (weyl_iff C).1 hC
   rw [blkE_ofBlocks]; exact ⟨hE, htrE⟩
 
-/-- the `B`-block of a Weyl tensor is symmetric trace-free. -/
 theorem blkB_mem_STF {C : Tensor4} (hC : IsWeyl C) : blkB C ∈ STF := by
   obtain ⟨E, B, -, -, hB, htrB, rfl⟩ := (weyl_iff C).1 hC
   rw [blkB_ofBlocks]; exact ⟨hB, htrB⟩
 
-/-- membership in `STF`. -/
 theorem mem_STF {E : Matrix (Fin 3) (Fin 3) ℝ} : E ∈ STF ↔ Eᵀ = E ∧ trace E = 0 := Iff.rfl
 
-/-- `[[E, B], [B, -E]]` with `E, B ∈ STF` is a Weyl tensor. -/
 theorem ofBlocks_mem_weylSpace {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : E ∈ STF) (hB : B ∈ STF) :
     ofBlocks E B B (-E) ∈ weylSpace :=
   (weyl_iff _).2 ⟨E, B, (mem_STF.1 hE).1, (mem_STF.1 hE).2, (mem_STF.1 hB).1,
@@ -596,13 +498,7 @@ def weylEquiv : weylSpace ≃ₗ[ℝ] STF × STF where
     simp
   right_inv := by rintro ⟨E, B⟩; simp
 
-/-- Thesis §3.2: in 4 dimensions the Weyl tensor has `n(n+1)(n+2)(n-3)/12 = 10` independent
-components (here: the space of algebraic Weyl tensors w.r.t. `η` has dimension 10).
-
-Thesis gap: stated without proof ("it can be shown"); proved here for `n = 4` via the block
-form `[[E, B], [B, -E]]` with `E, B` symmetric trace-free (5 + 5).
-See [QuennevilleBelair2015], §3.2 (which cites [Alcubierre2008], p. 288 and [Friedrich1996] for
-the Riemann/Weyl splitting). -/
+/-- The algebraic Weyl tensors have dimension 10. [QuennevilleBelair2015], §3.2 -/
 theorem finrank_weylSpace : Module.finrank ℝ weylSpace = 10 := by
   rw [LinearEquiv.finrank_eq weylEquiv, Module.finrank_prod, finrank_STF]
 

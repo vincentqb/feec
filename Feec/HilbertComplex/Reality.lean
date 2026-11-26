@@ -5,31 +5,9 @@ public import Feec.HilbertComplex.Reducing
 /-!
 # Real solutions: antilinear conjugations
 
-A **conjugation** of a Hilbert space over `𝕜 = ℝ` or `ℂ` is an `ℝ`-linear involution `C` with
-`C (a • x) = conj a • C x` and `⟪C x, C y⟫ = ⟪y, x⟫` (e.g. pointwise complex conjugation of
-fields, or `ξ ↦ conj f̂(-ξ)` on the Fourier side). Its fixed set `{x | C x = x}` (the real
-fields) is an `ℝ`-subspace but **not** a `𝕜`-submodule, so it is not a reducing subspace; the
-reality of solutions is a separate statement:
-
-* `Evolution.IsStrongSolution.conj`: if `C` commutes with `A`, then `C ∘ U` solves the equation
-  with forcing `C ∘ F`.
-* `Evolution.IsStrongSolution.conj_eq`: hence, for a dissipative `A`, real data and real
-  forcing give a real solution (uniqueness).
-* `C0Group.IsIsometric.conj_S`: the group of a skew-adjoint generator commuting with `C`
-  commutes with `C`.
-
-For a Hilbert complex with conjugations commuting with the differentials
-(`HilbertComplex.Conj`), the conjugations commute with the adjoints (`Conj.adjoint_comm`), the
-total conjugation commutes with the wave operator (`Conj.wave_totalConj`), and the Hodge wave
-equation has real solutions for real data (`Conj.conj_eq`, `Conj.totalConj_waveGroup`), staying
-in every reducing subcomplex (`Conj.propagates_real`, `Conj.existsUnique_mem_real`).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (real fields on `ℝ³` from the Fourier side)
-
-Bibliography: [references.bib](../../docs/references.bib)
+For a dissipative generator commuting with an antilinear isometric involution `C`, real data and
+forcing (`C x = x`) give real solutions; for a Hilbert complex with conjugations commuting with
+the differentials this holds for the Hodge wave equation, also within reducing subcomplexes.
 -/
 
 open scoped InnerProductSpace ComplexConjugate
@@ -51,8 +29,6 @@ structure CommutesWith (C : E →L[ℝ] E) (A : E →ₗ.[𝕜] E) : Prop where
   mapsTo : ∀ x : A.domain, C x ∈ A.domain
   comm : ∀ x : A.domain, A ⟨C x, mapsTo x⟩ = C (A x)
 
-/-- **Conjugated solutions**: if `C` commutes with `A`, then `C ∘ U` is a strong solution of
-`V' = A V + C ∘ F` whenever `U` solves `U' = A U + F`. -/
 theorem Evolution.IsStrongSolution.conj {C : E →L[ℝ] E} (hC : CommutesWith C A)
     (hU : Evolution.IsStrongSolution A I F U) :
     Evolution.IsStrongSolution A I (fun t => C (F t)) fun t => C (U t) := by
@@ -73,7 +49,6 @@ theorem Evolution.IsStrongSolution.conj_eq {C : E →L[ℝ] E} (hC : CommutesWit
 
 variable [IsScalarTower ℝ 𝕜 E] [CompleteSpace E]
 
-/-- The group of an isometric group whose generator commutes with `C` commutes with `C`. -/
 theorem C0Group.IsIsometric.conj_S {G : C0Group 𝕜 E} (hG : G.IsIsometric) {C : E →L[ℝ] E}
     (hC : CommutesWith C G.generator) (t : ℝ) (x : E) : C (G.S t x) = G.S t (C x) := by
   set B := G.generator
@@ -107,8 +82,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   [∀ i, NormedSpace ℝ (W i)] (H : HilbertComplex 𝕜 c W)
 
-/-- **Conjugations of a Hilbert complex**: antilinear involutions `C i` of each `W i` with
-`⟪C x, C y⟫ = ⟪y, x⟫`, preserving the domains and commuting with the differentials. -/
+/-- Conjugations of a Hilbert complex: antilinear involutions commuting with the differentials. -/
 structure Conj where
   /-- the conjugations -/
   C : ∀ i, W i →L[ℝ] W i
@@ -122,7 +96,6 @@ namespace Conj
 
 variable {H} (K : H.Conj)
 
-/-- The conjugations commute with the adjoints. -/
 theorem adjoint_comm {i j : ι} (y : ((H.d i j)†).domain) :
     ∃ h : K.C j y ∈ ((H.d i j)†).domain, (H.d i j)† ⟨_, h⟩ = K.C i ((H.d i j)† y) := by
   have key : ∀ x : (H.d i j).domain,
@@ -150,7 +123,6 @@ theorem totalConj_apply (x : PiLp 2 W) (i : ι) : K.totalConj x i = K.C i (x i) 
 
 variable [Fintype ι]
 
-/-- **The total conjugation commutes with the wave operator.** -/
 theorem wave_totalConj : CommutesWith K.totalConj H.wave := by
   have hmem : ∀ x : H.wave.domain, K.totalConj (x : PiLp 2 W) ∈ H.wave.domain := fun x =>
     H.mem_wave_domain.2 ⟨fun i j => K.mapsTo i j ⟨_, x.2.1 i j⟩,
@@ -163,7 +135,6 @@ theorem wave_totalConj : CommutesWith K.totalConj H.wave := by
   refine congrArg₂ (· - ·) (Finset.sum_congr rfl fun i _ => K.comm i j ⟨_, x.2.1 i j⟩)
     (Finset.sum_congr rfl fun k _ => (K.adjoint_comm ⟨_, x.2.2 k j⟩).2)
 
-/-- **Real data give real solutions of the Hodge wave equation.** -/
 theorem conj_eq {a b : ℝ} {F U : ℝ → PiLp 2 W}
     (hU : Evolution.IsStrongSolution H.wave (Icc a b) F U) (h0 : K.totalConj (U a) = U a)
     (hF : ∀ t ∈ Icc a b, K.totalConj (F t) = F t) : ∀ t ∈ Icc a b, K.totalConj (U t) = U t :=
@@ -173,8 +144,6 @@ section Reducing
 
 variable {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, (S i).HasOrthogonalProjection]
 
-/-- **Real solutions in a reducing subcomplex**: real data and forcing in `S` give a strong
-solution that stays real and in `S`. -/
 theorem propagates_real (hS : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ → PiLp 2 W}
     (hU : Evolution.IsStrongSolution H.wave (Icc a b) F U) (h0 : U a ∈ totalSub S)
     (h0r : K.totalConj (U a) = U a) (hF : ∀ t ∈ Icc a b, F t ∈ totalSub S)
@@ -182,9 +151,8 @@ theorem propagates_real (hS : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ →
     ∀ t ∈ Icc a b, U t ∈ totalSub S ∧ K.totalConj (U t) = U t :=
   fun t ht => ⟨hS.propagates hU h0 hF t ht, K.conj_eq hU h0r hFr t ht⟩
 
-/-- **Real solutions in a reducing subcomplex, with existence and uniqueness**: for real
-`U₀ ∈ D(L) ∩ ∏ S i` and admissible real forcing in `∏ S i`, the classical solution of
-`U' = L U + F`, unique among strong solutions, stays real and in `S`. -/
+/-- **Real solutions in a reducing subcomplex**: for real `U₀ ∈ D(L) ∩ ∏ S i` and admissible real
+forcing in `∏ S i`, the classical solution of `U' = L U + F` stays real and in `S`. -/
 theorem existsUnique_mem_real (hS : H.ReducingSubcomplex S) {U₀ : PiLp 2 W}
     (hU₀ : U₀ ∈ H.wave.domain) (hU₀S : U₀ ∈ totalSub S) (hU₀r : K.totalConj U₀ = U₀)
     {F : ℝ → PiLp 2 W} {a b : ℝ} (hF : Evolution.ForcingClass.admissible H.wave a b F)
@@ -200,7 +168,6 @@ end Reducing
 
 variable [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- The wave group commutes with the total conjugation: it maps real data to real data. -/
 theorem totalConj_waveGroup (t : ℝ) (x : PiLp 2 W) :
     K.totalConj (H.waveGroup.S t x) = H.waveGroup.S t (K.totalConj x) := by
   have h := K.wave_totalConj

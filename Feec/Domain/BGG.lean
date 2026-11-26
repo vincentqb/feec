@@ -7,54 +7,8 @@ public import Feec.HilbertComplex.BGG.SumComplex
 /-!
 # BGG complexes of constant-coefficient operators
 
-Two complexes of constant-coefficient operators `A, Ã` (`Feec.Domain.ConstCoeffComplex`) linked
-by operators `S k : 𝕜^{ι̃ k} → 𝕜^{ι (k+1)}` with `A S = -S Ã` on smooth fields
-(`Feec.Domain.ConstCoeffBGG`) are BGG data on the smooth fields (`ConstCoeffBGG.smoothData`), so
-the algebraic BGG construction of `Feec.HilbertComplex.BGG.Derived` applies: for zeroth-order `S`
-given by constant matrices (`ConstCoeffOp.ofMatrix`), left inverses make `S` injective and right
-inverses surjective on smooth fields, which is how the injectivity/surjectivity condition
-`Data.InjSurj J` is checked, and then the BGG complex `bgg J` has the cohomology of the twisted
-complex (`Data.bggHomologyIso`). Right-inverse matrices give right inverses on smooth fields, so the
-condition holds with explicit right inverses (`ConstCoeffBGG.injSurjWith_predMap`,
-`Data.InjSurjWith`), as the explicit cochain map (30) of [ArnoldHu2021] requires.
-
-The de Rham complex of `ℝ³` with values in `𝕜ᵐ` is `deRhamVec m`, in vector proxies
-`𝕜ᵐ --grad--> 𝕜^{m×3} --curl--> 𝕜^{m×3} --div--> 𝕜ᵐ` (row-wise operators); stacked de Rham
-diagrams of this kind give the Hessian, elasticity and div-div complexes
-(`Feec.Domain.HessianBGG`, `Feec.Domain.ElasticityBGG`, `Feec.Domain.DivDivBGG`). A
-pointwise-constrained complex of constant-coefficient operators
-(`Feec.Domain.ConstrainedComplex.ofMatrices`) has a smooth version
-(`ConstCoeffComplex.smoothComplex`), the target of the identifications.
-
-## Main definitions
-
-* `Feec.Domain.smoothFields E 𝕜 ι`, `ConstCoeffOp.smoothMap`: smooth fields and the action of a
-  constant-coefficient operator on them.
-* `ConstCoeffOp.ofMatrix M`: the zeroth-order operator of a constant matrix.
-* `Feec.Domain.ConstCoeffBGG`, `ConstCoeffBGG.smoothData`.
-* `Feec.Domain.smoothFieldsIn E M`, `ConstCoeffComplex.smoothComplex`: smooth constrained
-  complexes.
-* `Feec.Domain.deRhamVec m`: the de Rham complex of `ℝ³` with values in `𝕜ᵐ`, vector proxies.
-
-## Main results
-
-* `ConstCoeffOp.smoothMap_ofMatrix_injective`, `ConstCoeffOp.smoothMap_ofMatrix_surjective`:
-  matrices with left (right) inverses are injective (surjective) on smooth fields.
-* `ConstCoeffBGG.injSurjWith_predMap`: the condition `Data.InjSurjWith J` on smooth fields, with
-  explicit right inverses (`ConstCoeffBGG.predMap`).
-
-## References
-
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4 (complexes from stacked
-  de Rham complexes)
-* [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
-  (BGG sequences)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §11 (complexes from two de Rham complexes)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (BGG data)
-
-Bibliography: [references.bib](../../docs/references.bib)
+Two complexes of constant-coefficient operators linked by `S`, `A S = -S Ã` on smooth fields, are
+BGG data on the smooth fields (`ConstCoeffBGG`); `deRhamVec m` is the `𝕜ᵐ`-valued de Rham complex.
 -/
 
 open scoped ContDiff
@@ -116,7 +70,6 @@ theorem ofMatrix_one_apply [DecidableEq ι] (f : ι → E → 𝕜) :
   funext i x
   simp [ofMatrix_apply, Matrix.one_apply]
 
-/-- A matrix with a left inverse is injective on smooth fields. -/
 theorem smoothMap_ofMatrix_injective [Fintype κ] [DecidableEq ι] {M : Matrix κ ι 𝕜}
     {N : Matrix ι κ 𝕜} (h : N * M = 1) :
     Function.Injective (ofMatrix M : ConstCoeffOp E 𝕜 ι κ).smoothMap := fun f g hfg => by
@@ -124,7 +77,6 @@ theorem smoothMap_ofMatrix_injective [Fintype κ] [DecidableEq ι] {M : Matrix �
   simp only [coe_smoothMap, ofMatrix_apply_ofMatrix, h, ofMatrix_one_apply] at this
   exact Subtype.ext this
 
-/-- A matrix with a right inverse is surjective on smooth fields. -/
 theorem smoothMap_ofMatrix_surjective [Fintype κ] [DecidableEq κ] {M : Matrix κ ι 𝕜}
     {N : Matrix ι κ 𝕜} (h : M * N = 1) :
     Function.Surjective (ofMatrix M : ConstCoeffOp E 𝕜 ι κ).smoothMap := fun g =>
@@ -140,7 +92,7 @@ section Constrained
 variable {ι κ : Type*} [Fintype ι] [Fintype κ]
 
 variable (E) in
-/-- The smooth fields with values in the range of a constant matrix `M`: `M f = f`. -/
+/-- The smooth fields fixed by a constant matrix `M`: `M f = f`. -/
 def smoothFieldsIn (M : ι → ι → 𝕜) : Submodule 𝕜 (ι → E → 𝕜) where
   carrier := {f | (∀ i, ContDiff ℝ ∞ (f i)) ∧ matMulField M f = f}
   add_mem' {f g} hf hg := ⟨fun i => (hf.1 i).add (hg.1 i), by
@@ -192,9 +144,7 @@ def ConstCoeffOp.smoothMapIn {A : ConstCoeffOp E 𝕜 ι κ} {M : ι → ι → 
     {N : κ → κ → 𝕜} (hA : A.MatMapsTo M N) (f : smoothFieldsIn E M) :
     (ConstCoeffOp.smoothMapIn hA f : κ → E → 𝕜) = A.apply f := rfl
 
-/-- **The smooth constrained complex** of a complex of constant-coefficient operators with
-pointwise constraints `M k` mapped to each other by the operators: the smooth version of
-`Feec.Domain.ConstrainedComplex.ofMatrices`. -/
+/-- The smooth complex of a constant-coefficient complex with pointwise constraints `M k`. -/
 def ConstCoeffComplex.smoothComplex (C : ConstCoeffComplex E 𝕜) (M : ∀ k, C.ι k → C.ι k → 𝕜)
     (hM : ∀ k, (C.A k).MatMapsTo (M k) (M (k + 1))) : CochainComplex (ModuleCat 𝕜) ℤ :=
   CochainComplex.of (fun k => ModuleCat.of 𝕜 (smoothFieldsIn E (M k)))
@@ -206,12 +156,9 @@ end Constrained
 /-! ## BGG data of constant-coefficient operators -/
 
 variable (E 𝕜) in
-/-- **BGG data of constant-coefficient operators**: two complexes `A`, `Ã` on `ℤ` and connecting
-operators `S k : 𝕜^{ι̃ k} → 𝕜^{ι (k+1)}` with `A (k+1) S k = -S (k+1) Ã k` on smooth fields. -/
+/-- BGG data of constant-coefficient operators: two complexes linked by `S`, `A S = -S Ã`. -/
 structure ConstCoeffBGG where
-  /-- the top complex -/
   top : ConstCoeffComplex E 𝕜
-  /-- the bottom complex -/
   bot : ConstCoeffComplex E 𝕜
   /-- the connecting operators -/
   S : ∀ k, ConstCoeffOp E 𝕜 (bot.ι k) (top.ι (k + 1))
@@ -222,8 +169,7 @@ namespace ConstCoeffBGG
 
 variable (B : ConstCoeffBGG E 𝕜)
 
-/-- **The BGG data of smooth fields**: the two complexes and the connecting operators acting on
-smooth fields. -/
+/-- The BGG data of the smooth fields. -/
 def smoothData : BGG.Data 𝕜 (ComplexShape.up ℤ) (fun k => smoothFields E 𝕜 (B.top.ι k))
     (fun k => smoothFields E 𝕜 (B.bot.ι k)) :=
   BGG.Data.ofSucc (fun k => (B.top.A k).smoothMap) (fun k => (B.bot.A k).smoothMap)
@@ -244,15 +190,12 @@ def smoothData : BGG.Data 𝕜 (ComplexShape.up ℤ) (fun k => smoothFields E �
   BGG.Data.succMap_succ (X := fun k => smoothFields E 𝕜 (B.bot.ι k))
     (Y := fun k => smoothFields E 𝕜 (B.top.ι k)) (fun k => (B.S k).smoothMap) k
 
-/-- Maps `T k : Vᵏ⁺¹ → Ṽᵏ` of smooth fields as the family `t i j : Vʲ → Ṽⁱ` of
-`BGG.Data.InjSurjWith`: `T i` transported along `i + 1 = j`, and `0` otherwise. -/
+/-- Maps `T k : Vᵏ⁺¹ → Ṽᵏ` as the family `t i j` of `BGG.Data.InjSurjWith`. -/
 def predMap (T : ∀ k, smoothFields E 𝕜 (B.top.ι (k + 1)) →ₗ[𝕜] smoothFields E 𝕜 (B.bot.ι k))
     (i j : ℤ) : smoothFields E 𝕜 (B.top.ι j) →ₗ[𝕜] smoothFields E 𝕜 (B.bot.ι i) :=
   if h : i + 1 = j then h ▸ T i else 0
 
-/-- **The injectivity/surjectivity condition with explicit right inverses on smooth fields**: if
-`Sᵏ` is injective on smooth fields for `k ≤ J` and `T k` is a right inverse of `Sᵏ` for `k ≥ J`,
-the smooth BGG data satisfy `BGG.Data.InjSurjWith J` with the right inverses `T`. -/
+/-- **The injectivity/surjectivity condition on smooth fields** with explicit right inverses. -/
 theorem injSurjWith_predMap {J : ℤ}
     {T : ∀ k, smoothFields E 𝕜 (B.top.ι (k + 1)) →ₗ[𝕜] smoothFields E 𝕜 (B.bot.ι k)}
     (hinj : ∀ k ≤ J, Function.Injective (B.S k).smoothMap)
@@ -268,7 +211,6 @@ end ConstCoeffBGG
 
 /-! ## The de Rham complex of `ℝ³` with values in `𝕜ᵐ` -/
 
-/-- `u_{k+1,k+2} = u_{k+2,k+1}` for all `k` (`2 vskw u = 0`) iff `u` is symmetric. -/
 theorem vskw_eq_zero_iff {α : Type*} [AddGroup α] {u : Fin 3 × Fin 3 → α} :
     (∀ k : Fin 3, u (k + 1, k + 2) - u (k + 2, k + 1) = 0) ↔ ∀ i j, u (i, j) = u (j, i) := by
   constructor
@@ -322,7 +264,6 @@ def vecOp (m : ℕ) : ∀ k : ℤ, ConstCoeffOp (Fin 3 → ℝ) 𝕜 (vecIdx m k
   | .ofNat (_ + 3) => ConstCoeffOp.zeroOp _ _
   | .negSucc _ => ConstCoeffOp.zeroOp _ _
 
-/-- An operator out of a space of fields with empty index type, or into one, is zero. -/
 theorem ConstCoeffOp.apply_eq_zero_of_isEmpty {ι κ : Type*} [Fintype ι]
     (A : ConstCoeffOp E 𝕜 ι κ) (f : ι → E → 𝕜) (h : IsEmpty ι ∨ IsEmpty κ) : A.apply f = 0 := by
   rcases h with h | h
@@ -342,8 +283,7 @@ theorem vecOp_comp (m : ℕ) (k : ℤ) : (vecOp 𝕜 m k).IsComplexPair (vecOp �
   · exact ConstCoeffOp.apply_eq_zero_of_isEmpty _ _ (Or.inr (isEmpty_vecIdx m (by omega)))
 
 variable (𝕜) in
-/-- **The de Rham complex of `ℝ³` with values in `𝕜ᵐ`**, in vector proxies:
-`𝕜ᵐ --grad--> 𝕜^{m×3} --curl--> 𝕜^{m×3} --div--> 𝕜ᵐ` (row-wise). -/
+/-- **The de Rham complex of `ℝ³` with values in `𝕜ᵐ`**, in vector proxies. -/
 abbrev deRhamVec (m : ℕ) : ConstCoeffComplex (Fin 3 → ℝ) 𝕜 where
   ι := vecIdx m
   A := vecOp 𝕜 m

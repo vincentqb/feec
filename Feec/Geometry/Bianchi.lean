@@ -5,64 +5,15 @@ public import Feec.Geometry.Connection
 /-!
 # The second Bianchi identity and its contractions
 
-The differential Bianchi identity (thesis (2.4), `∇_[e R_cd]ab = 0`), its contracted forms
-(`∇_a R^a_bcd = ∇_c R_bd - ∇_d R_bc`, `∇^a G_ab = 0`, and `∇^a C_abcd = 0` in vacuum), and its
-frame form, in coordinate components as in `Feec.Geometry.Connection`: Lorentzian geometry is not
-in Mathlib, so a metric is a matrix field `g : ℝ^ι → Matrix ι ι ℝ` of any dimension and any
-signature (symmetric, nondegenerate). The field theorems assume their hypotheses on all of `ℝ^ι`
-(a global chart); local versions on an open set are not stated.
-
-## Conventions
-
-* `Γ a b c = Γ^a_{bc}`; jets `dΓ e a b c = ∂_e Γ^a_{bc}`, `ddΓ f e a b c = ∂_f ∂_e Γ^a_{bc}`.
-* `R^a_{bcd}` is (2.2), `riemComp`:
-  `∂_c Γ^a_{bd} - ∂_d Γ^a_{bc} + Γ^a_{ec} Γ^e_{bd} - Γ^a_{ed} Γ^e_{bc}`;
-  `R_abcd = g_ae R^e_bcd`; `R_bd = R^a_bad` (thesis `R_ab = R^c_acb`); `R = g^{bd} R_bd`.
-* The derivative index comes first: `cov13 Γ T dT f a b c d = ∇_f T^a_bcd
-  = ∂_f T^a_bcd + Γ^a_fe T^e_bcd - Γ^e_fb T^a_ecd - Γ^e_fc T^a_bed - Γ^e_fd T^a_bce`; likewise
-  `cov4` (`(0,4)`), `cov02`, `cov11` (`(1,1)`).
-* Frames: `e a μ = e^a_μ` (the columns of `e` are the frame vectors), `θ` the coframe
-  (`e θ = 1`), frame connection coefficients `γ l κ ν = γ^λ_{κν}` with `∇_{e_κ} e_ν = γ^λ_{κν} e_λ`,
-  frame derivatives `e_κ = e^h_κ ∂_h`.
-
-## What is a jet identity and what uses fields
-
-* **Jet level** (any commutative ring, any index type): `cov13_riem_cyclic` (the second Bianchi
-  identity for every torsion-free connection jet with symmetric second derivatives; no metric),
-  `sum_cov13_riem` (its contraction, no metric), `cov4_lower` (lowering commutes with `∇` given
-  first-order metric compatibility), the contraction rules `sum_gi_cov02`, `sum_gi_cov02_left`,
-  `sum_gi_cov13` (for a parallel inverse-metric jet), and tensoriality under a change of frame
-  (`cov4_frame4`, `frame_cyclic`).
-* **Fields** (`IsLeviCivita g Γ`: `g ∈ C²` symmetric, `Γ ∈ C²` torsion-free and compatible; this
-  holds for the Christoffel symbols of a nondegenerate `C³` metric, `isLeviCivita_christoffel`):
-  `covRiemField_cyclic`, `covRiemLowField_cyclic`, `covRiemLowField_cyclic_first`,
-  `div_riemField`, `two_mul_divMixed_ricUp`, `divMixed_einsteinUp`, `div_einsteinField`,
-  `div_weylField_vacuum`, `frameRiemField_cyclic`. The twice-contracted identity and the Weyl
-  divergence use fields because they differentiate the inverse metric and the symmetries of `R`
-  (at the jet level these would need third-order compatibility hypotheses).
-
-## Main results
-
-* `cov13_riem_cyclic`, `covRiemField_cyclic`, `covRiemLowField_cyclic`, `bianchi2_metric`:
-  **the second Bianchi identity** (thesis (2.4)).
-* `div_riemField`: `∇_a R^a_bcd = ∇_c R_bd - ∇_d R_bc`; `div_riemField_vacuum`.
-* `two_mul_divMixed_ricUp` (`2 ∇_a R^a_c = ∂_c R`), `divMixed_einsteinUp` (`∇_a G^a_c = 0`),
-  `div_einsteinField`, `div_einstein_metric`: **the twice-contracted Bianchi identity**
-  `∇^a G_ab = 0` of thesis §2.3.
-* `weylTensor`, `weylTensor_traceFree`, `div_weylField_vacuum`, `div_weyl_metric_vacuum`:
-  **in vacuum `∇^a C_abcd = 0`** for the Weyl tensor.
-* `cov4_frame4`, `frame_cyclic`, `frameRiemField_cyclic`: the Bianchi identity for the frame
-  components, the starting point of the nonlinear EB system
-  (`Feec.Physics.EinsteinBianchi.Nonlinear`).
-* `isLeviCivita_christoffel`: the Christoffel symbols of a `C³` metric of any signature.
-* `frameConnField_sub_swap`: torsion-freeness in a frame, `γ^λ_{κν} - γ^λ_{νκ} = θ^λ([e_κ, e_ν])`.
+The differential Bianchi identity `∇_[e R_cd]ab = 0` ([QuennevilleBelair2015], (2.4)) and its
+contraction, for connection jets over any commutative ring; for metric fields on `ℝ^ι` of any
+dimension and signature, also the twice-contracted identity and the vacuum divergence of the Weyl
+tensor.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §2.3 ((2.2), (2.4), the twice-contracted identity), §3.4
-* [R. M. Wald, *General Relativity*][Wald1984], §3.2, §3.4
-* [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [R. M. Wald, *General Relativity*][Wald1984]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -89,18 +40,17 @@ def cov13 (Γ : ι → ι → ι → R) (T : ι → ι → ι → ι → R) (dT 
   dT f a b c d + ∑ e, (Γ a f e * T e b c d - Γ e f b * T a e c d - Γ e f c * T a b e d
     - Γ e f d * T a b c e)
 
-/-- The terms of `∇_f R^a_bcd` linear in `∂Γ` (expansion helper). -/
+/-- The terms of `∇_f R^a_bcd` linear in `∂Γ`. -/
 private def bL (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (a b f c d e : ι) : R :=
   dΓ f a e c * Γ e b d + Γ a e c * dΓ f e b d - dΓ f a e d * Γ e b c - Γ a e d * dΓ f e b c
     + (Γ a f e * dΓ c e b d - Γ a f e * dΓ d e b c)
     - (Γ e f b * dΓ c a e d - Γ e f b * dΓ d a e c)
 
-/-- The terms of `∇_f R^a_bcd` cubic in `Γ` (expansion helper). -/
+/-- The terms of `∇_f R^a_bcd` cubic in `Γ`. -/
 private def bQ (Γ : ι → ι → ι → R) (a b f c d e g : ι) : R :=
   (Γ a f e * (Γ e g c * Γ g b d) - Γ a f e * (Γ e g d * Γ g b c))
     - (Γ e f b * (Γ a g c * Γ g e d) - Γ e f b * (Γ a g d * Γ g e c))
 
-/-- Expansion of `∇_f R^a_bcd` into second-derivative, `Γ ∂Γ`, `Γ³` and last-pair terms. -/
 private theorem cov13_riem_eq (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
     (ddΓ : ι → ι → ι → ι → ι → R) (f a b c d : ι) :
     cov13 Γ (riemComp Γ dΓ) (dRiemComp Γ dΓ ddΓ) f a b c d =
@@ -110,10 +60,8 @@ private theorem cov13_riem_eq (Γ : ι → ι → ι → R) (dΓ : ι → ι →
   simp only [riemComp, mul_add, mul_sub, mul_sum, sum_add_distrib, sum_sub_distrib]
   ring
 
-/-- **Second (differential) Bianchi identity**, jet level, no metric:
-`∇_f R^a_bcd + ∇_c R^a_bdf + ∇_d R^a_bfc = 0` for the curvature (2.2) of any torsion-free
-connection jet `(Γ, ∂Γ, ∂∂Γ)` with symmetric second derivatives, over any commutative ring.
-[QuennevilleBelair2015], (2.4); [Wald1984], §3.2 -/
+/-- The second Bianchi identity `∇_f R^a_bcd + ∇_c R^a_bdf + ∇_d R^a_bfc = 0` for a torsion-free
+connection jet with symmetric `∂∂Γ`. [QuennevilleBelair2015], (2.4); [Wald1984], §3.2 -/
 theorem cov13_riem_cyclic (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
     (ddΓ : ι → ι → ι → ι → ι → R) (hΓ : ∀ a b c, Γ a b c = Γ a c b)
     (hddΓ : ∀ f e a b c, ddΓ f e a b c = ddΓ e f a b c) (f a b c d : ι) :
@@ -151,7 +99,6 @@ theorem cov13_riem_cyclic (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι 
     ring
   linear_combination hL + hQ - hP + hddΓ f c a b d - hddΓ f d a b c + hddΓ c d a b f
 
-/-- Swap the two indices of a double sum. -/
 theorem sum_swap_eq {F G : ι → ι → R} (h : ∀ x i, F x i = G i x) :
     ∑ x, ∑ i, F x i = ∑ x, ∑ i, G x i := by
   rw [Finset.sum_comm]; exact sum_congr rfl fun i _ => sum_congr rfl fun x _ => h x i
@@ -167,8 +114,6 @@ def dLower (g : Matrix ι ι R) (dg : ι → ι → ι → R) (T : ι → ι →
     (dT : ι → ι → ι → ι → ι → R) : ι → ι → ι → ι → ι → R := fun f a b c d =>
   ∑ e, (dg f a e * T e b c d + g a e * dT f e b c d)
 
-/-- Lowering an index commutes with `∇` for a metric-compatible connection jet
-(`hcomp`: `∂_e g_ab = Γ^r_ea g_rb + Γ^r_eb g_ar`): `∇_f (g_ae T^e_bcd) = g_ae ∇_f T^e_bcd`. -/
 theorem cov4_lower (Γ : ι → ι → ι → R) (g : Matrix ι ι R) (dg : ι → ι → ι → R)
     (hcomp : ∀ e a b, dg e a b = ∑ r, (g r b * Γ r e a + g a r * Γ r e b))
     (T : ι → ι → ι → ι → R) (dT : ι → ι → ι → ι → ι → R) (f a b c d : ι) :
@@ -187,7 +132,6 @@ theorem cov4_lower (Γ : ι → ι → ι → R) (g : Matrix ι ι R) (dg : ι �
     sum_swap_eq fun x i => by ring
   linear_combination e1 + e2 - e3 - e4 - e5
 
-/-- Reindex a triple sum by a permutation of `ι × ι × ι`. -/
 theorem sum3_congr_perm {F G : ι → ι → ι → R} (σ : ι × ι × ι ≃ ι × ι × ι)
     (h : ∀ x, F x.1 x.2.1 x.2.2 = G (σ x).1 (σ x).2.1 (σ x).2.2) :
     ∑ a, ∑ b, ∑ c, F a b c = ∑ a, ∑ b, ∑ c, G a b c := by
@@ -195,7 +139,6 @@ theorem sum3_congr_perm {F G : ι → ι → ι → R} (σ : ι × ι × ι ≃ 
     intro H; rw [Fintype.sum_prod_type]; simp only [Fintype.sum_prod_type]
   rw [e, e]; exact Fintype.sum_equiv σ _ _ h
 
-/-- Reindex a five-fold sum by a permutation of `ι × ι × ι × ι × ι`. -/
 theorem sum5_congr_perm {F G : ι → ι → ι → ι → ι → R} (σ : ι × ι × ι × ι × ι ≃ ι × ι × ι × ι × ι)
     (h : ∀ x, F x.1 x.2.1 x.2.2.1 x.2.2.2.1 x.2.2.2.2 =
       G (σ x).1 (σ x).2.1 (σ x).2.2.1 (σ x).2.2.2.1 (σ x).2.2.2.2) :
@@ -237,7 +180,6 @@ def ricComp (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) 
 def dRicComp (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R) (ddΓ : ι → ι → ι → ι → ι → R) :
     ι → ι → ι → R := fun f b d => ∑ a, dRiemComp Γ dΓ ddΓ f a b a d
 
-/-- Contracting the upper index with the third commutes with `∇` (no metric). -/
 theorem sum_cov13_contract (Γ : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
     (dT : ι → ι → ι → ι → ι → R) (f b d : ι) :
     ∑ a, cov13 Γ T dT f a b a d =
@@ -252,7 +194,6 @@ theorem sum_cov13_contract (Γ : ι → ι → ι → R) (T : ι → ι → ι �
     Finset.sum_comm (f := fun a e => Γ e f d * T a b a e)]
   linear_combination hz
 
-/-- `∂_f R^a_bcd` is skew in `c, d`. -/
 theorem dRiemComp_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
     (ddΓ : ι → ι → ι → ι → ι → R) (f a b c d : ι) :
     dRiemComp Γ dΓ ddΓ f a b c d = -dRiemComp Γ dΓ ddΓ f a b d c := by
@@ -263,7 +204,6 @@ theorem dRiemComp_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι →
     rw [← sum_neg_distrib]; exact sum_congr rfl fun _ _ => by ring
   linear_combination this
 
-/-- `∇_f R^a_bcd` is skew in `c, d`. -/
 theorem cov13_riem_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
     (ddΓ : ι → ι → ι → ι → ι → R) (f a b c d : ι) :
     cov13 Γ (riemComp Γ dΓ) (dRiemComp Γ dΓ ddΓ) f a b c d =
@@ -276,8 +216,6 @@ theorem cov13_riem_skew (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι �
     riemComp_skew Γ dΓ a b d e]
   ring
 
-/-- **Contracted second Bianchi identity**, jet level, no metric:
-`∇_a R^a_bcd = ∇_c R_bd - ∇_d R_bc`. -/
 theorem sum_cov13_riem (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι → ι → R)
     (ddΓ : ι → ι → ι → ι → ι → R) (hΓ : ∀ a b c, Γ a b c = Γ a c b)
     (hddΓ : ∀ f e a b c, ddΓ f e a b c = ddΓ e f a b c) (b c d : ι) :
@@ -298,8 +236,6 @@ theorem sum_cov13_riem (Γ : ι → ι → ι → R) (dΓ : ι → ι → ι →
 def IsParallelInv (Γ : ι → ι → ι → R) (gi : Matrix ι ι R) (dgi : ι → ι → ι → R) : Prop :=
   ∀ f a b, dgi f a b = -∑ c, (gi a c * Γ b f c + Γ a f c * gi c b)
 
-/-- Contraction with a parallel inverse metric commutes with `∇`:
-`g^{ab} ∇_f S_ab = ∂_f (g^{ab} S_ab)`. -/
 theorem sum_gi_cov02 {Γ : ι → ι → ι → R} {gi : Matrix ι ι R} {dgi : ι → ι → ι → R}
     (hpar : IsParallelInv Γ gi dgi) (S : ι → ι → R) (dS : ι → ι → ι → R) (f : ι) :
     ∑ a, ∑ b, gi a b * cov02 Γ S dS f a b = ∑ a, ∑ b, (dgi f a b * S a b + gi a b * dS f a b) := by
@@ -315,7 +251,6 @@ theorem sum_gi_cov02 {Γ : ι → ι → ι → R} {gi : Matrix ι ι R} {dgi : 
     sum3_congr_perm perm23 fun x => by simp only [perm23, Equiv.coe_fn_mk]; ring
   linear_combination -e1 - e2
 
-/-- Raising the first index with a parallel inverse metric commutes with `∇`. -/
 theorem sum_gi_cov02_left {Γ : ι → ι → ι → R} {gi : Matrix ι ι R} {dgi : ι → ι → ι → R}
     (hpar : IsParallelInv Γ gi dgi) (S : ι → ι → R) (dS : ι → ι → ι → R) (f d c : ι) :
     ∑ b, gi d b * cov02 Γ S dS f b c = cov11 Γ (fun d c => ∑ b, gi d b * S b c)
@@ -332,7 +267,6 @@ theorem sum_gi_cov02_left {Γ : ι → ι → ι → R} {gi : Matrix ι ι R} {d
     sum_swap_eq fun x i => by ring
   linear_combination -e1 - e2 + e3
 
-/-- Contracting `b, d` of a `(1,3)` jet with a parallel inverse metric commutes with `∇`. -/
 theorem sum_gi_cov13 {Γ : ι → ι → ι → R} {gi : Matrix ι ι R} {dgi : ι → ι → ι → R}
     (hpar : IsParallelInv Γ gi dgi) (T : ι → ι → ι → ι → R) (dT : ι → ι → ι → ι → ι → R)
     (f a c : ι) :
@@ -356,7 +290,6 @@ theorem sum_gi_cov13 {Γ : ι → ι → ι → R} {gi : Matrix ι ι R} {dgi : 
     sum3_congr_perm perm23 fun x => by simp only [perm23, Equiv.coe_fn_mk]; ring
   linear_combination e1 - e2 - e3 - e4
 
-/-- `∇_f T_abcd` has the interchange symmetry if `T` and its jet do. -/
 theorem cov4_interchange (Γ : ι → ι → ι → R) {T : ι → ι → ι → ι → R}
     {dT : ι → ι → ι → ι → ι → R} (hT : Interchange T) (hdT : ∀ f, Interchange (dT f))
     (f a b c d : ι) : cov4 Γ T dT f a b c d = cov4 Γ T dT f c d a b := by
@@ -367,7 +300,6 @@ theorem cov4_interchange (Γ : ι → ι → ι → R) {T : ι → ι → ι →
   rw [hT e b c d, hT a e c d, hT a b e d, hT a b c e]
   ring
 
-/-- `∇_f T_abcd` is skew in each pair if `T` and its jet are. -/
 theorem cov4_pairSkew (Γ : ι → ι → ι → R) {T : ι → ι → ι → ι → R}
     {dT : ι → ι → ι → ι → ι → R} (hT : PairSkew T) (hdT : ∀ f, PairSkew (dT f)) (f : ι) :
     PairSkew (cov4 Γ T dT f) := by
@@ -428,7 +360,6 @@ def IsFrameConn (Γ : ι → ι → ι → R) (e : ι → ι → R) (de : ι →
     (Γ' : ι → ι → ι → R) : Prop :=
   ∀ h a μ, ∑ l, Γ' l h μ * e a l = de h a μ + ∑ c, Γ a h c * e c μ
 
-/-- Passing to frame components in the first slot commutes with `∇` (tensoriality, slot 1). -/
 theorem cov4M_slot1 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de : ι → ι → ι → R}
     (hrel : IsFrameConn Γ e de Γ') (B C D : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
     (dT : ι → ι → ι → ι → ι → R) (h μ b c d : ι) :
@@ -458,7 +389,6 @@ theorem cov4M_slot1 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de 
   simp only [mul_sum]
   ring
 
-/-- Passing to frame components in the second slot commutes with `∇` (tensoriality, slot 2). -/
 theorem cov4M_slot2 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de : ι → ι → ι → R}
     (hrel : IsFrameConn Γ e de Γ') (A C D : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
     (dT : ι → ι → ι → ι → ι → R) (h a μ c d : ι) :
@@ -488,7 +418,6 @@ theorem cov4M_slot2 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de 
   simp only [mul_sum]
   ring
 
-/-- Passing to frame components in the third slot commutes with `∇` (tensoriality, slot 3). -/
 theorem cov4M_slot3 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de : ι → ι → ι → R}
     (hrel : IsFrameConn Γ e de Γ') (A B D : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
     (dT : ι → ι → ι → ι → ι → R) (h a b μ d : ι) :
@@ -518,7 +447,6 @@ theorem cov4M_slot3 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de 
   simp only [mul_sum]
   ring
 
-/-- Passing to frame components in the fourth slot commutes with `∇` (tensoriality, slot 4). -/
 theorem cov4M_slot4 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de : ι → ι → ι → R}
     (hrel : IsFrameConn Γ e de Γ') (A B C : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
     (dT : ι → ι → ι → ι → ι → R) (h a b c μ : ι) :
@@ -552,8 +480,7 @@ theorem cov4M_slot4 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de 
 def frameJet (e : ι → ι → R) (dT : ι → ι → ι → ι → ι → R) : ι → ι → ι → ι → ι → R :=
   fun κ μ ν ρ σ => ∑ h, e h κ * dT h μ ν ρ σ
 
-/-- The frame connection coefficients `γ^λ_{κν} = e^h_κ Γ'^λ_{hν}`
-(`∇_{e_κ} e_ν = γ^λ_{κν} e_λ`). -/
+/-- The frame connection coefficients `γ^λ_{κν} = e^h_κ Γ'^λ_{hν}`. -/
 def frameConn (e : ι → ι → R) (Γ' : ι → ι → ι → R) : ι → ι → ι → R :=
   fun l κ ν => ∑ h, e h κ * Γ' l h ν
 
@@ -567,7 +494,6 @@ def dframe4 (e : ι → ι → R) (de : ι → ι → ι → R) (T : ι → ι �
   dslot1 e de (slot2 e (slot3 e (slot4 e T)))
     (dslot2 e de (slot3 e (slot4 e T)) (dslot3 e de (slot4 e T) (dslot4 e de T dT)))
 
-/-- Frame derivative index: `∇_κ = e^h_κ ∇_h`. -/
 theorem cov4_frameJet (e : ι → ι → R) (Γ' : ι → ι → ι → R) (T : ι → ι → ι → ι → R)
     (dT : ι → ι → ι → ι → ι → R) (κ μ ν ρ σ : ι) :
     cov4 (frameConn e Γ') T (frameJet e dT) κ μ ν ρ σ =
@@ -581,9 +507,6 @@ theorem cov4_frameJet (e : ι → ι → R) (Γ' : ι → ι → ι → R) (T : 
   rw [k fun x i => Γ' x i μ * T x ν ρ σ, k fun x i => Γ' x i ν * T μ x ρ σ,
     k fun x i => Γ' x i ρ * T μ ν x σ, k fun x i => Γ' x i σ * T μ ν ρ x]
 
-/-- **Tensoriality of `∇`**: the frame components of the covariant derivative of a `(0,4)`
-tensor are its covariant derivative in the frame, computed with the frame connection
-coefficients and frame derivatives. -/
 theorem cov4_frame4 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de : ι → ι → ι → R}
     (hrel : IsFrameConn Γ e de Γ') (T : ι → ι → ι → ι → R) (dT : ι → ι → ι → ι → ι → R)
     (κ μ ν ρ σ : ι) :
@@ -602,8 +525,6 @@ theorem cov4_frame4 {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de 
   rw [cov4M_slot4 hrel]
   rfl
 
-/-- **Frame form of the second Bianchi identity**: if the coordinate covariant derivative of `T`
-satisfies `∇_[h T_ab]cd = 0`, so do its frame components. -/
 theorem frame_cyclic {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de : ι → ι → ι → R}
     (hrel : IsFrameConn Γ e de Γ') (T : ι → ι → ι → ι → R) (dT : ι → ι → ι → ι → ι → R)
     (hcyc : ∀ h a b c d, cov4 Γ T dT h a b c d + cov4 Γ T dT a b h c d
@@ -638,12 +559,10 @@ theorem frame_cyclic {Γ Γ' : ι → ι → ι → R} {e : ι → ι → R} {de
   refine sum_eq_zero fun b _ => ?_
   rw [← mul_add, ← mul_add, hZc, mul_zero]
 
-/-- Frame components as a four-fold sum. -/
 theorem frame4_eq (e : ι → ι → R) (T : ι → ι → ι → ι → R) (μ ν ρ σ : ι) :
     frame4 e T μ ν ρ σ = ∑ a, ∑ b, ∑ c, ∑ d, e a μ * e b ν * e c ρ * e d σ * T a b c d := by
   simp only [frame4, slot1, slot2, slot3, slot4, mul_sum, mul_assoc]
 
-/-- Frame components of a tensor skew in each pair are skew in each pair. -/
 theorem frame4_pairSkew (e : ι → ι → R) {T : ι → ι → ι → ι → R} (hT : PairSkew T) :
     PairSkew (frame4 e T) := by
   intro μ ν ρ σ
@@ -668,7 +587,6 @@ theorem frame4_pairSkew (e : ι → ι → R) {T : ι → ι → ι → ι → R
     refine sum_congr rfl fun c _ => ?_
     rw [(hT a b d c).2]; ring
 
-/-- Frame components of a tensor with the first Bianchi identity satisfy it. -/
 theorem frame4_bianchi1 (e : ι → ι → R) {T : ι → ι → ι → ι → R} (hT : Bianchi1 T) :
     Bianchi1 (frame4 e T) := by
   intro μ ν ρ σ
@@ -689,8 +607,6 @@ theorem frame4_bianchi1 (e : ι → ι → R) {T : ι → ι → ι → ι → R
   refine sum_eq_zero fun d _ => ?_
   rw [← mul_add, ← mul_add, hT a b c d, mul_zero]
 
-/-- A trace of the frame components over slots 1 and 3, with weights `w`, is the frame
-transform of the trace of `T` against `gi_ac = ∑_μ w_μ e^a_μ e^c_μ`. -/
 theorem frame4_trace13 (e : ι → ι → R) (w : ι → R) (T : ι → ι → ι → ι → R) (ν σ : ι) :
     ∑ μ, w μ * frame4 e T μ ν μ σ =
       ∑ b, ∑ d, e b ν * e d σ * ∑ a, ∑ c, (∑ μ, w μ * e a μ * e c μ) * T a b c d := by
@@ -714,9 +630,7 @@ def dChr (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) : ι 
 def ddChr (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) : ι → ι → ι → ι → ι → ℝ :=
   fun f e a b c => partialDeriv f (fun y => partialDeriv e (fun z => Γ z a b c) y) x
 
-/-- A metric field `g` (symmetric, `C²`) and its Levi-Civita connection `Γ` (`C²`, torsion-free,
-compatible with `g`). For the Christoffel symbols of a nondegenerate `C³` metric see
-`isLeviCivita_christoffel`. -/
+/-- A `C²` metric field `g` and its `C²` torsion-free compatible connection `Γ`. -/
 structure IsLeviCivita (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ) : Prop where
   symm : ∀ x, (g x).IsSymm
   contDiff_metric : ∀ a b, ContDiff ℝ 2 fun x => g x a b
@@ -729,8 +643,6 @@ structure IsLeviCivita (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ
 def covRiemField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) : ι → ι → ι → ι → ι → ℝ :=
   cov13 (Γ x) (riemField Γ x) fun f a b c d => partialDeriv f (fun y => riemField Γ y a b c d) x
 
-/-- The partial derivatives of the Riemann field are the jet `dRiemComp` (product rule;
-`Γ ∈ C²`). -/
 theorem partialDeriv_riemField {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (hΓ : ∀ a b c, ContDiff ℝ 2 fun y => Γ y a b c) (x : ι → ℝ) (f a b c d : ι) :
     partialDeriv f (fun y => riemField Γ y a b c d) x =
@@ -748,7 +660,6 @@ theorem partialDeriv_riemField {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     partialDeriv_mul (by fun_prop) (by fun_prop)]
   ring
 
-/-- `∇R` of the field is the jet-level covariant derivative of (2.2). -/
 theorem covRiemField_eq {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (hΓ : ∀ a b c, ContDiff ℝ 2 fun y => Γ y a b c) (x : ι → ℝ) :
     covRiemField Γ x =
@@ -758,7 +669,6 @@ theorem covRiemField_eq {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
   funext f a b c d
   exact partialDeriv_riemField hΓ x f a b c d
 
-/-- **Second Bianchi identity** for fields. -/
 theorem covRiemField_cyclic {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (hΓC : ∀ a b c, ContDiff ℝ 2 fun y => Γ y a b c) (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b)
     (x : ι → ℝ) (f a b c d : ι) :
@@ -767,7 +677,6 @@ theorem covRiemField_cyclic {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
   exact cov13_riem_cyclic _ _ _ (hΓ x)
     (fun f e a b c => partialDeriv_comm (hΓC a b c) f e x) f a b c d
 
-/-- The Riemann field of a `C²` connection is differentiable. -/
 theorem differentiable_riemField {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (hΓ : ∀ a b c, ContDiff ℝ 2 fun y => Γ y a b c) (a b c d : ι) :
     Differentiable ℝ fun y => riemField Γ y a b c d := by
@@ -788,7 +697,6 @@ def covRiemLowField (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) �
   cov4 (Γ x) (riemLowField g Γ x) fun f a b c d =>
     partialDeriv f (fun y => riemLowField g Γ y a b c d) x
 
-/-- `∇_f R_abcd = g_ae ∇_f R^e_bcd` for the Levi-Civita connection. -/
 theorem covRiemLowField_eq {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) (x : ι → ℝ) (f a b c d : ι) :
     covRiemLowField g Γ x f a b c d = ∑ e, g x a e * covRiemField Γ x f e b c d := by
@@ -807,7 +715,6 @@ theorem covRiemLowField_eq {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι →
   rw [hd]
   exact cov4_lower (Γ x) (g x) _ (h.compat x) _ _ f a b c d
 
-/-- **Second Bianchi identity**, lowered: `∇_f R_abcd + ∇_c R_abdf + ∇_d R_abfc = 0`. -/
 theorem covRiemLowField_cyclic {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) (x : ι → ℝ) (f a b c d : ι) :
     covRiemLowField g Γ x f a b c d + covRiemLowField g Γ x c a b d f
@@ -816,28 +723,21 @@ theorem covRiemLowField_cyclic {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι
   exact sum_eq_zero fun e _ => by
     rw [covRiemField_cyclic h.contDiff_chr h.torsionFree x f e b c d, mul_zero]
 
-/-- The lowered Riemann field has the interchange symmetry.
-[QuennevilleBelair2015], Prop 2.1 -/
 theorem riemLowField_interchange {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) (x : ι → ℝ) : Interchange (riemLowField g Γ x) :=
   (riemField_isAlgCurv g Γ h.symm h.contDiff_metric
     (fun a b c => (h.contDiff_chr a b c).differentiable (by norm_num)) h.torsionFree h.compat x).2.2
 
-/-- The lowered Riemann field is skew in each pair. [QuennevilleBelair2015], Prop 2.1 -/
 theorem riemLowField_pairSkew {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) (x : ι → ℝ) : PairSkew (riemLowField g Γ x) :=
   (riemField_isAlgCurv g Γ h.symm h.contDiff_metric
     (fun a b c => (h.contDiff_chr a b c).differentiable (by norm_num)) h.torsionFree h.compat x).1
 
-/-- The lowered Riemann field satisfies the first Bianchi identity.
-[QuennevilleBelair2015], Prop 2.1 -/
 theorem riemLowField_bianchi1 {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) (x : ι → ℝ) : Bianchi1 (riemLowField g Γ x) :=
   (riemField_isAlgCurv g Γ h.symm h.contDiff_metric
     (fun a b c => (h.contDiff_chr a b c).differentiable (by norm_num)) h.torsionFree h.compat x).2.1
 
-/-- **Second Bianchi identity**, lowered, cyclic over the derivative and the first pair:
-`∇_f R_abcd + ∇_a R_bfcd + ∇_b R_facd = 0`. -/
 theorem covRiemLowField_cyclic_first {g : (ι → ℝ) → Matrix ι ι ℝ}
     {Γ : (ι → ℝ) → ι → ι → ι → ℝ} (h : IsLeviCivita g Γ) (x : ι → ℝ) (f a b c d : ι) :
     covRiemLowField g Γ x f a b c d + covRiemLowField g Γ x a b f c d
@@ -858,7 +758,8 @@ def ricField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) :
 def covRicField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) : ι → ι → ι → ℝ :=
   cov02 (Γ x) (ricField Γ x) fun f b d => partialDeriv f (fun y => ricField Γ y b d) x
 
-/-- **Contracted second Bianchi identity** for fields: `∇_a R^a_bcd = ∇_c R_bd - ∇_d R_bc`. -/
+/-- The contracted second Bianchi identity `∇_a R^a_bcd = ∇_c R_bd - ∇_d R_bc` for a `C²`
+torsion-free connection field. -/
 theorem div_riemField {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (hΓC : ∀ a b c, ContDiff ℝ 2 fun y => Γ y a b c) (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b)
     (x : ι → ℝ) (b c d : ι) :
@@ -875,7 +776,6 @@ theorem div_riemField {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
   rw [e, covRiemField_eq hΓC]
   exact sum_cov13_riem _ _ _ (hΓ x) (fun f e a b c => partialDeriv_comm (hΓC a b c) f e x) b c d
 
-/-- In vacuum (`R_bd ≡ 0`) the covariant derivative of the Ricci field vanishes. -/
 theorem covRicField_eq_zero {Γ : (ι → ℝ) → ι → ι → ι → ℝ} (hvac : ∀ y, ricField Γ y = 0)
     (x : ι → ℝ) (f b d : ι) : covRicField Γ x f b d = 0 := by
   have e : ∀ b d, (fun y => ricField Γ y b d) = fun _ => 0 := fun b d =>
@@ -883,15 +783,12 @@ theorem covRicField_eq_zero {Γ : (ι → ℝ) → ι → ι → ι → ℝ} (hv
   simp only [covRicField, cov02, e, partialDeriv_const, hvac x, Pi.zero_apply, mul_zero,
     add_zero, sum_const_zero, sub_zero]
 
-/-- In vacuum the Riemann tensor is divergence-free: `∇_a R^a_bcd = 0`. -/
 theorem div_riemField_vacuum {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (hΓC : ∀ a b c, ContDiff ℝ 2 fun y => Γ y a b c) (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b)
     (hvac : ∀ y, ricField Γ y = 0) (x : ι → ℝ) (b c d : ι) :
     ∑ a, covRiemField Γ x a a b c d = 0 := by
   rw [div_riemField hΓC hΓ, covRicField_eq_zero hvac, covRicField_eq_zero hvac, sub_zero]
 
-/-- `∇ g⁻¹ = 0` for fields: the derivative of the inverse metric of a metric with its
-Levi-Civita connection. -/
 theorem isParallelInv_field {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : (ι → ℝ) → Matrix ι ι ℝ} (hinv : ∀ y, gi y * g y = 1)
     (hgi : ∀ a b, Differentiable ℝ fun y => gi y a b) (x : ι → ℝ) :
@@ -949,7 +846,6 @@ def einsteinUpField (gi : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) 
 def divMixed (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (T : (ι → ℝ) → ι → ι → ℝ) (x : ι → ℝ) (c : ι) : ℝ :=
   ∑ a, cov11 (Γ x) (T x) (fun f a c => partialDeriv f (fun y => T y a c) x) a a c
 
-/-- `R^a_bcd = g^{ae} R_ebcd`. -/
 theorem riemField_eq_raise {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     {gi : Matrix ι ι ℝ} {x : ι → ℝ} (hinv : gi * g x = 1) (a b c d : ι) :
     riemField Γ x a b c d = ∑ e, gi a e * riemLowField g Γ x e b c d := by
@@ -964,7 +860,6 @@ theorem riemField_eq_raise {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι →
         rw [← hcf h, sum_mul]
         exact sum_congr rfl fun e _ => by ring
 
-/-- `g^{bd} R_ebcd = R_ec` (pair skewness, symmetric `g⁻¹`). -/
 theorem contract_riemLowField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : Matrix ι ι ℝ} {x : ι → ℝ} (hinv : gi * g x = 1) (e c : ι) :
     ∑ b, ∑ d, gi b d * riemLowField g Γ x e b c d = ricField Γ x e c := by
@@ -976,7 +871,6 @@ theorem contract_riemLowField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι 
   rw [(hS b e d c).1, (hS e b d c).2, hs.apply d b]
   ring
 
-/-- `g^{bd} R^a_bcd = R^a_c`. -/
 theorem contract_riemField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : (ι → ℝ) → Matrix ι ι ℝ} (hinv : ∀ y, gi y * g y = 1)
     (x : ι → ℝ) (a c : ι) :
@@ -985,7 +879,6 @@ theorem contract_riemField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι →
     mul_sum]
   exact sum3_congr_perm permCyc fun y => by simp only [permCyc, Equiv.coe_fn_mk]; ring
 
-/-- **Twice-contracted second Bianchi identity**: `2 ∇_a R^a_c = ∂_c R`. -/
 theorem two_mul_divMixed_ricUp {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : (ι → ℝ) → Matrix ι ι ℝ} (hinv : ∀ y, gi y * g y = 1)
     (hgi : ∀ a b, Differentiable ℝ fun y => gi y a b) (x : ι → ℝ) (c : ι) :
@@ -1054,14 +947,12 @@ theorem two_mul_divMixed_ricUp {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι
   linarith [hA, hB, hC, hD]
 
 omit [DecidableEq ι] in
-/-- `∇` of a `(1,1)` jet is additive. -/
 theorem cov11_sub (Γ : ι → ι → ι → ℝ) (T₁ T₂ : ι → ι → ℝ) (dT₁ dT₂ : ι → ι → ι → ℝ) (f a c : ι) :
     cov11 Γ (fun a c => T₁ a c - T₂ a c) (fun f a c => dT₁ f a c - dT₂ f a c) f a c =
       cov11 Γ T₁ dT₁ f a c - cov11 Γ T₂ dT₂ f a c := by
   simp only [cov11, mul_sub, sum_sub_distrib]
   ring
 
-/-- `∇_a (δ^a_c S / 2) = ∂_c S / 2`. -/
 theorem sum_cov11_delta (Γ : ι → ι → ι → ℝ) (S : ℝ) (dS : ι → ℝ) (c : ι) :
     ∑ a, cov11 Γ (fun a c => (if a = c then 1 else 0) * S / 2)
       (fun f a c => (if a = c then 1 else 0) * dS f / 2) a a c = dS c / 2 := by
@@ -1070,7 +961,6 @@ theorem sum_cov11_delta (Γ : ι → ι → ι → ℝ) (S : ℝ) (dS : ι → �
     ite_true]
   ring
 
-/-- **Contracted Bianchi identity** `∇_a G^a_c = 0` for the mixed Einstein tensor. -/
 theorem divMixed_einsteinUp {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : (ι → ℝ) → Matrix ι ι ℝ} (hinv : ∀ y, gi y * g y = 1)
     (hgi : ∀ a b, Differentiable ℝ fun y => gi y a b) (x : ι → ℝ) (c : ι) :
@@ -1105,7 +995,6 @@ theorem divMixed_einsteinUp {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι �
 def einsteinField (g gi : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) :
     Matrix ι ι ℝ := einstein (g x) (gi x) (Matrix.of (ricField Γ x))
 
-/-- Raising the first index of `G_bc` gives `G^d_c = R^d_c - ½ δ^d_c R`. -/
 theorem raise_einsteinField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : (ι → ℝ) → Matrix ι ι ℝ} (hinv : ∀ y, gi y * g y = 1)
     (x : ι → ℝ) (d c : ι) :
@@ -1127,7 +1016,6 @@ theorem raise_einsteinField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι �
     rw [mul_sum]; exact sum_congr rfl fun b _ => by ring, hδ]
   split_ifs <;> simp [invOf_eq_inv]; ring
 
-/-- **Twice-contracted Bianchi identity** `∇^a G_ac = 0` (thesis §2.3). -/
 theorem div_einsteinField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : (ι → ℝ) → Matrix ι ι ℝ} (hinv : ∀ y, gi y * g y = 1)
     (hgi : ∀ a b, Differentiable ℝ fun y => gi y a b) (x : ι → ℝ) (c : ι) :
@@ -1156,9 +1044,7 @@ theorem div_einsteinField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → 
   exact sum_congr rfl fun b _ => (partialDeriv_mul (f := fun y => gi y d b)
     (g := fun y => einsteinField g gi Γ y b c) (hgi d b x) (hG b c x) f).symm
 
-/-- The Weyl tensor of an algebraic curvature tensor `Rm` in dimension `n = card ι`:
-`C_abcd = R_abcd - (g_ac R_bd - g_ad R_bc - g_bc R_ad + g_bd R_ac)/(n-2)
-  + R (g_ac g_bd - g_ad g_bc)/((n-1)(n-2))`, with `R_ab = ricci gi Rm` and `R = g^{ab} R_ab`. -/
+/-- The Weyl tensor of an algebraic curvature tensor `Rm` in dimension `n = card ι`. -/
 def weylTensor (g gi : Matrix ι ι ℝ) (Rm : ι → ι → ι → ι → ℝ) : ι → ι → ι → ι → ℝ :=
   fun a b c d =>
     Rm a b c d - (g a c * ricci gi Rm b d - g a d * ricci gi Rm b c - g b c * ricci gi Rm a d
@@ -1167,14 +1053,11 @@ def weylTensor (g gi : Matrix ι ι ℝ) (Rm : ι → ι → ι → ι → ℝ) 
       / (((Fintype.card ι : ℝ) - 1) * ((Fintype.card ι : ℝ) - 2))
 
 omit [DecidableEq ι] in
-/-- In vacuum the Weyl tensor is the Riemann tensor. -/
 theorem weylTensor_eq_self {g gi : Matrix ι ι ℝ} {Rm : ι → ι → ι → ι → ℝ}
     (h : ricci gi Rm = 0) : weylTensor g gi Rm = Rm := by
   funext a b c d
   simp [weylTensor, h]
 
-/-- The Weyl tensor is trace-free: `g^{ac} C_abcd = 0` (`n ≠ 1, 2`, `Rm` with the Riemann
-symmetries). -/
 theorem weylTensor_traceFree {g gi : Matrix ι ι ℝ} (hg : g.IsSymm) (hinv : gi * g = 1)
     {Rm : ι → ι → ι → ι → ℝ} (hI : Interchange Rm)
     (hn1 : (Fintype.card ι : ℝ) ≠ 1) (hn2 : (Fintype.card ι : ℝ) ≠ 2) (b d : ι) :
@@ -1223,7 +1106,6 @@ theorem weylTensor_traceFree {g gi : Matrix ι ι ℝ} (hg : g.IsSymm) (hinv : g
   field_simp
   ring
 
-/-- The Ricci contraction of the lowered Riemann field is `R_ab = R^c_acb`. -/
 theorem ricci_riemLowField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     {gi : Matrix ι ι ℝ} {x : ι → ℝ} (hinv : gi * g x = 1) :
     ricci gi (riemLowField g Γ x) = Matrix.of (ricField Γ x) := by
@@ -1236,7 +1118,6 @@ theorem ricci_riemLowField {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι →
 def weylField (g gi : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (x : ι → ℝ) :
     ι → ι → ι → ι → ℝ := weylTensor (g x) (gi x) (riemLowField g Γ x)
 
-/-- **In vacuum the Weyl tensor is divergence-free**: `∇^a C_abcd = 0` when `R_ab = 0`. -/
 theorem div_weylField_vacuum {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {gi : (ι → ℝ) → Matrix ι ι ℝ} (hinv : ∀ y, gi y * g y = 1)
     (hvac : ∀ y, ricField Γ y = 0) (x : ι → ℝ) (b c d : ι) :
@@ -1271,14 +1152,12 @@ def pdFrame (e : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : ι → ι
   fun h a μ => partialDeriv h (fun y => e y a μ) x
 
 omit [DecidableEq ι] in
-/-- Frame components (slot 1) of differentiable fields are differentiable. -/
 theorem differentiable_slot1 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (a b c d : ι) :
     Differentiable ℝ fun y => slot1 (e y) (T y) a b c d := by
   simp only [slot1]; fun_prop
 
-/-- Product rule for frame components (slot 1). -/
 theorem pd4_slot1 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (x : ι → ℝ) :
@@ -1289,14 +1168,12 @@ theorem pd4_slot1 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → 
   exact sum_congr rfl fun a _ => partialDeriv_mul (by fun_prop) (by fun_prop) h
 
 omit [DecidableEq ι] in
-/-- Frame components (slot 2) of differentiable fields are differentiable. -/
 theorem differentiable_slot2 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (a b c d : ι) :
     Differentiable ℝ fun y => slot2 (e y) (T y) a b c d := by
   simp only [slot2]; fun_prop
 
-/-- Product rule for frame components (slot 2). -/
 theorem pd4_slot2 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (x : ι → ℝ) :
@@ -1307,14 +1184,12 @@ theorem pd4_slot2 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → 
   exact sum_congr rfl fun b _ => partialDeriv_mul (by fun_prop) (by fun_prop) h
 
 omit [DecidableEq ι] in
-/-- Frame components (slot 3) of differentiable fields are differentiable. -/
 theorem differentiable_slot3 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (a b c d : ι) :
     Differentiable ℝ fun y => slot3 (e y) (T y) a b c d := by
   simp only [slot3]; fun_prop
 
-/-- Product rule for frame components (slot 3). -/
 theorem pd4_slot3 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (x : ι → ℝ) :
@@ -1325,14 +1200,12 @@ theorem pd4_slot3 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → 
   exact sum_congr rfl fun c _ => partialDeriv_mul (by fun_prop) (by fun_prop) h
 
 omit [DecidableEq ι] in
-/-- Frame components (slot 4) of differentiable fields are differentiable. -/
 theorem differentiable_slot4 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (a b c d : ι) :
     Differentiable ℝ fun y => slot4 (e y) (T y) a b c d := by
   simp only [slot4]; fun_prop
 
-/-- Product rule for frame components (slot 4). -/
 theorem pd4_slot4 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → ι → ι → ι → ι → ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ)
     (hT : ∀ a b c d, Differentiable ℝ fun y => T y a b c d) (x : ι → ℝ) :
@@ -1342,8 +1215,7 @@ theorem pd4_slot4 {e : (ι → ℝ) → Matrix ι ι ℝ} {T : (ι → ℝ) → 
   rw [partialDeriv_sum _ (fun d _ => by fun_prop)]
   exact sum_congr rfl fun d _ => partialDeriv_mul (by fun_prop) (by fun_prop) h
 
-/-- The mixed connection coefficients `Γ'^λ_{hμ} = θ^λ_b (∂_h e^b_μ + Γ^b_{hc} e^c_μ)` of a frame
-field `e` with coframe `θ`. -/
+/-- The mixed connection coefficients `Γ'^λ_{hμ} = θ^λ_b (∂_h e^b_μ + Γ^b_{hc} e^c_μ)`. -/
 def mixedConnField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (e θ : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) :
     ι → ι → ι → ℝ := fun l h μ =>
   ∑ b, θ x l b * (partialDeriv h (fun y => e y b μ) x + ∑ c, Γ x b h c * e x c μ)
@@ -1352,8 +1224,6 @@ def mixedConnField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (e θ : (ι 
 def frameConnField (Γ : (ι → ℝ) → ι → ι → ι → ℝ) (e θ : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) :
     ι → ι → ι → ℝ := frameConn (e x) (mixedConnField Γ e θ x)
 
-/-- `mixedConnField` expands `∇_h e_μ` in the frame:
-`Γ'^λ_{hμ} e^a_λ = ∂_h e^a_μ + Γ^a_{hc} e^c_μ`. -/
 theorem isFrameConn_field (Γ : (ι → ℝ) → ι → ι → ι → ℝ) {e θ : (ι → ℝ) → Matrix ι ι ℝ}
     (hθ : ∀ y, e y * θ y = 1) (x : ι → ℝ) :
     IsFrameConn (Γ x) (e x) (pdFrame e x) (mixedConnField Γ e θ x) := by
@@ -1371,14 +1241,11 @@ theorem isFrameConn_field (Γ : (ι → ℝ) → ι → ι → ι → ℝ) {e θ
         exact sum_congr rfl fun l _ => by ring
     _ = _ := by simp [Matrix.one_apply]
 
-/-- The frame components `c^λ_{κν} = θ^λ_a [e_κ, e_ν]^a` of the Lie bracket of two frame vector
-fields, `[e_κ, e_ν]^a = e^h_κ ∂_h e^a_ν - e^h_ν ∂_h e^a_κ`. -/
+/-- The frame components `c^λ_{κν} = θ^λ_a [e_κ, e_ν]^a` of the Lie bracket of frame vectors. -/
 def frameBracket (e θ : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : ι → ι → ι → ℝ := fun l κ ν =>
   ∑ a, θ x l a * ∑ h, (e x h κ * partialDeriv h (fun y => e y a ν) x
     - e x h ν * partialDeriv h (fun y => e y a κ) x)
 
-/-- **Torsion-freeness in a frame**: `γ^λ_{κν} - γ^λ_{νκ} = c^λ_{κν}`, i.e.
-`∇_{e_κ} e_ν - ∇_{e_ν} e_κ = [e_κ, e_ν]` for a torsion-free connection. [Wald1984], §3.1 -/
 theorem frameConnField_sub_swap {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b) (e θ : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ)
     (l κ ν : ι) :
@@ -1407,10 +1274,8 @@ def frameRiemField (g : (ι → ℝ) → Matrix ι ι ℝ) (Γ : (ι → ℝ) �
     (e : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : ι → ι → ι → ι → ℝ :=
   frame4 (e x) (riemLowField g Γ x)
 
-/-- **Second Bianchi identity in a frame** (fields): for any `C¹` frame field `e` with coframe
-`θ`, the frame components `R_μνρσ` of the Riemann tensor satisfy
-`∇_κ R_μνρσ + ∇_μ R_νκρσ + ∇_ν R_κμρσ = 0`, where `∇_κ` is computed with the frame derivatives
-`e_κ = e^h_κ ∂_h` and the frame connection coefficients `frameConnField`. -/
+/-- The second Bianchi identity `∇_κ R_μνρσ + ∇_μ R_νκρσ + ∇_ν R_κμρσ = 0` for the frame
+components of the Riemann tensor of a metric, in a differentiable frame. -/
 theorem frameRiemField_cyclic {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι → ℝ) → ι → ι → ι → ℝ}
     (h : IsLeviCivita g Γ) {e θ : (ι → ℝ) → Matrix ι ι ℝ}
     (he : ∀ a μ, Differentiable ℝ fun y => e y a μ) (hθ : ∀ y, e y * θ y = 1) (x : ι → ℝ)
@@ -1441,13 +1306,11 @@ theorem frameRiemField_cyclic {g : (ι → ℝ) → Matrix ι ι ℝ} {Γ : (ι 
 
 /-! ### The Christoffel symbols of a metric -/
 
-/-- The determinant of a `Cⁿ` matrix field is `Cⁿ`. -/
 theorem contDiff_det {n : ℕ∞} {M : (ι → ℝ) → Matrix ι ι ℝ}
     (hM : ∀ a b, ContDiff ℝ n fun y => M y a b) : ContDiff ℝ n fun y => (M y).det := by
   simp only [Matrix.det_apply, Units.smul_def, zsmul_eq_mul]
   exact ContDiff.sum fun σ _ => contDiff_const.mul (contDiff_prod fun i _ => hM _ _)
 
-/-- The entries of the inverse of a nondegenerate `Cⁿ` matrix field are `Cⁿ`. -/
 theorem contDiff_inv_apply {n : ℕ∞} {M : (ι → ℝ) → Matrix ι ι ℝ}
     (hM : ∀ a b, ContDiff ℝ n fun y => M y a b) (hdet : ∀ y, (M y).det ≠ 0) (a b : ι) :
     ContDiff ℝ n fun y => (M y)⁻¹ a b := by
@@ -1457,14 +1320,13 @@ theorem contDiff_inv_apply {n : ℕ∞} {M : (ι → ℝ) → Matrix ι ι ℝ}
   simp only [Matrix.updateRow_apply]
   split_ifs <;> first | exact contDiff_const | exact hM i j
 
-/-- The Christoffel symbols `Γ^a_bc = ½ g^{ad} (∂_b g_dc + ∂_c g_db - ∂_d g_bc)` of a metric
-field. -/
+/-- The Christoffel symbols `Γ^a_bc = ½ g^{ad} (∂_b g_dc + ∂_c g_db - ∂_d g_bc)` of a metric. -/
 def christoffel (g : (ι → ℝ) → Matrix ι ι ℝ) (x : ι → ℝ) : ι → ι → ι → ℝ := fun a b c =>
   (1 / 2) * ∑ d, (g x)⁻¹ a d * (partialDeriv b (fun y => g y d c) x
     + partialDeriv c (fun y => g y d b) x - partialDeriv d (fun y => g y b c) x)
 
-/-- **The Levi-Civita connection of a `C³` metric**: the Christoffel symbols of a symmetric,
-nondegenerate (any signature) `C³` metric field are `C²`, torsion-free and metric compatible. -/
+/-- The Christoffel symbols of a symmetric nondegenerate `C³` metric field, of any signature, are
+`C²`, torsion-free and metric compatible. -/
 theorem isLeviCivita_christoffel {g : (ι → ℝ) → Matrix ι ι ℝ} (hs : ∀ x, (g x).IsSymm)
     (hC : ∀ a b, ContDiff ℝ 3 fun y => g y a b) (hdet : ∀ x, (g x).det ≠ 0) :
     IsLeviCivita g (christoffel g) := by
@@ -1513,15 +1375,15 @@ variable {g : (ι → ℝ) → Matrix ι ι ℝ} (hs : ∀ x, (g x).IsSymm)
   (hC : ∀ a b, ContDiff ℝ 3 fun y => g y a b) (hdet : ∀ x, (g x).det ≠ 0)
 include hs hC hdet
 
-/-- **Second Bianchi identity** `∇_[e R_cd]ab = 0` for the Levi-Civita connection of an arbitrary
-symmetric nondegenerate `C³` metric on `ℝ^ι` (any signature). -/
+/-- The second Bianchi identity `∇_[e R_cd]ab = 0` for the Levi-Civita connection of a symmetric
+nondegenerate `C³` metric on `ℝ^ι`, of any signature. [QuennevilleBelair2015], (2.4) -/
 theorem bianchi2_metric (x : ι → ℝ) (f a b c d : ι) :
     covRiemLowField g (christoffel g) x f a b c d + covRiemLowField g (christoffel g) x c a b d f
       + covRiemLowField g (christoffel g) x d a b f c = 0 :=
   covRiemLowField_cyclic (isLeviCivita_christoffel hs hC hdet) x f a b c d
 
-/-- **Twice-contracted Bianchi identity** `∇^a G_ac = 0` for an arbitrary symmetric
-nondegenerate `C³` metric. -/
+/-- The twice-contracted Bianchi identity `∇^a G_ac = 0` for a symmetric nondegenerate `C³`
+metric. [QuennevilleBelair2015], §2.3 -/
 theorem div_einstein_metric (x : ι → ℝ) (c : ι) :
     ∑ a, ∑ b, (g x)⁻¹ a b * cov02 (christoffel g x) (einsteinField g (fun y => (g y)⁻¹)
       (christoffel g) x) (fun f b c => partialDeriv f (fun y => einsteinField g
@@ -1530,8 +1392,8 @@ theorem div_einstein_metric (x : ι → ℝ) (c : ι) :
     (fun y => Matrix.nonsing_inv_mul _ (isUnit_iff_ne_zero.2 (hdet y)))
     (fun a b => (contDiff_inv_apply hC hdet a b).differentiable (by norm_num)) x c
 
-/-- **In vacuum the Weyl tensor is divergence-free**: `∇^a C_abcd = 0` for an arbitrary
-symmetric nondegenerate `C³` metric with `R_ab = 0`. -/
+/-- In vacuum (`R_ab = 0`) the Weyl tensor of a symmetric nondegenerate `C³` metric is
+divergence-free: `∇^a C_abcd = 0`. -/
 theorem div_weyl_metric_vacuum (hvac : ∀ y, ricField (christoffel g) y = 0) (x : ι → ℝ)
     (b c d : ι) :
     ∑ a, ∑ e, (g x)⁻¹ a e * cov4 (christoffel g x) (weylField g (fun y => (g y)⁻¹)

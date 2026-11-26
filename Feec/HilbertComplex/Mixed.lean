@@ -6,41 +6,13 @@ public import Feec.Variational.BabuskaNecas
 /-!
 # The mixed Hodge Laplacian
 
-Let `H` be a Hilbert complex and `i → j → k` two consecutive arrows. With the domain spaces
-`Vⁱ`, `Vʲ` (graph norms) and the harmonic forms `ℌʲ`, the **mixed formulation of the Hodge
-Laplacian** at `j` is: given `f ∈ Wʲ`, find `(σ, u, p) ∈ Vⁱ × Vʲ × ℌʲ` with
-
-  `⟪τ, σ⟫ - ⟪d τ, u⟫ = 0`,   `⟪v, d σ⟫ + ⟪d v, d u⟫ + ⟪v, p⟫ = ⟪v, f⟫`,   `⟪q, u⟫ = 0`
-
-for all `(τ, v, q)`. Equivalently `B x = F_f` for the bounded sesquilinear form `mixedForm` on
-`X = Vⁱ × Vʲ × ℌʲ` (an `ℓ²` product). Under closed range at `j` and `k` (Poincaré inequalities
-with constant `c_P ≥ 1`), `B` satisfies the inf-sup condition with constant `1 / (16 c_P²)`,
-by the test map `(σ, u, p) ↦ (σ - c_P⁻² ρ, u + d σ + p, p - u_ℌ)` where `u = d ρ + u_ℌ + u_⊥`
-is the Hodge decomposition of `u` and `ρ ⊥ 𝔷ⁱ`. This is the same proof pattern as the inf-sup
-condition of the Hodge wave form (`Feec.Variational.InfSup.of_testMap`).
-
-## Main results
-
-* `mixedForm_apply`, `mixedForm_eq_mixedRHS_iff`: the form and the three equations.
-* `exists_testVector`, `infSup_mixedForm`: the inf-sup condition, constant `1 / (16 c_P²)`.
-* `mixedForm_sign`, `separatingRight_mixedForm`: `B x y = conj (B (S y) (S x))` for the sign
-  flip `S`, hence separation.
-* `existsUnique_mixed`, `norm_le_of_mixed`: **well-posedness** with `‖x‖ ≤ 16 c_P² ‖f‖`, over
-  `ℝ` and `ℂ`, for every complex and every pair of consecutive arrows.
-* `IsMixedSolution.harmonic_eq`, `IsMixedSolution.mem_adjoint_domain`,
-  `IsMixedSolution.mem_adjoint_domain_d`: `p = P_ℌ f`, `u ∈ D(d†)` with `d† u = σ`, and
-  `d u ∈ D(d†)` with `d† d u = f - p - d σ`; so `u` solves the Hodge Laplacian
-  `(d d† + d† d) u = f - P_ℌ f`, `u ⊥ ℌ`: the mixed problem defines its solution operator.
+For consecutive arrows `i → j → k` of a Hilbert complex, the mixed Hodge Laplacian at `j` seeks
+`(σ, u, p) ∈ Vⁱ × Vʲ × ℌʲ` with `⟪τ, σ⟫ - ⟪d τ, u⟫ = 0`, `⟪v, d σ⟫ + ⟪d v, d u⟫ + ⟪v, p⟫ = ⟪v, f⟫`
+and `⟪q, u⟫ = 0`; under Poincaré inequalities for `d i j` and `d j k` it is well posed.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2, Thm 3.1 (well-posedness of the mixed Hodge Laplacian)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (the mixed Hodge Laplacian and its stable discretization)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 4.9
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 4.13 (the same test-function argument for the Hodge wave form)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -62,7 +34,6 @@ instance (j : ι) : CompleteSpace (H.harmonic j) := (H.isClosed_harmonic j).comp
 
 /-! ### Domain-space elements -/
 
-/-- At a related pair, `‖v‖²_V = ‖ι v‖² + ‖d i j (ι v)‖²`. -/
 theorem norm_sq_domainSpace_of_rel {i j : ι} (h : c.Rel i j) (v : H.domainSpace i) :
     ‖v‖ ^ 2 = ‖H.domainIncl i v‖ ^ 2 + ‖H.d i j (H.domainCoord i j v)‖ ^ 2 := by
   obtain rfl := c.next_eq' h
@@ -83,7 +54,6 @@ theorem d_domainCoord_toDomainSpace {i j : ι} (h : c.Rel i j) (x : (H.d i j).do
     H.d i j (H.domainCoord i j (H.toDomainSpace h x)) = H.d i j x :=
   congrArg (H.d i j) (Subtype.ext rfl)
 
-/-- `d j k x = 0` for a cycle `x`. -/
 theorem d_eq_zero_of_mem_cycles {j k : ι} {x : W j} (hx : x ∈ H.cycles j)
     (hk : x ∈ (H.d j k).domain) : H.d j k ⟨x, hk⟩ = 0 := by
   rw [H.cycles_eq_iInf] at hx
@@ -127,7 +97,6 @@ def MixedSpace.mk {i j : ι} (σ : H.domainSpace i) (u : H.domainSpace j) (p : H
 theorem MixedSpace.eta {i j : ι} (x : H.MixedSpace i j) :
     MixedSpace.mk x.fst x.snd.fst x.snd.snd = x := rfl
 
-/-- `‖(σ, u, p)‖² = ‖σ‖² + ‖u‖² + ‖p‖²`. -/
 theorem MixedSpace.norm_sq {i j : ι} (x : H.MixedSpace i j) :
     ‖x‖ ^ 2 = ‖x.fst‖ ^ 2 + ‖x.snd.fst‖ ^ 2 + ‖(x.snd.snd : W j)‖ ^ 2 := by
   rw [WithLp.prod_norm_sq_eq_of_L2, WithLp.prod_norm_sq_eq_of_L2, add_assoc]; rfl
@@ -173,9 +142,7 @@ variable {H}
 
 variable (H)
 
-/-- **The mixed form of the Hodge Laplacian** at `j`:
-`B((σ,u,p),(τ,v,q)) = ⟪τ,σ⟫ - ⟪dτ,u⟫ + ⟪v,dσ⟫ + ⟪dv,du⟫ + ⟪v,p⟫ - ⟪q,u⟫`
-(linear in `(σ,u,p)`, antilinear in `(τ,v,q)`). -/
+/-- **The mixed form** `B((σ,u,p),(τ,v,q)) = ⟪τ,σ⟫ - ⟪dτ,u⟫ + ⟪v,dσ⟫ + ⟪dv,du⟫ + ⟪v,p⟫ - ⟪q,u⟫`. -/
 def mixedForm (i j k : ι) : H.MixedSpace i j →L[𝕜] H.MixedSpace i j →L⋆[𝕜] 𝕜 :=
   (innerSLFlip 𝕜).bilinearComp (H.mixedI0 i j) (H.mixedI0 i j) -
     (innerSLFlip 𝕜).bilinearComp (H.mixedI1 i j) (H.mixedD0 i j) +
@@ -207,8 +174,6 @@ section InfSup
 
 variable {i j k : ι}
 
-/-- Hodge splitting under closed range at `j`: `u = b + h + w` with `b ∈ 𝔅ʲ`, `h ∈ ℌʲ`,
-`w ∈ (𝔷ʲ)ᗮ`. -/
 theorem exists_hodge_split (hcr : H.ClosedRangeAt j) (u : W j) :
     ∃ b h w, b ∈ H.boundaries j ∧ h ∈ H.harmonic j ∧ w ∈ (H.cycles j)ᗮ ∧ u = b + h + w := by
   have hz : (H.cycles j).starProjection u ∈ H.boundaries j ⊔ H.harmonic j := by
@@ -217,8 +182,6 @@ theorem exists_hodge_split (hcr : H.ClosedRangeAt j) (u : W j) :
   exact ⟨b, h, u - (H.cycles j).starProjection u, hb, hh,
     Submodule.sub_starProjection_mem_orthogonal u, by rw [hbh]; abel⟩
 
-/-- Poincaré preimage: under the Poincaré inequality for `d i j`, every `b ∈ 𝔅ʲ` is `d ρ` with
-`ρ ⊥ 𝔷ⁱ` and `‖ρ‖ ≤ c_P ‖b‖`. -/
 theorem exists_poincare_preimage (hij : c.Rel i j) {cP : ℝ}
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     {b : W j} (hb : b ∈ H.boundaries j) :
@@ -241,9 +204,6 @@ theorem exists_poincare_preimage (hij : c.Rel i j) {cP : ℝ}
   exact this
 
 set_option maxHeartbeats 1000000 in
-/-- **The test vector of the mixed Hodge Laplacian.** Under the Poincaré inequalities for
-`d i j` and `d j k` with constant `c_P ≥ 1`, every `x = (σ, u, p)` has a `y` with
-`‖x‖² / (2 c_P²) ≤ re B(x, y)` and `‖y‖ ≤ 8 ‖x‖`. -/
 theorem exists_testVector (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
@@ -438,10 +398,7 @@ theorem exists_testVector (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 
     exact (abs_le_of_sq_le_sq' hS (by positivity)).2
 
 /-- **Inf-sup condition for the mixed Hodge Laplacian**, with constant `1 / (16 c_P²)`, under the
-Poincaré inequalities for `d i j` and `d j k` with constant `c_P ≥ 1`. See [AFW2010], Thm 3.1;
-its discrete counterpart, uniform in the subcomplex (`Subcomplex.CochainProjection.infSup_mixedForm`),
-is the FEEC stability recalled as well known in [QuennevilleBelair2015], §4.6, citing [AFW2006],
-[AFW2010]. -/
+Poincaré inequalities for `d i j` and `d j k` with constant `c_P ≥ 1`. [AFW2010], Thm 3.1 -/
 theorem infSup_mixedForm (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖) :
@@ -469,7 +426,6 @@ theorem MixedSpace.norm_sign (x : H.MixedSpace i j) : ‖x.sign‖ = ‖x‖ := 
     simp [MixedSpace.sign]
   exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 h
 
-/-- **Symmetry of the mixed form**: `B x y = conj (B (S y) (S x))` for the sign flip `S`. -/
 theorem mixedForm_sign (x y : H.MixedSpace i j) :
     H.mixedForm i j k x y = starRingEnd 𝕜 (H.mixedForm i j k y.sign x.sign) := by
   have s0 : ∀ z : H.MixedSpace i j, H.mixedI0 i j z.sign = -H.mixedI0 i j z := fun z => by
@@ -487,7 +443,6 @@ theorem mixedForm_sign (x y : H.MixedSpace i j) :
     _root_.map_neg, inner_conj_symm]
   ring
 
-/-- **Separation for the mixed form**, from the inf-sup test vectors and the symmetry. -/
 theorem separatingRight_mixedForm (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖) :
@@ -504,7 +459,6 @@ theorem separatingRight_mixedForm (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ}
   rw [MixedSpace.norm_sign] at this
   exact norm_eq_zero.1 (by nlinarith [norm_nonneg w])
 
-/-- `‖(τ, v, q) ↦ ⟪v, f⟫‖ ≤ ‖f‖`. -/
 theorem norm_mixedRHS_le (f : W j) : ‖H.mixedRHS i j f‖ ≤ ‖f‖ := by
   refine ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun y => ?_
   rw [mixedRHS_apply, mul_comm]
@@ -514,9 +468,7 @@ theorem norm_mixedRHS_le (f : W j) : ‖H.mixedRHS i j f‖ ≤ ‖f‖ := by
     (WithLp.norm_snd_le (x := y)))
 
 /-- **Well-posedness of the mixed Hodge Laplacian**: under the Poincaré inequalities for `d i j`
-and `d j k` (closed range at `j` and `k`), for every `f ∈ Wʲ` the mixed problem `B x = F_f` has a
-unique solution. Over `ℝ` and `ℂ`, for every complex and every two consecutive arrows.
-See [AFW2010], Thm 3.1; cf. [AFW2006]. -/
+and `d j k`, `B x = F_f` has a unique solution for every `f ∈ Wʲ`. [AFW2010], Thm 3.1 -/
 theorem existsUnique_mixed (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
@@ -524,8 +476,7 @@ theorem existsUnique_mixed (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP :
   existsUnique_apply_eq (H.infSup_mixedForm hij hjk hcP hPi hPj)
     (H.separatingRight_mixedForm hij hjk hcP hPi hPj) _
 
-/-- **Stability of the mixed Hodge Laplacian**: `‖(σ, u, p)‖ ≤ 16 c_P² ‖f‖`. See [AFW2010],
-Thm 3.1. -/
+/-- **Stability of the mixed Hodge Laplacian**: `‖(σ, u, p)‖ ≤ 16 c_P² ‖f‖`. [AFW2010], Thm 3.1 -/
 theorem norm_le_of_mixed (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
@@ -585,7 +536,6 @@ theorem mixedForm_eq_mixedRHS_iff {f : W j} {σ : H.domainSpace i} {u : H.domain
       MixedSpace.mk_fst, MixedSpace.mk_snd_fst, MixedSpace.mk_snd_snd]
     linear_combination e1 + e2 - e3
 
-/-- **Well-posedness of the mixed Hodge Laplacian**, in equation form. -/
 theorem existsUnique_isMixedSolution (hij : c.Rel i j) (hjk : c.Rel j k) {cP : ℝ} (hcP : 1 ≤ cP)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hPj : ∀ z : (H.d j k).domain, (z : W j) ∈ (H.cycles j)ᗮ → ‖(z : W j)‖ ≤ cP * ‖H.d j k z‖)
@@ -594,7 +544,6 @@ theorem existsUnique_isMixedSolution (hij : c.Rel i j) (hjk : c.Rel j k) {cP : �
   refine ⟨x, mixedForm_eq_mixedRHS_iff.1 hx, fun y hy => hu y ?_⟩
   exact mixedForm_eq_mixedRHS_iff.2 hy
 
-/-- The harmonic part of the solution is the harmonic projection of the data: `p = P_ℌ f`. -/
 theorem IsMixedSolution.harmonic_eq (hij : c.Rel i j) {f : W j} {σ : H.domainSpace i}
     {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
     (H.harmonic j).starProjection f = p := by
@@ -609,7 +558,6 @@ theorem IsMixedSolution.harmonic_eq (hij : c.Rel i j) {f : W j} {σ : H.domainSp
   rw [h0, zero_add] at e
   rw [inner_sub_left, ← inner_conj_symm f, ← inner_conj_symm (p : W j), ← e, sub_self]
 
-/-- The first equation says `u ∈ D(d†)` with `d† u = σ` (here `d = d i j`). -/
 theorem IsMixedSolution.mem_adjoint_domain (hij : c.Rel i j) {f : W j} {σ : H.domainSpace i}
     {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
     ∃ h : H.domainIncl j u ∈ (H.d i j)†.domain,
@@ -622,9 +570,6 @@ theorem IsMixedSolution.mem_adjoint_domain (hij : c.Rel i j) {f : W j} {σ : H.d
   have hmem := mem_adjoint_domain_of_exists _ ⟨_, key⟩
   exact ⟨hmem, adjoint_apply_eq (H.dense i j) ⟨_, hmem⟩ key⟩
 
-/-- The second equation says `d u ∈ D(d†)` with `d† d u = f - p - d σ` (here `d = d j k`); with
-`IsMixedSolution.mem_adjoint_domain` this is the strong form `(d d† + d† d) u = f - P_ℌ f` of the
-Hodge Laplacian. -/
 theorem IsMixedSolution.mem_adjoint_domain_d (hjk : c.Rel j k) {f : W j} {σ : H.domainSpace i}
     {u : H.domainSpace j} {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
     ∃ h : H.d j k (H.domainCoord j k u) ∈ (H.d j k)†.domain,
@@ -641,7 +586,6 @@ theorem IsMixedSolution.mem_adjoint_domain_d (hjk : c.Rel j k) {f : W j} {σ : H
   have hmem := mem_adjoint_domain_of_exists _ ⟨_, key⟩
   exact ⟨hmem, adjoint_apply_eq (H.dense j k) ⟨_, hmem⟩ key⟩
 
-/-- Poincaré constants `≥ 1` from closed range at a related pair. -/
 theorem exists_poincare_of_closedRangeAt {i j : ι} (hij : c.Rel i j) (hj : H.ClosedRangeAt j) :
     ∃ cP : ℝ, 1 ≤ cP ∧ ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ →
       ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖ := by

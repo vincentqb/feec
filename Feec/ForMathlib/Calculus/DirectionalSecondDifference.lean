@@ -5,17 +5,8 @@ public import Feec.ForMathlib.Calculus.SecondDifference
 /-!
 # The second difference along a direction
 
-* `abs_secondDiff_sub_iteratedFDeriv_le`: for `u ∈ C⁴` on a real normed space,
-  `|u(x + d) - 2 u(x) + u(x - d) - D²u(x)(d, d)| ≤ B / 12` when `|D⁴u(x + t d)(d, d, d, d)| ≤ B`
-  for `t ∈ [-1, 1]`, the truncation error of the centred second difference along `d`
-  (`abs_secondDiff_sub_le` along the line `t ↦ x + t d`).
-
-## References
-
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (difference approximations of the Laplacian)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+For `u ∈ C⁴` on a real normed space, `|u(x + d) - 2 u(x) + u(x - d) - D²u(x)(d, d)| ≤ B / 12` when
+`|D⁴u(x + t d)(d, d, d, d)| ≤ B` for `t ∈ [-1, 1]`.
 -/
 
 open Set
@@ -24,9 +15,6 @@ open Set
 
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
-/-- **The truncation error of the second difference along a direction**: for `u ∈ C⁴` with
-`|D⁴u(x + t d)(d, d, d, d)| ≤ B` for `t ∈ [-1, 1]`,
-`|u(x + d) - 2 u(x) + u(x - d) - D²u(x)(d, d)| ≤ B / 12`. -/
 theorem abs_secondDiff_sub_iteratedFDeriv_le {u : E → ℝ} (hu : ContDiff ℝ 4 u) (x d : E) {B : ℝ}
     (hB : ∀ t ∈ Set.Icc (-1 : ℝ) 1, |iteratedFDeriv ℝ 4 u (x + t • d) (fun _ => d)| ≤ B) :
     |u (x + d) - 2 * u x + u (x - d) - iteratedFDeriv ℝ 2 u x (fun _ => d)| ≤ B / 12 := by

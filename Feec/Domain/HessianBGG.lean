@@ -6,41 +6,19 @@ public import Feec.Domain.HessianComplex
 /-!
 # The Hessian complex as a BGG complex
 
-The de Rham complex of `ℝ³` (`deRhamVec 1`) stacked over the de Rham complex with values in
-`𝕜³` (`deRhamVec 3`), linked by `S⁰ = I`, `S¹ = 2 vskw` (`(S¹ u)ₖ = u_{k+1,k+2} − u_{k+2,k+1}`,
-the normalization `curl S⁰ = -S¹ grad` of [QuennevilleBelair2015], §5.1) and `S² = tr`, is BGG
-data of constant-coefficient operators (`hessianBGG`). `S⁰, S¹, S²` are onto, so the
-injectivity/surjectivity condition holds at `J = 0` with the explicit right inverses `hessianT`
-(**`injSurjWith_hessianBGG`**, `injSurj_hessianBGG`): a de Rham instance of
-`Feec.BGG.Data.InjSurjWith` (the first two rows of [ArnoldHu2021], (32)). Its BGG complex `bgg 0`
-eliminates `V¹, V², V³` against `S⁰, S¹, S²`, and **is the Hessian complex**
-`𝕜 --grad grad--> Sym --curl--> T --div--> 𝕜³` of `Feec.Domain.HessianComplex` on smooth fields
-(**`hessianBGGIso`**): in degree `0` the pairs `(σ, grad σ)` (`S⁰` is bijective), with
-`(σ, grad σ) ↦ (0, grad grad σ)`; after `0` the fields `0 × N(Sᵏ)`, symmetric in degree `1`
-(`N(2 vskw)`), trace-free in degree `2` (`N(tr)`), with the differentials of the bottom row.
-Hence the smooth Hessian complex has the cohomology of the twisted de Rham complex
-(`hessianSmoothComplexHomologyIso`).
-
-## Main definitions
-
-* `Feec.Domain.hessianBGG`: the BGG diagram of the Hessian complex.
-* `Feec.Domain.hessianSmoothComplex`: the smooth Hessian complex (`hessianOp`, `hessianMat`).
+The de Rham complex of `ℝ³` over the `𝕜³`-valued one, linked by `S⁰ = I`, `S¹ = 2 vskw` and
+`S² = tr` ([ArnoldHu2021], (32); [QuennevilleBelair2015], §5.1), is BGG data whose BGG complex
+`bgg 0` is the smooth Hessian complex.
 
 ## Main results
 
-* **`injSurjWith_hessianBGG`**, `injSurj_hessianBGG`, `hessianBGGHomologyIso`.
-* **`hessianBGGIso`**, `hessianSmoothComplexHomologyIso`.
+* `injSurjWith_hessianBGG`: the injectivity/surjectivity condition at `J = 0`.
+* `hessianBGGIso`: `bgg 0` is isomorphic to the smooth Hessian complex.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 ((32), the Hessian complex
-  from the first two rows, `J = 0`)
-* [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
-  (BGG sequences)
-* [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
-  (the Hessian complex)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (the connecting maps `S₀ = I`, `S₁ = 2 vskw`)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -96,7 +74,6 @@ theorem ofMatrix_hessS2_apply (f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) 
     Finset.sum_apply]
   simp
 
-/-- `curl S⁰ = -S¹ grad`. -/
 theorem curlOp_hessS0 (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (curlOp 1).apply ((ofMatrix hessS0).apply f) =
       -(ofMatrix hessS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply ((gradOp 3 3).apply f) := by
@@ -106,7 +83,6 @@ theorem curlOp_hessS0 (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
   simp only [Pi.sub_apply, gradOp_apply]
   ring
 
-/-- `div S¹ = -S² curl`. -/
 theorem divOp_hessS1 {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (divOp 3 1).apply ((ofMatrix hessS1).apply f) =
       -(ofMatrix hessS2 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply ((curlOp 3).apply f) := by
@@ -135,8 +111,7 @@ theorem hessianS_anticomm (k : ℤ) (f : vecIdx 3 k → (Fin 3 → ℝ) → 𝕜
     exact funext fun j => isEmptyElim j
 
 variable (𝕜) in
-/-- **The BGG diagram of the Hessian complex**: the de Rham complex `𝕜 → 𝕜³ → 𝕜³ → 𝕜` over the
-de Rham complex with values in `𝕜³`, linked by `I`, `2 vskw`, `tr`. [ArnoldHu2021], (32) -/
+/-- **The BGG diagram of the Hessian complex** ([ArnoldHu2021], (32)). -/
 abbrev hessianBGG : ConstCoeffBGG (Fin 3 → ℝ) 𝕜 where
   top := deRhamVec 𝕜 1
   bot := deRhamVec 𝕜 3
@@ -185,10 +160,7 @@ def hessianT : ∀ k : ℤ, smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 1 (k + 1))
   | .ofNat (_ + 3) => 0
   | .negSucc _ => 0
 
-/-- **The Hessian diagram satisfies the injectivity/surjectivity condition at `J = 0` with the
-right inverses `hessianT`**: `I`, `2 vskw` and `tr` are onto, with right inverses `hessN0`,
-`hessN1`, `hessN2`. The first de Rham instance of `Data.InjSurjWith` ([ArnoldHu2021], (23),
-(32)). -/
+/-- **Injectivity/surjectivity at `J = 0`** for the Hessian diagram ([ArnoldHu2021], (23)). -/
 theorem injSurjWith_hessianBGG :
     (hessianBGG 𝕜).smoothData.InjSurjWith 0 ((hessianBGG 𝕜).predMap (hessianT 𝕜)) := by
   refine ConstCoeffBGG.injSurjWith_predMap _ (fun k hk => ?_) fun k hk v => ?_
@@ -215,13 +187,10 @@ theorem injSurjWith_hessianBGG :
         (Or.inr (by simp only [Int.ofNat_eq_natCast]; omega))
       exact funext fun i => isEmptyElim i
 
-/-- **The Hessian diagram satisfies the injectivity/surjectivity condition at `J = 0`**
-(`injSurjWith_hessianBGG`): `I`, `2 vskw` and `tr` are onto. [ArnoldHu2021], (23), (32) -/
 theorem injSurj_hessianBGG : (hessianBGG 𝕜).smoothData.InjSurj 0 :=
   injSurjWith_hessianBGG.injSurj
 
-/-- **The Hessian BGG complex has the cohomology of the twisted de Rham complex.**
-[ArnoldHu2021], §5.2 -/
+/-- The cohomology of `bgg 0` is that of the twisted de Rham complex ([ArnoldHu2021], §5.2). -/
 def hessianBGGHomologyIso (i : ℤ) :
     ((hessianBGG 𝕜).smoothData.bgg 0).homology i ≅
       (hessianBGG 𝕜).smoothData.twistComplex.homology i :=
@@ -233,7 +202,6 @@ theorem bijective_hessianBGG_S_zero :
     Function.Bijective ((hessianBGG 𝕜).smoothData.S 0 (0 + 1)) :=
   injSurjWith_hessianBGG.bijective
 
-/-- The BGG complex of the Hessian diagram has no exact part: `Δⁱ = 0`. -/
 theorem hessianBGG_Δ_eq_bot (i : ℤ) : (hessianBGG 𝕜).smoothData.Δ (· < 0) i = ⊥ := by
   rcases lt_trichotomy i 0 with hi | rfl | hi
   · have := isEmpty_vecIdx 1 (k := i) (Or.inl hi)
@@ -251,7 +219,6 @@ theorem hessianBGG_Δ_eq_bot (i : ℤ) : (hessianBGG 𝕜).smoothData.Δ (· < 0
   · exact (hessianBGG 𝕜).smoothData.bgg_Δ_of_gt hi
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `S¹ u = 0` iff `u` is symmetric. -/
 theorem hessS1_apply_eq_zero_iff {u : Fin 3 × Fin 3 → E → 𝕜} :
     (∀ a : Fin 1 × Fin 3, u (a.2 + 1, a.2 + 2) - u (a.2 + 2, a.2 + 1) = 0) ↔
       ∀ i j, u (i, j) = u (j, i) :=
@@ -283,7 +250,6 @@ def kerHessS1Equiv : LinearMap.ker ((hessianBGG 𝕜).smoothData.S 1 (1 + 1)) �
   right_inv _ := rfl
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- A field in the range of `dev` is trace-free. -/
 theorem trace_eq_zero_of_matMulField_deviatoricMat {u : Fin 3 × Fin 3 → E → 𝕜}
     (h : matMulField (deviatoricMat 3) u = u) (x : E) : ∑ k, u (k, k) x = 0 := by
   rw [← h]
@@ -325,7 +291,6 @@ def kerHessS3Equiv : LinearMap.ker ((hessianBGG 𝕜).smoothData.S 3 (3 + 1)) �
   left_inv _ := rfl
   right_inv _ := rfl
 
-/-- In degree `0`, `grad φ = grad grad σ` when `grad σ = S⁰ φ`. -/
 theorem gradOp_eq_hessOp {σ : Fin 1 → (Fin 3 → ℝ) → 𝕜} {φ : Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (h : (gradOp 3 1).apply σ = (ofMatrix hessS0).apply φ) :
     (gradOp 3 3).apply φ = (hessOp 3).apply fun _ => σ 0 := by
@@ -339,8 +304,7 @@ theorem gradOp_eq_hessOp {σ : Fin 1 → (Fin 3 → ℝ) → 𝕜} {φ : Fin 3 �
   rw [gradOp_apply, hessOp_apply, hφ]
 
 variable (𝕜) in
-/-- The smooth Hessian complex `𝕜 --grad grad--> Sym --curl--> T --div--> 𝕜³` of
-`Feec.Domain.HessianComplex`. -/
+/-- The smooth Hessian complex `𝕜 --grad grad--> Sym --curl--> T --div--> 𝕜³`. -/
 abbrev hessianSmoothComplex : CochainComplex (ModuleCat 𝕜) ℤ :=
   (hessianConstCoeffComplex 𝕜).smoothComplex (hessianMat 𝕜) hessianOp_matMapsTo
 
@@ -461,18 +425,14 @@ theorem hessianBGGEquiv_comm (i : ℤ) :
       subsingleton_hessianSmoothComplex_X (Or.inr (by omega))
     exact ModuleCat.hom_ext (LinearMap.ext fun _ => Subsingleton.elim _ _)
 
-/-- **The BGG complex of the Hessian diagram is the Hessian complex**: `bgg 0` of
-`hessianBGG` is isomorphic to the smooth Hessian complex `grad grad → curl → div` on symmetric and
-trace-free fields of `Feec.Domain.HessianComplex` (`hessianOp`, `hessianMat`).
-[ArnoldHu2021], §4.1 -/
+/-- **`bgg 0` of `hessianBGG` is the smooth Hessian complex** ([ArnoldHu2021], §4.1). -/
 def hessianBGGIso : (hessianBGG 𝕜).smoothData.bgg 0 ≅ hessianSmoothComplex 𝕜 :=
   HomologicalComplex.Hom.isoOfComponents (fun k => (hessianBGGEquiv k).toModuleIso)
     fun i j hij => by
       obtain rfl : i + 1 = j := hij
       exact hessianBGGEquiv_comm i
 
-/-- **The cohomology of the smooth Hessian complex is that of the twisted de Rham complex**
-of the Hessian diagram. [ArnoldHu2021], §5.2 -/
+/-- The smooth Hessian complex has the cohomology of the twisted complex ([ArnoldHu2021], §5.2). -/
 def hessianSmoothComplexHomologyIso (i : ℤ) :
     (hessianSmoothComplex 𝕜).homology i ≅
       (hessianBGG 𝕜).smoothData.twistComplex.homology i :=

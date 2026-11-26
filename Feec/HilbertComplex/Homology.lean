@@ -7,35 +7,8 @@ public import Mathlib.Algebra.Homology.ShortComplex.ModuleCat
 /-!
 # The cohomology of a Hilbert complex is the homology of its complex of domains
 
-A Hilbert complex `H` on a complex shape `c` restricts to a complex of `𝕜`-modules on the domains
-`D(d i (c.next i))` (`HilbertComplex.toModuleCat`), so the homological algebra of Mathlib (long
-exact sequences, quasi-isomorphisms) applies to it. Its homology is the cohomology
-`𝔷ⁱ / 𝔅ⁱ` of `H` (`HilbertComplex.cohomologyEquivHomology`). For a complex of bounded operators
-(`HilbertComplex.ofBounded`) the domains are the whole spaces.
-
-## Main definitions
-
-* `HilbertComplex.domainMap i j : D(d i (c.next i)) → D(d j (c.next j))`, `x ↦ d i j x`.
-* `HilbertComplex.toModuleCat`: the complex of domains, as a `HomologicalComplex` of modules.
-
-## Main results
-
-* `HilbertComplex.cohomologyEquivHomology : H.cohomology i ≃ₗ[𝕜] H.toModuleCat.homology i`.
-* `HilbertComplex.toModuleCatIso`, `HilbertComplex.cohomologyEquivOfIso`: a complex of modules
-  isomorphic to the complex of domains has the same (co)homology.
-* `HilbertComplex.domainComplexCohomologyEquiv`: the domain complex has the cohomology of the
-  complex.
-
-## References
-
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (the cohomology of a Hilbert
-  complex)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (cohomology of closed Hilbert complexes)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (Hilbert complexes and their cohomology)
-
-Bibliography: [references.bib](../../docs/references.bib)
+A Hilbert complex restricts to a complex of `𝕜`-modules on the domains `D(d i (c.next i))`, whose
+homology is the cohomology `𝔷ⁱ / 𝔅ⁱ` of the Hilbert complex.
 -/
 
 @[expose] public noncomputable section
@@ -60,8 +33,7 @@ def domainMap (i j : ι) : (H.d i (c.next i)).domain →ₗ[𝕜] (H.d j (c.next
 @[simp] theorem coe_domainMap (i j : ι) (x : (H.d i (c.next i)).domain) :
     (H.domainMap i j x : W j) = H.d i j ⟨x, H.domain_next_le i j x.2⟩ := rfl
 
-/-- **The complex of domains** `D(d i (c.next i))` of a Hilbert complex, with the differentials
-`d i j`, as a complex of `𝕜`-modules. -/
+/-- **The complex of domains** `D(d i (c.next i))`, with the differentials `d i j`, as modules. -/
 def toModuleCat : HomologicalComplex (ModuleCat 𝕜) c where
   X i := ModuleCat.of 𝕜 (H.d i (c.next i)).domain
   d i j := ModuleCat.ofHom (H.domainMap i j)
@@ -98,7 +70,6 @@ def cyclesEquiv (i : ι) : H.cycles i ≃ₗ[𝕜] LinearMap.ker (H.toModuleCat.
 @[simp] theorem coe_cyclesEquiv (i : ι) (z : H.cycles i) :
     H.toModuleCatVal (H.cyclesEquiv i z).1 = z := rfl
 
-/-- A boundary at `i` is the image of an element of the domain of `d (c.prev i) (c.next _)`. -/
 theorem mem_boundaries_iff {i : ι} {w : W i} :
     w ∈ H.boundaries i ↔ ∃ x : (H.d (c.prev i) (c.next (c.prev i))).domain,
       H.d (c.prev i) i ⟨x, H.domain_next_le _ i x.2⟩ = w := by
@@ -130,8 +101,7 @@ def cohomologyEquivHomology (i : ι) : H.cohomology i ≃ₗ[𝕜] H.toModuleCat
   (Submodule.Quotient.equiv _ _ (H.cyclesEquiv i) (H.map_cyclesEquiv_boundaries i)).trans
     (H.toModuleCat.sc i).moduleCatHomologyIso.symm.toLinearEquiv
 
-/-- Linear equivalences from the domains to the modules of a complex `K` that commute with the
-differentials are an isomorphism `H.toModuleCat ≅ K`. -/
+/-- Linear equivalences commuting with the differentials give `H.toModuleCat ≅ K`. -/
 def toModuleCatIso {W : ι → Type u} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 c W)
     (K : HomologicalComplex (ModuleCat.{u} 𝕜) c) (e : ∀ i, (H.d i (c.next i)).domain ≃ₗ[𝕜] K.X i)
@@ -139,8 +109,7 @@ def toModuleCatIso {W : ι → Type u} [∀ i, NormedAddCommGroup (W i)]
   HomologicalComplex.Hom.isoOfComponents (fun i => (e i).toModuleIso) fun i j _ =>
     ModuleCat.hom_ext (LinearMap.ext fun x => (he i j x).symm)
 
-/-- **Cohomology through a model of the complex of domains**: `H.cohomology i ≃ K.homology i`
-for every complex of modules `K` isomorphic to `H.toModuleCat`. -/
+/-- `H.cohomology i ≃ K.homology i` for every complex `K` isomorphic to `H.toModuleCat`. -/
 def cohomologyEquivOfIso {W : ι → Type u} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] {H : HilbertComplex 𝕜 c W}
     {K : HomologicalComplex (ModuleCat.{u} 𝕜) c} (e : H.toModuleCat ≅ K) (i : ι) :

@@ -7,52 +7,19 @@ public import Feec.ForMathlib.Calculus.DirectionalSecondDifference
 /-!
 # Second-order nodal consistency of the lumped-mass `P₁` Laplacian
 
-At a vertex `y` of a simplicial mesh `M` the lumped-mass `P₁` Laplacian is a difference operator
-on the edges `[y, v]` of the simplices `T` at `y` (`neg_p1Stiffness_nodalIndicator`):
-`m(y) (Lₕ U)(y) = Σ_T Σ_v ω_T(y, v) (U(v) - U(y))`, with the weights
-`ω_T(y, v) = -|T| ∇φ_y · ∇φ_v` of the stiffness form (`vertexWeight`, `hatGrad`), which depend on
-the vertices of `T` and not on their numbering (`p1Grad_congr_vertexSet`) and are nonnegative on
-non-obtuse meshes.
-
-It is consistent with the Laplacian, to second order, where the mesh is **translation invariant**
-(`IsTranslationInvariantAt`): with every simplex `T` at `y`, the translates `T + (y - v)` that move
-a vertex `v` of `T` to `y` are simplices of `M`, as at the vertices where `M` agrees with a lattice
-triangulation, e.g. at the interior nodes of the Freudenthal meshes
-(`isTranslationInvariantAt_freudenthalMesh`). Then
-
-* the edges come in opposite pairs of equal weight (`sum_vertexWeight_mul_neg`): the translate
-  of `T` moving the end `v` of the edge `[y, v]` to `y` has the edge `[y, y - (v - y)]`; so the
-  odd terms of Taylor's formula cancel;
-* the second moments of the edges are those of the Laplacian, `Σ ω (v - y)(v - y)ᵀ = 2 m(y) I`
-  (`sum_vertexWeight_mul_mul`): by the energy identity of a simplex
-  (`sum_sum_baryGrad_dotProduct_mul`, the element stiffness matrix applied to `zₐ z_b`), the
-  edges of a simplex `T` at `y`, all of them, carry `2 |T| I`, and the translates of `T` moving
-  each of its `n + 1` vertices to `y` count every edge at `y` once from each vertex.
-
-Without translation invariance the lumped-mass Laplacian need not be consistent at all: on the
-cross-polytope `{z | Σᵢ |zᵢ| < h}` meshed by its `2ⁿ` orthant simplices
-`conv(0, ±h e₁, …, ±h eₙ)` (`crossMesh`, non-obtuse), with the single node `0`,
-`(Lₕ U)(0) = -n (n + 1) U(0) / h²` (`lumpedLaplacianOn_crossMesh`).
+The lumped-mass `P₁` Laplacian is consistent with `Δ` to second order at the nodes where a
+non-obtuse mesh is translation invariant; on the cross-polytope mesh its consistency error at the
+centre is `n (n - 1)/2` for every `h`.
 
 ## Main results
 
-* **`abs_lumpedLaplacianOn_sub_laplacian_le`**: on a non-obtuse mesh translation invariant at a
-  node `y = x i` (a vertex), for `u ∈ C⁴` vanishing at the vertices of the simplices at `y` that
-  are not nodes, with `|D⁴u(z)(d, d, d, d)| ≤ B |d|⁴` on these simplices (`|d|` Euclidean),
-  `|(Lₕ Iₕ u)(y) - Δu(y)| ≤ n B h² / 12` for every `h` bounding the Euclidean lengths of the
-  edges at `y`.
-* `isTranslationInvariantAt_freudenthalMesh`, `dotProduct_sub_le_freudenthalMesh`: the
-  Freudenthal meshes are translation invariant at their interior nodes, with edges of length at
-  most `√n` times the mesh size.
-* **`abs_lumpedLaplacianOn_crossMesh_sub_laplacian`**: on the cross-polytope mesh, the quadratic
-  `(|z|² - h²)/2`, which vanishes at the vertices other than `0` and has Laplacian `n`, has nodal
-  consistency error `n (n - 1)/2` at `0`, for every `h`.
+* `abs_lumpedLaplacianOn_sub_laplacian_le`: `|(Lₕ Iₕ u)(y) - Δu(y)| ≤ n B h² / 12`.
+* `isTranslationInvariantAt_freudenthalMesh`: translation invariance at the interior nodes.
+* `abs_lumpedLaplacianOn_crossMesh_sub_laplacian`: the error `n (n - 1)/2` on the cross-polytope.
 
 ## References
 
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (the lumped mass method)
-* [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -69,8 +36,6 @@ variable {n : ℕ}
 
 /-! ### The energy identity of a simplex -/
 
-/-- **Affine reproduction of the gradients**: `Σⱼ (pⱼ)ₐ ∇λⱼ = eₐ`, the gradient of the coordinate
-`z ↦ zₐ`. -/
 theorem sum_smul_baryGrad {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (a : Fin n) : ∑ j, p j a • baryGrad p j = Pi.single a 1 := by
   classical
@@ -88,7 +53,6 @@ theorem sum_smul_baryGrad {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edge
   rw [e1, h1, h0, sub_zero]
   simp [Pi.single_apply, eq_comm]
 
-/-- `Σⱼ Σₖ (gⱼ · gₖ) cⱼ dₖ = (Σⱼ cⱼ gⱼ) · (Σₖ dₖ gₖ)`. -/
 theorem sum_sum_dotProduct_mul_mul (g : Fin (n + 1) → Fin n → ℝ) (c d : Fin (n + 1) → ℝ) :
     ∑ j, ∑ k, (g j ⬝ᵥ g k) * (c j * d k) = (∑ j, c j • g j) ⬝ᵥ ∑ k, d k • g k := by
   rw [sum_dotProduct]
@@ -98,9 +62,6 @@ theorem sum_sum_dotProduct_mul_mul (g : Fin (n + 1) → Fin n → ℝ) (c d : Fi
   rw [smul_dotProduct, dotProduct_smul, smul_eq_mul, smul_eq_mul]
   ring
 
-/-- **The energy identity of a simplex**:
-`Σⱼ Σₖ (∇λⱼ · ∇λₖ) (pₖ - pⱼ)ₐ (pₖ - pⱼ)_b = -2 δₐ_b`, the element stiffness matrix applied to the
-quadratic `zₐ z_b` (its rows sum to `0`, and `Σⱼ (pⱼ)ₐ ∇λⱼ = eₐ`). -/
 theorem sum_sum_baryGrad_dotProduct_mul {p : Fin (n + 1) → Fin n → ℝ}
     (hp : IsUnit (edgeMatrix p).det) (a b : Fin n) :
     ∑ j, ∑ k, (baryGrad p j ⬝ᵥ baryGrad p k) * ((p k a - p j a) * (p k b - p j b)) =
@@ -159,7 +120,6 @@ theorem measureReal_closedInterior_translate (c : Fin n → ℝ)
 
 /-! ### Hat-function gradients, and their invariance under renumbering and translation -/
 
-/-- **Barycentric gradients under a renumbering of the vertices**: `∇λ^{p ∘ π}ᵢ = ∇λ^p_{π i}`. -/
 theorem baryGrad_comp_perm {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (π : Equiv.Perm (Fin (n + 1))) (hpπ : IsUnit (edgeMatrix (p ∘ π)).det) (i : Fin (n + 1)) :
     baryGrad (p ∘ π) i = baryGrad p (π i) := by
@@ -169,14 +129,12 @@ theorem baryGrad_comp_perm {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edg
   rw [baryCoord_comp_perm hp π hpπ, baryCoord_comp_perm hp π hpπ, baryCoord_sub] at h
   simpa [Pi.single_apply] using h.symm
 
-/-- Two simplices with the same vertices are renumberings of each other. -/
 theorem exists_perm_of_vertexSet_eq {S S' : Affine.Simplex ℝ (Fin n → ℝ) n}
     (h : (vertexSet S : Set (Fin n → ℝ)) = vertexSet S') :
     ∃ π : Equiv.Perm (Fin (n + 1)), S'.points = S.points ∘ π :=
   exists_perm_comp_eq S'.independent.injective S.independent.injective
     (by rw [← coe_vertexSet, ← coe_vertexSet, h])
 
-/-- **The `P₁` gradient depends on the vertices only**, not on their numbering. -/
 theorem p1Grad_congr_vertexSet {S S' : Affine.Simplex ℝ (Fin n → ℝ) n}
     (h : (vertexSet S : Set (Fin n → ℝ)) = vertexSet S') (u : (Fin n → ℝ) → ℝ) :
     p1Grad S.points u = p1Grad S'.points u := by
@@ -200,8 +158,7 @@ theorem coe_vertexSet_translate (c : Fin n → ℝ) (T : Affine.Simplex ℝ (Fin
   funext z
   simp [add_comm]
 
-/-- The gradient `∇φᵥ` on the simplex `T` of the hat function of the point `v`: `∇λⱼ` if `v` is
-the vertex `pⱼ` of `T` (`hatGrad_points`), `0` if `v` is no vertex of `T`. -/
+/-- The gradient `∇φᵥ` on `T` of the hat function of the point `v` (`0` if `v` is no vertex). -/
 def hatGrad (T : Affine.Simplex ℝ (Fin n → ℝ) n) (v : Fin n → ℝ) : Fin n → ℝ :=
   p1Grad T.points (nodalIndicator v)
 
@@ -215,7 +172,6 @@ theorem hatGrad_of_notMem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {v : Fin n 
   refine sum_eq_zero fun j _ => ?_
   rw [nodalIndicator, ite_eq_right_iff.2 fun e => absurd (mem_vertexSet.2 ⟨j, e⟩) hv, zero_smul]
 
-/-- `∇Πₜw = Σᵥ w(v) ∇φᵥ` over the vertices `v` of `T`. -/
 theorem p1Grad_eq_sum_hatGrad (T : Affine.Simplex ℝ (Fin n → ℝ) n) (w : (Fin n → ℝ) → ℝ) :
     p1Grad T.points w = ∑ v ∈ vertexSet T, w v • hatGrad T v := by
   classical
@@ -239,8 +195,6 @@ theorem sum_hatGrad (T : Affine.Simplex ℝ (Fin n → ℝ) n) : ∑ v ∈ verte
 
 variable {S T : Affine.Simplex ℝ (Fin n → ℝ) n} {c : Fin n → ℝ}
 
-/-- **Hat-function gradients are invariant under translation**: if the vertices of `S` are those
-of `T` translated by `c`, then `∇φ^S_{v + c} = ∇φ^T_v`. -/
 theorem hatGrad_of_vertexSet_eq (h : (vertexSet S : Set (Fin n → ℝ)) = (· + c) '' vertexSet T)
     (v : Fin n → ℝ) : hatGrad S (v + c) = hatGrad T v := by
   rw [hatGrad, p1Grad_congr_vertexSet (h.trans (coe_vertexSet_translate c T).symm),
@@ -255,8 +209,7 @@ theorem measureReal_closedInterior_of_vertexSet_eq
   rw [← convexHull_vertexSet S, h, ← coe_vertexSet_translate, convexHull_vertexSet,
     measureReal_closedInterior_translate]
 
-/-- The weight `-|T| ∇φᵥ · ∇φ_w` of the edge `[v, w]` of `T` in the stiffness form, nonnegative for
-distinct vertices of a non-obtuse simplex (`vertexWeight_nonneg`). -/
+/-- The weight `-|T| ∇φᵥ · ∇φ_w` of the edge `[v, w]` of `T` in the stiffness form. -/
 def vertexWeight (T : Affine.Simplex ℝ (Fin n → ℝ) n) (v w : Fin n → ℝ) : ℝ :=
   -(volume.real T.closedInterior * (hatGrad T v ⬝ᵥ hatGrad T w))
 
@@ -287,8 +240,6 @@ theorem sum_vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) (f : (Fin n →
   rw [vertexSet]
   exact sum_image fun i _ j _ e => T.independent.injective e
 
-/-- **The energy identity over the vertices**:
-`Σᵥ Σ_w ω(v, w) (w - v)ₐ (w - v)_b = 2 |T| δₐ_b` (`sum_sum_baryGrad_dotProduct_mul`). -/
 theorem sum_sum_vertexWeight_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (a b : Fin n) :
     ∑ v ∈ vertexSet T, ∑ w ∈ vertexSet T, vertexWeight T v w * ((w - v) a * (w - v) b) =
       2 * volume.real T.closedInterior * if a = b then 1 else 0 := by
@@ -308,7 +259,7 @@ theorem sum_sum_vertexWeight_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (a b
 variable (M : SimplicialMesh n) (y : Fin n → ℝ)
 
 open Classical in
-/-- The **star** of the vertex `y`: the simplices of `M` with vertex `y`. -/
+/-- The star of the vertex `y`: the simplices of `M` with vertex `y`. -/
 def vertexStar : Finset (Affine.Simplex ℝ (Fin n → ℝ) n) :=
   M.simplices.filter fun T => y ∈ vertexSet T
 
@@ -320,7 +271,6 @@ theorem mem_vertexStar : T ∈ vertexStar M y ↔ T ∈ M.simplices ∧ y ∈ ve
 
 variable (M y)
 
-/-- The lumped mass over the star: `m(y) = Σ_{T ∋ y} |T| / (n + 1)`. -/
 theorem lumpedMass_eq_sum_vertexStar :
     lumpedMass M y = ∑ T ∈ vertexStar M y, volume.real T.closedInterior / (n + 1) := by
   classical
@@ -337,9 +287,6 @@ theorem lumpedMass_eq_sum_vertexStar :
       filter_eq_empty_iff.2 fun i _ hi => hy (mem_vertexSet.2 ⟨i, hi⟩)
     rw [this, card_empty, Nat.cast_zero, mul_zero]
 
-/-- **The lumped-mass Laplacian at a vertex is a difference operator**:
-`-a(φ_y, w) = Σ_{T ∋ y} Σᵥ ω_T(y, v) (w(v) - w(y))` over the vertices `v` of the simplices `T` at
-`y`, `ω_T = vertexWeight T`; so `m(y) (Lₕ U)(y) = Σ ω (U(v) - U(y))`. -/
 theorem neg_p1Stiffness_nodalIndicator (w : (Fin n → ℝ) → ℝ) :
     -p1Stiffness M (nodalIndicator y) w =
       ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * (w v - w y) := by
@@ -366,12 +313,7 @@ theorem neg_p1Stiffness_nodalIndicator (w : (Fin n → ℝ) → ℝ) :
 
 /-! ### Translation invariance -/
 
-/-- The mesh `M` is **translation invariant at** `y`: for every simplex `T` of `M` with vertex
-`y` and every vertex `v` of `T`, the translate `T + (y - v)`, which moves `v` to `y`, is a simplex
-of `M` (`M` has a simplex with these vertices, in any numbering). It holds at a vertex where `M`
-agrees with a lattice triangulation (a triangulation invariant under the translations by the
-differences of its vertices), e.g. at the interior nodes of the Freudenthal meshes
-(`isTranslationInvariantAt_freudenthalMesh`). -/
+/-- `M` is translation invariant at `y`: it contains `T + (y - v)` for every `T ∋ y` and `v ∈ T`. -/
 def IsTranslationInvariantAt (M : SimplicialMesh n) (y : Fin n → ℝ) : Prop :=
   ∀ T ∈ M.simplices, y ∈ vertexSet T → ∀ v ∈ vertexSet T, ∃ S ∈ M.simplices,
     (vertexSet S : Set (Fin n → ℝ)) = (· + (y - v)) '' vertexSet T
@@ -393,13 +335,11 @@ theorem reroot_spec
   split_ifs
   exact h.choose_spec
 
-/-- The simplex of `M` with given vertices is unique. -/
 theorem reroot_eq (hS : S ∈ M.simplices)
     (hV : (vertexSet S : Set (Fin n → ℝ)) = (· + c) '' vertexSet T) : reroot M T c = S := by
   obtain ⟨h1, h2⟩ := reroot_spec ⟨S, hS, hV⟩
   exact M.vertexSet_injOn h1 hS (Finset.coe_injective (h2.trans hV.symm))
 
-/-- The vertices of `T + c` translate back to those of `T`. -/
 theorem image_add_neg_image_add (V : Set (Fin n → ℝ)) (c : Fin n → ℝ) :
     (· + -c) '' ((· + c) '' V) = V := by
   rw [Set.image_image]
@@ -415,17 +355,12 @@ theorem mem_vertexSet_reroot (hT : IsTranslationInvariantAt M y) (hTM : T ∈ M.
     exact hw
   · exact fun hz => ⟨_, hz, by abel⟩
 
-/-- `reroot` undone: the simplex with the vertices of `reroot M T (y - v)` translated back is
-`T`. -/
 theorem reroot_reroot (hT : IsTranslationInvariantAt M y) (hTM : T ∈ M.simplices)
     (hyT : y ∈ vertexSet T) {v : Fin n → ℝ} (hv : v ∈ vertexSet T) :
     reroot M (reroot M T (y - v)) (-(y - v)) = T := by
   refine reroot_eq hTM ?_
   rw [(reroot_spec (hT T hTM hyT v hv)).2, image_add_neg_image_add]
 
-/-- **Opposite edges** (translation invariance at `y`): the simplex with the vertices of `T`
-translated by `y - v` has the edge `[y, y - (v - y)]`, with the weight of `[y, v]` in `T`; so
-`Σ ω f(v - y) = Σ ω f(y - v)` over the edges `[y, v]` of the star. -/
 theorem sum_vertexWeight_mul_neg (hT : IsTranslationInvariantAt M y) (f : (Fin n → ℝ) → ℝ) :
     ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * f (v - y) =
       ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * f (-(v - y)) := by
@@ -463,11 +398,6 @@ theorem sum_vertexWeight_mul_neg (hT : IsTranslationInvariantAt M y) (f : (Fin n
   congr 2
   abel
 
-/-- **The second moments of the edges at `y`** (translation invariance at `y`):
-`Σ ω (v - y)ₐ (v - y)_b = 2 m(y) δₐ_b` over the edges `[y, v]` of the star. By the energy identity
-(`sum_sum_vertexWeight_mul`) all the edges of a simplex `T` together give `2 |T| δₐ_b`; the
-translates of `T` moving each of its `n + 1` vertices to `y` count every edge at `y` once from
-each vertex. -/
 theorem sum_vertexWeight_mul_mul (hT : IsTranslationInvariantAt M y) (a b : Fin n) :
     ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * ((v - y) a * (v - y) b) =
       2 * lumpedMass M y * if a = b then 1 else 0 := by
@@ -540,16 +470,9 @@ theorem sum_vertexWeight_mul_mul (hT : IsTranslationInvariantAt M y) (a b : Fin 
 
 /-! ### Second-order consistency -/
 
-/-- **Second-order nodal consistency of the lumped-mass `P₁` Laplacian where the mesh is
-translation invariant**: let `M` be non-obtuse, `x : ι → ℝⁿ` injective nodes and `y = x i` a
-vertex of `M` at which `M` is translation invariant. For `u ∈ C⁴` vanishing at the vertices of
-the simplices at `y` that are not nodes, with `|D⁴u(z)(d, d, d, d)| ≤ B |d|⁴` on these simplices
-(`|d|² = d · d`), and `h` bounding the Euclidean lengths of the edges at `y`,
-`|(Lₕ Iₕ u)(y) - Δu(y)| ≤ n B h² / 12`: the odd Taylor terms cancel on opposite edges
-(`sum_vertexWeight_mul_neg`), the second moments are those of the Laplacian
-(`sum_vertexWeight_mul_mul`), and the second difference along each edge is
-`D²u(y)(d, d) + O(|d|⁴)` (`abs_secondDiff_sub_iteratedFDeriv_le`), with nonnegative weights.
-[Thomee2006], Ch. 15 -/
+/-- On a non-obtuse mesh translation invariant at a vertex node `y`, with edges at `y` of length
+`≤ h`: `|(Lₕ Iₕ u)(y) - Δu(y)| ≤ n B h² / 12` for `u ∈ C⁴` vanishing at the vertices of the
+simplices at `y` that are not nodes, `|D⁴u| ≤ B` ([Thomee2006], Ch. 15). -/
 theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι → Fin n → ℝ}
     (hM : IsNonobtuse M) (hx : Function.Injective x) {i : ι}
     (hv : ∃ T ∈ M.simplices, x i ∈ vertexSet T) (hT : IsTranslationInvariantAt M (x i))
@@ -743,9 +666,7 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
 
 /-! ### The Freudenthal meshes -/
 
-/-- **The Freudenthal meshes are translation invariant at their interior nodes**: the translate of
-a simplex `b + h (m + K_σ)` moving its vertex `b + h (m + vⱼ)` to an interior node `b + h q` is
-the simplex `b + h (q - vⱼ + K_σ)` of the mesh. -/
+/-- The Freudenthal meshes are translation invariant at their interior nodes. -/
 theorem isTranslationInvariantAt_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ)
     {q : Fin n → ℤ} (hq : q ∈ interiorNodes n (N + 1)) :
     IsTranslationInvariantAt (freudenthalMesh b s hs (N + 1)) (node b (s / (N + 1 : ℕ)) q) := by
@@ -772,8 +693,6 @@ theorem isTranslationInvariantAt_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (
   push_cast
   ring
 
-/-- **The edges of the Freudenthal meshes** have Euclidean length at most `√n h`: the vertices of
-`b + h (m + K_σ)` differ by `h` times vectors with entries in `{-1, 0, 1}`. -/
 theorem dotProduct_sub_le_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (freudenthalMesh b s hs (N + 1)).simplices)
     (j k : Fin (n + 1)) :
@@ -804,7 +723,7 @@ theorem dotProduct_sub_le_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 
     _ = n * (s / (N + 1 : ℕ)) ^ 2 := by
         rw [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
 
-/-! ### The cross-polytope: no consistency without translation invariance -/
+/-! ### The cross-polytope mesh -/
 
 section CrossPolytope
 
@@ -832,7 +751,7 @@ def orthantEquiv (hh : h ≠ 0) (s : Fin n → Bool) : (Fin n → ℝ) ≃ₗ[�
     orthantEquiv hh s z i = h * boolSign (s i) * z i := by
   simp [orthantEquiv]
 
-/-- **The orthant simplex** `conv(0, h s₀ e₀, …, h s_{n-1} e_{n-1})` of the signs `s`, `sᵢ = ±1`. -/
+/-- The orthant simplex `conv(0, h s₀ e₀, …, h s_{n-1} e_{n-1})` of the signs `s`. -/
 def orthantSimplex (hh : h ≠ 0) (s : Fin n → Bool) : Affine.Simplex ℝ (Fin n → ℝ) n :=
   mapEquiv (orthantEquiv hh s).toAffineEquiv (Feec.Mesh.refSimplex n)
 
@@ -1012,8 +931,7 @@ theorem injOn_vertexSet_orthantSimplex (hh : 0 < h) :
     exact (boolSign_injective (mul_left_cancel₀ hh.ne' this)).symm
 
 open Classical in
-/-- **The cross-polytope mesh** of `{z | Σᵢ |zᵢ| < h}`: the `2ⁿ` orthant simplices
-`conv(0, h s₀ e₀, …, h s_{n-1} e_{n-1})`, which meet at the centre `0`. -/
+/-- The cross-polytope mesh of `{z | Σᵢ |zᵢ| < h}`: its `2ⁿ` orthant simplices. -/
 def crossMesh (hh : 0 < h) : SimplicialMesh n :=
   SimplicialMesh.ofConforming (univ.image (orthantSimplex hh.ne')) {z | ∑ i, |z i| < h}
     (by
@@ -1058,19 +976,16 @@ theorem inv_edgeMatrix_orthantSimplex (hh : h ≠ 0) (s : Fin n → Bool) :
   funext l
   exact inv_mul_cancel₀ (mul_ne_zero hh (boolSign_ne_zero _))
 
-/-- `∇λ₀ = -(h sₗ)⁻¹`, the gradient of the barycentric coordinate of the centre. -/
 theorem baryGrad_orthantSimplex_zero (hh : h ≠ 0) (s : Fin n → Bool) :
     baryGrad (orthantSimplex hh s).points 0 = fun l => -(h * boolSign (s l))⁻¹ := by
   funext l
   simp [baryGrad, inv_edgeMatrix_orthantSimplex, Matrix.diagonal_apply]
 
-/-- `∇λₘ₊₁ = (h sₘ)⁻¹ eₘ`. -/
 theorem baryGrad_orthantSimplex_succ (hh : h ≠ 0) (s : Fin n → Bool) (m : Fin n) :
     baryGrad (orthantSimplex hh s).points m.succ = Pi.single m (h * boolSign (s m))⁻¹ := by
   funext l
   simp [baryGrad, inv_edgeMatrix_orthantSimplex, Matrix.diagonal_apply, Pi.single_apply, eq_comm]
 
-/-- **The cross-polytope mesh is non-obtuse**: its simplices have right angles at the centre. -/
 theorem isNonobtuse_crossMesh (hh : 0 < h) : IsNonobtuse (crossMesh (n := n) hh) := by
   intro T hT j k hjk
   obtain ⟨s, rfl⟩ := (mem_crossMesh_simplices hh).1 hT
@@ -1093,9 +1008,6 @@ theorem isNonobtuse_crossMesh (hh : 0 < h) : IsNonobtuse (crossMesh (n := n) hh)
       rw [baryGrad_orthantSimplex_succ, baryGrad_orthantSimplex_succ, dotProduct_single,
         Pi.single_eq_of_ne' hjk', zero_mul]
 
-/-- **The lumped-mass Laplacian of the cross-polytope mesh at its centre**, the single node:
-`(Lₕ U)(0) = -n (n + 1) U(0) / h²` (Dirichlet data at the other vertices): `a(φ₀, φ₀) = Σ |T| n/h²`
-and `m(0) = Σ |T| / (n + 1)`. -/
 theorem lumpedLaplacianOn_crossMesh (hh : 0 < h) (U : Unit → ℝ) :
     lumpedLaplacianOn (crossMesh (n := n) hh) (fun _ : Unit => (0 : Fin n → ℝ)) U () =
       -(n * (n + 1) / h ^ 2) * U () := by
@@ -1135,7 +1047,6 @@ theorem lumpedLaplacianOn_crossMesh (hh : 0 < h) (U : Unit → ℝ) :
   simp only [lumpedEntry, ha, hm]
   field_simp
 
-/-- `∂ₗ (|z|² - c)/2 = zₗ`. -/
 theorem partialDeriv_half_dotProduct_sub (c : ℝ) (l : Fin n) :
     partialDeriv l (fun z : Fin n → ℝ => (z ⬝ᵥ z - c) / 2) = fun z => z l := by
   funext y
@@ -1151,7 +1062,6 @@ theorem partialDeriv_half_dotProduct_sub (c : ℝ) (l : Fin n) :
     sub_zero]
   ring
 
-/-- `Δ (|z|² - c)/2 = n`. -/
 theorem laplacian_half_dotProduct_sub (c : ℝ) (y : Fin n → ℝ) :
     laplacian (fun z : Fin n → ℝ => (z ⬝ᵥ z - c) / 2) y = n := by
   rw [laplacian_apply]
@@ -1161,12 +1071,8 @@ theorem laplacian_half_dotProduct_sub (c : ℝ) (y : Fin n → ℝ) :
   rw [sum_congr rfl fun l _ => e l, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul,
     mul_one]
 
-/-- **No consistency without translation invariance**: on the cross-polytope mesh (non-obtuse),
-with the single node `0` and Dirichlet data at the other vertices `±h eᵢ`, the lumped-mass
-Laplacian of `u(z) = (|z|² - h²)/2`, which vanishes at the other vertices and has `Δu = n`, is
-`n (n + 1)/2` at `0`: the nodal consistency error is `n (n - 1)/2` at every `h`, though
-`D³u = D⁴u = 0`. The star of `0` is centrally symmetric; for `n ≥ 2` the mesh is not translation
-invariant at `0` (`abs_lumpedLaplacianOn_sub_laplacian_le`). -/
+/-- On the cross-polytope mesh with Dirichlet data at the vertices other than the centre `0`, the
+nodal consistency error of `u(z) = (|z|² - h²)/2` at `0` is `n (n - 1)/2` for every `h`. -/
 theorem abs_lumpedLaplacianOn_crossMesh_sub_laplacian (hh : 0 < h) :
     |lumpedLaplacianOn (crossMesh (n := n) hh) (fun _ : Unit => (0 : Fin n → ℝ))
         (fun _ => ((0 : Fin n → ℝ) ⬝ᵥ 0 - h ^ 2) / 2) () -

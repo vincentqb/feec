@@ -5,18 +5,13 @@ public import Feec.HilbertComplex.BGG.Discrete
 /-!
 # The discrete BGG mixed system needs exactness at `V_h¹`
 
-Thesis Props 5.3–5.4 (uniqueness for the discrete mixed system (5.6) of the complex with weak
-symmetries) assume two exact rows; the thesis' proof never uses exactness at `V_h¹`, but it is
-needed: with all spaces `ℝ`, `dX0 = dX1 = dY1 = S1 = 0`, `dY0 = S0 = id`, every other hypothesis
-of `Feec.BGG.eq_zero_of_mixed_homogeneous` holds (even `S₀,h` is onto), exactness at `V_h¹`
-fails, and `(σ, φ, u, λ) = (0, 0, 1, 1)` solves the homogeneous system
-(`mixed_not_unique_of_not_exactTop`). Under the stability hypotheses exactness at `V_h¹` is
-derived from the continuous one (`Feec.BGG.Discrete.exact_top_h`).
+Without exactness at `V_h¹`, the homogeneous discrete mixed system (5.6) of
+[QuennevilleBelair2015], §5.2 can have a nonzero solution (`mixed_not_unique_of_not_exactTop`).
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.2 (Props 5.3–5.4)
+  §5.2
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -27,14 +22,8 @@ open scoped RealInnerProductSpace
 
 namespace Feec.Counterexamples.DiscreteBGG
 
-/-- **Thesis Prop 5.4: the exactness at `V_h¹` assumed in Prop 5.3 cannot be dropped.** (It is
-an assumed hypothesis that the thesis' proof never invokes; it enters through
-`exists_of_exact_rows`.)
-All spaces `ℝ`,
-`dX0 = dX1 = dY1 = S1 = 0`, `dY0 = S0 = id`. Every other hypothesis of
-`eq_zero_of_mixed_homogeneous` holds
-(even `S₀,h` is onto), exactness at `V_h¹` fails, and `(σ,φ,u,λ) = (0,0,1,1)` solves the
-homogeneous system. See [QuennevilleBelair2015], Props 5.3–5.4. -/
+/-- Exactness at `V_h¹` cannot be dropped from `Feec.BGG.eq_zero_of_mixed_homogeneous`: over `ℝ`,
+`(0, 0, 1, 1)` solves the homogeneous system. Cf. [QuennevilleBelair2015], Props 5.3–5.4 -/
 theorem mixed_not_unique_of_not_exactTop :
     let dX0 : ℝ →ₗ[ℝ] ℝ := 0
     let dX1 : ℝ →ₗ[ℝ] ℝ := 0
@@ -59,8 +48,6 @@ theorem mixed_not_unique_of_not_exactTop :
     simp [dX0, dY0, S0]
 
 end Feec.Counterexamples.DiscreteBGG
-
-/-! ### Deprecated names -/
 
 namespace Feec.BGG
 

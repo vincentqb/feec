@@ -6,52 +6,18 @@ public import Feec.Models.Cube.SmoothingEstimates
 /-!
 # Smoothed projections for the cubical spaces `Q_b⁻Λᵏ` on the cube
 
-**The smoothed canonical interpolant of `Q_b⁻Λ(𝒯_h)`.** On the uniform cubical mesh of the cube
-`(0, L)ⁿ` (`Feec.FiniteElement.CubeConformity`), with any smoothing parameters `p` of the maximal
-family for a domain star-shaped with respect to a ball, `Q = Π_h R` (the global canonical
-interpolant `Π_h` of `Feec.FiniteElement.CubeInterpolation` of the smoothed form `R u`,
-`Feec.FiniteElement.smoothForm`) is a commuting map into the cubical subcomplex
-(`Feec.FiniteElement.Cube.cubeSmoothedCommutingMap`): `Π_h` commutes with `d` on `C¹` fields
-and only sees `[0, L]ⁿ`, where the smoother commutes with `d_max`.
+The smoothed canonical interpolant of the cubical spaces is a commuting map, uniformly bounded and
+close to the identity on `Vₕ`: the hypotheses of the smoothed projections of [AFW2010], §5.5.
 
-**The estimates on `Q = (0, ½)ⁿ`.** With `N + 1` cells per direction (`h_N = 1 / (2 (N + 1))`,
-whose Freudenthal refinement is the mesh `FEM.mesh n N` of the simplicial families), `Q_b⁻Λ`
-is the subcomplex `FEM.qMinus n b N ⊆ HΛ(Q)`, and for the admissible parameters
-(`FEM.IsAdm`, `FEM.pMax γ`) of `Feec.Models.Cube.SmoothingEstimates`:
+## Main results
 
-* **uniform `L²` bound** (`FEM.QMinus.exists_norm_smoothedInterp_le`): the cell degrees of
-  freedom are bounded in `C⁰` (`exists_norm_cubeFieldInterp_le`), the smoothed field on a closed
-  cell by the local mass of any of its simplices (`FEM.IsAdm.abs_smoothForm_le_locMass_of_near`),
-  and the local masses have bounded overlap (`FEM.sum_locMass_le`);
-* **closeness on `Vₕ`** (`FEM.QMinus.exists_closeConst`): `‖v - Q v‖² ≤ K γ² ‖v‖²`. The
-  cell interpolant is stable in its degrees of freedom (`exists_norm_cubeFieldInterp_le_sum_dof`),
-  a degree of freedom is the integral of its tangential coefficients over the face
-  (`fieldMoment_eq_integral`), and the error integrand of a degree of freedom is the pointwise
-  estimate `sqrt_mul_abs_sum_sub_smoothForm_le` of the simplicial families: at points of a
-  face whose free coordinates are `γ/2`-interior, every cell sampled by the smoother contains the
-  point, and the tangential components of the cell fields agree there
-  (`cellField_apply_eq_of_free`); the cell fields are polynomials of degree `≤ Σⱼ b_j`
-  (`Q_b⁻Λᵏ ⊆ P_{Σ b}Λᵏ`, `cubeFormMinus_le_polyForm`), with the inverse estimates of the cells
-  (`exists_cell_inverse_bound`); near the boundary of the face only the inverse estimates are
-  used, on a layer of measure `≤ nγ`.
-
-Hence for every `γ ∈ (0, γ₀]` the maximal-family parameters `pMax γ` give the smoothing
-estimates (`FEM.QMinusSmoothingEstimates`, `FEM.qMinusSmoothingEstimates_pMax`): uniformly
-`L²`-bounded `Q_N` with `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`, the hypotheses of the smoothed projections
-`π_N = J_N⁻¹ Q_N` ([AFW2010], §5.5; `Feec.HilbertComplex.Subcomplex.CommutingMap`).
-
-## Main definitions
-
-* `Feec.FiniteElement.Cube.cubeSmoothedInterp`, `cubeSmoothedCommutingMap`;
-* `Feec.Models.Cube.FEM.qMinus n b N`, `FEM.qMinusSmoothed`, `FEM.QMinusSmoothingEstimates`.
+* `FEM.qMinusSmoothingEstimates_pMax`: the smoothing estimates for the parameters `pMax γ`, `γ`
+  small.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §4–§5 (the spaces `Q_r⁻Λᵏ(𝒯_h)`, their degrees of freedom and canonical interpolants)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -69,8 +35,7 @@ variable {n : ℕ} {L : ℝ} [Fact (0 < L)] {N : ℕ} [NeZero N] {b : Fin n → 
 /-! ### The smoothed canonical interpolant of `Q_b⁻Λ(𝒯_h)` -/
 
 variable (n L N) in
-/-- **The smoothed canonical interpolant** `Q = Π_h R : L²((0, L)ⁿ; Λᵏ) → Q_b⁻Λᵏ(𝒯_h)`: the global
-canonical interpolant of the smoothed form ([AFW2010], §5.5); zero in negative degrees. -/
+/-- **The smoothed canonical interpolant** `Q = Π_h R` into `Q_b⁻Λᵏ(𝒯_h)` ([AFW2010], §5.5). -/
 def cubeSmoothedInterp (hb : ∀ j, 1 ≤ b j) (p : SmoothingParam (Fin n → ℝ)) :
     ∀ k : ℤ, L2F ℝ (cubeRefinement n L N).domain (formIdx n k) →ₗ[ℝ]
       L2F ℝ (cubeRefinement n L N).domain (formIdx n k)
@@ -99,9 +64,6 @@ theorem cubeSmoothedInterp_mem (hb : ∀ j, 1 ≤ b j) (p : SmoothingParam (Fin 
   · exact ⟨⟨_, cubeFieldGlobalInterp_mem hb _⟩, rfl⟩
   · exact Submodule.zero_mem _
 
-/-- **`d_max Q u = Q d_max u`** (maximal family): `Π_h` commutes with `d` on `C¹` fields
-(`cubeGlue_cubeFieldGlobalInterp_extDeriv`), sees only `[0, L]ⁿ` (`cubeFieldGlobalInterp_congr`),
-and the smoother commutes with `d_max` there (`extDeriv_smoothForm_of_maximal`). -/
 theorem maximal_cubeSmoothedInterp [NeZero n] (hb : ∀ j, 1 ≤ b j)
     {p : SmoothingParam (Fin n → ℝ)} {x₀ : Fin n → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ (cubeRefinement n L N).domain, ∀ z ∈ Metric.ball x₀ s₀,
@@ -124,9 +86,7 @@ theorem maximal_cubeSmoothedInterp [NeZero n] (hb : ∀ j, 1 ≤ b j)
   rfl
 
 variable (n L N) in
-/-- **The smoothed canonical interpolant as a commuting map** into the cubical subcomplex
-`Q_b⁻Λ(𝒯_h) ⊆ HΛ((0, L)ⁿ)` (maximal family, the cube star-shaped with respect to `B(x₀, s₀)`):
-`Q = Π_h R` with `d Q = Q d` in every degree. -/
+/-- **The smoothed canonical interpolant as a commuting map** into `Q_b⁻Λ(𝒯_h) ⊆ HΛ((0, L)ⁿ)`. -/
 def cubeSmoothedCommutingMap [NeZero n] (hb : ∀ j, 1 ≤ b j) (p : SmoothingParam (Fin n → ℝ))
     {x₀ : Fin n → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ (cubeRefinement n L N).domain, ∀ z ∈ Metric.ball x₀ s₀,
@@ -156,8 +116,6 @@ def cubeSmoothedCommutingMap [NeZero n] (hb : ∀ j, 1 ≤ b j) (p : SmoothingPa
 
 /-! ### Glued fields -/
 
-/-- **The squared norm of a glued cubical field** is at most the sum of the local squared norms
-of the cell fields on the simplices of the refinement. -/
 theorem norm_sq_cubeGlue_le {k : ℕ} (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
     (f : Affine.Simplex ℝ (Fin n → ℝ) n → ℝ)
     (hf : ∀ T ∈ (cubeRefinement n L N).simplices, ∑ s : formIdx n k, ∫ y in T.closedInterior,
@@ -167,9 +125,6 @@ theorem norm_sq_cubeGlue_le {k : ℕ} (ω : CubeCell (fun _ : Fin n => N) → Po
     (fun _ _ s => continuous_formComp (contDiff_cellField ω _ (r := 0)).continuous s)).trans
     (Finset.sum_le_sum fun T hT => hf T hT)
 
-/-- **A glued cubical field almost everywhere**: a.e. point of `(0, L)ⁿ` lies in the interior of a
-simplex `T'` of the refinement, where the zero extension of the field is the field of the cell
-of `T'`. -/
 theorem ae_extField_cubeGlue_eq {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)}
     (hk : ∀ m, IsDeg k (ω m)) :
     ∀ᵐ t ∂volume, t ∈ (cubeRefinement n L N).domain → ∃ T' ∈ (cubeRefinement n L N).simplices,
@@ -195,8 +150,6 @@ theorem ae_extField_cubeGlue_eq {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) �
       simp [FiniteElement.extField, formExt, hs]
     rw [this, isDeg_cellField (hk _) t s (fun h => hs (by rw [h]))]
 
-/-- A point of the interior of a simplex of the refinement and of the open cell `m` lies in
-the cell of the simplex: the cell is `m`. -/
 theorem simplexCell_eq_of_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (cubeRefinement n L N).simplices) {m : CubeCell fun _ : Fin n => N}
     {t : Fin n → ℝ} (htT : t ∈ T.closedInterior)
@@ -212,8 +165,6 @@ theorem simplexCell_eq_of_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n}
   have e2' : (m j : ℕ) < (simplexCell (N := N) L T j : ℕ) + 1 := by exact_mod_cast e2
   exact Fin.ext (by omega)
 
-/-- **The local `L²` norm of a cell field** is controlled by the glued field on any measurable
-set containing the closed cell. -/
 theorem formL2Sq_cellField_le {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)}
     (hk : ∀ m, IsDeg k (ω m)) (m : CubeCell fun _ : Fin n => N) {K : Set (Fin n → ℝ)}
     (hmK : closedCell L m ⊆ K) :
@@ -278,8 +229,6 @@ theorem formL2Sq_cellField_le {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) → 
 
 /-! ### The geometry of nearby cells -/
 
-/-- **Cells near a cell are in its `2h`-neighbourhood**: if `t ∈ m'` is within `h` of a point of
-`m`, then `m'` lies within `2h` of every point `z₀` of `m`. -/
 theorem closedCell_subset_cthickening {m m' : CubeCell fun _ : Fin n => N} {x t z₀ : Fin n → ℝ}
     (hx : x ∈ closedCell L m) (ht : t ∈ closedCell L m') (hxt : dist x t < L / N)
     (hz₀ : z₀ ∈ closedCell L m) {S : Set (Fin n → ℝ)} (hz₀S : z₀ ∈ S) :
@@ -313,10 +262,6 @@ theorem closedCell_subset_cthickening {m m' : CubeCell fun _ : Fin n => N} {x t 
   rw [Real.dist_eq, abs_le]
   constructor <;> nlinarith [h3.1, h3.2, h4.1, h4.2]
 
-/-- **Cells sampled near an interior point of a face**: a point `x = h (m + y_g)` of a face `g` of
-the cell `m` (fixed coordinates `0` or `1`) whose coordinates `y` are `θ`-interior to `[0, 1]`,
-and a point `t` of a closed cell `m'` with `‖x - t‖ < θ h`, `θ ≤ ½`: then `x ∈ m'`, and `m'`
-agrees with `m` in the free directions of `g`. -/
 theorem mem_closedCell_of_near_face {m m' : CubeCell fun _ : Fin n => N} {g : Fin n → Option ℝ}
     (hg : ∀ j c, g j = some c → c = 0 ∨ c = 1) {θ : ℝ} (hθ : θ ≤ 1 / 2) {y : Fin n → ℝ}
     (hy : ∀ j, θ ≤ y j ∧ y j ≤ 1 - θ) {t : Fin n → ℝ} (ht : t ∈ closedCell L m')
@@ -384,15 +329,13 @@ theorem mem_closedCell_of_near_face {m m' : CubeCell fun _ : Fin n => N} {g : Fi
   exact ⟨fun j _ => (key j).2, fun j => (key j).1⟩
 
 omit [NeZero N] in
-/-- Free directions of a face along which two cells agree are free directions of their common
-face. -/
 theorem commonFace_eq_none {m m' : CubeCell fun _ : Fin n => N} {j : Fin n} (h : m' j = m j) :
     commonFace _ m m' j = none := by
   simp [commonFace, h]
 
 /-! ### Boundary layers of the unit cube -/
 
-/-- The points of `ℝⁿ` with a coordinate `θ`-close to `{0, 1}`. -/
+/-- The points of `ℝⁿ` with a coordinate `< θ` or `> 1 - θ`. -/
 def cubeLayer (θ : ℝ) : Set (Fin n → ℝ) := {y | ∃ j, y j < θ ∨ 1 - θ < y j}
 
 omit [Fact (0 < L)] [NeZero N] in
@@ -405,7 +348,6 @@ theorem measurableSet_cubeLayer (θ : ℝ) : MeasurableSet (cubeLayer (n := n) �
     ((measurable_pi_apply j) measurableSet_Ioi)
 
 omit [Fact (0 < L)] [NeZero N] in
-/-- **The boundary layer of the unit cube is small**: `|[0, 1]ⁿ ∩ layer_θ| ≤ 2 n θ`. -/
 theorem volume_real_cubeLayer_le {θ : ℝ} (hθ : 0 ≤ θ) :
     volume.real (closedCube n ∩ cubeLayer θ) ≤ 2 * n * θ := by
   classical
@@ -443,8 +385,6 @@ theorem volume_real_cubeLayer_le {θ : ℝ} (hθ : 0 ≤ θ) :
 
 omit [Fact (0 < L)] [NeZero N] in
 open Classical in
-/-- **Integration of a moment-integrand bound** over the unit cube: if `H |F(y)| ≤ c` on the
-boundary layer `layer_θ` and `≤ c ε` elsewhere, then `H |∫_{[0,1]ⁿ} F| ≤ c (ε + 2 n θ)`. -/
 theorem mul_abs_integral_closedCube_le {F : (Fin n → ℝ) → ℝ}
     (hF : ContinuousOn F (closedCube n)) {H c ε θ : ℝ} (hH : 0 ≤ H) (hc : 0 ≤ c) (hε : 0 ≤ ε)
     (hθ0 : 0 ≤ θ)
@@ -488,7 +428,6 @@ theorem mul_abs_integral_closedCube_le {F : (Fin n → ℝ) → ℝ}
         nlinarith
 
 omit [Fact (0 < L)] [NeZero N] in
-/-- The fixed coordinates of the faces of the degrees of freedom are `0` or `1`. -/
 theorem dofFace_eq_some {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin n} {c : ℝ}
     (h : dofFace (fun _ => none) s α j = some c) : c = 0 ∨ c = 1 := by
   simp only [dofFace, Option.none_or] at h
@@ -500,8 +439,6 @@ theorem dofFace_eq_some {s : Finset (Fin n)} {α : Fin n →₀ ℕ} {j : Fin n}
   · left; rw [Nat.lt_one_iff.1 h2]; norm_num
 
 
-/-- **The cell error of an interpolated field**: on the cell `m`, the field of `ω ∈ Q_b⁻Λᵏ` minus
-the cell interpolant of `w` is the cell interpolant of `ω_m - w`. -/
 theorem cellField_sub_cellInterp {k : ℕ} (hb : ∀ j, 1 ≤ b j)
     {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)} {m : CubeCell fun _ : Fin n => N}
     (hωm : ω m ∈ cubeFormMinus ℝ b k) {w : FormField n} (hw : Continuous w) :
@@ -518,8 +455,6 @@ theorem cellField_sub_cellInterp {k : ℕ} (hb : ∀ j, 1 ≤ b j)
 /-! ### Stability of the cell interpolants -/
 
 variable (b) in
-/-- **Stability of the cell interpolants in `C⁰`**, uniformly in the side `L`, the number of cells
-`N` and the cell: `sup_m ‖Π_m w‖ ≤ C sup_m ‖w‖` for `k`-form fields. -/
 theorem exists_norm_cellInterp_le (k : ℕ) (hb : ∀ j, 1 ≤ b j) :
     ∃ C, 0 ≤ C ∧ ∀ (L : ℝ) [Fact (0 < L)] (N : ℕ) [NeZero N] (m : CubeCell fun _ : Fin n => N)
       (w : FormField n), (∀ x, IsDeg k (w x)) → ∀ B : ℝ, (∀ z ∈ closedCell L m, ‖w z‖ ≤ B) →
@@ -566,8 +501,6 @@ variable {n : ℕ}
 
 instance fact_half_pos : Fact (0 < (1 / 2 : ℝ)) := ⟨by norm_num⟩
 
-/-- The Freudenthal refinement of the cubical mesh of `(0, ½)ⁿ` with `N + 1` cells per direction
-is the mesh of the simplicial families. -/
 theorem cubeRefinement_eq_mesh (N : ℕ) : cubeRefinement n (1 / 2) (N + 1) = mesh n N := rfl
 
 theorem closedCell_subset_closure (N : ℕ) (m : CubeCell fun _ : Fin n => N + 1) :
@@ -578,8 +511,7 @@ theorem closedCell_subset_closure (N : ℕ) (m : CubeCell fun _ : Fin n => N + 1
 variable [NeZero n] {b : Fin n → ℕ}
 
 variable (n) in
-/-- **The cubical complex `Q_b⁻Λ`** on the cubical mesh of `Q = (0, ½)ⁿ` with `N + 1` cells per
-direction (`Q_r⁻Λᵏ` for `b = fun _ => r`), as a subcomplex of `HΛ(Q)`. -/
+/-- **The cubical complex `Q_b⁻Λ`** of `Q = (0, ½)ⁿ`, `N + 1` cells per direction, in `HΛ(Q)`. -/
 def qMinus (b : Fin n → ℕ) (N : ℕ) : (complex n).Subcomplex :=
   (deRham ℝ n).maximalSubcomplexOfEq (mesh_domain n N) (isOpen_mesh_domain n N)
     (isOpen_cubeDomain n) (cubeSubcomplex n (1 / 2) (N + 1) b)
@@ -589,17 +521,14 @@ instance (b : Fin n → ℕ) (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((qMinu
     (cubeSubcomplex n (1 / 2) (N + 1) b) (hS := fun k =>
       inferInstanceAs (FiniteDimensional ℝ (cubeV n (1 / 2) (N + 1) b k))) k
 
-/-- **The smoothed canonical interpolant** `Q_N = Π_h R` of the cubical complex, for
-maximal-family smoothing parameters centred at the centre of the cube. -/
+/-- **The smoothed canonical interpolant** `Q_N = Π_h R` of the cubical complex. -/
 def qMinusSmoothed (hb : ∀ j, 1 ≤ b j) (N : ℕ) (p : SmoothingParam (Fin n → ℝ))
     (hp : p.IsMaximal (center n) (1 / 4)) : (qMinus n b N).CommutingMap :=
   (deRham ℝ n).commutingMapOfEq (mesh_domain n N) (isOpen_mesh_domain n N) (isOpen_cubeDomain n)
     (cubeSmoothedCommutingMap n (1 / 2) (N + 1) hb p (starBall_mesh n N) hp)
 
 variable (b) in
-/-- **The estimates of the smoothed interpolants of the cubical complex** ([AFW2010], §5.5): for
-maximal-family parameters `p N`, uniform `L²` bounds of `Q_N` and `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`,
-normalized by `½ ≤ C` (the analogue of `FEM.SmoothingEstimates`). -/
+/-- **The smoothed interpolant estimates** ([AFW2010], §5.5): `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`. -/
 structure QMinusSmoothingEstimates (hb : ∀ j, 1 ≤ b j) (p : ℕ → SmoothingParam (Fin n → ℝ))
     (C : ℝ) : Prop where
   isMaximal : ∀ N, (p N).IsMaximal (center n) (1 / 4)
@@ -615,8 +544,6 @@ namespace QMinus
 variable {γ : ℝ}
 
 omit [NeZero n] in
-/-- **The local `L²` bound of `Q_N = Π_h R`** on a simplex of the refinement:
-`‖Q_N x‖²_{L²(T)} ≤ 2ⁿ (C 2ᵏ)² (32/γ)ⁿ m_T(x)`. -/
 theorem sum_integral_sq_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} {C : ℝ}
     (hC : ∀ (N : ℕ) (m : CubeCell fun _ : Fin n => N + 1) (w : FormField n),
       (∀ x, IsDeg k (w x)) → ∀ B : ℝ, (∀ z ∈ closedCell (1 / 2) m, ‖w z‖ ≤ B) →
@@ -659,9 +586,8 @@ theorem sum_integral_sq_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} {C :
   linear_combination (2 ^ n * hN N ^ n * (C * 2 ^ k) ^ 2) * hr2
 
 omit [NeZero n] in
-/-- **The uniform `L²` bound of the smoothed interpolants** `Q_N = Π_h R_N` of the cubical
-complexes, for any admissible parameters (`IsAdm`): `‖Q_N x‖ ≤ C ‖x‖` for all `N`, all degrees and
-all `x`, with `C` depending only on `n`, `b` and `γ`. -/
+/-- **The uniform `L²` bound of the smoothed interpolants**: `‖Q_N x‖ ≤ C ‖x‖` for all `N` and
+admissible `p`. -/
 theorem exists_norm_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) (hγ0 : 0 < γ) (hγ1 : γ ≤ 1) :
     ∃ C, 0 ≤ C ∧ ∀ (N k : ℕ) (p : SmoothingParam (Fin n → ℝ)), IsAdm γ N p →
       ∀ x : L2F ℝ (mesh n N).domain (formIdx n k),
@@ -683,8 +609,7 @@ theorem exists_norm_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) (hγ0 : 0 < γ) (h
 
 /-! ### The closeness estimate on `Vₕ` -/
 
-/-- The inverse estimates of the cells of the mesh of `Q` with `N + 1` cells per direction, with
-the constant `A` (`exists_cell_inverse_bound`). -/
+/-- The inverse estimates of the cells of the mesh of `Q`, with the constant `A`. -/
 def CellInvBound (b : Fin n → ℕ) (k : ℕ) (A : ℝ) : Prop :=
   ∀ (N : ℕ) (ω : CubeCell (fun _ : Fin n => N + 1) → PolyForm ℝ (Fin n))
     (m : CubeCell fun _ : Fin n => N + 1), ω m ∈ cubeFormMinus ℝ b k →
@@ -723,14 +648,6 @@ theorem continuous_momentCoeff (g : Fin n → Option ℝ) (η : PolyForm ℝ (Fi
 
 omit [NeZero n] in
 open Classical in
-/-- **The degrees of freedom of `v - Q_N v`** (`v ∈ Vₕ`, maximal family): on the cell `m` of a
-simplex `T`, `h^{n/2} |ℓᵢ(F_m^*(v_m - R v))| ≤ hᵏ C A m_T(v)^{1/2} 2^{k+1} ((k + 1) γ + n γ)`.
-On a face, the moment is the integral of `Σₛ (v_m - R v)(x)ₛ cₛ` over the unit cube
-(`fieldMoment_eq_integral`), whose integrand is `O(γ)` at points with `γ/2`-interior coordinates
-(every sampled cell contains the point and has the same tangential components there,
-`mem_closedCell_of_near_face`, `cellField_apply_eq_of_free`) and `O(1)` on the boundary layer,
-of measure `≤ n γ` (`mul_abs_integral_closedCube_le`), by the pointwise estimate
-`sqrt_mul_abs_sum_sub_smoothForm_le` of the simplicial families. -/
 theorem sqrt_mul_abs_fieldDof_sub_le {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
     (hA : CellInvBound b k A) {Cc : ℝ}
     (hCc : ∀ (i : CubeDofIdx b k), ∀ y ∈ closedCube n,
@@ -879,9 +796,6 @@ theorem sqrt_mul_abs_fieldDof_sub_le {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
     _ ≤ _ := mul_le_mul_of_nonneg_left hint (pow_nonneg hh.le k)
 
 omit [NeZero n] in
-/-- **The local closeness estimate** on a simplex `T` of the refinement:
-`‖v - Q_N v‖²_{L²(T)} ≤ 2ⁿ (A_Π #DOF K_T)²` with `K_T` the DOF bound of
-`sqrt_mul_abs_fieldDof_sub_le`. -/
 theorem sum_integral_sq_sub_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
     (hA : CellInvBound b k A) {Cc : ℝ} (hCc0 : 0 ≤ Cc)
     (hCc : ∀ (i : CubeDofIdx b k), ∀ y ∈ closedCube n,
@@ -959,9 +873,8 @@ theorem sum_integral_sq_sub_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} 
 
 omit [NeZero n] in
 variable (b) in
-/-- The constant of the closeness estimate in degree `k`: `‖v - Q_N v‖² ≤ K_k γ² ‖v‖²` on
-`Vₕᵏ` for all `N` and all admissible parameters of the maximal family (the local estimates
-`sum_integral_sq_sub_smoothedInterp_le` summed with the bounded overlap `sum_locMass_le`). -/
+/-- **The closeness estimate**: `‖v - Q_N v‖² ≤ K γ² ‖v‖²` on `Vₕᵏ` for all `N`, `γ ≤ 1` and
+admissible `p` with smoothing balls in the mesh domain. -/
 theorem exists_closeConst (k : ℕ) (hb : ∀ j, 1 ≤ b j) :
     ∃ K, 0 ≤ K ∧ ∀ {γ : ℝ} {N : ℕ} {p : SmoothingParam (Fin n → ℝ)}, IsAdm γ N p → γ ≤ 1 →
       (∀ x ∈ closure (cubeDomain n), ∀ t,
@@ -993,10 +906,8 @@ theorem exists_closeConst (k : ℕ) (hb : ∀ j, 1 ≤ b j) :
 end QMinus
 
 open QMinus in
-/-- **The smoothed-projection estimates for the cubical complexes** ([AFW2010], §5.5;
-[ChristiansenWinther2008]): there is `γ₀ > 0` such that for every `γ ∈ (0, γ₀]` the
-maximal-family parameters `pMax γ` give uniformly `L²`-bounded smoothed interpolants with
-`‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`, for all `N`. -/
+/-- **The smoothed-projection estimates for the cubical complexes** for `pMax γ`, `γ` small
+([AFW2010], §5.5; [ChristiansenWinther2008]). -/
 theorem qMinusSmoothingEstimates_pMax (hb : ∀ j, 1 ≤ b j) :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 ∧ ∀ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
       ∃ C, QMinusSmoothingEstimates b hb (pMax γ hγ hγ1) C := by

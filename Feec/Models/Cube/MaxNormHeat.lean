@@ -10,83 +10,17 @@ public import Mathlib.Analysis.Calculus.Deriv.Prod
 /-!
 # The heat equation in the maximum norm: lumped-mass `P₁` elements on Freudenthal meshes
 
-The heat equation `uₜ = Δu` on the cube `Q = b + (0, s)ⁿ` with homogeneous Dirichlet data,
-discretized in space by lumped-mass `P₁` finite elements on the Freudenthal meshes of level
-`N + 1` (mesh size `h = s / (N + 1)`, `Feec.Mesh.freudenthalMesh`), is a **uniformly stable
-family in the maximum norm at the nodes** (`MaxNormHeat.family`, `M = 1`). `Lₕ` is the
-symmetric negative definite difference Laplacian, so `e^{tLₕ}` is also a contraction in `ℓ²`;
-the direct Hilbert route reaches the maximum norm through the norm equivalence, with a factor
-`h^{-n/2}`. The Banach layer (`Feec.TimeStepping.stableFamily`, the discrete half of
-`Feec.TimeStepping.banachFEEC`) gives the maximum-norm theory with constants independent of `h`.
-
-The scheme is the lumped-mass Galerkin method on the space `P̊₁⁻Λ⁰` of conforming `P₁` (Whitney
-`0`-form) functions of `Feec.FiniteElement.WhitneyComplex` with vanishing boundary DOFs: the
-global `P₁` functions `U_h` with values `U` at the interior nodes (`feFun`) are exactly
-`P̊₁⁻Λ⁰` (`feEquiv`, a linear isomorphism, since the interior nodes are the mesh vertices off
-`∂Q`), and `W = Lₕ U` iff `(W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all `V`
-(`lumpedLaplacian_eq_iff`; for all test functions `V_h ∈ P̊₁⁻Λ⁰`,
-`lumpedLaplacian_eq_iff_globalSpace₀`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
-`m(p) = ∫_Q φₚ` (`Feec.FiniteElement.P1Global`). With the stencil theorem it is exactly the
-classical finite difference scheme for the heat equation: `Feec.Models.Cube.FiniteDifferenceHeat`
-states the finite difference Laplacian `FiniteDifference.laplacian` on its own, proves it equal to
-`Lₕ` (`FiniteDifferenceHeat.fdLaplacian_eq`), and reads the results below for it.
-
-The discrete space is `ℝ^{interior nodes}` with the maximum norm (`MaxNormHeat.Space N`). The
-discrete Laplacian `Lₕ = -M_L⁻¹ K` (`MaxNormHeat.lumpedLaplacian`) is defined from the `P₁`
-stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`,
-`Feec.FiniteElement.lumpedMass`), the nodal values extended by `0` to the boundary nodes. The
-meshes with their interior nodes are a family of non-obtuse meshes (`MaxNormHeat.meshes`), and the
-error estimates 4–6 below are the general ones of `Feec.FiniteElement.NonobtuseMeshes.maxNormHeat`
-with the nodal consistency error `n B₄ h² / 12` of 3: what is specific to the cube is the uniform
-stencil, hence the `O(h²)` consistency.
+Lumped-mass `P₁` elements on the Freudenthal meshes of `Q = b + (0, s)ⁿ` for the heat equation with
+Dirichlet data: a discrete maximum principle and maximum-norm error estimates.
 
 ## Main results
 
-**`MaxNormHeat.maxNormHeat`** (statement `MaxNormHeat.Verdict`):
-
-1. (**the stencil**, `lumpedLaplacian_apply`) the Freudenthal simplices are non-obtuse
-   (`Feec.FiniteElement.isNonobtuse_freudenthalMesh`), so the stiffness matrix has nonpositive
-   off-diagonal entries (Ciarlet–Raviart), and `Lₕ` is the
-   `(2n + 1)`-point difference Laplacian
-   `(Lₕ U)(p) = Σₗ (U(p + eₗ) - 2 U(p) + U(p - eₗ)) / h²` (`U = 0` at the boundary nodes);
-2. (**the discrete maximum principle**, `isSubMarkovGenerator`) `Lₕ` is a sub-Markov generator:
-   `e^{tLₕ}` is positive and contractive in the maximum norm, `-a ≤ v ≤ a ⇒ -a ≤ e^{tLₕ} v ≤ a`;
-3. (**consistency**, `norm_interp_laplacian_sub_le`) for `u ∈ C⁴` vanishing on `∂Q` with
-   `|∂ᵢ⁴ u| ≤ B` on `Q̄`, `‖Iₕ Δu - Lₕ Iₕ u‖_∞ ≤ n B h² / 12` (`Iₕ` the nodal interpolant);
-4. (**semidiscrete error**) for every classical solution `u` on `[0, T]` (`HeatSolution`:
-   `C⁴` on all of `ℝⁿ` at each time with `|∂ᵢ⁴ u| ≤ B₄` on `Q̄`, `uₜ = Δu`, `u = 0` on `∂Q`),
-   `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12`;
-5. (**backward Euler**) with `|uₜₜ| ≤ B₂`,
-   `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ B₂ + n B₄ h² / 12)`:
-   `O(τ + h²)` in the maximum norm, unconditionally;
-6. (**every A-stable rational scheme**, Crank–Nicolson and the Gauss and Radau methods among
-   them) Brenner–Thomée's stability bound `‖r(τLₕ)ᵏ‖_∞ ≤ 1 + C'_r √k`, and for `r` of order `p`
-   `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ n B₄ h² / 12 + C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞`
-   (the sharp smooth-data estimate; the factor `‖Lₕ^{p+1} v‖_∞` is that of the discrete datum);
-7. the full verdict of the Banach layer for the family (`StableFamily.Verdict`);
-8. (**the Galerkin form**) `m(x) = ⟪φₓ, 1⟫_{L²(Q)}` and `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫`,
-   with `U ↦ U_h` a bijection onto `P̊₁⁻Λ⁰` (`feFun_bijective`), so the test functions `V_h`
-   range over all of `P̊₁⁻Λ⁰`;
-9. (**the finite element function on `Q̄`**, `abs_sub_p1Interp_nodal_le`) a `P₁` function attains
-   its extreme values at the vertices (`Feec.FiniteElement.abs_p1Interp_le`) and the `P₁`
-   interpolation error is `≤ n² D₂ h² / 2` for `|∂ᵢ∂ₖ u| ≤ D₂`
-   (`Feec.FiniteElement.abs_sub_p1Interp_le`), so at every point `x` of every simplex `K`
-   (the simplices cover `Q̄`, `exists_simplex_mem`),
-   `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D₂ h² / 2`; with 4–6 this bounds the semidiscrete,
-   backward Euler and rational errors in `L^∞(Q)` (`semidiscrete_fe`, `backwardEuler_fe`,
-   `rational_fe`).
-
-Among the fully discrete results only 5 is uniform in `h` with the constants of `u` alone; in 6
-the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
-stability bound loses `√k` (no `‖r(τLₕ)ᵏ‖_∞ ≤ C` uniform in `k` and `h` is proved). The
-estimates 4–6 are in the maximum norm at the nodes, 9 in `L^∞(Q)` of the finite element function.
-`sineSolution` is a nonzero classical solution (`exp(-λt) ∏ᵢ sin(π(xᵢ - bᵢ)/s)`, with
-`|∂ᵢ∂ₖ u| ≤ (π/s)²`), so the hypotheses of 4–6 and 9 are satisfied (`maxNormHeat_nonvacuous`).
+* `MaxNormHeat.maxNormHeat`: the stencil, the maximum principle, consistency and the errors.
+* `MaxNormHeat.maxNormHeat_nonvacuous`: some nonzero classical solution meets the hypotheses.
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (the lumped mass method, the maximum principle and maximum-norm estimates)
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 
@@ -142,10 +76,7 @@ theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Fin n → ℤ) :
     intro e
     exact absurd (node_injective b (meshSize_pos hs N).ne' e ▸ c.2) hq
 
-/-- **The Freudenthal meshes with their interior nodes**: the level-`(N + 1)` meshes of
-`b + (0, s)ⁿ` are non-obtuse (`Feec.FiniteElement.isNonobtuse_freudenthalMesh`), a family of
-non-obtuse meshes (`Feec.FiniteElement.NonobtuseMeshes`) with Dirichlet data at the boundary
-nodes. -/
+/-- **The Freudenthal meshes with their interior nodes**, a family of non-obtuse meshes. -/
 abbrev meshes (b : Fin n → ℝ) (hs : 0 < s) : NonobtuseMeshes n ℕ where
   mesh N := freudenthalMesh b s hs (N + 1)
   Node N := Nodes n N
@@ -153,9 +84,7 @@ abbrev meshes (b : Fin n → ℝ) (hs : 0 < s) : NonobtuseMeshes n ℕ where
   injective N := node_injective_subtype b (meshSize_pos hs N).ne' _
   isNonobtuse N := isNonobtuse_freudenthalMesh b hs (N + 1)
 
-/-- **The lumped-mass `P₁` Laplacian** `Lₕ = -M_L⁻¹ K` on the level-`(N + 1)` Freudenthal mesh of
-`b + (0, s)ⁿ`, with homogeneous Dirichlet data: `(Lₕ U)(p) = -a(φₚ, U) / m(p)` at the interior
-nodes (`Feec.FiniteElement.lumpedLaplacianOn`). -/
+/-- **The lumped-mass `P₁` Laplacian** `Lₕ = -M_L⁻¹ K`, homogeneous Dirichlet data. -/
 def lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) : Space n N →L[ℝ] Space n N :=
   (meshes b hs).L N
 
@@ -165,7 +94,7 @@ theorem lumpedLaplacian_apply_eq (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N
         (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) :=
   lumpedLaplacianOn_apply _ _ U p
 
-/-- **The stencil** (`Lₕ` is the difference Laplacian). [Thomee2006], Ch. 15 -/
+/-- **The stencil**: `Lₕ` is the difference Laplacian ([Thomee2006], Ch. 15). -/
 theorem lumpedLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
     lumpedLaplacian b hs N U p = ∑ l, (zeroExt U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
       zeroExt U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2 := by
@@ -177,9 +106,7 @@ theorem lumpedLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (
   congr 2
   simp [zeroExt, p.2]
 
-/-- **The discrete maximum principle**: the Freudenthal meshes are non-obtuse, so `Lₕ` is a
-sub-Markov generator (`Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn`) and `e^{tLₕ}`
-is positive and contractive in the maximum norm. [CiarletRaviart1973]; [Thomee2006], Ch. 15 -/
+/-- **The discrete maximum principle**: `Lₕ` is a sub-Markov generator ([CiarletRaviart1973]). -/
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     IsSubMarkovGenerator (lumpedLaplacian b hs N) :=
   (meshes b hs).isSubMarkovGenerator N
@@ -190,7 +117,6 @@ theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
 def interp (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Space n N :=
   fun p => u (node b (meshSize s N) p)
 
-/-- A lattice node lies in the closed cube iff it is a node of the level-`(N + 1)` lattice. -/
 theorem node_mem_closedCube_iff (hs : 0 < s) {q : Fin n → ℤ} :
     node b (meshSize s N) q ∈ closedCube b s ↔ ∀ j, 0 ≤ q j ∧ q j ≤ N + 1 := by
   have hm := meshSize_mul s N
@@ -203,7 +129,6 @@ theorem node_mem_closedCube_iff (hs : 0 < s) {q : Fin n → ℤ} :
   push_cast
   norm_cast
 
-/-- A lattice node lies in the open cube iff it is an interior node. -/
 theorem node_mem_openCube_iff (hs : 0 < s) {q : Fin n → ℤ} :
     node b (meshSize s N) q ∈ openCube b s ↔ q ∈ interiorNodes n (N + 1) := by
   have hm := meshSize_mul s N
@@ -215,8 +140,6 @@ theorem node_mem_openCube_iff (hs : 0 < s) {q : Fin n → ℤ} :
     mul_pos_iff_of_pos_left hh, mul_lt_mul_iff_of_pos_left hh]
   norm_cast
 
-/-- The axis segment `x + τ eₗ` through a node `x` of the closed lattice lies in the closed cube
-while its `l`-th coordinate does. -/
 theorem node_add_mem_closedCube (hs : 0 < s) {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1)
     (l : Fin n) {τ : ℝ} (h1 : 0 ≤ meshSize s N * p l + τ) (h2 : meshSize s N * p l + τ ≤ s) :
     node b (meshSize s N) p + τ • Pi.single l 1 ∈ closedCube b s := by
@@ -229,7 +152,6 @@ theorem node_add_mem_closedCube (hs : 0 < s) {p : Fin n → ℤ} (hp : ∀ i, 0 
     constructor <;> linarith
   · simpa [Pi.single_eq_of_ne hi] using this
 
-/-- The segments `x ± t eₗ`, `|t| ≤ h`, through an interior node lie in the closed cube. -/
 theorem node_add_smul_mem_closedCube (hs : 0 < s) {p : Fin n → ℤ} (hp : p ∈ interiorNodes n (N + 1))
     (l : Fin n) {t : ℝ} (ht : t ∈ Icc (-meshSize s N) (meshSize s N)) :
     node b (meshSize s N) p + t • Pi.single l 1 ∈ closedCube b s := by
@@ -242,13 +164,10 @@ theorem node_add_smul_mem_closedCube (hs : 0 < s) {p : Fin n → ℤ} (hp : p �
   exact node_add_mem_closedCube hs (fun i => by have := hp' i; omega) l
     (by nlinarith [ht.1, meshSize_pos hs N]) (by nlinarith [ht.2, meshSize_pos hs N])
 
-/-- Interior nodes lie in the open cube. -/
 theorem node_mem_openCube (hs : 0 < s) (p : Nodes n N) :
     node b (meshSize s N) p ∈ openCube b s :=
   (node_mem_openCube_iff hs).2 p.2
 
-/-- The extension by `0` of the interpolant of `u`, `u = 0` on `∂Q`, is `u` at every node of the
-closed lattice. -/
 theorem zeroExt_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     (hbd : ∀ x ∈ closedCube b s, x ∉ openCube b s → u x = 0) {q : Fin n → ℤ}
     (hq : ∀ j, 0 ≤ q j ∧ q j ≤ N + 1) :
@@ -259,9 +178,6 @@ theorem zeroExt_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
   · exact (hbd _ ((node_mem_closedCube_iff hs).2 hq) fun ho =>
       hq' ((node_mem_openCube_iff hs).1 ho)).symm
 
-/-- **Consistency in the maximum norm**: for `u ∈ C⁴` vanishing on `∂Q` with `|∂ᵢ⁴ u| ≤ B` on
-`Q̄`, `|(Iₕ Δu)(p) - (Lₕ Iₕ u)(p)| ≤ n B h² / 12` at every interior node (the truncation error of
-the difference Laplacian, by Taylor's formula along the axes, `abs_secondDiff_sub_le`). -/
 theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
     (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B)
@@ -303,7 +219,6 @@ theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) 
         rw [hplus, hminus]; exact hterm l
     _ = n * B * h ^ 2 / 12 := by rw [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
 
-/-- **Consistency in the maximum norm**: `‖Iₕ Δu - Lₕ Iₕ u‖_∞ ≤ n B h² / 12`. -/
 theorem norm_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
     (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B)
@@ -322,23 +237,19 @@ theorem norm_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ)
 
 /-! ### The lumped-mass Galerkin method on `P̊₁⁻Λ⁰` -/
 
-/-- The **global `P₁` function** `U_h` of the discrete values `U` (`0` at the boundary nodes) on
-the level-`(N + 1)` Freudenthal mesh: an element of the global Whitney `0`-form (Lagrange `P₁`)
-space. -/
+/-- The **global `P₁` function** `U_h` of the discrete values `U`, `0` at the boundary nodes. -/
 def feFun (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
     (whitneyElement n).globalSpace (freudenthalMesh b s hs (N + 1)) 0 :=
   p1Global _ (nodal b s U)
 
-/-- `d U_h ∈ L²Λ¹(Q)` (elementwise `d`, the `L²` exterior derivative by
-`Feec.FiniteElement.inner_maximal_p1Global`). -/
+/-- `d U_h ∈ L²Λ¹(Q)`, the elementwise exterior derivative. -/
 def dFeFun (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
     Feec.Domain.L2F ℝ (freudenthalMesh b s hs (N + 1)).domain
       (Feec.Domain.formIdx n (((0 : ℕ) : ℤ) + 1)) :=
   (whitneyElement n).glue _ (((0 : ℕ) : ℤ) + 1) ((whitneyElement n).dPiecewise _ 0
     (feFun b hs U : (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0))
 
-/-- The **lumped-mass inner product** `(U, V)_h = Σ_p m(p) U(p) V(p)`, the vertex quadrature of
-`∫ U_h V_h`. -/
+/-- The **lumped-mass inner product** `(U, V)_h = Σ_p m(p) U(p) V(p)`. -/
 def lumpedInner (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) : ℝ :=
   ∑ p : Nodes n N, lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) *
     U p * V p
@@ -349,7 +260,6 @@ theorem lumpedMass_node_pos (b : Fin n → ℝ) (hs : 0 < s) (p : Nodes n N) :
   rw [meshSize, this]
   exact pow_pos (meshSize_pos hs N) n
 
-/-- **The lumped-mass `P₁` Laplacian in weak form**: `(Lₕ U, V)_h = -a(U_h, V_h)`. -/
 theorem lumpedInner_lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) :
     lumpedInner b hs (lumpedLaplacian b hs N U) V =
       -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodal b s U) (nodal b s V) := by
@@ -360,8 +270,6 @@ theorem lumpedInner_lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (U V : Spac
   have := (lumpedMass_node_pos b hs p).ne'
   field_simp
 
-/-- **The scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰`** (`feEquiv`):
-`(Lₕ U, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)} = -∫_Q ∇U_h · ∇V_h` for all discrete values `U, V`. -/
 theorem lumpedInner_lumpedLaplacian_eq_neg_inner (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) :
     lumpedInner b hs (lumpedLaplacian b hs N U) V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ := by
   rw [lumpedInner_lumpedLaplacian, dFeFun, dFeFun, feFun, feFun,
@@ -369,8 +277,7 @@ theorem lumpedInner_lumpedLaplacian_eq_neg_inner (b : Fin n → ℝ) (hs : 0 < s
       interior_subset_freudenthalMesh_domain b hs (N + 1) hT)]
 
 /-- **`Lₕ` is determined by the Galerkin equations**: `W = Lₕ U` iff
-`(W, V)_h = -⟪d U_h, d V_h⟫` for every `V`; so `U' = Lₕ U` is the semidiscrete lumped-mass
-Galerkin equation `(U', V)_h + ⟪d U_h, d V_h⟫ = 0`. [Thomee2006], Ch. 15 -/
+`(W, V)_h = -⟪d U_h, d V_h⟫` for every `V` ([Thomee2006], Ch. 15). -/
 theorem lumpedLaplacian_eq_iff (b : Fin n → ℝ) (hs : 0 < s) (U W : Space n N) :
     lumpedLaplacian b hs N U = W ↔
       ∀ V : Space n N, lumpedInner b hs W V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ := by
@@ -395,7 +302,6 @@ theorem interior_closure_freudenthalMesh_domain (b : Fin n → ℝ) (hs : 0 < s)
   refine Set.pi_congr rfl fun i _ => ?_
   rw [closure_Ioo (by linarith : b i ≠ b i + s), interior_Icc]
 
-/-- **The interior nodes are the free vertices** of the mesh: the vertices off `∂Q`. -/
 theorem isFreeVertexEnum (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     IsFreeVertexEnum (freudenthalMesh b s hs (N + 1))
       fun p : Nodes n N => node b (meshSize s N) p := by
@@ -413,9 +319,7 @@ theorem isFreeVertexEnum (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
         (vertexSet_subset_closedInterior T hy)), h⟩
     exact ⟨⟨q, (node_mem_openCube_iff hs).1 hq⟩, rfl⟩
 
-/-- **The nodal values are a linear isomorphism `ℝ^{interior nodes} ≃ P̊₁⁻Λ⁰`**, `U ↦ U_h`: every
-`P₁` function with vanishing boundary DOFs is `U_h` for its values `U` at the interior nodes
-(`Feec.FiniteElement.p1GlobalEquiv₀`). -/
+/-- **The nodal values are a linear isomorphism `ℝ^{interior nodes} ≃ P̊₁⁻Λ⁰`**, `U ↦ U_h`. -/
 def feEquiv (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     Space n N ≃ₗ[ℝ] (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0 :=
   p1GlobalEquiv₀ _ (isFreeVertexEnum b hs N)
@@ -424,16 +328,11 @@ theorem feEquiv_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
     (feEquiv b hs N U : (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0) =
       feFun b hs U := rfl
 
-/-- `U_h` has vanishing boundary DOFs: it lies in the space `P̊₁⁻Λ⁰` of the minimal (`H̊¹`)
-complex. -/
 theorem feFun_mem_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
     (feFun b hs U : (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0) ∈
       (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0 :=
   (feEquiv b hs N U).2
 
-/-- **The scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰`**: `W = Lₕ U` iff
-`(W, v)_h = -⟪d U_h, d v⟫_{L²Λ¹(Q)}` for every test function `v ∈ P̊₁⁻Λ⁰`, `(W, v)_h` the
-vertex quadrature with the nodal values of `v` (`feEquiv`). [Thomee2006], Ch. 15 -/
 theorem lumpedLaplacian_eq_iff_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (U W : Space n N) :
     lumpedLaplacian b hs N U = W ↔
       ∀ v : (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0,
@@ -446,9 +345,7 @@ theorem lumpedLaplacian_eq_iff_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (
 
 /-! ### The stable family and the heat equation -/
 
-/-- **The maximum-norm family**: the lumped-mass `P₁` Laplacians `Lₕ` of the levels `N + 1` on
-`ℝ^{interior nodes}` with the maximum norm, a uniformly stable family with `M = 1`
-(`isSubMarkovGenerator`), the family of `meshes` (`Feec.FiniteElement.NonobtuseMeshes.family`). -/
+/-- **The maximum-norm family** of the `Lₕ`, uniformly stable with `M = 1`. -/
 abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
   (meshes b hs).family
 
@@ -457,9 +354,8 @@ abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
 @[simp] theorem family_L (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     (family b hs).L N = lumpedLaplacian b hs N := rfl
 
-/-- A **classical solution of the heat equation** `uₜ = Δu` on `[0, T] × Q`, `u = 0` on `∂Q`:
-`C⁴` on all of `ℝⁿ` at each time with `|∂ᵢ⁴ u| ≤ B₄` on `Q̄`, with time derivative
-`u₁ = uₜ = Δu` in `Q`. -/
+/-- A **classical solution of the heat equation** `uₜ = Δu` on `[0, T] × Q`, `u = 0` on `∂Q`,
+`C⁴` in space. -/
 structure HeatSolution (b : Fin n → ℝ) (s T : ℝ) where
   /-- the solution -/
   u : ℝ → (Fin n → ℝ) → ℝ
@@ -480,7 +376,6 @@ variable {T : ℝ} (S : HeatSolution b s T)
 /-- The truncation error `n B₄ h² / 12` of the space discretization. -/
 def defect (N : ℕ) : ℝ := n * S.B₄ * meshSize s N ^ 2 / 12
 
-/-- **The defect of the interpolated solution**: `‖Iₕ uₜ - Lₕ Iₕ u‖_∞ ≤ n B₄ h² / 12`. -/
 theorem norm_defect_le (hs : 0 < s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖interp b s N (S.u₁ t) - lumpedLaplacian b hs N (interp b s N (S.u t))‖ ≤ S.defect N := by
   have e : interp b s N (S.u₁ t) = interp b s N (laplacian (S.u t)) :=
@@ -490,10 +385,6 @@ theorem norm_defect_le (hs : 0 < s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
 
 end HeatSolution
 
-/-- **The semidiscrete error in the maximum norm**: `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞`
-`+ t n B₄ h² / 12` for `t ∈ [0, T]`, every discrete datum `v`
-(`Feec.FiniteElement.NonobtuseMeshes.norm_interp_sub_exp_le` with the consistency error
-`n B₄ h² / 12`). -/
 theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) (v : Space n N) :
     ‖interp b s N (S.u t) - exp (t • lumpedLaplacian b hs N) v‖ ≤
@@ -503,10 +394,6 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) (
     (fun r hr q => S.hasDerivAt r (hsub hr) _ (node_mem_openCube hs q))
     (fun r hr => S.norm_defect_le hs N (hsub hr)) v
 
-/-- **Backward Euler in the maximum norm**: if moreover `uₜ` has time derivative `u₂` with
-`|u₂| ≤ B₂` in `Q`, then for `kτ ≤ T`
-`‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ B₂ + n B₄ h² / 12)`:
-`O(τ + h²)`, unconditionally stable (Hille–Yosida, `M = 1`). -/
 theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T)
     {u₂ : ℝ → (Fin n → ℝ) → ℝ} {B₂ : ℝ}
     (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
@@ -528,10 +415,6 @@ theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s 
     (fun r hr q => hu₂ r (hsub hr) _ (node_mem_openCube hs q)) hB
     (fun r hr => S.norm_defect_le hs N (hsub hr)) v
 
-/-- **Every A-stable rational scheme in the maximum norm**: for `r` of order `p` (Crank–Nicolson,
-the Gauss and Radau methods),
-`‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ n B₄ h² / 12 + C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞`,
-`C_r = sharpConst r p` (Brenner–Thomée's smooth-data estimate, `M = 1`). -/
 theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T)
     {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (N : ℕ) {τ : ℝ}
     (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) :
@@ -543,8 +426,6 @@ theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s
     (fun t ht q => S.hasDerivAt t (hsub ht) _ (node_mem_openCube hs q))
     (fun _ ht => S.norm_defect_le hs N (hsub ht)) v
 
-/-- **Brenner–Thomée's stability bound in the maximum norm**: `‖r(τLₕ)ᵏ‖_∞ ≤ 1 + C'_r √k` for
-every A-stable `r` (Crank–Nicolson included), uniformly in `h`. [BrennerThomee1979] -/
 theorem norm_step_pow_le (hs : 0 < s) {r : RationalScheme} (hr : r.IsAStable) (N : ℕ) {τ : ℝ}
     (hτ : 0 < τ) (k : ℕ) : ‖(family b hs).step r τ N ^ k‖ ≤ 1 + r.sqrtConst * √k :=
   (meshes b hs).norm_step_pow_le hr hτ N k
@@ -554,7 +435,7 @@ theorem norm_step_pow_le (hs : 0 < s) {r : RationalScheme} (hr : r.IsAStable) (N
 /-- The frequency `a = π / s` of the first Dirichlet eigenmode of the cube. -/
 def sineFreq (s : ℝ) : ℝ := Real.pi / s
 
-/-- The factor `y ↦ sin(a (y - c))` and its derivatives `aᵏ sin⁽ᵏ⁾(a (y - c))`. -/
+/-- The factor `y ↦ sin(a (y - c))` and its derivatives `aᵏ sin⁽ᵏ⁾(a (y - c))`, `k ≤ 4`. -/
 def sineDeriv (a c : ℝ) : ℕ → ℝ → ℝ
   | 0 => fun y => Real.sin (a * (y - c))
   | 1 => fun y => a * Real.cos (a * (y - c))
@@ -587,7 +468,6 @@ theorem sineFactors_zero (b : Fin n → ℝ) (a : ℝ) (i : Fin n) :
   · subst hj; simp [sineFactors]
   · simp [sineFactors, Function.update_of_ne hj]
 
-/-- `∂ᵢᵏ (c ∏ⱼ sin(a (xⱼ - bⱼ))) = c ∏ⱼ (factor `i` differentiated `k` times)`, `k ≤ 4`. -/
 theorem iterate_partialDeriv_sine (b : Fin n → ℝ) (a c : ℝ) (i : Fin n) (k : ℕ) (hk : k ≤ 4) :
     (partialDeriv i)^[k] (fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) 0 (x j)) =
       fun x => c * ∏ j, sineFactors b a i k j (x j) := by
@@ -601,7 +481,6 @@ theorem iterate_partialDeriv_sine (b : Fin n → ℝ) (a c : ℝ) (i : Fin n) (k
       simpa [sineFactors] using hasDerivAt_sineDeriv a (b i) k (by omega) y)]
     simp only [sineFactors, Function.update_idem]
 
-/-- `∏ⱼ G̃ⱼ(xⱼ) = κ ∏ⱼ Gⱼ(xⱼ)` when the `i`-th factor is replaced by `κ Gᵢ`. -/
 theorem prod_update_const_mul (G : Fin n → ℝ → ℝ) (i : Fin n) (κ : ℝ) (x : Fin n → ℝ) :
     ∏ j, Function.update G i (fun y => κ * G i y) j (x j) = κ * ∏ j, G j (x j) := by
   rw [← Finset.mul_prod_erase _ _ (Finset.mem_univ i),
@@ -609,7 +488,6 @@ theorem prod_update_const_mul (G : Fin n → ℝ → ℝ) (i : Fin n) (κ : ℝ)
   congr 2
   exact Finset.prod_congr rfl fun j hj => by rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
 
-/-- `∂ᵢ² (c ∏ⱼ sin(a (xⱼ - bⱼ))) = -a² c ∏ⱼ sin(a (xⱼ - bⱼ))`. -/
 theorem partialDeriv_partialDeriv_sineProd (b : Fin n → ℝ) (a c : ℝ) (i : Fin n) :
     partialDeriv i (partialDeriv i fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) 0 (x j)) =
       fun x => -a ^ 2 * c * ∏ j, sineDeriv a (b j) 0 (x j) := by
@@ -621,14 +499,11 @@ theorem partialDeriv_partialDeriv_sineProd (b : Fin n → ℝ) (a c : ℝ) (i : 
     prod_update_const_mul (fun j => sineDeriv a (b j) 0)]
   ring
 
-/-- The factor `y ↦ sin(a (y - c))` is odd about `c`: `sin(a (2c - y - c)) = -sin(a (y - c))`. -/
 theorem sineDeriv_zero_two_mul_sub (a c y : ℝ) :
     sineDeriv a c 0 (2 * c - y) = -sineDeriv a c 0 y := by
   simp only [sineDeriv]
   rw [show a * (2 * c - y - c) = -(a * (y - c)) by ring, Real.sin_neg]
 
-/-- The eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - cᵢ)/s)` has time derivative `-λ` times itself (any
-centre `c`, any `x`). -/
 theorem hasDerivAt_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
     HasDerivAt (fun t => Real.exp (-(n * sineFreq s ^ 2) * t) *
         ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))
@@ -639,7 +514,6 @@ theorem hasDerivAt_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
     (∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))
   exact this.congr_deriv (by simp; ring)
 
-/-- `Δ` of the eigenmode is `-λ` times itself, `λ = n (π/s)²` (any centre, any `x`). -/
 theorem laplacian_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
     laplacian (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) *
         ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) x =
@@ -653,7 +527,6 @@ theorem laplacian_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
   simp only [laplacian, e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
   ring
 
-/-- `|∂ᵢ⁴|` of the eigenmode is at most `(π/s)⁴` for `t ≥ 0` (any centre, any `x`). -/
 theorem abs_iterate_partialDeriv_sineMode_le (c : Fin n → ℝ) {t : ℝ} (ht : 0 ≤ t)
     (x : Fin n → ℝ) (i : Fin n) :
     |(partialDeriv i)^[4] (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) *
@@ -675,8 +548,7 @@ theorem abs_iterate_partialDeriv_sineMode_le (c : Fin n → ℝ) {t : ℝ} (ht :
       ≤ 1 * (sineFreq s ^ 4 * 1) := by gcongr
     _ = sineFreq s ^ 4 := by ring
 
-/-- **The first eigenmode** `u(t, x) = e^{-λt} ∏ᵢ sin(π (xᵢ - bᵢ)/s)`, `λ = n π² / s²`: a
-classical solution of the heat equation on every `[0, T] × Q` with `B₄ = (π/s)⁴`. -/
+/-- **The first eigenmode** `u(t, x) = e^{-λt} ∏ᵢ sin(π (xᵢ - bᵢ)/s)`, `λ = n π² / s²`. -/
 def sineSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : HeatSolution b s T where
   u t x := Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j)
   u₁ t x := -(n * sineFreq s ^ 2) *
@@ -697,7 +569,6 @@ def sineSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : HeatSolution b s T
   B₄ := sineFreq s ^ 4
   bound₄ t ht x _ i := abs_iterate_partialDeriv_sineMode_le b ht.1 x i
 
-/-- The first eigenmode is nonzero at the centre of the cube at `t = 0`. -/
 theorem sineSolution_u_zero_center (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     (sineSolution b hs T).u 0 (b + (s / 2) • fun _ => (1 : ℝ)) = 1 := by
   simp only [sineSolution, sineDeriv, sineFreq, mul_zero, Real.exp_zero, one_mul, Pi.add_apply,
@@ -716,7 +587,6 @@ theorem closedInterior_subset_closedCube (hs : 0 < s) {K : Affine.Simplex ℝ (F
   simp only at this ⊢
   rwa [closure_Ioo (by linarith : b i ≠ b i + s)] at this
 
-/-- The simplices of the level-`(N + 1)` mesh have diameter at most `h` (maximum norm). -/
 theorem dist_le_meshSize (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {y z : Fin n → ℝ}
     (hy : y ∈ K.closedInterior) (hz : z ∈ K.closedInterior) : dist y z ≤ meshSize s N := by
@@ -728,7 +598,6 @@ theorem dist_le_meshSize (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
       hz).trans (le_of_eq ?_)
     exact diam_freudenthalMesh_simplex b (freudenthalScale_pos hs (N + 1)) (finLattice m) σ
 
-/-- The vertices of the level-`(N + 1)` mesh are lattice nodes `b + h q`, `q ∈ {0, …, N + 1}ⁿ`. -/
 theorem exists_node_eq_points (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) (j : Fin (n + 1)) :
     ∃ q : Fin n → ℤ, (∀ i, 0 ≤ q i ∧ q i ≤ N + 1) ∧ K.points j = node b (meshSize s N) q := by
@@ -740,8 +609,6 @@ theorem exists_node_eq_points (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → �
     simp only [Pi.add_apply, h, finLattice] <;> omega
 
 
-/-- **The simplices of the mesh cover `Q̄`** (`Feec.Mesh.SimplicialMesh.biUnion_closedInterior`,
-from `Feec.Mesh.iUnion_freudenthalSet`): the bounds below on every simplex hold on all of `Q̄`. -/
 theorem exists_simplex_mem (hs : 0 < s) {x : Fin n → ℝ} (hx : x ∈ closedCube b s) :
     ∃ K ∈ (freudenthalMesh b s hs (N + 1)).simplices, x ∈ K.closedInterior := by
   have h : x ∈ closure (freudenthalMesh b s hs (N + 1)).domain := by
@@ -756,10 +623,6 @@ theorem exists_simplex_mem (hs : 0 < s) {x : Fin n → ℝ} (hx : x ∈ closedCu
 /-- The interpolation term `n² D₂ h² / 2`. -/
 def feDefect (D₂ : ℝ) (N : ℕ) : ℝ := n ^ 2 * D₂ * meshSize s N ^ 2 / 2
 
-/-- **A finite element function on `Q̄` from its values at the nodes**: for `u ∈ C²` with
-`|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and `g` with `|u - g| ≤ ε` at the nodes `{0, …, N + 1}ⁿ`, at every point `x`
-of every simplex `K` of the mesh, `|u(x) - Π_K g(x)| ≤ ε + n² D h² / 2`
-(`Feec.FiniteElement.abs_sub_p1Interp_le_of_vertices`); any boundary condition and node set. -/
 theorem abs_sub_p1Interp_le_of_nodes (hs : 0 < s) (N : ℕ) {u g : (Fin n → ℝ) → ℝ}
     (hu : ContDiff ℝ 2 u) {D ε : ℝ}
     (hD : ∀ x ∈ closedCube b s, ∀ i k, |partialDeriv k (partialDeriv i u) x| ≤ D)
@@ -774,10 +637,6 @@ theorem abs_sub_p1Interp_le_of_nodes (hs : 0 < s) (N : ℕ) {u g : (Fin n → �
       obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hK j
       rw [e]; exact hε q hq) hx
 
-/-- **The finite element function in the maximum norm on `Q̄`**: for `u ∈ C²` vanishing on `∂Q`
-with `|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and discrete values `U`, at every point `x` of every simplex `K` of the
-mesh, `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D h² / 2`, `U_h = Π_K U` the global `P₁` function
-(a `P₁` function attains its extrema at the vertices, plus the `P₁` interpolation error). -/
 theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
     (hu : ContDiff ℝ 2 u) {D : ℝ}
     (hD : ∀ x ∈ closedCube b s, ∀ i k, |partialDeriv k (partialDeriv i u) x| ≤ D)
@@ -797,7 +656,6 @@ theorem abs_sineDeriv_le {a : ℝ} (ha : 0 ≤ a) (c : ℝ) {k : ℕ} (hk : k �
   interval_cases k <;> simp only [sineDeriv, abs_mul, abs_neg, abs_pow, abs_of_nonneg ha] <;>
     first | simpa using hs | nlinarith [pow_nonneg ha 2, pow_nonneg ha 3, pow_nonneg ha 4]
 
-/-- `∂ₖ (c ∏ⱼ sin⁽ᵐʲ⁾(a(xⱼ - bⱼ))) = c ∏ⱼ sin⁽ᵐ'ʲ⁾`, `m' = m + eₖ` (for `mₖ ≤ 3`). -/
 theorem partialDeriv_sineProd (b : Fin n → ℝ) (a c : ℝ) (m : Fin n → ℕ) (k : Fin n)
     (hk : m k ≤ 3) :
     partialDeriv k (fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) (m j) (x j)) =
@@ -819,7 +677,6 @@ theorem abs_const_mul_sineProd_le {a : ℝ} (ha : 0 ≤ a) (b : Fin n → ℝ) (
   exact mul_le_mul_of_nonneg_left (Finset.prod_le_prod₀ (fun _ _ => abs_nonneg _)
     fun j _ => abs_sineDeriv_le ha _ (hm j) _) (abs_nonneg _)
 
-/-- The second derivatives of the first eigenmode: `|∂ᵢ∂ₖ u| ≤ (π/s)²` for `t ≥ 0`. -/
 theorem abs_partialDeriv_partialDeriv_sineSolution_le (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ)
     {t : ℝ} (ht : 0 ≤ t) (x : Fin n → ℝ) (i k : Fin n) :
     |partialDeriv k (partialDeriv i ((sineSolution b hs T).u t)) x| ≤ sineFreq s ^ 2 := by
@@ -847,14 +704,9 @@ theorem abs_partialDeriv_partialDeriv_sineSolution_le (b : Fin n → ℝ) (hs : 
 
 /-! ### The verdict -/
 
-/-- The conclusions of `maxNormHeat` for the cube `b + (0, s)ⁿ`: non-obtuse Freudenthal meshes,
-the difference stencil of the lumped-mass `P₁` Laplacian, the discrete maximum principle,
-maximum-norm consistency, the semidiscrete, backward Euler and rational-scheme errors against
-every classical solution, Brenner–Thomée's stability bound, and the verdict of the Banach layer
-for the family. -/
+/-- The conclusions of `maxNormHeat` for the cube `b + (0, s)ⁿ`. -/
 structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
-  /-- the Freudenthal meshes are non-obtuse (so the off-diagonal stiffness is nonpositive,
-  `Feec.FiniteElement.p1Stiffness_indicator_nonpos`) -/
+  /-- the Freudenthal meshes are non-obtuse -/
   nonobtuse (N : ℕ) [NeZero N] : IsNonobtuse (freudenthalMesh b s hs N)
   /-- the lumped-mass `P₁` Laplacian is the `(2n + 1)`-point difference Laplacian -/
   stencil (N : ℕ) (U : Space n N) (p : Nodes n N) :
@@ -899,8 +751,7 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
         (p1Global (freudenthalMesh b s hs (N + 1)) (fun _ => 1) :
           (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0)⟫_ℝ =
       lumpedMass (freudenthalMesh b s hs (N + 1)) x
-  /-- the scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰` (`feFun_bijective`):
-  `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all `V` -/
+  /-- the scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰` -/
   galerkin (N : ℕ) (U W : Space n N) : lumpedLaplacian b hs N U = W ↔
     ∀ V : Space n N, lumpedInner b hs W V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ
   /-- the semidiscrete error of the finite element function at every point of `Q̄` -/
@@ -937,8 +788,7 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
       ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
         r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ +
         feDefect (s := s) (n := n) D₂ N
-  /-- the simplices of the mesh cover `Q̄`, so the bounds of the finite element function on every
-  simplex hold on all of `Q̄` -/
+  /-- the simplices of the mesh cover `Q̄` -/
   covers (N : ℕ) {x : Fin n → ℝ} (hx : x ∈ closedCube b s) :
     ∃ K ∈ (freudenthalMesh b s hs (N + 1)).simplices, x ∈ K.closedInterior
   /-- `U ↦ U_h` is a bijection of `ℝ^{interior nodes}` onto `P̊₁⁻Λ⁰` -/
@@ -946,9 +796,8 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
     (⟨feFun b hs U, feFun_mem_globalSpace₀ b hs U⟩ :
       (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0)
 
-/-- **The heat equation in the maximum norm** (lumped-mass `P₁` elements on the Freudenthal
-meshes of the cube `b + (0, s)ⁿ`, Dirichlet data): see `Verdict`. [Thomee2006], Ch. 15;
-[CiarletRaviart1973]; [BrennerThomee1979] -/
+/-- **The heat equation in the maximum norm**: `Verdict` on the cube `b + (0, s)ⁿ` ([Thomee2006],
+Ch. 15; [CiarletRaviart1973]; [BrennerThomee1979]). -/
 theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   nonobtuse N _ := isNonobtuse_freudenthalMesh b hs N
   stencil := fun _ U p => lumpedLaplacian_apply b hs U p
@@ -979,7 +828,6 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   covers _ _ hx := exists_simplex_mem hs hx
   feFun_bijective N := (feEquiv b hs N).bijective
 
-/-- The second time derivative of the first eigenmode: `uₜₜ = λ² u`, `λ = n (π/s)²`. -/
 theorem sineSolution_hasDerivAt₁ (b : Fin n → ℝ) (hs : 0 < s) (T t : ℝ) (x : Fin n → ℝ) :
     HasDerivAt (fun t => (sineSolution b hs T).u₁ t x)
       ((n * sineFreq s ^ 2) ^ 2 * (sineSolution b hs T).u t x) t := by
@@ -988,7 +836,6 @@ theorem sineSolution_hasDerivAt₁ (b : Fin n → ℝ) (hs : 0 < s) (T t : ℝ) 
     (∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))).const_mul (-(n * sineFreq s ^ 2))
   exact this.congr_deriv (by simp [sineSolution]; ring)
 
-/-- `|uₜₜ| ≤ λ²` for the first eigenmode, `t ≥ 0`. -/
 theorem abs_sineSolution_u₂_le (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) {t : ℝ} (ht : 0 ≤ t)
     (x : Fin n → ℝ) :
     |(n * sineFreq s ^ 2) ^ 2 * (sineSolution b hs T).u t x| ≤ (n * sineFreq s ^ 2) ^ 2 := by
@@ -1003,9 +850,7 @@ theorem abs_sineSolution_u₂_le (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) {t :
       ≤ (n * sineFreq s ^ 2) ^ 2 * (1 * 1) := by gcongr
     _ = _ := by ring
 
-/-- **The verdict is not vacuous**: the first eigenmode `sineSolution` is a classical solution
-on every `[0, T] × Q`, nonzero at `t = 0`, with `uₜₜ = λ² u`, `|uₜₜ| ≤ λ²`; so the semidiscrete,
-backward Euler (its extra hypotheses on `uₜₜ` hold) and rational clauses all apply to it. -/
+/-- **The verdict is not vacuous**: a nonzero classical solution has bounded `uₜₜ` and `∂ᵢ∂ₖ u`. -/
 theorem maxNormHeat_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     Verdict b hs ∧ ∃ S : HeatSolution b s T, S.u 0 ≠ 0 ∧
       (∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),

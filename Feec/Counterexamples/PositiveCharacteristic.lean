@@ -6,49 +6,19 @@ public import Feec.Counterexamples.PolynomialForms
 /-!
 # Invariant polynomial forms in positive characteristic
 
-Over a field `K` of characteristic `0`, the `GL(n)`-invariant subspaces of `H_mΛᵏ` (`m + k > 0`)
-are `0`, the closed forms `dH_{m+1}Λ^{k-1}`, the `κ`-closed forms `κH_{m-1}Λ^{k+1}` and `H_mΛᵏ`
-(`Feec.FiniteElement.IsGLInvariant.eq_of_le_homForm`, [AFW2006], §3.4), and the closed forms of
-`H_mΛ^{k+1}` are exact (`Feec.FiniteElement.homForm_inf_ker_extDeriv`). Both fail over **every**
-field of characteristic `p > 0`, so both hold in all dimensions and degrees exactly in
-characteristic `0` (`charZero_iff_classification_ker`, `charZero_iff_classification`,
-`charZero_iff_closed_eq_exact`):
-
-* **a Frobenius-twisted invariant subspace** (`coeffForm_powSpan_not_classified`,
-  `coeffForm_powSpan_not_classified_succ`): with `q = p²`, the span `U` of the `q`-th powers
-  `x_i^q` is mapped into itself by every linear substitution, as `(Σ_l b_l x_l)^q = Σ_l b_l^q x_l^q`
-  (`polySubst_mem_powSpan`), so the `1`-forms `UΛ¹` with coefficients in `U` are a linearly
-  invariant subspace of `H_qΛ¹` (`isLinearInvariant_coeffForm`). For `n ≥ 2` it contains
-  `x_i^q dx_i`, which is not `κ`-closed (`κ(x_i^q dx_i) = x_i^{q+1}`), and it misses the exact form
-  `d(x_i^{q-1} x_j^2)`, whose coefficient `q - 1 = -1` on `x_i^{q-2} x_j^2 dx_i` does not vanish
-  while `x_i^{q-2} x_j^2 ∉ U`; so it is none of `0`, the closed forms, `dH_{q+1}Λ⁰`, the
-  `κ`-closed forms, `κH_{q-1}Λ²` and `H_qΛ¹`;
-* **a closed form that is not exact** (`closed_not_exact`): `x_i^{p-1} dx_i ∈ H_{p-1}Λ¹` is
-  closed, and not `dη` for any `η ∈ H_pΛ⁰`, since the homotopy formula
-  `(dκ + κd) η = (p + 0) η = 0` and `κη = 0` would give `κ(x_i^{p-1} dx_i) = x_i^p = 0`.
-
-The constant `p + 0` of the homotopy formula is one of the integers that the proofs in
-characteristic `0` invert. In dimension `1` every subspace of `H_mΛᵏ` is `0` or `H_mΛᵏ`
-(`dim H_mΛᵏ ≤ 1`), so the first counterexample needs `n ≥ 2`.
-
-## Main definitions
-
-* `powSpan K n q`: the span of the `q`-th powers `x_i^q` of the coordinates.
+The classification of the `GL(n)`-invariant subspaces of `H_mΛᵏ` ([AFW2006], §3.4) and the
+exactness of the closed forms of `H_mΛ^{k+1}` hold in every dimension iff the field has
+characteristic `0`.
 
 ## Main results
 
-* `charZero_iff_classification_ker`, `charZero_iff_classification`: the classification of the
-  `GL(n)`-invariant subspaces of `H_mΛᵏ` holds in every dimension iff `K` has characteristic `0`;
-* `charZero_iff_closed_eq_exact`: the closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ` in every
-  dimension iff `K` has characteristic `0`;
-* `coeffForm_powSpan_not_classified`, `coeffForm_powSpan_not_classified_succ`,
-  `closed_not_exact`: the counterexamples.
+* `charZero_iff_classification`: the classification holds iff `K` has characteristic `0`.
+* `charZero_iff_closed_eq_exact`: closed polynomial forms are exact iff `K` has characteristic `0`.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.2 (Theorem 3.1, the homotopy formula), §3.4 (the decomposition (3.10) into irreducible
-  invariant subspaces)
+  §3.4
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -66,8 +36,6 @@ variable {K : Type*} [Field K] {n : ℕ}
 
 /-! ### Forms with coefficients in an invariant space of polynomials -/
 
-/-- **Forms with coefficients in a space of polynomials closed under linear substitutions are
-linearly invariant.** -/
 theorem isLinearInvariant_coeffForm {S : Submodule K (MvPolynomial (Fin n) K)}
     (hS : ∀ (B : Fin n → Fin n → K), ∀ f ∈ S, polySubst B 0 f ∈ S) (k : ℕ) :
     IsLinearInvariant (coeffForm K k S) := fun B ω hω =>
@@ -89,7 +57,6 @@ theorem powSpan_le_homogeneousSubmodule (q : ℕ) :
   Submodule.span_le.2 <| Set.range_subset_iff.2 fun i =>
     (mem_homogeneousSubmodule _ _).2 (isHomogeneous_X_pow i q)
 
-/-- The polynomials of `powSpan K n q` have no monomial `x^α` other than the `x_i^q`. -/
 theorem coeff_eq_zero_of_mem_powSpan {q : ℕ} {f : MvPolynomial (Fin n) K}
     (hf : f ∈ powSpan K n q) {α : Fin n →₀ ℕ} (hα : ∀ i, Finsupp.single i q ≠ α) :
     f.coeff α = 0 := by
@@ -98,8 +65,6 @@ theorem coeff_eq_zero_of_mem_powSpan {q : ℕ} {f : MvPolynomial (Fin n) K}
       simp [coeff_X_pow, hα i]
   exact this hf
 
-/-- **`(Σ_l b_l x_l)^{p^e} = Σ_l b_l^{p^e} x_l^{p^e}`**: in characteristic `p` the span of the
-`p^e`-th powers of the coordinates is closed under linear substitutions. -/
 theorem polySubst_mem_powSpan (p : ℕ) [ExpChar K p] (e : ℕ) (B : Fin n → Fin n → K)
     {f : MvPolynomial (Fin n) K} (hf : f ∈ powSpan K n (p ^ e)) :
     polySubst B 0 f ∈ powSpan K n (p ^ e) := by
@@ -140,7 +105,6 @@ theorem powDx_mem_coeffForm (i : Fin n) (q : ℕ) :
     · exact Submodule.subset_span ⟨i, rfl⟩
     · exact zero_mem _
 
-/-- `κ(x_i^q dx_i) = x_i^{q+1}`. -/
 theorem koszul_powDx (i : Fin n) (q : ℕ) :
     Koszul.koszul (powDx (K := K) i q) ∅ = X i ^ (q + 1) := by
   rw [Koszul.koszul_apply, compl_empty, sum_eq_single i (fun l _ hl => by
@@ -163,7 +127,6 @@ theorem dPowMulSq_mem_map (i j : Fin n) (m : ℕ) :
     · exact (isHomogeneous_X_pow i m).mul (isHomogeneous_X_pow j 2)
     · exact isHomogeneous_zero _ _ _
 
-/-- The coefficient of `x_i^{m-1} x_j^2 dx_i` in `d(x_i^m x_j^2)` is `m`. -/
 theorem coeff_dPowMulSq {i j : Fin n} (hij : i ≠ j) {m : ℕ} (hm : 1 ≤ m) :
     (dPowMulSq (K := K) i j m {i}).coeff (Finsupp.single i (m - 1) + Finsupp.single j 2) =
       (m : K) := by
@@ -185,8 +148,6 @@ theorem dPowMulSq_mem_homForm (i j : Fin n) (m : ℕ) :
   exact ⟨by simpa using Koszul.extDeriv_mem_homForm hη, by
     rw [SetLike.mem_coe, LinearMap.mem_ker, Koszul.extDerivₗ_apply, Koszul.extDeriv_extDeriv]⟩
 
-/-- `d(x_i^{q-1} x_j^2) ∉ UΛ¹` for `q = p²`: its coefficient `q - 1 = -1` on `x_i^{q-2} x_j^2 dx_i`
-does not vanish, and `x_i^{q-2} x_j^2` is not a `q`-th power of a coordinate. -/
 theorem dPowMulSq_notMem [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ} (hm : m + 1 = p ^ 2) :
     dPowMulSq (K := K) i j m ∉ coeffForm K 1 (powSpan K n (m + 1)) := fun h => by
   have hp := (Fact.out : p.Prime).two_le
@@ -202,9 +163,8 @@ theorem dPowMulSq_notMem [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ} 
   push_cast at hq0
   exact one_ne_zero (by linear_combination hq0 - h0)
 
-/-- **In characteristic `p > 0`, `UΛ¹` (`U` spanned by the `x_l^{p²}`) is a linearly invariant
-subspace of `H_{p²}Λ¹` that is none of `0`, the closed forms, the `κ`-closed forms and
-`H_{p²}Λ¹`** (`n ≥ 2`), against `IsLinearInvariant.eq_of_le_homForm`. -/
+/-- In characteristic `p > 0`, for `i ≠ j`, `UΛ¹` (`U` spanned by the `x_l^{p²}`) is none of `0`,
+the closed forms, the `κ`-closed forms and `H_{p²}Λ¹`. -/
 theorem coeffForm_powSpan_not_classified [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ}
     (hm : m + 1 = p ^ 2) :
     ¬ (coeffForm K 1 (powSpan K n (m + 1)) = ⊥ ∨
@@ -221,8 +181,8 @@ theorem coeffForm_powSpan_not_classified [Fact p.Prime] {i j : Fin n} (hij : i �
   · exact koszul_powDx_ne_zero i _ (LinearMap.mem_ker.1 hξ.2)
   · exact hψ (dPowMulSq_mem_homForm i j m).1
 
-/-- **In characteristic `p > 0`, `UΛ¹` is none of `0`, `dH_{p²+1}Λ⁰`, `κH_{p²-1}Λ²` and
-`H_{p²}Λ¹`** (`n ≥ 2`), against `IsLinearInvariant.eq_of_le_homForm_succ` ([AFW2006], §3.4). -/
+/-- In characteristic `p > 0`, for `i ≠ j`, `UΛ¹` is none of `0`, `dH_{p²+1}Λ⁰`, `κH_{p²-1}Λ²` and
+`H_{p²}Λ¹`. -/
 theorem coeffForm_powSpan_not_classified_succ [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ}
     (hm : m + 1 = p ^ 2) :
     ¬ (coeffForm K 1 (powSpan K n (m + 1)) = ⊥ ∨
@@ -251,9 +211,7 @@ theorem extDeriv_powDx (i : Fin n) (m : ℕ) : Koszul.extDeriv (powDx (K := K) i
     simp [powDx, h, (pderiv l).leibniz_pow, pderiv_X_of_ne (Ne.symm hli)]
   · simp [powDx, h]
 
-/-- **In characteristic `p > 0`, `x_i^{p-1} dx_i ∈ H_{p-1}Λ¹` is closed and not exact**: were
-it `dη`, `η ∈ H_pΛ⁰`, the homotopy formula `(dκ + κd) η = p η = 0` and `κη = 0` would give
-`κ(x_i^{p-1} dx_i) = x_i^p = 0`. Against `homForm_inf_ker_extDeriv`. -/
+/-- In characteristic `p > 0`, `x_i^{p-1} dx_i ∈ H_{p-1}Λ¹` is closed and not exact. -/
 theorem closed_not_exact (i : Fin n) {m : ℕ} (hm : m + 1 = p) :
     powDx (K := K) i m ∈ homForm K (Fin n) m 1 ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ∧
       powDx (K := K) i m ∉ (homForm K (Fin n) (m + 1) 0).map (extDerivₗ K (Fin n)) := by
@@ -269,9 +227,8 @@ end Frobenius
 /-! ### Characteristic `0` is necessary -/
 
 variable (K) in
-/-- **The classification of the `GL(n)`-invariant subspaces of `H_mΛᵏ` (`m + k > 0`) as `0`, the
-closed forms, the `κ`-closed forms and `H_mΛᵏ` holds in every dimension iff `K` has characteristic
-`0`** (`IsGLInvariant.eq_of_le_homForm`, `coeffForm_powSpan_not_classified`). -/
+/-- The `GL(n)`-invariant subspaces of `H_mΛᵏ`, `m + k > 0`, are `0`, the closed forms, the
+`κ`-closed forms and `H_mΛᵏ` in every dimension iff `K` has characteristic `0`. -/
 theorem charZero_iff_classification_ker :
     CharZero K ↔ ∀ (n : ℕ) (W : Submodule K (PolyForm K (Fin n))), IsGLInvariant W →
       ∀ m k, 0 < m + k → W ≤ homForm K (Fin n) m k →
@@ -288,9 +245,8 @@ theorem charZero_iff_classification_ker :
       (coeffForm_powSpan_le_homForm _ 1))
 
 variable (K) in
-/-- **[AFW2006], §3.4: the `GL(n)`-invariant subspaces of `H_rΛᵏ` (`r, k ≥ 1`) are `0`,
-`dH_{r+1}Λ^{k-1}`, `κH_{r-1}Λ^{k+1}` and `H_rΛᵏ` in every dimension iff `K` has characteristic
-`0`** (`IsGLInvariant.eq_of_le_homForm_succ`, `coeffForm_powSpan_not_classified_succ`). -/
+/-- The `GL(n)`-invariant subspaces of `H_rΛᵏ`, `r, k ≥ 1`, are `0`, `dH_{r+1}Λ^{k-1}`,
+`κH_{r-1}Λ^{k+1}` and `H_rΛᵏ` in every dimension iff `K` has characteristic `0`. -/
 theorem charZero_iff_classification :
     CharZero K ↔ ∀ (n : ℕ) (W : Submodule K (PolyForm K (Fin n))), IsGLInvariant W →
       ∀ m k, W ≤ homForm K (Fin n) (m + 1) (k + 1) →
@@ -307,8 +263,8 @@ theorem charZero_iff_classification :
       (coeffForm_powSpan_le_homForm _ 1))
 
 variable (K) in
-/-- **The closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ` in every dimension iff `K` has
-characteristic `0`** (`homForm_inf_ker_extDeriv`, `closed_not_exact`). -/
+/-- The closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ` in every dimension iff `K` has
+characteristic `0`. -/
 theorem charZero_iff_closed_eq_exact :
     CharZero K ↔ ∀ n m k, homForm K (Fin n) m (k + 1) ⊓ LinearMap.ker (extDerivₗ K (Fin n)) =
       (homForm K (Fin n) (m + 1) k).map (extDerivₗ K (Fin n)) := by

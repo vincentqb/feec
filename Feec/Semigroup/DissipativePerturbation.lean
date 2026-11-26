@@ -6,27 +6,13 @@ public import Feec.ForMathlib.LinearPMap.Bounded
 /-!
 # Dissipative bounded perturbations of m-dissipative operators
 
-Lower-order terms (damping, absorption, zeroth-order coupling between the fields of a system)
-enter an evolution `u' = A u` as a bounded perturbation `A + B`. This file records the
-generator-level combination rule by which the semidiscrete and fully discrete FEEC theorems
-(`Feec.HilbertComplex.DissipFEEC`, `Feec.HilbertComplex.Approximation.FullyDiscrete`), which take
-an m-dissipative generator, apply to `A + B` (the perturbed FEEC theorem
-`Feec.HilbertComplex.perturbFEEC`, `Feec.HilbertComplex.Approximation.PerturbFEEC`):
-
-* **`LinearPMap.IsMDissipative.vadd`**: if `A` is m-dissipative, `B` is bounded and `A + B`
-  (domain `D(A)`, `B +ᵥ A`) is dissipative, then `A + B` is m-dissipative:
-  `μ - A - B = (1 - B (μ - A)⁻¹)(μ - A)` is onto for `μ > ‖B‖`. In particular
-  `IsMDissipative.vadd_of_dissipative` (bounded dissipative `B`, e.g. damping `-σ`), and
-  `IsMDissipative.vadd_sub_smul` (any bounded `B`, shifted by `ω ≥ ‖B‖`: the generator of
-  `e^{-ωt} e^{t(A + B)}`, a quasi-contractive perturbation reduced to a contractive one).
+On a Hilbert space, an m-dissipative operator plus a bounded `B` is m-dissipative when the sum is
+dissipative, in particular when `B` is, and after a shift by any `ω ≥ ‖B‖` in general.
 
 ## References
 
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.1 (Thm 1.1: bounded perturbations of generators), §3.3 (Cor 3.3: dissipative perturbations
-  of generators of contraction semigroups)
-* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §III.1 (bounded perturbations)
+  §3.1, §3.3
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -41,9 +27,8 @@ namespace LinearPMap
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
   {A : E →ₗ.[𝕜] E}
 
-/-- **Dissipative bounded perturbations of m-dissipative operators are m-dissipative**: if `A` is
-m-dissipative, `B` bounded and `B +ᵥ A` dissipative, then `B +ᵥ A` is m-dissipative (for
-`μ = ‖B‖ + 1`, `μ - A - B = (1 - B R(μ))(μ - A)` with `‖B R(μ)‖ < 1`). [Pazy1983], §3.3 -/
+/-- **Perturbations with a dissipative sum**: if `A` is m-dissipative, `B` bounded and `B +ᵥ A`
+dissipative, then `B +ᵥ A` is m-dissipative. [Pazy1983], §3.3 -/
 theorem IsMDissipative.vadd (hA : A.IsMDissipative) (B : E →L[𝕜] E)
     (hAB : ((B : E →ₗ[𝕜] E) +ᵥ A).IsDissipative) : ((B : E →ₗ[𝕜] E) +ᵥ A).IsMDissipative := by
   set μ : ℝ := ‖B‖ + 1
@@ -69,14 +54,14 @@ theorem IsMDissipative.vadd (hA : A.IsMDissipative) (B : E →L[𝕜] E)
   change _ = z - B (R z)
   abel
 
-/-- **Bounded dissipative perturbations** (damping, absorption): `A` m-dissipative and `B` bounded
-dissipative give `A + B` m-dissipative. [Pazy1983], §3.3 -/
+/-- **Bounded dissipative perturbations**: `A` m-dissipative and `B` bounded dissipative give
+`A + B` m-dissipative. [Pazy1983], §3.3 -/
 theorem IsMDissipative.vadd_of_dissipative (hA : A.IsMDissipative) {B : E →L[𝕜] E}
     (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) : ((B : E →ₗ[𝕜] E) +ᵥ A).IsMDissipative :=
   hA.vadd B (hA.dissipative.vadd hB)
 
 /-- **Any bounded perturbation, shifted**: for `A` m-dissipative, `B` bounded and `ω ≥ ‖B‖`,
-`A + B - ω` is m-dissipative (it generates `e^{-ωt} e^{t(A + B)}`). [Pazy1983], §3.1 -/
+`A + B - ω` is m-dissipative. [Pazy1983], §3.1 -/
 theorem IsMDissipative.vadd_sub_smul (hA : A.IsMDissipative) (B : E →L[𝕜] E) {ω : ℝ}
     (hω : ‖B‖ ≤ ω) :
     (((B - (ω : 𝕜) • ContinuousLinearMap.id 𝕜 E : E →L[𝕜] E) : E →ₗ[𝕜] E) +ᵥ A).IsMDissipative :=

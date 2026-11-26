@@ -5,29 +5,13 @@ public import Feec.Domain.Complexes
 /-!
 # Realizations along isometric embeddings: constrained and scalar fields
 
-Many operators of the bounded-domain models act between **constrained** field spaces: `curl` on
-symmetric matrix fields with trace-free values, the Hessian of a scalar field with symmetric
-values, `div div` on symmetric fields. They are realizations of a constant-coefficient operator
-`A : 𝕜^ι → 𝕜^κ` between Hilbert spaces `X ↪ L²(Ω; 𝕜^ι)`, `Y ↪ L²(Ω; 𝕜^κ)` embedded
-isometrically (`Jx`, `Jy`): closed subspaces (`Submodule.subtypeₗᵢ`), scalar fields
-(`L2.toL2F`), or the whole space.
+The constrained minimal realization `A_via : X → Y` of a constant-coefficient operator between
+spaces embedded isometrically in `L²` fields is its closure on the constrained test fields.
 
-* `ConstCoeffOp.testGraphVia A Jx Jy`: `{(x, y) | Jx x = φ, Jy y = A φ, φ ∈ C_c^∞}`;
-* `ConstCoeffOp.minimalVia A Jx Jy`: its closure, closed when the `Y`-valued test fields are
-  dense in `Y` (`ConstCoeffOp.DenseVia`), densely defined when the `X`-valued test fields in its
-  domain are dense in `X`;
-* `minimalVia_graph_map`: `Jy (A_via x) = A_min (Jx x)`, i.e. `A_via ⊆ A_min` through the
-  embeddings;
-* `mem_adjoint_minimalVia_domain_iff`: `D(A_via†)` is the weak domain tested against the
-  constrained test fields (no boundary condition).
+## Main results
 
-## References
-
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §2 (complexes with values in subspaces of matrices)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.minimalVia_graph_map`: `A_via ⊆ A_min` through the embeddings.
+* `ConstCoeffOp.mem_adjoint_minimalVia_domain_iff`: `D(A_via†)` is the weak domain.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap
@@ -35,7 +19,6 @@ open MeasureTheory Set Filter Topology
 
 @[expose] public noncomputable section
 
-/-- The adjoint identity on a graph point: `⟪T† y, x⟫ = ⟪y, z⟫` for `(x, z) ∈ graph T`. -/
 theorem LinearPMap.adjoint_inner_of_mem_graph {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
     {T : E →ₗ.[𝕜] F} (hT : Dense (T.domain : Set E)) (y : T†.domain) {p : E × F}
@@ -103,8 +86,6 @@ def DenseVia (Jy : Y →ₗᵢ[𝕜] L2F 𝕜 Ω κ) : Prop :=
   ∀ y : Y, (∀ (ψ : κ → E → 𝕜) (hψ : IsTestField Ω ψ) (y' : Y), Jy y' = testField hψ →
     ⟪y', y⟫_𝕜 = 0) → y = 0
 
-/-- The graph-closure identity through the embeddings: for `(x, y)` in the closure of the
-constrained test graph and `y' ∈ Y` with `Jy y' = ψ ∈ C_c^∞`, `⟪y', y⟫ = ⟪Aᵗ ψ, Jx x⟫`. -/
 theorem closure_testGraphVia_inner {p : X × Y} (hp : p ∈ (A.testGraphVia Jx Jy).topologicalClosure)
     {ψ : κ → E → 𝕜} (hψ : IsTestField Ω ψ) {y' : Y} (hy' : Jy y' = testField hψ) :
     ⟪y', p.2⟫_𝕜 = ⟪testField (A.formalAdj.isTestField_apply hψ), Jx p.1⟫_𝕜 := by
@@ -127,8 +108,7 @@ theorem testGraphVia_closable (hY : DenseVia Jy) :
   rw [A.closure_testGraphVia_inner Jx Jy hp hψ hy']
   simp
 
-/-- The **constrained minimal realization** `A_via : X → Y`, the closure of `A` on the
-constrained test fields. -/
+/-- The **constrained minimal realization**: the closure of `A` on the constrained test fields. -/
 def minimalVia : X →ₗ.[𝕜] Y := (A.testGraphVia Jx Jy).topologicalClosure.toLinearPMap
 
 theorem minimalVia_graph (hY : DenseVia Jy) :
@@ -148,8 +128,6 @@ theorem mem_graph_minimalVia (hY : DenseVia Jy) {p : X × Y} (hp : p ∈ A.testG
   rw [A.minimalVia_graph Jx Jy hY]
   exact Submodule.le_topologicalClosure _ hp
 
-/-- The constrained realization is densely defined when the `X`-valued test fields are dense
-and `A` maps them to `Y`-valued test fields. -/
 theorem dense_minimalVia_domain_of [CompleteSpace X] (hY : DenseVia Jy) (hX : DenseVia Jx)
     (hA : ∀ (φ : ι → E → 𝕜) (hφ : IsTestField Ω φ) (x : X), Jx x = testField hφ →
       ∃ y : Y, Jy y = testField (A.isTestField_apply hφ)) :
@@ -163,8 +141,7 @@ theorem dense_minimalVia_domain_of [CompleteSpace X] (hY : DenseVia Jy) (hX : De
     (LinearPMap.mem_domain_of_mem_graph (A.mem_graph_minimalVia Jx Jy hY ⟨φ, hφ, hx, hy⟩))
     |> fun h => by rwa [inner_eq_zero_symm] at h
 
-/-- **`A_via ⊆ A_min` through the embeddings**: `Jx x ∈ D(A_min)` and `A_min (Jx x) = Jy (A_via
-x)`. -/
+/-- **`A_via ⊆ A_min` through the embeddings**: `A_min (Jx x) = Jy (A_via x)`. -/
 theorem minimalVia_graph_map (hΩ : IsOpen Ω) (hY : DenseVia Jy) (x : (A.minimalVia Jx Jy).domain) :
     (Jx x, Jy (A.minimalVia Jx Jy x)) ∈ (A.minimal Ω).graph := by
   rw [A.minimal_graph hΩ]
@@ -181,8 +158,7 @@ theorem minimalVia_graph_map (hΩ : IsOpen Ω) (hY : DenseVia Jy) (x : (A.minima
   exact closure_minimal hsub ((Submodule.isClosed_topologicalClosure _).preimage f.continuous)
     (A.mem_closure_minimalVia Jx Jy hY x)
 
-/-- **The adjoint of a constrained realization is weak**: `v ∈ D(A_via†)` iff there is `w ∈ X`
-with `⟪w, x⟫ = ⟪v, y⟫` for every constrained test pair `(x, y)`. -/
+/-- **The adjoint of a constrained realization is weak**, tested on constrained test pairs. -/
 theorem mem_adjoint_minimalVia_domain_iff [CompleteSpace X] (hY : DenseVia Jy)
     (hd : Dense ((A.minimalVia Jx Jy).domain : Set X)) {v : Y} :
     v ∈ (A.minimalVia Jx Jy)†.domain ↔
@@ -201,7 +177,6 @@ theorem mem_adjoint_minimalVia_domain_iff [CompleteSpace X] (hY : DenseVia Jy)
       (continuous_const.inner continuous_snd)
     exact closure_minimal (fun q hq => hw q hq) hS (A.mem_closure_minimalVia Jx Jy hY x)
 
-/-- The value of `A_via†` is the weak one. -/
 theorem adjoint_minimalVia_apply_eq [CompleteSpace X] (hY : DenseVia Jy)
     (hd : Dense ((A.minimalVia Jx Jy).domain : Set X)) (v : (A.minimalVia Jx Jy)†.domain)
     {w : X} (hw : ∀ p ∈ A.testGraphVia Jx Jy, ⟪w, p.1⟫_𝕜 = ⟪(v : Y), p.2⟫_𝕜) :
@@ -219,8 +194,6 @@ section Complex
 variable {μ : Type*} [Fintype μ] {Z : Type*} [NormedAddCommGroup Z] [InnerProductSpace 𝕜 Z]
   {B : ConstCoeffOp E 𝕜 κ μ} (Jz : Z →ₗᵢ[𝕜] L2F 𝕜 Ω μ)
 
-/-- `R(A_via) ⊆ D(B_via)` and `B_via A_via = 0` when `B A = 0` and `A` maps `X`-valued test
-fields to `Y`-valued ones. -/
 theorem minimalVia_graph_mem (hAB : A.IsComplexPair B) (hY : DenseVia Jy)
     (hZ : DenseVia Jz) (x : (A.minimalVia Jx Jy).domain) :
     (A.minimalVia Jx Jy x, (0 : Z)) ∈ (B.minimalVia Jy Jz).graph := by
@@ -248,9 +221,6 @@ end Complex
 
 /-! ### Density of constrained test fields -/
 
-/-- **Constrained test fields are dense** when the constraint is the range of a self-adjoint
-continuous `P` preserving test fields: if `P u ∈ R(J)`, `P (J y) = J y`, `⟪P u, v⟫ = ⟪u, P v⟫`
-and `P` maps test fields to test fields, then the `Y`-valued test fields are dense in `Y`. -/
 theorem denseVia_of_proj (hΩ : IsOpen Ω) (J : Y →ₗᵢ[𝕜] L2F 𝕜 Ω κ) (P : L2F 𝕜 Ω κ →L[𝕜] L2F 𝕜 Ω κ)
     (hPJ : ∀ y, P (J y) = J y) (hPsa : ∀ u v, ⟪P u, v⟫_𝕜 = ⟪u, P v⟫_𝕜)
     (hPt : ∀ (ψ : κ → E → 𝕜) (hψ : IsTestField Ω ψ), ∃ (ψ' : κ → E → 𝕜) (hψ' : IsTestField Ω ψ')
@@ -265,8 +235,6 @@ theorem denseVia_of_proj (hΩ : IsOpen Ω) (J : Y →ₗᵢ[𝕜] L2F 𝕜 Ω κ
     rw [← inner_conj_symm, this, map_zero]
   exact J.injective (by rw [h0, map_zero])
 
-/-- **Surjective embeddings have dense test fields** (e.g. the identity, `L2.toL2F`, or a
-reindexing of components). -/
 theorem denseVia_of_surjective (hΩ : IsOpen Ω) (J : Y →ₗᵢ[𝕜] L2F 𝕜 Ω κ)
     (hJ : Function.Surjective J) : DenseVia J := by
   intro y hy

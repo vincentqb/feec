@@ -5,46 +5,14 @@ public import Feec.HilbertComplex.Approximation.ApproxConforming
 /-!
 # Non-vacuity of the approximating FEEC theorem: a genuine variational crime
 
-On the complex `𝕜 --id--> 𝕜 → 0` (`Feec.HilbertComplex.ConstrainedFEEC.idComplex`, where
-`D(L) = W` and `L = L₀` is bounded), the **perturbed discretization**
-`Feec.HilbertComplex.ApproxFEEC.perturbed` has, at level `n` with `hₙ = 1/(n+1)` and
-`cₙ = 1 + hₙ`,
+Two approximating FEEC discretizations of `𝕜 --id--> 𝕜 → 0`, with the reading maps `cₙ · id` and
+`1 + hₙ P`, satisfy the approximating FEEC theorem with nonzero consistency defects and inexact
+schemes.
 
-* the discrete space `Xₙ = W` with the inner product of `W`, read in `W` through the
-  non-isometric `ιₙ = cₙ · id` (an **inner-product crime**: the discrete inner product is
-  `cₙ⁻²` times the one pulled back from `W`), `πₙ = cₙ⁻¹ · id`;
-* the discrete generator `Lₙ = cₙ L₀` (a **differential crime**: the discrete differential is
-  `cₙ 𝐝`, which differs from `𝐝` by the small bounded operator `hₙ 𝐝`).
+## Main results
 
-It is not a subcomplex discretization, and its consistency defect along the exact orbit is
-`pₙ' - Lₙ pₙ = (cₙ⁻¹ - 1) e^{tL} L₀ x`, nonzero for `x = (1, 0, 0)` at every level and time
-(`ApproxFEEC.perturbed_defect_ne_zero`), of order `hₙ`. The approximating FEEC theorem applies,
-with a core of all data and an `O(h)` rate class
-(`ApproxFEEC.perturbedRate`, `C = 0`, `C' = ‖L₀‖`), and both branches of the constraint residual
-occur: `K = W` reduces `L`, and for `K = 𝕜 × 0 × 0` a datum of `K` leaves `K` and the residuals of
-every convergent discretization of it have a positive limit
-(`ApproxFEEC.perturbed_nonvacuous`). The scheme is inexact: its solution from `πₙ (1, 0, 0)` differs
-from the exact one at some time (`ApproxFEEC.perturbed_exists_sol_ne`, via the inexactness
-criterion `SkewFEEC.exists_sol_ne`).
-
-Since `perturbed` is a scalar time rescaling, a second witness has a **non-scalar** reading map:
-`ApproxFEEC.projPerturbed` has `Xₙ = W`, `Lₙ = L₀` and `ιₙ = 1 + hₙ P`, `πₙ = 1 - bₙ P = ιₙ⁻¹`
-(`P` the orthogonal projection onto `𝕜 × 0 × 0`, `bₙ = hₙ / (1 + hₙ)`), so the pulled-back inner
-product `⟪ιₙ ·, ιₙ ·⟫` differs from that of `Xₙ` and `ιₙ` does not commute with `L₀`. Its
-consistency defect along `pₙ(t) = πₙ e^{tL} x` is the commutator `bₙ [L₀, P] e^{tL} x`, nonzero at
-every level and time along `e^{-tL} (1, 0, 0)`; `ιₙ` is neither a scalar multiple of the identity
-nor isometric, the scheme is inexact, the rate class is `O(h)` with `C' = 2 ‖L₀‖`, and the graded
-non-reducing branch of the residual occurs with its eventual lower bound
-(`ApproxFEEC.projPerturbed_nonvacuous`). Finally `ApproxFEEC.idFEEC`, a constrained FEEC
-discretization, enters through the conforming bridge `ConstrainedFEEC.toApprox` /
-`ConstrainedFEEC.toCore`.
-
-## References
-
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (variational crimes: non-isometric `iₕ`, discrete differentials differing from `d`)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `ApproxFEEC.perturbed_nonvacuous`: an inner-product and a differential crime.
+* `ApproxFEEC.projPerturbed_nonvacuous`: a non-scalar reading map that does not commute with `L₀`.
 -/
 
 open scoped InnerProductSpace
@@ -61,7 +29,7 @@ open ConstrainedFEEC ShortHilbertComplex
 variable {𝕜 : Type*} [RCLike 𝕜]
 
 variable (𝕜) in
-/-- The (bounded) wave operator `L₀` of `𝕜 --id--> 𝕜 → 0`. -/
+/-- The wave operator `L₀` of `𝕜 --id--> 𝕜 → 0`. -/
 def idWave : (PiLp 2 (W3 𝕜 𝕜 PUnit)) →L[𝕜] (PiLp 2 (W3 𝕜 𝕜 PUnit)) :=
   LinearMap.toContinuousLinearMap
     { toFun := fun x => (idComplex 𝕜).wave ⟨x, mem_idComplex_wave_domain x⟩
@@ -77,7 +45,6 @@ theorem idWave_skew (x y : (PiLp 2 (W3 𝕜 𝕜 PUnit))) : ⟪idWave 𝕜 x, y�
   (idComplex 𝕜).isSkewAdjoint_wave.isSkewSymmetric ⟨x, mem_idComplex_wave_domain x⟩
     ⟨y, mem_idComplex_wave_domain y⟩
 
-/-- `L₀ (1, 0, 0)` has component `1` in degree `1`. -/
 theorem idWave_firstDatum_one :
     ((idWave 𝕜 (firstDatum 𝕜) : PiLp 2 (W3 𝕜 𝕜 PUnit)) 1 : 𝕜) = (1 : 𝕜) := by
   have e := (idShort 𝕜).wave_apply_one ⟨firstDatum 𝕜, mem_idComplex_wave_domain _⟩
@@ -87,7 +54,6 @@ theorem idWave_firstDatum_one :
   rw [e2, sub_zero] at e
   exact e
 
-/-- `L₀ (1, 0, 0) ≠ 0`. -/
 theorem idWave_firstDatum_ne_zero : idWave 𝕜 (firstDatum 𝕜) ≠ 0 := by
   intro h0
   have h1 : ((idWave 𝕜 (firstDatum 𝕜) : PiLp 2 (W3 𝕜 𝕜 PUnit)) 1 : 𝕜) = (0 : 𝕜) := by
@@ -95,7 +61,6 @@ theorem idWave_firstDatum_ne_zero : idWave 𝕜 (firstDatum 𝕜) ≠ 0 := by
   have h2 : (1 : 𝕜) = 0 := (idWave_firstDatum_one (𝕜 := 𝕜)).symm.trans h1
   exact one_ne_zero h2
 
-/-- `L₀ (1, 0, 0) ∉ 𝕜 × 0 × 0`. -/
 theorem idWave_firstDatum_not_mem : idWave 𝕜 (firstDatum 𝕜) ∉ firstSub 𝕜 := by
   intro hm
   have h1 : ((idWave 𝕜 (firstDatum 𝕜) : PiLp 2 (W3 𝕜 𝕜 PUnit)) 1 : 𝕜) = (0 : 𝕜) :=
@@ -133,8 +98,7 @@ theorem perturbScale_ne_zero (n : ℕ) : (perturbScale n : 𝕜) ≠ 0 :=
   RCLike.ofReal_ne_zero.2 (perturbScale_pos n).ne'
 
 variable (𝕜) in
-/-- **A genuinely non-conforming approximating FEEC discretization** of `𝕜 --id--> 𝕜 → 0`:
-`Xₙ = W`, `ιₙ = cₙ · id` (not isometric), `πₙ = cₙ⁻¹ · id`, `Lₙ = cₙ L₀` (`cₙ = 1 + hₙ`). -/
+/-- A **non-conforming discretization** of `𝕜 --id--> 𝕜 → 0`: `ιₙ = cₙ · id` and `Lₙ = cₙ L₀`. -/
 abbrev perturbed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
     (hK : IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) :
     ApproxFEEC (idComplex 𝕜) ℕ where
@@ -173,7 +137,7 @@ variable (Q : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit))) (hQ : IsClosed (Q : 
 theorem perturbed_incl_apply (n : ℕ) (x : (PiLp 2 (W3 𝕜 𝕜 PUnit))) :
     (perturbed 𝕜 Q hQ).incl n x = (perturbScale n : 𝕜) • x := rfl
 
-/-- The comparison `pₙ(t) = cₙ⁻¹ e^{tL} x`, read exactly: `ιₙ pₙ(t) = e^{tL} x`. -/
+/-- The comparison `pₙ(t) = cₙ⁻¹ e^{tL} x`, with `ιₙ pₙ(t) = e^{tL} x`. -/
 def perturbedComparison (T : ℝ) : (perturbed 𝕜 Q hQ).Comparison T where
   Data := univ
   p x n t := ((perturbScale n : 𝕜))⁻¹ • (idComplex 𝕜).waveGroup.S t x
@@ -186,7 +150,6 @@ def perturbedComparison (T : ℝ) : (perturbed 𝕜 Q hQ).Comparison T where
     ((hasDerivAt_waveGroup (idComplex 𝕜) (mem_idComplex_wave_domain x) t).const_smul
       ((perturbScale n : 𝕜))⁻¹).hasDerivWithinAt
 
-/-- The consistency defect is `(cₙ⁻¹ - 1) e^{tL} L₀ x`. -/
 theorem perturbedComparison_defect (T : ℝ) (x : (PiLp 2 (W3 𝕜 𝕜 PUnit))) (n : ℕ) (t : ℝ) :
     (perturbedComparison Q hQ T).defect x n t =
       (((perturbScale n : 𝕜))⁻¹ - 1) • (idComplex 𝕜).waveGroup.S t (idWave 𝕜 x) := by
@@ -250,7 +213,7 @@ def perturbedCore : (perturbed 𝕜 Q hQ).Core where
       _ ≤ perturbMesh n * (‖idWave 𝕜 x‖ + 1) := by nlinarith
       _ < ε := hn
 
-/-- An `O(h)` rate class with all data: `C = 0` (exact approximation), `C' = ‖L₀‖`. -/
+/-- An `O(h)` rate class with all data, `C = 0` and `C' = ‖L₀‖`. -/
 def perturbedRate (T : ℝ) : (perturbed 𝕜 Q hQ).RateClass T where
   toComparison := perturbedComparison Q hQ T
   classNorm := norm
@@ -273,15 +236,12 @@ def perturbedRate (T : ℝ) : (perturbed 𝕜 Q hQ).RateClass T where
           mul_le_mul h1 ((idWave 𝕜).le_opNorm x) (norm_nonneg _) hm.le
       _ = _ := by ring
 
-/-- **The consistency defect is genuinely nonzero**: along `(1, 0, 0)`, at every level and time. -/
 theorem perturbed_defect_ne_zero (T : ℝ) (n : ℕ) (t : ℝ) :
     (perturbedComparison Q hQ T).defect (firstDatum 𝕜) n t ≠ 0 := by
   rw [← norm_ne_zero_iff, norm_perturbedComparison_defect]
   exact mul_ne_zero (div_ne_zero (perturbMesh_pos n).ne' (perturbScale_pos n).ne')
     (norm_ne_zero_iff.2 idWave_firstDatum_ne_zero)
 
-/-- **The perturbed scheme is inexact**: at every level, the discrete solution from `πₙ (1, 0, 0)`
-differs from the exact one at some time (`ιₙ Lₙ πₙ x = cₙ L₀ x ≠ L₀ x`). -/
 theorem perturbed_exists_sol_ne (n : ℕ) :
     ∃ t, (perturbed 𝕜 Q hQ).sol n ((perturbed 𝕜 Q hQ).proj n (firstDatum 𝕜)) t ≠
       (idComplex 𝕜).waveGroup.S t (firstDatum 𝕜) := by
@@ -302,14 +262,8 @@ theorem perturbed_exists_sol_ne (n : ℕ) :
     linarith [one_lt_perturbScale n, RCLike.ofReal_injective this]
   · exact idWave_firstDatum_ne_zero h3
 
-/-- **Non-vacuity of the approximating FEEC theorem under genuine variational crimes.** At every
-level the reading map is not isometric, the discrete generator differs from `L₀`, and the
-consistency defect along `(1, 0, 0)` is nonzero at every time, and the scheme is inexact (its
-solution from `πₙ (1, 0, 0)` differs from the exact one at some time); the core is all of `W` and
-the rate
-class contains all data with `α = 1`; the constraint `K = W` reduces `L`, and for
-`K = 𝕜 × 0 × 0` some datum of `K` leaves `K` at some `t ∈ [0, T]`, `ιₙ πₙ x → x`, and the residuals
-`dist(ιₙ e^{tLₙ} vₙ, K)` of every convergent discretization tend to `dist(e^{tL} x, K) > 0`. -/
+/-- **Non-vacuity under variational crimes**: `ιₙ` is not isometric, `Lₙ ≠ L₀`, the defect is
+nonzero, the scheme is inexact, and both branches of the constraint residual occur. -/
 theorem perturbed_nonvacuous :
     (∀ n, (∀ x : (PiLp 2 (W3 𝕜 𝕜 PUnit)), x ≠ 0 → ‖(perturbed 𝕜 Q hQ).incl n x‖ ≠ ‖x‖) ∧
       (perturbed 𝕜 Q hQ).L n ≠ idWave 𝕜 ∧
@@ -369,7 +323,7 @@ theorem perturbed_nonvacuous :
     rw [← ApproxFEEC.S_eq_waveGroup (perturbed 𝕜 (firstSub 𝕜) isClosed_totalSub) ht.1]
     exact dissipFEEC_tendsto_infDist _ (perturbedCore _ _) _ hxc hv ht.1
 
-/-! ### A non-scalar reading map: an inner-product crime that does not commute with `L` -/
+/-! ### A non-scalar reading map -/
 
 variable (𝕜) in
 /-- The orthogonal projection `P` onto `𝕜 × 0 × 0`. -/
@@ -383,12 +337,11 @@ theorem firstProj_firstProj (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
 theorem firstProj_firstDatum : firstProj 𝕜 (firstDatum 𝕜) = firstDatum 𝕜 :=
   Submodule.starProjection_eq_self_iff.2 firstDatum_mem
 
-/-- `P L₀ (1, 0, 0) ≠ L₀ (1, 0, 0)`: `P` does not commute with `L₀`. -/
 theorem firstProj_idWave_firstDatum_ne :
     firstProj 𝕜 (idWave 𝕜 (firstDatum 𝕜)) ≠ idWave 𝕜 (firstDatum 𝕜) := fun h =>
   idWave_firstDatum_not_mem (Submodule.starProjection_eq_self_iff.1 h)
 
-/-- `bₙ = hₙ / (1 + hₙ)`, so that `(1 - bₙ P)(1 + hₙ P) = 1`. -/
+/-- `bₙ = hₙ / (1 + hₙ)`. -/
 def projCoeff (n : ℕ) : ℝ := perturbMesh n / perturbScale n
 
 theorem projCoeff_pos (n : ℕ) : 0 < projCoeff n :=
@@ -413,10 +366,7 @@ theorem one_sub_projCoeff_mul (n : ℕ) :
   linear_combination this
 
 variable (𝕜) in
-/-- **An approximating FEEC discretization with a non-scalar reading map** of
-`𝕜 --id--> 𝕜 → 0`: `Xₙ = W`, `Lₙ = L₀`, `ιₙ = 1 + hₙ P` (not a multiple of an isometry),
-`πₙ = 1 - bₙ P = ιₙ⁻¹`. The pulled-back inner product `⟪ιₙ ·, ιₙ ·⟫` differs from that of `Xₙ`,
-and `ιₙ` does not commute with `L₀`. -/
+/-- A **discretization with a non-scalar reading map**: `ιₙ = 1 + hₙ P`, `πₙ = ιₙ⁻¹`, `Lₙ = L₀`. -/
 abbrev projPerturbed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
     (hK : IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) : ApproxFEEC (idComplex 𝕜) ℕ where
   K := K
@@ -457,7 +407,6 @@ theorem projPerturbed_incl_apply (n : ℕ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
 theorem projPerturbed_proj_apply (n : ℕ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (projPerturbed 𝕜 Q hQ).proj n x = x - (projCoeff n : 𝕜) • firstProj 𝕜 x := rfl
 
-/-- `ιₙ πₙ = 1` as well. -/
 theorem projPerturbed_incl_proj (n : ℕ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (projPerturbed 𝕜 Q hQ).incl n ((projPerturbed 𝕜 Q hQ).proj n x) = x := by
   rw [projPerturbed_incl_apply, projPerturbed_proj_apply, (firstProj 𝕜).map_sub,
@@ -466,7 +415,7 @@ theorem projPerturbed_incl_proj (n : ℕ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
         firstProj 𝕜 x := by module
     _ = x := by rw [projCoeff_identity, zero_smul, add_zero]
 
-/-- The comparison `pₙ(t) = πₙ e^{tL} x`, read exactly: `ιₙ pₙ(t) = e^{tL} x`. -/
+/-- The comparison `pₙ(t) = πₙ e^{tL} x`, with `ιₙ pₙ(t) = e^{tL} x`. -/
 def projComparison (T : ℝ) : (projPerturbed 𝕜 Q hQ).Comparison T where
   Data := univ
   p x n t := (projPerturbed 𝕜 Q hQ).proj n ((idComplex 𝕜).waveGroup.S t x)
@@ -479,7 +428,6 @@ def projComparison (T : ℝ) : (projPerturbed 𝕜 Q hQ).Comparison T where
     ((((projPerturbed 𝕜 Q hQ).proj n).restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt t
       (hasDerivAt_waveGroup (idComplex 𝕜) (mem_idComplex_wave_domain x) t)).hasDerivWithinAt
 
-/-- The consistency defect is the commutator `bₙ (L₀ P - P L₀) e^{tL} x`. -/
 theorem projComparison_defect (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) (t : ℝ) :
     (projComparison Q hQ T).defect x n t = (projCoeff n : 𝕜) •
       (idWave 𝕜 (firstProj 𝕜 ((idComplex 𝕜).waveGroup.S t x)) -
@@ -541,7 +489,7 @@ def projCore : (projPerturbed 𝕜 Q hQ).Core where
       _ ≤ perturbMesh n * (2 * ‖idWave 𝕜‖ * ‖x‖ + 1) := by nlinarith
       _ < ε := hn
 
-/-- An `O(h)` rate class with all data: `C = 0` (exact approximation), `C' = 2 ‖L₀‖`. -/
+/-- An `O(h)` rate class with all data, `C = 0` and `C' = 2 ‖L₀‖`. -/
 def projRate (T : ℝ) : (projPerturbed 𝕜 Q hQ).RateClass T where
   toComparison := projComparison Q hQ T
   classNorm := norm
@@ -559,8 +507,6 @@ def projRate (T : ℝ) : (projPerturbed 𝕜 Q hQ).RateClass T where
     rw [Real.rpow_one]
     exact (norm_projComparison_defect_le Q hQ T x n t).trans_eq (by ring)
 
-/-- **The commutator defect is genuinely nonzero**: at every level and time, along the datum
-`e^{-tL} (1, 0, 0)`. -/
 theorem projComparison_defect_ne_zero (T : ℝ) (n : ℕ) (t : ℝ) :
     (projComparison Q hQ T).defect ((idComplex 𝕜).waveGroup.S (-t) (firstDatum 𝕜)) n t ≠ 0 := by
   rw [projComparison_defect, ← C0Group.map_add_apply, add_neg_cancel, C0Group.S_zero_apply,
@@ -568,8 +514,6 @@ theorem projComparison_defect_ne_zero (T : ℝ) (n : ℕ) (t : ℝ) :
   refine smul_ne_zero (RCLike.ofReal_ne_zero.2 (projCoeff_pos n).ne') fun h => ?_
   exact firstProj_idWave_firstDatum_ne (sub_eq_zero.1 h).symm
 
-/-- **The scheme is inexact**: at every level, the discrete solution from `πₙ (1, 0, 0)` differs
-from the exact one at some time. -/
 theorem projPerturbed_exists_sol_ne (n : ℕ) :
     ∃ t, (projPerturbed 𝕜 Q hQ).sol n ((projPerturbed 𝕜 Q hQ).proj n (firstDatum 𝕜)) t ≠
       (idComplex 𝕜).waveGroup.S t (firstDatum 𝕜) := by
@@ -592,12 +536,8 @@ theorem projPerturbed_exists_sol_ne (n : ℕ) :
   · exact (RCLike.ofReal_ne_zero.2 (projCoeff_pos n).ne') h
   · exact firstProj_idWave_firstDatum_ne (sub_eq_zero.1 h)
 
-/-- **Non-vacuity with a non-scalar reading map.** At every level `ιₙ` is not a scalar multiple
-of the identity and not isometric, `ιₙ πₙ = 1`, the scheme is inexact, and the consistency defect
-(a commutator `bₙ [L₀, P]`) is nonzero at every time; the core is all of `W`, the rate class is
-`O(h)`; for `K = 𝕜 × 0 × 0` (graded, `R`-invariant, not reducing) a datum of `D(L) ∩ K` leaves
-`K` forward in time, and the residuals of its discretization `πₙ x` tend to a positive limit and
-stay eventually above half of it. -/
+/-- **Non-vacuity with a non-scalar reading map**: `ιₙ` is neither scalar nor isometric, the defect
+is nonzero, the scheme is inexact, and a datum of `𝕜 × 0 × 0` leaves it. -/
 theorem projPerturbed_nonvacuous :
     (∀ n, (∀ a : 𝕜, (projPerturbed 𝕜 Q hQ).incl n ≠ a • ContinuousLinearMap.id 𝕜 _) ∧
       ‖(projPerturbed 𝕜 Q hQ).incl n (firstDatum 𝕜)‖ ≠ ‖firstDatum 𝕜‖ ∧

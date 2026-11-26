@@ -8,47 +8,10 @@ public import Mathlib.Analysis.InnerProductSpace.StarOrder
 /-!
 # Reweighting a Hilbert complex: conjugation by bounded isomorphisms
 
-For a Hilbert complex `H` and bounded isomorphisms `a i : W i ≃L[𝕜] W' i` (the **weights**),
-the **conjugated complex** `H.conj a` has the differentials `d' i j = a j ∘ d i j ∘ (a i)⁻¹` on
-`a i D(d i j)`. In applications `W' = W` and the weights are positive self-adjoint, e.g.
-`a = ε^{1/2}` on the electric fields and `a = μ^{-1/2}` on the magnetic fluxes of a medium: the
-standard inner product of the conjugated variables `a x` is then the weighted inner product
-`⟪x, y⟫_G = ⟪G x, y⟫` with `G = a† a` (`⟪ε E, E⟫`, `⟪μ⁻¹ B, B⟫`), so the conjugated complex
-realizes the weighted `L²` structure of a medium on the standard spaces.
-
-Unlike `Feec.HilbertComplex.transport`, the weights need not be scaled isometries; the price is
-that adjoints pick up the adjoint weights: `(d')† = (a i)⁻† ∘ d† ∘ (a j)†`.
-
-## Main definitions
-
-* `ContinuousLinearEquiv.adjoint a : F ≃L[𝕜] E`: the adjoint `a†` of `a : E ≃L[𝕜] F`, with
-  inverse `(a⁻¹)†`.
-* `LinearPMap.conj T a b = b ∘ T ∘ a⁻¹` for `T : E →ₗ.[𝕜] F`.
-* `HilbertComplex.conj H a`: the conjugated (reweighted) complex.
-
-## Main results
-
-* `LinearPMap.adjoint_conj`: `(b T a⁻¹)† = (a⁻¹)† T† b†`.
-* `HilbertComplex.ReducingSubcomplex.conj`: a reducing subcomplex `S` of `H` gives the reducing
-  subcomplex `S'` of `H.conj a` whenever `a S ⊆ S'` and `a Sᗮ ⊆ S'ᗮ` (e.g. `S' = S` when the
-  weights commute with the projections).
-* `ShortHilbertComplex.conj`: the same for short complexes.
-* `Evolution.isStrongSolution_conj_symm_iff`, `Evolution.isClassicalSolution_conj_symm_iff`,
-  `Evolution.ForcingClass.admissible.conjEquiv`, `Evolution.existsUnique_conj_symm`: evolution
-  equations `U' = Φ⁻¹ A Φ U + F` are similar to `V' = A V + Φ F`, and well-posedness transfers.
-* `ContinuousLinearMap.exists_selfAdjoint_equiv_adjoint_comp_eq`: over `ℂ` every bounded,
-  self-adjoint, uniformly positive `ε` is `e† e` for a self-adjoint isomorphism `e` (`e = ε^{1/2}`,
-  the continuous functional calculus square root), so the weights of every medium exist.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (Hilbert complexes; weighted inner products define equivalent complexes)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4 (Hilbert complexes)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (Hilbert complexes of closed densely
-  defined operators)
-
-Bibliography: [references.bib](../../docs/references.bib)
+For bounded isomorphisms `a i : W i ≃L[𝕜] W' i`, the conjugated complex has the differentials
+`a j ∘ d i j ∘ (a i)⁻¹` and the adjoints `(a i)⁻† ∘ d† ∘ (a j)†`; reducing subcomplexes transfer
+when the weights preserve their orthogonal splittings, and well-posedness of evolution equations
+transfers along such similarities.
 -/
 
 open scoped InnerProductSpace
@@ -63,8 +26,7 @@ namespace ContinuousLinearEquiv
 variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F]
 
-/-- The **adjoint** `a† : F ≃L[𝕜] E` of a continuous linear equivalence `a : E ≃L[𝕜] F`; its
-inverse is `(a⁻¹)†`. -/
+/-- The adjoint `a† : F ≃L[𝕜] E` of `a : E ≃L[𝕜] F`. -/
 def adjoint (a : E ≃L[𝕜] F) : F ≃L[𝕜] E :=
   ContinuousLinearEquiv.equivOfInverse (ContinuousLinearMap.adjoint (a : E →L[𝕜] F))
     (ContinuousLinearMap.adjoint (a.symm : F →L[𝕜] E))
@@ -90,14 +52,12 @@ theorem norm_adjoint_symm (a : E ≃L[𝕜] F) :
     ‖(a.adjoint.symm : E →L[𝕜] F)‖ = ‖(a.symm : F →L[𝕜] E)‖ :=
   ContinuousLinearMap.adjoint.norm_map _
 
-/-- `a†† = a`. -/
 theorem adjoint_adjoint (a : E ≃L[𝕜] F) : a.adjoint.adjoint = a := by
   ext x
   change ContinuousLinearMap.adjoint (ContinuousLinearMap.adjoint (a : E →L[𝕜] F)) x = a x
   rw [ContinuousLinearMap.adjoint_adjoint]
   rfl
 
-/-- `((a⁻¹)†)† = a⁻¹`. -/
 theorem adjoint_symm_adjoint_apply (a : E ≃L[𝕜] F) (x : F) : a.adjoint.symm.adjoint x = a.symm x := by
   change ContinuousLinearMap.adjoint (ContinuousLinearMap.adjoint (a.symm : F →L[𝕜] E)) x = _
   rw [ContinuousLinearMap.adjoint_adjoint]
@@ -110,8 +70,7 @@ namespace Submodule
 variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
-/-- The image of a subspace with an orthogonal projection under a continuous linear isomorphism
-of Hilbert spaces has an orthogonal projection (it is closed). -/
+/-- The image of a subspace with an orthogonal projection under an isomorphism has one. -/
 instance hasOrthogonalProjection_map_continuousLinearEquiv [CompleteSpace F] (a : E ≃L[𝕜] F)
     (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
     (K.map (a : E →ₗ[𝕜] F)).HasOrthogonalProjection := by
@@ -133,8 +92,7 @@ variable {𝕜 E F E' F' : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSp
   [NormedAddCommGroup F] [NormedSpace 𝕜 F] [NormedAddCommGroup E'] [NormedSpace 𝕜 E']
   [NormedAddCommGroup F'] [NormedSpace 𝕜 F']
 
-/-- The **conjugate** `b ∘ T ∘ a⁻¹ : E' → F'` of `T : E → F` by isomorphisms `a : E ≃ E'`,
-`b : F ≃ F'`, on the domain `a D(T)`. -/
+/-- The conjugate `b ∘ T ∘ a⁻¹ : E' → F'` of `T : E → F`, on `a D(T)`. -/
 def conj (T : E →ₗ.[𝕜] F) (a : E ≃L[𝕜] E') (b : F ≃L[𝕜] F') : E' →ₗ.[𝕜] F' where
   domain := T.domain.comap (a.symm : E' →ₗ[𝕜] E)
   toFun := (b : F →ₗ[𝕜] F').comp (T.toFun.comp
@@ -151,7 +109,6 @@ theorem conj_apply (y : (T.conj a b).domain) :
 theorem apply_mem_conj_domain {x : E} : a x ∈ (T.conj a b).domain ↔ x ∈ T.domain := by
   rw [mem_conj_domain, ContinuousLinearEquiv.symm_apply_apply]
 
-/-- `(b T a⁻¹) (a x) = b (T x)`. -/
 theorem conj_apply_apply (x : T.domain) :
     T.conj a b ⟨a x, apply_mem_conj_domain.2 x.2⟩ = b (T x) := by
   rw [conj_apply]
@@ -172,7 +129,6 @@ theorem mem_conj_graph_iff {p : E' × F'} :
     rw [conj_apply, ← (b.apply_symm_apply p.2), ← show T x = b.symm p.2 from hx2]
     exact congrArg b (apply_congr' _ _ _ hx1'.symm)
 
-/-- `N(b T a⁻¹) = a N(T)`. -/
 theorem mem_ker_conj_iff {y : E'} : y ∈ (T.conj a b).ker ↔ a.symm y ∈ T.ker := by
   simp only [mem_ker_iff]
   constructor
@@ -183,7 +139,6 @@ theorem mem_ker_conj_iff {y : E'} : y ∈ (T.conj a b).ker ↔ a.symm y ∈ T.ke
     rw [conj_apply, ← b.map_zero, ← h0]
     exact congrArg b (apply_congr' _ _ _ hz)
 
-/-- The conjugate of a closed operator is closed. -/
 theorem isClosed_conj (hT : T.IsClosed) : (T.conj a b).IsClosed := by
   have hg : ((T.conj a b).graph : Set (E' × F')) =
       (fun p : E' × F' => (a.symm p.1, b.symm p.2)) ⁻¹' (T.graph : Set (E × F)) := by
@@ -193,7 +148,6 @@ theorem isClosed_conj (hT : T.IsClosed) : (T.conj a b).IsClosed := by
   exact hT.preimage ((a.symm.continuous.comp continuous_fst).prodMk
     (b.symm.continuous.comp continuous_snd))
 
-/-- The conjugate of a densely defined operator is densely defined. -/
 theorem dense_conj_domain (hT : Dense (T.domain : Set E)) :
     Dense ((T.conj a b).domain : Set E') :=
   hT.preimage a.symm.toHomeomorph.isOpenMap
@@ -205,7 +159,6 @@ theorem conj_eq_zero (hT : T = 0) : T.conj a b = 0 := by
     rw [hT]; exact ⟨fun _ => Submodule.mem_top, fun _ => Submodule.mem_top⟩
   · rw [conj_apply, apply_eq_zero_of_eq_zero hT, _root_.map_zero, apply_eq_zero_of_eq_zero rfl]
 
-/-- Conjugating back by the inverses recovers `T`. -/
 theorem conj_symm_conj : (T.conj a b).conj a.symm b.symm = T := by
   refine LinearPMap.ext ?_ fun x y hxy => ?_
   · ext x
@@ -260,9 +213,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W W' :
   [∀ i, CompleteSpace (W' i)]
   (H : HilbertComplex 𝕜 c W) (a : ∀ i, W i ≃L[𝕜] W' i)
 
-/-- The **conjugated** (reweighted) complex `d' i j = a j ∘ d i j ∘ (a i)⁻¹`, on `a i D(d i j)`.
-For positive self-adjoint weights this is the complex of the weighted inner products
-`⟪(a i)† a i x, y⟫`. -/
+/-- The **conjugated** (reweighted) complex `d' i j = a j ∘ d i j ∘ (a i)⁻¹`, on `a i D(d i j)`. -/
 def conj : HilbertComplex 𝕜 c W' where
   d i j := (H.d i j).conj (a i) (a j)
   shape i j h := conj_eq_zero (H.shape i j h)
@@ -279,16 +230,14 @@ def conj : HilbertComplex 𝕜 c W' where
       change (a j).symm ((H.d i j).conj (a i) (a j) y) = _
       rw [conj_apply, ContinuousLinearEquiv.symm_apply_apply]))
 
-/-- Conjugating back by the inverse weights recovers `H`. -/
 theorem conj_symm_conj : (H.conj a).conj (fun i => (a i).symm) = H :=
   ext_d (funext fun _ => funext fun _ => LinearPMap.conj_symm_conj)
 
-/-! ### Reducing subcomplexes and invariant cores of the conjugated complex -/
+/-! ### Reducing subcomplexes of the conjugated complex -/
 
 variable {H a}
 
 omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] in
-/-- If `a K ⊆ K'` and `a Kᗮ ⊆ K'ᗮ`, then `P_{K'} a = a P_K`. -/
 theorem starProjection_apply_of_map_le {i : ι} {K : Submodule 𝕜 (W i)}
     {K' : Submodule 𝕜 (W' i)} [K.HasOrthogonalProjection] [K'.HasOrthogonalProjection]
     (h : K.map (a i : W i →ₗ[𝕜] W' i) ≤ K')
@@ -304,16 +253,8 @@ namespace ReducingSubcomplex
 variable {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, (S i).HasOrthogonalProjection]
   {S' : ∀ i, Submodule 𝕜 (W' i)} [∀ i, (S' i).HasOrthogonalProjection]
 
-/-- **Reducing subcomplexes transport to the conjugated complex**: if `S` is a reducing
-subcomplex of `H` and the weights map `S i` into `S' i` and `(S i)ᗮ` into `(S' i)ᗮ`, then `S'`
-is a reducing subcomplex of `H.conj a`.
-
-Since `a i` is bijective and `W i = S i ⊕ (S i)ᗮ`, the hypotheses force `a i (S i) = S' i` and
-`a i (S i)ᗮ = (S' i)ᗮ`: the weights must carry the orthogonal splitting to an orthogonal
-splitting (e.g. unitary weights, or weights commuting with the projections). For general weights
-`a i S i` is only invariant along the oblique splitting `a i S i ⊕ a i (S i)ᗮ`; the weighted Gauss
-laws of a medium (`Maxwell.Medium.gauss`) are therefore obtained from the `divFreeSub` of the
-conjugated complex itself rather than from this lemma. -/
+/-- **Reducing subcomplexes transport to the conjugated complex** when the weights map `S i` into
+`S' i` and `(S i)ᗮ` into `(S' i)ᗮ`. -/
 theorem conj (h : H.ReducingSubcomplex S) (hS : ∀ i, (S i).map (a i : W i →ₗ[𝕜] W' i) ≤ S' i)
     (hSo : ∀ i, (S i)ᗮ.map (a i : W i →ₗ[𝕜] W' i) ≤ (S' i)ᗮ) :
     (H.conj a).ReducingSubcomplex S' := by
@@ -344,12 +285,10 @@ namespace ContinuousLinearMap
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E]
 
-/-- `⟪e† e x, y⟫ = ⟪e x, e y⟫`: the weighted inner product of `G = e† e`. -/
 theorem inner_adjoint_comp_self_apply (e : E →L[𝕜] E) (x y : E) :
     ⟪(ContinuousLinearMap.adjoint e ∘L e) x, y⟫_𝕜 = ⟪e x, e y⟫_𝕜 := by
   rw [comp_apply, adjoint_inner_left]
 
-/-- `re ⟪e† e x, x⟫ = ‖e x‖²`. -/
 theorem re_inner_adjoint_comp_self_apply (e : E →L[𝕜] E) (x : E) :
     RCLike.re ⟪(ContinuousLinearMap.adjoint e ∘L e) x, x⟫_𝕜 = ‖e x‖ ^ 2 := by
   rw [inner_adjoint_comp_self_apply, inner_self_eq_norm_sq]
@@ -361,9 +300,7 @@ namespace ContinuousLinearMap
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
 
 /-- **Every medium has weights** (over `ℂ`): a bounded, self-adjoint, uniformly positive `ε`
-(`c ‖x‖² ≤ re ⟪ε x, x⟫`, `c > 0`; e.g. multiplication by a measurable matrix field with
-`λ ≤ ε(x) ≤ Λ`) is `e† e = e e` for the self-adjoint isomorphism `e = ε^{1/2}` (the continuous
-functional calculus square root `CFC.sqrt ε`). -/
+(`c ‖x‖² ≤ re ⟪ε x, x⟫`, `c > 0`) is `e† e` for a self-adjoint isomorphism `e`. -/
 theorem exists_selfAdjoint_equiv_adjoint_comp_eq {ε : E →L[ℂ] E} (hε : IsSelfAdjoint ε)
     {c : ℝ} (hc : 0 < c) (hcε : ∀ x, c * ‖x‖ ^ 2 ≤ RCLike.re ⟪ε x, x⟫_ℂ) :
     ∃ e : E ≃L[ℂ] E, IsSelfAdjoint (e : E →L[ℂ] E) ∧
@@ -466,12 +403,9 @@ theorem mem_graph_conj_self_iff {x v : E} :
   rw [mem_conj_graph_iff]; simp
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- `(A.conj Φ⁻¹ Φ⁻¹).conj Φ Φ = A`. -/
 theorem conj_conj_symm : (A.conj Φ.symm Φ.symm).conj Φ Φ = A := by
   simpa using LinearPMap.conj_symm_conj (T := A) (a := Φ.symm) (b := Φ.symm)
 
-/-- **Similarity of evolution equations**: if `U` solves `U' = A U + F`, then `Φ U` solves
-`V' = (Φ A Φ⁻¹) V + Φ F`. -/
 theorem IsStrongSolution.conjEquiv (hU : IsStrongSolution A I F U) :
     IsStrongSolution (A.conj Φ Φ) I (fun t => Φ (F t)) (fun t => Φ (U t)) := by
   refine ⟨(Φ : E →L[𝕜] E).continuous.comp_continuousOn hU.continuousOn, fun t ht => ?_⟩
@@ -488,8 +422,6 @@ theorem IsClassicalSolution.conjEquiv (hU : IsClassicalSolution A I F U) :
     (Φ : E →L[𝕜] E).continuous.comp_continuousOn hVc,
     fun t ht => (mem_graph_conj_self_iff Φ).2 (hV t ht)⟩⟩
 
-/-- Strong solutions of `U' = Φ⁻¹ A Φ U + F` are the `Φ⁻¹`-images of the strong solutions of
-`V' = A V + Φ F`. -/
 theorem isStrongSolution_conj_symm_iff :
     IsStrongSolution (A.conj Φ.symm Φ.symm) I F U ↔
       IsStrongSolution A I (fun t => Φ (F t)) (fun t => Φ (U t)) := by
@@ -511,7 +443,6 @@ theorem isClassicalSolution_conj_symm_iff :
     simpa using h.conjEquiv Φ.symm
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- Admissible forcing is carried along a similarity. -/
 theorem ForcingClass.admissible.conjEquiv [CompleteSpace E] {a b : ℝ}
     (hF : ForcingClass.admissible A a b F) :
     ForcingClass.admissible (A.conj Φ Φ) a b (fun t => Φ (F t)) := by
@@ -539,8 +470,7 @@ theorem ForcingClass.admissible.conjEquiv_symm [CompleteSpace E] {a b : ℝ}
   have := hF.conjEquiv Φ
   rwa [conj_conj_symm] at this
 
-/-- **Well-posedness is invariant under similarity**: if `U' = A U + F` has a classical solution
-for every `U₀ ∈ D(A)` and admissible `F`, unique among strong solutions, then so has
+/-- **Well-posedness is invariant under similarity**: if `U' = A U + F` is well posed, so is
 `U' = Φ⁻¹ A Φ U + F`. -/
 theorem existsUnique_conj_symm [CompleteSpace E] {a b : ℝ}
     (h : ∀ U₀ ∈ A.domain, ∀ F, ForcingClass.admissible A a b F →

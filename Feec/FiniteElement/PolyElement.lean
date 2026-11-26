@@ -7,66 +7,20 @@ public import Feec.FiniteElement.PolyKind
 /-!
 # The global element families `P_rΛᵏ` and `P_r⁻Λᵏ` of any order
 
-An **admissible sequence** (`Feec.FiniteElement.PolySeq`) chooses in every form degree `k` a
-family `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` (`r_k ≥ 1`), consecutive degrees related by the transitions
-`Xᵏ → P_{r_k}⁻Λᵏ⁺¹` or `Xᵏ → P_{r_k-1}Λᵏ⁺¹` of [AFW2006], §5 and [AFW2010], §5.2
-(`PolyKind.Transition`). Each admissible sequence is an element family
-`Feec.FiniteElement.polyElement n S : LocalElement n`, so that `Feec.FiniteElement.Assembly`
-provides the global spaces, their dimensions, the subcomplexes of `HΛ(Ω)` and `H̊Λ(Ω)`, and the
-global canonical interpolant commuting with `d`.
-
-**Degrees of freedom depending only on the face.** For a face (vertex set) `g` of `m + 1`
-points, `lexEnum g m` lists the points of `g` in increasing lexicographic order (`toLex`), and
-the degrees of freedom are the moments `ℓ_{g,i}(ω) = ∫_{T̂_m} F_q^* ω ∧ ηᵢ` along the
-parametrization `F_q` of `q = lexEnum g m`, with `ηᵢ` a fixed basis of the test space
-`P⁻_{r+k-m}Λ^{m-k}` (for `P_rΛᵏ`) or `P_{r+k-m-1}Λ^{m-k}` (for `P_r⁻Λᵏ`)
-(`testSpace`, `testSpaceMinus` of `Feec.FiniteElement.LocalDof`), applied to the degree-`k` part of
-`ω` (`degField`). They vanish for `#g < k + 1` (`PolySeq.isEmpty_dofIdx_of_card_lt`).
-
-**Reduction to the local theory.** The lexicographic enumeration `p'` of the vertices of an
-`n`-simplex `T` is an affinely independent enumeration of `T` (`isUnit_det_edgeMatrix_lexEnum`)
-whose faces `p' ∘ e` (`e` increasing) are exactly the enumerations `lexEnum` of their vertex sets
-(`lexEnum_image_comp`). Hence on `T` the degrees of freedom are those of
-`Feec.FiniteElement.localDof p'` (resp. `localDofMinus p'`), with the same test bases, and
-unisolvence and trace determination follow from `isUnisolvent_localDof`
-(`eq_zero_of_faceMoment_eq_zero_simplex`) and `faceTrace_eq_of_localDof_eq`; the local spaces
-are the same for all simplices by affine invariance (`localPolySpace_eq`).
-
-## Main definitions
-
-* `PolyKind.space`, `PolyKind.test`: the form fields over `ℝ` of the families
-  `Feec.FiniteElement.PolyKind` (defined in `Feec.FiniteElement.PolyKind`), the evaluations of the polynomial
-  forms `PolyKind.form ℝ`, `PolyKind.testForm ℝ` (`PolyKind.space_eq_map_form`,
-  `PolyKind.test_eq_map_testForm`).
-* `Feec.FiniteElement.lexEnum g m`: the points of `g` in lexicographic order.
-* `Feec.FiniteElement.vertexMoment q η ω = ∫_{T̂_m} F_q^* ω ∧ η`, `degField k ω`, `degMoment`.
-* `Feec.FiniteElement.PolySeq`: admissible sequences; `PolySeq.DofIdx`, `PolySeq.dof`.
-* `Feec.FiniteElement.polyElement n S`: the element family.
+An admissible sequence `S` chooses in every form degree `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ`, along the
+transitions of [AFW2006], §5 and [AFW2010], §5.2; `polyElement n S` is its element family.
 
 ## Main results
 
-* `PolyKind.extDeriv_mem_space`: `d` maps the source space into the target space of an
-  admissible transition;
-* `PolyKind.test_of_transition`: **for each of the four transitions**, the traces on the facets
-  and the exterior derivative of a target test form are source test forms;
-* `vertexMoment_extDeriv`: Stokes' formula for moments along any vertex family;
-* `vertexMoment_congr`: along points of a face, the moments only see the tangential traces on
-  the face (`PolySeq.dof_congr` for the degrees of freedom);
-* `PolySeq.isUnisolvent_dof`, `PolySeq.tangentialTraceEq_of_dof_eq`, `PolySeq.dof_congr`,
-  `PolySeq.dof_comp_extDerivC1_mem_span`: the axioms of an element family;
-* `PolySeq.tangentialTraceEq_of_dof_eq_face`: the degrees of freedom on a face of any dimension
-  and its subfaces determine the tangential trace on the face (the facet case is the element
-  axiom);
-* `PolyKind.finrank_space_eq_sum`: `dim = Σ_m C(n+1, m+1) dim(test forms on m-faces)`, the
-  count `PolyKind.finrank_form_eq_sum` over `ℝ`.
+* `PolyKind.test_of_transition`: test forms along an admissible transition.
+* `PolySeq.isUnisolvent_dof`: unisolvence of the degrees of freedom.
+* `PolySeq.tangentialTraceEq_of_dof_eq_face`: trace determination on faces of every dimension.
+* `PolyKind.finrank_space_eq_sum`: `dim = Σ_m C(n+1, m+1) dim(test forms on m-faces)`, `r ≥ 1`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3–5 (the spaces, degrees of freedom, admissible sequences, assembly)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.2 (degrees of freedom, the complexes `P_r⁻Λ`, `P_rΛ` and their mixtures)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -81,18 +35,14 @@ open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
 
-/-! ### The form fields of the two polynomial families -/
-
 namespace PolyKind
 
-/-- The space of polynomial `k`-form fields of degree `r` of the family: `P_rΛᵏ(ℝⁿ)` or
-`P_r⁻Λᵏ(ℝⁿ)`. -/
+/-- The polynomial `k`-form fields `P_rΛᵏ(ℝⁿ)` or `P_r⁻Λᵏ(ℝⁿ)` of the family. -/
 def space (n : ℕ) : PolyKind → ℕ → ℕ → Submodule ℝ (FormField n)
   | full, r, k => polySpace n r k
   | trimmed, r, k => polyMinusSpace n r k
 
-/-- The test forms of the degrees of freedom of the family on `m`-faces: `P⁻_{r+k-m}Λ^{m-k}` for
-`P_rΛᵏ` and `P_{r+k-m-1}Λ^{m-k}` for `P_r⁻Λᵏ` (`testSpace`, `testSpaceMinus`). -/
+/-- The test forms of the family on `m`-faces: `P⁻_{r+k-m}Λ^{m-k}`, resp. `P_{r+k-m-1}Λ^{m-k}`. -/
 def test : PolyKind → ℕ → ℕ → (m : ℕ) → Submodule ℝ (FormField m)
   | full, r, k, m => testSpace r k m
   | trimmed, r, k, m => testSpaceMinus r k m
@@ -135,7 +85,6 @@ theorem test_eq_bot {κ : PolyKind} {r k m : ℕ} (h : ¬(k ≤ m ∧ m < r + k)
   · exact testSpace_eq_bot h
   · exact testSpaceMinus_eq_bot h
 
-/-- The form fields are the evaluations of the polynomial forms over `ℝ`. -/
 theorem space_eq_map_form (κ : PolyKind) (r k : ℕ) :
     κ.space n r k = (κ.form ℝ r k).map (evalForm n) := by
   cases κ <;> rfl
@@ -149,7 +98,6 @@ theorem test_eq_map_testForm (κ : PolyKind) (r k m : ℕ) :
   · rw [κ.testForm_eq_bot h, Submodule.map_bot]
     exact test_eq_bot h
 
-/-- The form fields have the dimension of the polynomial forms (`evalForm` is injective). -/
 theorem finrank_map_evalForm (W : Submodule ℝ (Koszul.PolyForm ℝ (Fin n))) :
     Module.finrank ℝ (W.map (evalForm n)) = Module.finrank ℝ W :=
   Koszul.finrank_map_of_injOn _ _ fun _ _ hx => evalForm_injective (by rw [hx, map_zero])
@@ -162,17 +110,14 @@ theorem finrank_test (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k m : ℕ) :
     Module.finrank ℝ (κ.test r k m) = κ.testDim r k m := by
   rw [κ.test_eq_map_testForm, finrank_map_evalForm, κ.finrank_testForm hr]
 
-/-- `dim P_rΛᵏ(ℝⁿ)` (resp. `P_r⁻Λᵏ`) is the number of degrees of freedom:
-`Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` ([AFW2006], Thms 4.9, 4.13; over every field
-of characteristic `0`, `PolyKind.finrank_form_eq_sum`). -/
+/-- `dim P_rΛᵏ(ℝⁿ)` (resp. `P_r⁻Λᵏ`), `r ≥ 1`, is the number of degrees of freedom:
+`Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`. [AFW2006], Thms 4.9, 4.13 -/
 theorem finrank_space_eq_sum (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     Module.finrank ℝ (κ.space n r k) =
       ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) * Module.finrank ℝ (κ.test r k m) := by
   simp only [κ.finrank_space_eq_finrank_form, κ.finrank_form_eq_sum hr, κ.finrank_testForm hr,
     κ.finrank_test hr]
 
-/-- **Vanishing moments force `ω = 0`** on `P_rΛᵏ(T)` (resp. `P_r⁻Λᵏ(T)`)
-(`eq_zero_of_faceMoment_eq_zero_simplex`, `eq_zero_of_faceMoment_eq_zero_minus_simplex`). -/
 theorem eq_zero_of_faceMoment {p : Fin (n + 1) → Fin n → ℝ} (κ : PolyKind)
     (hp : IsUnit (edgeMatrix p).det) {r : ℕ} (hr : 1 ≤ r) {k : ℕ} {ω : FormField n}
     (hω : ω ∈ κ.space n r k)
@@ -182,8 +127,6 @@ theorem eq_zero_of_faceMoment {p : Fin (n + 1) → Fin n → ℝ} (κ : PolyKind
   · exact eq_zero_of_faceMoment_eq_zero_simplex hp hr k hω hdof
   · exact eq_zero_of_faceMoment_eq_zero_minus_simplex hp k hω hdof
 
-/-- **Trace determination** (`faceTrace_eq_of_localDof_eq`, `faceTrace_eq_of_localDofMinus_eq`):
-the moments on a face `f` of `p` and on its subfaces determine the trace on `f`. -/
 theorem faceTrace_eq {p : Fin (n + 1) → Fin n → ℝ} (κ : PolyKind)
     (hp : IsUnit (edgeMatrix p).det) {r : ℕ} (hr : 1 ≤ r) {k : ℕ} (f : Face n)
     {ω ω' : FormField n} (hω : ω ∈ κ.space n r k) (hω' : ω' ∈ κ.space n r k)
@@ -199,10 +142,6 @@ theorem faceTrace_eq {p : Fin (n + 1) → Fin n → ℝ} (κ : PolyKind)
       (ω' := ⟨ω', (localPolyMinusSpace_eq hp r k).symm ▸ hω'⟩)
       fun g hg i => h g hg _ (testBasisMinus r k g.dim i).2
 
-/-! ### Admissible transitions -/
-
-/-- **`d` maps the source space into the target space** along an admissible transition: `d P_rΛᵏ`
-and `d P_r⁻Λᵏ` lie in `P_r⁻Λᵏ⁺¹` and in `P_{r-1}Λᵏ⁺¹` (`PolyKind.extDeriv_mem_form`). -/
 theorem extDeriv_mem_space (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k : ℕ} {ω : FormField n} (hω : ω ∈ κ.space n r k) :
     extDeriv ω ∈ κ'.space n r' (k + 1) := by
@@ -210,10 +149,8 @@ theorem extDeriv_mem_space (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
   obtain ⟨Ω, hΩ, rfl⟩ := hω
   exact ⟨_, κ.extDeriv_mem_form ht hΩ, (extDeriv_evalForm Ω).symm⟩
 
-/-- **Test forms along an admissible transition**: if `η` is a test form of the target family in
-degree `k + 1` on an `(M+1)`-face, its traces on the facets and `dη` are test forms of the source
-family in degree `k` (this is what makes the moments of `dω` combinations of the moments of `ω`,
-by Stokes' theorem). -/
+/-- **Test forms along an admissible transition**: the facet traces and the exterior derivative
+of a target test form of degree `k + 1` are source test forms of degree `k`. -/
 theorem test_of_transition (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k M : ℕ} {η : FormField (M + 1)}
     (hη : η ∈ κ'.test r' (k + 1) (M + 1)) :
@@ -282,11 +219,7 @@ theorem test_of_transition (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
 
 end PolyKind
 
-/-! ### Lexicographically sorted vertex sets -/
-
-/-- The points of `g` in increasing lexicographic order (`toLex`), as a family
-`Fin (m + 1) → ℝⁿ` when `#g = m + 1` (and `0` otherwise). This enumeration depends only on the
-set `g`, and the enumeration of a subset is the restriction (`lexEnum_eq`). -/
+/-- The points of `g` in increasing lexicographic order, as `Fin (m + 1) → ℝⁿ` if `#g = m + 1`. -/
 def lexEnum (g : Finset (Fin n → ℝ)) (m : ℕ) : Fin (m + 1) → Fin n → ℝ :=
   if h : #g = m + 1 then fun i =>
     ofLex ((g.map toLex.toEmbedding).orderEmbOfFin (by rw [card_map, h]) i)
@@ -314,8 +247,6 @@ theorem lexEnum_injective {g : Finset (Fin n → ℝ)} {m : ℕ} (h : #g = m + 1
     Function.Injective (lexEnum g m) := fun _ _ hij =>
   (strictMono_lexEnum h).injective (congrArg toLex hij)
 
-/-- **Uniqueness of the sorted enumeration**: a lexicographically increasing enumeration of `g`
-is `lexEnum g m`. -/
 theorem lexEnum_eq {g : Finset (Fin n → ℝ)} {m : ℕ} (h : #g = m + 1)
     {q : Fin (m + 1) → Fin n → ℝ} (hq : ∀ i, q i ∈ g) (hmono : StrictMono fun i => toLex (q i)) :
     lexEnum g m = q := by
@@ -338,7 +269,6 @@ theorem range_lexEnum {g : Finset (Fin n → ℝ)} {m : ℕ} (h : #g = m + 1) :
   conv_rhs => rw [← image_lexEnum h]
   rw [coe_image, coe_univ, Set.image_univ]
 
-/-- An enumeration of the points of `g` is a reordering of their lexicographic enumeration. -/
 theorem exists_lexEnum_eq_comp_perm {g : Finset (Fin n → ℝ)} {m : ℕ} (hc : #g = m + 1)
     {q : Fin (m + 1) → Fin n → ℝ} (hq : Set.range q = g) :
     ∃ π : Equiv.Perm (Fin (m + 1)), lexEnum g m = q ∘ π := by
@@ -348,7 +278,6 @@ theorem exists_lexEnum_eq_comp_perm {g : Finset (Fin n → ℝ)} {m : ℕ} (hc :
     exact Finset.injOn_of_card_image_eq (by rw [himg, card_univ, Fintype.card_fin, ← hc])
   exact exists_perm_comp_eq (lexEnum_injective hc) hqinj (by rw [range_lexEnum hc, hq])
 
-/-- A subfamily of a sorted family is the sorted enumeration of its range. -/
 theorem lexEnum_image_comp {N m : ℕ} {p : Fin (N + 1) → Fin n → ℝ}
     (hp : StrictMono fun i => toLex (p i)) {e : Fin (m + 1) → Fin (N + 1)} (he : StrictMono e) :
     #(Finset.univ.image (p ∘ e)) = m + 1 ∧ lexEnum (Finset.univ.image (p ∘ e)) m = p ∘ e := by
@@ -357,7 +286,6 @@ theorem lexEnum_image_comp {N m : ℕ} {p : Fin (N + 1) → Fin n → ℝ}
       Fintype.card_fin]
   exact ⟨hc, lexEnum_eq hc (fun i => mem_image_of_mem _ (mem_univ i)) (hp.comp he)⟩
 
-/-- A subset of the range of a sorted family is enumerated by a subfamily. -/
 theorem exists_orderEmb_comp_eq_lexEnum {N m : ℕ} {p : Fin (N + 1) → Fin n → ℝ}
     (hp : StrictMono fun i => toLex (p i)) {g : Finset (Fin n → ℝ)} (hg : #g = m + 1)
     (hgp : ∀ x ∈ g, ∃ i, p i = x) : ∃ e : Fin (m + 1) ↪o Fin (N + 1), p ∘ e = lexEnum g m := by
@@ -368,8 +296,6 @@ theorem exists_orderEmb_comp_eq_lexEnum {N m : ℕ} {p : Fin (N + 1) → Fin n �
     exact hp.lt_iff_lt.1 this
   exact ⟨OrderEmbedding.ofStrictMono f hmono, funext fun i => hf i⟩
 
-/-- The vertices of an `n`-simplex in lexicographic order are an affinely independent
-enumeration: their edge matrix is invertible. -/
 theorem isUnit_det_edgeMatrix_lexEnum (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     IsUnit (edgeMatrix (lexEnum (vertexSet T) n)).det := by
   have hc := card_vertexSet T
@@ -386,10 +312,7 @@ theorem exists_lexEnum_eq_of_mem_vertexSet (T : Affine.Simplex ℝ (Fin n → �
   obtain ⟨i, -, hi⟩ := mem_image.1 hx
   exact ⟨i, hi⟩
 
-/-! ### Moments along vertex families -/
-
-/-- The moment `∫_{T̂_m} F_q^* ω ∧ η` along the parametrization `F_q` of the ordered (possibly
-degenerate) simplex `q`; for `q = p ∘ e` it is `faceMoment p e η ω`. -/
+/-- The moment `∫_{T̂_m} F_q^* ω ∧ η` along the parametrization `F_q` of the ordered simplex `q`. -/
 def vertexMoment {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m) (ω : FormField n) :
     ℝ :=
   simplexIntegral (refVertex m) (wedgeField (affinePullback (simplexMatrix q) (q 0) ω) η)
@@ -451,8 +374,6 @@ theorem vertexMoment_sum_smul_right {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ
     rw [sum_insert ha, sum_insert ha, vertexMoment_add_right q ((hη a).const_smul (c a)) hs hω,
       vertexMoment_smul_right, ih, smul_eq_mul]
 
-/-- **Traces compose** along vertex families: the trace on a face `e'` of the reference simplex of
-`F_q^* ω` is the trace along `q ∘ e'`. -/
 theorem faceTrace_affinePullback_simplexMatrix {m m' : ℕ} (q : Fin (m + 1) → Fin n → ℝ)
     (e' : Fin (m' + 1) → Fin (m + 1)) (ω : FormField n) :
     faceTrace (refVertex m) e' (affinePullback (simplexMatrix q) (q 0) ω) =
@@ -465,10 +386,6 @@ theorem faceTrace_affinePullback_simplexMatrix {m m' : ℕ} (q : Fin (m + 1) →
   · rw [hq, simplexMatrix_comp_affine]
   · exact simplexMap_refVertex q (e' 0)
 
-/-- **Stokes' formula for moments along a vertex family**: for a `C¹` `k`-form `ω`, an ordered
-`(M+1)`-simplex `q` and a smooth test form `η` on `T̂_{M+1}`,
-`∫ F_q^* dω ∧ η = Σᵢ (-1)ⁱ ∫ F_{q ∘ δᵢ}^* ω ∧ δᵢ^* η - (-1)^k ∫ F_q^* ω ∧ dη`
-(the version of `faceMoment_extDeriv` for faces that are not faces of a given `n`-simplex). -/
 theorem vertexMoment_extDeriv {M k : ℕ} (q : Fin (M + 2) → Fin n → ℝ) {η : FormField (M + 1)}
     (hη : ContDiff ℝ ⊤ η) {ω : FormField n} (hω : ContDiff ℝ 1 ω) (hk : ∀ y, IsDeg k (ω y)) :
     vertexMoment q η (extDeriv ω) =
@@ -510,8 +427,6 @@ theorem vertexMoment_extDeriv {M k : ℕ} (q : Fin (M + 2) → Fin n → ℝ) {�
   rw [vertexMoment_eq_integral, vertexMoment_eq_integral q (extDeriv η)]
   linarith
 
-/-! ### The degree-`k` part of a form field -/
-
 /-- The degree-`k` part `Σ_{#s = k} ω_s dx_s` of a form field. -/
 def degField (k : ℕ) (ω : FormField n) : FormField n := fun x s => if #s = k then ω x s else 0
 
@@ -550,7 +465,6 @@ theorem contDiff_degField (k : ℕ) {r : WithTop ℕ∞} {ω : FormField n} (h :
   · simp only [degField, hs, ↓reduceIte]; exact contDiff_pi.1 h s
   · simp only [degField, hs, ↓reduceIte]; exact contDiff_const
 
-/-- `d` maps the degree-`k` part to the degree-`(k+1)` part: `d (ω_k) = (dω)_{k+1}`. -/
 theorem extDeriv_degField (k : ℕ) (ω : FormField n) :
     extDeriv (degField k ω) = degField (k + 1) (extDeriv ω) := by
   funext x s
@@ -562,7 +476,6 @@ theorem extDeriv_degField (k : ℕ) (ω : FormField n) :
   · rw [show degField (k + 1) (extDeriv ω) x s = 0 by simp [degField, hs]]
     exact IsDeg.extDeriv (isDeg_degField k ω) x s hs
 
-/-- The pullback by `k` vectors only sees the degree-`k` part. -/
 theorem pullback_degField_univ {k : ℕ} (V : Fin n → Fin k → ℝ) (ω : FormField n)
     (x : Fin n → ℝ) : pullback V (degField k ω x) univ = pullback V (ω x) univ := by
   rw [pullback_apply, pullback_apply]
@@ -577,8 +490,6 @@ theorem TangentialTraceEq.degField {g : Finset (Fin n → ℝ)} {k : ℕ} {ω ω
     TangentialTraceEq g k (degField k ω x) (degField k ω' x) := fun V hV => by
   rw [pullback_degField_univ, pullback_degField_univ]; exact h V hV
 
-/-- **Tangential traces through a vertex family**: forms of degree `k` with the same tangential
-trace on `g` have the same pullback along the edge matrix of any enumeration of points of `g`. -/
 theorem pullback_simplexMatrix_eq_of_tangentialTraceEq {m k : ℕ} {g : Finset (Fin n → ℝ)}
     (q : Fin (m + 1) → Fin n → ℝ) (hq : ∀ l, q l ∈ g) {α β : Finset (Fin n) → ℝ}
     (hα : IsDeg k α) (hβ : IsDeg k β) (h : TangentialTraceEq g k α β) :
@@ -607,8 +518,6 @@ theorem pullback_simplexMatrix_eq_of_tangentialTraceEq {m k : ℕ} {g : Finset (
     exact vsub_mem_vectorSpan ℝ (Finset.mem_coe.2 (hq _)) (Finset.mem_coe.2 (hq 0))
   · rw [(hα.pullback _) t ht, (hβ.pullback _) t ht]
 
-/-- **Moments only see tangential traces**: along points `q₀, …, q_m` of `g`, the moment
-`∫_{T̂_m} F_q^* ω ∧ η` of a form of degree `k` depends only on its tangential trace on `g`. -/
 theorem vertexMoment_congr {m k : ℕ} {g : Finset (Fin n → ℝ)} (q : Fin (m + 1) → Fin n → ℝ)
     (hq : ∀ l, q l ∈ g) (η : FormField m) {ω ω' : FormField n} (hω : ∀ x, IsDeg k (ω x))
     (hω' : ∀ x, IsDeg k (ω' x))
@@ -622,8 +531,7 @@ theorem vertexMoment_congr {m k : ℕ} {g : Finset (Fin n → ℝ)} (q : Fin (m 
   simp only [wedgeField, affinePullback_apply]
   rw [pullback_simplexMatrix_eq_of_tangentialTraceEq q hq (hω _) (hω' _) (h _ hx)]
 
-/-- The moment of the degree-`k` part, `ω ↦ ∫_{T̂_m} F_q^* ω_k ∧ η`, as a linear functional on
-continuous forms. -/
+/-- The moment `ω ↦ ∫_{T̂_m} F_q^* ω_k ∧ η` of the degree-`k` part, on continuous forms. -/
 def degMoment (k : ℕ) {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m)
     (hη : Continuous η) : contForms n →ₗ[ℝ] ℝ where
   toFun ω := vertexMoment q η (degField k ω)
@@ -638,13 +546,7 @@ theorem degMoment_apply (k : ℕ) {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) 
     (hη : Continuous η) (ω : contForms n) :
     degMoment k q η hη ω = vertexMoment q η (degField k ω) := rfl
 
-/-! ### Admissible sequences and their degrees of freedom -/
-
-/-- **An admissible sequence** of polynomial families ([AFW2006], §5; [AFW2010], §5.2): in every
-form degree `k` a family `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` with `r_k ≥ 1`, consecutive degrees being
-related by an admissible transition `Xᵏ → P_{r_k}⁻Λᵏ⁺¹` or `Xᵏ → P_{r_k-1}Λᵏ⁺¹`. (The degrees
-`k > n` carry the zero space.) `P_0Λⁿ`, the piecewise constants, is represented by the equal
-space `P_1⁻Λⁿ` (`polyMinusSpace_top`). -/
+/-- An admissible sequence of polynomial families `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ`, `r_k ≥ 1`. -/
 @[ext] structure PolySeq where
   /-- the family in degree `k` -/
   kind : ℕ → PolyKind
@@ -671,8 +573,7 @@ theorem continuous_testBasis (k m : ℕ) (i : Fin (Module.finrank ℝ (S.test k 
     Continuous (S.testBasis k m i : FormField m) :=
   (PolyKind.contDiff_of_mem_test (S.testBasis k m i).2).continuous
 
-/-- The degrees of freedom of degree `k` attached to the face (vertex set) `g`: a basis of the
-test forms on `(#g - 1)`-faces, none for `g = ∅`. -/
+/-- The degrees of freedom of degree `k` of the face `g`: a basis of its test forms. -/
 abbrev DofIdx (g : Finset (Fin n → ℝ)) (k : ℕ) : Type :=
   {_i : Fin (Module.finrank ℝ (S.test k (#g - 1))) // g.Nonempty}
 
@@ -686,7 +587,6 @@ theorem card_dofIdx (g : Finset (Fin n → ℝ)) (k : ℕ) :
 instance (k : ℕ) : IsEmpty (S.DofIdx (∅ : Finset (Fin n → ℝ)) k) :=
   ⟨fun i => Finset.not_nonempty_empty i.2⟩
 
-/-- There are no degrees of freedom of degree `k` on faces with fewer than `k + 1` vertices. -/
 theorem isEmpty_dofIdx_of_card_lt {g : Finset (Fin n → ℝ)} {k : ℕ} (h : #g < k + 1) :
     IsEmpty (S.DofIdx g k) := by
   refine ⟨fun i => ?_⟩
@@ -697,10 +597,7 @@ theorem isEmpty_dofIdx_of_card_lt {g : Finset (Fin n → ℝ)} {k : ℕ} (h : #g
   have := i.1.isLt
   omega
 
-/-- **The degrees of freedom** of the face `g`: with `q = lexEnum g (#g - 1)` the vertices of `g`
-in lexicographic order and `ηᵢ` the basis of the test forms,
-`ℓ_{g,i}(ω) = ∫_{T̂_m} F_q^* ω ∧ ηᵢ` ([AFW2006], §4.5–4.6, §5.1), applied to the degree-`k`
-part of `ω`. They depend only on the vertex set `g`. -/
+/-- The degree of freedom `ℓ_{g,i}(ω) = ∫ F_q^* ω_k ∧ ηᵢ` of `g`, `q = lexEnum g (#g - 1)`. -/
 def dof (g : Finset (Fin n → ℝ)) (k : ℕ) (i : S.DofIdx g k) : contForms n →ₗ[ℝ] ℝ :=
   degMoment k (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 : FormField (#g - 1))
     (S.continuous_testBasis k _ i.1)
@@ -709,8 +606,6 @@ theorem dof_apply (g : Finset (Fin n → ℝ)) (k : ℕ) (i : S.DofIdx g k) (ω 
     S.dof g k i ω = vertexMoment (lexEnum g (#g - 1))
       (S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) (degField k ω) := rfl
 
-/-- **Moments against test forms are combinations of the degrees of freedom**: for `#g = m + 1`
-and a test form `η` on `m`-faces, `ω ↦ ∫ F_q^* ω_k ∧ η` is a combination of the `ℓ_{g,i}`. -/
 theorem exists_degMoment_eq_sum {g : Finset (Fin n → ℝ)} {m : ℕ} (hg : #g = m + 1) {k : ℕ}
     {η : FormField m} (hη : η ∈ S.test k m) :
     ∃ c : S.DofIdx g k → ℝ, degMoment k (lexEnum g m) η
@@ -739,7 +634,6 @@ theorem degMoment_comp_mem_span {g : Finset (Fin n → ℝ)} {m : ℕ} (hg : #g 
   exact Submodule.sum_mem _ fun i _ =>
     Submodule.smul_mem _ _ (Submodule.subset_span ⟨i, rfl⟩)
 
-/-- **The degrees of freedom of `g` determine the moments** against all test forms. -/
 theorem degMoment_eq_of_dof_eq {g : Finset (Fin n → ℝ)} {m : ℕ} (hg : #g = m + 1) {k : ℕ}
     {ω ω' : contForms n} (h : ∀ i, S.dof g k i ω = S.dof g k i ω') {η : FormField m}
     (hη : η ∈ S.test k m) :
@@ -771,10 +665,7 @@ theorem card_sigma_dofIdx (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
   simp only [smul_eq_mul, Nat.succ_pos, ↓reduceIte, lt_irrefl, mul_zero, add_zero]
   exact sum_congr rfl fun x _ => rfl
 
-/-- **Unisolvence** of the degrees of freedom of the faces of `T` on `P_{r_k}Λᵏ` (resp.
-`P_{r_k}⁻Λᵏ`). The lexicographic enumeration of the vertices of `T` is an enumeration `p'` of
-`T` whose faces are enumerated by `lexEnum`, so these are the degrees of freedom of
-`isUnisolvent_localDof` (resp. `isUnisolvent_localDofMinus`) on `p'`, for the same test bases. -/
+/-- **Unisolvence** of the degrees of freedom of the faces of `T` on the spaces of `S`. -/
 theorem isUnisolvent_dof (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     IsUnisolvent fun p : Σ g : (vertexSet T).powerset, S.DofIdx (g : Finset (Fin n → ℝ)) k =>
       S.dof (p.1 : Finset (Fin n → ℝ)) k p.2 ∘ₗ Submodule.inclusion (S.space_le_contForms n k) := by
@@ -800,10 +691,6 @@ theorem isUnisolvent_dof (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
   refine h.trans ?_
   simpa using vertexMoment_smul_left (p' ∘ ⇑e) η 0 0
 
-/-- **Trace determination on any face**: two fields of `P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`) with the
-same degrees of freedom on the subfaces of a face `g` of an `n`-simplex `T` have the same pullback
-along the lexicographic parametrization of `g` (on tangential traces,
-`PolySeq.tangentialTraceEq_of_dof_eq_face`). -/
 theorem affinePullback_lexEnum_eq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {g : Finset (Fin n → ℝ)} {k m : ℕ} (hT : g ⊆ vertexSet T) (hc : #g = m + 1)
     {w η : FormField n} (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
@@ -836,9 +723,8 @@ theorem affinePullback_lexEnum_eq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → �
   rw [heF, show lexEnum (vertexSet T) n (eF 0) = lexEnum g m 0 from congrFun heF 0] at htr
   exact htr
 
-/-- **Trace determination on faces of every dimension**: on a face `F` of `T`, two forms of the
-local space with the same degrees of freedom on the faces of `F` have the same tangential trace
-on `F`. -/
+/-- **Trace determination on faces of every dimension**: two forms of `S_k` with the same degrees
+of freedom on the faces of a face `F` of `T` have the same tangential trace on `F`. -/
 theorem tangentialTraceEq_of_dof_eq_face {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {F : Finset (Fin n → ℝ)} {k j : ℕ} (hT : F ⊆ vertexSet T) (hc : #F = j + 1)
     {w η : FormField n} (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
@@ -853,7 +739,6 @@ theorem tangentialTraceEq_of_dof_eq_face {T : Affine.Simplex ℝ (Fin n → ℝ)
   have := congrFun htr y
   simpa [affinePullback_apply, simplexMap] using this
 
-/-- **Trace determination on facets** (`tangentialTraceEq_of_dof_eq_face` for `#F = n`). -/
 theorem tangentialTraceEq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {F : Finset (Fin n → ℝ)} {k : ℕ} (hT : F ⊆ vertexSet T) (hc : #F = n) {w η : FormField n}
     (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
@@ -866,7 +751,6 @@ theorem tangentialTraceEq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     simp [this] at hx
   exact S.tangentialTraceEq_of_dof_eq_face hT hc hw hη hdof
 
-/-- **The degrees of freedom of `g` only see the tangential traces on `g`.** -/
 theorem dof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : S.DofIdx g k) {w η : contForms n}
     (h : ∀ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)),
       TangentialTraceEq g k ((w : FormField n) x) ((η : FormField n) x)) :
@@ -876,8 +760,6 @@ theorem dof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : S.DofIdx g k) {w �
   exact vertexMoment_congr _ (lexEnum_mem hg) _ (isDeg_degField k _) (isDeg_degField k _)
     fun x hx => (h x hx).degField
 
-/-- Stokes compatibility for one test form: `ω ↦ ∫ F_q^* (dω)_{k+1} ∧ η`, for a test form `η` of
-degree `k + 1`, is a combination of the degree-`k` degrees of freedom of the faces of `g`. -/
 theorem degMoment_comp_extDerivC1_mem_span {g : Finset (Fin n → ℝ)} {m k : ℕ}
     (hg : #g = m + 1) {η : FormField m} (hη : η ∈ S.test (k + 1) m) :
     degMoment (k + 1) (lexEnum g m) η (PolyKind.contDiff_of_mem_test hη).continuous ∘ₗ
@@ -933,9 +815,6 @@ theorem degMoment_comp_extDerivC1_mem_span {g : Finset (Fin n → ℝ)} {m k : �
     rw [hG] at this
     exact hsub _ hGg this
 
-/-- **Stokes compatibility of the degrees of freedom**: `ℓ_{g,i} ∘ d` is a combination of the
-degrees of freedom of the faces of `g` (Stokes' theorem on `g`, `vertexMoment_extDeriv`, and
-`PolyKind.test_of_transition`). -/
 theorem dof_comp_extDerivC1_mem_span (g : Finset (Fin n → ℝ)) (k : ℕ)
     (i : S.DofIdx g (k + 1)) :
     S.dof g (k + 1) i ∘ₗ extDerivC1 ∈
@@ -947,9 +826,7 @@ theorem dof_comp_extDerivC1_mem_span (g : Finset (Fin n → ℝ)) (k : ℕ)
 
 end PolySeq
 
-/-- **The element family of an admissible sequence** `S`: on every `n`-simplex the spaces
-`P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` (the same polynomial spaces for every simplex, by affine
-invariance), with the moment degrees of freedom `PolySeq.dof` attached to the faces. -/
+/-- The element family of an admissible sequence, with the moment degrees of freedom. -/
 def polyElement (n : ℕ) (S : PolySeq) : LocalElement n where
   space _ k := S.space n k
   contDiff_of_mem h := (PolyKind.contDiff_of_mem_space h).of_le le_top
@@ -963,8 +840,6 @@ def polyElement (n : ℕ) (S : PolySeq) : LocalElement n where
   trace := fun hT _ hc hw hη h => S.tangentialTraceEq_of_dof_eq hT hc hw hη h
   dof_congr := S.dof_congr
   dof_extDeriv := S.dof_comp_extDerivC1_mem_span
-
-/-! ### Naturality of the higher-order families under affine maps -/
 
 theorem PolySeq.affinePullback_mem_space (S : PolySeq) {m n' : ℕ} (B : Fin n' → Fin m → ℝ)
     (b' : Fin n' → ℝ) (k : ℕ) {w : FormField n'} (hw : w ∈ S.space n' k) :
@@ -997,7 +872,6 @@ theorem PolySeq.affinePullback_mem_test (S : PolySeq) {m : ℕ} (B : Fin m → F
     funext x s
     simp [affinePullback_apply, pullback_apply]
 
-/-- `degField` commutes with the pullback (the pullback preserves degrees). -/
 theorem degField_affinePullback {m n' : ℕ} (k : ℕ) (B : Fin n' → Fin m → ℝ) (b' : Fin n' → ℝ)
     (w : FormField n') :
     degField k (affinePullback B b' w) = affinePullback B b' (degField k w) := by
@@ -1015,13 +889,11 @@ theorem degField_affinePullback {m n' : ℕ} (k : ℕ) (B : Fin n' → Fin m →
     · rw [isDeg_wedgeProd B t s (by rw [ht]; exact hs), mul_zero]
     · simp only [ht, ite_false, zero_mul]
 
-/-- **Moments along an affine image**: `∫_{T̂} F_q^* (G^* ω) ∧ η = ∫_{T̂} F_{G ∘ q}^* ω ∧ η`. -/
 theorem vertexMoment_affinePullback {m n' : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m)
     (B : Fin n' → Fin n → ℝ) (b' : Fin n' → ℝ) (w : FormField n') :
     vertexMoment q η (affinePullback B b' w) = vertexMoment (fun i => affine B b' (q i)) η w := by
   simp only [vertexMoment, affinePullback_affinePullback, simplexMatrix_comp_affine]
 
-/-- `wedgeField` commutes with the pullback. -/
 theorem affinePullback_wedgeField {m : ℕ} (B : Fin m → Fin m → ℝ) (b' : Fin m → ℝ)
     (α β : FormField m) :
     affinePullback B b' (wedgeField α β) =
@@ -1029,7 +901,6 @@ theorem affinePullback_wedgeField {m : ℕ} (B : Fin m → Fin m → ℝ) (b' : 
   funext x
   simp only [affinePullback_apply, wedgeField, pullback_wedgeForm]
 
-/-- `(A_π)^* (A_{π⁻¹})^* η = η`. -/
 theorem affinePullback_permMap_inv {m : ℕ} (π : Equiv.Perm (Fin (m + 1))) (η : FormField m) :
     affinePullback (simplexMatrix (refVertex m ∘ π)) (refVertex m (π 0))
       (affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹))) (refVertex m (π⁻¹ 0)) η) = η := by
@@ -1042,8 +913,6 @@ theorem affinePullback_permMap_inv {m : ℕ} (π : Equiv.Perm (Fin (m + 1))) (η
     simplexMatrix_refVertex, refVertex_zero]
   exact affinePullback_id η
 
-/-- **Moments under a reparametrization of the face**: permuting the vertices by `π` multiplies
-the moment by `sign π` and transforms the test form by `A_{π⁻¹}`. -/
 theorem vertexMoment_comp_perm {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ)
     (π : Equiv.Perm (Fin (m + 1))) (η : FormField m) (w : FormField n) :
     vertexMoment (q ∘ π) η w = ((Equiv.Perm.sign π : ℤ) : ℝ) *

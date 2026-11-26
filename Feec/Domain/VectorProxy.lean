@@ -8,41 +8,14 @@ public import Feec.ForMathlib.Calculus.Partial
 /-!
 # Vector proxies: the `L²` de Rham complex of `ℝ³` is `H¹ → H(curl) → H(div) → L²`
 
-On an open `Ω ⊆ ℝ³`, the vector proxies of `Feec.Algebra.Proxy3` identify `k`-forms with scalar
-and vector fields: `f = ω_∅`, `v_j = ω_{j}`, `u_k = ±ω_{{k}ᶜ}` (`u = (ω_{12}, -ω_{02}, ω_{01})`),
-`g = ω_{012}`. In each degree this is a signed permutation of the components
-(`proxyMat k`, the signed bijection `proxyIdx k : vecIdx 1 k ≃ formIdx 3 k` with signs
-`proxySgn k`), hence a unitary map `proxy k : L²Λᵏ(Ω) ≃ L²(Ω; vecIdx 1 k)`.
-
-* `extD_eq_coordD`: the exterior derivative of smooth forms is the coordinate exterior derivative
-  of `Feec.Koszul.Proxy3` for the partial derivatives `∂_j`, so the proxy identities
-  `d = grad, curl, div` of polynomial forms (`Feec.Koszul.Proxy3.vec1_coordD`, `vec2_coordD`,
-  `vol_coordD`) hold for smooth fields: **`vecOp_proxyMat`**,
-  `(vecOp k) (P_k f) = P_{k+1} (d f)` on all fields, in every degree.
-* `ConstCoeffComplex.maximalComplex_eq_transport_ofMatrix`: for two complexes of
-  constant-coefficient operators intertwined by constant matrices with two-sided inverses
-  (`C'.A k ∘ M_k = M_{k+1} ∘ C.A k` on smooth fields), the maximal complex of `C'` is the
-  transport of that of `C` along the matrices (from `ConstCoeffOp.maximal_ofMatrixCLM` in both
-  directions); without inverses the matrices are cochain maps of the maximal complexes
-  (`ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm`, from
-  `ConstCoeffComplex.maximalComplex_comm`: maps intertwining the maximal operators degree by
-  degree are cochain maps).
-* `ConstCoeffOp.minimal_ofMatrixCLM_of_comm`: the same intertwining maps minimal domains
-  (closures of the graphs on test fields), e.g. `H̊Λ¹(Ω)` and `d_min` into `H̊(curl, Ω)` and
-  `curl_min`.
-* **`deRhamVec_maximalComplex_eq_map`**: the maximal vector-proxy complex
-  `H¹(Ω) --grad--> H(curl, Ω) --curl--> H(div, Ω) --div--> L²(Ω)` (`deRhamVec ℝ 1`) is the
-  unitary transport of the maximal de Rham complex `HΛ⁰(Ω) → HΛ¹(Ω) → HΛ²(Ω) → L²Λ³(Ω)` along the
-  proxies: `grad = P₁ d P₀⁻¹`, `curl = P₂ d P₁⁻¹`, `div = P₃ d P₂⁻¹` with the same domains.
+On an open `Ω ⊆ ℝ³`, the vector proxies, signed permutations of the components, intertwine `d` with
+`grad`, `curl`, `div` and transport the maximal de Rham complex to `H¹ → H(curl) → H(div) → L²`
+(`deRhamVec_maximalComplex_eq_map`).
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (vector proxies of the de Rham complex in three dimensions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4 (the `L²` de Rham complex; in vector proxies `H¹`, `H(curl)`, `H(div)`, `L²`)
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003] (the spaces `H(curl)`,
-  `H(div)`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -93,14 +66,12 @@ omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensiona
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] [DecidableEq κ] in
-/-- A constant matrix with `Mᴴ M = 1` preserves inner products of `L²` fields. -/
 theorem inner_ofMatrixCLM_ofMatrixCLM {M : Matrix κ ι 𝕜} (hM : M.conjTranspose * M = 1)
     (u v : L2F 𝕜 Ω ι) : ⟪ofMatrixCLM M u, ofMatrixCLM M v⟫_𝕜 = ⟪u, v⟫_𝕜 := by
   rw [inner_ofMatrixCLM, ofMatrixCLM_ofMatrixCLM, hM, ofMatrixCLM_one]
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] [DecidableEq κ] in
-/-- A constant matrix with `Mᴴ M = 1` is an isometry of `L²` fields. -/
 theorem norm_ofMatrixCLM {M : Matrix κ ι 𝕜} (hM : M.conjTranspose * M = 1) (u : L2F 𝕜 Ω ι) :
     ‖ofMatrixCLM M u‖ = ‖u‖ := by
   rw [norm_eq_sqrt_re_inner (𝕜 := 𝕜), norm_eq_sqrt_re_inner (𝕜 := 𝕜),
@@ -117,8 +88,6 @@ theorem ofMatrix_neg_apply (M : Matrix κ' κ 𝕜) (f : κ → E → 𝕜) :
   funext j x
   simp [ofMatrix_apply, Finset.sum_neg_distrib]
 
-/-- **A constant matrix intertwining two operators maps maximal domains**: if `A M = M' B` on
-smooth fields, then `M D(B_max) ⊆ D(A_max)` with `A_max (M u) = M' (B_max u)`. -/
 theorem maximal_ofMatrixCLM_of_comm (hΩ : IsOpen Ω) {A : ConstCoeffOp E 𝕜 ι' κ'}
     {B : ConstCoeffOp E 𝕜 ι κ} {M : Matrix ι' ι 𝕜} {M' : Matrix κ' κ 𝕜}
     (h : ∀ f : ι → E → 𝕜, (∀ i, ContDiff ℝ ∞ (f i)) →
@@ -130,10 +99,6 @@ theorem maximal_ofMatrixCLM_of_comm (hΩ : IsOpen Ω) {A : ConstCoeffOp E 𝕜 �
     rw [h f hf, ofMatrix_neg_apply, neg_neg]) u
   exact ⟨hu, by rw [he, L2F.ofMatrixCLM_neg, neg_neg]⟩
 
-/-- **A constant matrix intertwining two operators maps minimal domains**: if `A M = M' B` on
-smooth fields, then `M D(B_min) ⊆ D(A_min)` with `A_min (M u) = M' (B_min u)`: `M` maps test
-fields to test fields, hence the graph of `B` on test fields into that of `A`, and the closures
-of these graphs into each other by continuity. -/
 theorem minimal_ofMatrixCLM_of_comm (hΩ : IsOpen Ω) {A : ConstCoeffOp E 𝕜 ι' κ'}
     {B : ConstCoeffOp E 𝕜 ι κ} {M : Matrix ι' ι 𝕜} {M' : Matrix κ' κ 𝕜}
     (h : ∀ f : ι → E → 𝕜, (∀ i, ContDiff ℝ ∞ (f i)) →
@@ -158,8 +123,6 @@ theorem minimal_ofMatrixCLM_of_comm (hΩ : IsOpen Ω) {A : ConstCoeffOp E 𝕜 �
 
 omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- An intertwining by matrices with two-sided inverses passes to the inverses:
-`A M = M' B` gives `B N = N' A` when `N M = 1`, `M N = 1` and `N' M' = 1`. -/
 theorem apply_ofMatrix_inv [DecidableEq ι] [DecidableEq ι'] [DecidableEq κ]
     {A : ConstCoeffOp E 𝕜 ι' κ'} {B : ConstCoeffOp E 𝕜 ι κ} {M : Matrix ι' ι 𝕜}
     {M' : Matrix κ' κ 𝕜} {N : Matrix ι ι' 𝕜} {N' : Matrix κ κ' 𝕜} (hMN : M * N = 1)
@@ -175,10 +138,6 @@ theorem apply_ofMatrix_inv [DecidableEq ι] [DecidableEq ι'] [DecidableEq κ]
 
 end ConstCoeffOp
 
-/-- **Constant matrices intertwining two complexes of constant-coefficient operators are cochain
-maps of their maximal complexes**: if `C'.A k ∘ M_k = M_{k+1} ∘ C.A k` on smooth fields, then
-`M_j D(d_max) ⊆ D(d'_max)` and `d'_max M_j = M_k d_max` (`ConstCoeffOp.maximal_ofMatrixCLM_of_comm`
-in each degree). -/
 theorem ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm (hΩ : IsOpen Ω)
     {C C' : ConstCoeffComplex E 𝕜} {M : ∀ k, Matrix (C'.ι k) (C.ι k) 𝕜}
     (h : ∀ k (f : C.ι k → E → 𝕜), (∀ i, ContDiff ℝ ∞ (f i)) →
@@ -199,9 +158,6 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasureSpace E]
   (M : ∀ k, Matrix (C'.ι k) (C.ι k) ℝ) (N : ∀ k, Matrix (C.ι k) (C'.ι k) ℝ)
   (hMN : ∀ k, M k * N k = 1) (hNM : ∀ k, N k * M k = 1)
 
-/-- **Constant matrices intertwining two complexes of constant-coefficient operators transport
-their maximal complexes**: if `C'.A k ∘ M_k = M_{k+1} ∘ C.A k` on smooth fields and the `M_k`
-have two-sided inverses, then `d'_max = M d_max M⁻¹` with `D(d'_max) = M D(d_max)`. -/
 theorem maximalComplex_eq_transport_ofMatrix (hΩ : IsOpen Ω)
     (h : ∀ k (f : C.ι k → E → ℝ), (∀ i, ContDiff ℝ ∞ (f i)) →
       (C'.A k).apply ((ConstCoeffOp.ofMatrix (M k)).apply f) =
@@ -234,8 +190,6 @@ end Intertwining
 
 open Feec.Koszul.Proxy3 Feec.ExteriorFibre
 
-/-- **The exterior derivative of fields is the coordinate exterior derivative** of
-`Feec.Koszul.Proxy3` for the partial derivatives `∂_j` (`_root_.partialDeriv`). -/
 theorem extD_eq_coordD (F : Finset (Fin 3) → (Fin 3 → ℝ) → ℝ) (s : Finset (Fin 3)) :
     extD F s = coordD (partialDeriv (𝕜 := ℝ)) F s := by
   funext x
@@ -245,9 +199,7 @@ theorem extD_eq_coordD (F : Finset (Fin 3) → (Fin 3 → ℝ) → ℝ) (s : Fin
 
 /-! ### The vector proxies -/
 
-/-- **The vector-proxy dictionary** `vecIdx 1 k ≃ formIdx 3 k`: `∅` in degree `0`, `j ↦ {j}` in
-degree `1`, `k ↦ {k}ᶜ` in degree `2`, `{0, 1, 2}` in degree `3`, and empty index types outside
-`0 ≤ k ≤ 3`. -/
+/-- **The vector-proxy dictionary** `vecIdx 1 k ≃ formIdx 3 k`: `∅`, `{j}`, `{k}ᶜ`, `{0, 1, 2}`. -/
 def proxyIdx : ∀ k : ℤ, vecIdx 1 k ≃ formIdx 3 k
   | .ofNat 0 => Equiv.ofBijective (fun _ => ⟨∅, by simp⟩) (by decide)
   | .ofNat 1 => Equiv.ofBijective (fun v => ⟨{v.2}, by simp⟩) (by decide)
@@ -273,8 +225,7 @@ theorem proxySgn_mul_self (k : ℤ) (v : vecIdx 1 k) : proxySgn k v * proxySgn k
   | .ofNat 2 => simp only [proxySgn]; exact_mod_cast vec2Sign_mul_self v.2
   | .ofNat 0 | .ofNat 1 | .ofNat 3 | .ofNat (_ + 4) | .negSucc _ => simp [proxySgn]
 
-/-- The signed permutation matrix of a bijection `e : κ ≃ ι` and signs `ε`:
-`(P f)_a = ε_a f_{e a}`. -/
+/-- The signed permutation matrix `(P f)_a = ε_a f_{e a}` of `e : κ ≃ ι` and signs `ε`. -/
 def signedPerm {ι κ : Type*} [DecidableEq ι] (e : κ ≃ ι) (ε : κ → ℝ) : Matrix κ ι ℝ :=
   fun a i => if e a = i then ε a else 0
 
@@ -354,7 +305,6 @@ theorem ofMatrix_proxyMat_three (w : formIdx 3 3 → (Fin 3 → ℝ) → ℝ) :
   funext v
   exact (one_smul ℝ _).trans (formExt_of_card w (by decide)).symm
 
-/-- `grad = P₁ d P₀⁻¹`: `Feec.Koszul.Proxy3.vec1_coordD` for the partial derivatives. -/
 theorem gradOp_proxyMat (f : formIdx 3 0 → (Fin 3 → ℝ) → ℝ) :
     (gradOp 3 1).apply ((ConstCoeffOp.ofMatrix (proxyMat 0)).apply f) =
       (ConstCoeffOp.ofMatrix (proxyMat 1)).apply ((extDerivOp ℝ 3 0).apply f) := by
@@ -366,7 +316,6 @@ theorem gradOp_proxyMat (f : formIdx 3 0 → (Fin 3 → ℝ) → ℝ) :
   rw [vec1, formExt_extDerivOp_apply f (by simp), h]
   rfl
 
-/-- `curl = P₂ d P₁⁻¹`: `Feec.Koszul.Proxy3.vec2_coordD` for the partial derivatives. -/
 theorem curlOp_proxyMat (f : formIdx 3 1 → (Fin 3 → ℝ) → ℝ) :
     (curlOp 1).apply ((ConstCoeffOp.ofMatrix (proxyMat 1)).apply f) =
       (ConstCoeffOp.ofMatrix (proxyMat 2)).apply ((extDerivOp ℝ 3 1).apply f) := by
@@ -382,7 +331,6 @@ theorem curlOp_proxyMat (f : formIdx 3 1 → (Fin 3 → ℝ) → ℝ) :
   rw [h]
   fin_cases k <;> rfl
 
-/-- `div = P₃ d P₂⁻¹`: `Feec.Koszul.Proxy3.vol_coordD` for the partial derivatives. -/
 theorem divOp_proxyMat (f : formIdx 3 2 → (Fin 3 → ℝ) → ℝ) :
     (divOp 3 1).apply ((ConstCoeffOp.ofMatrix (proxyMat 2)).apply f) =
       (ConstCoeffOp.ofMatrix (proxyMat 3)).apply ((extDerivOp ℝ 3 2).apply f) := by
@@ -393,9 +341,6 @@ theorem divOp_proxyMat (f : formIdx 3 2 → (Fin 3 → ℝ) → ℝ) :
   rw [vol_coordD _ fun j m => funext (partialDeriv_neg m j)]
   simp [divOf, partialDeriv]
 
-/-- **The vector proxies intertwine `d` with `grad`, `curl`, `div`** on all fields, in every
-degree: `(vecOp k) (P_k f) = P_{k+1} (d f)` (`gradOp_proxyMat`, `curlOp_proxyMat`,
-`divOp_proxyMat`; outside `0 ≤ k ≤ 2` one side of each operator is an empty index type). -/
 theorem vecOp_proxyMat (k : ℤ) (f : formIdx 3 k → (Fin 3 → ℝ) → ℝ) :
     (vecOp ℝ 1 k).apply ((ConstCoeffOp.ofMatrix (proxyMat k)).apply f) =
       (ConstCoeffOp.ofMatrix (proxyMat (k + 1))).apply ((extDerivOp ℝ 3 k).apply f) := by
@@ -415,9 +360,7 @@ instance (k : ℤ) : DecidableEq ((deRham ℝ 3).ι k) := inferInstanceAs (Decid
 
 variable {Ω : Set (Fin 3 → ℝ)}
 
-/-- **The vector proxy** `L²Λᵏ(Ω) ≃ L²(Ω; vecIdx 1 k)`, the signed permutation `proxyMat k`
-of the components (`f = ω_∅`, `v_j = ω_{j}`, `u = (ω_{12}, -ω_{02}, ω_{01})`, `g = ω_{012}`):
-a unitary map. -/
+/-- **The vector proxy** `L²Λᵏ(Ω) ≃ L²(Ω; vecIdx 1 k)`, a unitary map. -/
 def proxy (k : ℤ) : L2F ℝ Ω (formIdx 3 k) ≃ₗᵢ[ℝ] L2F ℝ Ω (vecIdx 1 k) where
   toLinearEquiv := (L2F.ofMatrixEquiv (proxyMat k) (proxyMat k).transpose
     (proxyMat_mul_transpose k) (transpose_mul_proxyMat k)).toLinearEquiv
@@ -427,10 +370,7 @@ def proxy (k : ℤ) : L2F ℝ Ω (formIdx 3 k) ≃ₗᵢ[ℝ] L2F ℝ Ω (vecIdx
 @[simp] theorem proxy_apply (k : ℤ) (u : L2F ℝ Ω (formIdx 3 k)) :
     proxy k u = L2F.ofMatrixCLM (proxyMat k) u := rfl
 
-/-- **The vector-proxy complex is the de Rham complex in proxies**: on every open `Ω ⊆ ℝ³`, the
-maximal complex `H¹(Ω) --grad--> H(curl, Ω) --curl--> H(div, Ω) --div--> L²(Ω)` of
-`deRhamVec ℝ 1` is the unitary transport of `HΛ(Ω)` along the vector proxies. [AFW2006], §2;
-[AFW2010], §4 -/
+/-- **The maximal vector-proxy complex is `HΛ(Ω)` in proxies** ([AFW2006], §2; [AFW2010], §4). -/
 theorem deRhamVec_maximalComplex_eq_map (hΩ : IsOpen Ω) :
     (deRhamVec ℝ 1).maximalComplex hΩ = ((deRham ℝ 3).maximalComplex hΩ).map proxy :=
   ConstCoeffComplex.maximalComplex_eq_transport_ofMatrix (deRham ℝ 3) (deRhamVec ℝ 1) proxyMat

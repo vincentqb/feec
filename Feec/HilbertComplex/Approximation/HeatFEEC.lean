@@ -8,60 +8,18 @@ public import Feec.HilbertComplex.Approximation.Ritz
 /-!
 # The heat FEEC theorem
 
-The Hodge heat equation `u' = -Δ u` of a Hilbert complex `H` on a finite index type (any shape: a
-window `H.window a m` of a complex on `ℤ` or `ℕ`, a short complex, …), discretized on a constrained
-FEEC discretization `F` (a conforming family with a closed constraint `K`) by the discrete Hodge
-Laplacian of the total spaces `Xₕ = ∏ Vₕⁱ`, is a dissipative FEEC discretization
-(`ConstrainedFEEC.toHeat : DissipFEEC (-Δ) κ`), and the dissipative FEEC theorem holds for it with
-the **heat Ritz projection**: the static FEEC theorem drives the dynamic one.
-
-* **The total complex** (`Feec.HilbertComplex.Total`): `Δ` is the mixed Hodge Laplacian of the
-  total complex `H.total` (`W = ⊕ Wⁱ` with `𝐝`), so its Green operator `G` is a solution operator
-  and the static theory of [AFW2010], §3.4 applies to `Δ` in all degrees at once, the boundary
-  degrees of a window included. The total spaces with the total cochain projections are a
-  family of subcomplexes of `H.total` (`ConstrainedFEEC.totalFamily`), approximating in the
-  graph norm, and bounded in the graph norm when the projections are bounded in the graph norm in
-  every degree (`ConstrainedFEEC.isGraphBounded_totalFamily`): the hypothesis of the heat theory.
-* **The discrete side**: the discrete Hodge Laplacian `Δₕ = dₕ dₕ* + dₕ* dₕ`
-  (`Subcomplex.laplacian`, bounded), the discrete Green operator `Gₕ` (the solution operator of
-  the discrete total complex, `Δₕ Gₕ = 1 - P_ℌₕ`, `Subcomplex.laplacian_solutionOp`) and the
-  discrete harmonic projection `P_ℌₕ`. The discrete Green operator *is* the mixed method
-  (`discreteGreen_orthProj`: `Gₕ Qₕ f = uₕ`; `discreteHarmonicProj_orthProj`: `P_ℌₕ Qₕ f = pₕ`),
-  so the static error `e(f) = ‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖` (`staticError`) bounds
-  `‖G f - Gₕ Qₕ f‖` and `‖P_ℌ f - P_ℌₕ Qₕ f‖`.
-* **The heat Ritz projection** (`heatRitz`), for the graph lift `ℓ y = (y, A y)` of `D(A²)`,
-  `A = -Δ`, read by `ρ (y, z) = P_ℌ y - G z` (the Hodge decomposition `y = P_ℌ y + G Δ y`,
-  `heatRead_lift`): `Rₕ ℓ y = Gₕ Qₕ (Δ y) + P_ℌₕ Qₕ y` (`ritzR_lift`). Its Galerkin property is
-  `-Δₕ Rₕ ℓ y = (1 - P_ℌₕ) Qₕ (A y)` (`heatGen_ritzR`), so the consistency defect is
-  `Rₕ ℓ(A y) - (1 - P_ℌₕ) Qₕ (A y)` (`heatRitz_defect_eq`; for `y ∈ D(Δ²)`,
-  `(Qₕ - Rₕ ℓ)(Δ y) - P_ℌₕ Qₕ Δ y`), which on `ℓ (A y)` is the operator
-  `Δₕ (y, z) = 2 P_ℌₕ Qₕ (1 - P_ℌ) y + Qₕ G z - Gₕ Qₕ z` (`ritzDefect_lift`, using
-  `P_ℌ A y = 0` and `G A² y = -A y`), bounded by `2 e((1 - P_ℌ) y) + e(z)` (`norm_ritzDefect_le`).
-* **Convergence**: the static errors tend to `0` (the static FEEC theorem, [AFW2010], Thm 3.9),
-  so the heat Ritz projection gives a core (`heatCore`, data `D(Δ²)`, dense) and the full
-  `DissipFEEC.Verdict` (`heatFEEC`).
-* **Rates**: with a Jackson estimate, the static rate `e(f) ≤ K L hᵒʳᵈ` ([AFW2010], Thm 3.9,
-  `SubcomplexFamily.StaticVerdict.rate`) along the orbit gives
-  `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ` (`rate_heat_of_static`, `rate_heat`): the
-  static constant enters the dynamic bound.
+The Hodge heat equation `u' = -Δ u` on a constrained FEEC discretization of a finite complex, with
+the heat Ritz projection and the static theory of [AFW2010], §3.4 for the total complex.
 
 ## Main results
 
-* `ConstrainedFEEC.toHeat`, `ConstrainedFEEC.heatRitz`, `ConstrainedFEEC.heatCore`;
-* **`ConstrainedFEEC.heatFEEC`**, **`ConstrainedFEEC.rate_heat`**;
-  `ConstrainedFEEC.totalJackson` (the Jackson estimate of the total family from one of the
-  family), `ConstrainedFEEC.jacksonHeatRateClass`;
-* `ConstrainedFEEC.ritzR_lift`, `ConstrainedFEEC.heatRitz_defect_eq`,
-  `ConstrainedFEEC.heatGen_ritzR`, `ConstrainedFEEC.ritzDefect_lift`.
+* `ConstrainedFEEC.heatFEEC`: the dissipative FEEC verdict on a core with dense data `D(Δ²)`.
+* `ConstrainedFEEC.rate_heat`: the heat rate `(2 + 3t) K L hᵒʳᵈ` from a Jackson estimate.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2 (the Hodge Laplacian), §3.4 (Thm 3.8, 3.9)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
-  (the elliptic projection as comparison function)
-* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
-  (the Hodge heat equation in FEEC)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -84,9 +42,7 @@ namespace Subcomplex
 
 variable {H : HilbertComplex 𝕜 c W} (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
-/-- **The discrete Hodge Laplacian** `Δₕ = dₕ dₕ* + dₕ* dₕ` on `Vₕʲ` at `i → j → k`, a bounded
-operator (`Vₕ` is finite-dimensional; `dₕ*` is the Hilbert adjoint of `dₕ` in the `W` inner
-products). -/
+/-- The discrete Hodge Laplacian `Δₕ = dₕ dₕ* + dₕ* dₕ` on `Vₕʲ` at `i → j → k`. -/
 def laplacian (i j k : ι) : S.V j →L[𝕜] S.V j :=
   S.dh i j ∘L (S.dh i j).adjoint + (S.dh j k).adjoint ∘L S.dh j k
 
@@ -94,7 +50,6 @@ theorem laplacian_apply (i j k : ι) (v : S.V j) :
     S.laplacian i j k v = S.dh i j ((S.dh i j).adjoint v) + (S.dh j k).adjoint (S.dh j k v) :=
   rfl
 
-/-- `Δₕ ≥ 0`: `re ⟪Δₕ v, v⟫ = ‖dₕ* v‖² + ‖dₕ v‖²`. -/
 theorem re_inner_laplacian_self (i j k : ι) (v : S.V j) :
     RCLike.re ⟪S.laplacian i j k v, v⟫ = ‖(S.dh i j).adjoint v‖ ^ 2 + ‖S.dh j k v‖ ^ 2 := by
   rw [laplacian_apply, inner_add_left,
@@ -103,13 +58,11 @@ theorem re_inner_laplacian_self (i j k : ι) (v : S.V j) :
     inner_self_eq_norm_sq,
     inner_self_eq_norm_sq]
 
-/-- The adjoint of a discrete differential is the Hilbert adjoint of `dₕ`. -/
 theorem adjoint_d_toHilbertComplex_apply (i j : ι) (y : ((S.toHilbertComplex.d i j)†).domain) :
     (S.toHilbertComplex.d i j)† y = (S.dh i j).adjoint y :=
   LinearPMap.apply_eq_of_eq (ContinuousLinearMap.adjoint_toPMap_top (S.dh i j)) y
     ⟨y, Submodule.mem_top⟩ rfl
 
-/-- **The discrete solution operator inverts `Δₕ`**: `Δₕ Gₕ f = f - P_ℌₕ f`. -/
 theorem laplacian_solutionOp {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (f : S.V j) :
     S.laplacian i j k
         (S.toHilbertComplex.solutionOp hij hjk (S.closedRangeAt j) (S.closedRangeAt k) f) =
@@ -121,7 +74,6 @@ theorem laplacian_solutionOp {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (f
     e
   rwa [S.adjoint_d_toHilbertComplex_apply, S.adjoint_d_toHilbertComplex_apply] at e'
 
-/-- **`Δₕ` vanishes on the discrete harmonic forms.** -/
 theorem laplacian_of_mem_harmonic {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {q : S.V j}
     (hq : q ∈ S.toHilbertComplex.harmonic j) : S.laplacian i j k q = 0 := by
   obtain rfl := c.next_eq' hjk
@@ -141,8 +93,7 @@ section Read
 
 variable [Fintype ι] (H : HilbertComplex 𝕜 c W)
 
-/-- The reading `ρ (y, z) = P_ℌ y - G z` of the graph lift of the heat generator `A = -Δ`:
-`ρ (y, A y) = P_ℌ y + G Δ y = y` on `D(Δ)` (the Hodge decomposition, `heatRead_lift`). -/
+/-- The reading `ρ (y, z) = P_ℌ y - G z` of the graph lift of the heat generator `A = -Δ`. -/
 def heatRead (hcr : ∀ i, H.ClosedRangeAt i) : PiLp 2 W × PiLp 2 W →L[𝕜] PiLp 2 W :=
   (H.total.harmonic ()).starProjection ∘L ContinuousLinearMap.fst 𝕜 _ _ -
     H.greenOp hcr ∘L ContinuousLinearMap.snd 𝕜 _ _
@@ -151,7 +102,6 @@ theorem heatRead_apply (hcr : ∀ i, H.ClosedRangeAt i) (g : PiLp 2 W × PiLp 2 
     H.heatRead hcr g = (H.total.harmonic ()).starProjection g.1 - H.greenOp hcr g.2 :=
   rfl
 
-/-- `A y = -Δ y` for `y ∈ D(Δ)`, in terms of the extension `genExt`. -/
 theorem genExt_neg_hodgeLaplacian {y : PiLp 2 W} (hy : y ∈ H.hodgeLaplacian.domain) :
     DissipFEEC.genExt (-H.hodgeLaplacian) y = -H.hodgeLaplacian ⟨y, hy⟩ :=
   (DissipFEEC.genExt_of_mem (A := -H.hodgeLaplacian) hy).trans (LinearPMap.neg_apply _ _)
@@ -171,8 +121,7 @@ namespace ConstrainedFEEC
 
 variable [Fintype ι] {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ConstrainedFEEC H κ)
 
-/-- The total spaces `Xₕ = ∏ Vₕⁱ`, a subcomplex of the total complex `H.total` (reducible, so
-that its space is `Xₕ` for instances). -/
+/-- The total spaces `Xₕ = ∏ Vₕⁱ`, a subcomplex of the total complex `H.total`. -/
 abbrev totalSubcomplex (h : κ) : H.total.Subcomplex where
   V _ := totalSub (F.V h).V
   le_domain _ _ x hx := F.Xh_mem_domain h ⟨x, hx⟩
@@ -191,14 +140,12 @@ def totalProjection (h : κ) : (F.totalSubcomplex h).CochainProjection where
   proj _ _ hx := F.piProj_of_mem h hx
   comm _ _ x := F.totalD_piProj h x
 
-/-- **The total family**: the total spaces with the total cochain projections, a family of
-subcomplexes of the total complex `H.total`. -/
+/-- The total family: the total spaces with the total cochain projections. -/
 def totalFamily : SubcomplexFamily H.total κ where
   l := F.l
   V := F.totalSubcomplex
   π := F.totalProjection
 
-/-- **The total family approximates in the graph norm** (`ConstrainedFEEC.dense_graph`). -/
 theorem approximates_totalFamily : F.totalFamily.Approximates () := fun σ => by
   refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun _ => ha.trans_le Metric.infDist_nonneg,
     fun a ha => ?_⟩
@@ -221,9 +168,6 @@ theorem approximates_totalFamily : F.totalFamily.Approximates () := fun σ => by
   change ‖(x : PiLp 2 W) - y‖ + ‖H.totalD x - H.totalD ⟨y, _⟩‖ < a
   linarith
 
-/-- **The total projections are bounded in the graph norm of `𝐝`** when the projections are
-bounded in the graph norm in every degree: `‖Πₕ x‖ + ‖𝐝 Πₕ x‖ ≤ (m + 1) m √2 C (‖x‖ + ‖𝐝 x‖)`,
-`m` the number of degrees (`Subcomplex.CochainProjection.isGraphBounded_of_add_le`). -/
 theorem isGraphBounded_totalFamily (hb : ∀ i, F.IsGraphBounded i) :
     F.totalFamily.IsGraphBounded () := by
   choose C hC using hb
@@ -276,9 +220,7 @@ theorem isGraphBounded_totalFamily (hb : ∀ i, F.IsGraphBounded i) :
         mul_le_mul_of_nonneg_left hsum (by positivity)
     _ = _ := by ring
 
-/-- **The total Jackson estimate**: a Jackson estimate of the family is one of the total family
-(`totalFamily`), for the forms of `D(𝐝)` whose components are `s`-regular with bound `L`, with the
-constant `(m + m²) Σᵢ B_{s,i}`, `m` the number of degrees (`Subcomplex.exists_mem_graphSub_le`). -/
+/-- The Jackson estimate of the total family from a Jackson estimate of the family. -/
 def totalJackson {ρ : Type*} (J : F.Jackson ρ) : F.totalFamily.Jackson ρ where
   meshSize := J.meshSize
   meshSize_nonneg := J.meshSize_nonneg
@@ -313,8 +255,7 @@ def totalJackson {ρ : Type*} (J : F.Jackson ρ) : F.totalFamily.Jackson ρ wher
 
 /-! ### The discrete heat equation -/
 
-/-- **The discrete Green operator** `Gₕ` on `Xₕ`: the solution operator of the discrete total
-complex (`Δₕ Gₕ = 1 - P_ℌₕ`, `Subcomplex.laplacian_solutionOp`). -/
+/-- The discrete Green operator `Gₕ`, the solution operator of the discrete total complex. -/
 def discreteGreen (h : κ) : F.Xh h →L[𝕜] F.Xh h :=
   (F.totalSubcomplex h).toHilbertComplex.solutionOp (loop_rel () ()) (loop_rel () ())
     ((F.totalSubcomplex h).closedRangeAt ()) ((F.totalSubcomplex h).closedRangeAt ())
@@ -337,7 +278,6 @@ theorem heatGen_discreteHarmonicProj (h : κ) (v : F.Xh h) :
   rw [heatGen, _root_.neg_apply, discreteHarmonicProj, Subcomplex.laplacian_of_mem_harmonic _
     (loop_rel () ()) (loop_rel () ()) (Submodule.starProjection_apply_mem _ _), neg_zero]
 
-/-- `-Δₕ` is dissipative: `re ⟪-Δₕ v, v⟫ = -‖dₕ* v‖² - ‖dₕ v‖² ≤ 0`. -/
 theorem re_inner_heatGen_self_le (h : κ) (v : F.Xh h) : RCLike.re ⟪F.heatGen h v, v⟫ ≤ 0 := by
   rw [heatGen, _root_.neg_apply, inner_neg_left, _root_.map_neg,
     Subcomplex.re_inner_laplacian_self]
@@ -350,29 +290,23 @@ section Static
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-/-- **The static FEEC theorem for the total family** ([AFW2010], Thm 3.4–3.9, for the mixed
-Hodge Laplacian `Δ` of `W = ⊕ Wⁱ`). -/
 theorem staticVerdict_total (hb : ∀ i, F.IsGraphBounded i) (hcr : ∀ i, H.ClosedRangeAt i) :
     F.totalFamily.StaticVerdict () :=
   F.totalFamily.staticFEEC () (F.isGraphBounded_totalFamily hb) (F.isGraphBounded_totalFamily hb)
     (H.closedRangeAt_total hcr ()) fun k _ => H.closedRangeAt_total hcr k
 
-/-- **The static error** `‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖` of the mixed method for `Δ` with
-data `f` on the total spaces `Xₕ`. -/
+/-- The static error `e(f)` of the mixed method for `Δ` on the total spaces, with data `f`. -/
 def staticError (h : κ) (f : PiLp 2 W) : ℝ :=
   (F.totalSubcomplex h).mixedError (loop_rel () ()) (loop_rel () ()) f
     (H.totalMixedSolution hcr f).fst (H.totalMixedSolution hcr f).snd.fst
     (H.totalMixedSolution hcr f).snd.snd
 
-/-- **The discrete Green operator is the mixed method**: `Gₕ Qₕ f = uₕ`, the `u` component of the
-discrete mixed solution with data `f` (`Subcomplex.CochainProjection.discreteMixedSolution`). -/
 theorem discreteGreen_orthProj (h : κ) (f : PiLp 2 W) :
     (F.discreteGreen h (F.orthProj h f) : PiLp 2 W) = (F.totalSubcomplex h).toW ()
       (Subcomplex.CochainProjection.discreteMixedSolution (F.totalSubcomplex h) (loop_rel () ())
         (loop_rel () ()) f).snd.fst :=
   rfl
 
-/-- `P_ℌₕ Qₕ f = pₕ`, the harmonic component of the discrete mixed solution with data `f`. -/
 theorem discreteHarmonicProj_orthProj (h : κ) (f : PiLp 2 W) :
     (F.discreteHarmonicProj h (F.orthProj h f) : PiLp 2 W) =
       (((Subcomplex.CochainProjection.discreteMixedSolution (F.totalSubcomplex h) (loop_rel () ())
@@ -398,7 +332,6 @@ theorem norm_harmonicProj_sub_le (h : κ) (f : PiLp 2 W) :
 variable (hb : ∀ i, F.IsGraphBounded i)
 include hcr hb
 
-/-- **The static error tends to `0`** ([AFW2010], Thm 3.9 with the approximation property). -/
 theorem tendsto_staticError (f : PiLp 2 W) :
     Tendsto (fun h => F.staticError hcr h f) F.l (𝓝 0) :=
   (F.staticVerdict_total hb hcr).converges (loop_rel () ()) (loop_rel () ())
@@ -418,7 +351,6 @@ theorem tendsto_discreteHarmonicProj (f : PiLp 2 W) :
     (fun h => (norm_sub_rev _ _).trans_le (F.norm_harmonicProj_sub_le hcr h f))
     (F.tendsto_staticError hcr hb f))
 
-/-- **Uniform stability of the discrete Green operators** ([AFW2010], Thm 3.8). -/
 theorem exists_norm_discreteGreen_le :
     ∃ C, 0 ≤ C ∧ ∀ h, ‖F.discreteGreen h‖ ≤ C := by
   obtain ⟨C, hC⟩ := (F.staticVerdict_total hb hcr).wellPosed (loop_rel () ()) (loop_rel () ())
@@ -441,9 +373,7 @@ section Ritz
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-/-- **The heat Ritz projection** `Rₕ (y, z) = P_ℌₕ Qₕ y - Gₕ Qₕ z`: on the graph lift,
-`Rₕ ℓ y = Gₕ Qₕ (Δ y) + P_ℌₕ Qₕ y`, the discrete mixed solution with data `Δ y` plus the discrete
-harmonic part of `y` (the elliptic projection of [Wheeler1973] for `Δ`). -/
+/-- The heat Ritz projection `Rₕ (y, z) = P_ℌₕ Qₕ y - Gₕ Qₕ z`. [Wheeler1973] -/
 def ritzR (h : κ) : PiLp 2 W × PiLp 2 W →L[𝕜] F.Xh h :=
   F.discreteHarmonicProj h ∘L F.orthProj h ∘L ContinuousLinearMap.fst 𝕜 _ _ -
     F.discreteGreen h ∘L F.orthProj h ∘L ContinuousLinearMap.snd 𝕜 _ _
@@ -453,8 +383,6 @@ theorem ritzR_apply (h : κ) (g : PiLp 2 W × PiLp 2 W) :
       F.discreteGreen h (F.orthProj h g.2) :=
   rfl
 
-/-- **The heat Ritz projection on the graph lift** is the discrete mixed solution with data `Δ y`
-plus the discrete harmonic part of `y`: `Rₕ ℓ y = Gₕ Qₕ (Δ y) + P_ℌₕ Qₕ y` on `D(Δ)`. -/
 theorem ritzR_lift (h : κ) {y : PiLp 2 W} (hy : y ∈ H.hodgeLaplacian.domain) :
     F.ritzR h (y, DissipFEEC.genExt (-H.hodgeLaplacian) y) =
       F.discreteGreen h (F.orthProj h (H.hodgeLaplacian ⟨y, hy⟩)) +
@@ -462,9 +390,7 @@ theorem ritzR_lift (h : κ) {y : PiLp 2 W} (hy : y ∈ H.hodgeLaplacian.domain) 
   rw [ritzR_apply, H.genExt_neg_hodgeLaplacian hy, _root_.map_neg, _root_.map_neg,
     sub_neg_eq_add, add_comm]
 
-/-- The defect operator `Δₕ (y, z) = 2 P_ℌₕ Qₕ (1 - P_ℌ) y + Qₕ G z - Gₕ Qₕ z` of the heat Ritz
-projection; on `ℓ (A y)` it is the consistency defect (`ritzDefect_lift`), and it tends to `0`
-strongly (`tendsto_ritzDefect`). -/
+/-- The defect operator `Δₕ (y, z) = 2 P_ℌₕ Qₕ (1 - P_ℌ) y + Qₕ G z - Gₕ Qₕ z`. -/
 def ritzDefect (h : κ) : PiLp 2 W × PiLp 2 W →L[𝕜] F.Xh h :=
   (2 : 𝕜) • (F.discreteHarmonicProj h ∘L F.orthProj h ∘L
       (1 - (H.total.harmonic ()).starProjection) ∘L ContinuousLinearMap.fst 𝕜 _ _) +
@@ -477,16 +403,11 @@ theorem ritzDefect_apply (h : κ) (g : PiLp 2 W × PiLp 2 W) :
       (F.orthProj h (H.greenOp hcr g.2) - F.discreteGreen h (F.orthProj h g.2)) :=
   rfl
 
-/-- **The Galerkin property of the heat Ritz projection**: `-Δₕ Rₕ (y, z) = (1 - P_ℌₕ) Qₕ z`;
-on the graph lift, `Δₕ Rₕ ℓ y = (1 - P_ℌₕ) Qₕ Δ y`. -/
 theorem heatGen_ritzR (h : κ) (g : PiLp 2 W × PiLp 2 W) :
     F.heatGen h (F.ritzR h g) = F.orthProj h g.2 - F.discreteHarmonicProj h (F.orthProj h g.2) := by
   rw [ritzR_apply, _root_.map_sub, heatGen_discreteHarmonicProj, heatGen_discreteGreen]
   abel
 
-/-- **The defect identity of the heat Ritz projection** (pointwise in `Xₕ`, for every `y`):
-`Rₕ ℓ(A y) - Lₕ Rₕ ℓ y = Rₕ ℓ(A y) - (1 - P_ℌₕ) Qₕ (A y)`, `A = -Δ`, `Lₕ = -Δₕ`; for `y ∈ D(Δ²)`,
-where `A y = -Δ y` and `ℓ (A y) = -ℓ (Δ y)`, the defect is `(Qₕ - Rₕ ℓ)(Δ y) - P_ℌₕ Qₕ Δ y`. -/
 theorem heatRitz_defect_eq (h : κ) (y : PiLp 2 W) :
     F.ritzR h (DissipFEEC.genExt (-H.hodgeLaplacian) y,
         DissipFEEC.genExt (-H.hodgeLaplacian) (DissipFEEC.genExt (-H.hodgeLaplacian) y)) -
@@ -497,8 +418,6 @@ theorem heatRitz_defect_eq (h : κ) (y : PiLp 2 W) :
           F.discreteHarmonicProj h (F.orthProj h (DissipFEEC.genExt (-H.hodgeLaplacian) y))) := by
   rw [heatGen_ritzR]
 
-/-- **The defect operator on the lifted velocities**: for `a ∈ D(Δ)` with `P_ℌ a = 0` (e.g.
-`a = A y`), `Δₕ ℓ a = Rₕ ℓ a - (1 - P_ℌₕ) Qₕ a` (`G A a = -a`, the Hodge decomposition). -/
 theorem ritzDefect_lift (h : κ) {a : PiLp 2 W} (ha : a ∈ H.hodgeLaplacian.domain)
     (hPa : (H.total.harmonic ()).starProjection a = 0) :
     F.ritzDefect hcr h (a, DissipFEEC.genExt (-H.hodgeLaplacian) a) =
@@ -519,8 +438,6 @@ theorem norm_discreteHarmonicProj_apply_le (h : κ) (v : F.Xh h) :
     ‖F.discreteHarmonicProj h v‖ ≤ ‖v‖ :=
   Submodule.norm_starProjection_apply_le _ v
 
-/-- **The defect operator is small**: `‖Δₕ (y, z)‖ ≤ 2 e((1 - P_ℌ) y) + e(z)`, `e` the static
-error. -/
 theorem norm_ritzDefect_le (h : κ) (g : PiLp 2 W × PiLp 2 W) :
     ‖F.ritzDefect hcr h g‖ ≤
       2 * F.staticError hcr h (g.1 - (H.total.harmonic ()).starProjection g.1) +
@@ -552,9 +469,7 @@ section Rate
 
 variable {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ)
 
-/-- `f` has an `s`-regular mixed solution with bound `L`: the solution `(σ, u, p)` of the mixed
-problem of `Δ` with data `f`, the boundary part of `u`, and `p` are in the class `s` of the Jackson
-estimate `J` of the total family. -/
+/-- `f` has an `s`-regular mixed solution with bound `L` for the Jackson estimate `J`. -/
 def RegMixed (L : ℝ) (f : PiLp 2 W) : Prop :=
   J.Reg s () L (H.total.domainIncl () (H.totalMixedSolution hcr f).fst) ∧
     J.Reg s () L (H.total.domainIncl () (H.totalMixedSolution hcr f).snd.fst) ∧
@@ -562,9 +477,6 @@ def RegMixed (L : ℝ) (f : PiLp 2 W) : Prop :=
       (H.total.domainIncl () (H.totalMixedSolution hcr f).snd.fst))) ∧
     J.Reg s () L ((H.totalMixedSolution hcr f).snd.snd : PiLp 2 W)
 
-/-- **The static rate for the total family** ([AFW2010], Thm 3.9 with a Jackson estimate,
-`SubcomplexFamily.StaticVerdict.rate`): `e(f) ≤ K L hᵒʳᵈ` for data with `s`-regular mixed
-solutions. -/
 theorem exists_staticError_le (hb : ∀ i, F.IsGraphBounded i) :
     ∃ K, 0 ≤ K ∧ ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L →
     F.RegMixed hcr J s L f → ∀ h, F.staticError hcr h f ≤ K * L * J.meshSize h ^ J.ord s := by
@@ -576,8 +488,7 @@ theorem exists_staticError_le (hb : ∀ i, F.IsGraphBounded i) :
   exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right (le_max_left _ _) hL)
     (Real.rpow_nonneg (J.meshSize_nonneg h) _)
 
-/-- **The regular states of the heat rate**: `y ∈ D(Δ²)` such that `y`, `A y` and `A² y` (`A = -Δ`)
-have `s`-regular mixed solutions with bound `L`. -/
+/-- The regular states: `y ∈ D(Δ²)` with `y`, `A y`, `A² y` of `s`-regular mixed solutions. -/
 def heatReg (L : ℝ) : Set (PiLp 2 W) :=
   {y | y ∈ (-H.hodgeLaplacian).sqDomain ∧ F.RegMixed hcr J s L y ∧
     F.RegMixed hcr J s L (DissipFEEC.genExt (-H.hodgeLaplacian) y) ∧
@@ -589,8 +500,6 @@ variable {J s} {K : ℝ} (hK : ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L →
   {L : ℝ} (hL : 0 ≤ L)
 include hK hL
 
-/-- **Static approximation of the heat Ritz projection**: `‖y - ιₕ Rₕ ℓ y‖ ≤ e(y) + e(A y)
-≤ 2 K L hᵒʳᵈ` on the regular states (`y = P_ℌ y - G A y`). -/
 theorem norm_sub_ritzR_le {y : PiLp 2 W} (hy : y ∈ F.heatReg hcr J s L) (h : κ) :
     ‖y - (F.ritzR h (y, DissipFEEC.genExt (-H.hodgeLaplacian) y) : PiLp 2 W)‖ ≤
       2 * K * L * J.meshSize h ^ J.ord s := by
@@ -611,8 +520,6 @@ theorem norm_sub_ritzR_le {y : PiLp 2 W} (hy : y ∈ F.heatReg hcr J s L) (h : �
   have h2 := (F.norm_greenOp_sub_le hcr h a).trans (hK hL hy.2.2.1 h)
   linarith
 
-/-- **Static consistency of the heat Ritz projection**: `‖Δₕ ℓ(A y)‖ ≤ 2 e(A y) + e(A² y)
-≤ 3 K L hᵒʳᵈ` on the regular states (`P_ℌ A y = 0`). -/
 theorem norm_ritzDefect_lift_le {y : PiLp 2 W} (hy : y ∈ F.heatReg hcr J s L) (h : κ) :
     ‖F.ritzDefect hcr h (DissipFEEC.genExt (-H.hodgeLaplacian) y,
       DissipFEEC.genExt (-H.hodgeLaplacian) (DissipFEEC.genExt (-H.hodgeLaplacian) y))‖ ≤
@@ -634,9 +541,7 @@ section Heat
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **The heat FEEC discretization** of the Hodge heat equation `u' = -Δ u` on `W = ⊕ Wⁱ`:
-`Xₕ = ∏ Vₕⁱ` with the `W` inner product, `Lₕ = -Δₕ` the discrete Hodge Laplacian of the total
-spaces (`heatGen`), `ιₕ` the inclusion, `πₕ = Qₕ` the orthogonal projection. -/
+/-- The heat FEEC discretization: `Xₕ = ∏ Vₕⁱ`, `Lₕ = -Δₕ`, `ιₕ` the inclusion, `πₕ = Qₕ`. -/
 def toHeat : DissipFEEC (-H.hodgeLaplacian) κ where
   isMDissipative := H.isMDissipative_neg_hodgeLaplacian
   K := F.K
@@ -659,17 +564,14 @@ theorem norm_toHeat_incl_le (h : κ) : ‖F.toHeat.incl h‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by rw [one_mul]; exact le_rfl
 
 
-/-- **The graph lift** `ℓ y = (y, -Δ y)` of `D(Δ²)` for the heat equation, read by
-`ρ (y, z) = P_ℌ y - G z`. -/
+/-- The graph lift `ℓ y = (y, -Δ y)` of `D(Δ²)`, read by `ρ (y, z) = P_ℌ y - G z`. -/
 def heatLift : F.toHeat.Lift (PiLp 2 W × PiLp 2 W) :=
   DissipFEEC.Lift.graph F.toHeat (H.heatRead hcr) fun _ hy => H.heatRead_lift hcr hy.1
 
 variable (hb : ∀ i, F.IsGraphBounded i)
 
 include hb in
-/-- **The heat Ritz projection** of the heat FEEC discretization, for the graph lift of `D(Δ²)`:
-`Rₕ = ritzR`, defects `Δₕ = ritzDefect`, `Δₕ' = 0`, uniformly bounded by the uniform stability of
-the discrete mixed problem ([AFW2010], Thm 3.8). -/
+/-- The heat Ritz projection for the graph lift of `D(Δ²)`, with defects `ritzDefect` and `0`. -/
 def heatRitz : F.toHeat.Ritz (F.heatLift hcr) where
   R := F.ritzR
   Δ := F.ritzDefect hcr
@@ -717,9 +619,7 @@ def heatRitz : F.toHeat.Ritz (F.heatLift hcr) where
       nlinarith [norm_nonneg g]
 
 include hb in
-/-- **The heat core**: the core of the heat Ritz projection, data `D(Δ²)` (dense,
-`dense_heatCore_data`), from the convergence of the static mixed method (the static error tends
-to `0`, [AFW2010], Thm 3.9). -/
+/-- **The heat core**: the core of the heat Ritz projection, with data `D(Δ²)`. -/
 def heatCore : F.toHeat.Core :=
   (F.heatRitz hcr hb).toCore
     (fun g => ((F.tendsto_discreteHarmonicProj hcr hb g.1).sub
@@ -732,19 +632,15 @@ def heatCore : F.toHeat.Core :=
 
 theorem heatCore_data : (F.heatCore hcr hb).Data = (-H.hodgeLaplacian).sqDomain := rfl
 
-/-- The data `D(Δ²)` of the heat core are dense: the heat FEEC theorem applies to every datum. -/
 theorem dense_heatCore_data : (F.heatCore hcr hb).Data.topologicalClosure = ⊤ :=
   Submodule.dense_iff_topologicalClosure_eq_top.1 H.isMDissipative_neg_hodgeLaplacian.dense_sqDomain
 
-/-- **The heat core has nonzero data** as soon as the window is nonzero (`dense_heatCore_data`). -/
 theorem exists_mem_heatCore_data_ne_zero [Nontrivial (PiLp 2 W)] :
     ∃ x ∈ (F.heatCore hcr hb).Data, x ≠ 0 :=
   H.isMDissipative_neg_hodgeLaplacian.dense_sqDomain.exists_mem_open isOpen_ne (exists_ne 0)
 
-/-- **The heat FEEC theorem** (`DissipFEEC.Verdict` of the heat FEEC discretization with the heat
-core): well-posedness and the energy identity, propagation of `K`, convergence of the discrete
-heat flows from every convergent family of discrete data (every datum: `dense_heatCore_data`),
-rates for every rate class (`rate_heat`), the constraint residual. -/
+/-- **The heat FEEC theorem**: with closed range and projections bounded in the graph norm, the
+dissipative FEEC verdict of the heat FEEC discretization on the heat core. -/
 theorem heatFEEC : F.toHeat.Verdict (F.heatCore hcr hb) :=
   dissipFEEC F.toHeat (F.heatCore hcr hb)
 
@@ -756,9 +652,7 @@ variable {ρ : Type*} {J : F.totalFamily.Jackson ρ} {s : ρ} {K : ℝ} (hK0 : 0
   {L : ℝ} (hL : 0 ≤ L)
 include hK0 hK hL hb
 
-/-- **The heat rate class** on `[0, T]` of the heat Ritz projection: data `x ∈ D(Δ²)` whose orbit
-stays in the regular states with bound `L`, approximation constant `2K` and consistency constant
-`3K`, `K` the constant of the static rate. -/
+/-- The heat rate class on `[0, T]`, with the constants `2K` and `3K` of a static rate `K`. -/
 def heatRateClass (T : ℝ) : F.toHeat.RateClass T :=
   (F.heatRitz hcr hb).toRateClass (DissipFEEC.RegScale.trajectory F.toHeat T
       (-H.hodgeLaplacian).sqDomain (F.heatReg hcr J s L) (fun _ => L) (fun _ => L))
@@ -772,10 +666,6 @@ def heatRateClass (T : ℝ) : F.toHeat.RateClass T :=
       rw [_root_.zero_apply, norm_zero, add_zero]
       exact (F.norm_ritzDefect_lift_le hcr hK hL hy h).trans_eq (by ring))
 
-/-- **The heat rate, from the static rate**: for `x ∈ D(Δ²)` whose orbit on `[0, T]` stays in the
-regular states with bound `L`, `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ`, for every
-constant `K` of the static rate `e(f) ≤ K L hᵒʳᵈ` ([AFW2010], Thm 3.9): the static estimate enters
-the dynamic one directly. -/
 theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
     (hreg : ∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ F.heatReg hcr J s L) (h : κ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
@@ -804,10 +694,9 @@ theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplac
 end Rate
 
 include hb in
-/-- **The heat rate** ([AFW2010], Thm 3.9 along the heat flow): there is a constant `K`, the
-constant of the static rate of the total family (`exists_staticError_le`), such that for
-`x ∈ D(Δ²)` whose orbit on `[0, T]` stays in the regular states with bound `L`,
-`‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ`. -/
+/-- **The heat rate**: with closed range, projections bounded in the graph norm and a Jackson
+estimate of the total family, some `K` gives `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ`
+on orbits in the regular states of bound `L`. -/
 theorem rate_heat {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) :
     ∃ K, 0 ≤ K ∧ ∀ {L : ℝ}, 0 ≤ L →
     ∀ {T : ℝ} {x : PiLp 2 W}, x ∈ (-H.hodgeLaplacian).sqDomain →
@@ -818,9 +707,7 @@ theorem rate_heat {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) :
   exact ⟨K, hK0, fun {_} hL {_ _} hx hreg h _ ht =>
     F.rate_heat_of_static hcr hb hK0 hK hL hx hreg h ht⟩
 
-/-- **The heat rate class of a Jackson estimate** `J` of the total family: `heatRateClass` with
-the constant `K` of the static rate (`exists_staticError_le`), approximation constant `2K` and
-consistency constant `3K`. -/
+/-- The heat rate class of a Jackson estimate of the total family. -/
 def jacksonHeatRateClass {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) {L : ℝ} (hL : 0 ≤ L)
     (T : ℝ) : F.toHeat.RateClass T :=
   F.heatRateClass hcr hb (F.exists_staticError_le hcr J s hb).choose_spec.1

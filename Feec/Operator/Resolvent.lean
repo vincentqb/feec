@@ -6,36 +6,9 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 /-!
 # Resolvents of unbounded operators
 
-For a linear operator `A : E →ₗ.[𝕜] E` on a normed space over `𝕜 = ℝ` or `ℂ` and `z : 𝕜`:
-
-* `IsResolvent A z R`: the bounded operator `R` is a two-sided inverse of `z - A : D(A) → E`.
-  It is unique (`IsResolvent.unique`), and `resolvent A z` is it when it exists
-  (`IsResolvent.resolvent_eq`; junk value `0` otherwise).
-* General identities: `IsResolvent.apply_mem_domain`, `IsResolvent.apply_resolvent`
-  (`A R y = z R y - y`), `IsResolvent.apply_domain` (`R A x = z R x - x`), the **resolvent
-  identity** `IsResolvent.sub_eq` (`R(z) - R(w) = (w - z) R(z) R(w)`) and
-  `IsResolvent.commute`.
-* `IsResolvent.norm_apply_le` (`‖R‖ ≤ 1/c` from the lower bound `c ‖x‖ ≤ ‖z x - A x‖`).
-* Lower bounds, on inner product spaces: `IsDissipative.re_mul_norm_le_norm_shiftOp`
-  (`re z ‖x‖ ≤ ‖(z - A) x‖`), `re_mul_norm_le_norm_smul_sub` (`re z ‖x‖ ≤ ‖z x - A x‖` when
-  `re ⟪A x, x⟫ ≤ 0`), `abs_re_mul_norm_le_norm_smul_sub` (`|re z| ‖x‖ ≤ ‖z x - A x‖` when
-  `re ⟪A x, x⟫ = 0`).
-* **Skew-adjoint operators** (`A.IsSkewAdjoint`, i.e. `A† = -A`): for `re z ≠ 0`, `z - A` is
-  bijective (`IsSkewSymmetric.injective_shiftOp`, needing only skew-symmetry, and
-  `surjective_shiftOp`), so `resolvent A z` is a resolvent (`isResolvent_resolvent`) with
-  `‖R(z)‖ ≤ 1/|re z|` (`norm_resolvent_apply_le`) and adjoint `R(z)† = -R(-z̄)` (`adjoint_resolvent`, `inner_resolvent_left`).
-
-Over `𝕜 = ℝ` this is the real-`z ≠ 0` resolvent used for Stone's theorem; over `ℂ` it is the
-resolvent off the imaginary axis.
-
-## References
-
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995] (resolvents and the resolvent
-  identity for closed operators)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.10 (resolvents of skew-adjoint generators)
-
-Bibliography: [references.bib](../../docs/references.bib)
+The resolvent `(z - A)⁻¹` of a linear operator `A`, a bounded two-sided inverse of
+`z - A : D(A) → E`; for a skew-adjoint `A` it exists when `re z ≠ 0`, with `‖R(z)‖ ≤ 1/|re z|` and
+`R(z)† = -R(-z̄)`.
 -/
 
 open LinearPMap Filter Topology
@@ -63,8 +36,7 @@ structure IsResolvent (A : E →ₗ.[𝕜] E) (z : 𝕜) (R : E →L[𝕜] E) : 
   apply_sub : ∀ x : A.domain, R (z • (x : E) - A x) = x
 
 open scoped Classical in
-/-- The resolvent `(z - A)⁻¹` of `A` at `z`, when `z - A` has a bounded inverse
-(junk value `0` otherwise). -/
+/-- The resolvent `(z - A)⁻¹` of `A` at `z`, or `0` if `z - A` has no bounded inverse. -/
 def resolvent (A : E →ₗ.[𝕜] E) (z : 𝕜) : E →L[𝕜] E :=
   if h : ∃ R, IsResolvent A z R then h.choose else 0
 
@@ -77,19 +49,16 @@ def toDomain (hR : IsResolvent A z R) (y : E) : A.domain := ⟨R y, hR.mem_domai
 
 @[simp] theorem coe_toDomain (hR : IsResolvent A z R) (y : E) : (hR.toDomain y : E) = R y := rfl
 
-/-- `(z - A) R y = y`, with `R y` as a domain element. -/
 theorem sub_apply_toDomain (hR : IsResolvent A z R) (y : E) :
     z • R y - A (hR.toDomain y) = y :=
   hR.sub_apply y
 
-/-- A resolvent is unique. -/
 theorem unique (hR : IsResolvent A z R) (hS : IsResolvent A z S) : R = S := by
   ext y
   have h := hR.apply_sub (hS.toDomain y)
   rw [coe_toDomain, hS.sub_apply_toDomain] at h
   exact h
 
-/-- `resolvent A z` is the resolvent, when one exists. -/
 theorem resolvent_eq (hR : IsResolvent A z R) : resolvent A z = R := by
   have h : ∃ R, IsResolvent A z R := ⟨R, hR⟩
   rw [resolvent, dite_eq_left_of_eq_true (eq_true h)]
@@ -98,19 +67,16 @@ theorem resolvent_eq (hR : IsResolvent A z R) : resolvent A z = R := by
 theorem isResolvent_resolvent (hR : IsResolvent A z R) : IsResolvent A z (resolvent A z) :=
   hR.resolvent_eq ▸ hR
 
-/-- `A R y = z R y - y`. -/
 theorem apply_resolvent (hR : IsResolvent A z R) (y : E) :
     A (hR.toDomain y) = z • R y - y := by
   rw [eq_sub_iff_add_eq, add_comm]
   exact (sub_eq_iff_eq_add.1 (hR.sub_apply_toDomain y)).symm
 
-/-- `R (A x) = z R x - x` on `D(A)`: `R` commutes with `A`. -/
 theorem apply_domain (hR : IsResolvent A z R) (x : A.domain) :
     R (A x) = z • R x - x := by
   have h : A x = z • (x : E) - (z • (x : E) - A x) := by abel
   rw [h, _root_.map_sub, _root_.map_smul, hR.apply_sub]
 
-/-- A resolvent is injective. -/
 theorem injective (hR : IsResolvent A z R) : Function.Injective R := by
   refine (injective_iff_map_eq_zero R).2 fun y hy => ?_
   have h := hR.sub_apply y
@@ -120,7 +86,6 @@ theorem injective (hR : IsResolvent A z R) : Function.Injective R := by
   rw [show R y = 0 from hy, smul_zero, sub_zero] at h
   exact h.symm
 
-/-- A resolvent of `A - ω` at `z - ω` is a resolvent of `A` at `z`. -/
 theorem of_neg_smul_vadd {ω : 𝕜}
     (h : IsResolvent (((-ω) • (LinearMap.id : E →ₗ[𝕜] E)) +ᵥ A) (z - ω) R) : IsResolvent A z R where
   mem_domain := h.mem_domain
@@ -153,7 +118,6 @@ theorem sub_eq (hR : IsResolvent A z R) (hS : IsResolvent A w S) :
   rw [← h]
   module
 
-/-- Resolvents at different points commute. -/
 theorem commute (hR : IsResolvent A z R) (hS : IsResolvent A w S) : Commute R S := by
   rcases eq_or_ne z w with rfl | hzw
   · rw [hR.unique hS]
@@ -163,7 +127,6 @@ theorem commute (hR : IsResolvent A z R) (hS : IsResolvent A w S) : Commute R S 
     rw [← h1, show w - z = -(z - w) by ring, neg_smul, ← h2]; abel
   exact smul_right_injective _ (sub_ne_zero.2 hzw.symm) h3
 
-/-- `‖R y‖ ≤ c⁻¹ ‖y‖` from the lower bound `c ‖x‖ ≤ ‖z x - A x‖` (`c > 0`). -/
 theorem norm_apply_le (hR : IsResolvent A z R) {c : ℝ} (hc : 0 < c)
     (hb : ∀ x : A.domain, c * ‖(x : E)‖ ≤ ‖z • (x : E) - A x‖) (y : E) :
     ‖R y‖ ≤ c⁻¹ * ‖y‖ := by
@@ -172,13 +135,10 @@ theorem norm_apply_le (hR : IsResolvent A z R) {c : ℝ} (hc : 0 < c)
   rw [le_inv_mul_iff₀ hc]
   exact h
 
-/-- `‖R‖ ≤ c⁻¹` from the lower bound `c ‖x‖ ≤ ‖z x - A x‖` (`c > 0`). -/
 theorem norm_le (hR : IsResolvent A z R) {c : ℝ} (hc : 0 < c)
     (hb : ∀ x : A.domain, c * ‖(x : E)‖ ≤ ‖z • (x : E) - A x‖) : ‖R‖ ≤ c⁻¹ :=
   R.opNorm_le_bound (inv_nonneg.2 hc.le) (hR.norm_apply_le hc hb)
 
-/-- **`(1 - τA)⁻¹ = τ⁻¹ (τ⁻¹ - A)⁻¹`**: an operator `R'` with `R' (x - τ A x) = x` on `D(A)` is
-`τ⁻¹ R`, for the resolvent `R` at `τ⁻¹`. -/
 theorem eq_inv_smul_of_apply_sub {τ : ℝ} (hR : IsResolvent A (τ : 𝕜)⁻¹ R) (hτ : τ ≠ 0)
     {R' : E →L[𝕜] E} (hR' : ∀ x y, (x, y) ∈ A.graph → R' (x - (τ : 𝕜) • y) = x) :
     R' = (τ : 𝕜)⁻¹ • R := by
@@ -193,7 +153,6 @@ theorem eq_inv_smul_of_apply_sub {τ : ℝ} (hR : IsResolvent A (τ : 𝕜)⁻¹
   rw [h, _root_.smul_apply]
   rfl
 
-/-- `τ⁻¹ R (x - τ A x) = x` on `D(A)`, for the resolvent `R` at `τ⁻¹`. -/
 theorem inv_smul_apply_sub {τ : ℝ} (hR : IsResolvent A (τ : 𝕜)⁻¹ R) (hτ : τ ≠ 0) {x y : E}
     (h : (x, y) ∈ A.graph) : ((τ : 𝕜)⁻¹ • R) (x - (τ : 𝕜) • y) = x := by
   have hτ' : (τ : 𝕜) ≠ 0 := by exact_mod_cast hτ
@@ -213,8 +172,6 @@ variable {A : E →ₗ.[𝕜] E} {z w : 𝕜} {R S : E →L[𝕜] E}
 
 /-! ### Lower bounds -/
 
-/-- `re z ‖x‖ ≤ ‖z x - y‖` when `re ⟪y, x⟫ ≤ 0`; with `y = A x` this is the lower bound
-`re z ‖x‖ ≤ ‖(z - A) x‖` for a dissipative operator `A`. -/
 theorem re_mul_norm_le_norm_smul_sub {x y : E} (hA : RCLike.re ⟪y, x⟫ ≤ 0) :
     RCLike.re z * ‖x‖ ≤ ‖z • x - y‖ := by
   have h1 : RCLike.re ⟪z • x - y, x⟫ = RCLike.re z * ‖x‖ ^ 2 - RCLike.re ⟪y, x⟫ := by
@@ -227,8 +184,6 @@ theorem re_mul_norm_le_norm_smul_sub {x y : E} (hA : RCLike.re ⟪y, x⟫ ≤ 0)
   · refine le_of_mul_le_mul_right ?_ h
     nlinarith
 
-/-- `|re z| ‖x‖ ≤ ‖z x - y‖` when `re ⟪y, x⟫ = 0`; with `y = A x` this is the lower bound
-`|re z| ‖x‖ ≤ ‖(z - A) x‖` for a skew-symmetric operator `A`. -/
 theorem abs_re_mul_norm_le_norm_smul_sub {x y : E} (hA : RCLike.re ⟪y, x⟫ = 0) :
     |RCLike.re z| * ‖x‖ ≤ ‖z • x - y‖ := by
   rcases le_total 0 (RCLike.re z) with hz | hz
@@ -239,23 +194,19 @@ theorem abs_re_mul_norm_le_norm_smul_sub {x y : E} (hA : RCLike.re ⟪y, x⟫ = 
     calc RCLike.re (-z) * ‖x‖ ≤ ‖-z • x - -y‖ := h
       _ = ‖z • x - y‖ := by rw [← norm_neg]; congr 1; rw [neg_smul]; abel
 
-/-- `re z ‖x‖ ≤ ‖(z - A) x‖` for a dissipative operator `A`. -/
 theorem _root_.LinearPMap.IsDissipative.re_mul_norm_le_norm_shiftOp (hA : A.IsDissipative)
     (z : 𝕜) (x : A.domain) : RCLike.re z * ‖(x : E)‖ ≤ ‖shiftOp A z x‖ :=
   re_mul_norm_le_norm_smul_sub (hA x)
 
-/-- For dissipative `A` and `re z > 0`, a resolvent is bounded by `1 / re z`. -/
 theorem IsResolvent.norm_le_of_isDissipative (hR : IsResolvent A z R) (hA : A.IsDissipative)
     (hz : 0 < RCLike.re z) : ‖R‖ ≤ (RCLike.re z)⁻¹ :=
   hR.norm_le hz (hA.re_mul_norm_le_norm_shiftOp z)
 
-/-- `|re z| ‖x‖ ≤ ‖(z - A) x‖` for skew-symmetric `A`. -/
 theorem _root_.LinearPMap.IsSkewSymmetric.abs_re_mul_norm_le_norm_shiftOp
     (hA : A.IsSkewSymmetric) (z : 𝕜) (x : A.domain) :
     |RCLike.re z| * ‖(x : E)‖ ≤ ‖shiftOp A z x‖ :=
   abs_re_mul_norm_le_norm_smul_sub (hA.re_inner_self x)
 
-/-- `z - A` is injective for skew-symmetric `A` and `re z ≠ 0`. -/
 theorem _root_.LinearPMap.IsSkewSymmetric.injective_shiftOp (hA : A.IsSkewSymmetric)
     (hz : RCLike.re z ≠ 0) : Function.Injective (shiftOp A z) := by
   rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
@@ -272,8 +223,6 @@ section SkewAdjoint
 
 variable [CompleteSpace E]
 
-/-- Membership in `D(A†)` with `A† y = w` transfers to `D(A)` with `A y = -w` for skew-adjoint
-`A`. -/
 theorem _root_.LinearPMap.IsSkewAdjoint.exists_mem_domain_of_inner_eq (hA : A.IsSkewAdjoint)
     {y w : E} (h : ∀ x : A.domain, ⟪w, (x : E)⟫ = ⟪y, A x⟫) :
     ∃ hy : y ∈ A.domain, A ⟨y, hy⟩ = -w := by
@@ -286,7 +235,6 @@ theorem _root_.LinearPMap.IsSkewAdjoint.exists_mem_domain_of_inner_eq (hA : A.Is
   rw [hval, LinearPMap.neg_apply] at h2
   rw [h2, neg_neg]
 
-/-- `(range (z - A))ᗮ = ⊥` for skew-adjoint `A` and `re z ≠ 0`. -/
 theorem orthogonal_range_shiftOp (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
     (LinearMap.range (shiftOp A z))ᗮ = ⊥ := by
   rw [Submodule.eq_bot_iff]
@@ -308,7 +256,6 @@ theorem orthogonal_range_shiftOp (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0)
   have := hA.isSkewSymmetric.injective_shiftOp hz' (h0.trans (_root_.map_zero _).symm)
   exact congrArg Subtype.val this
 
-/-- The range of `z - A` is closed for skew-adjoint `A` and `re z ≠ 0`. -/
 theorem isClosed_range_shiftOp (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
     IsClosed (LinearMap.range (shiftOp A z) : Set E) := by
   refine IsSeqClosed.isClosed fun {u y} hu huy => ?_
@@ -342,7 +289,6 @@ theorem isClosed_range_shiftOp (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
   rw [hAx]
   abel
 
-/-- `z - A : D(A) → E` is surjective for skew-adjoint `A` and `re z ≠ 0`. -/
 theorem surjective_shiftOp (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
     Function.Surjective (shiftOp A z) := by
   rw [← LinearMap.range_eq_top, ← (isClosed_range_shiftOp hA hz).submodule_topologicalClosure_eq,
@@ -374,7 +320,6 @@ theorem isResolvent_resolvent (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
       apply_sub := fun x => congrArg Subtype.val ((shiftEquiv hA hz).symm_apply_apply x) }
   exact hR.isResolvent_resolvent
 
-/-- `‖R(z) y‖ ≤ |re z|⁻¹ ‖y‖` for skew-adjoint `A` (Hille–Yosida bound). -/
 theorem norm_resolvent_apply_le (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) (y : E) :
     ‖resolvent A z y‖ ≤ |RCLike.re z|⁻¹ * ‖y‖ :=
   (isResolvent_resolvent hA hz).norm_apply_le (abs_pos.2 hz)
@@ -386,7 +331,6 @@ theorem norm_resolvent_le (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
   (isResolvent_resolvent hA hz).norm_le (abs_pos.2 hz)
     (hA.isSkewSymmetric.abs_re_mul_norm_le_norm_shiftOp z)
 
-/-- `⟪R(z) x, y⟫ = -⟪x, R(-z̄) y⟫` for skew-adjoint `A`. -/
 theorem inner_resolvent_left (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) (x y : E) :
     ⟪resolvent A z x, y⟫ = -⟪x, resolvent A (-(starRingEnd 𝕜) z) y⟫ := by
   have hz' : RCLike.re (-(starRingEnd 𝕜) z) ≠ 0 := by
@@ -412,9 +356,6 @@ theorem adjoint_resolvent (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
   rw [inner_conj_symm, _root_.map_neg, inner_conj_symm] at h
   rw [_root_.neg_apply, inner_neg_left, h]
 
-/-- **`D(A²)` is dense** for a skew-adjoint `A`: every `y` is within `δ` of some `x ∈ D(A)` with
-`A x ∈ D(A)`. Take `w ∈ D(A)` near `y` and `x = c (c - A)⁻¹ w`; then `A x = c (x - w) ∈ D(A)` and
-`x - w = (c - A)⁻¹ A w` has norm `≤ ‖A w‖ / c`. Cf. [Pazy1983], §1.2. -/
 theorem _root_.LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_near (hA : A.IsSkewAdjoint) (y : E)
     {δ : ℝ} (hδ : 0 < δ) : ∃ x : A.domain, A x ∈ A.domain ∧ ‖y - x‖ < δ := by
   obtain ⟨w, hw, hyw⟩ := hA.dense_domain.exists_dist_lt y (half_pos hδ)

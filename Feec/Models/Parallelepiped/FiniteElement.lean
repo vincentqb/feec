@@ -8,83 +8,22 @@ public import Feec.HilbertComplex.Approximation.StaticFEEC
 /-!
 # The finite element method on parallelepipeds
 
-Let `Ω = A · Q + b` with `Q = (0, ½)ⁿ` and `A` invertible (`Parallelepiped.domain`; every open box
-`∏ᵢ (aᵢ, cᵢ)` is one, `domain_boxMatrix`), `T x = A x + b`. The finite element theory of the cube
-(`Feec.Models.Cube.FiniteElementConvergence`, `Feec.Models.Cube.PolyFiniteElementConvergence`,
-`Feec.Models.Cube.PolyRate`, `Feec.Models.Cube.TangentialRate`) is carried to `Ω` by **affine
-transport**, with no hypothesis beyond the data and smoothness.
+On the parallelepiped `Ω = A · Q + b`, `Q = (0, ½)ⁿ`, the pullback of forms along `T x = A x + b`
+is an isomorphism of Hilbert complexes (`IsChainIso`), along which the Hodge theory and the finite
+element families of the cube (`whitneyFamily`, `polyFamily`) pass to `Ω`.
 
-* **The pullback of forms.** The fibre matrices of `T^*` are the `k × k` minors of `A`
-  (`minorMat`; `pullFun_minorMat`: pointwise `T^*` is `Feec.FiniteElement.affinePullback`), they
-  intertwine `d` (`isDIntertwining_minorMat`, from `extDeriv_affinePullback_apply`) and the minors
-  of `A⁻¹` invert them (Cauchy–Binet, `sum_minorMat_mul`). Hence (`Feec.Domain.FormPullback`)
-  `T^* : L²(Ω; Λᵏ) ≃ L²(Q; Λᵏ)` (`pullEquiv`) is a bounded isomorphism with
-  `‖T^*‖ ≤ pullConst A`, `‖(T^*)⁻¹‖ ≤ pullConst A⁻¹` (`pullConst A = |det A|^{-1/2} Σ |minors|`,
-  the minors bounded by `k! ‖A‖_max^k`), and `HΛ(Q)`, `H̊Λ(Q)` are the
-  transports of `HΛ(Ω)`, `H̊Λ(Ω)` (`complex_cube_eq_transport`, `complexMin_cube_eq_transport`):
-  an isomorphism of Hilbert complexes (`isChainIso`, `isChainIsoMin`).
-* **Isomorphisms of Hilbert complexes** (`Feec.HilbertComplex.IsChainIso`, not isometric) carry
-  subcomplexes and cochain projections `e⁻¹ π' e` with explicit `L²` and graph bounds
-  (`comapProj`, `norm_comapProj_le`; graph bounds follow from `L²` bounds, `d π = π d`; conforming
-  families, `comapFamily`), the Poincaré inequality with
-  `c_P = ‖e⁻¹‖ c_P' ‖e‖` (`IsChainIso.norm_le_of_mem_orthogonal_cycles`), finite-dimensionality
-  and the dimension of the harmonic forms (`finiteDimensional_harmonic`, `finrank_harmonic_eq`:
-  `x ↦ P_{ℌ'} (e x)` is injective), degreewise approximation (`exists_near_comapSub`,
-  `eventually_near_comapSub`, `tendsto_infDist_comapSub`) and the compactness property
-  (`IsChainIso.hasCompactPropertyAt`). The box `D(d) ∩ D(d†)` is not mapped to the box of the
-  other complex, but the compactness property splits into `dim ℌ < ∞` and two half-compactness
-  properties (`hasCompactPropertyAt_iff_half`: the boxes of `D(d) ∩ 𝔷ᗮ` and `D(d†) ∩ N(d†)ᗮ`),
-  which transfer through `e` and through the adjoints `e*` (`IsChainIso.halfCompactAt`,
-  `IsChainIso.adjHalfCompactAt`; `adjoint_conj_mem_iff`, `adjoint_conj_apply`:
-  `(b T a⁻¹)† = (a*)⁻¹ T† b*`).
-* **Affine invariance of the finite element spaces.** For an element family natural under `T`
-  (`IsAffineNatural`: local spaces pulled back into local spaces, DOFs of `T^* w` on `g` fixed
-  combinations of the DOFs of `w` on `T g`) the glued spaces of the image mesh `T(M)` pull back
-  into those of `M` (`fieldPull_mem_V`, `fieldPull_mem_V₀`; boundary facets correspond,
-  `isBoundaryFacet_map`). The Whitney family is natural (face integrals change by orientation
-  signs, `isAffineNatural_whitney`) and so is every admissible sequence `P_rΛ`/`P_r⁻Λ`
-  (`isAffineNatural_poly`: `T ∘ lexEnum g = lexEnum (T g) ∘ π`, moments change by `sign π` and test
-  forms by `A_{π⁻¹}^*`, `vertexMoment_comp_perm`). On the image Freudenthal meshes `T(M_N)`
-  (`Parallelepiped.mesh`, shape regular), `v ∈ Vₕ(T(M_N))` iff `T^* v ∈ Vₕ(M_N)`
-  (`mem_whitney_V_iff`, `mem_whitneyMin_V_iff`, `mem_poly_V_iff`, `mem_polyMin_V_iff`).
-* **Hodge theory of `Ω`.** Poincaré with `c_P(A) = pullConst A⁻¹ (2π)⁻¹ pullConst A`
-  (`norm_le_of_mem_orthogonal_cycles`, `_min`), closed range in every degree (`closedRangeAt`,
-  `closedRangeAt_min`), `dim ℌᵏ(HΛ(Ω)) = dim Hᵏ(HΛ(Ω)) = [k = 0]`,
-  `dim ℌᵏ(H̊Λ(Ω)) = dim Hᵏ(H̊Λ(Ω)) = [k = n]` (`finrank_harmonic`, `finrank_cohomology`,
-  `finrank_harmonic_min`, `finrank_cohomology_min`), the compactness property of `HΛ(Ω)` and
-  `H̊Λ(Ω)`
-  (`hasCompactProperty`, `hasCompactProperty_min`).
-* **The finite element families on `Ω`**, Whitney forms and every admissible sequence, both
-  boundary-condition families: **conforming families** (`whitneyFamily`, `polyFamily`, `_Min`),
-  the families of the cube transported by `T^*` (`IsChainIso.comapFamily`: the projections
-  `T^{*-1} π_N T^*`, bounded by `‖(T^*)⁻¹‖ C ‖T^*‖`), with the **Jackson estimates** of order `h`
-  for `C²` forms on `cl Ω` (`whitneyJackson`, `whitneyJacksonMin`; the class `IsC2Form`, pulled
-  back with `fibConst A = ‖A^*‖ ‖A‖`) and of order `h^{s+1}` for `C^{s+2}` forms
-  (`polyJackson`, `polyJacksonMin`). With closed range and finite-dimensional harmonic forms, the
-  static FEEC theorem (`Feec.HilbertComplex.ConformingFamily.staticFEEC`) gives the uniform
-  discrete Poincaré inequality, uniform well-posedness and stability of the discrete mixed Hodge
-  Laplacian, the vanishing harmonic gap, the discrete cohomology, quasi-optimality and
-  convergence, and its `rate` the orders `h` and `h^{s+1}` (`mixed_rate_poly`,
-  `mixed_rate_polyMin`). The semi-discrete Hodge wave equation converges on every window
-  (`exists_tendstoUniformlyOn_window_whitney`, `exists_tendstoUniformlyOn_window_poly`, `_min`),
-  with the `O(h)` rate for `C²` solutions (`norm_sub_le_meshSize_window_smooth`), by
-  `Feec.HilbertComplex.Subcomplex.exists_tendstoUniformlyOn_window_of`.
+## Main results
 
-Not covered here: the mixed boundary conditions of `Feec.Models.Cube.DeRhamPartial`.
+* `closedRangeAt`, `finrank_cohomology`, `hasCompactProperty`: the Hodge theory of `HΛ(Ω)`.
+* `mixed_rate_poly`: the rate `h^{s+1}` of the higher-order mixed method.
+* `exists_tendstoUniformlyOn_window_whitney`: convergence of the semi-discrete Hodge wave equation.
+* `norm_sub_le_meshSize_window_smooth`: its rate `O(h)` for smooth solutions.
 
 ## References
 
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-  (affine-equivalent families of finite elements)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (Thm 3.4, 3.6), §3.4 (Thm 3.8, 3.9), §5.5 (smoothed projections)
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §4–5 (pullback of the spaces and degrees of freedom)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
-  solutions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -105,9 +44,7 @@ variable {n : ℕ}
 /-- The matrix `A` as a family of rows, the argument of `Feec.FiniteElement.affine`. -/
 abbrev rows (A : Matrix (Fin n) (Fin n) ℝ) : Fin n → Fin n → ℝ := fun i j => A i j
 
-/-- **The fibre matrix of the pullback by `A` on `k`-forms**: `(A^* α)_s = Σ_t minorMat A k s t α_t`
-with `minorMat A k s t = (θ_{t₁} ∧ ⋯ ∧ θ_{t_k})_s` for the rows `θᵢ = A_{i·}`, the `k × k` minor
-of `A` on the rows `t` and the columns `s` (`Feec.ExteriorFibre.wedgeProd_apply_eq_det_submatrix`). -/
+/-- The fibre matrix of the pullback by `A` on `k`-forms: the `k × k` minors of `A`. -/
 def minorMat (A : Matrix (Fin n) (Fin n) ℝ) (k : ℤ) (s t : formIdx n k) : ℝ :=
   wedgeProd (rows A) t.1 s.1
 
@@ -116,7 +53,6 @@ theorem affine_rows (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) :
   funext x i
   rw [affine_apply, affMap_apply]
 
-/-- `Σ_{t ⊆ Fin n} ext(f)_t g_t = Σ_{#t = k} f_t g_t`. -/
 theorem sum_formExt_mul {k : ℤ} (f : formIdx n k → ℝ) (g : Finset (Fin n) → ℝ) :
     ∑ t, formExt f t * g t = ∑ t : formIdx n k, f t * g t.1 := by
   rw [← Fintype.sum_subtype_add_sum_subtype (fun t : Finset (Fin n) => (#t : ℤ) = k)]
@@ -143,8 +79,6 @@ theorem contDiff_formField {k : ℤ} {φ : formIdx n k → (Fin n → ℝ) → �
     (hφ : ∀ t, ContDiff ℝ ∞ (φ t)) : ContDiff ℝ ∞ (formField φ) :=
   contDiff_pi.2 fun s => contDiff_formExt hφ s
 
-/-- **The pullback of fields is `Feec.FiniteElement.affinePullback` pointwise**: the components of
-`T^* φ` are those of the pullback of the form field of `φ`. -/
 theorem pullFun_minorMat (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) {k : ℤ}
     (φ : formIdx n k → (Fin n → ℝ) → ℝ) :
     pullFun A b (minorMat A k) φ = formComp (affinePullback (rows A) b (formField φ)) := by
@@ -155,7 +89,6 @@ theorem pullFun_minorMat (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) {k
   refine Finset.sum_congr rfl fun t _ => ?_
   rw [minorMat, mul_comm]
 
-/-- `d` of the form field of `φ` is the form field of `d φ`. -/
 theorem extDeriv_formField {k : ℕ} (φ : formIdx n k → (Fin n → ℝ) → ℝ) :
     extDeriv (formField φ) = formField ((extDerivOp ℝ n k).apply φ) := by
   funext x s
@@ -166,7 +99,6 @@ theorem extDeriv_formField {k : ℕ} (φ : formIdx n k → (Fin n → ℝ) → �
   · rw [IsDeg.extDeriv (isDeg_formField φ) x s (fun h => hs (by exact_mod_cast h))]
     simp [formField, formExt, hs]
 
-/-- `d` of a field indexed by an empty set of components vanishes. -/
 theorem extDerivOp_apply_of_isEmpty {k : ℤ} [IsEmpty (formIdx n k)]
     (w : formIdx n k → (Fin n → ℝ) → ℝ) (u : formIdx n (k + 1)) (y : Fin n → ℝ) :
     (extDerivOp ℝ n k).apply w u y = 0 := by
@@ -178,8 +110,6 @@ theorem extDerivOp_apply_of_isEmpty {k : ℤ} [IsEmpty (formIdx n k)]
     · rfl
   rw [this]; simp
 
-/-- **The minors intertwine `d`**: `d (T^* φ) = T^* (d φ)` for smooth `k`-forms
-(`Feec.FiniteElement.extDeriv_affinePullback_apply`). -/
 theorem isDIntertwining_minorMat (A : Matrix (Fin n) (Fin n) ℝ) :
     IsDIntertwining A (minorMat A) := by
   intro b k φ hφ
@@ -196,8 +126,6 @@ theorem isDIntertwining_minorMat (A : Matrix (Fin n) (Fin n) ℝ) :
     rw [extDerivOp_apply_of_isEmpty, Feec.Domain.pullFun]
     simp only [extDerivOp_apply_of_isEmpty, mul_zero, Finset.sum_const_zero]
 
-/-- **Cauchy–Binet for the minors** (functoriality of the pullback,
-`Feec.ExteriorFibre.pullback_pullback`). -/
 theorem sum_minorMat_mul (A A' : Matrix (Fin n) (Fin n) ℝ) (k : ℤ) (s r : formIdx n k) :
     ∑ t, minorMat A k s t * minorMat A' k t r = minorMat (A' * A) k s r := by
   classical
@@ -227,8 +155,7 @@ theorem minorMat_one (k : ℤ) (s r : formIdx n k) :
   · have h' : ¬ s.1 = r.1 := fun h' => h (Subtype.ext h')
     simp [h, h']
 
-/-- **The fibre data of the pullback of forms along `x ↦ A x + b`**: the minors of `A` and of
-`A⁻¹`, mutually inverse (Cauchy–Binet) and intertwining `d`. -/
+/-- The fibre data of the pullback of forms along `x ↦ A x + b`: the minors of `A` and `A⁻¹`. -/
 def formPullData (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) : FormPullData A where
   C := minorMat A
   Cinv := minorMat A⁻¹
@@ -249,15 +176,13 @@ variable {ι : Type*} {c : ComplexShape ι} {W W' : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
   [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℝ (W' i)] [∀ i, CompleteSpace (W' i)]
 
-/-- **`e` is an isomorphism of Hilbert complexes** `H ≅ H'` (not necessarily isometric): every
-`e i` is a bounded isomorphism with `e (D(dᵢⱼ)) = D(d'ᵢⱼ)` and `d' e = e d`. -/
+/-- `e` is an isomorphism of Hilbert complexes: `e D(d) = D(d')` and `d' e = e d`. -/
 structure IsChainIso (H : HilbertComplex ℝ c W) (H' : HilbertComplex ℝ c W')
     (e : ∀ i, W i ≃L[ℝ] W' i) : Prop where
   mem_domain_iff : ∀ i j (x : W i), e i x ∈ (H'.d i j).domain ↔ x ∈ (H.d i j).domain
   comm : ∀ i j (x : (H.d i j).domain) (h : e i x ∈ (H'.d i j).domain),
     H'.d i j ⟨e i x, h⟩ = e j (H.d i j x)
 
-/-- A transported complex is isomorphic to the original one. -/
 theorem isChainIso_transport (H : HilbertComplex ℝ c W) (e : ∀ i, W i ≃L[ℝ] W' i) :
     IsChainIso H (H.transport e (fun _ _ => 1) fun _ _ => one_ne_zero) e where
   mem_domain_iff i j x := by
@@ -319,8 +244,6 @@ theorem mem_boundaries_iff (i : ι) (x : W i) :
   · rintro ⟨y, rfl⟩
     exact ⟨⟨e (c.prev i) y, (hI.mem_domain_iff _ _ _).2 y.2⟩, hI.comm _ _ _ _⟩
 
-/-! #### Subcomplexes, cochain projections -/
-
 /-- The subcomplex `e⁻¹ S'` of `H` of a subcomplex `S'` of `H'`. -/
 def comapSub (S' : H'.Subcomplex) : H.Subcomplex where
   V i := (S'.V i).comap (e i : W i →L[ℝ] W' i).toLinearMap
@@ -358,7 +281,6 @@ def comapProj {S' : H'.Subcomplex} (S : H.Subcomplex) (hS : ∀ i x, x ∈ S.V i
 theorem comapProj_π {S' : H'.Subcomplex} (S : H.Subcomplex) (hS) (P : S'.CochainProjection)
     (i : ι) (x : W i) : (hI.comapProj S hS P).π i x = (e i).symm (P.π i (e i x)) := rfl
 
-/-- `‖e⁻¹ π' e x‖ ≤ ‖e⁻¹‖ C ‖e‖ ‖x‖`. -/
 theorem norm_comapProj_le {S' : H'.Subcomplex} (S : H.Subcomplex) (hS)
     (P : S'.CochainProjection) {i : ι} {C M M' : ℝ}
     (hC : 0 ≤ C) (hπ : ∀ y, ‖P.π i y‖ ≤ C * ‖y‖) (hM : ‖(e i : W i →L[ℝ] W' i)‖ ≤ M)
@@ -373,11 +295,6 @@ theorem norm_comapProj_le {S' : H'.Subcomplex} (S : H.Subcomplex) (hS)
     _ ≤ M' * (C * (M * ‖x‖)) := by gcongr; exact h2
     _ = _ := by ring
 
-/-! #### Poincaré inequalities, harmonic forms, approximation -/
-
-/-- **The Poincaré inequality transfers**: if `‖z‖ ≤ c_P ‖d' z‖` for `z ∈ D(d'ᵢⱼ) ⊥ 𝔷'ⁱ`, then
-`‖z‖ ≤ ‖e⁻¹‖ c_P ‖e‖ ‖d z‖` for `z ∈ D(dᵢⱼ) ⊥ 𝔷ⁱ`: project `e z` onto `(𝔷')ᗮ` and pull back;
-the correction is a cycle, and `z` is the shortest point of `z + 𝔷ⁱ`. -/
 theorem norm_le_of_mem_orthogonal_cycles {i j : ι} (hij : c.Rel i j) {cP M M' : ℝ}
     (hcP : 0 ≤ cP) (hM : ‖(e j : W j →L[ℝ] W' j)‖ ≤ M)
     (hM' : ‖((e i).symm : W' i →L[ℝ] W i)‖ ≤ M')
@@ -418,8 +335,6 @@ theorem norm_le_of_mem_orthogonal_cycles {i j : ι} (hij : c.Rel i j) {cP M M' :
     _ ≤ M' * (cP * (M * ‖H.d i j z‖)) := by gcongr; exact h4
     _ = _ := by ring
 
-/-- **The map `x ↦ P_{ℌ'} (e x)` is injective on `ℌⁱ`**: `e x ⊥ ℌ'` forces `e x ∈ cl 𝔅'`, so
-`x ∈ cl 𝔅 ∩ ℌ = 0`. -/
 theorem injective_harmonic (j : ι) [CompleteSpace (H'.harmonic j)] :
     Function.Injective ((H'.harmonic j).orthogonalProjectionOnto.toLinearMap ∘ₗ
       (e j : W j →L[ℝ] W' j).toLinearMap ∘ₗ (H.harmonic j).subtype) := by
@@ -457,14 +372,11 @@ theorem injective_harmonic (j : ι) [CompleteSpace (H'.harmonic j)] :
   exact Subtype.ext (inner_self_eq_zero.1
     (Submodule.inner_right_of_mem_orthogonal hcl horth))
 
-/-- **Finite-dimensional harmonic forms transfer** (`injective_harmonic`). -/
 theorem finiteDimensional_harmonic (j : ι) [FiniteDimensional ℝ (H'.harmonic j)] :
     FiniteDimensional ℝ (H.harmonic j) := by
   have : CompleteSpace (H'.harmonic j) := (H'.isClosed_harmonic j).completeSpace_coe
   exact Module.Finite.of_injective _ (hI.injective_harmonic j)
 
-/-- **Degreewise graph-norm approximation transfers**: a `v' ∈ S'ⁱ` within `ε` of `e x` (and
-`d' (e x - v')` within `ε`) gives `v = e⁻¹ v' ∈ (e⁻¹ S')ⁱ` within `M' ε` of `x`. -/
 theorem exists_near_comapSub {S' : H'.Subcomplex} (S : H.Subcomplex)
     (hS : ∀ i x, x ∈ S.V i ↔ e i x ∈ S'.V i) {M' : ℝ}
     (hM' : ∀ k, ‖((e k).symm : W' k →L[ℝ] W k)‖ ≤ M') {i : ι} {x : W i} {ε : ℝ}
@@ -493,8 +405,6 @@ theorem exists_near_comapSub {S' : H'.Subcomplex} (S : H.Subcomplex)
     exact (((e j).symm : W' j →L[ℝ] W j).le_of_opNorm_le (hM' j) _).trans
       (mul_le_mul_of_nonneg_left (h2 j hx') ((norm_nonneg _).trans (hM' j)))
 
-/-- **Eventual degreewise approximation transfers** (the hypothesis of
-`Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`). -/
 theorem eventually_near_comapSub {κ : Type*} {l : Filter κ} {S' : κ → H'.Subcomplex}
     (S : κ → H.Subcomplex) (hS : ∀ N i x, x ∈ (S N).V i ↔ e i x ∈ (S' N).V i) {M' : ℝ}
     (hM' : ∀ k, ‖((e k).symm : W' k →L[ℝ] W k)‖ ≤ M')
@@ -519,8 +429,6 @@ theorem eventually_near_comapSub {κ : Type*} {l : Filter κ} {S' : κ → H'.Su
   exact ⟨v, hv, hv1.trans_lt hlt, fun j hx => (hv2 j hx).trans_lt hlt⟩
 
 omit hI in
-/-- **`L²` approximation transfers**: if `dist(x', S'ⁱ_N) → 0` for every `x'`, then
-`dist(x, (e⁻¹ S'_N)ⁱ) → 0` for every `x`. -/
 theorem tendsto_infDist_comapSub {κ : Type*} {l : Filter κ} {S' : κ → H'.Subcomplex}
     (S : κ → H.Subcomplex) (hS : ∀ N i x, x ∈ (S N).V i ↔ e i x ∈ (S' N).V i) {i : ι}
     (h' : ∀ x' : W' i, Tendsto (fun N => Metric.infDist x' ((S' N).V i : Set (W' i))) l (𝓝 0))
@@ -546,9 +454,7 @@ theorem tendsto_infDist_comapSub {κ : Type*} {l : Filter κ} {S' : κ → H'.Su
   rw [← dist_eq_norm]
   exact mul_le_mul_of_nonneg_left hd.le (norm_nonneg _)
 
-/-- **A conforming family transfers along an isomorphism of Hilbert complexes** with `‖e‖ ≤ M`,
-`‖e⁻¹‖ ≤ M'` in every degree: the subcomplexes `Sₕ = e⁻¹ S'ₕ`, with the projections `e⁻¹ π'ₕ e`
-(`comapProj`), bounded by `M' C M`, and approximating by `tendsto_infDist_comapSub`. -/
+/-- A conforming family transported along an isomorphism of Hilbert complexes. -/
 def comapFamily {κ : Type*} (F' : ConformingFamily H' κ) (S : κ → H.Subcomplex)
     [∀ h i, FiniteDimensional ℝ ((S h).V i)] (hS : ∀ h i x, x ∈ (S h).V i ↔ e i x ∈ (F'.V h).V i)
     {M M' : ℝ} (hM : ∀ i, ‖(e i : W i →L[ℝ] W' i)‖ ≤ M)
@@ -560,12 +466,10 @@ def comapFamily {κ : Type*} (F' : ConformingFamily H' κ) (S : κ → H.Subcomp
     (zero_le_one.trans F'.one_le_projBound) (F'.norm_π_le h i) (hM i) (hM' i) x⟩
   approx _ := tendsto_infDist_comapSub S hS (F'.approx _)
 
-/-- The inverse of an isomorphism of Hilbert complexes. -/
 theorem symm : IsChainIso H' H fun i => (e i).symm where
   mem_domain_iff i j y := hI.symm_mem_domain_iff i j y
   comm i j y h := hI.comm_symm i j y h
 
-/-- **The harmonic forms of isomorphic complexes have the same dimension.** -/
 theorem finrank_harmonic_eq (j : ι) [FiniteDimensional ℝ (H'.harmonic j)] :
     Module.finrank ℝ (H.harmonic j) = Module.finrank ℝ (H'.harmonic j) := by
   have := hI.finiteDimensional_harmonic j
@@ -592,8 +496,6 @@ section Compact
 
 open scoped LinearPMap Pointwise
 
-/-- **The adjoint of a conjugated operator**: if `a (D(T)) = D(T')` and `T' (a x) = b (T x)`,
-then `y' ∈ D(T'†) ↔ b* y' ∈ D(T†)`. -/
 theorem adjoint_conj_mem_iff {E F E' F' : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace ℝ F] [CompleteSpace F]
     [NormedAddCommGroup E'] [InnerProductSpace ℝ E'] [CompleteSpace E']
@@ -627,7 +529,6 @@ theorem adjoint_conj_mem_iff {E F E' F' : Type*} [NormedAddCommGroup E] [InnerPr
     rw [h1, ContinuousLinearMap.adjoint_inner_left, ← h3, h2]
     rfl
 
-/-- The value of the adjoint of a conjugated operator: `T† (b* y') = a* (T'† y')`. -/
 theorem adjoint_conj_apply {E F E' F' : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace ℝ F] [CompleteSpace F]
     [NormedAddCommGroup E'] [InnerProductSpace ℝ E'] [CompleteSpace E']
@@ -648,22 +549,18 @@ theorem adjoint_conj_apply {E F E' F' : Type*} [NormedAddCommGroup E] [InnerProd
 
 variable (H : HilbertComplex ℝ c W)
 
-/-- **Half-compactness at `i`**: the unit box of `D(d) ∩ 𝔷ⁱᗮ` in the graph norm lies in a compact
-set. -/
+/-- Half-compactness at `i`: the graph-norm unit box of `D(d) ∩ 𝔷ⁱᗮ` is precompact. -/
 def HalfCompactAt (i : ι) : Prop :=
   ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain),
     x ∈ (H.cycles i)ᗮ → ‖x‖ ≤ 1 → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ 1 → x ∈ K
 
-/-- **Adjoint half-compactness at `i`**: the unit box of `D(d†) ∩ N(d†)ᗮ` in the graph norm of
-`d† = (d (c.prev i) i)†` lies in a compact set. -/
+/-- Adjoint half-compactness at `i`: the graph-norm unit box of `D(d†) ∩ N(d†)ᗮ` is precompact. -/
 def AdjHalfCompactAt (i : ι) : Prop :=
   ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ ((H.d (c.prev i) i)†).domain),
     x ∈ ((H.d (c.prev i) i)†).kerᗮ → ‖x‖ ≤ 1 → ‖(H.d (c.prev i) i)† ⟨x, hx⟩‖ ≤ 1 → x ∈ K
 
 variable {H}
 
-/-- Scaled boxes of a set closed under scalar multiplication: if the unit box `{x ∈ S : ‖x‖ ≤ 1,
-‖A x‖ ≤ 1}` of a linear map `A` on a submodule `S` lies in a compact set, so does every box. -/
 theorem exists_isCompact_of_box {V Y : Type*} [NormedAddCommGroup V] [NormedSpace ℝ V]
     [NormedAddCommGroup Y] [NormedSpace ℝ Y] {S : Submodule ℝ V} (A : S →ₗ[ℝ] Y)
     (P : V → Prop) (hP : ∀ (a : ℝ) (x : V), P x → P (a • x)) {K : Set V} (hK : IsCompact K)
@@ -699,9 +596,6 @@ theorem AdjHalfCompactAt.exists {i : ι} (h : H.AdjHalfCompactAt i) (r : ℝ) :
     (fun x hP h1 h2 => hsub x x.2 hP h1 h2) r
   exact ⟨K', hK', fun x hx hP h1 h2 => hsub' ⟨x, hx⟩ hP h1 h2⟩
 
-/-- **The compactness property splits** into the finite-dimensionality of the harmonic forms and
-the two half-compactness properties: `x = P_{𝔷ᗮ} x + P_{N(d†)ᗮ} x + P_ℌ x`, with `N(d†)ᗮ ⊆ 𝔷` and
-`𝔷ᗮ ⊆ N(d†)` ([AFW2010], §3.1.3; no closed range needed). -/
 theorem hasCompactPropertyAt_iff_half (i : ι) :
     H.HasCompactPropertyAt i ↔
       FiniteDimensional ℝ (H.harmonic i) ∧ H.HalfCompactAt i ∧ H.AdjHalfCompactAt i := by
@@ -810,8 +704,6 @@ namespace IsChainIso
 
 variable {H' : HilbertComplex ℝ c W'} {e : ∀ i, W i ≃L[ℝ] W' i}
 
-/-- **Half-compactness transfers along isomorphisms of Hilbert complexes**:
-`x = P_{𝔷ᗮ} e⁻¹ (P_{𝔷'ᗮ} e x)` for `x ∈ 𝔷ᗮ`. -/
 theorem halfCompactAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.HalfCompactAt i) :
     H.HalfCompactAt i := by
   set r := ‖(e i : W i →L[ℝ] W' i)‖ + ‖(e (c.next i) : W (c.next i) →L[ℝ] W' (c.next i))‖
@@ -867,8 +759,6 @@ theorem halfCompactAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.HalfCompactAt i
   change P ((e i).symm p) = x
   conv_rhs => rw [← hxx, hsplit, map_add, hq0, add_zero]
 
-/-- **Adjoint half-compactness transfers along isomorphisms of Hilbert complexes**, through the
-adjoints `(e i)*`: `D(d'†) = (e i)*⁻¹ D(d†)` (`adjoint_conj_mem_iff`). -/
 theorem adjHalfCompactAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.AdjHalfCompactAt i) :
     H.AdjHalfCompactAt i := by
   set T := H.d (c.prev i) i
@@ -956,10 +846,7 @@ theorem adjHalfCompactAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.AdjHalfCompa
   change P (bA p) = x
   conv_rhs => rw [← hxx, hsplit, map_add, hq0, add_zero]
 
-/-- **The compactness property transfers along isomorphisms of Hilbert complexes** (bounded,
-not necessarily isometric), degreewise: by `hasCompactPropertyAt_iff_half`, it is the
-finite-dimensionality of `ℌ` (`finiteDimensional_harmonic`) and the two half-compactness
-properties (`halfCompactAt`, `adjHalfCompactAt`). -/
+/-- The compactness property transfers degreewise along isomorphisms of Hilbert complexes. -/
 theorem hasCompactPropertyAt (hI : IsChainIso H H' e) {i : ι} (h' : H'.HasCompactPropertyAt i) :
     H.HasCompactPropertyAt i := by
   obtain ⟨hf, h3, h1⟩ := (hasCompactPropertyAt_iff_half i).1 h'
@@ -981,8 +868,7 @@ open Feec.Models.Cube
 
 variable {n : ℕ} (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
 
-/-- **The parallelepiped** `Ω = A · Q + b`, `Q = (0, ½)ⁿ`, written as `T⁻¹`-preimage of `Q`
-(`domain_eq_image`); every open box `∏ᵢ (aᵢ, bᵢ)` is one (`domain_boxMatrix`). -/
+/-- The parallelepiped `Ω = A · Q + b`, `Q = (0, ½)ⁿ`, as the preimage of `Q` under `T⁻¹`. -/
 def domain : Set (Fin n → ℝ) := affMap A⁻¹ (affInvShift A b) ⁻¹' FEM.cubeDomain n
 
 theorem isOpen_domain : IsOpen (domain A b) :=
@@ -1030,9 +916,7 @@ theorem convex_domain : Convex ℝ (domain A b) := by
   have h := (FEM.convex_cubeDomain n).affine_preimage (affEquiv A hA b).symm.toAffineMap
   simpa [domain] using h
 
-/-- **The pullback of forms** `T^* : L²(Ω; Λᵏ) ≃ L²(Q; Λᵏ)`,
-`(T^* u)_s = Σ_t minor_{ts}(A) u_t ∘ T` (`Feec.FiniteElement.affinePullback` pointwise,
-`pullFun_minorMat`). -/
+/-- The pullback of forms `T^* : L²(Ω; Λᵏ) ≃ L²(Q; Λᵏ)`, `(T^* u)_s = Σ_t minor_{ts}(A) u_t ∘ T`. -/
 def pullEquiv (k : ℤ) :
     L2F ℝ (domain A b) (formIdx n k) ≃L[ℝ] L2F ℝ (FEM.cubeDomain n) (formIdx n k) :=
   (formPullData A hA).equiv hA b (isOpen_domain A b) (preimage_domain A hA b) k
@@ -1050,30 +934,23 @@ abbrev complexMin :
     HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ (domain A b) (formIdx n k) :=
   (deRham ℝ n).minimalComplex (isOpen_domain A b)
 
-/-- **`HΛ(Q)` is the transport of `HΛ(Ω)` along `T^*`.** -/
 theorem complex_cube_eq_transport : FEM.complex n = (complex A b).transport (pullEquiv A hA b)
     (fun _ _ => 1) fun _ _ => one_ne_zero :=
   (formPullData A hA).maximalComplex_eq_transport hA b (FEM.isOpen_cubeDomain n)
     (isOpen_domain A b) (preimage_domain A hA b)
 
-/-- **`H̊Λ(Q)` is the transport of `H̊Λ(Ω)` along `T^*`.** -/
 theorem complexMin_cube_eq_transport : FEM.complexMin n = (complexMin A b).transport
     (pullEquiv A hA b) (fun _ _ => 1) fun _ _ => one_ne_zero :=
   (formPullData A hA).minimalComplex_eq_transport hA b (FEM.isOpen_cubeDomain n)
     (isOpen_domain A b) (preimage_domain A hA b)
 
-/-- **`T^*` is an isomorphism of Hilbert complexes `HΛ(Ω) ≅ HΛ(Q)`.** -/
 theorem isChainIso : IsChainIso (complex A b) (FEM.complex n) (pullEquiv A hA b) := by
   rw [complex_cube_eq_transport A hA b]; exact isChainIso_transport _ _
 
-/-- **`T^*` is an isomorphism of Hilbert complexes `H̊Λ(Ω) ≅ H̊Λ(Q)`.** -/
 theorem isChainIsoMin : IsChainIso (complexMin A b) (FEM.complexMin n) (pullEquiv A hA b) := by
   rw [complexMin_cube_eq_transport A hA b]; exact isChainIso_transport _ _
 
-/-! #### Explicit constants -/
-
-/-- The constant `|det A|^{-1/2} Σ_{s,t ⊆ Fin n} |minor_{ts}(A)|` bounding `T^*` in every
-degree. -/
+/-- The constant `|det A|^{-1/2} Σ_{s,t} |minor_{ts}(A)|` bounding `T^*` in every degree. -/
 def pullConst : ℝ :=
   Real.sqrt |A.det|⁻¹ * ∑ s : Finset (Fin n), ∑ t : Finset (Fin n), |wedgeProd (rows A) t s|
 
@@ -1081,7 +958,6 @@ theorem pullConst_nonneg : 0 ≤ pullConst A :=
   mul_nonneg (Real.sqrt_nonneg _) (Finset.sum_nonneg fun _ _ => Finset.sum_nonneg fun _ _ =>
     abs_nonneg _)
 
-/-- A sum of nonnegative terms over a subtype is at most the full sum. -/
 theorem sum_subtype_le_sum {α : Type*} [Fintype α] (p : α → Prop) [DecidablePred p]
     {f : α → ℝ} (hf : ∀ a, 0 ≤ f a) : ∑ a : {a // p a}, f a ≤ ∑ a, f a := by
   rw [← Fintype.sum_subtype_add_sum_subtype p f]
@@ -1098,7 +974,6 @@ theorem sum_minorMat_le (k : ℤ) :
         (f := fun s => ∑ t : Finset (Fin n), |wedgeProd (rows A) t s|)
         fun _ => Finset.sum_nonneg fun _ _ => abs_nonneg _
 
-/-- `‖T^*‖ ≤ pullConst A` in every degree. -/
 theorem norm_pullEquiv_le (k : ℤ) :
     ‖(pullEquiv A hA b k : L2F ℝ (domain A b) (formIdx n k) →L[ℝ]
       L2F ℝ (FEM.cubeDomain n) (formIdx n k))‖ ≤ pullConst A := by
@@ -1108,7 +983,6 @@ theorem norm_pullEquiv_le (k : ℤ) :
   gcongr
   exact mul_le_mul_of_nonneg_left (sum_minorMat_le A k) (Real.sqrt_nonneg _)
 
-/-- `‖(T^*)⁻¹‖ ≤ pullConst A⁻¹` in every degree. -/
 theorem norm_pullEquiv_symm_le (k : ℤ) :
     ‖((pullEquiv A hA b k).symm : L2F ℝ (FEM.cubeDomain n) (formIdx n k) →L[ℝ]
       L2F ℝ (domain A b) (formIdx n k))‖ ≤ pullConst A⁻¹ := by
@@ -1152,7 +1026,6 @@ theorem cofaces_map (M : SimplicialMesh n) (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin
     exact ⟨⟨T, hT, rfl⟩, (image_subset_vertexSet_mapEquiv_iff e).2 hF⟩
 
 open Classical in
-/-- **Boundary facets are mapped to boundary facets.** -/
 theorem isBoundaryFacet_map (M : SimplicialMesh n) (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
     {F : Finset (Fin n → ℝ)} (hF : M.IsBoundaryFacet F) :
     (M.map e).IsBoundaryFacet (F.image e) := by
@@ -1168,12 +1041,10 @@ theorem interior_closedInterior_mapEquiv (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n
   rw [closedInterior_mapEquiv]
   exact ((AffineEquiv.toContinuousAffineEquiv e).toHomeomorph.image_interior _).symm
 
-/-- Two meshes with the same simplices and domain are equal. -/
 theorem SimplicialMesh.ext_of {M M' : SimplicialMesh n} (hs : M.simplices = M'.simplices)
     (hd : M.domain = M'.domain) : M = M' := by
   cases M; cases M'; subst hs hd; rfl
 
-/-- Mapping by `e` and then by a left inverse `e'` gives back the mesh. -/
 theorem map_map_of_leftInverse (M : SimplicialMesh n) (e e' : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ))
     (h : ∀ x, e' (e x) = x) : (M.map e).map e' = M := by
   have hT : ∀ T : Affine.Simplex ℝ (Fin n → ℝ) n, mapEquiv e' (mapEquiv e T) = T := fun T =>
@@ -1194,7 +1065,6 @@ end MeshMap
 
 section WhitneyInvariance
 
-/-- A sum over all subsets of a degree-`k` coefficient vector is a sum over the `k`-subsets. -/
 theorem sum_isDeg_mul {k : ℕ} {α : Finset (Fin n) → ℝ} (hα : IsDeg k α)
     (g : Finset (Fin n) → ℝ) :
     ∑ t, α t * g t = ∑ t : formIdx n (k : ℤ), α t.1 * g t.1 := by
@@ -1203,9 +1073,6 @@ theorem sum_isDeg_mul {k : ℕ} {α : Finset (Fin n) → ℝ} (hα : IsDeg k α)
     rw [hα t.1 (fun h => t.2 (by rw [h])), zero_mul], add_zero]
 
 open Classical in
-/-- **The face integrals are affine invariant up to orientation**: for a `k`-face `g`,
-`∫_g T^* w = ε_g ∫_{T(g)} w` with a sign `ε_g` depending only on `g` (the enumerations of `T(g)`
-by `T ∘ faceEnum g` and `faceEnum (T g)` differ by a permutation). -/
 theorem exists_whitneyFaceDof_affinePullback {g : Finset (Fin n → ℝ)} {k : ℕ}
     (hg : g.card = k + 1) : ∃ ε : ℝ, ∀ w : contForms n,
       whitneyFaceDof g k ⟨affinePullback (rows A) b (w : FormField n),
@@ -1230,9 +1097,7 @@ theorem exists_whitneyFaceDof_affinePullback {g : Finset (Fin n → ℝ)} {k : �
   rw [whitneyFaceDof_apply, whitneyFaceDof_apply, ← hε w, simplexIntegral_comp_affine]
 
 open Classical in
-/-- **An element family is natural under `T x = A x + b`**: the local spaces of `T(K)` pull back
-into those of `K`, and the DOFs of `T^* w` on a face `g` are fixed linear combinations of the
-DOFs of `w` on `T(g)` (depending only on `g`). -/
+/-- An element family is natural under `T`: its local spaces and DOFs pull back along `T`. -/
 structure IsAffineNatural (E : LocalElement n) : Prop where
   space : ∀ (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) {w : FormField n},
     w ∈ E.space (mapEquiv (affEquiv A hA b) T) k → affinePullback (rows A) b w ∈ E.space T k
@@ -1243,8 +1108,6 @@ structure IsAffineNatural (E : LocalElement n) : Prop where
         ∑ j, c j * E.dof (g.image (affEquiv A hA b)) k j w
 
 open Classical in
-/-- **The Whitney element family is natural**: `P₁⁻Λ` is affine invariant and the face integrals
-transform by signs (`exists_whitneyFaceDof_affinePullback`). -/
 theorem isAffineNatural_whitney : IsAffineNatural A hA b (whitneyElement n) where
   space T k w hw := by
     change _ ∈ whitneySpace _ k at hw
@@ -1278,8 +1141,6 @@ theorem pullPiecewise_apply (k : ℕ) (u : E.Piecewise (M.map (affEquiv A hA b))
       (u ⟨mapEquiv (affEquiv A hA b) T, mapEquiv_mem_map M _ T.2⟩ : FormField n) := rfl
 
 open Classical in
-/-- **Global fields pull back to global fields**: the DOFs on a face `g` of `T^* u_{T(K)}` are the
-same combinations of the DOFs of `u` on `T(g)` for all `K ∋ g`. -/
 theorem pullPiecewise_mem_globalSpace {k : ℕ} {u : E.Piecewise (M.map (affEquiv A hA b)) k}
     (hu : u ∈ E.globalSpace (M.map (affEquiv A hA b)) k) :
     pullPiecewise E hE M k u ∈ E.globalSpace M k := by
@@ -1301,8 +1162,6 @@ theorem pullPiecewise_mem_globalSpace {k : ℕ} {u : E.Piecewise (M.map (affEqui
   exact h1.trans h2.symm
 
 open Classical in
-/-- **Vanishing boundary DOFs pull back**: boundary facets of `M` are mapped to boundary facets
-of `T(M)` (`isBoundaryFacet_map`). -/
 theorem pullPiecewise_mem_globalSpace₀ {k : ℕ} {u : E.Piecewise (M.map (affEquiv A hA b)) k}
     (hu : u ∈ E.globalSpace₀ (M.map (affEquiv A hA b)) k) :
     pullPiecewise E hE M k u ∈ E.globalSpace₀ M k := by
@@ -1319,7 +1178,6 @@ theorem pullPiecewise_mem_globalSpace₀ {k : ℕ} {u : E.Piecewise (M.map (affE
   simp only [h0, mul_zero, Finset.sum_const_zero] at h1
   exact h1
 
-/-- The components of a glued field are the piecewise components. -/
 theorem coeFn_glue (E : LocalElement n) (M : SimplicialMesh n) {k : ℕ} (u : E.Piecewise M k)
     (s : formIdx n (k : ℤ)) :
     (E.glue M k u s : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict M.domain]
@@ -1327,7 +1185,6 @@ theorem coeFn_glue (E : LocalElement n) (M : SimplicialMesh n) {k : ℕ} (u : E.
   coeFn_pieceL2 M M.domain _ (fun _ hT s => continuous_formComp
     (E.contDiff_extendPW M u hT).continuous s) s
 
-/-- **The glued pullback**: `T^* (glue u) = glue (T^* u)`, elementwise on the interiors. -/
 theorem glue_pullPiecewise (hM : IsOpen M.domain) {k : ℕ}
     (u : E.Piecewise (M.map (affEquiv A hA b)) k)
     (hmeas : MeasurableSet (M.map (affEquiv A hA b)).domain)
@@ -1358,8 +1215,6 @@ theorem glue_pullPiecewise (hM : IsOpen M.domain) {k : ℕ}
   rw [minorMat, mul_comm]
 
 include hE in
-/-- **Affine invariance of the global spaces**: `T^*` maps the glued space of `M₂ = T(M₁)` into
-the glued space of `M₁`, for a natural element family. -/
 theorem fieldPull_mem_V {M₁ M₂ : SimplicialMesh n}
     (h : M₂ = M₁.map (affEquiv A hA b)) (hM₁ : IsOpen M₁.domain)
     (hmeas : MeasurableSet M₂.domain) (hT : affMap A b ⁻¹' M₂.domain = M₁.domain) (k : ℤ)
@@ -1375,7 +1230,6 @@ theorem fieldPull_mem_V {M₁ M₂ : SimplicialMesh n}
     exact Submodule.zero_mem _
 
 include hE in
-/-- **Affine invariance of the global spaces with vanishing boundary DOFs.** -/
 theorem fieldPull_mem_V₀ {M₁ M₂ : SimplicialMesh n}
     (h : M₂ = M₁.map (affEquiv A hA b)) (hM₁ : IsOpen M₁.domain)
     (hmeas : MeasurableSet M₂.domain) (hT : affMap A b ⁻¹' M₂.domain = M₁.domain) (k : ℤ)
@@ -1391,10 +1245,6 @@ theorem fieldPull_mem_V₀ {M₁ M₂ : SimplicialMesh n}
     exact Submodule.zero_mem _
 
 open Classical in
-/-- **The higher-order element families are natural** under `T x = A x + b`: the spaces are affine
-invariant and the moment DOFs on `g` of `T^* w` are combinations of the moment DOFs on `T(g)`:
-`T ∘ lexEnum g = lexEnum (T g) ∘ π`, the moments change by `sign π` and the test forms by
-`A_{π⁻¹}^*`, which preserves the test spaces. -/
 theorem isAffineNatural_poly (S : PolySeq) : IsAffineNatural A hA b (polyElement n S) where
   space T k w hw := S.affinePullback_mem_space (rows A) b k hw
   dof g k i := by
@@ -1435,9 +1285,7 @@ end WhitneyInvariance
 
 section WhitneyΩ
 
-/-- **The image `T(M_N)` of the level-`(N + 1)` Freudenthal mesh of `Q`**, a conforming mesh of
-`Ω`, shape regular uniformly in `N` (its simplices are `T K` for the simplices `K` of `M_N`, with
-`B_{TK} = A B_K`). -/
+/-- The image `T(M_N)` of the level-`(N + 1)` Freudenthal mesh of `Q`. -/
 def mesh (N : ℕ) : SimplicialMesh n := (FEM.mesh n N).map (affEquiv A hA b)
 
 theorem mesh_domain (N : ℕ) : (mesh A hA b N).domain = domain A b := by
@@ -1465,7 +1313,7 @@ theorem mesh_cube_eq_map (N : ℕ) :
 
 variable [NeZero n]
 
-/-- **The Whitney complex of `T(M_N)`** as a subcomplex of `HΛ(Ω)`. -/
+/-- The Whitney complex of `T(M_N)`, a subcomplex of `HΛ(Ω)`. -/
 def whitney (N : ℕ) : (complex A b).Subcomplex :=
   (deRham ℝ n).maximalSubcomplexOfEq (mesh_domain A hA b N) (isOpen_mesh_domain A hA b N)
     (isOpen_domain A b) (whitneySubcomplex (mesh A hA b N) (isOpen_mesh_domain A hA b N))
@@ -1473,8 +1321,7 @@ def whitney (N : ℕ) : (complex A b).Subcomplex :=
 instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((whitney A hA b N).V k) :=
   (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
 
-/-- **The Whitney complex of `T(M_N)` with vanishing boundary DOFs** as a subcomplex of
-`H̊Λ(Ω)`. -/
+/-- The Whitney complex of `T(M_N)` with vanishing boundary DOFs, a subcomplex of `H̊Λ(Ω)`. -/
 def whitneyMin (N : ℕ) : (complexMin A b).Subcomplex :=
   (deRham ℝ n).minimalSubcomplexOfEq (mesh_domain A hA b N) (isOpen_mesh_domain A hA b N)
     (isOpen_domain A b)
@@ -1484,7 +1331,6 @@ def whitneyMin (N : ℕ) : (complexMin A b).Subcomplex :=
 instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((whitneyMin A hA b N).V k) :=
   (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
 
-/-- Affine invariance, transported along the domain equalities of the subcomplexes. -/
 theorem fieldPull_mem_whitney_cast {M₁ M₂ : SimplicialMesh n}
     (h : M₂ = M₁.map (affEquiv A hA b)) {Ω₁ Ω₂ : Set (Fin n → ℝ)} (h₁ : M₁.domain = Ω₁)
     (h₂ : M₂.domain = Ω₂) (hM₁ : IsOpen M₁.domain) (hM₂ : IsOpen M₂.domain) (hΩ₁ : IsOpen Ω₁)
@@ -1509,8 +1355,6 @@ theorem fieldPull_mem_whitneyMin_cast {M₁ M₂ : SimplicialMesh n}
   subst h₁ h₂
   exact fieldPull_mem_V₀ (whitneyElement n) (isAffineNatural_whitney A hA b) h hM₁ _ hT k hv
 
-/-- **Affine invariance of the Whitney spaces on `Ω`**: `v ∈ Vₕᵏ(T(M_N))` iff
-`T^* v ∈ Vₕᵏ(M_N)`. -/
 theorem mem_whitney_V_iff (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A b) (formIdx n k)) :
     x ∈ (whitney A hA b N).V k ↔ pullEquiv A hA b k x ∈ (FEM.whitney n N).V k := by
   constructor
@@ -1528,7 +1372,6 @@ theorem mem_whitney_V_iff (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A b) (formIdx
         (pullEquiv A hA b k x) = x := (pullEquiv A hA b k).symm_apply_apply x
     rwa [e] at h
 
-/-- **Affine invariance of the Whitney spaces with vanishing boundary DOFs on `Ω`.** -/
 theorem mem_whitneyMin_V_iff (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A b) (formIdx n k)) :
     x ∈ (whitneyMin A hA b N).V k ↔ pullEquiv A hA b k x ∈ (FEM.whitneyMin n N).V k := by
   constructor
@@ -1556,8 +1399,6 @@ section Hodge
 
 include hA
 
-/-- **Poincaré inequality of `HΛ(Ω)`** with `c_P(A) = ‖(T^*)⁻¹‖ (2π)⁻¹ ‖T^*‖`, from the cube
-(`Feec.Models.Cube.FEM.norm_le_of_mem_orthogonal_cycles`) and `IsChainIso.norm_le_of_mem_orthogonal_cycles`. -/
 theorem norm_le_of_mem_orthogonal_cycles {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (z : ((complex A b).d i j).domain)
     (hz : (z : L2F ℝ (domain A b) (formIdx n i)) ∈ ((complex A b).cycles i)ᗮ) :
@@ -1567,7 +1408,6 @@ theorem norm_le_of_mem_orthogonal_cycles {i j : ℤ} (hij : (ComplexShape.up ℤ
     (norm_pullEquiv_le A hA b j) (norm_pullEquiv_symm_le A hA b i)
     (fun z hz => FEM.norm_le_of_mem_orthogonal_cycles hij z hz) z hz
 
-/-- **Poincaré inequality of `H̊Λ(Ω)`**. -/
 theorem norm_le_of_mem_orthogonal_cycles_min {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (z : ((complexMin A b).d i j).domain)
     (hz : (z : L2F ℝ (domain A b) (formIdx n i)) ∈ ((complexMin A b).cycles i)ᗮ) :
@@ -1577,57 +1417,47 @@ theorem norm_le_of_mem_orthogonal_cycles_min {i j : ℤ} (hij : (ComplexShape.up
     (norm_pullEquiv_le A hA b j) (norm_pullEquiv_symm_le A hA b i)
     (fun z hz => FEM.norm_le_of_mem_orthogonal_cycles_min hij z hz) z hz
 
-/-- **`HΛ(Ω)` has closed range in every degree.** -/
+/-- `HΛ(Ω)` has closed range in every degree. -/
 theorem closedRangeAt (j : ℤ) : (complex A b).ClosedRangeAt j := by
   have hr : (ComplexShape.up ℤ).Rel (j - 1) j := sub_add_cancel j 1
   exact ((complex A b).closedRangeAt_iff_poincare_of_rel hr).2
     ⟨_, fun z hz => norm_le_of_mem_orthogonal_cycles A hA b hr z hz⟩
 
-/-- **`H̊Λ(Ω)` has closed range in every degree.** -/
 theorem closedRangeAt_min (j : ℤ) : (complexMin A b).ClosedRangeAt j := by
   have hr : (ComplexShape.up ℤ).Rel (j - 1) j := sub_add_cancel j 1
   exact ((complexMin A b).closedRangeAt_iff_poincare_of_rel hr).2
     ⟨_, fun z hz => norm_le_of_mem_orthogonal_cycles_min A hA b hr z hz⟩
 
-/-- **The harmonic forms of `HΛ(Ω)` are finite-dimensional**, of dimension `[k = 0]` (the
-constants; `Ω` is contractible). -/
 theorem finiteDimensional_harmonic (k : ℤ) : FiniteDimensional ℝ ((complex A b).harmonic k) :=
   (isChainIso A hA b).finiteDimensional_harmonic k
 
-/-- **The harmonic forms of `HΛ(Ω)`**: `dim ℌᵏ = [k = 0]` (`IsChainIso.finrank_harmonic_eq`). -/
 theorem finrank_harmonic (k : ℤ) :
     Module.finrank ℝ ((complex A b).harmonic k) = if k = 0 then 1 else 0 := by
   rw [(isChainIso A hA b).finrank_harmonic_eq k, FEM.finrank_harmonic]
 
-/-- **The cohomology of `HΛ(Ω)`**: `dim Hᵏ = [k = 0]`. -/
+/-- `dim Hᵏ(HΛ(Ω)) = [k = 0]`. -/
 theorem finrank_cohomology (k : ℤ) :
     Module.finrank ℝ ((complex A b).cohomology k) = if k = 0 then 1 else 0 := by
   rw [((complex A b).cohomologyEquivHarmonic (closedRangeAt A hA b k)).finrank_eq,
     finrank_harmonic A hA b]
 
-/-- **The harmonic forms of `H̊Λ(Ω)` are finite-dimensional**, of dimension `[k = n]`. -/
 theorem finiteDimensional_harmonic_min (k : ℤ) :
     FiniteDimensional ℝ ((complexMin A b).harmonic k) :=
   (isChainIsoMin A hA b).finiteDimensional_harmonic k
 
-/-- **The harmonic forms of `H̊Λ(Ω)`**: `dim ℌᵏ = [k = n]`. -/
 theorem finrank_harmonic_min (k : ℤ) :
     Module.finrank ℝ ((complexMin A b).harmonic k) = if k = n then 1 else 0 := by
   rw [(isChainIsoMin A hA b).finrank_harmonic_eq k, FEM.finrank_harmonic_min]
 
-/-- **The cohomology of `H̊Λ(Ω)`**: `dim Hᵏ = [k = n]`. -/
 theorem finrank_cohomology_min (k : ℤ) :
     Module.finrank ℝ ((complexMin A b).cohomology k) = if k = n then 1 else 0 := by
   rw [((complexMin A b).cohomologyEquivHarmonic (closedRangeAt_min A hA b k)).finrank_eq,
     finrank_harmonic_min A hA b]
 
-/-- **The compactness property of `HΛ(Ω)`**, every degree: transferred from the cube
-(`FEM.hasCompactProperty`) along the non-isometric isomorphism `T^*`
-(`IsChainIso.hasCompactPropertyAt`). -/
+/-- `HΛ(Ω)` has the compactness property in every degree. -/
 theorem hasCompactProperty : (complex A b).HasCompactProperty :=
   fun i => (isChainIso A hA b).hasCompactPropertyAt (FEM.hasCompactProperty i)
 
-/-- **The compactness property of `H̊Λ(Ω)`**, every degree. -/
 theorem hasCompactProperty_min : (complexMin A b).HasCompactProperty :=
   fun i => (isChainIsoMin A hA b).hasCompactPropertyAt (FEM.hasCompactProperty_min i)
 
@@ -1637,7 +1467,7 @@ end Hodge
 
 section WhitneyFEM
 
-/-- The Poincaré constant `c_P(A) = ‖(T^*)⁻¹‖ (2π)⁻¹ ‖T^*‖` of `Ω`, at least `1`. -/
+/-- The Poincaré constant `max 1 (pullConst A⁻¹ (2π)⁻¹ pullConst A)` of `Ω`. -/
 def poincareConst : ℝ := max 1 (pullConst A⁻¹ * (2 * Real.pi)⁻¹ * pullConst A)
 
 include hA in
@@ -1658,14 +1488,12 @@ theorem poincare_min (i j : ℤ) (hij : (ComplexShape.up ℤ).Rel i j)
 
 variable [NeZero n]
 
-/-- **The Whitney forms of the image Freudenthal meshes of `Ω = A · Q + b`** with the smoothed
-projections of the cube transported by `T^*` (`IsChainIso.comapFamily`; Whitney spaces are
-affine invariant, `mem_whitney_V_iff`), a conforming family of `HΛ(Ω)`. -/
+/-- The Whitney forms of the image Freudenthal meshes, a conforming family of `HΛ(Ω)`. -/
 def whitneyFamily : ConformingFamily (complex A b) ℕ :=
   (isChainIso A hA b).comapFamily (FEM.whitneyFamily n) (whitney A hA b)
     (mem_whitney_V_iff A hA b) (norm_pullEquiv_le A hA b) (norm_pullEquiv_symm_le A hA b)
 
-/-- **The Whitney forms with vanishing boundary DOFs on `Ω`**, a conforming family of `H̊Λ(Ω)`. -/
+/-- The Whitney forms with vanishing boundary DOFs on `Ω`, a conforming family of `H̊Λ(Ω)`. -/
 def whitneyFamilyMin : ConformingFamily (complexMin A b) ℕ :=
   (isChainIsoMin A hA b).comapFamily (FEM.whitneyFamilyMin n) (whitneyMin A hA b)
     (mem_whitneyMin_V_iff A hA b) (norm_pullEquiv_le A hA b) (norm_pullEquiv_symm_le A hA b)
@@ -1696,7 +1524,6 @@ theorem affinePullback_eq_comp (w : FormField n) :
     affinePullback (rows A) b w = fun x => fibCLM A (w (affMap A b x)) := by
   funext x; rw [affinePullback_apply, affine_rows]; rfl
 
-/-- **Derivatives of a pulled-back form**: `‖D(T^* w)(y)‖ ≤ fibConst A ‖Dw(T y)‖`. -/
 theorem norm_fderiv_affinePullback_le {w : FormField n} (hw : Differentiable ℝ w)
     (y : Fin n → ℝ) :
     ‖fderiv ℝ (affinePullback (rows A) b w) y‖ ≤ fibConst A * ‖fderiv ℝ w (affMap A b y)‖ := by
@@ -1715,13 +1542,11 @@ theorem extDeriv_affinePullback {w : FormField n} (hw : Differentiable ℝ w) :
   funext fun _ => extDeriv_affinePullback_apply _ b (hw _)
 
 include hA in
-/-- `T` maps `cl Q` into `cl Ω`. -/
 theorem affMap_mem_closure_domain {y : Fin n → ℝ} (hy : y ∈ closure (FEM.cubeDomain n)) :
     affMap A b y ∈ closure (domain A b) := by
   rw [domain_eq_image A hA b]
   exact image_closure_subset_closure_image (continuous_affMap A b) ⟨y, hy, rfl⟩
 
-/-- **`T^*` of the `L²` class of a continuous `k`-form is the class of its pullback.** -/
 theorem pullEquiv_formL2 {k : ℕ} {w : FormField n} (hw : Continuous w)
     (hdeg : ∀ y, IsDeg k (w y)) :
     pullEquiv A hA b k (formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) k
@@ -1743,16 +1568,14 @@ theorem pullEquiv_formL2 {k : ℕ} {w : FormField n} (hw : Continuous w)
   refine Finset.sum_congr rfl fun t _ => ?_
   rw [minorMat, mul_comm]
 
-/-- `x ∈ L²(Ω; Λʲ)` is a `C²` form of degree `j` whose derivative and the derivative of its
-exterior derivative are bounded by `L` on `cl Ω`; trivially true in negative degrees. -/
+/-- `x` is a `C²` form of degree `j` with derivative bounds `L` on `cl Ω`. -/
 def IsC2Form (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n, ∃ hw : ContDiff ℝ 2 w,
     (∀ y, IsDeg k (w y)) ∧ (∀ y ∈ closure (domain A b), ‖fderiv ℝ w y‖ ≤ L) ∧
     (∀ y ∈ closure (domain A b), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
 
-/-- `x ∈ L²(Ω; Λʲ)` is a `C²` form of degree `j` vanishing outside `Ω`, with the derivative bounds
-of `IsC2Form`. -/
+/-- `x` is a `C²` form of degree `j` vanishing outside `Ω`, with the bounds of `IsC2Form`. -/
 def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n, ∃ hw : ContDiff ℝ 2 w,
     (∀ y, IsDeg k (w y)) ∧ (∀ y ∉ domain A b, w y = 0) ∧
@@ -1760,7 +1583,6 @@ def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : P
     (∀ y ∈ closure (domain A b), ‖fderiv ℝ (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
 
-/-- **`C²` forms on `Ω` pull back to `C²` forms on `Q`**, with bound `fibConst A · L`. -/
 theorem IsC2Form.pullEquiv {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
     (hx : IsC2Form A hA b j L x) : FEM.IsC2Form j (fibConst A * L) (pullEquiv A hA b j x) := by
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
@@ -1779,7 +1601,6 @@ theorem IsC2Form.pullEquiv {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formId
       (fibConst_nonneg A)
   · exact pullEquiv_formL2 A hA b hw.continuous hdeg
 
-/-- **`C²` forms vanishing outside `Ω` pull back to `C²` forms vanishing outside `Q`.** -/
 theorem IsC2FormMin.pullEquiv {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
     (hx : IsC2FormMin A hA b j L x) :
     FEM.IsC2FormMin j (fibConst A * L) (pullEquiv A hA b j x) := by
@@ -1806,7 +1627,7 @@ end Smooth
 
 section Rates
 
-/-- The rate constant `‖(T^*)⁻¹‖ B_j fibConst(A)` of the interpolation error on `Ω`. -/
+/-- The rate constant `pullConst A⁻¹ · B_j · fibConst A` of the interpolation error on `Ω`. -/
 def rateBound (j : ℤ) : ℝ := pullConst A⁻¹ * FEM.interpBound n j * fibConst A
 
 theorem rateBound_nonneg (j : ℤ) : 0 ≤ rateBound A j :=
@@ -1814,8 +1635,6 @@ theorem rateBound_nonneg (j : ℤ) : 0 ≤ rateBound A j :=
 
 variable [NeZero n]
 
-/-- **Interpolation error of `C²` forms on `Ω`**: some `v ∈ Vₕʲ(T(M_N))` has `‖x - v‖` and
-`‖d (x - v)‖` at most `rateBound A j · L · h_N`. -/
 theorem IsC2Form.exists_mem_whitney_le {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
     (hx : IsC2Form A hA b j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (whitney A hA b N).V j, ‖x - v‖ ≤ rateBound A j * L * FEM.meshSize N ∧
@@ -1830,7 +1649,6 @@ theorem IsC2Form.exists_mem_whitney_le {j : ℤ} {L : ℝ} {x : L2F ℝ (domain 
       rateBound A j * L * FEM.meshSize N := by simp only [rateBound]; ring
   exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
 
-/-- **Interpolation error of `C²` forms vanishing outside `Ω`**, in `V̊ₕ(T(M_N))`. -/
 theorem IsC2FormMin.exists_mem_whitneyMin_le {j : ℤ} {L : ℝ}
     {x : L2F ℝ (domain A b) (formIdx n j)} (hx : IsC2FormMin A hA b j L x) (hL0 : 0 ≤ L)
     (N : ℕ) :
@@ -1847,8 +1665,7 @@ theorem IsC2FormMin.exists_mem_whitneyMin_le {j : ℤ} {L : ℝ}
       rateBound A j * L * FEM.meshSize N := by simp only [rateBound]; ring
   exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
 
-/-- **The Jackson estimate of the Whitney forms of `Ω`**: `C²` forms on `cl Ω` (`IsC2Form`) at
-the order `h_N` with the constants `rateBound` (`IsC2Form.exists_mem_whitney_le`). -/
+/-- The Jackson estimate of order `h_N` of the Whitney forms of `Ω`, for `C²` forms. -/
 def whitneyJackson : (whitneyFamily A hA b).Jackson Unit where
   meshSize := FEM.meshSize
   meshSize_nonneg N := (FEM.meshSize_pos N).le
@@ -1860,8 +1677,7 @@ def whitneyJackson : (whitneyFamily A hA b).Jackson Unit where
   jackson _ N _ _ _ hL hx := by
     rw [Real.rpow_one, ← mul_assoc]; exact hx.exists_mem_whitney_le A hA b hL N
 
-/-- **The Jackson estimate of the Whitney forms with vanishing boundary DOFs of `Ω`**: `C²` forms
-vanishing outside `Ω` (`IsC2FormMin`) at the order `h_N`. -/
+/-- The Jackson estimate of order `h_N` of the Whitney forms with vanishing boundary DOFs. -/
 def whitneyJacksonMin : (whitneyFamilyMin A hA b).Jackson Unit where
   meshSize := FEM.meshSize
   meshSize_nonneg N := (FEM.meshSize_pos N).le
@@ -1889,8 +1705,6 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((whitneyMin A hA b N).window a m).V i) :=
   inferInstanceAs (FiniteDimensional ℝ ((whitneyMin A hA b N).V (a + i)))
 
-/-- **Graph-norm density of the Whitney spaces of `T(M_N)` in `HΛ(Ω)`**, degreewise (from the
-cube by `IsChainIso.eventually_near_comapSub`). -/
 theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ (domain A b) (formIdx n i)) {ε : ℝ}
     (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (whitney A hA b N).V i, ‖x - v‖ < ε ∧
@@ -1911,8 +1725,6 @@ theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ (domain A b) (f
     (fun N i x => mem_whitneyMin_V_iff A hA b N i x) (norm_pullEquiv_symm_le A hA b)
     (fun i x' _ hε => FEM.eventually_exists_whitneyMin_near i x' hε) i x ε hε
 
-/-- **The Whitney windows of `T(M_N)` approximate every point of the graph space** of the total
-differential of every window of `HΛ(Ω)`. -/
 theorem dense_window (a : ℤ) (m : ℕ) :
     ∀ ζ : ((complex A b).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
       ∃ w ∈ ((whitney A hA b N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
@@ -1929,10 +1741,8 @@ theorem dense_windowMin (a : ℤ) (m : ℕ) :
       obtain ⟨v, hv, h1, h2⟩ := hN
       exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
 
-/-- **Convergence of the semi-discrete Hodge wave equation on `Ω`** for every window of `HΛ(Ω)`
-and `D(L)` data, with no remaining hypothesis ([QuennevilleBelair2015], Thm 4.14): the
-semi-discrete Whitney solutions on `T(M_N)` with `ξₕ(t₀) = Pₕ x` converge to `e^{(t - t₀) L} x`
-uniformly on `[t₀, t₁]`. -/
+/-- On every window of `HΛ(Ω)`, the semi-discrete Whitney solutions from `Pₕ x`, `x ∈ D(L)`,
+converge to `e^{(t - t₀) L} x` uniformly on `[t₀, t₁]`. [QuennevilleBelair2015], Thm 4.14 -/
 theorem exists_tendstoUniformlyOn_window_whitney (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
     (x : ((complex A b).window a m).wave.domain) :
     ∃ ξh ξh' : ℕ → ℝ → ((complex A b).window a m).totalD.GraphSpace,
@@ -1946,7 +1756,6 @@ theorem exists_tendstoUniformlyOn_window_whitney (a : ℤ) (m : ℕ) (t₀ t₁ 
   HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
     (Subcomplex.isApproximating (dense_window A hA b a m)) t₀ t₁ x
 
-/-- **Convergence of the semi-discrete Hodge wave equation with vanishing traces on `Ω`.** -/
 theorem exists_tendstoUniformlyOn_windowMin_whitney (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
     (x : ((complexMin A b).window a m).wave.domain) :
     ∃ ξh ξh' : ℕ → ℝ → ((complexMin A b).window a m).totalD.GraphSpace,
@@ -1960,10 +1769,8 @@ theorem exists_tendstoUniformlyOn_windowMin_whitney (a : ℤ) (m : ℕ) (t₀ t�
   HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
     (Subcomplex.isApproximating (dense_windowMin A hA b a m)) t₀ t₁ x
 
-/-- **`O(h)` rate of the semi-discrete Hodge wave equation on `Ω` for smooth solutions**
-([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7): if every component of `ξ(s)` and
-`ξ'(s)` is a `C²` form with bound `L` on `cl Ω` for `s ∈ [t₀, t₁]`, then
-`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² K L h_N` with `K = (m + m²) Σᵢ 2 rateBound A (a + i)`. -/
+/-- The rate `O(h_N)` of the semi-discrete Hodge wave equation on `Ω` for `C²` solutions.
+[QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7 -/
 theorem norm_sub_le_meshSize_window_smooth (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complex A b).window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
@@ -2002,8 +1809,6 @@ section PolyΩ
 
 variable [NeZero n]
 
-/-- Affine invariance of the global spaces of a natural element family, transported along the
-domain equalities of the subcomplexes. -/
 theorem fieldPull_mem_cast (E : LocalElement n) (hE : IsAffineNatural A hA b E)
     {M₁ M₂ : SimplicialMesh n} (h : M₂ = M₁.map (affEquiv A hA b)) {Ω₁ Ω₂ : Set (Fin n → ℝ)}
     (h₁ : M₁.domain = Ω₁) (h₂ : M₂.domain = Ω₂) (hM₁ : IsOpen M₁.domain) (hM₂ : IsOpen M₂.domain)
@@ -2029,7 +1834,7 @@ theorem fieldPull_mem_castMin (E : LocalElement n) (hE : IsAffineNatural A hA b 
   subst h₁ h₂
   exact fieldPull_mem_V₀ E hE h hM₁ _ hT k hv
 
-/-- **The complex of the admissible sequence `S` on `T(M_N)`**, a subcomplex of `HΛ(Ω)`. -/
+/-- The complex of the admissible sequence `S` on `T(M_N)`, a subcomplex of `HΛ(Ω)`. -/
 def poly (S : PolySeq) (N : ℕ) : (complex A b).Subcomplex :=
   (deRham ℝ n).maximalSubcomplexOfEq (mesh_domain A hA b N) (isOpen_mesh_domain A hA b N)
     (isOpen_domain A b) (S.subcomplex (mesh A hA b N) (isOpen_mesh_domain A hA b N))
@@ -2037,7 +1842,7 @@ def poly (S : PolySeq) (N : ℕ) : (complex A b).Subcomplex :=
 instance (S : PolySeq) (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((poly A hA b S N).V k) :=
   (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
 
-/-- **The complex of `S` on `T(M_N)` with vanishing boundary DOFs**, a subcomplex of `H̊Λ(Ω)`. -/
+/-- The complex of `S` on `T(M_N)` with vanishing boundary DOFs, a subcomplex of `H̊Λ(Ω)`. -/
 def polyMin (S : PolySeq) (N : ℕ) : (complexMin A b).Subcomplex :=
   (deRham ℝ n).minimalSubcomplexOfEq (mesh_domain A hA b N) (isOpen_mesh_domain A hA b N)
     (isOpen_domain A b)
@@ -2047,7 +1852,6 @@ def polyMin (S : PolySeq) (N : ℕ) : (complexMin A b).Subcomplex :=
 instance (S : PolySeq) (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((polyMin A hA b S N).V k) :=
   (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
 
-/-- **Affine invariance of `P_rΛ`/`P_r⁻Λ` on `Ω`**: `v ∈ Vₕᵏ(T(M_N))` iff `T^* v ∈ Vₕᵏ(M_N)`. -/
 theorem mem_poly_V_iff (S : PolySeq) (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A b) (formIdx n k)) :
     x ∈ (poly A hA b S N).V k ↔ pullEquiv A hA b k x ∈ (FEM.poly n S N).V k := by
   constructor
@@ -2067,7 +1871,6 @@ theorem mem_poly_V_iff (S : PolySeq) (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A 
         (pullEquiv A hA b k x) = x := (pullEquiv A hA b k).symm_apply_apply x
     rwa [e] at h
 
-/-- **Affine invariance of `P_rΛ`/`P_r⁻Λ` with vanishing boundary DOFs on `Ω`.** -/
 theorem mem_polyMin_V_iff (S : PolySeq) (N : ℕ) (k : ℤ) (x : L2F ℝ (domain A b) (formIdx n k)) :
     x ∈ (polyMin A hA b S N).V k ↔ pullEquiv A hA b k x ∈ (FEM.polyMin n S N).V k := by
   constructor
@@ -2104,8 +1907,6 @@ instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((polyMin A hA b S N).window a m).V i) :=
   inferInstanceAs (FiniteDimensional ℝ ((polyMin A hA b S N).V (a + i)))
 
-/-- **Convergence of the semi-discrete Hodge wave equation for the higher-order families on
-`Ω`**, every window, `D(L)` data ([QuennevilleBelair2015], Thm 4.14). -/
 theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
     (x : ((complex A b).window a m).wave.domain) :
     ∃ ξh ξh' : ℕ → ℝ → ((complex A b).window a m).totalD.GraphSpace,
@@ -2120,14 +1921,12 @@ theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) 
     (poly A hA b S) (fun N i x => mem_poly_V_iff A hA b S N i x) (norm_pullEquiv_symm_le A hA b)
     fun i x' _ hε => FEM.eventually_exists_poly_near S i x' hε) a m t₀ t₁ x
 
-/-- **The finite element complexes of an admissible sequence `S` on the meshes of `Ω`**, with
-the transported smoothed projections of the cube, a conforming family of `HΛ(Ω)`. -/
+/-- The complexes of an admissible sequence `S` on `Ω`, a conforming family of `HΛ(Ω)`. -/
 def polyFamily (S : PolySeq) : ConformingFamily (complex A b) ℕ :=
   (isChainIso A hA b).comapFamily (FEM.polyFamily n S) (poly A hA b S)
     (mem_poly_V_iff A hA b S) (norm_pullEquiv_le A hA b) (norm_pullEquiv_symm_le A hA b)
 
-/-- **The finite element complexes of `S` with vanishing boundary DOFs on `Ω`**, a conforming
-family of `H̊Λ(Ω)`. -/
+/-- The complexes of `S` with vanishing boundary DOFs, a conforming family of `H̊Λ(Ω)`. -/
 def polyFamilyMin (S : PolySeq) : ConformingFamily (complexMin A b) ℕ :=
   (isChainIsoMin A hA b).comapFamily (FEM.polyFamilyMin n S) (polyMin A hA b S)
     (mem_polyMin_V_iff A hA b S) (norm_pullEquiv_le A hA b) (norm_pullEquiv_symm_le A hA b)
@@ -2149,8 +1948,6 @@ def fibConstIter (m : ℕ) : ℝ := ‖fibCLM A‖ * ‖(Matrix.toLin' A).toCont
 theorem fibConstIter_nonneg (m : ℕ) : 0 ≤ fibConstIter A m :=
   mul_nonneg (norm_nonneg _) (pow_nonneg (norm_nonneg _) m)
 
-/-- **Iterated derivatives of a pulled-back form**:
-`‖D^m (T^* w)(y)‖ ≤ ‖A^*‖ ‖A‖^m ‖D^m w(T y)‖`. -/
 theorem norm_iteratedFDeriv_affinePullback_le {m : ℕ} {w : FormField n}
     (hw : ContDiff ℝ m w) (y : Fin n → ℝ) :
     ‖iteratedFDeriv ℝ m (affinePullback (rows A) b w) y‖ ≤
@@ -2177,8 +1974,7 @@ theorem norm_iteratedFDeriv_affinePullback_le {m : ℕ} {w : FormField n}
         rw [hLy]; exact mul_le_mul_of_nonneg_left h2 (norm_nonneg _)
     _ = _ := by simp only [fibConstIter, L]; ring
 
-/-- `x ∈ L²(Ω; Λʲ)` is a `C^{s+2}` form of degree `j` whose `(s+1)`-st derivative and that of its
-exterior derivative are bounded by `L` on `cl Ω` (trivially true in negative degrees). -/
+/-- `x` is a `C^{s+2}` form of degree `j` with `(s+1)`-st derivative bounds `L` on `cl Ω`. -/
 def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
@@ -2186,8 +1982,6 @@ def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n 
     (∀ y ∈ closure (domain A b), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_domain A b).measurableSet (isBounded_domain A hA b) j ⟨w, hw.continuous⟩
 
-/-- **`C^{s+2}` forms on `Ω` pull back to `C^{s+2}` forms on `Q`**, with bound
-`fibConstIter A (s + 1) · L`. -/
 theorem IsCsForm.pullEquiv {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
     (hx : IsCsForm A hA b s j L x) :
     FEM.IsCsForm s j (fibConstIter A (s + 1) * L) (pullEquiv A hA b j x) := by
@@ -2209,7 +2003,7 @@ theorem IsCsForm.pullEquiv {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (domain A 
       (fibConstIter_nonneg A _)
   · exact pullEquiv_formL2 A hA b hw.continuous hdeg
 
-/-- The rate constant `‖(T^*)⁻¹‖ B_j ‖A^*‖ ‖A‖^{s+1}` of the higher-order families on `Ω`. -/
+/-- The rate constant `pullConst A⁻¹ · B_j · ‖A^*‖ ‖A‖^{s+1}` of the higher-order families. -/
 def polyRateBound (S : PolySeq) (s : ℕ) (j : ℤ) : ℝ :=
   pullConst A⁻¹ * FEM.polyInterpBound n S j * fibConstIter A (s + 1)
 
@@ -2219,8 +2013,6 @@ theorem polyRateBound_nonneg (S : PolySeq) (s : ℕ) (j : ℤ) : 0 ≤ polyRateB
 
 variable [NeZero n]
 
-/-- **Interpolation error of order `h^{s+1}` on `Ω`** for a sequence of order `s` in degrees `j`,
-`j + 1`. -/
 theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ} (hS : PolyOrderAt n S s j)
     {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)} (hx : IsCsForm A hA b s j L x) (hL0 : 0 ≤ L)
     (N : ℕ) :
@@ -2238,8 +2030,7 @@ theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ} (hS : Poly
     simp only [polyRateBound]; ring
   exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
 
-/-- `x ∈ L²(Ω; Λʲ)` is a `C^{s+2}` form of degree `j` **vanishing outside `Ω`** with the bounds of
-`IsCsForm`. -/
+/-- `x` is a `C^{s+2}` form vanishing outside `Ω`, with the bounds of `IsCsForm`. -/
 def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (domain A b) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
@@ -2291,9 +2082,7 @@ theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
     simp only [polyRateBound]; ring
   exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
 
-/-- **The Jackson estimate of the complexes of `S` on `Ω`**: for `s : ℕ`, the `C^{s+2}` forms on
-`cl Ω` (`IsCsForm s`) of the degrees where `S` reproduces `P_s` (`PolyOrderAt`) at the order
-`h_N^{s+1}` with the constants `polyRateBound` (`IsCsForm.exists_mem_poly_le`). -/
+/-- The Jackson estimate of order `h_N^{s+1}` of the complexes of `S` on `Ω`. -/
 def polyJackson (S : PolySeq) : (polyFamily A hA b S).Jackson ℕ where
   meshSize := FEM.meshSize
   meshSize_nonneg N := (FEM.meshSize_pos N).le
@@ -2305,8 +2094,7 @@ def polyJackson (S : PolySeq) : (polyFamily A hA b S).Jackson ℕ where
   jackson s N _ _ _ hL hx := by
     rw [Real.rpow_natCast]; exact hx.2.exists_mem_poly_le A hA b hx.1 hL N
 
-/-- **The Jackson estimate of the complexes of `S` with vanishing boundary DOFs on `Ω`**: the
-forms of class `IsCsFormMin s` at the order `h_N^{s+1}` (`IsCsFormMin.exists_mem_polyMin_le`). -/
+/-- The Jackson estimate of order `h_N^{s+1}` of the complexes of `S` with vanishing DOFs. -/
 def polyJacksonMin (S : PolySeq) : (polyFamilyMin A hA b S).Jackson ℕ where
   meshSize := FEM.meshSize
   meshSize_nonneg N := (FEM.meshSize_pos N).le
@@ -2318,10 +2106,8 @@ def polyJacksonMin (S : PolySeq) : (polyFamilyMin A hA b S).Jackson ℕ where
   jackson s N _ _ _ hL hx := by
     rw [Real.rpow_natCast]; exact hx.2.exists_mem_polyMin_le A hA b hx.1 hL N
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method on `Ω = A · Q + b`**
-([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), with no hypothesis beyond the data: for a sequence of
-order `s` (`PolyOrder`) and a solution whose components, boundary part and harmonic part are
-`C^{s+2}` with `‖D^{s+1}‖ ≤ L` on `cl Ω`, the error on `T(M_N)` is `≤ K L h_N^{s+1}`. -/
+/-- Convergence of order `h^{s+1}` of the higher-order mixed method on `Ω = A · Q + b`, for
+solutions of class `C^{s+2}` on `cl Ω`. [AFW2010], Thm 3.9; [Arnold2018], Ch. 7 -/
 theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complex A b).domainSpace i}
@@ -2350,8 +2136,6 @@ theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : 
   rw [← Real.rpow_natCast]
   exact h
 
-/-- **Convergence of order `h^{s+1}` with vanishing traces on `Ω`**, for solutions whose
-components are `C^{s+2}` forms vanishing outside `Ω`. -/
 theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complexMin A b).domainSpace i}
@@ -2395,7 +2179,6 @@ theorem isUnit_det_boxMatrix {a c : Fin n → ℝ} (h : ∀ i, a i < c i) :
   rw [boxMatrix, Matrix.det_diagonal, isUnit_iff_ne_zero]
   exact Finset.prod_ne_zero_iff.2 fun i _ => by have := h i; positivity
 
-/-- **Every open box is a parallelepiped**: `∏ᵢ (aᵢ, cᵢ) = diag(2 (c - a)) · Q + a`. -/
 theorem domain_boxMatrix {a c : Fin n → ℝ} (h : ∀ i, a i < c i) :
     domain (boxMatrix a c) a = Set.univ.pi fun i => Set.Ioo (a i) (c i) := by
   rw [domain_eq_image _ (isUnit_det_boxMatrix h)]

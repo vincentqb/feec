@@ -8,41 +8,13 @@ public import Feec.Evolution.Energy
 /-!
 # The Hodge heat equation
 
-For a Hilbert complex `H` on a finite index type (any shape, `𝕜 = ℝ` or `ℂ`), with total
-differential `𝐝`, its adjoint `𝐝* = 𝐝†`, wave operator `L = 𝐝 − 𝐝*` and Hodge Laplacian
-`Δ = -L² = 𝐝 𝐝* + 𝐝* 𝐝` (`Feec.HilbertComplex.hodgeLaplacian`), the **Hodge heat equation**
-`u' = -Δ u + F` is well posed, its semigroup `e^{-tΔ}` fixes the harmonic forms and commutes
-with the harmonic projection, and it decays exponentially to the harmonic part under a Poincaré
-inequality. No closed range is needed except for the decay.
-
-## Main results
-
-* `HilbertComplex.isMDissipative_neg_hodgeLaplacian`: `-Δ` is m-dissipative (self-adjoint,
-  `re ⟪Δ x, x⟫ = ‖𝐝 x‖² + ‖𝐝* x‖² ≥ 0`).
-* `HilbertComplex.heatSemigroup`: the Lumer–Phillips contraction semigroup of `-Δ`, with
-  `generator_heatSemigroup`.
-* `HilbertComplex.existsUnique_classicalSolution_heat`: classical solutions of
-  `u' = -Δ u + F` for `u₀ ∈ D(Δ)` and admissible forcing, unique among strong solutions
-  (from `LinearPMap.IsMDissipative.existsUnique_classicalSolution`, any m-dissipative generator).
-* Harmonic forms `⊕ ℌⁱ = ker Δ = ker 𝐝 ∩ ker 𝐝*` (`HilbertComplex.harmonicSum`): stationary
-  (`heatSemigroup_S_apply_of_mem_harmonicSum`), and `e^{-tΔ}` commutes with their orthogonal
-  projection (`starProjection_heatSemigroup_S`, `heatSemigroup_S_starProjection`).
-* `LinearPMap.norm_le_of_poincare_adjoint` (a Poincaré inequality for `T` gives one for `T†`
-  with the same constant) and `LinearPMap.norm_sq_le_of_poincare`:
-  `‖x‖² ≤ c_P² (‖𝐝 x‖² + ‖𝐝* x‖²)` on `D(𝐝) ∩ D(𝐝*) ∩ (⊕ ℌⁱ)ᗮ`.
-* **`HilbertComplex.norm_heatSemigroup_sub_starProjection_le`**: exponential decay
-  `‖e^{-tΔ} u₀ - P_ℌ u₀‖ ≤ e^{-t / c_P²} ‖u₀ - P_ℌ u₀‖`, for a Poincaré constant `c_P` of `𝐝`.
+For a finite Hilbert complex the Hodge heat equation `u' = -Δ u + F` is well posed; its semigroup
+`e^{-tΔ}` fixes the harmonic forms and, under a Poincaré inequality, decays exponentially to the
+harmonic part.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1–§3.2 (Hodge decomposition, Poincaré inequality, the abstract Hodge Laplacian)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4 (the abstract Hodge
-  Laplacian)
-* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
-  (the Hodge heat equation in FEEC)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.4 (Lumer–Phillips), §4.1–4.2 (the inhomogeneous problem)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -61,10 +33,8 @@ open Feec
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E}
 
-/-- **Well-posedness for an m-dissipative generator**: for `U₀ ∈ D(A)` and admissible forcing
-`F ∈ C([a,b]; E) ∩ (W^{1,1}(a,b; E) ∪ L¹(a,b; D(A)))`, `U' = A U + F`, `U a = U₀` has a classical
-solution on `[a, b]` (Duhamel's formula for the Lumer–Phillips semigroup), unique among strong
-solutions. Cf. [Pazy1983], §4.1–4.2. -/
+/-- **Well-posedness for an m-dissipative generator**: for `U₀ ∈ D(A)` and admissible forcing,
+a classical solution of `U' = A U + F`, unique among strong solutions. [Pazy1983], §4.1–4.2 -/
 theorem existsUnique_classicalSolution (hA : A.IsMDissipative) {U₀ : E} (hU₀ : U₀ ∈ A.domain)
     {F : ℝ → E} {a b : ℝ} (hF : Evolution.ForcingClass.admissible A a b F) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution A (Icc a b) F U ∧
@@ -85,9 +55,6 @@ section Poincare
 
 variable [CompleteSpace E]
 
-/-- **Poincaré inequality for the adjoint, with the same constant**: if `‖x‖ ≤ C ‖T x‖` on
-`D(T) ∩ N(T)ᗮ`, then `‖y‖ ≤ C ‖T† y‖` on `D(T†) ∩ N(T†)ᗮ` (`y = T x` with `x ⊥ N(T)`, and
-`‖y‖² = ⟪x, T† y⟫`). -/
 theorem norm_le_of_poincare_adjoint {T S : E →ₗ.[𝕜] E} (hD : Dense (T.domain : Set E))
     (hc : T.IsClosed) (hS : T† = S) {C : ℝ}
     (hP : ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ C * ‖T x‖) (y : S.domain)
@@ -113,10 +80,6 @@ theorem norm_le_of_poincare_adjoint {T S : E →ₗ.[𝕜] E} (hD : Dense (T.dom
     rw [← h0, hy0, LinearPMap.map_zero, norm_zero, mul_zero]
   · nlinarith
 
-/-- **The Poincaré inequality for `T` and `T†` together**: for a closed densely defined `T` with
-`T T = 0` and a Poincaré constant `C` for `T`, every `v ∈ D(T) ∩ D(T†)` orthogonal to
-`N(T) ∩ N(T†)` satisfies `‖v‖² ≤ C² (‖T v‖² + ‖T† v‖²)`. Split `v = a + b`, `b = P_{N(T)} v`:
-`a ⊥ N(T)`, `b ⊥ N(T†)`, `T a = T v`, `T† b = T† v`. -/
 theorem norm_sq_le_of_poincare {T S : E →ₗ.[𝕜] E} (hD : Dense (T.domain : Set E))
     (hc : T.IsClosed) (hmaps : ∀ x : T.domain, (T x : E) ∈ T.domain)
     (hcomp : ∀ x : T.domain, T ⟨T x, hmaps x⟩ = 0) (hS : T† = S) {C : ℝ}
@@ -220,7 +183,6 @@ theorem mem_ker_totalD_iff {x : PiLp 2 W} : x ∈ H.totalD.ker ↔ ∀ i, x i �
     have hx : x ∈ H.totalD.domain := fun i j => H.domain_next_le i j (H.cycles_le_domain i (hc i))
     exact LinearPMap.mem_ker_iff.2 ⟨⟨x, hx⟩, rfl, (H.totalD_eq_zero_iff ⟨x, hx⟩).2 hc⟩
 
-/-- `⊕ ℌⁱ = ker 𝐝 ∩ ker 𝐝*`. -/
 theorem mem_harmonicSum_iff_ker {x : PiLp 2 W} :
     x ∈ H.harmonicSum ↔ x ∈ H.totalD.ker ∧ x ∈ H.dual.totalD.ker := by
   rw [harmonicSum, mem_ker_hodgeLaplacian_iff, mem_ker_totalD_iff, H.dual.mem_ker_totalD_iff]
@@ -238,11 +200,9 @@ section Heat
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- The **Hodge heat semigroup** `e^{-tΔ}`: the Lumer–Phillips contraction semigroup of the
-m-dissipative `-Δ`. -/
+/-- The **Hodge heat semigroup** `e^{-tΔ}` of the m-dissipative `-Δ`. -/
 def heatSemigroup : C0Semigroup 𝕜 (PiLp 2 W) := H.isMDissipative_neg_hodgeLaplacian.semigroup
 
-/-- The generator of the heat semigroup is `-Δ`, domain included. -/
 theorem generator_heatSemigroup : H.heatSemigroup.generator = -H.hodgeLaplacian :=
   H.isMDissipative_neg_hodgeLaplacian.generator_semigroup
 
@@ -253,9 +213,8 @@ theorem isSymmetric_neg_hodgeLaplacian : (-H.hodgeLaplacian).IsSymmetric := by
   change ⟪-(-H.wave.sq) x, (y : PiLp 2 W)⟫ = ⟪(x : PiLp 2 W), -(-H.wave.sq) y⟫
   rw [inner_neg_left, inner_neg_right, h]
 
-/-- **Well-posedness of the Hodge heat equation** `u' = -Δ u + F`: for `u₀ ∈ D(Δ)` and
-admissible forcing, a classical solution exists on `[a, b]` and is unique among strong
-solutions. -/
+/-- **Well-posedness of the Hodge heat equation** `u' = -Δ u + F`: for `u₀ ∈ D(Δ)` and admissible
+forcing, a classical solution on `[a, b]`, unique among strong solutions. -/
 theorem existsUnique_classicalSolution_heat {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ H.hodgeLaplacian.domain)
     {F : ℝ → PiLp 2 W} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible (-H.hodgeLaplacian) a b F) :
@@ -266,25 +225,21 @@ theorem existsUnique_classicalSolution_heat {U₀ : PiLp 2 W} (hU₀ : U₀ ∈ 
 
 /-! ### Stationary harmonic forms and the harmonic projection -/
 
-/-- **Harmonic forms are stationary**: `e^{-tΔ} h = h` for `h ∈ ⊕ ℌⁱ`, `t ≥ 0`. -/
 theorem heatSemigroup_S_apply_of_mem_harmonicSum {x : PiLp 2 W} (hx : x ∈ H.harmonicSum)
     {t : ℝ} (ht : 0 ≤ t) : H.heatSemigroup.S t x = x :=
   C0Semigroup.S_apply_of_mem_ker
     (by rw [generator_heatSemigroup]; exact H.mem_ker_neg_hodgeLaplacian_iff.2 hx) ht
 
-/-- `P_ℌ e^{-tΔ} = P_ℌ`. -/
 theorem starProjection_heatSemigroup_S {t : ℝ} (ht : 0 ≤ t) (x : PiLp 2 W) :
     H.harmonicSum.starProjection (H.heatSemigroup.S t x) = H.harmonicSum.starProjection x :=
   C0Semigroup.starProjection_S_of_isSymmetric
     (by rw [generator_heatSemigroup]; exact H.isSymmetric_neg_hodgeLaplacian) ht
     (fun _ hk => H.heatSemigroup_S_apply_of_mem_harmonicSum hk ht) x
 
-/-- `e^{-tΔ} P_ℌ = P_ℌ`. -/
 theorem heatSemigroup_S_starProjection {t : ℝ} (ht : 0 ≤ t) (x : PiLp 2 W) :
     H.heatSemigroup.S t (H.harmonicSum.starProjection x) = H.harmonicSum.starProjection x :=
   H.heatSemigroup_S_apply_of_mem_harmonicSum (H.harmonicSum.starProjection_apply_mem x) ht
 
-/-- The heat semigroup preserves `(⊕ ℌⁱ)ᗮ`. -/
 theorem heatSemigroup_S_mem_orthogonal {x : PiLp 2 W} (hx : x ∈ H.harmonicSumᗮ) {t : ℝ}
     (ht : 0 ≤ t) : H.heatSemigroup.S t x ∈ H.harmonicSumᗮ := by
   rw [← Submodule.starProjection_apply_eq_zero_iff] at hx ⊢
@@ -297,8 +252,6 @@ end Heat
 theorem harmonicSum_eq_inf : H.harmonicSum = H.totalD.ker ⊓ H.dual.totalD.ker :=
   Submodule.ext fun _ => H.mem_harmonicSum_iff_ker
 
-/-- **The Poincaré inequality for the Hodge Laplacian**: with a Poincaré constant `cP` for `𝐝`,
-`‖x‖² ≤ cP² (‖𝐝 x‖² + ‖𝐝* x‖²) = cP² re ⟪Δ x, x⟫` for `x ∈ D(Δ) ∩ (⊕ ℌⁱ)ᗮ`. -/
 theorem norm_sq_le_re_inner_hodgeLaplacian {cP : ℝ}
     (hP : ∀ x : H.totalD.domain, (x : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(x : PiLp 2 W)‖ ≤ cP * ‖H.totalD x‖)
@@ -313,9 +266,8 @@ section Decay
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **Exponential decay of the Hodge heat flow to the harmonic projection**: with a Poincaré
-constant `cP` for `𝐝`, `‖e^{-tΔ} u₀ - P_ℌ u₀‖ ≤ e^{-t / cP²} ‖u₀ - P_ℌ u₀‖` for `t ≥ 0`.
-Energy method: on `D(Δ) ∩ ℌᗮ`, `re ⟪-Δ u, u⟫ ≤ -‖u‖² / cP²`; then density. -/
+/-- **Exponential decay to the harmonic part**: with a Poincaré constant `cP` for `𝐝`,
+`‖e^{-tΔ} u₀ - P_ℌ u₀‖ ≤ e^{-t / cP²} ‖u₀ - P_ℌ u₀‖` for `t ≥ 0`. -/
 theorem norm_heatSemigroup_sub_starProjection_le {cP : ℝ}
     (hP : ∀ x : H.totalD.domain, (x : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(x : PiLp 2 W)‖ ≤ cP * ‖H.totalD x‖)

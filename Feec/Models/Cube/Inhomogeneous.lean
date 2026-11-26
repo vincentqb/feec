@@ -11,88 +11,19 @@ public import Feec.TimeStepping.Cayley
 /-!
 # The thesis' experiments with inhomogeneous boundary data
 
-The Crank–Nicolson runs of [QuennevilleBelair2015], Ch. 7, as implemented in `fem4gr`
-(<https://github.com/vincentqb/fem4gr>, `ebsystem3d_mixed_crank_triplet.py`), solve the
-Einstein–Bianchi system `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E` on the unit cube (the
-printed (4.14) `σ̇ = −div E`, `Ė = −grad σ − curl B`, `Ḃ = curl E` up to `σ ↦ −σ`, as assembled in
-`fem4gr`; the two are equivalent, and `σ = 0` in all data of Ch. 7) with **inhomogeneous** essential boundary data taken from the exact plane wave: `σ = 0`,
-`E × n = E_ex × n`, `B · n = B_ex · n` on `∂Ω`. The homogeneous problem is the Hodge wave
-equation of the thesis' complex `H̊¹ → H̊(curl) → L²` (`Feec.Models.BoundedDomain.gradCurl`).
+The runs of [QuennevilleBelair2015], Ch. 7 with inhomogeneous boundary data: whole-space TSD
+solutions as liftings, and the Crank–Nicolson scheme with prescribed boundary DOFs.
 
-## Hodge wave equations with boundary data
+## Main results
 
-For a finite Hilbert complex `H` (the boundary conditions, e.g. the minimal realization) and a
-complex `H'` with `d ≤ d'` (no boundary conditions, e.g. the maximal realization), the operator
-without boundary conditions is `L_max = 𝐝' − 𝐝†` (`waveMax H H'`), and `L = 𝐝 − 𝐝† ≤ L_max`
-(`wave_le_waveMax`); existence and uniqueness with a lifting is
-`Feec.Evolution.existsUnique_isBoundarySolution` for the skew-adjoint `L`. The
-boundary values are prescribed by a lifting through
-`Feec.Evolution.IsBoundarySolution L_max L`: the essential conditions are those of `𝐝`, while
-`𝐝†` carries none. For the thesis' complex, `L_max (σ, E, B) = (div E, grad σ − curl B, curl E)`
-on `H¹ × (H(curl) ∩ H(div)) × H(curl)`, and `U(t) − G(t) ∈ D(L)` says that `σ` and the tangential
-trace `E × n` agree with those of `G`. The condition `B · n = h` of `fem4gr` is not an extra
-condition of the continuous problem: `B` lies in the last space `L²`.
-
-## Restrictions of whole-space solutions
-
-A **whole-space TSD solution** (`WholeSpaceTSD`) is a classical solution of `E' = −curl B`,
-`B' = curl E` on `ℝ × ℝ³`, `C¹` in space with jointly continuous time derivatives, whose fields are
-symmetric, trace-free and divergence-free at every point (so `σ = 0`); the plane wave of Ch. 7 is
-one (`Feec.Numerics.PlaneWaveCube`). On every bounded open `Ω`:
-
-* its restriction `R(t) = (0, E(t)|_Ω, B(t)|_Ω)` is a strong solution of `U' = L_max U` with values
-  in `K = {0} × L²(TSD) × L²(TSD)` (`WholeSpaceTSD.isStrongSolution_restrict`,
-  `WholeSpaceTSD.restrict_mem`);
-* **it is the unique solution with its own boundary data and initial value**
-  (`WholeSpaceTSD.restrict_unique`), so TSD propagates for this datum;
-* for an initial value `U₀` with `U₀ − R(0) ∈ D(L)`, the solution with the boundary data of `R`
-  exists, is unique (`WholeSpaceTSD.existsUnique`), and equals `R(t) + e^{tL}(U₀ − R(0))`
-  (`WholeSpaceTSD.eq_add_waveGroup`); it stays TSD on `[0, T]` **iff** the homogeneous solution
-  from `U₀ − R(0)` does (`WholeSpaceTSD.mem_iff`), in particular whenever `U₀ − R(0)` lies in
-  the invariant core `K*` of the homogeneous problem.
-
-The homogeneous refutation (`Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`) then
-transfers to these data: TSD propagation fails for a TSD perturbation `R(0) + W₀` of the initial
-value (`Feec.Numerics.PlaneWaveCube.exists_not_propagates`).
-
-The condition `B · n = h` imposed by `fem4gr` is not part of the continuous problem. *Remark (not
-formalized):* for an exact lifting it is propagated, since `B − B_R` evolves in the range of
-`curl_min`, which lies in the kernel of the normal trace.
-
-## The fully discrete scheme
-
-For a finite element subcomplex `Vₕ` (all DOFs) with the subspaces `V̊ₕⁱ` of vanishing boundary
-DOFs, `discreteWave S = 𝐝ₕ − 𝐝ₕ*` is the matrix of `fem4gr`'s bilinear form, skew on all of `Vₕ`
-(`inner_discreteWave_self`), and the Crank–Nicolson step with prescribed boundary DOFs
-(`Feec.TimeStepping.IsDirichletCNStep`) is well posed for every time step
-(`existsUnique_isDirichletCNStep`); the constraint residuals of its solution are bounded by the
-consistency error (`norm_residual_le`). On the Whitney spaces of the Freudenthal meshes of the cube
-(`whitneyRow N`: Lagrange `P₁`, Nédélec, Raviart–Thomas, with `V̊ₕ ⊆ Vₕ` by
-`whitneyMin_le_whitney`) it applies row by row. The meshes are those of `(0, ½)³`
-(`Feec.Models.Cube.FEM.cubeDomain`); the unit cube of `fem4gr` is its dilation: the meshes of
-`(0, 1)³` are their images under `x ↦ 2x`, and the scheme on the dilated Whitney spaces with step
-`Δt` is the scheme on `(0, ½)³` with step `Δt / 2` (`Feec.Numerics.PlaneWaveCube`, file
-`Feec/Numerics/PlaneWaveCubeError.lean`).
-One row of (4.14) is the scalar de Rham window. The `fem4gr` spaces are the three-row space
-`DState3 (whitneyRow N)` (row `r` holds `(σ_r, E_r, B_r)`), on which the row-wise scheme
-`discreteWave3` decouples into the three rows and is well posed
-(`whitney_existsUnique_cnStep3`). The constraint monitors of `fem4gr` couple the rows: the skew parts
-`½ (E − Eᵀ)`, `½ (B − Bᵀ)` (`skewPart`), the traces `tr E / √3`, `tr B / √3` (`tracePart`), with
-`E_{rj}` the `dx_j` component of row `r` (`entryE`) and `B_{rj}` the Hodge-star vector proxy of the
-`2`-form of row `r` (`entryB`), and `σ` (`sigmaPart`); each has norm at most `1`, and each residual
-of the discrete solution is at most that of the comparison fields plus the initial error and the
-summed consistency errors (`whitney_norm_residuals_le`).
-The bound `‖τₙ‖ = O(Δt (h + Δt²))` of the consistency error for smooth solutions, the resulting
-`O(h + Δt²)` error and monitor bounds, and `V̊ₕ ≠ 0` are in `Feec.Models.Cube.InhomogeneousError`
-(`exists_comparison_consistency`, `whitney_cn_error_le`, `whitney_cn_monitors_le`,
-`whitneyInterior3_ne_bot`). What is **not** proved: the discrete divergence monitor (its constant
-depends on the mesh; covered abstractly by `norm_residual_le3`).
+* `WholeSpaceTSD.mem_iff`: TSD propagation with these data reduces to the homogeneous problem.
+* `whitney_existsUnique_cnStep3`: the scheme is well posed for every time step.
+* `whitney_norm_residuals_le`: the constraint monitors are bounded by those of a comparison field
+  plus the initial and consistency errors.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7, §4.10 (Prop 4.17, (4.14))
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -114,7 +45,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   [Fintype ι]
 
-/-- `f ≤ f'` gives `f − g ≤ f' − g`. -/
 theorem sub_le_sub_right {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {f f' g : E →ₗ.[𝕜] F} (h : f ≤ f') :
     f - g ≤ f' - g := by
@@ -124,7 +54,6 @@ theorem sub_le_sub_right {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace
   · exact h.2 hxy
   · congr 1; exact Subtype.ext hxy
 
-/-- The total differential is monotone in the differentials. -/
 theorem totalD_mono {H H' : HilbertComplex 𝕜 c W} (h : ∀ i j, H.d i j ≤ H'.d i j) :
     H.totalD ≤ H'.totalD := by
   refine ⟨fun x hx i j => (h i j).1 (hx i j), fun x y hxy => ?_⟩
@@ -134,13 +63,10 @@ theorem totalD_mono {H H' : HilbertComplex 𝕜 c W} (h : ∀ i j, H.d i j ≤ H
   change (x : PiLp 2 W) i = (y : PiLp 2 W) i
   rw [hxy]
 
-/-- **The wave operator without boundary conditions** `L_max = 𝐝' − 𝐝†` of a pair of complexes
-`H ≤ H'` (`H` carries the boundary conditions, `H'` none): the operator of the Hodge wave
-equation with inhomogeneous essential boundary data. -/
+/-- **The wave operator without boundary conditions** `L_max = 𝐝' − 𝐝†` of complexes `H ≤ H'`. -/
 def waveMax (H H' : HilbertComplex 𝕜 c W) : PiLp 2 W →ₗ.[𝕜] PiLp 2 W :=
   H'.totalD - H.dual.totalD
 
-/-- `L = 𝐝 − 𝐝† ≤ L_max = 𝐝' − 𝐝†`. -/
 theorem wave_le_waveMax {H H' : HilbertComplex 𝕜 c W} (h : ∀ i j, H.d i j ≤ H'.d i j) :
     H.wave ≤ waveMax H H' :=
   sub_le_sub_right (totalD_mono h)
@@ -150,7 +76,6 @@ theorem mem_waveMax_domain {H H' : HilbertComplex 𝕜 c W} {x : PiLp 2 W} :
       (∀ i j, x i ∈ (H'.d i j).domain) ∧ ∀ i j, x j ∈ ((H.d i j)†).domain :=
   ⟨fun h => ⟨h.1, fun i j => h.2 j i⟩, fun h => ⟨h.1, fun j i => h.2 i j⟩⟩
 
-/-- `(L_max x) j = ∑ i, d' i j (x i) − ∑ k, (d j k)† (x k)`. -/
 theorem waveMax_apply {H H' : HilbertComplex 𝕜 c W} (x : (waveMax H H').domain) (j : ι) :
     (waveMax H H' x) j = ∑ i, H'.d i j ⟨(x : PiLp 2 W) i, x.2.1 i j⟩ -
       ∑ k, (H.d j k)† ⟨(x : PiLp 2 W) k, x.2.2 k j⟩ :=
@@ -173,8 +98,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] [CompleteSpace W₂]
   (S S' : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
 
-/-- `L_max = 𝐝' − 𝐝†` for short complexes `S ≤ S'`: `(x₀, x₁, x₂) ↦ (−d₀† x₁, d₀' x₀ − d₁† x₂,
-d₁' x₁)` on `D(d₀') × (D(d₁') ∩ D(d₀†)) × D(d₁†)`. -/
+/-- `L_max = 𝐝' − 𝐝†` for short complexes `S ≤ S'`. -/
 abbrev shortWaveMax : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) :=
   waveMax S.toHilbertComplex S'.toHilbertComplex
 
@@ -203,7 +127,6 @@ theorem mem_shortWaveMax_domain {x : PiLp 2 (W3 W₀ W₁ W₂)} : x ∈ (shortW
           exact (show ((0 : W3 W₀ W₁ W₂ _ →ₗ.[𝕜] W3 W₀ W₁ W₂ _)†).domain = ⊤ by
             rw [LinearPMap.adjoint_zero]; rfl) ▸ Submodule.mem_top
 
-/-- `(L_max x)₀ = −d₀† x₁`. -/
 theorem shortWaveMax_apply_zero (x : (shortWaveMax S S').domain) :
     ((shortWaveMax S S' x : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀) =
       -(S.d₀† ⟨(x : PiLp 2 (W3 W₀ W₁ W₂)) 1, x.2.2 1 0⟩) := by
@@ -216,7 +139,6 @@ theorem shortWaveMax_apply_zero (x : (shortWaveMax S S').domain) :
   simp
   rfl
 
-/-- `(L_max x)₁ = d₀' x₀ − d₁† x₂`. -/
 theorem shortWaveMax_apply_one (x : (shortWaveMax S S').domain) :
     ((shortWaveMax S S' x : PiLp 2 (W3 W₀ W₁ W₂)) 1 : W₁) =
       S'.d₀ ⟨(x : PiLp 2 (W3 W₀ W₁ W₂)) 0, x.2.1 0 1⟩ -
@@ -229,7 +151,6 @@ theorem shortWaveMax_apply_one (x : (shortWaveMax S S').domain) :
   simp
   rfl
 
-/-- `(L_max x)₂ = d₁' x₁`. -/
 theorem shortWaveMax_apply_two (x : (shortWaveMax S S').domain) :
     ((shortWaveMax S S' x : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) =
       S'.d₁ ⟨(x : PiLp 2 (W3 W₀ W₁ W₂)) 1, x.2.1 1 2⟩ := by
@@ -242,7 +163,6 @@ theorem shortWaveMax_apply_two (x : (shortWaveMax S S').domain) :
   simp
   rfl
 
-/-- A point of the graph of `L_max` from its components. -/
 theorem mk3_mem_graph_shortWaveMax {x₀ : W₀} {x₁ : W₁} {x₂ : W₂} {y₀ : W₀} {y₁ : W₁} {y₂ : W₂}
     (h0 : x₀ ∈ S'.d₀.domain) (h1 : x₁ ∈ S'.d₁.domain) (h1' : x₁ ∈ S.d₀†.domain)
     (h2 : x₂ ∈ S.d₁†.domain) (e0 : y₀ = -S.d₀† ⟨x₁, h1'⟩)
@@ -266,7 +186,6 @@ section TimeDerivative
 
 variable {Ω : Set R3}
 
-/-- Scalar multiples of continuous fields. -/
 theorem smoothField_smul (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*} (c : ℝ)
     {Ψ : ι → R3 → ℝ} (hΨ : ∀ i, Continuous (Ψ i)) :
     c • smoothField hΩ hb Ψ hΨ =
@@ -283,10 +202,6 @@ theorem smoothField_congr (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : 
     smoothField hΩ hb Ψ hΨ = smoothField hΩ hb Φ hΦ := by
   subst h; rfl
 
-/-- **Classical time derivatives are `L²(Ω)` time derivatives** on a bounded `Ω`: if
-`∂ₜ f(t, x) = f'(t, x)` pointwise with `f'` jointly continuous, then `t ↦ f(t)|_Ω ∈ L²(Ω)` has
-derivative `f'(t)|_Ω`. (Mean value theorem and uniform continuity of `f'` on
-`[t - 1, t + 1] × cl Ω`.) -/
 theorem hasDerivAt_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*}
     [Fintype ι] {f f' : ℝ → ι → R3 → ℝ} (hf : ∀ t i, Continuous (f t i))
     (hf' : ∀ i, Continuous fun p : ℝ × R3 => f' p.1 i p.2)
@@ -396,19 +311,14 @@ abbrev State (Ω : Set R3) : Type :=
 abbrev constraint (Ω : Set R3) :=
   HilbertComplex.totalSub (family3 (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3))) (tsd Ω) (tsd Ω))
 
-/-- **The operator of (4.14) without boundary conditions** (up to `σ ↦ −σ`, as in `fem4gr`),
-`L_max (σ, E, B) = (div E, grad σ − curl B, curl E)` on `H¹ × (H(curl) ∩ H(div)) × H(curl)`:
-`L_max = 𝐝_max − 𝐝_min†` for the thesis' complex `H̊¹ → H̊(curl) → L²`. -/
+/-- **The operator `(σ, E, B) ↦ (div E, grad σ − curl B, curl E)`** without boundary conditions. -/
 abbrev thesisWaveMax (hΩ : IsOpen Ω) :=
   shortWaveMax (gradCurl ℝ hΩ) (gradCurlMax ℝ hΩ)
 
-/-- The Hodge wave operator of the thesis' complex is the restriction of `L_max` to the fields with
-`σ = 0` and `E × n = 0` on `∂Ω` (`σ ∈ H̊¹`, `E ∈ H̊(curl)`). -/
 theorem wave_le_thesisWaveMax (hΩ : IsOpen Ω) : (gradCurl ℝ hΩ).wave ≤ thesisWaveMax hΩ :=
   wave_le_shortWaveMax ((gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).minimal_le_maximal hΩ)
     ((curlOp 3 : ConstCoeffOp R3 ℝ _ _).minimal_le_maximal hΩ)
 
-/-- Derivatives of the three components give the derivative of the point of `State Ω`. -/
 theorem hasDerivAt_mk3 {f₀ : ℝ → L2F ℝ Ω (Fin 3)} {f₁ f₂ : ℝ → L2F ℝ Ω Ix}
     {f₀' : L2F ℝ Ω (Fin 3)} {f₁' f₂' : L2F ℝ Ω Ix} {t : ℝ} (h₀ : HasDerivAt f₀ f₀' t)
     (h₁ : HasDerivAt f₁ f₁' t) (h₂ : HasDerivAt f₂ f₂' t) :
@@ -426,11 +336,7 @@ end StandardBoundary
 
 /-! ## Whole-space TSD solutions and their restrictions -/
 
-/-- A **classical TSD solution of the Einstein–Bianchi system on `ℝ³`** with `σ = 0`: fields
-`E, B : ℝ → ℝ³ˣ³-valued functions on ℝ³`, `C¹` in space, with jointly continuous `curl E`,
-`curl B`, solving `∂ₜ E = −curl B`, `∂ₜ B = curl E` pointwise, and symmetric, trace-free and
-row-wise divergence-free at every point and time. The plane wave of [QuennevilleBelair2015], Ch. 7,
-is one (`Feec.Numerics.PlaneWaveCube.planeWaveTSD`). No integrability on `ℝ³` is assumed. -/
+/-- A **classical TSD solution** of `∂ₜ E = −curl B`, `∂ₜ B = curl E` on `ℝ × ℝ³`. -/
 structure WholeSpaceTSD where
   E : ℝ → Ix → R3 → ℝ
   B : ℝ → Ix → R3 → ℝ
@@ -486,11 +392,9 @@ theorem fieldB_mem_tsd (t : ℝ) : W.fieldB hΩ hb t ∈ tsd Ω :=
   smoothField_mem_tsd hΩ hb (W.contDiff_B t) (fun i j x _ => W.symm_B t i j x)
     (fun x _ => W.trace_B t x) (fun j x _ => W.div_B t j x)
 
-/-- **The restriction is TSD at every time**: `R(t) ∈ K = {0} × L²(TSD) × L²(TSD)`. -/
 theorem restrict_mem (t : ℝ) : W.restrict hΩ hb t ∈ constraint Ω :=
   mem_totalSub_family3.2 ⟨Submodule.zero_mem _, W.fieldE_mem_tsd hΩ hb t, W.fieldB_mem_tsd hΩ hb t⟩
 
-/-- `E ∈ H(curl)` with `curl_max E = curl E`. -/
 theorem fieldE_mem_curl_maximal (t : ℝ) :
     ∃ h : W.fieldE hΩ hb t ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).maximal Ω).domain,
       (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).maximal Ω ⟨_, h⟩ =
@@ -507,7 +411,6 @@ theorem fieldE_mem_curl_maximal (t : ℝ) :
   exact MemLp.toLp_congr (hcurl ij) (memLp_of_continuous hΩ.measurableSet hb
     (W.continuous_curlM_E t ij)) (Eventually.of_forall fun x => by rw [← curlM_eq_apply])
 
-/-- `(R(t), R'(t)) ∈ graph L_max`: `L_max R(t) = (div E, −curl B, curl E) = (0, −curl B, curl E)`. -/
 theorem mem_graph_thesisWaveMax (t : ℝ) :
     (W.restrict hΩ hb t, W.restrictDeriv hΩ hb t) ∈ (thesisWaveMax hΩ).graph := by
   obtain ⟨hE1, hE1v⟩ := W.fieldE_mem_curl_maximal hΩ hb t
@@ -525,7 +428,6 @@ theorem mem_graph_thesisWaveMax (t : ℝ) :
     exact smoothField_congr hΩ hb _ _ (by funext ij x; ring)
   · exact hE1v.symm
 
-/-- `R' = (0, −curl B, curl E)` in `L²(Ω)`. -/
 theorem hasDerivAt_restrict (t : ℝ) :
     HasDerivAt (W.restrict hΩ hb) (W.restrictDeriv hΩ hb t) t := by
   have hE := hasDerivAt_smoothField hΩ hb (W.continuous_E) (f' := fun s ij x => -curlM (W.B s) ij x)
@@ -534,14 +436,11 @@ theorem hasDerivAt_restrict (t : ℝ) :
     W.continuous_curl_E W.hasDerivAt_B t
   exact hasDerivAt_mk3 (hasDerivAt_const t (0 : L2F ℝ Ω (Fin 3))) hE hB
 
-/-- **The restriction solves the problem without boundary conditions**: `R' = L_max R` on every
-time set. -/
 theorem isStrongSolution_restrict (I : Set ℝ) :
     Evolution.IsStrongSolution (thesisWaveMax hΩ) I 0 (W.restrict hΩ hb) :=
   Evolution.IsStrongSolution.of_deriv fun t _ => ⟨_, W.mem_graph_thesisWaveMax hΩ hb t, by
     rw [Pi.zero_apply, add_zero]; exact (W.hasDerivAt_restrict hΩ hb t).hasDerivWithinAt⟩
 
-/-- `R` is a lifting with `R' = L_max R`. -/
 theorem isLifting (I : Set ℝ) :
     Evolution.IsLifting (thesisWaveMax hΩ) I (W.restrict hΩ hb) (W.restrictDeriv hΩ hb)
       (W.restrictDeriv hΩ hb) :=
@@ -551,9 +450,7 @@ theorem isLifting (I : Set ℝ) :
 
 /-! ### Uniqueness, existence and TSD propagation for the data of `R` -/
 
-/-- **The restriction is the unique solution with its own boundary data**: every solution `V` of
-`V' = L_max V` on `[a, b]` with `σ = 0` and `E × n = E_R × n` on `∂Ω` and `V(a) = R(a)` is `R`.
-In particular it is TSD at every time (`restrict_mem`). -/
+/-- **The restriction is the unique solution with its own boundary data and initial value.** -/
 theorem restrict_unique {a b : ℝ} {V : ℝ → State Ω}
     (hV : Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave (Icc a b) 0
       (W.restrict hΩ hb) V) (hV0 : V a = W.restrict hΩ hb a) :
@@ -565,9 +462,7 @@ theorem forcing_eq_zero :
     (0 - W.restrictDeriv hΩ hb + W.restrictDeriv hΩ hb : ℝ → State Ω) = 0 := by
   funext t; simp
 
-/-- **Existence and uniqueness** with the boundary data of `R`: for every `U₀` with
-`U₀ − R(a) ∈ D(L)` there is a unique solution of `U' = L_max U` on `[a, b]` with the boundary
-data of `R` (`σ = 0`, `E × n = E_R × n`) and `U(a) = U₀`. -/
+/-- **Existence and uniqueness** with the boundary data of `R`, for `U₀ − R(a) ∈ D(L)`. -/
 theorem existsUnique {a b : ℝ} {U₀ : State Ω} (hU₀ : U₀ - W.restrict hΩ hb a ∈ (gradCurl ℝ hΩ).wave.domain) :
     ∃ U, U a = U₀ ∧ Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave
         (Icc a b) 0 (W.restrict hΩ hb) U ∧
@@ -581,9 +476,6 @@ theorem existsUnique {a b : ℝ} {U₀ : State Ω} (hU₀ : U₀ - W.restrict h�
     (gradCurl ℝ hΩ).isSkewAdjoint_wave (wave_le_thesisWaveMax hΩ) (W.isLifting hΩ hb _) hU₀ hF
   exact ⟨U, hU0, hU, huniq⟩
 
-/-- **The solution is `R` plus a homogeneous solution**: `U(t) = R(t) + e^{tL}(U(0) − R(0))` on
-`[0, T]`, where `e^{tL}` is the wave group of the thesis' complex (homogeneous boundary
-conditions). -/
 theorem eq_add_waveGroup {T : ℝ} {U : ℝ → State Ω}
     (hU : Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave (Icc 0 T) 0
       (W.restrict hΩ hb) U) :
@@ -598,10 +490,8 @@ theorem eq_add_waveGroup {T : ℝ} {U : ℝ → State Ω}
   rw [← this, Pi.sub_apply, add_sub_cancel]
 
 
-/-- **TSD propagation for data from a whole-space TSD solution, characterized**: a solution `U`
-on `[0, T]` with the boundary data of `R` stays in `K = {0} × L²(TSD) × L²(TSD)` iff the
-homogeneous solution `e^{tL}(U(0) − R(0))` (thesis' boundary conditions, no inhomogeneous data)
-from the difference of the initial values stays in `K`. -/
+/-- **TSD propagation, characterized**: a solution with the boundary data of `R` stays in `K` iff
+the homogeneous solution `e^{tL}(U(0) − R(0))` does. -/
 theorem mem_iff {T : ℝ} {U : ℝ → State Ω}
     (hU : Evolution.IsBoundarySolution (thesisWaveMax hΩ) (gradCurl ℝ hΩ).wave (Icc 0 T) 0
       (W.restrict hΩ hb) U) :
@@ -638,9 +528,7 @@ def discreteD : DState S →ₗ[ℝ] DState S where
   map_smul' a x := PiLp.ext fun j => by
     simp [map_smul, Finset.smul_sum]
 
-/-- **The matrix `A` of the scheme**, `A = 𝐝ₕ − 𝐝ₕ*` on all of `Vₕ`: its bilinear form is
-`⟪A u, v⟫ = ⟪𝐝ₕ u, v⟫ − ⟪u, 𝐝ₕ v⟫`, for (4.14) up to `σ ↦ −σ`
-`(grad σ, C) − (E, grad τ) + (curl E, D) − (B, curl C)` (`fem4gr`: `A = A0 + A1 − A2`). -/
+/-- **The matrix `A = 𝐝ₕ − 𝐝ₕ*` of the scheme** on all of `Vₕ`. -/
 def discreteWave : DState S →ₗ[ℝ] DState S :=
   discreteD S - LinearMap.adjoint (discreteD S)
 
@@ -648,7 +536,6 @@ theorem inner_discreteWave (u v : DState S) :
     ⟪discreteWave S u, v⟫ = ⟪discreteD S u, v⟫ - ⟪u, discreteD S v⟫ := by
   rw [discreteWave, LinearMap.sub_apply, inner_sub_left, LinearMap.adjoint_inner_left]
 
-/-- `A` is skew on all of `Vₕ`. -/
 theorem inner_discreteWave_self (u : DState S) : ⟪discreteWave S u, u⟫ = 0 := by
   rw [inner_discreteWave, real_inner_comm u, sub_self]
 
@@ -659,21 +546,12 @@ def interior (V₀ : ∀ i, Submodule ℝ (W i)) : Submodule ℝ (DState S) wher
   add_mem' hu hv i := (V₀ i).add_mem (hu i) (hv i)
   smul_mem' a _ hu i := (V₀ i).smul_mem a (hu i)
 
-/-- **Well-posedness of the scheme with inhomogeneous Dirichlet DOFs on a finite element
-subcomplex**, for every time step: from every `uₙ ∈ Vₕ`, boundary data `gₙ₊₁ ∈ Vₕ` and load `f`
-there is exactly one `uₙ₊₁` with the boundary DOFs of `gₙ₊₁` solving the CN equations tested
-against `V̊ₕ`. -/
 theorem existsUnique_isDirichletCNStep (V₀ : ∀ i, Submodule ℝ (W i)) (s : ℝ)
     (f g' u : DState S) :
     ∃! u', TimeStepping.IsDirichletCNStep (interior S V₀) (discreteWave S) s f g' u u' :=
   TimeStepping.existsUnique_isDirichletCNStep
     (fun w _ => by rw [inner_discreteWave_self, mul_zero]) f g' u
 
-/-- **Constraint residuals of the discrete solution are bounded by the consistency error**, on a
-finite element subcomplex: for the CN iterates `uₙ` with boundary data `gₙ`, comparison fields
-`ũₙ` (e.g. interpolants of the exact solution) with the same boundary DOFs and consistency
-errors `τₙ`, and any linear residual map `c` with `‖c x‖ ≤ C ‖x‖`,
-`‖c u_N‖ ≤ ‖c ũ_N‖ + C (‖u₀ − ũ₀‖ + Σ_{n<N} ‖τₙ‖)`. -/
 theorem norm_residual_le (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {X : Type*}
     [SeminormedAddCommGroup X] [NormedSpace ℝ X] (cmap : DState S →ₗ[ℝ] X) {C : ℝ}
     (hc : ∀ x, ‖cmap x‖ ≤ C * ‖x‖) (hC : 0 ≤ C) {f g u ũ τ : ℕ → DState S}
@@ -686,20 +564,17 @@ theorem norm_residual_le (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {X : Type
   TimeStepping.norm_residual_le_of_isDirichletCNStep cmap hc hC
     (fun w _ => by rw [inner_discreteWave_self, mul_zero]) h hũ h0 hτ N
 
-/-! ### The three rows of the `fem4gr` spaces -/
+/-! ### The three-row space -/
 
-/-- **The three-row space** `Vₕ × Vₕ × Vₕ`: row `r` holds `(σ_r, E_r, B_r)`, the `r`-th rows of the
-vector field `σ` and of the matrix fields `E`, `B` (for the de Rham window, `fem4gr`'s
-`(CG₁)³ × (N1curl)³ × (RT)³`, up to the ordering of the components). -/
+/-- **The three-row space** `Vₕ × Vₕ × Vₕ`, row `r` holding `(σ_r, E_r, B_r)`. -/
 abbrev DState3 := PiLp 2 fun _ : Fin 3 => DState S
 
-/-- The row-wise matrix of the scheme: the operators `grad`, `curl` of (4.14) act on each row. -/
+/-- The row-wise matrix of the scheme: `discreteWave` on each row. -/
 def discreteWave3 : DState3 S →ₗ[ℝ] DState3 S where
   toFun u := WithLp.toLp 2 fun r => discreteWave S (u r)
   map_add' u v := PiLp.ext fun r => by simp
   map_smul' a u := PiLp.ext fun r => by simp
 
-/-- The row-wise matrix is skew on the three-row space. -/
 theorem inner_discreteWave3_self (u : DState3 S) : ⟪discreteWave3 S u, u⟫ = 0 := by
   rw [PiLp.inner_apply (discreteWave3 S u) u]
   exact Finset.sum_eq_zero fun r _ => inner_discreteWave_self S (u r)
@@ -711,16 +586,12 @@ def interior3 (V₀ : ∀ i, Submodule ℝ (W i)) : Submodule ℝ (DState3 S) wh
   add_mem' hu hv r := by simpa using (interior S V₀).add_mem (hu r) (hv r)
   smul_mem' a _ hu r := by simpa using (interior S V₀).smul_mem a (hu r)
 
-/-- **Well-posedness on the three-row space**, for every time step. -/
 theorem existsUnique_isDirichletCNStep3 (V₀ : ∀ i, Submodule ℝ (W i)) (s : ℝ)
     (f g' u : DState3 S) :
     ∃! u', TimeStepping.IsDirichletCNStep (interior3 S V₀) (discreteWave3 S) s f g' u u' :=
   TimeStepping.existsUnique_isDirichletCNStep
     (fun w _ => by rw [inner_discreteWave3_self, mul_zero]) f g' u
 
-/-- **Constraint residuals on the three-row space are bounded by the consistency error**
-(`norm_residual_le` for the row-wise scheme): this covers the residuals that couple the rows, such
-as the skew and trace parts of `E` and `B`. -/
 theorem norm_residual_le3 (V₀ : ∀ i, Submodule ℝ (W i)) {s : ℝ} {X : Type*}
     [SeminormedAddCommGroup X] [NormedSpace ℝ X] (cmap : DState3 S →ₗ[ℝ] X) {C : ℝ}
     (hc : ∀ x, ‖cmap x‖ ≤ C * ‖x‖) (hC : 0 ≤ C) {f g u ũ τ : ℕ → DState3 S}
@@ -749,8 +620,7 @@ def skewPart (ent : Fin 3 → Fin 3 → V →ₗ[ℝ] X) : V →ₗ[ℝ] PiLp 2 
   map_smul' a u := PiLp.ext fun p => by
     simp only [map_smul, PiLp.smul_apply, RingHom.id_apply]; module
 
-/-- The normalized **trace** `(tr M) / √3` of a matrix field (the norm of the trace part
-`(tr M / 3) I` of `M`). -/
+/-- The normalized **trace** `(tr M) / √3` of a matrix field. -/
 def tracePart (ent : Fin 3 → Fin 3 → V →ₗ[ℝ] X) : V →ₗ[ℝ] X :=
   (Real.sqrt 3)⁻¹ • ∑ r, ent r r
 
@@ -799,7 +669,6 @@ theorem norm_tracePart_le {ent : Fin 3 → Fin 3 → V →ₗ[ℝ] X}
   nlinarith [sq_nonneg (‖ent 0 0 u‖ - ‖ent 1 1 u‖), sq_nonneg (‖ent 1 1 u‖ - ‖ent 2 2 u‖),
     sq_nonneg (‖ent 0 0 u‖ - ‖ent 2 2 u‖)]
 
-/-- Squared norms of components along an injective index map are at most the squared norm. -/
 theorem _root_.PiLp.sum_norm_sq_comp_le {κ ι : Type*} [Fintype κ] [Fintype ι] {β : ι → Type*}
     [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) {f : κ → ι} (hf : Function.Injective f) :
     ∑ k, ‖x (f k)‖ ^ 2 ≤ ‖x‖ ^ 2 := by
@@ -830,37 +699,30 @@ theorem _root_.Feec.Domain.ConstCoeffComplex.minimalSubcomplexOfEq_le {n : ℕ}
     (C.minimalSubcomplexOfEq h hΩ hΩ' S').V k ≤ (C.maximalSubcomplexOfEq h hΩ hΩ' S).V k := by
   subst h; exact hle k
 
-/-- **The Whitney spaces with vanishing boundary DOFs lie in the Whitney spaces**:
-`V̊ₕᵏ ⊆ Vₕᵏ` on the Freudenthal meshes of the cube. -/
 theorem whitneyMin_le_whitney (N : ℕ) (k : ℤ) :
     (whitneyMin 3 N).V k ≤ (whitney 3 N).V k :=
   (deRham ℝ 3).minimalSubcomplexOfEq_le (mesh_domain 3 N) (isOpen_mesh_domain 3 N)
     (isOpen_cubeDomain 3) _ _ (fun k => (whitneyElement 3).V₀_le_V (mesh 3 N) k) k
 
-/-- The Whitney window `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (Lagrange, Nédélec, Raviart–Thomas) of the
-level-`(N + 1)` Freudenthal mesh of the cube: one row of the `fem4gr` spaces
-`(CG₁)³ × (N1curl)³ × (RT)³` of (4.14) (the row-wise operators decouple the three rows). -/
+/-- The Whitney window `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` of the level-`(N + 1)` Freudenthal mesh. -/
 abbrev whitneyRow (N : ℕ) := (whitney 3 N).window 0 3
 
 /-- The fields of one Whitney row with vanishing boundary DOFs, `V̊ₕ⁰ × V̊ₕ¹ × V̊ₕ²`. -/
 abbrev whitneyInterior (N : ℕ) :=
   interior (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ))
 
-/-- **Well-posedness of the one-row Whitney scheme** `P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` with prescribed
-boundary DOFs, for every time step. -/
 theorem whitney_existsUnique_cnStep (N : ℕ) (s : ℝ) (f g' u : DState (whitneyRow N)) :
     ∃! u', TimeStepping.IsDirichletCNStep (whitneyInterior N) (discreteWave (whitneyRow N)) s f
       g' u u' :=
   existsUnique_isDirichletCNStep _ _ s f g' u
 
-/-! ### The three-row Whitney space and the `fem4gr` constraint monitors -/
+/-! ### The three-row Whitney space and the constraint monitors -/
 
 /-- The three-row fields with vanishing boundary DOFs on the Freudenthal Whitney spaces. -/
 abbrev whitneyInterior3 (N : ℕ) :=
   interior3 (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ))
 
-/-- **Well-posedness of the three-row `fem4gr` scheme** `(P₁)³ × (P₁⁻Λ¹)³ × (P₁⁻Λ²)³` with
-prescribed boundary DOFs, for every time step. -/
+/-- **Well-posedness of the three-row scheme** with prescribed boundary DOFs, every time step. -/
 theorem whitney_existsUnique_cnStep3 (N : ℕ) (s : ℝ) (f g' u : DState3 (whitneyRow N)) :
     ∃! u', TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s f
       g' u u' :=
@@ -879,9 +741,7 @@ theorem edgeIdx_injective : Function.Injective edgeIdx := fun i j h => by
 theorem faceIdx_injective : Function.Injective faceIdx := fun i j h => by
   simpa [faceIdx] using congrArg Subtype.val h
 
-/-- The Hodge-star sign `(−1)^j` of the vector proxy of a `2`-form on `ℝ³`: `B_j = (−1)^j ω_{{j}ᶜ}`
-(`ω = B₀ dx₁ ∧ dx₂ − B₁ dx₀ ∧ dx₂ + B₂ dx₀ ∧ dx₁`; with this proxy `d` on `1`-forms is `curl`, by
-`(dω)_{kl} = ∂_k ω_l − ∂_l ω_k` for `k < l`, `extDerivOp`). -/
+/-- The Hodge-star sign `(−1)^j` of the vector proxy of a `2`-form on `ℝ³`. -/
 def faceSign (j : Fin 3) : ℝ := (-1) ^ (j : ℕ)
 
 /-- The entry `E_{rj}` of the matrix field `E`: component `dx_j` of the `1`-form of row `r`. -/
@@ -890,8 +750,7 @@ def entryE (N : ℕ) (r j : Fin 3) : DState3 (whitneyRow N) →ₗ[ℝ] L2 ℝ (
   map_add' u v := by simp
   map_smul' a u := by simp
 
-/-- The entry `B_{rj}` of the matrix field `B`: the vector proxy `(−1)^j ω_{{j}ᶜ}` of the `2`-form
-of row `r`. -/
+/-- The entry `B_{rj}` of the matrix field `B`, the vector proxy of the `2`-form of row `r`. -/
 def entryB (N : ℕ) (r j : Fin 3) : DState3 (whitneyRow N) →ₗ[ℝ] L2 ℝ (cubeDomain 3) where
   toFun u := faceSign j • ((u r 2 : (whitneyRow N).V 2) : L2F ℝ (cubeDomain 3) _) (faceIdx j)
   map_add' u v := by simp
@@ -932,7 +791,6 @@ theorem norm_sigmaPart_le (N : ℕ) (u : DState3 (whitneyRow N)) : ‖sigmaPart 
   exact Finset.sum_le_sum fun r _ =>
     pow_le_pow_left₀ (norm_nonneg _) (PiLp.norm_apply_le (u r) 0) 2
 
-/-- `norm_residual_le3` on the three-row Whitney space for a residual map of norm at most `1`. -/
 theorem whitney_norm_residual_le (N : ℕ) {X : Type*} [SeminormedAddCommGroup X] [NormedSpace ℝ X]
     (c : DState3 (whitneyRow N) →ₗ[ℝ] X) (hc : ∀ x, ‖c x‖ ≤ ‖x‖) {s : ℝ}
     {f g u ũ τ : ℕ → DState3 (whitneyRow N)}
@@ -946,16 +804,8 @@ theorem whitney_norm_residual_le (N : ℕ) {X : Type*} [SeminormedAddCommGroup X
     (C := 1) (fun x => by rw [one_mul]; exact hc x) zero_le_one h hũ h0 hτ M
   rwa [one_mul] at this
 
-/-- **The `fem4gr` constraint monitors of the discrete solution are bounded by the consistency
-error**, on the three-row Whitney space of the cube: for the Crank–Nicolson iterates `uₙ` with
-prescribed boundary DOFs `gₙ` and comparison fields `ũₙ` (e.g. interpolants of the exact
-solution) with the same boundary DOFs and consistency errors `τₙ`, each of the monitored
-residuals `c` — the skew parts `½ (E − Eᵀ)`, `½ (B − Bᵀ)` ("Skew of E/B"), the normalized traces
-`tr E / √3`, `tr B / √3` ("Trace of E/B") and `σ` ("Sigma Zero") — satisfies
-`‖c u_N‖ ≤ ‖c ũ_N‖ + ‖u₀ − ũ₀‖ + Σ_{n<N} ‖τₙ‖` (all with constant `1`). Not covered: the discrete
-divergence (its constant depends on the mesh, `norm_residual_le3`). The bound of `τₙ` in `h` and
-`Δt` for smooth solutions is `exists_comparison_consistency`
-(`Feec.Models.Cube.InhomogeneousError`). -/
+/-- **The constraint monitors of the discrete solution are bounded by the consistency error**:
+`‖c u_M‖ ≤ ‖c ũ_M‖ + ‖u₀ − ũ₀‖ + Σ_{n<M} ‖τₙ‖` for the skew parts, the traces and `σ`. -/
 theorem whitney_norm_residuals_le (N : ℕ) {s : ℝ} {f g u ũ τ : ℕ → DState3 (whitneyRow N)}
     (h : ∀ n, TimeStepping.IsDirichletCNStep (whitneyInterior3 N) (discreteWave3 (whitneyRow N)) s
       (f n) (g (n + 1)) (u n) (u (n + 1)))

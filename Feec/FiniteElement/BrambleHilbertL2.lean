@@ -11,95 +11,23 @@ public import Mathlib.Analysis.Calculus.ParametricIntegral
 /-!
 # The `L²` Bramble–Hilbert lemma, Sobolev embedding and `L²` interpolation errors
 
-`Feec.FiniteElement.BrambleHilbert` is the classical (`C^{r+1}`, sup-norm) form of the
-Bramble–Hilbert lemma. This file proves its Sobolev (`L²`) form for smooth functions, with the
-**averaged Taylor polynomial** `Q_m f (x) = ⨍_{y ∈ K} T_m f(y)(x)` (`avgTaylorPoly`; the Taylor
-polynomial of degree `< m` at `y`, averaged uniformly over the base points `y ∈ K`), and derives
-the Sobolev embedding and the `L²` interpolation error of the canonical interpolants of `P_rΛᵏ`
-and `P_r⁻Λᵏ`. All statements are for functions of class `C^m` on an open neighbourhood of a
-compact set (no Sobolev spaces): the seminorms are `∫_K ‖D^m f‖²`, `D^m` the iterated Fréchet
-derivative. The averaged Taylor polynomial is the construction of Sobolev used in [BrennerScott2008], Ch. 4,
-here averaged over `K` itself.
-
-* **Polynomial part** (`avgTaylorPoly_mem_polyFunctions`): `Q_{k+1} f ∈ P_k(ℝⁿ; G)` (expansion
-  of `T_{k+1} f(y)(x)` in monomials of `x` with integrable coefficients in `y`,
-  `avgTaylorPoly_eq_sum`).
-* **Riesz-potential bound** (`enorm_sub_avgTaylorPoly_le_riesz`): for `K` compact convex with
-  `|K| > 0`, `‖x - y‖ ≤ d` on `K` and `x ∈ K`,
-  `‖f x - Q_{k+1} f (x)‖ ≤ dⁿ / (n k! |K|) ∫_K ‖D^{k+1} f(z)‖ ‖x - z‖^{k+1-n} dz`
-  (`rieszKernel`). Proof: Taylor's formula with integral remainder along `[y, x]`
-  (`sub_taylorPoly_eq_integral`), the change of variables `z = y + t (x - y)` at fixed `t`
-  (Jacobian `(1 - t)⁻ⁿ`, `lintegral_comp_add_smul_sub`), `‖x - z‖ ≤ (1 - t) d`, Tonelli, and
-  `∫₀¹ (1 - t)^{-(n+1)} 1[‖x - z‖ ≤ (1 - t) d] dt ≤ dⁿ / (n ‖x - z‖ⁿ)`
-  (`lintegral_inv_one_sub_pow_indicator_le`).
-* **Kernel integrals** (`lintegral_rieszKernel_pow_le`, `lintegral_closedBall_pow_div_pow`):
-  `∫_K ‖x - z‖^{q(m-n)} dz ≤ n |B₁| d^{n + q(m-n)} / (n + q(m-n))` for `q n < q m + n`, by polar
-  coordinates (`MeasureTheory.integral_fun_norm_addHaar`).
-* **`L²` Bramble–Hilbert** (`lintegral_sub_avgTaylorPoly_sq_le`), for every order `k + 1 ≥ 1`:
-  `∫_K ‖f - Q_{k+1} f‖² ≤ (dⁿ/(n k! |K|) · C₁)² ∫_K ‖D^{k+1} f‖²`, by a Schur test on the
-  symmetric Riesz kernel (weighted Cauchy–Schwarz `lintegral_mul_sq_le`, Tonelli).
-* **Sobolev embedding** (`enorm_sub_avgTaylorPoly_le_L2`), for `2(k + 1) > n`:
-  `sup_K ‖f - Q_{k+1} f‖ ≤ dⁿ/(n k! |K|) · C₂^{1/2} (∫_K ‖D^{k+1} f‖²)^{1/2}` (Cauchy–Schwarz,
-  `‖x - ·‖^{2(k+1-n)}` integrable).
-* **Interpolation on `T̂`** (`IsRefInterpolant.lintegral_sub_sq_le_L2`): every reference
-  interpolant `I` that is stable in `C⁰(T̂)` and reproduces `P_s`
-  (`Feec.FiniteElement.IsRefInterpolant n s 0`) satisfies
-  `∫_{T̂} ‖f - I f‖² ≤ K ∫_{T̂} ‖D^{s+1} f‖²` if `2(s + 1) > n` (`K = refL2Const n s C`), since
-  `f - I f = (f - p) - I (f - p)` with `p = Q_{s+1} f` and the Sobolev embedding.
-* **Transport** (`lintegral_sub_transportInterp_sq_le_L2`): on any `n`-simplex `T`,
-  `∫_T ‖u - Π_T u‖² ≤ (‖Φ⁻¹‖ ‖Φ‖ ‖B_T‖^{s+1})² K ∫_T ‖D^{s+1} u‖²` (the Jacobians cancel), and on
-  a shape-regular family with `‖B_T‖ ≤ C₀ h_T`
-  (`lintegral_sub_transportInterp_sq_le_L2_of_isShapeRegular`). For differential forms on
-  homothetic copies `T = t + h K` (`Feec.FiniteElement.transportInterp_polyRefInterp_eq`):
-  `‖w - Π_T w‖²_{L²(T)} ≤ C h^{2(s+1)} ∫_T ‖D^{s+1} w‖²` for `P_rΛᵏ`, `s ≤ r`
-  (`exists_formL2Sq_sub_polyInterp_le_L2`) and `P_r⁻Λᵏ`, `s ≤ r - 1`
-  (`exists_formL2Sq_sub_polyMinusInterp_le_L2`).
-
-**Norms.** Every norm on `Fin n → ℝ` is Mathlib's sup norm: `d` bounds the sup-norm diameter,
-`|B₁| = 2ⁿ` is the volume of the sup-norm unit ball, and `‖D^m f‖` is the operator norm for the
-sup norm. Other norms change only the constants.
-
-**The restriction `2(s + 1) > n`.** The Bramble–Hilbert part (`lintegral_sub_avgTaylorPoly_sq_le`)
-holds for every order `≥ 1` in every dimension. The interpolation
-estimates need `2(s + 1) > n`: the moment degrees of freedom of `Π_T` (`∫_f tr_f ω ∧ η`, down
-to vertex values) need point values, which `H^{s+1}` controls only through the Sobolev embedding
-`H^{s+1} ⊂ C⁰` ([Evans2010], §5.6). In dimension `n ≤ 3` this is every `s ≥ 1`, and `s ≥ 0` for
-`n = 1`. The embedding with lower-order terms `enorm_le_L2`, applied to `D^{s+1} f` instead of
-`f`, avoids the restriction at the price of the derivatives of the orders
-`s + 1, …, s + ⌊n/2⌋ + 2`; this file provides only that embedding, and the interpolation
-estimates on physical simplices below keep `2(s + 1) > n`. The interpolation estimate with
-lower-order terms is assembled on the Freudenthal simplices of the cube only
-(`Feec.Models.Cube.FEM.sum_integral_sq_sub_globalInterp_le_sum`). The dimension is assumed
-`n ≥ 1` (the time integral of the Riesz argument is `1/n`).
-
-## Main definitions
-
-* `Feec.FiniteElement.avgTaylorPoly K f m`: the averaged Taylor polynomial `Q_m f`.
-* `Feec.FiniteElement.rieszKernel n m x z`: `‖x - z‖^m / ‖x - z‖ⁿ` in `ℝ≥0∞`.
-* `Feec.FiniteElement.avgTaylorConst`, `Feec.FiniteElement.rieszConst`,
-  `Feec.FiniteElement.refL2Const`, `Feec.FiniteElement.formTransportConst`: explicit constants.
+The averaged Taylor polynomial ([BrennerScott2008], Ch. 4) gives the `L²` Bramble–Hilbert lemma,
+the Sobolev embedding for `2(k + 1) > n` ([Evans2010], §5.6) and the `L²` interpolation errors.
 
 ## Main results
 
-* `sub_taylorPoly_eq_integral`: Taylor's formula with integral remainder.
-* `enorm_sub_avgTaylorPoly_le_riesz`: the Riesz-potential bound.
-* `lintegral_sub_avgTaylorPoly_sq_le`: **`L²` Bramble–Hilbert**.
-* `enorm_sub_avgTaylorPoly_le_L2`: **Sobolev embedding** for `2(k + 1) > n`.
-* `enorm_le_L2`: the Sobolev embedding with the lower-order terms (`enorm_avgTaylorPoly_le`).
+* `lintegral_sub_avgTaylorPoly_sq_le`: the `L²` Bramble–Hilbert lemma.
+* `enorm_sub_avgTaylorPoly_le_L2`: the Sobolev embedding, in a-priori form.
 * `IsRefInterpolant.lintegral_sub_sq_le_L2`: the reference interpolation error in `L²`.
-* `lintegral_sub_transportInterp_sq_le_L2`, `exists_formL2Sq_sub_polyInterp_le_L2`,
-  `exists_formL2Sq_sub_polyMinusInterp_le_L2`: physical simplices.
+* `exists_formL2Sq_sub_polyInterp_le_L2`: the `L²` error of `Π_T` for `P_rΛᵏ` on `T = t + h K`.
+* `exists_formL2Sq_sub_polyMinusInterp_le_L2`: the same for `P_r⁻Λᵏ`.
 
 ## References
 
 * [J. H. Bramble, S. R. Hilbert, *Estimation of Linear Functionals on Sobolev Spaces with Application to Fourier Transforms and Spline Interpolation*][BrambleHilbert1970]
-* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
-  Ch. 4 (averaged Taylor polynomials, the Bramble–Hilbert lemma)
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008], Ch. 4
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-  (Thm 3.1.1, polynomial approximation; Thm 3.1.4, interpolation error; Thm 3.1.5, regular
-  families)
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.6 (Sobolev inequalities),
-  §5.8.1 (Poincaré inequalities)
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.6
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -117,21 +45,17 @@ variable {n : ℕ} {G : Type} [NormedAddCommGroup G] [NormedSpace ℝ G]
 
 section AvgTaylor
 
-/-- The **averaged Taylor polynomial** of order `m` (degree `< m`) of `f` over `K`:
-`Q_m f (x) = ⨍_{y ∈ K} T_m f(y)(x)`, the Taylor polynomial at `y` averaged uniformly over the
-base points `y ∈ K`. -/
+/-- The averaged Taylor polynomial `Q_m f (x) = ⨍_{y ∈ K} T_m f(y)(x)` of `f` over `K`. -/
 def avgTaylorPoly [CompleteSpace G] (K : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → G) (m : ℕ)
     (x : Fin n → ℝ) : G :=
   ⨍ y in K, taylorPoly f y m x
 
-/-- The coefficient of the monomial `∏_{l ∈ s} x_{σ l}` in the expansion of the `i`-th Taylor
-term at `y`. -/
+/-- The coefficient of `∏_{l ∈ s} x_{σ l}` in the `i`-th Taylor term of `f` at `y`. -/
 def taylorCoeff (f : (Fin n → ℝ) → G) (i : ℕ) (σ : Fin i → Fin n) (s : Finset (Fin i))
     (y : Fin n → ℝ) : G :=
   ((i.factorial : ℝ)⁻¹ * ∏ l ∈ sᶜ, (-y (σ l))) •
     iteratedFDeriv ℝ i f y (fun l => fun j => if σ l = j then (1 : ℝ) else 0)
 
-/-- Expansion of the Taylor polynomial at `y` in monomials of `x`. -/
 theorem taylorPoly_eq_sum_taylorCoeff (f : (Fin n → ℝ) → G) (y x : Fin n → ℝ) (m : ℕ) :
     taylorPoly f y m x = ∑ i ∈ Finset.range m, ∑ σ : Fin i → Fin n, ∑ s : Finset (Fin i),
       (∏ l ∈ s, x (σ l)) • taylorCoeff f i σ s y := by
@@ -157,7 +81,6 @@ theorem taylorPoly_eq_sum_taylorCoeff (f : (Fin n → ℝ) → G) (y x : Fin n �
   congr 1
   ring
 
-/-- Continuity of the derivatives of a `C^N` function on an open set. -/
 theorem continuousOn_iteratedFDeriv_of_isOpen {E F : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] [NormedAddCommGroup F] [NormedSpace ℝ F] {N : ℕ} {f : E → F} {U : Set E}
     (hU : IsOpen U) (hf : ContDiffOn ℝ N f U) {i : ℕ} (hi : i ≤ N) :
@@ -173,7 +96,6 @@ theorem continuousOn_taylorCoeff {r : ℕ} {f : (Fin n → ℝ) → G} {U : Set 
     (continuous_apply (σ l)).continuousOn.neg)) ?_
   exact (continuous_eval_const _).comp_continuousOn (continuousOn_iteratedFDeriv_of_isOpen hU hf hi)
 
-/-- The monomial `x ↦ (∏_{l ∈ s} x_{σ l}) • c` lies in `P_r` for `#s ≤ r`. -/
 theorem prod_smul_mem_polyFunctions {i r : ℕ} (σ : Fin i → Fin n) (s : Finset (Fin i))
     (hs : s.card ≤ r) (c : G) :
     (fun x : Fin n → ℝ => (∏ l ∈ s, x (σ l)) • c) ∈ polyFunctions n r G := by
@@ -185,7 +107,6 @@ theorem prod_smul_mem_polyFunctions {i r : ℕ} (σ : Fin i → Fin n) (s : Fins
   · funext x
     simp
 
-/-- Expansion of the averaged Taylor polynomial in monomials of `x`. -/
 theorem avgTaylorPoly_eq_sum [CompleteSpace G] {K U : Set (Fin n → ℝ)} (hK : IsCompact K)
     (hU : IsOpen U) (hKU : K ⊆ U) {r : ℕ} {f : (Fin n → ℝ) → G} (hf : ContDiffOn ℝ r f U)
     (x : Fin n → ℝ) :
@@ -209,8 +130,6 @@ theorem avgTaylorPoly_eq_sum [CompleteSpace G] {K U : Set (Fin n → ℝ)} (hK :
   refine Finset.sum_congr rfl fun s _ => ?_
   rw [integral_smul, smul_comm]
 
-/-- **The averaged Taylor polynomial of order `r + 1` lies in `P_r`** (for `f` of class `C^r` on
-an open neighbourhood of the compact set `K`, so that the coefficients are integrable). -/
 theorem avgTaylorPoly_mem_polyFunctions [CompleteSpace G] {K U : Set (Fin n → ℝ)}
     (hK : IsCompact K) (hU : IsOpen U) (hKU : K ⊆ U) {r : ℕ} {f : (Fin n → ℝ) → G}
     (hf : ContDiffOn ℝ r f U) : avgTaylorPoly K f (r + 1) ∈ polyFunctions n r G := by
@@ -236,8 +155,7 @@ section Remainder
 variable {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
   [NormedSpace ℝ F]
 
-/-- The Taylor sum along the segment `t ↦ y + t v`:
-`∑_{i ≤ k} ((1 - t)^i / i!) D^i f(y + t v)(v, …, v)`. -/
+/-- The Taylor sum `∑_{i ≤ k} ((1 - t)^i / i!) D^i f(y + t v)(v, …, v)` along `y + t v`. -/
 def taylorSegment (f : E → F) (y v : E) (k : ℕ) (t : ℝ) : F :=
   ∑ i ∈ Finset.range (k + 1),
     ((1 - t) ^ i / i.factorial) • iteratedFDeriv ℝ i f (y + t • v) (fun _ => v)
@@ -298,9 +216,6 @@ theorem hasDerivAt_taylorSegment {N : ℕ} {f : E → F} {U : Set E} (hU : IsOpe
       ring
     rw [this, zero_smul, zero_add]
 
-/-- **Taylor's formula with integral remainder**: for `f` of class `C^{k+1}` on an open set
-containing the segment `[y, x]`,
-`f x - T_{k+1} f(y)(x) = ∫₀¹ ((1 - t)^k / k!) D^{k+1} f(y + t (x - y))(x - y, …, x - y) dt`. -/
 theorem sub_taylorPoly_eq_integral [CompleteSpace F] {k : ℕ} {f : E → F} {U : Set E}
     (hU : IsOpen U) (hf : ContDiffOn ℝ (k + 1) f U) {x y : E}
     (hseg : ∀ t ∈ Icc (0 : ℝ) 1, y + t • (x - y) ∈ U) :
@@ -328,8 +243,6 @@ theorem sub_taylorPoly_eq_integral [CompleteSpace F] {k : ℕ} {f : E → F} {U 
     simp
   rw [h1, h0]
 
-/-- The integral remainder in `ℝ≥0∞`:
-`‖f x - T_{k+1} f(y)(x)‖ ≤ ∫₀¹ ((1 - t)^k / k!) ‖D^{k+1} f(y + t (x - y))‖ ‖x - y‖^{k+1} dt`. -/
 theorem enorm_sub_taylorPoly_le [CompleteSpace F] {k : ℕ} {f : E → F} {U : Set E}
     (hU : IsOpen U) (hf : ContDiffOn ℝ (k + 1) f U) {x y : E}
     (hseg : ∀ t ∈ Icc (0 : ℝ) 1, y + t • (x - y) ∈ U) :
@@ -355,7 +268,6 @@ end Remainder
 
 section Integrals
 
-/-- `∫₀^b (1 - t)^{-(n+1)} dt = ((1 - b)^{-n} - 1) / n` for `b < 1`. -/
 theorem integral_inv_one_sub_pow (hn : 0 < n) {b : ℝ} (hb0 : 0 ≤ b) (hb : b < 1) :
     ∫ t in (0 : ℝ)..b, ((1 - t) ^ (n + 1))⁻¹ = (((1 - b) ^ n)⁻¹ - 1) / n := by
   have hderiv : ∀ t ∈ uIcc (0 : ℝ) b, HasDerivAt (fun t : ℝ => ((1 - t) ^ n)⁻¹ / n)
@@ -380,8 +292,6 @@ theorem integral_inv_one_sub_pow (hn : 0 < n) {b : ℝ} (hb0 : 0 ≤ b) (hb : b 
   rw [intervalIntegral.integral_eq_sub_of_hasDerivAt hderiv hcont.intervalIntegrable]
   simp [sub_div]
 
-/-- The time integral of the Riesz-potential argument:
-`∫₀¹ (1 - t)^{-(n+1)} 1[a ≤ (1 - t) d] dt ≤ dⁿ / (n aⁿ)` for `a > 0`. -/
 theorem lintegral_inv_one_sub_pow_indicator_le (hn : 0 < n) {a d : ℝ} (ha : 0 < a) :
     ∫⁻ t in Ioo (0 : ℝ) 1, ENNReal.ofReal (((1 - t) ^ (n + 1))⁻¹) *
         {t : ℝ | a ≤ (1 - t) * d}.indicator 1 t ≤ ENNReal.ofReal (d ^ n / (n * a ^ n)) := by
@@ -441,7 +351,6 @@ theorem lintegral_inv_one_sub_pow_indicator_le (hn : 0 < n) {a d : ℝ} (ha : 0 
         have : 0 ≤ (n : ℝ) * a ^ n := by positivity
         linarith
 
-/-- Lebesgue integrals under a dilation: `∫ g(r y) dy = |r⁻ⁿ| ∫ g`. -/
 theorem lintegral_comp_smul_fin (g : (Fin n → ℝ) → ℝ≥0∞) {r : ℝ} (hr : r ≠ 0) :
     ∫⁻ y, g (r • y) = ENNReal.ofReal |(r ^ n)⁻¹| * ∫⁻ z, g z := by
   let e : (Fin n → ℝ) ≃ᵐ (Fin n → ℝ) := (Homeomorph.smul (Units.mk0 r hr)).toMeasurableEquiv
@@ -452,8 +361,6 @@ theorem lintegral_comp_smul_fin (g : (Fin n → ℝ) → ℝ≥0∞) {r : ℝ} (
         rw [he, Measure.map_addHaar_smul volume hr, lintegral_smul_measure, Module.finrank_fin_fun]
         rfl
 
-/-- The change of variables `z = y + t (x - y) = (1 - t) y + t x`, `t ≠ 1`:
-`∫ g(y + t (x - y)) dy = |(1 - t)⁻ⁿ| ∫ g`. -/
 theorem lintegral_comp_add_smul_sub (g : (Fin n → ℝ) → ℝ≥0∞) (x : Fin n → ℝ) {t : ℝ}
     (ht : t ≠ 1) :
     ∫⁻ y, g (y + t • (x - y)) = ENNReal.ofReal |((1 - t) ^ n)⁻¹| * ∫⁻ z, g z := by
@@ -464,7 +371,6 @@ theorem lintegral_comp_add_smul_sub (g : (Fin n → ℝ) → ℝ≥0∞) (x : Fi
   rw [lintegral_comp_smul_fin (fun w => g (w + t • x)) hs,
     lintegral_add_right_eq_self (fun w => g w) (t • x)]
 
-/-- The indicator of a function continuous on a closed set is measurable. -/
 theorem measurable_indicator_of_continuousOn {s : Set (Fin n → ℝ)} (hs : IsClosed s)
     {g : (Fin n → ℝ) → ℝ≥0∞} (hg : ContinuousOn g s) : Measurable (s.indicator g) := by
   classical
@@ -477,8 +383,7 @@ end Integrals
 
 section Riesz
 
-/-- The Riesz kernel `‖x - z‖^m / ‖x - z‖^n` in `ℝ≥0∞`: `‖x - z‖^{m-n}` off the diagonal, `0` on
-the diagonal if `m ≥ 1`. -/
+/-- The Riesz kernel `‖x - z‖^m / ‖x - z‖^n` in `ℝ≥0∞`. -/
 def rieszKernel (n m : ℕ) (x z : Fin n → ℝ) : ℝ≥0∞ := ‖x - z‖ₑ ^ m / ‖x - z‖ₑ ^ n
 
 theorem measurable_rieszKernel (m : ℕ) :
@@ -496,7 +401,6 @@ theorem measurable_rieszKernel_right (m : ℕ) (x : Fin n → ℝ) :
 theorem rieszKernel_comm (m : ℕ) (x z : Fin n → ℝ) : rieszKernel n m x z = rieszKernel n m z x := by
   simp only [rieszKernel, ← enorm_neg (x - z), neg_sub]
 
-/-- The per-point time integral of the Riesz argument. -/
 theorem lintegral_time_le (hn : 0 < n) (k : ℕ) {d : ℝ} (hd : 0 ≤ d) (x z : Fin n → ℝ) (c : ℝ≥0∞) :
     ∫⁻ t in Ioo (0 : ℝ) 1, ENNReal.ofReal ((1 - t) ^ k / k.factorial) *
         ENNReal.ofReal |((1 - t) ^ n)⁻¹| * (c * (ENNReal.ofReal (1 - t)⁻¹ * ‖x - z‖ₑ) ^ (k + 1) *
@@ -689,9 +593,6 @@ end Riesz
 
 section KernelIntegral
 
-/-- **Radial integral of a power** on a closed ball (polar coordinates,
-`MeasureTheory.integral_fun_norm_addHaar`): for `b < a + n`,
-`∫_{‖w‖ ≤ d} ‖w‖^a / ‖w‖^b dw = n |B₁| d^{n + a - b} / (n + a - b)`. -/
 theorem lintegral_closedBall_pow_div_pow (hn : 0 < n) {a b : ℕ} (ha : 0 < a) (hab : b < a + n)
     {d : ℝ} (hd : 0 ≤ d) :
     ∫⁻ w in Metric.closedBall (0 : Fin n → ℝ) d, ‖w‖ₑ ^ a / ‖w‖ₑ ^ b =
@@ -756,17 +657,13 @@ theorem lintegral_closedBall_pow_div_pow (hn : 0 < n) {a b : ℕ} (ha : 0 < a) (
   rw [← ofReal_integral_eq_lintegral_ofReal hint hnonneg, integral_fun_norm_addHaar volume h, hval,
     Module.finrank_fin_fun, nsmul_eq_mul, smul_eq_mul, mul_assoc]
 
-/-- The explicit constant `n |B₁| d^{n + a - b} / (n + a - b)` of
-`lintegral_closedBall_pow_div_pow`. -/
+/-- The constant `n |B₁| d^{n + a - b} / (n + a - b)`. -/
 def rieszConst (n a b : ℕ) (d : ℝ) : ℝ≥0∞ :=
   ENNReal.ofReal (n * volume.real (Metric.ball (0 : Fin n → ℝ) 1) *
     (d ^ ((n : ℝ) + a - b) / ((n : ℝ) + a - b)))
 
 theorem rieszConst_ne_top (n a b : ℕ) (d : ℝ) : rieszConst n a b d ≠ ∞ := ENNReal.ofReal_ne_top
 
-/-- **Integrability of the Riesz kernel**:
-`∫_K k(x, z)^q dz ≤ n |B₁| d^{n + q(m - n)} / (n + q(m - n))`
-for `x ∈ K`, `‖x - y‖ ≤ d` on `K`, `q m ≥ 1` and `q n < q m + n`. -/
 theorem lintegral_rieszKernel_pow_le (hn : 0 < n) {K : Set (Fin n → ℝ)} (hKm : MeasurableSet K)
     {d : ℝ} (hd : ∀ x ∈ K, ∀ y ∈ K, ‖x - y‖ ≤ d) {x : Fin n → ℝ} (hx : x ∈ K) {m q : ℕ}
     (hqm : 0 < q * m) (hq : q * n < q * m + n) :
@@ -792,7 +689,6 @@ theorem lintegral_rieszKernel_pow_le (hn : 0 < n) {K : Set (Fin n → ℝ)} (hKm
         rw [lintegral_indicator measurableSet_closedBall]
         exact lintegral_closedBall_pow_div_pow hn hqm hq hd0
 
-/-- **Weighted Cauchy–Schwarz**: `(∫ F k)² ≤ (∫ k)(∫ F² k)`. -/
 theorem lintegral_mul_sq_le {α : Type*} [MeasurableSpace α] (μ : Measure α)
     {F k : α → ℝ≥0∞} (hF : AEMeasurable F μ) (hk : AEMeasurable k μ) :
     (∫⁻ a, F a * k a ∂μ) ^ 2 ≤ (∫⁻ a, k a ∂μ) * ∫⁻ a, F a ^ 2 * k a ∂μ := by
@@ -839,12 +735,8 @@ theorem measurable_indicator_enorm_iteratedFDeriv {K U : Set (Fin n → ℝ)} (h
   measurable_indicator_of_continuousOn hK (continuous_enorm.comp_continuousOn
     ((continuousOn_iteratedFDeriv_of_isOpen hU hf le_rfl).mono hKU))
 
-/-- **`L²` Bramble–Hilbert lemma** on a compact convex set with nonempty interior (`|K| > 0`),
-for every order `k + 1 ≥ 1` ([BrambleHilbert1970]; [Ciarlet2002], Thm 3.1.1): the averaged
-Taylor polynomial `p = Q_{k+1} f ∈ P_k` satisfies
-`∫_K ‖f - p‖² ≤ (dⁿ/(n k! |K|) · C₁)² ∫_K ‖D^{k+1} f‖²`, with
-`C₁ = n |B₁| d^{k+1} / (k+1)` the bound of `∫_K ‖x - z‖^{k+1-n} dz` (Schur test on the Riesz
-kernel). -/
+/-- The `L²` Bramble–Hilbert lemma on a compact convex set `K`, `|K| > 0`:
+`∫_K ‖f - Q_{k+1} f‖² ≤ C ∫_K ‖D^{k+1} f‖²` ([BrambleHilbert1970]; [Ciarlet2002], Thm 3.1.1). -/
 theorem lintegral_sub_avgTaylorPoly_sq_le [CompleteSpace G] (hn : 0 < n) {K U : Set (Fin n → ℝ)}
     (hK : IsCompact K) (hKc : Convex ℝ K) (hK0 : volume K ≠ 0) (hU : IsOpen U) (hKU : K ⊆ U)
     {k : ℕ} {f : (Fin n → ℝ) → G} (hf : ContDiffOn ℝ (k + 1) f U) {d : ℝ}
@@ -910,11 +802,8 @@ theorem lintegral_sub_avgTaylorPoly_sq_le [CompleteSpace G] (hn : 0 < n) {K U : 
         rw [this]
         ring
 
-/-- **Sobolev embedding** `H^{k+1}(K) ⊂ C(K)` for `2(k + 1) > n`, in a-priori form for
-`C^{k+1}` functions (no Sobolev space is constructed) and in the Bramble–Hilbert form:
-`sup_K ‖f - Q_{k+1} f‖ ≤ dⁿ/(n k! |K|) · C₂^{1/2} (∫_K ‖D^{k+1} f‖²)^{1/2}` with
-`C₂ = n |B₁| d^{2(k+1) - n} / (2(k+1) - n)` the bound of `∫_K ‖x - z‖^{2(k+1-n)} dz`
-(Cauchy–Schwarz on the Riesz potential; [Evans2010], §5.6). -/
+/-- The Sobolev embedding for `2(k + 1) > n`, in a-priori form for `C^{k+1}` functions: on `K`,
+`‖f - Q_{k+1} f‖ ≤ C (∫_K ‖D^{k+1} f‖²)^{1/2}` ([Evans2010], §5.6). -/
 theorem enorm_sub_avgTaylorPoly_le_L2 [CompleteSpace G] (hn : 0 < n) {K U : Set (Fin n → ℝ)}
     (hK : IsCompact K) (hKc : Convex ℝ K) (hK0 : volume K ≠ 0) (hU : IsOpen U) (hKU : K ⊆ U)
     {k : ℕ} (hnk : n < 2 * (k + 1)) {f : (Fin n → ℝ) → G} (hf : ContDiffOn ℝ (k + 1) f U)
@@ -953,8 +842,6 @@ theorem enorm_sub_avgTaylorPoly_le_L2 [CompleteSpace G] (hn : 0 < n) {K U : Set 
         gcongr
     _ = _ := by ring
 
-/-- **Iterated derivatives of iterated derivatives**: `‖Dⁱ (Dʲ f)(x)‖ = ‖D^{i+j} f(x)‖` (the
-currying isometries `continuousMultilinearCurryLeftEquiv`, `norm_iteratedFDeriv_fderiv`). -/
 theorem norm_iteratedFDeriv_iteratedFDeriv {E F : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] [NormedAddCommGroup F] [NormedSpace ℝ F] (f : E → F) (i j : ℕ) (x : E) :
     ‖iteratedFDeriv ℝ i (iteratedFDeriv ℝ j f) x‖ = ‖iteratedFDeriv ℝ (i + j) f x‖ := by
@@ -970,7 +857,6 @@ theorem norm_iteratedFDeriv_iteratedFDeriv {E F : Type*} [NormedAddCommGroup E]
       (F := E →L[ℝ] E [×j]→L[ℝ] F) (G := E [×(j + 1)]→L[ℝ] F), norm_iteratedFDeriv_fderiv, ih,
       Nat.add_right_comm, Nat.add_assoc]
 
-/-- **Cauchy–Schwarz for the average**: `|K|⁻¹ ∫_K g ≤ (⨍_K g²)^{1/2}`. -/
 theorem inv_mul_setLIntegral_le_sqrt {K : Set (Fin n → ℝ)} (hK0 : volume K ≠ 0)
     (hKt : volume K ≠ ∞) {g : (Fin n → ℝ) → ℝ≥0∞} (hg : AEMeasurable g (volume.restrict K)) :
     (volume K)⁻¹ * ∫⁻ z in K, g z ≤ (⨍⁻ z in K, g z ^ 2 ∂volume) ^ (1 / 2 : ℝ) := by
@@ -993,10 +879,6 @@ theorem inv_mul_setLIntegral_le_sqrt {K : Set (Fin n → ℝ)} (hK0 : volume K �
                                                  ring
     _ = _ := by rw [hV1, mul_one]
 
-/-- **The averaged Taylor polynomial is bounded by the `L²` averages of the derivatives**: for `K`
-compact with `|K| > 0`, `‖x - y‖ ≤ d` on `K` and `x ∈ K`,
-`‖Q_m f(x)‖ ≤ Σ_{i < m} dⁱ/i! (⨍_K ‖Dⁱ f‖²)^{1/2}` (the Taylor terms at each base point and
-`inv_mul_setLIntegral_le_sqrt`). -/
 theorem enorm_avgTaylorPoly_le [CompleteSpace G] {K U : Set (Fin n → ℝ)} (hK : IsCompact K)
     (hK0 : volume K ≠ 0) (hU : IsOpen U) (hKU : K ⊆ U) {m : ℕ} {f : (Fin n → ℝ) → G}
     (hf : ContDiffOn ℝ m f U) {d : ℝ} (hd : ∀ x ∈ K, ∀ y ∈ K, ‖x - y‖ ≤ d) {x : Fin n → ℝ}
@@ -1052,12 +934,6 @@ theorem enorm_avgTaylorPoly_le [CompleteSpace G] {K U : Set (Fin n → ℝ)} (hK
     _ ≤ _ := Finset.sum_le_sum fun i hi => by
         gcongr; exact inv_mul_setLIntegral_le_sqrt hK0 hKt (hm i hi)
 
-/-- **Sobolev embedding with the lower-order terms** `H^{k+1}(K) ⊂ C(K)`, `2(k + 1) > n`, in
-a-priori form for `C^{k+1}` functions:
-`sup_K ‖f‖ ≤ Σ_{i ≤ k} dⁱ/i! (⨍_K ‖Dⁱ f‖²)^{1/2} + dⁿ/(n k! |K|) · C₂^{1/2} ‖D^{k+1} f‖_{L²(K)}`
-(`enorm_sub_avgTaylorPoly_le_L2` for `f - Q_{k+1} f`, `enorm_avgTaylorPoly_le` for `Q_{k+1} f`;
-[Evans2010], §5.6). Applied to `f = D^{s+1} w` it bounds `sup_K ‖D^{s+1} w‖` by `L²` norms of
-derivatives of every order `≥ s + 1`, with no condition on `s`. -/
 theorem enorm_le_L2 [CompleteSpace G] (hn : 0 < n) {K U : Set (Fin n → ℝ)}
     (hK : IsCompact K) (hKc : Convex ℝ K) (hK0 : volume K ≠ 0) (hU : IsOpen U) (hKU : K ⊆ U)
     {k : ℕ} (hnk : n < 2 * (k + 1)) {f : (Fin n → ℝ) → G} (hf : ContDiffOn ℝ (k + 1) f U)
@@ -1094,8 +970,7 @@ theorem volume_closedInterior_ne_zero (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   (isOpen_interior.measure_pos volume (interior_closedInterior_nonempty T)).ne'.symm ∘
     fun h => le_antisymm ((measure_mono interior_subset).trans h.le) zero_le |>.symm
 
-/-- The constant of the reference `L²` interpolation estimate
-`|T̂| (1 + C)² (avgTaylorConst)² C₂`. -/
+/-- The constant `|T̂| (1 + C)² (avgTaylorConst)² C₂` of the reference `L²` estimate. -/
 def refL2Const (n s : ℕ) (C : ℝ) : ℝ≥0∞ :=
   volume (Feec.Mesh.refSimplex n).closedInterior * ENNReal.ofReal (1 + C) ^ 2 *
     (avgTaylorConst n s 1 (Feec.Mesh.refSimplex n).closedInterior ^ 2 *
@@ -1108,13 +983,8 @@ theorem refL2Const_ne_top (n s : ℕ) (C : ℝ) : refL2Const n s C ≠ ∞ :=
       (ENNReal.pow_ne_top (avgTaylorConst_ne_top (volume_closedInterior_ne_zero _)))
       (rieszConst_ne_top _ _ _ _))
 
-/-- **`L²(T̂)` interpolation error from `L²` derivatives** ([Ciarlet2002], Thm 3.1.4, Sobolev
-form): for every reference interpolant `I` that is stable in `C⁰(T̂)` and reproduces `P_s`
-(`IsRefInterpolant n s 0`, e.g. the canonical interpolants of `P_rΛ`, `s ≤ r`, and `P_r⁻Λ`,
-`s ≤ r - 1`), and every `f` of class `C^{s+1}` near `T̂`, if `2(s + 1) > n`:
-`∫_{T̂} ‖f - I f‖² ≤ K ∫_{T̂} ‖D^{s+1} f‖²`, `K = refL2Const n s C`. The restriction
-`2(s + 1) > n` is that of the Sobolev embedding `H^{s+1} ⊂ C⁰`: the moment degrees of freedom
-need point values (traces on faces). -/
+/-- If `2(s + 1) > n`, a reference interpolant stable in `C⁰(T̂)` and reproducing `P_s` satisfies
+`∫_{T̂} ‖f - I f‖² ≤ K ∫_{T̂} ‖D^{s+1} f‖²` ([Ciarlet2002], Thm 3.1.4, Sobolev form). -/
 theorem IsRefInterpolant.lintegral_sub_sq_le_L2 [CompleteSpace G] (hn : 0 < n) {s : ℕ}
     (hns : n < 2 * (s + 1)) {I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G} {C : ℝ} (hC : 0 ≤ C)
     (hI : IsRefInterpolant n s 0 G I C) {f : (Fin n → ℝ) → G} {U : Set (Fin n → ℝ)}
@@ -1182,11 +1052,6 @@ section Transport
 
 open Feec.Mesh
 
-/-- **`L²(T)` interpolation error on an `n`-simplex `T`**, by transport from `T̂`
-(`Feec.FiniteElement.transportInterp`, `Π_T u = Φ⁻¹ ∘ I (Φ ∘ u ∘ F_T) ∘ F_T⁻¹`): for
-`2(s + 1) > n`,
-`∫_T ‖u - Π_T u‖² ≤ (‖Φ⁻¹‖ ‖Φ‖ ‖B_T‖^{s+1})² K ∫_T ‖D^{s+1} u‖²`. The Jacobians `|det B_T|` of
-the two changes of variables cancel. -/
 theorem lintegral_sub_transportInterp_sq_le_L2 [CompleteSpace G] (hn : 0 < n) {s : ℕ}
     (hns : n < 2 * (s + 1)) {I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G} {C : ℝ} (hC : 0 ≤ C)
     (hI : IsRefInterpolant n s 0 G I C) (T : Affine.Simplex ℝ (Fin n → ℝ) n) (Φ : G ≃L[ℝ] G)
@@ -1251,11 +1116,6 @@ theorem lintegral_sub_transportInterp_sq_le_L2 [CompleteSpace G] (hn : 0 < n) {s
     _ = _ := by
         rw [lintegral_closedInterior_eq T (fun x => ‖iteratedFDeriv ℝ (s + 1) u x‖ₑ ^ 2)]
 
-/-- **`L²(T)` interpolation error on a shape-regular family** (`Feec.Mesh.IsShapeRegular`:
-`‖B_T‖ ≤ C₀ h_T`, `‖B_T⁻¹‖ ≤ C₀ / h_T`) with a fibre map scaling like a `k`-form pullback
-(`‖Φ_T‖ ≤ A ‖B_T‖^k`, `‖Φ_T⁻¹‖ ≤ A ‖B_T⁻¹‖^k`):
-`∫_T ‖u - Π_T u‖² ≤ (A² C₀^{2k} (C₀ h_T)^{s+1})² K ∫_T ‖D^{s+1} u‖²` for `2(s + 1) > n`
-([Ciarlet2002], Thm 3.1.5, Sobolev form). -/
 theorem lintegral_sub_transportInterp_sq_le_L2_of_isShapeRegular [CompleteSpace G] (hn : 0 < n)
     {s : ℕ} (hns : n < 2 * (s + 1)) {I : ((Fin n → ℝ) → G) → (Fin n → ℝ) → G} {C : ℝ}
     (hC : 0 ≤ C) (hI : IsRefInterpolant n s 0 G I C) {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}
@@ -1290,7 +1150,6 @@ open Feec.Mesh ExteriorFibre
 
 variable {r k : ℕ}
 
-/-- `‖u‖²_{L²(S)} ≤ #Λ ∫_S ‖u‖²` (sup norm on the fibre), if the right side is finite. -/
 theorem formL2Sq_le_card_mul_lintegral {S : Set (Fin n → ℝ)} {u : FormField n}
     (hfin : ∫⁻ x in S, ‖u x‖ₑ ^ 2 ≠ ∞) :
     formL2Sq S u ≤ Fintype.card (Finset (Fin n)) * (∫⁻ x in S, ‖u x‖ₑ ^ 2).toReal := by
@@ -1319,8 +1178,7 @@ theorem integral_norm_sq_eq_toReal_lintegral {E : Type*} [NormedAddCommGroup E]
   refine lintegral_congr fun x => ?_
   rw [ENNReal.ofReal_pow (norm_nonneg _), ofReal_norm]
 
-/-- The constant `(‖Φ_K⁻¹‖ ‖Φ_K‖ ‖B_K‖^{s+1})²` of a reference simplex `K` with the fibre map
-`Φ_K = B_K^*`. -/
+/-- The constant `(‖Φ_K⁻¹‖ ‖Φ_K‖ ‖B_K‖^{s+1})²` of `K` with the fibre map `Φ_K = B_K^*`. -/
 def formTransportConst (K : Affine.Simplex ℝ (Fin n → ℝ) n) (s : ℕ) : ℝ :=
   (‖((fibrePullbackEquiv K.points (isUnit_det_edgeMatrix K)).symm :
       (Finset (Fin n) → ℝ) →L[ℝ] (Finset (Fin n) → ℝ))‖ *
@@ -1328,8 +1186,6 @@ def formTransportConst (K : Affine.Simplex ℝ (Fin n → ℝ) n) (s : ℕ) : �
       (Finset (Fin n) → ℝ) →L[ℝ] (Finset (Fin n) → ℝ))‖ *
       ‖(K.linearEquiv : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖ ^ (s + 1))) ^ 2
 
-/-- The common core of the form estimates: a reference interpolant transported to `T = t + h K`
-with `Φ_K`, compared with a field `P` that it equals. -/
 theorem formL2Sq_sub_le_of_transportInterp_eq (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hn : 0 < n)
     {s : ℕ} (hns : n < 2 * (s + 1)) {I : FormField n → FormField n} {CI : ℝ} (hCI : 0 ≤ CI)
     (hI : IsRefInterpolant n s 0 (Finset (Fin n) → ℝ) I CI) {h : ℝ} (hh : 0 < h)
@@ -1377,10 +1233,8 @@ theorem formL2Sq_sub_le_of_transportInterp_eq (K : Affine.Simplex ℝ (Fin n →
           ← integral_norm_sq_eq_toReal_lintegral hTm hDc]
         ring
 
-/-- **`L²(T)` interpolation error of `Π_T` for `P_rΛᵏ` from `L²` derivatives** on
-`T = t + h K`, `s ≤ r`, `2(s + 1) > n`:
-`‖w - Π_T w‖²_{L²(T)} ≤ C h^{2(s+1)} ∫_T ‖D^{s+1} w‖²`, `C` depending only on `K`, `n`, `r`,
-`s` (full order `h^{2(r+1)}` for `s = r`). -/
+/-- The `L²(T)` error of `Π_T` for `P_rΛᵏ` on `T = t + h K`, `s ≤ r`, `2(s + 1) > n`:
+`‖w - Π_T w‖²_{L²(T)} ≤ C h^{2(s+1)} ∫_T ‖D^{s+1} w‖²`, `C` independent of `h`, `t`, `w`. -/
 theorem exists_formL2Sq_sub_polyInterp_le_L2 (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hn : 0 < n)
     (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ} (hs : s ≤ r) (hns : n < 2 * (s + 1)) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)
@@ -1397,8 +1251,8 @@ theorem exists_formL2Sq_sub_polyInterp_le_L2 (K : Affine.Simplex ℝ (Fin n → 
   exact formL2Sq_sub_le_of_transportInterp_eq K hn hns hCI0 hI hh t hU hTU hw
     (transportInterp_polyRefInterp_eq K hr hk hh t hwc hwk)
 
-/-- **`L²(T)` interpolation error of `Π_T` for `P_r⁻Λᵏ` from `L²` derivatives** on
-`T = t + h K`, `s ≤ r - 1`, `2(s + 1) > n`. -/
+/-- The `L²(T)` error of `Π_T` for `P_r⁻Λᵏ` on `T = t + h K`, `s + 1 ≤ r`, `2(s + 1) > n`:
+`‖w - Π_T w‖²_{L²(T)} ≤ C h^{2(s+1)} ∫_T ‖D^{s+1} w‖²`, `C` independent of `h`, `t`, `w`. -/
 theorem exists_formL2Sq_sub_polyMinusInterp_le_L2 (K : Affine.Simplex ℝ (Fin n → ℝ) n)
     (hn : 0 < n) (hr : 1 ≤ r) (hk : k ≤ n) {s : ℕ} (hs : s + 1 ≤ r) (hns : n < 2 * (s + 1)) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)

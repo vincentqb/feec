@@ -7,52 +7,19 @@ public import Feec.HilbertComplex.Approximation.Subcomplex
 /-!
 # Assembly of global finite element spaces on simplicial meshes
 
-An abstract **element family** (`Feec.FiniteElement.LocalElement`) assigns to every `n`-simplex
-`T` of `ℝⁿ` finite-dimensional spaces `P(T)ᵏ` of `C¹` real `k`-forms with `d P(T)ᵏ ⊆ P(T)ᵏ⁺¹`,
-and to every face `g` (a vertex set) degrees of freedom `ℓ_{g,i}` on continuous forms, depending
-only on `g`, such that
+On a conforming mesh, an element family assembles the global spaces `Λ_hᵏ(M)` of piecewise fields
+with matching degrees of freedom, and the finite element subcomplexes of the `L²` de Rham complexes.
 
-* the DOFs of the faces of `T` are unisolvent on `P(T)ᵏ`;
-* **trace determination**: on a common facet `F` of `T` and `T'`, forms of `P(T)ᵏ` and `P(T')ᵏ`
-  with the same DOFs on the faces of `F` have the same tangential trace on `F`;
-* the DOFs of a face only see the tangential traces on the face (`dof_congr`);
-* **Stokes compatibility**: `ℓ_{g,i} ∘ d` is a combination of the DOFs of the faces of `g`
-  (for Whitney forms, Stokes' theorem).
+## Main results
 
-On a conforming mesh `M` of an open `Ω`, the global space `Λ_hᵏ(M)` (`LocalElement.globalSpace`)
-consists of the piecewise fields `u = (u_T)_T`, `u_T ∈ P(T)ᵏ`, whose DOFs agree on shared faces.
-Then
-
-* `Λ_hᵏ(M)` is finite-dimensional of dimension `Σ_g #DOF(g)` (`finrank_globalSpace`), the global
-  DOFs being a linear isomorphism (`globalDofEquiv`); the gluing into `L²(Ω; Λᵏ)` is injective
-  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension (`finrank_V`); with
-  vanishing boundary DOFs, the dimension is the number of interior DOFs, those of the faces not
-  contained in a boundary facet (`interiorDofEquiv`, `finrank_globalSpace₀`, `finrank_V₀`);
-* `Λ_hᵏ(M) ⊆ {piecewise fields with continuous tangential traces}`
-  (`tangentialTraceEq_of_mem_globalSpace`), with equality when the faces of `M` have facet-connected
-  stars (`mem_globalSpace_iff`); the hypothesis is needed (two triangles sharing only a vertex);
-* `d Λ_hᵏ ⊆ Λ_hᵏ⁺¹` (`dPiecewise_mem_globalSpace`), so the glued `L²` spaces form a
-  `Feec.HilbertComplex.Subcomplex` of the maximal de Rham complex `HΛ(Ω)`
-  (`LocalElement.subcomplex`), and the global spaces with vanishing boundary DOFs form a subcomplex
-  of the minimal complex `H̊Λ(Ω)` (`LocalElement.subcomplexMin`, `Ω` strictly star-shaped);
-* the local and global canonical interpolants `Π_T`, `Π_h` (`localInterp`, `globalInterp`) are
-  determined by the DOFs (`localDof_localInterp`, `globalInterp_piecewise`) and commute with `d`
-  on `C¹` forms (`localInterp_extDeriv`, `globalInterp_extDeriv`);
-* **equivalent families** (`LocalElement.Equivalent`: the same local spaces, DOFs spanning the
-  same functionals on every face) assemble the same spaces `Vₕᵏ`, `V̊ₕᵏ` and the same subcomplexes
-  on every mesh (`Equivalent.V_eq`, `Equivalent.V₀_eq`, `Equivalent.subcomplex_eq`,
-  `Equivalent.subcomplexMin_eq`).
+* `LocalElement.finrank_V`: `dim Vₕᵏ` is the number of global degrees of freedom.
+* `LocalElement.mem_globalSpace_iff`: on facet-connected meshes, `Λ_hᵏ(M)` consists of the
+  tangentially continuous fields.
+* `LocalElement.globalInterp_extDeriv`: the canonical interpolant commutes with `d`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (assembly of `P_rΛᵏ` and `P_r⁻Λᵏ` from degrees of freedom, conformity, commuting
-  projections)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
-* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
-  §3.4 (interpolation-equivalent elements)
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -68,7 +35,7 @@ open Feec.Domain Feec.Mesh ExteriorFibre
 
 variable {n : ℕ}
 
-/-- An abstract **element family** on the `n`-simplices of `ℝⁿ` (see the module docstring). -/
+/-- An element family: local spaces of `C¹` forms closed under `d`, with DOFs on the faces. -/
 structure LocalElement (n : ℕ) where
   /-- the local spaces `P(T)ᵏ` -/
   space : Affine.Simplex ℝ (Fin n → ℝ) n → ℕ → Submodule ℝ (FormField n)
@@ -76,30 +43,28 @@ structure LocalElement (n : ℕ) where
   isDeg_of_mem : ∀ {T k w}, w ∈ space T k → ∀ x, IsDeg k (w x)
   extDeriv_mem : ∀ {T k w}, w ∈ space T k → extDeriv w ∈ space T (k + 1)
   finiteDimensional : ∀ (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ), FiniteDimensional ℝ (space T k)
-  /-- the DOFs of degree `k` attached to the face (vertex set) `g` -/
+  /-- the DOFs attached to the face `g` -/
   DofIdx : Finset (Fin n → ℝ) → ℕ → Type
   dofIdxFintype : ∀ g k, Fintype (DofIdx g k)
-  /-- the DOFs, on continuous forms; they depend only on the face `g` -/
   dof : ∀ g k, DofIdx g k → contForms n →ₗ[ℝ] ℝ
-  /-- the DOFs of the faces of `T` are unisolvent on `P(T)ᵏ` -/
   unisolvent : ∀ (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ), IsUnisolvent fun p : Σ g : (vertexSet T).powerset,
       DofIdx (g : Finset (Fin n → ℝ)) k =>
     dof (p.1 : Finset (Fin n → ℝ)) k p.2 ∘ₗ
       Submodule.inclusion (show space T k ≤ contForms n from
         fun _ hw => (contDiff_of_mem hw).continuous)
-  /-- **trace determination** on common facets -/
+  /-- trace determination on common facets -/
   trace : ∀ {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} {F : Finset (Fin n → ℝ)} {k w η},
     F ⊆ vertexSet T → F ⊆ vertexSet T' → F.card = n → (hw : w ∈ space T k) →
       (hη : η ∈ space T' k) →
       (∀ g ⊆ F, ∀ i, dof g k i ⟨w, (contDiff_of_mem hw).continuous⟩ =
         dof g k i ⟨η, (contDiff_of_mem hη).continuous⟩) →
       ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TangentialTraceEq F k (w x) (η x)
-  /-- the DOFs of a face `g` only see the tangential traces on `g` -/
+  /-- the DOFs of `g` only see the tangential traces on `g` -/
   dof_congr : ∀ {g : Finset (Fin n → ℝ)} {k} (i : DofIdx g k) {w η : contForms n},
     (∀ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)),
       TangentialTraceEq g k ((w : FormField n) x) ((η : FormField n) x)) →
       dof g k i w = dof g k i η
-  /-- **Stokes compatibility**: `ℓ_{g,i} ∘ d` is a combination of the DOFs of the faces of `g` -/
+  /-- Stokes compatibility -/
   dof_extDeriv : ∀ (g : Finset (Fin n → ℝ)) (k : ℕ) (i : DofIdx g (k + 1)), dof g (k + 1) i ∘ₗ extDerivC1 ∈
     Submodule.span ℝ (Set.range fun p : Σ g' : g.powerset, DofIdx (g' : Finset (Fin n → ℝ)) k =>
       dof (p.1 : Finset (Fin n → ℝ)) k p.2 ∘ₗ Submodule.inclusion c1Forms_le_contForms)
@@ -143,12 +108,10 @@ theorem pieceL2_smul (c : 𝕜) {v : Affine.Simplex ℝ (Fin n → ℝ) n → ι
 
 end PieceL2
 
-/-- Tangential traces on a facet determine those on its faces. -/
 theorem TangentialTraceEq.mono {g F : Finset (Fin n → ℝ)} {k : ℕ} {α β : Finset (Fin n) → ℝ}
     (h : TangentialTraceEq F k α β) (hgF : g ⊆ F) : TangentialTraceEq g k α β :=
   fun V hV => h V fun l => vectorSpan_mono ℝ (Finset.coe_subset.2 hgF) (hV l)
 
-/-- A functional in the span of functionals agreeing at two points takes equal values there. -/
 theorem eq_of_mem_span_range {X ι' : Type*} [AddCommGroup X] [Module ℝ X] {m : ι' → X →ₗ[ℝ] ℝ}
     {L : X →ₗ[ℝ] ℝ} (hL : L ∈ Submodule.span ℝ (Set.range m)) {x y : X} (h : ∀ i, m i x = m i y) :
     L x = L y := by
@@ -179,7 +142,6 @@ theorem localDof_apply (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (g :
     (i : E.DofIdx g k) (u : E.space T k) :
     E.localDof T k g i u = E.dof g k i ⟨u, E.le_contForms T k u.2⟩ := rfl
 
-/-- The local spaces are determined by the DOFs of the faces of `T`. -/
 theorem localSpace_ext (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) {u v : E.space T k}
     (h : ∀ g ⊆ vertexSet T, ∀ i, E.localDof T k g i u = E.localDof T k g i v) : u = v :=
   (E.unisolvent T k).ext fun p => h p.1 (mem_powerset.1 p.1.2) p.2
@@ -191,8 +153,7 @@ variable (M : SimplicialMesh n)
 /-- The piecewise fields `(u_T)_{T ∈ M}`, `u_T ∈ P(T)ᵏ`. -/
 abbrev Piecewise (k : ℕ) := ∀ T : M.simplices, E.space T k
 
-/-- **The global finite element space** `Λ_hᵏ(M)`: piecewise fields whose DOFs agree on shared
-faces. -/
+/-- The global space `Λ_hᵏ(M)`: the piecewise fields whose DOFs agree on shared faces. -/
 def globalSpace (k : ℕ) : Submodule ℝ (E.Piecewise M k) where
   carrier := {u | ∀ T T' : M.simplices, ∀ g, g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
     g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) → ∀ i,
@@ -225,7 +186,7 @@ theorem subset_faceSimplex (g : meshFaces M) :
 /-- The global DOF index: the DOFs of all faces of the mesh. -/
 abbrev GlobalDofIdx (k : ℕ) := Σ g : meshFaces M, E.DofIdx g k
 
-/-- **The global DOFs** `Λ_hᵏ(M) → ℝ^{global DOFs}`. -/
+/-- The global DOFs `Λ_hᵏ(M) → ℝ^{global DOFs}`. -/
 def globalDof (k : ℕ) : E.globalSpace M k →ₗ[ℝ] (E.GlobalDofIdx M k → ℝ) where
   toFun u p := E.localDof (faceSimplex M p.1) k p.1 p.2 ((u : E.Piecewise M k) (faceSimplex M p.1))
   map_add' u v := funext fun p => by simp
@@ -237,8 +198,7 @@ theorem globalDof_apply (k : ℕ) (u : E.globalSpace M k) (p : E.GlobalDofIdx M 
     E.globalDof M k u p = E.localDof T k p.1 p.2 ((u : E.Piecewise M k) T) :=
   u.2 _ _ _ (subset_faceSimplex M p.1) hT p.2
 
-/-- The piecewise field with prescribed global DOFs: on each `T`, the local field with the
-DOFs of the faces of `T`. -/
+/-- The piecewise field with prescribed global DOFs. -/
 def ofGlobalDof (k : ℕ) (c : E.GlobalDofIdx M k → ℝ) : E.Piecewise M k := fun T =>
   (E.unisolvent T k).equiv.symm fun p =>
     c ⟨⟨p.1, (mem_meshFaces M).2 ⟨T, T.2, mem_powerset.1 p.1.2⟩⟩, p.2⟩
@@ -254,7 +214,7 @@ theorem ofGlobalDof_mem (k : ℕ) (c : E.GlobalDofIdx M k → ℝ) :
     E.ofGlobalDof M k c ∈ E.globalSpace M k := fun T T' g hg hg' i => by
   rw [localDof_ofGlobalDof _ _ _ _ _ _ hg, localDof_ofGlobalDof _ _ _ _ _ _ hg']
 
-/-- **The global DOFs are a linear isomorphism** `Λ_hᵏ(M) ≃ ℝ^{global DOFs}`. -/
+/-- The global DOFs as a linear isomorphism `Λ_hᵏ(M) ≃ ℝ^{global DOFs}`. -/
 def globalDofEquiv (k : ℕ) : E.globalSpace M k ≃ₗ[ℝ] (E.GlobalDofIdx M k → ℝ) :=
   LinearEquiv.ofBijective (E.globalDof M k) ⟨fun u v huv => by
     refine Subtype.ext (funext fun T => E.localSpace_ext T k fun g hg i => ?_)
@@ -264,7 +224,6 @@ def globalDofEquiv (k : ℕ) : E.globalSpace M k ≃ₗ[ℝ] (E.GlobalDofIdx M k
       rw [E.globalDof_apply M k _ p (faceSimplex M p.1) (subset_faceSimplex M p.1)]
       exact localDof_ofGlobalDof _ _ _ _ _ _ (subset_faceSimplex M p.1) _⟩⟩
 
-/-- **`dim Λ_hᵏ(M) = Σ_g #DOF(g)`**, the number of global DOFs. -/
 theorem finrank_globalSpace (k : ℕ) :
     Module.finrank ℝ (E.globalSpace M k) = Fintype.card (E.GlobalDofIdx M k) := by
   rw [(E.globalDofEquiv M k).finrank_eq, Module.finrank_fintype_fun_eq_card]
@@ -303,8 +262,6 @@ theorem localDof_localD (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (g 
     E.localDof T (k + 1) g i (E.localD T k u) =
       (E.dof g (k + 1) i ∘ₗ extDerivC1) ⟨u, E.le_c1Forms T k u.2⟩ := rfl
 
-/-- **Global fields have continuous tangential traces**: on an interior facet `F` with
-neighbours `T`, `T'`, the tangential traces of `u_T` and `u_T'` agree. -/
 theorem tangentialTraceEq_of_mem_globalSpace {k : ℕ} {u : E.Piecewise M k}
     (hu : u ∈ E.globalSpace M k) {F : Finset (Fin n → ℝ)} (hF : F ∈ M.facets)
     (T T' : M.simplices) (hT : F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n))
@@ -314,9 +271,7 @@ theorem tangentialTraceEq_of_mem_globalSpace {k : ℕ} {u : E.Piecewise M k}
   E.trace hT hT' hF.1 (u T).2 (u T').2 fun g hg i =>
     hu T T' g (hg.trans hT) (hg.trans hT') i
 
-/-- The stars of the (nonempty) faces of `M` are **facet-connected**: two `n`-simplices
-containing a face `g` are joined by a chain of `n`-simplices containing `g`, consecutive ones
-sharing a facet that contains `g`. (Fails for two triangles meeting only at a vertex.) -/
+/-- The star of every nonempty face of `M` is connected through facets containing the face. -/
 def FacetConnected : Prop :=
   ∀ g : Finset (Fin n → ℝ), g.Nonempty → ∀ T T' : M.simplices,
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
@@ -325,9 +280,8 @@ def FacetConnected : Prop :=
           F ⊆ vertexSet (T₁ : Affine.Simplex ℝ (Fin n → ℝ) n) ∧
             F ⊆ vertexSet (T₂ : Affine.Simplex ℝ (Fin n → ℝ) n)) T T'
 
-/-- **`Λ_hᵏ(M)` is the space of piecewise fields with continuous tangential traces** (for meshes
-with facet-connected face stars, and no DOF on the empty face): DOF agreement on shared faces is
-equivalent to the agreement of the tangential traces on the facets. -/
+/-- With facet-connected face stars and no DOF on the empty face, `Λ_hᵏ(M)` is the space of the
+piecewise fields with continuous tangential traces on the facets. -/
 theorem mem_globalSpace_iff (hM : FacetConnected M) {k : ℕ} (hempty : IsEmpty (E.DofIdx ∅ k))
     {u : E.Piecewise M k} :
     u ∈ E.globalSpace M k ↔ ∀ F ∈ M.facets, ∀ T T' : M.simplices,
@@ -355,8 +309,6 @@ def dPiecewise (k : ℕ) : E.Piecewise M k →ₗ[ℝ] E.Piecewise M (k + 1) :=
 @[simp] theorem dPiecewise_apply (k : ℕ) (u : E.Piecewise M k) (T : M.simplices) :
     E.dPiecewise M k u T = E.localD T k (u T) := rfl
 
-/-- **`d Λ_hᵏ ⊆ Λ_hᵏ⁺¹`**: DOFs of `d u` on a face are combinations of DOFs of `u` on its
-subfaces (`dof_extDeriv`). -/
 theorem dPiecewise_mem_globalSpace {k : ℕ} {u : E.Piecewise M k} (hu : u ∈ E.globalSpace M k) :
     E.dPiecewise M k u ∈ E.globalSpace M (k + 1) := fun T T' g hg hg' i => by
   rw [dPiecewise_apply, dPiecewise_apply, localDof_localD, localDof_localD]
@@ -369,8 +321,7 @@ def dGlobal (k : ℕ) : E.globalSpace M k →ₗ[ℝ] E.globalSpace M (k + 1) :=
 
 /-! ### Vanishing boundary DOFs -/
 
-/-- The global space with **vanishing boundary DOFs** `Λ̊_hᵏ(M)`: the DOFs of the faces lying in
-boundary facets vanish. -/
+/-- The global space `Λ̊_hᵏ(M)`: the DOFs of the faces lying in boundary facets vanish. -/
 def globalSpace₀ (k : ℕ) : Submodule ℝ (E.Piecewise M k) :=
   E.globalSpace M k ⊓
     { carrier := {u | ∀ T : M.simplices, ∀ F, M.IsBoundaryFacet F →
@@ -394,7 +345,6 @@ theorem dPiecewise_mem_globalSpace₀ {k : ℕ} {u : E.Piecewise M k}
       exact hu.2 T F hF hFT g' (hg'g.trans hg) j
   rw [h, map_zero]
 
-/-- Fields with vanishing boundary DOFs have vanishing tangential traces on boundary facets. -/
 theorem tangentialTraceEq_zero_of_mem_globalSpace₀ {k : ℕ} {u : E.Piecewise M k}
     (hu : u ∈ E.globalSpace₀ M k) {F : Finset (Fin n → ℝ)} (hF : M.IsBoundaryFacet F)
     (T : M.simplices) (hT : F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n)) :
@@ -409,8 +359,7 @@ theorem tangentialTraceEq_zero_of_mem_globalSpace₀ {k : ℕ} {u : E.Piecewise 
 
 /-! ### The local canonical interpolant -/
 
-/-- **The local canonical interpolant** `Π_T : C⁰Λᵏ → P(T)ᵏ`: the local field with the DOFs of `w`
-on the faces of `T`. -/
+/-- The local canonical interpolant `Π_T : C⁰Λᵏ → P(T)ᵏ`, defined by the DOFs. -/
 def localInterp (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) : contForms n →ₗ[ℝ] E.space T k :=
   interp (E.unisolvent T k) fun p => E.dof p.1 k p.2
 
@@ -419,8 +368,6 @@ theorem localDof_localInterp (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ
     E.localDof T k g i (E.localInterp T k w) = E.dof g k i w :=
   dof_interp (E.unisolvent T k) (fun p => E.dof p.1 k p.2) w ⟨⟨g, mem_powerset.2 hg⟩, i⟩
 
-/-- **The local canonical interpolant commutes with `d`** on `C¹` forms:
-`Π_T (dw) = d (Π_T w)`. -/
 theorem localInterp_extDeriv (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) (w : c1Forms n) :
     E.localInterp T (k + 1) (extDerivC1 w) =
       E.localD T k (E.localInterp T k (Submodule.inclusion c1Forms_le_contForms w)) := by
@@ -434,8 +381,7 @@ theorem localInterp_extDeriv (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ
 
 /-! ### The global canonical interpolant -/
 
-/-- **The global canonical interpolant** `Π_h : C⁰Λᵏ → Λ_hᵏ(M)`: on each `T`, the local field with
-the DOFs of `w`. -/
+/-- The global canonical interpolant `Π_h : C⁰Λᵏ → Λ_hᵏ(M)`, defined by the DOFs. -/
 def globalInterp (k : ℕ) : contForms n →ₗ[ℝ] E.globalSpace M k where
   toFun w := ⟨fun T => (E.unisolvent T k).equiv.symm fun p => E.dof p.1 k p.2 w,
     fun T T' g hg hg' i => by
@@ -458,7 +404,6 @@ theorem localDof_globalInterp (k : ℕ) (w : contForms n) (T : M.simplices) (g :
   (E.unisolvent (T : Affine.Simplex ℝ (Fin n → ℝ) n) k).dof_equiv_symm
     (fun p => E.dof p.1 k p.2 w) ⟨⟨g, mem_powerset.2 hg⟩, i⟩
 
-/-- **`Π_h` is determined by the DOFs**: `Π_h w = u` when the DOFs of `w` are those of `u`. -/
 theorem globalInterp_piecewise (k : ℕ) (u : E.globalSpace M k) (w : contForms n)
     (hw : ∀ T : M.simplices, ∀ g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n), ∀ i,
       E.dof g k i w = E.localDof T k g i ((u : E.Piecewise M k) T)) :
@@ -466,8 +411,7 @@ theorem globalInterp_piecewise (k : ℕ) (u : E.globalSpace M k) (w : contForms 
   Subtype.ext (funext fun T => E.localSpace_ext T k fun g hg i => by
     rw [localDof_globalInterp _ _ _ _ _ _ hg, hw T g hg i])
 
-/-- **The global canonical interpolant commutes with `d`** on `C¹` forms:
-`Π_h (dw) = d (Π_h w)`. -/
+/-- `Π_h (dw) = d (Π_h w)` on `C¹` forms. -/
 theorem globalInterp_extDeriv (k : ℕ) (w : c1Forms n) :
     E.globalInterp M (k + 1) (extDerivC1 w) =
       E.dGlobal M k (E.globalInterp M k (Submodule.inclusion c1Forms_le_contForms w)) := by
@@ -509,8 +453,7 @@ theorem isDeg_extendPW {k : ℕ} (u : E.Piecewise M k) {T : Affine.Simplex ℝ (
     (hT : T ∈ M.simplices) (x : Fin n → ℝ) : IsDeg k (E.extendPW M u T x) := by
   rw [extendPW_of_mem _ _ _ hT]; exact E.isDeg_of_mem (u ⟨T, hT⟩).2 x
 
-/-- **Gluing**: a piecewise field of degree `k` as an element of `L²(Ω; Λᵏ)`
-(`k = k'.toNat` for `k' ≥ 0`; for `k' < 0` the target is the zero space). -/
+/-- A piecewise field of degree `k` as an element of `L²(Ω; Λᵏ)` (zero for `k < 0`). -/
 def glue (k : ℤ) : E.Piecewise M k.toNat →ₗ[ℝ] L2F ℝ M.domain (formIdx n k) where
   toFun u := pieceL2 M M.domain (fun T => formComp (k := k) (E.extendPW M u T))
     (fun T hT s => continuous_formComp (E.contDiff_extendPW M u hT).continuous s)
@@ -554,7 +497,6 @@ theorem subsingleton_L2F_of_neg (S : Set (Fin n → ℝ)) {j : ℤ} (hj : j < 0)
   obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
   exact subsingleton_L2F_negSucc S k
 
-/-- **Conformity of the global spaces**: `Vₕᵏ ⊆ HΛᵏ(Ω)`, with `d_max` the elementwise `d`. -/
 theorem glue_mem_maximal [NeZero n] (hΩ : IsOpen M.domain) (k : ℕ) (u : E.globalSpace M k) :
     ∃ h : E.glue M k (u : E.Piecewise M k) ∈ ((extDerivOp ℝ n k).maximal M.domain).domain,
       (extDerivOp ℝ n k).maximal M.domain ⟨_, h⟩ =
@@ -575,7 +517,6 @@ theorem glue_mem_maximal [NeZero n] (hΩ : IsOpen M.domain) (k : ℕ) (u : E.glo
   rw [E.extendPW_of_mem M _ hT, E.extendPW_of_mem M _ hT]
   rfl
 
-/-- **Conformity with vanishing boundary DOFs**: `V̊ₕᵏ ⊆ H̊Λᵏ(Ω)` (`Ω` strictly star-shaped). -/
 theorem glue_mem_minimal [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
     (k : ℕ) (u : E.globalSpace₀ M k) :
@@ -659,8 +600,7 @@ theorem minimal_apply_mem_V₀ [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n 
     rw [this, LinearPMap.map_zero]
     exact Submodule.zero_mem _
 
-/-- **The finite element subcomplex** `Vₕ ⊆ HΛ(Ω)` of the maximal de Rham complex: the glued
-global spaces `Vₕᵏ` are finite-dimensional, lie in `D(d_max)`, and `d Vₕᵏ ⊆ Vₕᵏ⁺¹`. -/
+/-- The finite element subcomplex `Vₕ` of the maximal de Rham complex `HΛ(Ω)`. -/
 def subcomplex [NeZero n] (hΩ : IsOpen M.domain) :
     ((deRham ℝ n).maximalComplex hΩ).Subcomplex where
   V := E.V M
@@ -683,8 +623,7 @@ instance [NeZero n] (hΩ : IsOpen M.domain) (k : ℤ) :
     FiniteDimensional ℝ ((E.subcomplex M hΩ).V k) :=
   inferInstanceAs (FiniteDimensional ℝ (E.V M k))
 
-/-- **The finite element subcomplex with vanishing boundary DOFs** `V̊ₕ ⊆ H̊Λ(Ω)` of the minimal
-de Rham complex (`Ω` strictly star-shaped, e.g. convex). -/
+/-- The finite element subcomplex `V̊ₕ` of `H̊Λ(Ω)`, for `Ω` strictly star-shaped. -/
 def subcomplexMin [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
     ((deRham ℝ n).minimalComplex hΩ).Subcomplex where
@@ -711,7 +650,6 @@ instance [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
 
 /-! ### Injectivity of the gluing and the dimensions of `Vₕᵏ` -/
 
-/-- A local field vanishing on `T` is zero (its DOFs only see traces on the faces of `T`). -/
 theorem localSpace_eq_zero_of_eqOn (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ)
     (u : E.space T k) (h : ∀ x ∈ T.closedInterior, (u : FormField n) x = 0) : u = 0 :=
   E.localSpace_ext T k fun g hg i => by
@@ -768,7 +706,7 @@ theorem glue_injective (hΩ : IsOpen M.domain) (k : ℕ) :
   have hclosed : IsClosed {y | f y = 0} := isClosed_eq hf continuous_const
   exact closure_minimal (fun y hy => hEq hy) hclosed (hcl hx)
 
-/-- **`dim Vₕᵏ = dim Λ_hᵏ(M) = #{global DOFs}`**: the gluing is injective. -/
+/-- `dim Vₕᵏ = #{global DOFs}`. -/
 theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
     Module.finrank ℝ (E.V M k) = Fintype.card (E.GlobalDofIdx M k) := by
   have hinj : Function.Injective
@@ -780,16 +718,15 @@ theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
 
 /-! ### The dimension of the spaces with vanishing boundary DOFs -/
 
-/-- A global DOF is a **boundary DOF** if its face lies in a boundary facet. -/
+/-- A global DOF is a boundary DOF if its face lies in a boundary facet. -/
 def IsBoundaryDof {k : ℕ} (p : E.GlobalDofIdx M k) : Prop :=
   ∃ F, M.IsBoundaryFacet F ∧ (p.1 : Finset (Fin n → ℝ)) ⊆ F
 
-/-- The **interior DOFs**: the global DOFs of the faces not contained in a boundary facet. -/
+/-- The interior DOFs: the global DOFs of the faces not contained in a boundary facet. -/
 abbrev InteriorDofIdx (k : ℕ) := {p : E.GlobalDofIdx M k // ¬ E.IsBoundaryDof M p}
 
 instance (k : ℕ) : Fintype (E.InteriorDofIdx M k) := Fintype.ofFinite _
 
-/-- `u ∈ Λ̊_hᵏ(M)` iff the boundary global DOFs of `u` vanish. -/
 theorem mem_globalSpace₀_iff {k : ℕ} (u : E.globalSpace M k) :
     (u : E.Piecewise M k) ∈ E.globalSpace₀ M k ↔
       ∀ p, E.IsBoundaryDof M p → E.globalDof M k u p = 0 := by
@@ -809,7 +746,7 @@ def interiorDof (k : ℕ) : E.globalSpace₀ M k →ₗ[ℝ] (E.InteriorDofIdx M
   LinearMap.funLeft ℝ ℝ Subtype.val ∘ₗ E.globalDof M k ∘ₗ
     Submodule.inclusion (E.globalSpace₀_le M k)
 
-/-- **The interior global DOFs are a linear isomorphism** `Λ̊_hᵏ(M) ≃ ℝ^{interior DOFs}`. -/
+/-- The interior global DOFs as a linear isomorphism `Λ̊_hᵏ(M) ≃ ℝ^{interior DOFs}`. -/
 def interiorDofEquiv (k : ℕ) : E.globalSpace₀ M k ≃ₗ[ℝ] (E.InteriorDofIdx M k → ℝ) := by
   classical
   refine LinearEquiv.ofBijective (E.interiorDof M k) ⟨fun u v huv => ?_, fun c => ?_⟩
@@ -833,12 +770,10 @@ def interiorDofEquiv (k : ℕ) : E.globalSpace₀ M k ≃ₗ[ℝ] (E.InteriorDof
     change E.globalDof M k ⟨_, E.ofGlobalDof_mem M k c'⟩ p.1 = c p
     rw [hc']; simp [c', p.2]
 
-/-- **`dim Λ̊_hᵏ(M) = #{interior DOFs}`**. -/
 theorem finrank_globalSpace₀ (k : ℕ) :
     Module.finrank ℝ (E.globalSpace₀ M k) = Fintype.card (E.InteriorDofIdx M k) := by
   rw [(E.interiorDofEquiv M k).finrank_eq, Module.finrank_fintype_fun_eq_card]
 
-/-- **`dim V̊ₕᵏ = dim Λ̊_hᵏ(M) = #{interior DOFs}`**. -/
 theorem finrank_V₀ (hΩ : IsOpen M.domain) (k : ℕ) :
     Module.finrank ℝ (E.V₀ M k) = Fintype.card (E.InteriorDofIdx M k) := by
   have hinj : Function.Injective
@@ -850,8 +785,7 @@ theorem finrank_V₀ (hΩ : IsOpen M.domain) (k : ℕ) :
 
 /-! ### Equivalent element families assemble the same spaces -/
 
-/-- **Equivalent element families** (interpolation-equivalent elements, [BrennerScott2008], §3.4):
-the same local spaces, and on every face the degrees of freedom span the same functionals. -/
+/-- Equivalent element families ([BrennerScott2008], §3.4): same local spaces, same DOF spans. -/
 structure Equivalent (E E' : LocalElement n) : Prop where
   space_eq : ∀ T k, E.space T k = E'.space T k
   span_dof_eq : ∀ g k, Submodule.span ℝ (Set.range (E.dof g k)) =
@@ -868,7 +802,6 @@ theorem symm (h : E.Equivalent E') : E'.Equivalent E :=
 def castPiecewise (h : E.Equivalent E') {k : ℕ} (u : E.Piecewise M k) : E'.Piecewise M k :=
   fun T => ⟨u T, h.space_eq T k ▸ (u T).2⟩
 
-/-- Fields with equal `E`-DOFs on `g` have equal `E'`-DOFs on `g`. -/
 theorem dof_eq (h : E.Equivalent E') {g : Finset (Fin n → ℝ)} {k : ℕ} {a b : contForms n}
     (hab : ∀ i, E.dof g k i a = E.dof g k i b) (i : E'.DofIdx g k) :
     E'.dof g k i a = E'.dof g k i b :=
@@ -901,23 +834,18 @@ theorem V₀_le (h : E.Equivalent E') (k : ℤ) : E.V₀ M k ≤ E'.V₀ M k := 
   rintro _ ⟨u, rfl⟩
   exact ⟨⟨_, h.castPiecewise_mem_globalSpace₀ M u.2⟩, h.glue_castPiecewise M k u⟩
 
-/-- **Equivalent element families assemble the same global spaces** `Vₕᵏ`, on every mesh. -/
 theorem V_eq (h : E.Equivalent E') (k : ℤ) : E.V M k = E'.V M k :=
   le_antisymm (h.V_le M k) (h.symm.V_le M k)
 
-/-- **Equivalent element families assemble the same global spaces with vanishing boundary DOFs**
-`V̊ₕᵏ`, on every mesh. -/
 theorem V₀_eq (h : E.Equivalent E') (k : ℤ) : E.V₀ M k = E'.V₀ M k :=
   le_antisymm (h.V₀_le M k) (h.symm.V₀_le M k)
 
-/-- **Equivalent element families give the same finite element subcomplex** of `HΛ(Ω)`. -/
 theorem subcomplex_eq [NeZero n] (h : E.Equivalent E') (hΩ : IsOpen M.domain) :
     E.subcomplex M hΩ = E'.subcomplex M hΩ := by
   have key : ∀ S S' : ((deRham ℝ n).maximalComplex hΩ).Subcomplex, S.V = S'.V → S = S' := by
     rintro ⟨V, _, _⟩ ⟨V', _, _⟩ rfl; rfl
   exact key _ _ (funext (h.V_eq M))
 
-/-- **Equivalent element families give the same finite element subcomplex** of `H̊Λ(Ω)`. -/
 theorem subcomplexMin_eq [NeZero n] (h : E.Equivalent E') (hΩ : IsOpen M.domain)
     (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :

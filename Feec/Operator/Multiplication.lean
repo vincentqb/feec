@@ -12,39 +12,9 @@ public import Feec.ForMathlib.Lp.CountEquiv
 /-!
 # Multiplication operators on `L²(μ; E)`
 
-For a measure space `(α, μ)`, Hilbert spaces `E, F` over `𝕜 = ℝ` or `ℂ`, and a measurable
-family of operators `m : α → E →L[𝕜] F` (a *fibre-matrix symbol*), the multiplication operator
-`u ↦ (a ↦ m a (u a))` on `L²(μ; E)`. This one theory covers
-
-* Fourier multipliers on `L²(ℝⁿ)` (`α = ℝⁿ` frequency space, `μ = volume`), and
-* Fourier multipliers on the torus, `ℓ²(ℤⁿ)` (`α = ℤⁿ`, `μ = count`), through the isometry
-  `lp.equivLpCount : ℓ²(α; E) ≃ₗᵢ L²(α, count; E)`.
-
-## Main results
-
-* `mulCLM μ B hB C hC`: the bounded multiplier by an a.e. strongly measurable, a.e. bounded
-  family `B`, with `coeFn_mulCLM`, `norm_mulCLM_le` and `inner_mulCLM`
-  (`⟪B u, v⟫ = ⟪u, B* v⟫`).
-* `mulOp μ m` with domain `mulDomain μ m = {u | m u ∈ L²}`: closed (`isClosed_mulOp`),
-  densely defined (`dense_mulDomain`), with adjoint the multiplier by the fibrewise adjoints,
-  *domain included* (`adjoint_mulOp`). Only a.e. strong measurability of `m` is assumed, and
-  `mulOp` depends on `m` only up to a.e. equality (`mulOp_congr_ae`). No σ-finiteness: the
-  proofs use the truncations `𝟙_{‖m‖ ≤ n} m` and the exhaustion `⋃ₙ {‖m‖ ≤ n} = α`.
-* `fibreSub μ K`: the fibrewise subspace `{u | u a ∈ K a a.e.}` for a family of subspaces with
-  measurable orthogonal projections; it is closed (`isClosed_fibreSub`) and its orthogonal
-  projection is the fibrewise projection (`starProjection_fibreSub`).
-* Measurable dependence of kernel projections: for a continuous family `H b` of positive
-  symmetric operators on a finite-dimensional space, `b ↦ P_{ker H b}` is strongly measurable
-  (`stronglyMeasurable_starProjection_ker`), as the limit of the continuous resolvents
-  `ε (ε + H b)⁻¹` (`tendsto_smul_inverse_smul_one_add`). This makes projections like the
-  transverse-traceless projection `P_ξ`, discontinuous at `ξ = 0`, bounded multipliers.
-
-## References
-
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995] (closed operators and their
-  adjoints; multiplication operators are the standard example)
-
-Bibliography: [references.bib](../../docs/references.bib)
+For an a.e. strongly measurable family `m : α → E →L[𝕜] F`, the multiplication operator
+`u ↦ (a ↦ m a (u a))` on `L²(μ; E)` is closed and densely defined, with adjoint the multiplier by
+the fibrewise adjoints; the orthogonal projection onto a fibrewise subspace acts fibrewise.
 -/
 
 @[expose] public noncomputable section
@@ -64,12 +34,10 @@ variable {α : Type*} [MeasurableSpace α] {μ : Measure α}
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
-/-- `a ↦ B a (u a)` is a.e. strongly measurable. -/
 theorem aestronglyMeasurable_clm_apply {B : α → E →L[𝕜] F} (hB : AEStronglyMeasurable B μ)
     {u : α → E} (hu : AEStronglyMeasurable u μ) : AEStronglyMeasurable (fun a => B a (u a)) μ :=
   isBoundedBilinearMap_apply.continuous.comp_aestronglyMeasurable₂ hB hu
 
-/-- An a.e. uniformly bounded measurable family maps `L²` into `L²`. -/
 theorem memLp_clm_apply {B : α → E →L[𝕜] F} (hB : AEStronglyMeasurable B μ) {C : ℝ}
     (hC : ∀ᵐ a ∂μ, ‖B a‖ ≤ C) (u : Lp E 2 μ) : MemLp (fun a => B a (u a)) 2 μ :=
   MemLp.of_le_mul (Lp.memLp u) (aestronglyMeasurable_clm_apply hB (Lp.aestronglyMeasurable u))
@@ -109,12 +77,10 @@ theorem coeFn_mulCLM (B : α → E →L[𝕜] F) (hB : AEStronglyMeasurable B μ
 
 variable [CompleteSpace E] [CompleteSpace F]
 
-/-- The fibrewise adjoint family of a measurable family is measurable. -/
 theorem aestronglyMeasurable_adjoint {B : α → E →L[𝕜] F} (hB : AEStronglyMeasurable B μ) :
     AEStronglyMeasurable (fun a => ContinuousLinearMap.adjoint (B a)) μ :=
   (ContinuousLinearMap.adjoint (𝕜 := 𝕜) (E := E) (F := F)).continuous.comp_aestronglyMeasurable hB
 
-/-- **Bounded multipliers**: `⟪B u, v⟫ = ⟪u, B* v⟫` with `B*` the fibrewise adjoint. -/
 theorem inner_mulCLM {B : α → E →L[𝕜] F} {B' : α → F →L[𝕜] E} {hB : AEStronglyMeasurable B μ}
     {hB' : AEStronglyMeasurable B' μ} {C C' : ℝ} {hC : ∀ᵐ a ∂μ, ‖B a‖ ≤ C}
     {hC' : ∀ᵐ a ∂μ, ‖B' a‖ ≤ C'} (h : ∀ᵐ a ∂μ, B' a = ContinuousLinearMap.adjoint (B a))
@@ -163,7 +129,6 @@ theorem norm_indicator_le {m : α → E →L[𝕜] F} {S : Set α} {C : ℝ} (hC
   · rw [Set.indicator_of_notMem h, norm_zero]; exact hC
 
 omit [MeasurableSpace α] in
-/-- An a.e. property holding on each set of an exhausting sequence holds a.e. -/
 theorem ae_of_forall_mem_cover {m0 : MeasurableSpace α} {μ : Measure α} {S : ℕ → Set α}
     (hcov : ∀ a, ∃ n, a ∈ S n) {P : α → Prop} (h : ∀ᵐ a ∂μ, ∀ n, a ∈ S n → P a) :
     ∀ᵐ a ∂μ, P a := by
@@ -176,7 +141,6 @@ variable (𝕜 E) in
 abbrev cutoffCLM (μ : Measure α) {S : Set α} (hS : MeasurableSet S) : Lp E 2 μ →L[𝕜] Lp E 2 μ :=
   mulCLM μ (cutoff 𝕜 E S) (aestronglyMeasurable_cutoff hS) 1 (ae_of_all _ (norm_cutoff_le S))
 
-/-- `𝟙_S` is a symmetric idempotent multiplier: `⟪𝟙_S w, w⟫ = ⟪𝟙_S w, 𝟙_S w⟫`. -/
 theorem inner_cutoffCLM_self {S : Set α} (hS : MeasurableSet S) (w : Lp E 2 μ) :
     ⟪cutoffCLM 𝕜 E μ hS w, w⟫ = ⟪cutoffCLM 𝕜 E μ hS w, cutoffCLM 𝕜 E μ hS w⟫ := by
   rw [L2.inner_def, L2.inner_def]
@@ -221,7 +185,6 @@ def mulDomain : Submodule 𝕜 (Lp E 2 μ) where
     exact congrArg (m a) h.symm
 
 variable {μ m} in
-/-- Membership in `mulDomain μ m`, by definition. -/
 theorem mem_mulDomain {u : Lp E 2 μ} : u ∈ mulDomain μ m ↔ MemLp (fun a => m a (u a)) 2 μ :=
   Iff.rfl
 
@@ -245,14 +208,12 @@ def mulOp : Lp E 2 μ →ₗ.[𝕜] Lp F 2 μ where
 
 theorem mulOp_domain : (mulOp μ m).domain = mulDomain μ m := rfl
 
-/-- `mulOp μ m` acts fibrewise by `m a`. -/
 theorem coeFn_mulOp (u : (mulOp μ m).domain) :
     mulOp μ m u =ᵐ[μ] fun a => m a ((u : Lp E 2 μ) a) :=
   (u.2 : MemLp (fun a => m a ((u : Lp E 2 μ) a)) 2 μ).coeFn_toLp
 
 variable {μ m}
 
-/-- `mulOp μ m u = v` iff `m u = v` a.e. -/
 theorem mulOp_apply_eq_iff (u : (mulOp μ m).domain) (v : Lp F 2 μ) :
     mulOp μ m u = v ↔ ∀ᵐ a ∂μ, m a ((u : Lp E 2 μ) a) = v a := by
   constructor
@@ -264,7 +225,6 @@ theorem mulOp_apply_eq_iff (u : (mulOp μ m).domain) (v : Lp F 2 μ) :
     filter_upwards [coeFn_mulOp μ m u, h] with a h1 h2
     rw [h1, h2]
 
-/-- **`mulOp` only depends on the symbol up to a.e. equality.** -/
 theorem mulOp_congr_ae {m' : α → E →L[𝕜] F} (h : m =ᵐ[μ] m') : mulOp μ m = mulOp μ m' := by
   have hdom : mulDomain μ m = mulDomain μ m' := by
     ext u
@@ -274,8 +234,6 @@ theorem mulOp_congr_ae {m' : α → E →L[𝕜] F} (h : m =ᵐ[μ] m') : mulOp 
   filter_upwards [coeFn_mulOp μ m ⟨x, hx⟩, coeFn_mulOp μ m' ⟨x, hy⟩, h] with a h1 h2 h3
   rw [h1, h2, h3]
 
-/-- Characterization of the graph through the truncations `𝟙_{S n} m` along an exhausting
-sequence of measurable sets on which `m` is bounded. -/
 theorem exists_mulOp_eq_iff {S : ℕ → Set α} (hS : ∀ n, MeasurableSet (S n))
     (hcov : ∀ a, ∃ n, a ∈ S n) (hb : ∀ n, ∀ a ∈ S n, ‖m a‖ ≤ n)
     (hm : StronglyMeasurable m) (u : Lp E 2 μ) (v : Lp F 2 μ) :
@@ -333,7 +291,6 @@ abbrev truncCLM (hm : StronglyMeasurable m) (n : ℕ) : Lp E 2 μ →L[𝕜] Lp 
     ((hm.indicator (measurableSet_truncSet hm n)).aestronglyMeasurable) n
     (ae_of_all _ (norm_indicator_le (Nat.cast_nonneg n) (norm_le_of_mem_truncSet n)))
 
-/-- Multiplication operators by strongly measurable symbols are closed. -/
 theorem isClosed_mulOp_of_stronglyMeasurable (hm : StronglyMeasurable m) :
     (mulOp μ m).IsClosed := by
   have hS := measurableSet_truncSet hm
@@ -351,7 +308,6 @@ theorem isClosed_mulOp_of_stronglyMeasurable (hm : StronglyMeasurable m) :
     ((ContinuousLinearMap.continuous _).comp continuous_fst)
     ((ContinuousLinearMap.continuous _).comp continuous_snd)
 
-/-- Cut-offs `𝟙_{‖m‖ ≤ n} z` lie in the domain. -/
 theorem cutoffCLM_mem_mulDomain (hm : StronglyMeasurable m) (n : ℕ) (z : Lp E 2 μ) :
     cutoffCLM 𝕜 E μ (measurableSet_truncSet hm n) z ∈ mulDomain μ m := by
   refine (memLp_clm_apply ((hm.indicator (measurableSet_truncSet hm n)).aestronglyMeasurable)
@@ -365,7 +321,6 @@ theorem cutoffCLM_mem_mulDomain (hm : StronglyMeasurable m) (n : ℕ) (z : Lp E 
   · rw [Set.indicator_of_notMem ha, cutoff_apply_of_notMem ha, _root_.zero_apply,
       _root_.map_zero]
 
-/-- On cut-offs, `m` acts as the bounded truncation `𝟙_{‖m‖ ≤ n} m`. -/
 theorem mulOp_cutoffCLM (hm : StronglyMeasurable m) (n : ℕ) (z : Lp E 2 μ) :
     mulOp μ m ⟨_, cutoffCLM_mem_mulDomain hm n z⟩ = truncCLM hm n z := by
   refine Lp.ext ?_
@@ -383,8 +338,6 @@ theorem mulOp_cutoffCLM (hm : StronglyMeasurable m) (n : ℕ) (z : Lp E 2 μ) :
   · rw [Set.indicator_of_notMem ha, cutoff_apply_of_notMem ha, _root_.zero_apply,
       _root_.map_zero]
 
-/-- Multiplication operators by strongly measurable symbols are densely defined: the
-orthogonal complement of the domain is orthogonal to every cut-off. -/
 theorem dense_mulDomain_of_stronglyMeasurable [CompleteSpace E] (hm : StronglyMeasurable m) :
     Dense (mulDomain μ m : Set (Lp E 2 μ)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
@@ -409,7 +362,6 @@ theorem dense_mulDomain_of_stronglyMeasurable [CompleteSpace E] (hm : StronglyMe
 
 variable [CompleteSpace E] [CompleteSpace F]
 
-/-- The fibrewise-adjoint multiplier is a formal adjoint. -/
 theorem mulOp_isFormalAdjoint :
     (mulOp μ m).IsFormalAdjoint (mulOp μ fun a => ContinuousLinearMap.adjoint (m a)) := by
   intro x y
@@ -419,7 +371,6 @@ theorem mulOp_isFormalAdjoint :
     with a h1 h2
   rw [h1, h2, ContinuousLinearMap.adjoint_inner_right]
 
-/-- The adjoint of a multiplication operator by a strongly measurable symbol. -/
 theorem adjoint_mulOp_of_stronglyMeasurable (hm : StronglyMeasurable m) :
     (mulOp μ m)† = mulOp μ fun a => ContinuousLinearMap.adjoint (m a) := by
   have hd : Dense ((mulOp μ m).domain : Set (Lp E 2 μ)) := dense_mulDomain_of_stronglyMeasurable hm
@@ -479,8 +430,7 @@ theorem dense_mulDomain [CompleteSpace E] (hm : AEStronglyMeasurable m μ) :
 
 variable [CompleteSpace E] [CompleteSpace F]
 
-/-- **The adjoint of a multiplication operator is the multiplier by the fibrewise adjoints**,
-domain included. -/
+/-- **The adjoint of a multiplication operator is the multiplier by the fibrewise adjoints.** -/
 theorem adjoint_mulOp (hm : AEStronglyMeasurable m μ) :
     (mulOp μ m)† = mulOp μ fun a => ContinuousLinearMap.adjoint (m a) := by
   rw [mulOp_congr_ae hm.ae_eq_mk, adjoint_mulOp_of_stronglyMeasurable hm.stronglyMeasurable_mk]
@@ -488,7 +438,6 @@ theorem adjoint_mulOp (hm : AEStronglyMeasurable m μ) :
   filter_upwards [hm.ae_eq_mk] with a ha
   rw [ha]
 
-/-- The adjoint acts fibrewise by the fibre adjoints. -/
 theorem coeFn_adjoint_mulOp (hm : AEStronglyMeasurable m μ) (y : (mulOp μ m)†.domain) :
     (mulOp μ m)† y =ᵐ[μ] fun a => ContinuousLinearMap.adjoint (m a) ((y : Lp F 2 μ) a) := by
   obtain ⟨hd, hv⟩ := LinearPMap.ext_iff.1 (adjoint_mulOp hm)
@@ -523,7 +472,6 @@ def fibreSub (K : α → Submodule 𝕜 E) : Submodule 𝕜 (Lp E 2 μ) where
     filter_upwards [hu, Lp.coeFn_smul r u] with a h1 h2
     rw [h2]; exact (K a).smul_mem r h1
 
-/-- Membership in `fibreSub μ K`, by definition. -/
 theorem mem_fibreSub {K : α → Submodule 𝕜 E} {u : Lp E 2 μ} :
     u ∈ fibreSub μ K ↔ ∀ᵐ a ∂μ, u a ∈ K a := Iff.rfl
 
@@ -555,7 +503,6 @@ theorem mem_fibreSub_iff_fibreProj {u : Lp E 2 μ} :
     rw [← (K a).starProjection_eq_self_iff, ← h1, h2]
 
 include hP in
-/-- Fibrewise subspaces with measurable fibre projections are closed. -/
 theorem isClosed_fibreSub : IsClosed (fibreSub μ K : Set (Lp E 2 μ)) := by
   have : (fibreSub μ K : Set (Lp E 2 μ)) = {u | fibreProj K hP u = u} := by
     ext u; exact mem_fibreSub_iff_fibreProj K hP
@@ -565,7 +512,6 @@ theorem isClosed_fibreSub : IsClosed (fibreSub μ K : Set (Lp E 2 μ)) := by
 variable [CompleteSpace E]
 
 include hP in
-/-- Fibrewise subspaces admit orthogonal projections. -/
 theorem hasOrthogonalProjection_fibreSub : (fibreSub μ K).HasOrthogonalProjection := by
   have : CompleteSpace (fibreSub μ K) := (isClosed_fibreSub K hP).completeSpace_coe
   infer_instance
@@ -584,7 +530,6 @@ theorem starProjection_fibreSub [(fibreSub μ K).HasOrthogonalProjection] (u : L
 
 omit [CompleteSpace E] in
 include hP in
-/-- Pointwise form of `starProjection_fibreSub`. -/
 theorem coeFn_starProjection_fibreSub [(fibreSub μ K).HasOrthogonalProjection]
     (u : Lp E 2 μ) :
     (fibreSub μ K).starProjection u =ᵐ[μ] fun a => (K a).starProjection (u a) := by
@@ -601,13 +546,11 @@ variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 variable (m : α → E →L[𝕜] F)
 
-/-- For the counting measure, the domain is the weighted-`ℓ²` condition. -/
 theorem mem_mulDomain_count_iff {u : Lp E 2 (Measure.count : Measure α)} :
     u ∈ mulDomain Measure.count m ↔ Memℓp (fun a => m a (u a)) 2 :=
   memLp_count_iff two_ne_zero
 
 omit [MeasurableSingletonClass α] [Countable α] in
-/-- For the counting measure, `mulOp` acts pointwise, everywhere. -/
 theorem coeFn_mulOp_count (u : (mulOp Measure.count m).domain) (a : α) :
     (mulOp (Measure.count : Measure α) m u : α → F) a = m a ((u : Lp E 2 Measure.count) a) :=
   Measure.ae_count_iff.1 (coeFn_mulOp Measure.count m u) a
@@ -620,8 +563,6 @@ section MeasurableProj
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [FiniteDimensional 𝕜 E]
 
-/-- On a finite-dimensional source, a family of operators is strongly measurable as soon as all
-its applications are. -/
 theorem stronglyMeasurable_clm_of_apply {F : Type*} [NormedAddCommGroup F]
     [InnerProductSpace 𝕜 F] {β : Type*} [MeasurableSpace β] {f : β → E →L[𝕜] F}
     (h : ∀ x, StronglyMeasurable fun b => f b x) : StronglyMeasurable f := by
@@ -648,7 +589,6 @@ variable (H : E →L[𝕜] E) (hsym : ∀ x y, inner 𝕜 (H x) y = inner 𝕜 x
 include hpos
 
 omit [FiniteDimensional 𝕜 E] in
-/-- `ε ‖v‖ ≤ ‖(ε + H) v‖` for a positive operator `H` and `ε ≥ 0`. -/
 theorem mul_norm_le_norm_smul_one_add_apply (ε : ℝ) (v : E) :
     ε * ‖v‖ ≤ ‖((ε : 𝕜) • (1 : E →L[𝕜] E) + H) v‖ := by
   have h1 : ε * ‖v‖ ^ 2 ≤ RCLike.re ⟪((ε : 𝕜) • (1 : E →L[𝕜] E) + H) v, v⟫ := by
@@ -663,7 +603,6 @@ theorem mul_norm_le_norm_smul_one_add_apply (ε : ℝ) (v : E) :
   · rw [← h, mul_zero]; exact norm_nonneg _
   · exact le_of_mul_le_mul_right (by nlinarith) h
 
-/-- `ε + H` is invertible for a positive operator `H` and `ε > 0`. -/
 theorem isUnit_smul_one_add {ε : ℝ} (hε : 0 < ε) : IsUnit ((ε : 𝕜) • (1 : E →L[𝕜] E) + H) := by
   have : CompleteSpace E := FiniteDimensional.complete 𝕜 E
   have hinj : Function.Injective ((ε : 𝕜) • (1 : E →L[𝕜] E) + H) := by
@@ -680,7 +619,6 @@ theorem isUnit_smul_one_add {ε : ℝ} (hε : 0 < ε) : IsUnit ((ε : 𝕜) • 
 
 omit hpos in
 include hsym in
-/-- For a symmetric operator, `(ker H)ᗮ ⊆ range H`. -/
 theorem orthogonal_ker_le_range_of_symm :
     (LinearMap.ker (H : E →ₗ[𝕜] E))ᗮ ≤ LinearMap.range (H : E →ₗ[𝕜] E) := by
   have : CompleteSpace E := FiniteDimensional.complete 𝕜 E
@@ -691,8 +629,6 @@ theorem orthogonal_ker_le_range_of_symm :
   rw [← h, Submodule.orthogonal_orthogonal]
 
 include hsym in
-/-- **Resolvent limit**: `ε (ε + H)⁻¹ x → P_{ker H} x` as `ε = 1/(n+1) → 0`, for a positive
-symmetric operator `H` on a finite-dimensional space. -/
 theorem tendsto_smul_inverse_smul_one_add (x : E) :
     Tendsto (fun n : ℕ => ((1 / ((n : ℝ) + 1) : ℝ) : 𝕜) •
         Ring.inverse (((1 / ((n : ℝ) + 1) : ℝ) : 𝕜) • (1 : E →L[𝕜] E) + H) x) atTop
@@ -739,10 +675,8 @@ theorem tendsto_smul_inverse_smul_one_add (x : E) :
 
 end Resolvent
 
-/-- **Measurable dependence of kernel projections.** For a continuous family `H b` of positive
-symmetric operators on a finite-dimensional space, `b ↦ P_{ker H b}` is strongly measurable
-(though in general discontinuous): it is the pointwise limit of the continuous resolvents
-`ε (ε + H b)⁻¹` (`tendsto_smul_inverse_smul_one_add`). -/
+/-- **Measurable dependence of kernel projections**: for a continuous family `H b` of positive
+symmetric operators on a finite-dimensional space, `b ↦ P_{ker H b}` is strongly measurable. -/
 theorem stronglyMeasurable_starProjection_ker {β : Type*} [TopologicalSpace β]
     [MeasurableSpace β] [OpensMeasurableSpace β] {H : β → E →L[𝕜] E} (hH : Continuous H)
     (hsym : ∀ b x y, ⟪H b x, y⟫ = ⟪x, H b y⟫) (hpos : ∀ b x, 0 ≤ RCLike.re ⟪H b x, x⟫) :

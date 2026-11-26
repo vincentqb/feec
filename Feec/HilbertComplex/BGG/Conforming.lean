@@ -6,83 +6,23 @@ public import Feec.HilbertComplex.BGG.DomainData
 /-!
 # Discrete BGG complexes: conforming families of the derived complex
 
-**Discrete BGG data** are stacked conforming families (`Feec.BGG.BoundedData.StackedFamily`):
-conforming families `Vₕ`, `Ṽₕ` of the two rows of BGG data along one filter, linked by the
-connecting maps, `S Ṽₕⁱ ⊆ Vₕʲ`, whose cochain projections commute with them, `πₕ S = S π̃ₕ` (the
-discrete BGG diagrams of [BonizzoniHuKanschatSap2024]). Then `πₕ × π̃ₕ` commutes with the twisted
-differential and keeps the eliminations `Γ E`, `Δ F` and the closure of `Δ F`, so
-
-* the discrete derived spaces `Υₕⁱ = P_{(Δⁱ)ᗮ} (Γⁱ ∩ (Vₕⁱ × Ṽₕⁱ))` (`derivedSubcomplex`, the range
-  of `derivedπ`) form a finite-dimensional subcomplex of the derived Hilbert complex
-  `Υⁱ = Γⁱ ⊖ Δⁱ` (`BoundedData.derivedComplex`), with the cochain projection
-  `y ↦ P_{(Δⁱ)ᗮ} (πₕ × π̃ₕ) y` (`derivedCochainProjection`), bounded by `max C C̃`, and the
-  approximation property of the rows passes to them: **the discrete derived complexes form a
-  conforming family of the derived complex** (`StackedFamily.derived`);
-* hence **the FEEC theorem holds for discrete BGG complexes** (`StackedFamily.feecVerdict`):
-  when the exact part is closed, the elimination hypotheses hold and the rows have
-  finite-dimensional cohomology, the derived complex has closed range
-  (`BoundedData.derivedComplex_closedRangeAt`), so the static FEEC theorem holds in every degree,
-  and the conclusions of `ConformingFamily.feec` hold for the derived complex.
-
-For two Hilbert complexes linked by bounded connecting maps (`Feec.BGG.HilbertData`), stacked
-conforming families in `L²` (`HilbertData.StackedFamily`) give conforming families of the domain
-complexes in the graph norms (`ConformingFamily.domain`: `‖πₕ v‖_V ≤ C ‖v‖_V` since
-`d πₕ = πₕ d`), so they give stacked families of the bounded data `HilbertData.domainData`
-(`HilbertData.StackedFamily.toDomain`) and hence a conforming family of the derived complex of
-the domain complexes; the discrete twisted complexes `Vₕ × Ṽₕ` are moreover a conforming family of
-the `L²` twisted complex (`HilbertData.StackedFamily.twist`). With the analytic BGG theorem
-(`HilbertData.derivedVerdict`, `HilbertData.bggVerdict`) this is
-`HilbertData.StackedFamily.feecVerdict` and, for the BGG complexes `bgg J` of [ArnoldHu2021] with
-the connecting maps up to `J` bounded below and the regular decompositions after `J`,
-`HilbertData.StackedFamily.bggVerdict`.
-
-The derived complex of the domain complexes is a Hilbert complex of bounded operators in the
-graph norms (the bounded Hilbert complexes of [ArnoldHu2021], §3), so the verdicts are statements
-in these norms; the `L²` realization of the derived complex as a complex of closed unbounded
-operators is not formalized. The weak-symmetry discretizations of
-`Feec.HilbertComplex.BGG.Discrete` are not stacked families: their discrete connecting maps are
-`Πₕ S` (the compatibility condition `Discrete.Compatible`), not `S`, so their discrete complexes are
-not subcomplexes of the derived complex.
-
-The stacking conditions are strong: where `Sⁱ` is onto, `πₕ S = S π̃ₕ` forces
-`Vₕʲ = πₕ (S W̃ⁱ) = S Ṽₕⁱ` and fixes `πₕʲ` on `Wʲ = S W̃ⁱ`, and in every degree `π̃ₕ` preserves
-`ker S`. The only stacked families constructed here are the full families of finite-dimensional
-data (`πₕ = id`, `BoundedData.StackedFamily.full`, `HilbertData.StackedFamily.full`); finite
-element stacked families (e.g. the tensor-product splines of [BonizzoniHuKanschatSap2024]) are
-not constructed.
-
-## Main definitions
-
-* `HilbertComplex.Subcomplex.domain`, `CochainProjection.domain`, **`ConformingFamily.domain`**:
-  a conforming family in the domain complex; `ConformingFamily.full`: the whole spaces of a
-  complex of bounded operators on finite-dimensional spaces.
-* `Feec.BGG.BoundedData.StackedFamily`: stacked conforming families of bounded BGG data;
-  `StackedFamily.twistπL`, `StackedFamily.derivedπ`, `StackedFamily.derivedSubcomplex`,
-  **`StackedFamily.derived`**; `StackedFamily.full`.
-* `Feec.BGG.BoundedData.toHilbertData`: bounded BGG data as analytic BGG data.
-* `Feec.BGG.HilbertData.StackedFamily`, `StackedFamily.toDomain`, `StackedFamily.derived`,
-  **`StackedFamily.twist`**; `StackedFamily.full`.
-* `BoundedData.StackedFamily.Verdict`, `HilbertData.StackedFamily.Verdict`.
+Stacked conforming families of BGG data, conforming families of the two rows with
+`S Ṽₕⁱ ⊆ Vₕʲ` and `πₕ S = S π̃ₕ` ([BonizzoniHuKanschatSap2024]), give a conforming family of the
+derived complex, so the FEEC theorem ([AFW2010], Thms 3.4–3.9) holds for discrete BGG complexes
+when the exact part is closed, the elimination hypotheses hold and the rows have
+finite-dimensional cohomology.
 
 ## Main results
 
-* `BoundedData.StackedFamily.derivedD_derivedπ`, `derivedπ_derivedπ`: the derived projection is a
-  cochain projection; `mem_derivedSubcomplex_iff`: its range is `P_{(Δⁱ)ᗮ} (Γⁱ ∩ (Vₕⁱ × Ṽₕⁱ))`.
-* **`BoundedData.StackedFamily.feecVerdict`**, **`HilbertData.StackedFamily.feecVerdict`**,
-  **`HilbertData.StackedFamily.bggVerdict`**: the FEEC theorem for discrete BGG complexes.
-* `BoundedData.StackedFamily.Verdict.static`, `HilbertData.StackedFamily.Verdict.static`: the
-  static FEEC theorem in every degree.
-* `BoundedData.idShift_feecVerdict`, `BoundedData.idShift_toHilbertData_bggVerdict`: non-vacuity
-  (`BoundedData.idShift`, the full families).
+* `HilbertData.StackedFamily.feecVerdict`: the FEEC theorem for discrete BGG complexes.
+* `HilbertData.StackedFamily.bggVerdict`: the same for the BGG complexes `bgg J` of [ArnoldHu2021].
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
-  and linking maps, Theorem 6), §5 (the twisted complex)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3
 * [F. Bonizzoni, K. Hu, G. Kanschat, D. Sap, *Discrete tensor product BGG sequences: splines and finite elements*][BonizzoniHuKanschatSap2024]
-  (discrete BGG diagrams)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1.2 (domain complex), §3.3 (bounded cochain projections), Thms 3.4–3.9
+  Thms 3.4–3.9
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -101,7 +41,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   {H : HilbertComplex 𝕜 c W} {κ : Type*}
 
-/-- `N.comap f` is finite-dimensional for `f` injective and `N` finite-dimensional. -/
 theorem _root_.Submodule.finiteDimensional_comap_of_injective {K X Y : Type*} [Field K]
     [AddCommGroup X] [Module K X] [AddCommGroup Y] [Module K Y] {f : X →ₗ[K] Y}
     (hf : Function.Injective f) (N : Submodule K Y) [FiniteDimensional K N] :
@@ -109,14 +48,12 @@ theorem _root_.Submodule.finiteDimensional_comap_of_injective {K X Y : Type*} [F
   .of_injective (f.restrict (p := N.comap f) (q := N) fun _ hx => hx)
     fun _ _ hab => Subtype.ext (hf (congrArg Subtype.val hab))
 
-/-- `‖x‖ ≤ ‖x₁‖ + ‖x₂‖` on the `ℓ²` product. -/
 theorem _root_.WithLp.norm_le_norm_fst_add_norm_snd {α β : Type*} [SeminormedAddCommGroup α]
     [SeminormedAddCommGroup β] (x : WithLp 2 (α × β)) : ‖x‖ ≤ ‖x.fst‖ + ‖x.snd‖ := by
   refine (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 ?_
   rw [WithLp.prod_norm_sq_eq_of_L2, add_sq]
   nlinarith [norm_nonneg x.fst, norm_nonneg x.snd]
 
-/-- Maps bounded by `C` act componentwise on the `ℓ²` product with bound `C`. -/
 theorem _root_.WithLp.norm_toLp_map_le {α β : Type*} [SeminormedAddCommGroup α]
     [SeminormedAddCommGroup β] {p : α → α} {q : β → β} {C : ℝ} (hC : 0 ≤ C)
     (hp : ∀ a, ‖p a‖ ≤ C * ‖a‖) (hq : ∀ b, ‖q b‖ ≤ C * ‖b‖) (x : WithLp 2 (α × β)) :
@@ -129,7 +66,7 @@ theorem _root_.WithLp.norm_toLp_map_le {α β : Type*} [SeminormedAddCommGroup �
 
 namespace Subcomplex
 
-/-- **A subcomplex in the domain complex**: `Vₕⁱ ⊆ D(dⁱ)` as a subspace of the graph space. -/
+/-- A subcomplex in the domain complex: `Vₕⁱ ⊆ D(dⁱ)` as a subspace of the graph space. -/
 def domain (S : H.Subcomplex) : H.domainComplex.Subcomplex where
   V i := (S.V i).comap (H.domainIncl i).toLinearMap
   le_domain _ _ := le_top
@@ -159,12 +96,11 @@ def domainπ (i : ι) : H.domainSpace i →ₗ[𝕜] H.domainSpace i where
 @[simp] theorem domainIncl_domainπ (i : ι) (v : H.domainSpace i) :
     H.domainIncl i (P.domainπ i v) = P.π i (H.domainIncl i v) := rfl
 
-/-- `d π = π d` on the graph space. -/
 theorem d_domainCoord_domainπ (i j : ι) (v : H.domainSpace i) :
     H.d i j (H.domainCoord i j (P.domainπ i v)) = P.π j (H.d i j (H.domainCoord i j v)) :=
   P.comm i j (H.domainCoord i j v)
 
-/-- **The cochain projection in the domain complex**. -/
+/-- The cochain projection in the domain complex. -/
 def domain : S.domain.CochainProjection where
   π := P.domainπ
   mem i v := P.mem i _
@@ -175,7 +111,6 @@ def domain : S.domain.CochainProjection where
     rw [domainIncl_domainD, domainIncl_domainπ, domainIncl_domainD]
     exact P.d_domainCoord_domainπ i j x)
 
-/-- A cochain projection bounded by `C` in `W` is bounded by `C` in the graph norm. -/
 theorem norm_domainπ_le {C : ℝ} (hC : 0 ≤ C) (hπ : ∀ i x, ‖P.π i x‖ ≤ C * ‖x‖) (i : ι)
     (v : H.domainSpace i) : ‖P.domainπ i v‖ ≤ C * ‖v‖ := by
   refine (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 ?_
@@ -184,7 +119,6 @@ theorem norm_domainπ_le {C : ℝ} (hC : 0 ≤ C) (hπ : ∀ i x, ‖P.π i x‖
   exact add_le_add (pow_le_pow_left₀ (norm_nonneg _) (hπ _ _) 2)
     (pow_le_pow_left₀ (norm_nonneg _) (hπ _ _) 2)
 
-/-- `‖v - π v‖_V ≤ ‖x - π x‖ + ‖d x - π d x‖` for `x = ι v`. -/
 theorem norm_sub_domainπ_le (i : ι) (v : H.domainSpace i) :
     ‖v - P.domainπ i v‖ ≤ ‖H.domainIncl i v - P.π i (H.domainIncl i v)‖ +
       ‖H.d i (c.next i) (H.domainCoord i _ v) -
@@ -202,10 +136,7 @@ end Subcomplex
 
 namespace ConformingFamily
 
-/-- **A conforming family in the domain complex**: the spaces `Vₕⁱ ⊆ D(dⁱ)` with the graph norm
-and the cochain projections `v ↦ (πₕ v, d πₕ v)`, bounded in the graph norm by the bound of `πₕ`
-in `W` (`d πₕ = πₕ d`), with the approximation property in the graph norm from that of `πₕ` in
-`W` at `v` and `d v`. -/
+/-- A conforming family in the domain complex, with the graph norm and `v ↦ (πₕ v, d πₕ v)`. -/
 def domain (F : ConformingFamily H κ) : ConformingFamily H.domainComplex κ where
   l := F.l
   V h := (F.V h).domain
@@ -224,8 +155,7 @@ def domain (F : ConformingFamily H κ) : ConformingFamily H.domainComplex κ whe
       ((F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h i) _)
       ((F.π h).norm_sub_π_le_infDist hC (F.norm_π_le h _) _))
 
-/-- **The full conforming family** of a Hilbert complex of bounded operators on
-finite-dimensional spaces: the whole spaces with the identity projections, along any filter. -/
+/-- The whole spaces of a complex of bounded operators on finite-dimensional spaces, `π = id`. -/
 def full {X : ι → Type*} [∀ i, NormedAddCommGroup (X i)] [∀ i, InnerProductSpace 𝕜 (X i)]
     [∀ i, CompleteSpace (X i)] [∀ i, FiniteDimensional 𝕜 (X i)] (δ : ∀ i j, X i →L[𝕜] X j)
     (shape : ∀ i j, ¬ c.Rel i j → δ i j = 0) (comp : ∀ i j k x, δ j k (δ i j x) = 0)
@@ -253,8 +183,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {V Vt :
   [∀ i, NormedAddCommGroup (Vt i)] [∀ i, InnerProductSpace 𝕜 (Vt i)]
   [∀ i, CompleteSpace (Vt i)] (D : BoundedData 𝕜 c V Vt) (κ : Type*)
 
-/-- The real structure of the derived spaces of complex BGG data, declared on `derivedSpace`
-itself so that instance search does not compare the generic submodule norms. -/
+/-- The real structure of the derived spaces of complex BGG data. -/
 instance instNormedSpaceRealDerivedSpace [∀ i, NormedSpace ℝ (V i)] [∀ i, NormedSpace ℝ (Vt i)]
     [∀ i, IsScalarTower ℝ 𝕜 (V i)] [∀ i, IsScalarTower ℝ 𝕜 (Vt i)] (E F : ι → Prop) (i : ι) :
     NormedSpace ℝ (D.derivedSpace E F i) where
@@ -265,9 +194,7 @@ instance instIsScalarTowerRealDerivedSpace [∀ i, NormedSpace ℝ (V i)] [∀ i
     IsScalarTower ℝ 𝕜 (D.derivedSpace E F i) :=
   Submodule.isScalarTower' _
 
-/-- **Stacked conforming families** of bounded BGG data, the discrete BGG data: conforming
-families `Vₕ`, `Ṽₕ` of the two rows along one filter, linked by the connecting maps
-(`S Ṽₕⁱ ⊆ Vₕʲ`), whose cochain projections commute with them (`πₕ S = S π̃ₕ`). -/
+/-- Conforming families `Vₕ`, `Ṽₕ` of the two rows with `S Ṽₕⁱ ⊆ Vₕʲ` and `πₕ S = S π̃ₕ`. -/
 structure StackedFamily where
   /-- the family of the top row -/
   top : ConformingFamily D.rowTopComplex κ
@@ -366,8 +293,7 @@ theorem twistπL_mem_ΔL (h : κ) {i : ι} {x : WithLp 2 (V i × Vt i)} (hx : x 
 
 /-! #### The derived subcomplex -/
 
-/-- **The derived cochain projection** `y ↦ P_{(Δⁱ)ᗮ} (πₕ × π̃ₕ) y` on `Υⁱ = Γⁱ ⊖ Δⁱ`, the
-compression of `πₕ × π̃ₕ` (`HilbertComplex.Subquotient.compress`). -/
+/-- The derived cochain projection `y ↦ P_{(Δⁱ)ᗮ} (πₕ × π̃ₕ) y` on `Υⁱ = Γⁱ ⊖ Δⁱ`. -/
 def derivedπ (h : κ) (i : ι) : D.derivedSpace E F i →L[𝕜] D.derivedSpace E F i :=
   (D.subquotient E F).compress (G.twistπL h i) (G.twistπL_mem_ΓL E h)
 
@@ -380,7 +306,6 @@ theorem derivedπ_derivedπ (h : κ) (i : ι) (y : D.derivedSpace E F i) :
   Subtype.ext <| ((D.subquotient E F).coe_compress_compress _ _ (G.twistπL_mem_ΔL E F h) y).trans
     (congrArg _ (G.twistπL_twistπL h i y))
 
-/-- **The derived projection commutes with the derived differential.** -/
 theorem derivedD_derivedπ (h : κ) (i j : ι) (y : D.derivedSpace E F i) :
     D.derivedD E F i j (G.derivedπ E F h i y) = G.derivedπ E F h j (D.derivedD E F i j y) :=
   (D.subquotient E F).spaceD_compress _ _ (G.twistπL_mem_ΔL E F h) (G.twistL_twistπL h i j) y
@@ -394,9 +319,7 @@ theorem twistπL_mem_twistV (h : κ) (i : ι) (x : WithLp 2 (V i × Vt i)) :
     G.twistπL h i x ∈ G.twistV h i :=
   ⟨(⟨_, (G.top.π h).mem i x.ofLp.1⟩, ⟨_, (G.bot.π h).mem i x.ofLp.2⟩), rfl⟩
 
-/-- **The discrete derived spaces** `Υₕⁱ`, the range of the derived projection: the projections
-`P_{(Δⁱ)ᗮ} (Γⁱ ∩ (Vₕⁱ × Ṽₕⁱ))` (`mem_derivedSubcomplex_iff`), a subcomplex of the derived
-complex. -/
+/-- The discrete derived spaces, the range of the derived projection. -/
 def derivedSubcomplex (h : κ) : (D.derivedComplex E F).Subcomplex where
   V i := LinearMap.range (G.derivedπ E F h i : D.derivedSpace E F i →ₗ[𝕜] D.derivedSpace E F i)
   le_domain _ _ := le_top
@@ -409,7 +332,6 @@ theorem twistπL_of_mem_twistV (h : κ) {i : ι} {x : WithLp 2 (V i × Vt i)}
   obtain ⟨⟨a, b⟩, rfl⟩ := hx
   exact WithLp.ofLp_injective 2 (Prod.ext ((G.top.π h).proj i a a.2) ((G.bot.π h).proj i b b.2))
 
-/-- **The discrete derived spaces are `P_{(Δⁱ)ᗮ} (Γⁱ ∩ (Vₕⁱ × Ṽₕⁱ))`.** -/
 theorem mem_derivedSubcomplex_iff (h : κ) {i : ι} {y : D.derivedSpace E F i} :
     y ∈ (G.derivedSubcomplex E F h).V i ↔ ∃ x ∈ D.ΓL E i ⊓ G.twistV h i,
       (y : WithLp 2 (V i × Vt i)) = (D.ΔL E F i)ᗮ.starProjection x := by
@@ -460,9 +382,7 @@ theorem norm_sub_derivedπ_le (h : κ) (i : ι) (y : D.derivedSpace E F i) :
   exact (Submodule.norm_starProjection_apply_le _ _).trans
     (WithLp.norm_le_norm_fst_add_norm_snd _)
 
-/-- **The conforming family of the derived complex**: the discrete derived spaces
-(`derivedSubcomplex`), with the derived projections, bounded by `max C C̃`, and the approximation
-property from those of the two rows. -/
+/-- The conforming family of the derived complex. -/
 def derived : ConformingFamily (D.derivedComplex E F) κ where
   l := G.top.l
   V := G.derivedSubcomplex E F
@@ -484,8 +404,7 @@ def derived : ConformingFamily (D.derivedComplex E F) κ where
       ((G.bot.π h).norm_sub_π_le_infDist hC' (G.bot.norm_π_le h i) _))
 
 variable (D) in
-/-- **The full stacked family** of bounded BGG data of finite-dimensional spaces
-(`ConformingFamily.full`), along any filter. -/
+/-- The full stacked family of bounded BGG data of finite-dimensional spaces, along any filter. -/
 def full [∀ i, FiniteDimensional 𝕜 (V i)] [∀ i, FiniteDimensional 𝕜 (Vt i)] (l : Filter κ) :
     D.StackedFamily κ where
   top := ConformingFamily.full _ _ _ l
@@ -507,8 +426,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {V Vt :
   [∀ i, NormedAddCommGroup (Vt i)] [∀ i, InnerProductSpace 𝕜 (Vt i)]
   [∀ i, CompleteSpace (Vt i)] (D : BoundedData 𝕜 c V Vt)
 
-/-- Bounded BGG data as analytic BGG data: the rows `rowTopComplex`, `rowBotComplex` (full
-domains) linked by `S`. -/
+/-- Bounded BGG data as analytic BGG data. -/
 def toHilbertData : HilbertData 𝕜 c V Vt where
   H := D.rowTopComplex
   Ht := D.rowBotComplex
@@ -528,9 +446,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W Wt :
   [∀ i, NormedAddCommGroup (Wt i)] [∀ i, InnerProductSpace 𝕜 (Wt i)]
   [∀ i, CompleteSpace (Wt i)] (D : HilbertData 𝕜 c W Wt) (κ : Type*)
 
-/-- **Stacked conforming families** of analytic BGG data, the discrete BGG data: conforming
-families `Vₕ`, `Ṽₕ` of the two Hilbert complexes along one filter (commuting cochain projections
-bounded in `L²`), linked by the connecting maps, `S Ṽₕⁱ ⊆ Vₕʲ`, with `πₕ S = S π̃ₕ`. -/
+/-- Conforming families `Vₕ`, `Ṽₕ` of two Hilbert complexes with `S Ṽₕⁱ ⊆ Vₕʲ`, `πₕ S = S π̃ₕ`. -/
 structure StackedFamily where
   /-- the family of the top complex -/
   top : ConformingFamily D.H κ
@@ -544,8 +460,7 @@ namespace StackedFamily
 
 variable {D κ} (G : D.StackedFamily κ)
 
-/-- The stacked families in the domain complexes (`ConformingFamily.domain`), stacked conforming
-families of the bounded BGG data `domainData`. -/
+/-- The stacked families in the domain complexes. -/
 def toDomain : D.domainData.StackedFamily κ where
   top := G.top.domain
   bot := G.bot.domain
@@ -571,8 +486,7 @@ def twistIncl (h : κ) (i : ι) : (G.top.V h).V i × (G.bot.V h).V i →ₗ[𝕜
   (WithLp.linearEquiv 2 𝕜 (W i × Wt i)).symm.toLinearMap ∘ₗ
     ((G.top.V h).V i).subtype.prodMap ((G.bot.V h).V i).subtype
 
-/-- **The discrete twisted complex** `Vₕ × Ṽₕ`, a subcomplex of the `L²` twisted complex
-(`S Ṽₕ ⊆ Vₕ`). -/
+/-- The discrete twisted complex `Vₕ × Ṽₕ`, a subcomplex of the `L²` twisted complex. -/
 def twistSubcomplex (h : κ) : D.twistComplex.Subcomplex where
   V i := LinearMap.range (G.twistIncl h i)
   le_domain i j := by
@@ -608,8 +522,7 @@ def twistCochainProjection (h : κ) : (G.twistSubcomplex h).CochainProjection wh
       refine ((G.bot.π h).comm i j ⟨_, hx.2⟩).trans ?_
       rw [snd_twistπ, D.twistD_apply_snd (i := i) (j := j) x]
 
-/-- **The conforming family of the `L²` twisted complex**: the discrete twisted complexes
-`Vₕ × Ṽₕ` with the projections `πₕ × π̃ₕ`, bounded in `L²` by `max C C̃`. -/
+/-- The conforming family of the `L²` twisted complex. -/
 def twist : ConformingFamily D.twistComplex κ where
   l := G.top.l
   V := G.twistSubcomplex
@@ -637,14 +550,12 @@ def twist : ConformingFamily D.twistComplex κ where
 
 variable (E F : ι → Prop)
 
-/-- **The conforming family of the derived complex** of the domain complexes
-(`BoundedData.StackedFamily.derived`). -/
+/-- The conforming family of the derived complex of the domain complexes. -/
 abbrev derived : ConformingFamily (D.domainData.derivedComplex E F) κ := G.toDomain.derived E F
 
 end StackedFamily
 
-/-- **The full stacked family** of bounded BGG data of finite-dimensional spaces, as analytic BGG
-data (`BoundedData.toHilbertData`), along any filter. -/
+/-- The full stacked family of bounded BGG data of finite-dimensional spaces, as analytic data. -/
 def StackedFamily.full {V Vt : ι → Type v} [∀ i, NormedAddCommGroup (V i)]
     [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)] [∀ i, FiniteDimensional 𝕜 (V i)]
     [∀ i, NormedAddCommGroup (Vt i)] [∀ i, InnerProductSpace 𝕜 (Vt i)]
@@ -672,31 +583,23 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [Is
   {D : BoundedData 𝕜 (ComplexShape.up α) V Vt} {κ : Type*} (G : D.StackedFamily κ)
   (E F : α → Prop)
 
-/-- **The conclusions of the FEEC theorem for a discrete BGG complex** (`feecVerdict`): the
-derived complex has closed range in every degree, and the FEEC theorem (`ConformingFamily.Verdict`)
-holds for the conforming family of the derived complex, so the static FEEC theorem holds in every
-degree with finite-dimensional harmonic forms (`Verdict.static`). -/
+/-- Closed range of the derived complex and the FEEC theorem for its conforming family. -/
 structure Verdict : Prop where
-  /-- the derived complex has closed range ([ArnoldHu2021], Theorem 6) -/
+  /-- the derived complex has closed range -/
   closedRangeAt (i : α) : (D.derivedComplex E F).ClosedRangeAt i
   /-- the FEEC theorem for the derived complex -/
   feec : (G.derived E F).Verdict
 
 variable {G E F}
 
-/-- The static FEEC theorem for a discrete BGG complex in every degree with finite-dimensional
-harmonic forms. [AFW2010], Thms 3.4–3.9 -/
 theorem Verdict.static (v : G.Verdict E F) (j : α)
     [FiniteDimensional 𝕜 ((D.derivedComplex E F).harmonic j)] : (G.derived E F).StaticVerdict j :=
   v.feec.static v.closedRangeAt j
 
 variable (G)
 
-/-- **The FEEC theorem for discrete BGG complexes of bounded data.** If the exact part is closed,
-the elimination hypotheses hold and the rows have finite-dimensional cohomology, then for stacked
-conforming families the derived complex has closed range (`derivedComplex_closedRangeAt`), so
-the static FEEC theorem holds in every degree, and the FEEC theorem holds for the discrete
-derived complexes. [ArnoldHu2021], Theorem 6; [AFW2010], Thms 3.4–3.9 -/
+/-- If the exact part is closed, the elimination hypotheses hold and the rows have
+finite-dimensional cohomology, stacked conforming families satisfy `Verdict`. -/
 theorem feecVerdict (hΔ : ∀ i, IsClosed (D.Δ F i : Set (V i × Vt i))) (he : D.Eliminates E F)
     [∀ i, FiniteDimensional 𝕜 (D.rowTopComplex.cohomology i)]
     [∀ i, FiniteDimensional 𝕜 (D.rowBotComplex.cohomology i)] : G.Verdict E F :=
@@ -708,8 +611,6 @@ namespace Feec.BGG.BoundedData
 
 variable (𝕜 : Type*) [RCLike 𝕜]
 
-/-- **Non-vacuity of the FEEC theorem for discrete BGG complexes**: the full stacked family of
-`idShift` (`Sⁱ = id` on `𝕜`) along `atTop`, for every `J`. -/
 theorem idShift_feecVerdict (J : ℤ) :
     (StackedFamily.full (idShift 𝕜) (κ := ℕ) atTop).Verdict (J < ·) (· < J) :=
   StackedFamily.feecVerdict _ (fun _ => Submodule.closed_of_finiteDimensional _)
@@ -731,21 +632,15 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [Is
   {D : HilbertData 𝕜 (ComplexShape.up α) W Wt} {κ : Type*} (G : D.StackedFamily κ)
   (E F : α → Prop)
 
-/-- **The conclusions of the FEEC theorem for a discrete BGG complex of two Hilbert complexes**
-(`feecVerdict`): those for the stacked families in the domain complexes
-(`BoundedData.StackedFamily.Verdict`), and the analytic BGG verdict in every degree (cohomology of
-dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`). -/
+/-- The conclusions for the domain complexes, the analytic BGG theorem and the twisted complex. -/
 structure Verdict : Prop extends G.toDomain.Verdict E F where
-  /-- the analytic BGG theorem in every degree ([ArnoldHu2021], Theorem 6) -/
+  /-- the analytic BGG theorem in every degree -/
   derived (i : α) : D.DerivedVerdict E F i
   /-- the FEEC theorem for the discrete `L²` twisted complexes `Vₕ × Ṽₕ` -/
   twist : G.twist.Verdict
 
 variable {G E F}
 
-/-- **The static FEEC theorem for a discrete BGG complex in every degree**: the harmonic forms of
-the derived complex are finite-dimensional by the analytic BGG verdict (`derived`).
-[AFW2010], Thms 3.4–3.9 -/
 theorem Verdict.static (v : G.Verdict E F) (j : α) : (G.derived E F).StaticVerdict j :=
   have := (v.derived j).finiteDimensional
   have := ((D.domainData.derivedComplex E F).finiteDimensional_harmonic_iff
@@ -754,13 +649,8 @@ theorem Verdict.static (v : G.Verdict E F) (j : α) : (G.derived E F).StaticVerd
 
 variable (G)
 
-/-- **The FEEC theorem for discrete BGG complexes.** For two Hilbert complexes linked by bounded
-connecting maps with closed exact part and the elimination hypotheses, whose cohomology is
-finite-dimensional, and stacked conforming families of them (`S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ`): the
-discrete derived complexes form a conforming family of the derived complex of the domain
-complexes, which has closed range and finite-dimensional cohomology, so the static FEEC theorem
-holds in every degree and the whole FEEC theorem holds for it. [ArnoldHu2021], Theorem 6;
-[AFW2010], Thms 3.4–3.9 -/
+/-- For two Hilbert complexes with finite-dimensional cohomology, closed exact part and the
+elimination hypotheses, stacked conforming families satisfy `Verdict`. -/
 theorem feecVerdict
     (hΔ : ∀ i, IsClosed (D.domainData.Δ F i : Set (D.H.domainSpace i × D.Ht.domainSpace i)))
     (he : D.domainData.Eliminates E F) [∀ i, FiniteDimensional 𝕜 (D.H.cohomology i)]
@@ -779,10 +669,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W Wt : ℤ → Type v} [∀ i, NormedAddC
   [∀ i, IsScalarTower ℝ 𝕜 (W i)] [∀ i, NormedSpace ℝ (Wt i)] [∀ i, IsScalarTower ℝ 𝕜 (Wt i)]
   {D : HilbertData 𝕜 (ComplexShape.up ℤ) W Wt} {κ : Type*} (G : D.StackedFamily κ)
 
-/-- **The FEEC theorem for discrete BGG complexes `bgg J`**: if the connecting maps up to `J` are
-bounded below, the regular decompositions hold after `J` and the two complexes have
-finite-dimensional cohomology, then for stacked conforming families the FEEC theorem holds for
-the discrete BGG complexes (`feecVerdict`). [ArnoldHu2021], Theorem 6 -/
+/-- If the `Sⁱ`, `i ≤ J`, are bounded below, the regular decompositions hold after `J` and the
+cohomology is finite-dimensional, stacked conforming families satisfy `Verdict` for `bgg J`. -/
 theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
     (htop : D.RegularDecomposition J) [∀ i, FiniteDimensional 𝕜 (D.H.cohomology i)]
     [∀ i, FiniteDimensional 𝕜 (D.Ht.cohomology i)] : G.Verdict (J < ·) (· < J) :=
@@ -797,9 +685,6 @@ namespace Feec.BGG.BoundedData
 
 variable (𝕜 : Type*) [RCLike 𝕜]
 
-/-- **Non-vacuity of the FEEC theorem for discrete BGG complexes of two Hilbert complexes**: the
-full stacked family of `idShift` as analytic BGG data, along `atTop`, for every `J` (`Sⁱ = id` is
-bounded below and onto, so the regular decompositions hold). -/
 theorem idShift_toHilbertData_bggVerdict (J : ℤ) :
     (HilbertData.StackedFamily.full (idShift 𝕜) (κ := ℕ) atTop).Verdict (J < ·) (· < J) := by
   have hS (i j : ℤ) (hij : i + 1 = j) (x : 𝕜) : (idShift 𝕜).toHilbertData.S i j x = x := by

@@ -6,42 +6,12 @@ public import Feec.ForMathlib.Calculus.SecondDifference
 /-!
 # The leapfrog scheme under a CFL condition
 
-For a bounded **skew** operator `L` (`⟪L x, y⟫ = -⟪x, L y⟫`, e.g. a discrete Hodge wave operator
-`Lₕ = dₕ - dₕ*`) the explicit two-step **leapfrog** scheme `uₙ₊₂ = uₙ + 2 τ L uₙ₊₁` (`IsLeapfrog`)
-conserves the modified energy `Eₙ = ‖uₙ₊₁‖² + ‖uₙ‖² - 2 τ re ⟪L uₙ, uₙ₊₁⟫` (`leapfrogEnergy`), which
-under the **CFL condition** `τ ‖L‖ ≤ c < 1` is equivalent to `‖uₙ₊₁‖² + ‖uₙ‖²`
-(`leapfrogEnergy_ge`, `leapfrogEnergy_le`). On finite element spaces `‖Lₕ‖ ≲ h⁻¹` (inverse
-estimates), so the condition is `τ ≲ h`: the scheme is stable and second order only under it, with
-constants independent of `L`.
-
-## Main results
-
-* `leapfrogEnergy_succ`: the energy identity `Eₙ₊₁ = Eₙ + re ⟪rₙ, eₙ₊₂ + eₙ⟫` for the perturbed
-  recursion `eₙ₊₂ = eₙ + 2 τ L eₙ₊₁ + rₙ`;
-* **`norm_leapfrog_le`** (stability, `rₙ = 0`):
-  `√(1 - c) ‖uₙ‖ ≤ √((1 + c) (‖u₀‖² + ‖u₁‖²))`;
-* `norm_succ_le_of_leapfrog`, `norm_le_of_leapfrog` (stability plus consistency, the recursion
-  needed only up to the step bounded):
-  `√(1 - c) ‖eₙ₊₁‖ ≤ √((1 + c) (‖e₀‖² + ‖e₁‖²)) + Σ_{k<n} ‖rₖ‖ / √(1 - c)`;
-* **`norm_leapfrog_sub_exp_le`** (second order): for leapfrog iterates `uₙ` and the exact flow
-  `e^{tL} x`, at `t = n τ`,
-  `√(1 - c) ‖uₙ - e^{tL} x‖ ≤ √((1 + c) (‖u₀ - x‖² + ‖u₁ - e^{τL} x‖²))`
-  `+ t τ² ‖L³ x‖ / (3 √(1 - c))`
-  (the residual of the exact orbit is `(e^{τL} - e^{-τL} - 2 τ L) e^{(k+1)τL} x = O(τ³ ‖L³ x‖)`,
-  `norm_exp_sub_exp_neg_le`);
-* `norm_centredDifference_le`: the centred difference remainder
-  `‖f(m + τ) - f(m - τ) - 2 τ f'(m)‖ ≤ τ³ sup ‖f'''‖ / 3`, for comparison trajectories;
-* **leapfrog with prescribed boundary degrees of freedom** (`IsDirichletLeapfrogStep`): on a
-  finite element space `V` with the fields `V₀` of vanishing boundary DOFs, the step
-  `uₙ₊₂ - gₙ₊₂ ∈ V₀`, `⟪uₙ₊₂ - uₙ, v⟫ = 2 τ ⟪A uₙ₊₁, v⟫` on `V₀` is uniquely solvable for every
-  `τ` (`existsUnique_isDirichletLeapfrogStep`), and against comparison fields with the same
-  boundary DOFs the error obeys the CFL estimate of the skew operator `P₀ A P₀`, `τ ‖A‖ ≤ c < 1`
-  (`norm_succ_sub_le_of_isDirichletLeapfrogStep`).
+For bounded skew `L`, leapfrog `uₙ₊₂ = uₙ + 2 τ L uₙ₊₁` conserves a modified energy and, under the
+CFL condition `τ ‖L‖ ≤ c < 1`, is stable (also with prescribed boundary DOFs) and of second order.
 
 ## References
 
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
-  (leapfrog for second-order hyperbolic problems: discrete energy, CFL stability)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -58,18 +28,14 @@ variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [InnerProductSpac
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- `u` is a **leapfrog sequence** for `u' = L u` with time step `τ`:
-`uₙ₊₂ = uₙ + 2 τ L uₙ₊₁`. [Joly2003] -/
+/-- `u` is a leapfrog sequence for `u' = L u` with step `τ`: `uₙ₊₂ = uₙ + 2 τ L uₙ₊₁`. [Joly2003] -/
 def IsLeapfrog (L : X →L[𝕜] X) (τ : ℝ) (u : ℕ → X) : Prop :=
   ∀ n, u (n + 2) = u n + ((2 * τ : ℝ) : 𝕜) • L (u (n + 1))
 
-/-- The **modified energy** `‖b‖² + ‖a‖² - 2 τ re ⟪L a, b⟫` of two consecutive leapfrog states
-`a = uₙ`, `b = uₙ₊₁`. -/
+/-- The modified energy `‖b‖² + ‖a‖² - 2 τ re ⟪L a, b⟫` of consecutive leapfrog states `a`, `b`. -/
 def leapfrogEnergy (L : X →L[𝕜] X) (τ : ℝ) (a b : X) : ℝ :=
   ‖b‖ ^ 2 + ‖a‖ ^ 2 - 2 * τ * RCLike.re ⟪L a, b⟫
 
-/-- **The leapfrog energy identity**: for skew `L` and `b' = a + 2 τ L b + r`,
-`E(b, b') = E(a, b) + re ⟪r, b' + a⟫`; for `r = 0` the energy is conserved. -/
 theorem leapfrogEnergy_succ (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) {a b b' r : X}
     (h : b' = a + ((2 * τ : ℝ) : 𝕜) • L b + r) :
     leapfrogEnergy L τ b b' = leapfrogEnergy L τ a b + RCLike.re ⟪r, b' + a⟫ := by
@@ -83,7 +49,6 @@ theorem leapfrogEnergy_succ (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) {a b b'
   rw [h2]
   linarith
 
-/-- **CFL coercivity**: `τ ≥ 0`, `τ ‖L‖ ≤ c` give `(1 - c)(‖a‖² + ‖b‖²) ≤ E(a, b)`. -/
 theorem leapfrogEnergy_ge (hτ : 0 ≤ τ) (hc : τ * ‖L‖ ≤ c) (a b : X) :
     (1 - c) * (‖a‖ ^ 2 + ‖b‖ ^ 2) ≤ leapfrogEnergy L τ a b := by
   have h1 : RCLike.re ⟪L a, b⟫ ≤ ‖L‖ * ‖a‖ * ‖b‖ :=
@@ -99,7 +64,6 @@ theorem leapfrogEnergy_ge (hτ : 0 ≤ τ) (hc : τ * ‖L‖ ≤ c) (a b : X) :
   unfold leapfrogEnergy
   linarith
 
-/-- **CFL upper bound**: `τ ≥ 0`, `τ ‖L‖ ≤ c` give `E(a, b) ≤ (1 + c)(‖a‖² + ‖b‖²)`. -/
 theorem leapfrogEnergy_le (hτ : 0 ≤ τ) (hc : τ * ‖L‖ ≤ c) (a b : X) :
     leapfrogEnergy L τ a b ≤ (1 + c) * (‖a‖ ^ 2 + ‖b‖ ^ 2) := by
   have h1 : -RCLike.re ⟪L a, b⟫ ≤ ‖L‖ * ‖a‖ * ‖b‖ :=
@@ -116,14 +80,10 @@ theorem leapfrogEnergy_le (hτ : 0 ≤ τ) (hc : τ * ‖L‖ ≤ c) (a b : X) :
   unfold leapfrogEnergy
   linarith
 
-/-- `a² ≤ b² + m (a + b)` with `a, b, m ≥ 0` gives `a ≤ b + m`. -/
 private theorem le_add_of_sq_le {a b m : ℝ} (hb : 0 ≤ b) (hm : 0 ≤ m)
     (h : a ^ 2 ≤ b ^ 2 + m * (a + b)) : a ≤ b + m := by
   nlinarith
 
-/-- **Stability plus consistency for leapfrog, up to step `n`** under the CFL condition
-`τ ‖L‖ ≤ c < 1`: for skew `L` and `eₖ₊₂ = eₖ + 2 τ L eₖ₊₁ + rₖ` for `k < n`,
-`√(1 - c) ‖eₙ₊₁‖ ≤ √((1 + c)(‖e₀‖² + ‖e₁‖²)) + Σ_{k<n} ‖rₖ‖ / √(1 - c)`. [Joly2003] -/
 theorem norm_succ_le_of_leapfrog (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ)
     (hc : τ * ‖L‖ ≤ c) (hc1 : c < 1) {e r : ℕ → X} {n : ℕ}
     (he : ∀ k < n, e (k + 2) = e k + ((2 * τ : ℝ) : 𝕜) • L (e (k + 1)) + r k) :
@@ -177,9 +137,6 @@ theorem norm_succ_le_of_leapfrog (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (h
     Real.sqrt_le_sqrt (leapfrogEnergy_le hτ hc _ _)
   linarith [hsnd n, key n le_rfl]
 
-/-- **Stability plus consistency for leapfrog** under the CFL condition `τ ‖L‖ ≤ c < 1`: for
-skew `L` and `eₙ₊₂ = eₙ + 2 τ L eₙ₊₁ + rₙ`,
-`√(1 - c) ‖eₙ‖ ≤ √((1 + c)(‖e₀‖² + ‖e₁‖²)) + Σ_{k<n} ‖rₖ‖ / √(1 - c)`. [Joly2003] -/
 theorem norm_le_of_leapfrog (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ)
     (hc : τ * ‖L‖ ≤ c) (hc1 : c < 1) {e r : ℕ → X}
     (he : ∀ n, e (n + 2) = e n + ((2 * τ : ℝ) : 𝕜) • L (e (n + 1)) + r n) (n : ℕ) :
@@ -203,9 +160,8 @@ theorem norm_le_of_leapfrog (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 
       div_le_div_of_nonneg_right (by rw [sum_range_succ]; linarith [norm_nonneg (r m)]) hs
     linarith [norm_succ_le_of_leapfrog hL hτ hc hc1 (n := m) fun k _ => he k]
 
-/-- **Stability of leapfrog** under the CFL condition `τ ‖L‖ ≤ c < 1`:
-`√(1 - c) ‖uₙ‖ ≤ √((1 + c)(‖u₀‖² + ‖u₁‖²))`, uniformly in `n` and in the skew `L`.
-[Joly2003] -/
+/-- **Stability of leapfrog** for skew `L`, `τ ≥ 0` and the CFL condition `τ ‖L‖ ≤ c < 1`:
+`√(1 - c) ‖uₙ‖ ≤ √((1 + c)(‖u₀‖² + ‖u₁‖²))`, uniformly in `n` and `L`. [Joly2003] -/
 theorem norm_leapfrog_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ) (hc : τ * ‖L‖ ≤ c)
     (hc1 : c < 1) {u : ℕ → X} (hu : IsLeapfrog L τ u) (n : ℕ) :
     √(1 - c) * ‖u n‖ ≤ √((1 + c) * (‖u 0‖ ^ 2 + ‖u 1‖ ^ 2)) := by
@@ -216,8 +172,6 @@ section Exp
 
 variable [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X]
 
-/-- The leapfrog residual of the exact flow:
-`‖e^{τL} y - e^{-τL} y - 2 τ L y‖ ≤ τ³/3 ‖L³ y‖` for skew `L`, `τ ≥ 0`. -/
 theorem norm_exp_sub_exp_neg_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ) (y : X) :
     ‖exp ((τ : 𝕜) • L) y - exp (((-τ : ℝ) : 𝕜) • L) y - ((2 * τ : ℝ) : 𝕜) • L y‖ ≤
       τ ^ 3 / 3 * ‖(L ^ 3) y‖ := by
@@ -256,10 +210,9 @@ theorem norm_exp_sub_exp_neg_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (h�
   refine (norm_sub_le _ _).trans ?_
   linarith
 
-/-- **Second-order convergence of leapfrog** under the CFL condition `τ ‖L‖ ≤ c < 1`: for skew
-`L`, leapfrog iterates `uₙ` and the exact flow, at `t = n τ`,
-`√(1 - c) ‖uₙ - e^{tL} x‖ ≤ √((1 + c)(‖u₀ - x‖² + ‖u₁ - e^{τL} x‖²)) + t τ² ‖L³ x‖ / (3 √(1 - c))`,
-uniformly in the skew `L`. [Joly2003] -/
+/-- **Second-order convergence of leapfrog** for skew `L`, `τ ≥ 0` and `τ ‖L‖ ≤ c < 1`, at
+`t = n τ` ([Joly2003]):
+`√(1 - c) ‖uₙ - e^{tL} x‖ ≤ √((1 + c)(‖u₀ - x‖² + ‖u₁ - e^{τL} x‖²)) + tτ² ‖L³ x‖ / (3√(1 - c))`. -/
 theorem norm_leapfrog_sub_exp_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (hτ : 0 ≤ τ)
     (hc : τ * ‖L‖ ≤ c) (hc1 : c < 1) {u : ℕ → X} (hu : IsLeapfrog L τ u) (x : X) (n : ℕ) :
     √(1 - c) * ‖u n - exp (((n * τ : ℝ) : 𝕜) • L) x‖ ≤
@@ -319,9 +272,6 @@ section CentredDifference
 
 variable {Y : Type*} [NormedAddCommGroup Y] [NormedSpace ℝ Y]
 
-/-- **The centred difference remainder** of the leapfrog step: for `f` with derivatives
-`f₁, f₂, f₃` on `[m - τ, m + τ]` and `‖f₃‖ ≤ B`,
-`‖f(m + τ) - f(m - τ) - 2 τ f₁(m)‖ ≤ τ³ B / 3`. -/
 theorem norm_centredDifference_le {f f₁ f₂ f₃ : ℝ → Y} {m τ B : ℝ} (hτ : 0 ≤ τ)
     (h1 : ∀ t ∈ Icc (m - τ) (m + τ), HasDerivAt f (f₁ t) t)
     (h2 : ∀ t ∈ Icc (m - τ) (m + τ), HasDerivAt f₁ (f₂ t) t)
@@ -392,18 +342,11 @@ open scoped RealInnerProductSpace
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
   {V₀ : Submodule ℝ V} {A : V →ₗ[ℝ] V}
 
-/-- One **leapfrog step with prescribed boundary degrees of freedom**: on a finite element space
-`V` with the subspace `V₀` of the fields with vanishing boundary DOFs, the step `(u, u') ↦ u''`
-with boundary values `g''` (any field with the prescribed boundary DOFs, e.g. an interpolant of
-the exact solution) is `u'' − g'' ∈ V₀` and `⟪u'' − u, v⟫ = 2 τ ⟪A u', v⟫` for all `v ∈ V₀`,
-`⟪A u, v⟫` the bilinear form of the scheme. It is explicit: one solve with the mass matrix of
-`V₀`, for every time step (`existsUnique_isDirichletLeapfrogStep`). [Joly2003] -/
+/-- The leapfrog step `⟪u'' − u, v⟫ = 2 τ ⟪A u', v⟫` on `V₀`, with `u'' − g'' ∈ V₀`. -/
 def IsDirichletLeapfrogStep (V₀ : Submodule ℝ V) (A : V →ₗ[ℝ] V) (τ : ℝ) (g'' u u' u'' : V) :
     Prop :=
   u'' - g'' ∈ V₀ ∧ ∀ v ∈ V₀, ⟪u'' - u, v⟫ = 2 * τ * ⟪A u', v⟫
 
-/-- **Well-posedness of the leapfrog step**, for every time step:
-`u'' = g'' + P₀ (u + 2 τ A u' − g'')` with `P₀` the orthogonal projection onto `V₀`. -/
 theorem existsUnique_isDirichletLeapfrogStep (τ : ℝ) (g'' u u' : V) :
     ∃! u'', IsDirichletLeapfrogStep V₀ A τ g'' u u' u'' := by
   refine ⟨g'' + V₀.starProjection (u + (2 * τ) • A u' - g''),
@@ -430,8 +373,7 @@ theorem existsUnique_isDirichletLeapfrogStep (τ : ℝ) (g'' u u' : V) :
       ring
     exact sub_eq_zero.1 (inner_self_eq_zero.1 (h0 _ hd))
 
-/-- The **interior operator** `P₀ A P₀` of the scheme, as a continuous operator on `V`: it is skew
-when `A` is, and `‖P₀ A P₀‖ ≤ ‖A‖`. -/
+/-- The **interior operator** `P₀ A P₀` of the scheme, as a continuous operator on `V`. -/
 def interiorOp (V₀ : Submodule ℝ V) (A : V →ₗ[ℝ] V) : V →L[ℝ] V :=
   V₀.starProjection ∘L LinearMap.toContinuousLinearMap A ∘L V₀.starProjection
 
@@ -447,14 +389,9 @@ theorem inner_interiorOp (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫) (x y : V) 
   rw [Submodule.inner_starProjection_left_eq_right, hA,
     Submodule.inner_starProjection_left_eq_right]
 
-/-- **Error of the leapfrog scheme with prescribed boundary DOFs** under the CFL condition
-`τ ‖A‖ ≤ c < 1` for skew `A`: let `uₖ` be the iterates up to step `n + 1`, with boundary data
-`gₖ₊₂`, and let comparison fields `ũₖ` (e.g. interpolants of the exact solution) have the same
-boundary DOFs and solve the scheme up to the residuals `ρₖ`,
-`⟪ũₖ₊₂ − ũₖ, v⟫ = 2 τ ⟪A ũₖ₊₁, v⟫ + ⟪ρₖ, v⟫` on `V₀`. Then
-`√(1 − c) ‖uₙ₊₁ − ũₙ₊₁‖ ≤ √((1 + c)(‖u₀ − ũ₀‖² + ‖u₁ − ũ₁‖²)) + Σ_{k<n} ‖ρₖ‖ / √(1 − c)`:
-the errors `eₖ ∈ V₀` follow the leapfrog recursion of the skew operator `P₀ A P₀` with the
-residuals `−P₀ ρₖ` (`norm_succ_le_of_leapfrog`). [Joly2003] -/
+/-- **Error with prescribed boundary DOFs** for skew `A`, `τ ≥ 0` and `τ ‖A‖ ≤ c < 1`, against `ũₖ`
+with the same boundary DOFs and residuals `ρₖ`:
+`√(1 − c) ‖uₙ₊₁ − ũₙ₊₁‖ ≤ √((1 + c)(‖u₀ − ũ₀‖² + ‖u₁ − ũ₁‖²)) + Σ_{k<n} ‖ρₖ‖ / √(1 − c)`. -/
 theorem norm_succ_sub_le_of_isDirichletLeapfrogStep (hA : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫)
     {τ c : ℝ} (hτ : 0 ≤ τ) (hc : τ * ‖LinearMap.toContinuousLinearMap A‖ ≤ c) (hc1 : c < 1)
     {g u ũ ρ : ℕ → V} {n : ℕ}

@@ -8,63 +8,20 @@ public import Feec.Models.Cube.MaximalRegularDecomposition
 /-!
 # Sobolev-data rates for the BGG elements of Tables 5.1 / 6.1 with the thesis' boundary conditions
 
-[QuennevilleBelair2015], Thm 5.5 and §6.3: rates for the static problem (5.3) and the
-semi-discrete scheme (6.5) on `Q = (0, ½)³` with the elements of Tables 5.1 / 6.1 and the thesis'
-boundary conditions, for data in relative-class Sobolev spaces `Hˢ` instead of `C²`.
-
-**The class.** `SobRel s L k x`: the relative parity extension of the `k`-form `x` (vanishing
-tangential traces, `Feec.Models.Cube.Sobolev.sobolevPar Finset.univ`) lies in `Hˢ(𝕋³)` with norm
-`≤ L`. `IsSobolevStateTr` asks it of every field whose projection error enters the Strang data of
-(6.4): `σ, dφₐ, uₐ, duₐ, M, ρₐ, S¹u`. `S¹u` is a separate field: `S¹` does not preserve the
-relative class (it couples components of opposite parities). For `s < ½` the class encodes no
-trace condition (`Hˢ` has no traces there); "vanishing tangential traces" is meant for `s > ½`.
-
-**Rates.** The relative-class best approximation `infDist_polyPartial_le_sobolevPar_min` and the
-uniformly bounded smoothed projections ([AFW2010], §5.5) give `CubeClose` with `h^{min(s,1)}`
-(`cubeClose_of_isSobolevStateTr`), hence the static rate `staticFEM_rate_sobolev` (Thm 5.5) and the
-rate `cubeWave_rate_sobolev` of (6.5), `K L (1 + t) h^{min(s,1)}`. The exponent `min(s, 1)` is
-optimal for these elements: `P₁⁻Λ̊²` reproduces only constants (`r_eff = 1`); the lower bounds are
-standard and not formalized.
-
-**Gaffney on the cube.** Through `HQmin_eq_compress` (minimal complex of `Q` = compression of the
-torus window along the relative parity), `x ∈ D(d) ∩ D(d*)` in degree `k` gives `x ∈ H¹_univ`
-with `‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d*x‖²` (`Feec.Models.Cube.Sobolev.gaffney_RT`,
-`gaffney_HQmin`, `sobRel_zero_of_mem`, `sobRel_one_of_mem`, `sobRel_two_of_mem`), and conversely `H¹_univ ⊆ D(d) ∩ D(d*)`
-(`mem_HQmin_of_sobolevPar_one`, `mem_D2min_D1adj_of_sobRel_one`): the relative class `H¹_univ`
-is exactly `D(d) ∩ D(d*)`.
-
-**Non-vacuity below `H^{1/2}`.** The sawtooth 2-form `sawW2` (`f(y₀) dy₁ ∧ dy₂`, `f` the odd
-`½`-periodic sawtooth) satisfies `d¹* sawW2 = 0`, lies in `Hˢ_univ` exactly for `s < ½`, and is not
-in `H̊Λ²(Q)`. The stationary state `sawWave T` (`ρ = (sawW2, 0, 0)`) is a classical solution of
-(6.2) satisfying every hypothesis of `cubeWave_rate_sobolev` for `0 ≤ s < ½`, outside every class
-`IsSmoothStateTr` of `cubeWave_rate_tr` (`cubeWave_rate_sobolev_nonvacuous`).
+The rates of [QuennevilleBelair2015], Thm 5.5 and §6.3, for the static problem (5.3) and the scheme
+(6.5) on `Q = (0, ½)³`, for data in the relative-class Sobolev spaces `Hˢ_univ` instead of `C²`.
 
 ## Main results
 
-* `cubeClose_of_isSobolevStateTr`: projection errors `O(L h^{min(s,1)})`.
-* **`staticFEM_rate_sobolev`**: Thm 5.5 for relative-class `Hˢ` data, with `‖λ‖ ≤ L` (as in
-  `staticFEM_rate_tr_cube`) and the pairing bound `|⟪S¹u, d w⟫| ≤ L ‖w‖` (`S¹u ∈ D(d¹*)`) as
-  hypotheses. The pairing bound is new compared with `staticFEM_rate_tr_cube`, where `C²` gives
-  it; it is natural for `s < 1` and redundant for `s ≥ 1` (`staticFEM_rate_sobolev_of_one_le`).
-* **`cubeWave_rate_sobolev`**: the rate `K L (1 + t) h^{min(s,1)}` of (6.5). Beyond
-  `IsSobolevStateTr` it assumes `L²`-bounded multipliers (as `cubeWave_rate_tr`) and the pairing
-  bounds `|⟪M, d v⟫|, |⟪M', d v⟫| ≤ L ‖v‖` (`M, M' ∈ D(d¹*)`). The pairing bounds are new compared
-  with `cubeWave_rate_tr`, where `C²` gives them; they are redundant for `s ≥ 1`
-  (`cubeWave_rate_sobolev_of_one_le`).
-* `staticFEM_rate_sobolev_cube`, `cubeWave_rate_sobolev_cube`: the same with the smoothing
-  estimates discharged (`tableRows_uniform_cochainProjection`).
-* `gaffney_HQmin`, `sobRel_one_of_mem`, `sobRel_two_of_mem`: Gaffney's identity on the cube;
-  `mem_HQmin_of_sobolevPar_one`, `mem_D2min_D1adj_of_sobRel_one`: its converse
-  (`H¹_univ ⊆ D(d) ∩ D(d*)`, with `‖d x‖, ‖d* x‖ ≤ ‖x‖_{1,univ}`).
-* **`cubeWave_rate_sobolev_nonvacuous`**: the rate `h^s`, `s < ½`, for the sawtooth solution, which
-  is not in `H^{1/2}` and in no `C²` class.
+* `staticFEM_rate_sobolev`: Thm 5.5 (adapted) for relative-class `Hˢ` data.
+* `cubeWave_rate_sobolev`: the rate `K L (1 + t) h^{min(s,1)}` of (6.5).
+* `staticFEM_rate_sobolev_of_one_le`, `cubeWave_rate_sobolev_of_one_le`: the case `s ≥ 1`.
+* `gaffney_HQmin`, `mem_HQmin_of_sobolevPar_one`: `H¹_univ = D(d) ∩ D(d*)` (Gaffney's identity).
+* `cubeWave_rate_sobolev_nonvacuous`: the rate `h^s`, `s < ½`, for a sawtooth solution.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 5.5 ((5.3), (5.6), Table 5.1), §6.3 ((6.4), (6.5), Table 6.1)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9, §4.3 (Gaffney's inequality), §5.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -81,9 +38,7 @@ open Feec.Models.Cube.Sobolev
 
 /-! ### Relative-class Sobolev data -/
 
-/-- **Relative-class `Hˢ` data with bound `L`** in degree `k` on the cube: the relative parity
-extension (vanishing tangential traces) of `x` lies in `Hˢ(𝕋³)` and `‖x‖_{s,univ} ≤ L`
-(`Sobolev.sobolevPar Finset.univ`, `Sobolev.parNorm`). -/
+/-- **Relative-class `Hˢ` data**: `x` lies in `Hˢ_univ` with `‖x‖_{s,univ} ≤ L`. -/
 def SobRel (s L : ℝ) (k : ℕ) (x : L2F ℝ (cubeDomain 3) (formIdx 3 k)) : Prop :=
   toQ k x ∈ sobolevPar Finset.univ k s ∧ parNorm Finset.univ k s (toQ k x) ≤ L
 
@@ -113,9 +68,6 @@ section ProjSob
 
 variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
 
-/-- **Quasi-optimality of the smoothed projections for `Hˢ` data with vanishing tangential
-traces**: `‖x − π x‖ ≤ (1 + 2C) C_S h_N^{min(s,1)} L` for `x ∈ Hˢ_univ` with `‖x‖_{s,univ} ≤ L`
-(`norm_sub_π_le_infDist`, `infDist_polyPartial_le_sobolevPar_min` with `J = univ`). -/
 theorem norm_sub_proj_le_of_sobRel (hE : PolySmoothingEstimatesMin 3 S p C) (N k : ℕ) {s L : ℝ}
     (hs0 : 0 ≤ s) {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hx : SobRel s L k x) :
     ‖x - (hE.proj N).π k x‖ ≤ (1 + 2 * C) * sobConstPar 3 S k * meshSize N ^ min s 1 * L := by
@@ -134,7 +86,6 @@ theorem norm_sub_proj_le_of_sobRel (hE : PolySmoothingEstimatesMin 3 S p C) (N k
 
 end ProjSob
 
-/-- `h_N ≤ h_N^{min(s,1)}` (`h_N ≤ ½`). -/
 theorem meshSize_le_rpow_min (s : ℝ) (N : ℕ) : meshSize N ≤ meshSize N ^ min s 1 := by
   have hh := meshSize_pos N
   have h1 : meshSize N ≤ 1 := (meshSize_le_half N).trans (by norm_num)
@@ -146,10 +97,7 @@ theorem rpow_min_nonneg (s : ℝ) (N : ℕ) : 0 ≤ meshSize N ^ min s 1 :=
 
 /-! ### The Sobolev class of exact states and closeness to the projections -/
 
-/-- **Relative-class `Hˢ` regularity of an exact state** `(σ, φ, u, M, ρ)` of (6.4)/(6.5)
-(Table 6.1 with the thesis' boundary conditions): `σ`, `dφₐ`, `uₐ`, `duₐ`, `M`, `ρₐ` and `S¹u` lie
-in the relative parity class `Hˢ_univ` (vanishing tangential traces) with norms `≤ L`. These are
-exactly the fields whose projection errors make up the Strang data of (6.4) (`CubeClose`). -/
+/-- `σ`, `dφₐ`, `uₐ`, `duₐ`, `M`, `ρₐ` and `S¹u` lie in `Hˢ_univ` with norms `≤ L`. -/
 def IsSobolevStateTr (s L : ℝ) (σ : U0) (φ : Wv U0) (u : Wv U1) (M : W2) (ρ : Wv W2) : Prop :=
   SobRel s L 0 (σ : W0) ∧ (∀ a, SobRel s L 1 (D0 (φ a))) ∧ (∀ a, SobRel s L 1 (u a : W1)) ∧
     (∀ a, SobRel s L 2 (D1 (u a))) ∧ SobRel s L 2 M ∧ (∀ a, SobRel s L 2 (ρ a)) ∧
@@ -204,8 +152,6 @@ theorem le_sobStateConst_mul {S : PolySeq} (hS : S = PolySeq.lowestOrder ∨ S =
   exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left (sobConstPar_le_sum hS hk) hA) hX
 
 include hT in
-/-- The projection error of a relative-class field for one of the two element families of
-Table 5.1, in degrees `0, 1, 2`. -/
 theorem norm_sub_proj_le_sobStateConst {S : PolySeq} (hE : PolySmoothingEstimatesMin 3 S p C)
     (hS : S = PolySeq.lowestOrder ∨ S = PolySeq.lagrangeP2) (N : ℕ) {k : ℕ} (hk : k < 3)
     {s L : ℝ} (hs0 : 0 ≤ s) {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hx : SobRel s L k x) :
@@ -218,10 +164,6 @@ theorem norm_sub_proj_le_sobStateConst {S : PolySeq} (hE : PolySmoothingEstimate
     _ ≤ sobStateConst C * (meshSize N ^ min s 1 * L) := this
     _ = _ := by ring
 
-/-- **A relative-class `Hˢ` state is `δ`-close to its projections with
-`δ = C h_N^{min(s,1)} L`** (`CubeClose`): every projection error of the Strang data of (6.4) is
-bounded by the quasi-optimality of the uniformly bounded smoothed projections
-(`norm_sub_proj_le_of_sobRel`). -/
 theorem cubeClose_of_isSobolevStateTr (N : ℕ) {s L : ℝ} (hs0 : 0 ≤ s) {σ : U0} {φ : Wv U0}
     {u : Wv U1} {M : W2} {ρ : Wv W2} (h : IsSobolevStateTr s L σ φ u M ρ) :
     CubeClose hT hB N (sobStateConst C * meshSize N ^ min s 1 * L) σ φ u M ρ := by
@@ -312,25 +254,15 @@ theorem gnSq_Pt1_sub_le_of_close (N : ℕ) {δ : ℝ} (u : Wv U1)
 
 /-! ### Thm 5.5 for relative-class Sobolev data -/
 
-/-- **Relative-class `Hˢ` regularity of a solution of (5.3)**: `σ`, `dσ`, `φₐ`, `dφₐ`, `uₐ`, `duₐ`
-and `S¹u` lie in `Hˢ_univ` (vanishing tangential traces) with norms `≤ L` (the graph-norm
-projection errors of Thm 5.5). -/
+/-- `σ`, `dσ`, `φₐ`, `dφₐ`, `uₐ`, `duₐ` and `S¹u` lie in `Hˢ_univ` with norms `≤ L`. -/
 def IsSobolevStaticTr (s L : ℝ) (σ : U0) (φ : Wv U0) (u : Wv U1) : Prop :=
   SobRel s L 0 (σ : W0) ∧ SobRel s L 1 (D0 σ) ∧ (∀ a, SobRel s L 0 (φ a : W0)) ∧
     (∀ a, SobRel s L 1 (D0 (φ a))) ∧ (∀ a, SobRel s L 1 (u a : W1)) ∧
     (∀ a, SobRel s L 2 (D1 (u a))) ∧ SobRel s L 2 (bggSegment.S1 u)
 
 set_option maxHeartbeats 8000000 in
-/-- **Thm 5.5 on the cube with the elements of Table 5.1 for Sobolev data with the thesis'
-boundary conditions** ([QuennevilleBelair2015], Thm 5.5, the static problem (5.3); unconditional:
-the regularity hypothesis is `curlPotential`): there is `K`, independent of `N`, `s` and the
-solution, such that for every `s ≥ 0`, every solution `(σ, φ, u, λ)` of (5.3) whose fields `σ, dσ,
-φₐ, dφₐ, uₐ, duₐ, S¹u` are in the relative class `Hˢ_univ` with norms `≤ L` (`IsSobolevStaticTr`),
-with `‖λ‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖` (`S¹u ∈ D(d¹*)`), every discrete solution of (5.6)
-satisfies `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N^{min(s,1)})²`. The projection
-errors are those of `cubeClose_of_isSobolevStateTr` (quasi-optimality of the uniformly bounded
-smoothed projections, [AFW2010], §5.5, with the relative-class best approximation
-`infDist_polyPartial_le_sobolevPar_min`); the consistency terms are `O(h_N) ≤ O(h_N^{min(s,1)})`. -/
+/-- **[QuennevilleBelair2015], Thm 5.5 (adapted), for relative-class `Hˢ` data**: if `‖λ‖ ≤ L`
+and `|⟪S¹u, d w⟫| ≤ L ‖w‖`, the solutions of (5.6) have error at most `K L h_N^{min(s,1)}`. -/
 theorem staticFEM_rate_sobolev :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
       {F : Wv U1 →ₗ[ℝ] ℝ} {s L : ℝ}, 0 ≤ s → 0 ≤ L →
@@ -385,9 +317,6 @@ theorem staticFEM_rate_sobolev :
 /-! ### The rate of (6.5) for relative-class Sobolev data -/
 
 set_option maxHeartbeats 8000000 in
-/-- **The Strang data of (6.4) for a relative-class `Hˢ` state**: with the consistency constants
-`K₀ = L C₀ h_N` (an `L²`-bounded multiplier) and `K₁ = K h_N L` (`M ∈ D(d¹*)`), the Strang data
-are `≤ (√Kd L h_N^{min(s,1)})²` with `Kd` independent of `N`, `s` and the state. -/
 theorem cubeFEM_strangData_le_sobolev (N : ℕ) {s L : ℝ} (hs0 : 0 ≤ s) {σ : U0} {φ : Wv U0}
     {u : Wv U1} {M : W2} {ρ : Wv W2} (h : IsSobolevStateTr s L σ φ u M ρ) (C0 K1 : ℝ) :
     (cubeFEM hT hB N).strangData σ φ u M ρ (L * C0 * meshSize N) (K1 * meshSize N * L) ≤
@@ -423,27 +352,8 @@ theorem cubeFEM_strangData_le_sobolev (N : ℕ) {s L : ℝ} (hs0 : 0 ≤ s) {σ 
   linarith
 
 set_option maxHeartbeats 8000000 in
-/-- **The rate of the semi-discrete scheme (6.5) on the cube for relative-class Sobolev data**
-([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, with the thesis' boundary conditions; the
-elliptic projection (6.4) as initial datum; new: the thesis states no rate for (6.5);
-unconditional: `curlPotential`). There is `K`, independent of `N`, `T`, `s`, the data and the
-solution, such that for every `s ≥ 0`, every `L²` source `f` continuous on `[0,T]` and every
-classical solution `w` of (6.2) whose states and time derivatives are in the relative class
-`Hˢ_univ` with norms `≤ L` (`IsSobolevStateTr`), whose skew fields satisfy
-`|⟪M, d v⟫|, |⟪M', d v⟫| ≤ L ‖v‖` (`M, M' ∈ D(d¹*)`), and whose multiplier functionals are
-`L²`-bounded, `|ℓ μ|, |ℓ' μ| ≤ L ‖μ‖` (as in the existing rates `cubeWave_rate_tr`), the scheme
-(6.5) with source `P_{Ṽₕ¹} f` has a solution from the dynamic part of the elliptic projection of
-the exact initial state with, on `[0,T]`,
-`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ K L (1 + t) h_N^{min(s,1)}`.
-Proof: `Feec.BGG.ExactWave.exists_discreteSolution_rate` with `h = h_N^{min(s,1)}`, the Strang data
-`cubeFEM_strangData_le_sobolev`, `K₀` from `consistency_S0_of_approx` and `K₁` from
-`exists_cubeFEM_K1`.
-
-**The exponent `min(s, 1)` is optimal for these elements**: the top row `P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²`
-reproduces only the constants in degrees `1, 2` (`r_eff = 1`), so `dist(M, P₁⁻Λ̊²)` is of exact
-order `h` for smooth `M` with nonzero gradient, and no rate beyond `h¹` holds even for smooth
-data; for `s ≤ 1` the rate `hˢ` of the best approximation is sharp ([AFW2010], §5.4 and the table of
-`Feec.Models.Cube.SobolevRate`). The lower bounds are standard and not formalized. -/
+/-- **The rate `K L (1 + t) h_N^{min(s,1)}` of (6.5)** for relative-class Sobolev states with
+`|⟪M, d v⟫| ≤ L ‖v‖` and `|ℓ μ| ≤ L ‖μ‖`. -/
 theorem cubeWave_rate_sobolev :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
       (_hf : ContinuousOn f (Icc 0 T)) (w : Feec.BGG.ExactWave bggSegment T (srcFun f))
@@ -520,10 +430,8 @@ open Feec.Models.Cube.Geometry (Q)
 
 variable {n : ℕ}
 
-/-- **Gaffney's identity in the relative class `H̊Λ(Q)`** (window form): a form on `Q` in the
-domain of the outgoing minimal differential and of the adjoint of the incoming one lies in
-`H¹_univ` with `‖x‖²_{1,univ} = ‖x‖² + ‖d x‖² + ‖d* x‖²`. Through the identification of `H̊Λ(Q)`
-with the relative parity class of the torus (`HQmin_eq_compress`) this is `gaffney_RT`. -/
+/-- **Gaffney's identity in the relative class `H̊Λ(Q)`**: `x ∈ D(d_min) ∩ D(d_min*)` lies in
+`H¹_univ`, with `‖x‖²_{1,univ} = ‖x‖² + ‖d x‖² + ‖d* x‖²`. -/
 theorem gaffney_HQmin (a : Fin (Fintype.card (Fin n) + 1)) {x : WQ n a}
     (h1 : x ∈ ((HQmin n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)).domain)
     (h2 : x ∈ (((HQmin n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain) :
@@ -617,9 +525,6 @@ theorem HQmin_d_wi (k : ℕ) (hk : k + 1 < 4) :
 theorem HQmin_d_wi_zero_zero : (HQmin 3).d (wi 0 (by norm_num)) (wi 0 (by norm_num)) = 0 :=
   (HQmin 3).shape _ _ (by change ¬ 0 + 1 = 0; omega)
 
-/-- **Gaffney on `Q` in degrees `k + 1 ≤ 2`**: `x ∈ D(d_min) ∩ D(d_min*)` (the outgoing minimal
-differential and the adjoint of the incoming one; `H̊(curl) ∩ H(div)` in degree `1`) gives
-`x ∈ H¹_univ` with `‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d*x‖²`. -/
 theorem gaffney_Q (k : ℕ) (hk : k + 2 < 4) {x : L2F ℝ (Q (Fin 3)) (formIdx 3 ((k + 1 : ℕ) : ℤ))}
     (h1 : x ∈ ((HQmin 3).d (wi (k + 1) (by omega)) (wi (k + 2) hk)).domain)
     (h2 : x ∈ (((HQmin 3).d (wi k (by omega)) (wi (k + 1) (by omega)))†).domain) :
@@ -630,7 +535,6 @@ theorem gaffney_Q (k : ℕ) (hk : k + 2 < 4) {x : L2F ℝ (Q (Fin 3)) (formIdx 3
   gaffney_HQmin' (n := 3) (wi (k + 1) (by omega)) (wi (k + 2) hk) (wi k (by omega))
     (window_next_wi (k + 1) hk) (window_prev_wi k (by omega)) h1 h2
 
-/-- **Gaffney on `Q` in degree `0`**: `H̊Λ⁰(Q) ⊆ H¹_univ`, `‖x‖²_{1,univ} = ‖x‖² + ‖dx‖²`. -/
 theorem gaffney_Q_zero {x : L2F ℝ (Q (Fin 3)) (formIdx 3 ((0 : ℕ) : ℤ))}
     (h1 : x ∈ ((HQmin 3).d (wi 0 (by norm_num)) (wi 1 (by norm_num))).domain) :
     x ∈ sobolevPar Finset.univ 0 1 ∧
@@ -666,8 +570,6 @@ theorem norm_adjoint_apply_of_eq_op {E F : Type*} [NormedAddCommGroup E] [InnerP
     ‖A† ⟨y, mem_adjoint_domain_of_eq_op h hy⟩‖ = ‖B† ⟨y, hy⟩‖ := by
   subst h; rfl
 
-/-- **Gaffney's identity on a copy of `Q`, degrees `k + 1 ≤ 2`**, for the minimal differentials
-(`h : Ω = Q` transports along `castL2F`). -/
 theorem gaffney_of_eq (k : ℕ) (hk : k + 2 < 4) {Ω : Set (Fin 3 → ℝ)} (h : Ω = Q (Fin 3))
     {x : L2F ℝ Ω (formIdx 3 ((k + 1 : ℕ) : ℤ))}
     (h1 : x ∈ ((extDerivOp ℝ 3 ((k + 1 : ℕ) : ℤ)).minimal Ω).domain)
@@ -684,7 +586,6 @@ theorem gaffney_of_eq (k : ℕ) (hk : k + 2 < 4) {Ω : Set (Fin 3 → ℝ)} (h :
   refine ⟨hm, hn.trans ?_⟩
   rw [norm_apply_of_eq_op e1 h1, norm_adjoint_apply_of_eq_op e2 h2]
 
-/-- **Gaffney's identity on a copy of `Q`, degree `0`**. -/
 theorem gaffney_of_eq_zero {Ω : Set (Fin 3 → ℝ)} (h : Ω = Q (Fin 3))
     {x : L2F ℝ Ω (formIdx 3 ((0 : ℕ) : ℤ))}
     (h1 : x ∈ ((extDerivOp ℝ 3 ((0 : ℕ) : ℤ)).minimal Ω).domain) :
@@ -706,23 +607,16 @@ theorem sobRel_of_sq_eq {s : ℝ} {k : ℕ} {x : L2F ℝ (cubeDomain 3) (formIdx
     (hn : parNorm Finset.univ k s (toQ k x) ^ 2 = A) : SobRel s (√A) k x :=
   ⟨hm, Real.le_sqrt_of_sq_le (le_of_eq hn)⟩
 
-/-- **Gaffney on the cube, degree `0`**: `σ ∈ H̊Λ⁰(Q)` is in `H¹_univ` with
-`‖σ‖²_{1,univ} = ‖σ‖² + ‖dσ‖²`. -/
 theorem sobRel_zero_of_mem {x : W0} (h1 : x ∈ D0.domain) :
     SobRel 1 (√(‖x‖ ^ 2 + ‖D0 ⟨x, h1⟩‖ ^ 2)) 0 x :=
   sobRel_of_sq_eq (gaffney_of_eq_zero (cubeDomain_eq_Q 3) (x := x) h1).1
     (gaffney_of_eq_zero (cubeDomain_eq_Q 3) (x := x) h1).2
 
-/-- **Gaffney on the cube, degree `1`** ([AFW2010], §4.3, Gaffney's inequality; here the identity
-of the relative parity class): `x ∈ H̊(curl) ∩ H(div)` (`D(d¹) ∩ D(d⁰*)`) is in `H¹_univ` with
-`‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d⁰*x‖²`. -/
 theorem sobRel_one_of_mem {x : W1} (h1 : x ∈ D1.domain) (h2 : x ∈ (D0†).domain) :
     SobRel 1 (√(‖x‖ ^ 2 + ‖D1 ⟨x, h1⟩‖ ^ 2 + ‖D0† ⟨x, h2⟩‖ ^ 2)) 1 x :=
   sobRel_of_sq_eq (gaffney_of_eq 0 (by norm_num) (cubeDomain_eq_Q 3) (x := x) h1 h2).1
     (gaffney_of_eq 0 (by norm_num) (cubeDomain_eq_Q 3) (x := x) h1 h2).2
 
-/-- **Gaffney on the cube, degree `2`**: `x ∈ D(d²) ∩ D(d¹*)` is in `H¹_univ` with
-`‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d¹*x‖²`. -/
 theorem sobRel_two_of_mem {x : W2} (h1 : x ∈ D2min.domain) (h2 : x ∈ (D1†).domain) :
     SobRel 1 (√(‖x‖ ^ 2 + ‖D2min ⟨x, h1⟩‖ ^ 2 + ‖D1† ⟨x, h2⟩‖ ^ 2)) 2 x :=
   sobRel_of_sq_eq (gaffney_of_eq 1 (by norm_num) (cubeDomain_eq_Q 3) (x := x) h1 h2).1
@@ -735,8 +629,6 @@ theorem summable_freq_of_memSob_one {k : ℕ} {y : Seq n k} (hy : MemSob 1 y) :
   Summable.of_nonneg_of_le (fun m => by positivity)
     (fun m => by rw [weight_one]; nlinarith [sq_nonneg ‖cf y m‖]) hy
 
-/-- **`H¹(𝕋ⁿ)` lies in the domain of the outgoing torus differential** (`|ξ ∧ v| ≤ |ξ| |v|`,
-`window_cartan`). -/
 theorem mem_RT_domain_of_memSob_one (a : Fin (Fintype.card (Fin n) + 1)) {y : TW n a}
     (hy : MemSob 1 (y : Seq n a)) :
     y ∈ ((RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)).domain := by
@@ -752,8 +644,6 @@ theorem mem_RT_domain_of_memSob_one (a : Fin (Fintype.card (Fin n) + 1)) {y : TW
     ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a (Fourier.Torus.freq m))
       (cf (y : Seq n a) m)‖]
 
-/-- **`H¹(𝕋ⁿ)` lies in the domain of the adjoint of the incoming torus differential**
-(`|ι_ξ v| ≤ |ξ| |v|`, `window_cartan`). -/
 theorem mem_RT_adjoint_domain_of_memSob_one (a : Fin (Fintype.card (Fin n) + 1)) {y : TW n a}
     (hy : MemSob 1 (y : Seq n a)) :
     y ∈ (((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain := by
@@ -773,9 +663,7 @@ theorem mem_RT_adjoint_domain_of_memSob_one (a : Fin (Fintype.card (Fin n) + 1))
     ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a) (Fourier.Torus.freq m)
       (cf (y : Seq n a) m)‖]
 
-/-- **The converse of Gaffney in the relative class**: `H¹_univ(Q) ⊆ D(d_min) ∩ D(d_min*)` (the
-outgoing minimal differential and the adjoint of the incoming one), through
-`HQmin_eq_compress`. -/
+/-- **The converse of Gaffney**: `H¹_univ(Q) ⊆ D(d_min) ∩ D(d_min*)`. -/
 theorem mem_HQmin_of_sobolevPar_one (a : Fin (Fintype.card (Fin n) + 1)) {x : WQ n a}
     (hx : x ∈ sobolevPar Finset.univ (a : ℕ) 1) :
     x ∈ ((HQmin n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)).domain ∧
@@ -789,8 +677,6 @@ theorem mem_HQmin_of_sobolevPar_one (a : Fin (Fintype.card (Fin n) + 1)) {x : WQ
     (inner_J true) (reducing_range true)]
   exact ⟨mem_RT_domain_of_memSob_one a hm, mem_RT_adjoint_domain_of_memSob_one a hm⟩
 
-/-- **The converse of Gaffney on a copy of `Q`, degrees `k + 1 ≤ 2`**: `x ∈ H¹_univ` lies in
-`D(d_min) ∩ D(d_min*)` with `‖d x‖, ‖d* x‖ ≤ ‖x‖_{1,univ}`. -/
 theorem mem_domains_of_eq (k : ℕ) (hk : k + 2 < 4) {Ω : Set (Fin 3 → ℝ)} (h : Ω = Q (Fin 3))
     {x : L2F ℝ Ω (formIdx 3 ((k + 1 : ℕ) : ℤ))}
     (hx : castL2F h _ x ∈ sobolevPar Finset.univ (k + 1) 1) :
@@ -821,16 +707,12 @@ theorem mem_domains_of_eq (k : ℕ) (hk : k + 2 < 4) {Ω : Set (Fin 3 → ℝ)} 
     nlinarith [sq_nonneg ‖x‖, sq_nonneg ‖(HQmin 3).d (wi (k + 1) (by omega)) (wi (k + 2) hk)
       ⟨x, hd1⟩‖]
 
-/-- **The converse of Gaffney on the cube, degree `2`**: a `2`-form in `H¹_univ` with
-`‖x‖_{1,univ} ≤ L` lies in `D(d²) ∩ D(d¹*)` with `‖d² x‖, ‖d¹* x‖ ≤ L`. -/
 theorem mem_D2min_D1adj_of_sobRel_one {L : ℝ} {x : W2} (hx : SobRel 1 L 2 x) :
     ∃ h1 : x ∈ D2min.domain, ∃ h2 : x ∈ (D1†).domain,
       ‖D2min ⟨x, h1⟩‖ ≤ L ∧ ‖D1† ⟨x, h2⟩‖ ≤ L := by
   obtain ⟨h1, h2, b1, b2⟩ := mem_domains_of_eq 1 (by norm_num) (cubeDomain_eq_Q 3) (x := x) hx.1
   exact ⟨h1, h2, b1.trans hx.2, b2.trans hx.2⟩
 
-/-- **A `2`-form in `H¹_univ` pairs boundedly with `d¹`**: `|⟪x, d v⟫| ≤ ‖x‖_{1,univ} ‖v‖`
-(`x ∈ D(d¹*)`, `mem_D2min_D1adj_of_sobRel_one`). -/
 theorem abs_inner_D1_le_of_sobRel_one {L : ℝ} {x : W2} (hx : SobRel 1 L 2 x) (v : U1) :
     |⟪x, D1 v⟫| ≤ L * ‖v‖ := by
   obtain ⟨-, h2, -, b2⟩ := mem_D2min_D1adj_of_sobRel_one hx
@@ -840,7 +722,6 @@ theorem abs_inner_D1_le_of_sobRel_one {L : ℝ} {x : W2} (hx : SobRel 1 L 2 x) (
 
 end Gaffney
 
-/-- **`Hˢ_univ ⊆ H¹_univ` for `s ≥ 1`**, with `‖·‖_{1,univ} ≤ ‖·‖_{s,univ}`. -/
 theorem SobRel.of_one_le {s L : ℝ} {k : ℕ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)}
     (hx : SobRel s L k x) (hs : 1 ≤ s) : SobRel 1 L k x :=
   ⟨sobolevPar_anti _ _ hs hx.1, (parNorm_mono _ _ hs hx.1).trans hx.2⟩
@@ -854,9 +735,8 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 4000000 in
-/-- **Thm 5.5 for `Hˢ_univ` data, `s ≥ 1`** ([QuennevilleBelair2015], Thm 5.5): the rate
-`(K L h_N)²` of `staticFEM_rate_sobolev` without the pairing hypothesis
-`|⟪S¹u, d w⟫| ≤ L ‖w‖`, which follows from `S¹u ∈ H¹_univ` (`abs_inner_D1_le_of_sobRel_one`). -/
+/-- **Thm 5.5 for `Hˢ_univ` data, `s ≥ 1`** ([QuennevilleBelair2015], Thm 5.5 (adapted)): the rate
+`(K L h_N)²` of `staticFEM_rate_sobolev` without the hypothesis `|⟪S¹u, d w⟫| ≤ L ‖w‖`. -/
 theorem staticFEM_rate_sobolev_of_one_le :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
       {F : Wv U1 →ₗ[ℝ] ℝ} {s L : ℝ}, 1 ≤ s → 0 ≤ L →
@@ -887,11 +767,8 @@ theorem staticFEM_rate_sobolev_of_one_le :
   rwa [min_eq_right hs, Real.rpow_one] at h
 
 set_option maxHeartbeats 4000000 in
-/-- **The rate of (6.5) for `Hˢ_univ` states, `s ≥ 1`** ([QuennevilleBelair2015], §6.3): the
-rate `K L (1 + t) h_N` of `cubeWave_rate_sobolev` without the pairing hypotheses
-`|⟪M, d v⟫|, |⟪M', d v⟫| ≤ L ‖v‖`, which follow from `M, M' ∈ H¹_univ`
-(`abs_inner_D1_le_of_sobRel_one`). For `s ≥ 1` the only hypotheses beyond the class are the
-`L²`-bounded multipliers, as in `cubeWave_rate_tr`. -/
+/-- **The rate `K L (1 + t) h_N` of (6.5) for `Hˢ_univ` states, `s ≥ 1`**, with `|ℓ μ| ≤ L ‖μ‖`
+and no pairing bounds. -/
 theorem cubeWave_rate_sobolev_of_one_le :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
       (_hf : ContinuousOn f (Icc 0 T)) (w : Feec.BGG.ExactWave bggSegment T (srcFun f))
@@ -925,8 +802,6 @@ end OneLe
 /-! ### Packaged with the smoothed projections of Tables 5.1/6.1 -/
 
 set_option maxHeartbeats 4000000 in
-/-- **`staticFEM_rate_sobolev` with the smoothing estimates discharged**: for the common
-smoother of both rows of Table 5.1 (`tableRows_uniform_cochainProjection`). -/
 theorem staticFEM_rate_sobolev_cube :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -956,8 +831,6 @@ theorem staticFEM_rate_sobolev_cube :
   exact ⟨p, C, hT, hB, staticFEM_rate_sobolev hT hB⟩
 
 set_option maxHeartbeats 4000000 in
-/-- **`cubeWave_rate_sobolev` with the smoothing estimates discharged**: for the common smoother
-of both rows of Table 6.1 (`tableRows_uniform_cochainProjection`). -/
 theorem cubeWave_rate_sobolev_cube :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -995,9 +868,7 @@ open Feec.Fourier.Exterior (Form)
 def t12 : {s : Finset (Fin 3) // (s.card : ℤ) = 2} := ⟨{1, 2}, by decide⟩
 
 open scoped Classical in
-/-- **The coefficients of the sawtooth `2`-form** `f(y₀) dx₁ ∧ dx₂`, `f(y₀) = Σ_{c ≠ 0}
-(i/c) e^{2πi c y₀} = −2 Σ_{c > 0} sin(2πc y₀)/c` (the sawtooth `π(2y₀ − 1)` on `(0, 1)`; not
-formalized): `i/c` at the frequencies `c e₀`, `c ≠ 0`, in the component `{1, 2}`. -/
+/-- The coefficients of the sawtooth `2`-form: `i/c` at `c e₀`, `c ≠ 0`, in component `{1, 2}`. -/
 def sawCoeff (m : Fin 3 → ℤ) : Form ℂ (Fin 3) 2 :=
   if OnAxis m ∧ m 0 ≠ 0 then EuclideanSpace.single t12 (Complex.I * (((m 0 : ℝ)⁻¹ : ℝ) : ℂ))
   else 0
@@ -1037,8 +908,6 @@ theorem onAxis_flipAt_iff (j : Fin 3) (m : Fin 3 → ℤ) :
   split_ifs <;> simp
 
 open scoped Classical in
-/-- **The sawtooth coefficients are real and in the relative class** (odd in `y₀`, even in `y₁, y₂`
-for the component `{1, 2}`: `RealParJ univ 2`). -/
 theorem realParJ_sawSeq : RealParJ (Finset.univ : Finset (Fin 3)) 2 sawSeq := by
   refine ⟨fun m t => ?_, fun j m t => ?_⟩
   · change cf sawSeq (-m) t = (starRingEnd ℂ) (cf sawSeq m t)
@@ -1083,7 +952,7 @@ theorem realParJ_sawSeq : RealParJ (Finset.univ : Finset (Fin 3)) 2 sawSeq := by
       rw [ite_eq_right_of_eq_false _ _ (eq_false hc), ite_eq_right_of_eq_false _ _ (eq_false hm)]
       simp
 
-/-- **The sawtooth witness** `f(y₀) dx₁ ∧ dx₂ ∈ L²Λ²(Q)` (an `L²` Fourier series). -/
+/-- **The sawtooth witness** `f(y₀) dx₁ ∧ dx₂ ∈ L²Λ²(Q)`. -/
 def sawWitness : L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ) : ℤ)) := Jinvf 2 sawSeq
 
 theorem JfJ_sawWitness : JfJ (Finset.univ : Finset (Fin 3)) 2 sawWitness = sawSeq :=
@@ -1094,15 +963,11 @@ theorem sawWitness_mem_sobolevPar {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1 / 2) :
   rw [mem_sobolevPar, JfJ_sawWitness, memSob_sawSeq_iff]
   exact summable_axisTerm hs0 hs
 
-/-- **The sawtooth witness is not in `H^{1/2}_univ`**: its tangential trace on `{y₀ = 0}` does
-not vanish (the odd extension in `y₀` jumps). -/
 theorem sawWitness_not_mem_sobolevPar_half : sawWitness ∉ sobolevPar Finset.univ 2 (1 / 2) := by
   rw [mem_sobolevPar, JfJ_sawWitness, memSob_sawSeq_iff]
   exact not_summable_axisTerm_half
 
 open Feec.Fourier.Exterior in
-/-- **`ι_ξ` kills the sawtooth coefficients**: at `ξ = 2πc e₀` the contraction of `dx₁ ∧ dx₂`
-vanishes (`ξ` has no component along `e₁, e₂`). -/
 theorem contr_ext_sawCoeff (m : Fin 3 → ℤ) :
     contr (Fourier.Torus.freq m) (ext 2 (sawCoeff m)) = 0 := by
   classical
@@ -1131,8 +996,6 @@ theorem contr_ext_sawCoeff (m : Fin 3 → ℤ) :
     simp
 
 open Feec.Fourier.Exterior in
-/-- At the axis frequencies the de Rham symbol has norm `|ξ| |v| = 2π` on the sawtooth
-coefficients. -/
 theorem norm_deRham_sawCoeff_axis (c : ℤ) (hc : c ≠ 0) :
     ‖(deRham (Fin 3)).m 2 (2 + 1) (Fourier.Torus.freq (axis (n := 3) c))
       (sawCoeff (axis (n := 3) c))‖ ^ 2 = (2 * Real.pi) ^ 2 := by
@@ -1151,8 +1014,6 @@ theorem norm_deRham_sawCoeff_axis (c : ℤ) (hc : c ≠ 0) :
   field_simp
 
 open Feec.Fourier.Exterior in
-/-- `ι_ξ` kills the sawtooth sequence at every frequency: the adjoint of the de Rham symbol
-`Λ¹ → Λ²` vanishes on it. -/
 theorem adjoint_symbol_sawSeq (k : Fin 3 → ℤ) :
     ContinuousLinearMap.adjoint
       ((Torus.DeRham.windowSymbol (Fin 3)).m (wi 1 (by norm_num)) (wi 2 (by norm_num)) k)
@@ -1163,7 +1024,6 @@ theorem adjoint_symbol_sawSeq (k : Fin 3 → ℤ) :
   change -Complex.I • res 1 (contr (Fourier.Torus.freq k) (ext 2 (sawCoeff k))) = 0
   rw [contr_ext_sawCoeff, map_zero, smul_zero]
 
-/-- **The sawtooth sequence is in the kernel of the adjoint of the torus `d¹`.** -/
 theorem sawSeq_mem_ker_adjoint :
     (sawSeq : TW 3 (wi 2 (by norm_num))) ∈
       (((RT 3).d (wi 1 (by norm_num)) (wi 2 (by norm_num)))†).ker := by
@@ -1175,8 +1035,6 @@ theorem sawSeq_mem_ker_adjoint :
   obtain ⟨y, hy, h0⟩ := LinearPMap.mem_ker_iff.1 hk
   exact LinearPMap.mem_ker_iff.2 ⟨⟨y.1, y.2⟩, hy, h0⟩
 
-/-- **The sawtooth form is co-closed**: `sawWitness ∈ N((d¹_min)*)` on `Q`, i.e.
-`⟪f(y₀) dx₁ ∧ dx₂, d w⟫ = 0` for every `w ∈ H̊Λ¹(Q)` (`ι_ξ` kills its coefficients). -/
 theorem sawWitness_mem_ker_adjoint :
     (sawWitness : WQ 3 (wi 2 (by norm_num))) ∈
       (((HQmin 3).d (wi 1 (by norm_num)) (wi 2 (by norm_num)))†).ker := by
@@ -1189,8 +1047,6 @@ theorem sawWitness_mem_ker_adjoint :
   rw [eJ]
   exact sawSeq_mem_ker_adjoint
 
-/-- **The sawtooth form is not in `H̊Λ²(Q)`**: `sawWitness ∉ D(d²_min)` (at the axis frequencies
-`|ξ ∧ x̂(m)| = 2π`, not square summable). -/
 theorem sawWitness_not_mem_domain :
     (sawWitness : WQ 3 (wi 2 (by norm_num))) ∉
       ((HQmin 3).d (wi 2 (by norm_num)) (wi 3 (by norm_num))).domain := by
@@ -1248,14 +1104,10 @@ def sawW2 : W2 := (toQ ((2 : ℕ) : ℤ)).symm sawWitness
 
 theorem toQ_sawW2 : toQ ((2 : ℕ) : ℤ) sawW2 = sawWitness := LinearIsometryEquiv.apply_symm_apply _ _
 
-/-- **The sawtooth form is co-closed with no boundary condition**: `⟪f(y₀) dx₁ ∧ dx₂, d w⟫ = 0`
-for every `w ∈ H̊Λ¹(Q)`, i.e. `sawW2 ∈ N((d¹)*)`. -/
 theorem inner_sawW2_D1 (w : U1) : ⟪sawW2, D1 w⟫ = 0 :=
   inner_minimal_one_eq_zero_of_eq (cubeDomain_eq_Q 3) sawW2 w
     (by change toQ ((2 : ℕ) : ℤ) sawW2 ∈ _; rw [toQ_sawW2]; exact sawWitness_mem_ker_adjoint)
 
-/-- **The sawtooth form is not in `H̊Λ²(Q)`** (its tangential trace on `{y₀ = 0}` does not
-vanish). -/
 theorem sawW2_not_mem_D2min : sawW2 ∉ D2min.domain := fun hx => by
   have h := mem_HQmin_of_eq 2 (by norm_num) (cubeDomain_eq_Q 3) hx
   change toQ ((2 : ℕ) : ℤ) sawW2 ∈ _ at h
@@ -1290,10 +1142,7 @@ theorem inner_sawRho_dt1 (v : Wv U1) : ⟪sawRho, bggSegment.dt1 v⟫ = 0 := by
     add_zero]
   exact inner_sawW2_D1 (v 0)
 
-/-- **A stationary classical solution of (6.2) whose magnetic field is the sawtooth form**:
-`σ = φ = u = M = 0`, `ρ = (f(y₀) dx₁ ∧ dx₂, 0, 0)`, `ℓ = 0`, source `0`; (6.2b) holds because
-`ρ` is co-closed (`inner_sawW2_D1`). `ρ` has a nonzero tangential trace on `{y₀ = 0}` (it is in
-`Hˢ_univ` exactly for `s < ½`). -/
+/-- **A stationary solution of (6.2)**: `ρ = (f(y₀) dx₁ ∧ dx₂, 0, 0)`, all other fields zero. -/
 def sawWave (T : ℝ) : Feec.BGG.ExactWave bggSegment T (srcFun 0) where
   σ _ := 0
   φ _ := 0
@@ -1369,8 +1218,6 @@ theorem sawWave_isSobolevStateTr (T : ℝ) {s : ℝ} (hs0 : 0 ≤ s) (hs : s < 1
   · subst ha; rw [sawRho_apply_zero]; exact sobRel_sawW2 hs0 hs
   · rw [sawRho_apply_of_ne ha]; exact z2
 
-/-- **The sawtooth solution is outside the `C²` class of `cubeWave_rate_tr`**: its magnetic field
-is in no class `IsCsFormTr 0 2 L` (it is not in `H̊Λ²(Q)`, `sawW2_not_mem_D2min`). -/
 theorem not_isSmoothStateTr_sawWave (T t L : ℝ) :
     ¬ IsSmoothStateTr L ((sawWave T).σ t) ((sawWave T).φ t) ((sawWave T).u t) ((sawWave T).M t)
       ((sawWave T).ρ t) := fun h => by
@@ -1380,11 +1227,8 @@ theorem not_isSmoothStateTr_sawWave (T t L : ℝ) :
   exact sawW2_not_mem_D2min h0
 
 set_option maxHeartbeats 2000000 in
-/-- **Non-vacuity of `cubeWave_rate_sobolev` beyond the `C²` class** (and of the exponent
-`h^{min(s,1)}` with `s < 1`): for every `0 ≤ s < ½` the stationary sawtooth solution `sawWave T`
-of (6.2) satisfies all hypotheses of `cubeWave_rate_sobolev` with `L = ‖f dx₁ ∧ dx₂‖_{s,univ}`, so
-(6.5) converges to it at the rate `h_N^s`; its magnetic field is not in `H^{1/2}_univ` and the
-solution is in no class `IsSmoothStateTr` (`cubeWave_rate_tr` does not apply to it). -/
+/-- **The rate `h_N^s` of `cubeWave_rate_sobolev` for the sawtooth solution**, `0 ≤ s < ½`, whose
+magnetic field is not in `H^{1/2}_univ` and which lies in no class `IsSmoothStateTr`. -/
 theorem cubeWave_rate_sobolev_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ} (hT0 : 0 < T) {s : ℝ}
@@ -1422,8 +1266,6 @@ theorem cubeWave_rate_sobolev_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → 
   exact ⟨sh, hb⟩
 
 end Saw
-
-/-! ### Non-vacuity: a stationary solution of (6.2) below `H^{1/2}` -/
 
 section SawWave
 

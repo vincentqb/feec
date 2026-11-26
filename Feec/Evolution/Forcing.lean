@@ -8,37 +8,13 @@ public import Mathlib.MeasureTheory.Measure.OpenPos
 /-!
 # Forcing classes for `U' = A U + F`
 
-The admissible forcing terms of the inhomogeneous evolution problem `U' = A U + F` on a time
-interval `[a,b]`, as predicates `Evolution.ForcingClass.* A a b F` (any scalar ring `𝕜`, in
-particular `ℝ` and `ℂ`), with the inclusions between them.
-
-* `ForcingClass.contDomain A a b F`: `F ∈ C([a,b]; D(A))` (graph norm).
-* `ForcingClass.derivOffCountable a b F`: `F` continuous on `[a,b]`, differentiable on `(a,b)`
-  off a countable set, with an integrable derivative (contains `C¹([a,b]; X)` and
-  piecewise-`C¹` forcing).
-* `ForcingClass.w11 a b F`: `F ∈ W^{1,1}(a,b; X)`, i.e. `F = x₀ + ∫ₐ^· g` a.e. on `(a,b)` with
-  `g ∈ L¹(a,b; X)` ([CazenaveHaraux1998], Ch. 1; `g` is the weak derivative).
-* `ForcingClass.l1Domain A a b F`: `F ∈ L¹(a,b; D(A))`: `F(t) ∈ D(A)` a.e. with `A F` a.e. equal
-  to an integrable function.
-* `ForcingClass.admissible A a b F := ContinuousOn F [a,b] ∧ (w11 a b F ∨ l1Domain A a b F)`: the
-  class of [QuennevilleBelair2015], Thm 4.3, `C([a,b]; X) ∩ (W^{1,1}(a,b; X) ∪ L¹(a,b; D(A)))`.
-
-Inclusions: `contDomain.admissible`, `derivOffCountable.admissible`, `admissible_of_C1`, and
-`ForcingClass.w11_iff` (for continuous `F`, the a.e. identity holds pointwise with `x₀ = F a`).
-
-The real, `[0,T]` predicates `Feec.ForcingClass.* A T F` and the short names `ForcingDL`,
-`ForcingW11`, `IsW11` and `IsL1D` are kept as abbreviations (`a = 0`, `b = T`);
-`ForcingDLOrW11 := ForcingDL ∨ ForcingW11` is a subclass of `ForcingClass.admissible`
-(`ForcingDLOrW11.admissible`).
+Forcing classes for `U' = A U + F` on `[a,b]`, among them the admissible class
+`C([a,b]; X) ∩ (W^{1,1}(a,b; X) ∪ L¹(a,b; D(A)))`, with the inclusions between them.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (Thm 4.3)
-* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
-  Ch. 1 (`W^{1,p}` in time), Prop 4.1.6, Cor 2.4.9
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §4.2 (forcing in `W^{1,1}` or in `L¹(0,T; D(A))`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -53,42 +29,33 @@ namespace Evolution.ForcingClass
 
 variable {𝕜 E : Type*} [Ring 𝕜] [NormedAddCommGroup E] [Module 𝕜 E] [NormedSpace ℝ E]
 
-/-- `F ∈ C([a,b]; D(A))`: `F(t) ∈ D(A)` on `[a,b]`, with `F` and `t ↦ A F(t)` continuous on
-`[a,b]`. -/
+/-- `F ∈ C([a,b]; D(A))`: `F(t) ∈ D(A)`, with `F` and `A F` continuous on `[a,b]`. -/
 def contDomain (A : E →ₗ.[𝕜] E) (a b : ℝ) (F : ℝ → E) : Prop :=
   ∃ hF : ∀ t ∈ Icc a b, F t ∈ A.domain, ContinuousOn F (Icc a b) ∧
     ∃ H : ℝ → E, ContinuousOn H (Icc a b) ∧ ∀ t (ht : t ∈ Icc a b), A ⟨F t, hF t ht⟩ = H t
 
-/-- `F` continuous on `[a,b]`, differentiable at every point of `(a,b)` off a countable set,
-with an interval-integrable derivative `F'`. Contains `C¹([a,b]; X)`; contained in
-`C([a,b]; X) ∩ W^{1,1}(a,b; X)` (`derivOffCountable.admissible`). -/
+/-- `F` continuous on `[a,b]` with an integrable derivative off a countable set. -/
 def derivOffCountable (a b : ℝ) (F : ℝ → E) : Prop :=
   ContinuousOn F (Icc a b) ∧ ∃ (F' : ℝ → E) (s : Set ℝ), s.Countable ∧
     IntervalIntegrable F' volume a b ∧ ∀ t ∈ Ioo a b \ s, HasDerivAt F (F' t) t
 
-/-- `F ∈ W^{1,1}(a,b; X)`: `F = x₀ + ∫ₐ^· g` a.e. on `(a,b)`, for some `x₀ ∈ X` and some `g`
-Bochner integrable on `(a,b)`; `g` is then the weak derivative. Equivalence with absolute
-continuity plus an integrable a.e. derivative needs the Radon–Nikodým property of `X` (true for
-Hilbert spaces) and is not proved here. See [CazenaveHaraux1998], Ch. 1. -/
+/-- `F ∈ W^{1,1}(a,b; X)`: `F = x₀ + ∫ₐ^· g` a.e. on `(a,b)` with `g` integrable.
+[CazenaveHaraux1998], Ch. 1 -/
 def w11 (a b : ℝ) (F : ℝ → E) : Prop :=
   ∃ (x₀ : E) (g : ℝ → E), IntegrableOn g (Ioc a b) ∧
     F =ᵐ[volume.restrict (Ioo a b)] fun t => x₀ + ∫ s in a..t, g s
 
-/-- `F ∈ L¹(a,b; D(A))` (graph norm): `F(t) ∈ D(A)` for a.e. `t ∈ (a,b)`, with `t ↦ A F(t)` a.e.
-equal to a Bochner integrable `H`. (Integrability of `F` itself is automatic in `admissible`,
-where `F` is continuous on `[a,b]`.) -/
+/-- `F(t) ∈ D(A)` for a.e. `t ∈ (a,b)`, with `A F` a.e. equal to an integrable function. -/
 def l1Domain (A : E →ₗ.[𝕜] E) (a b : ℝ) (F : ℝ → E) : Prop :=
   ∃ H : ℝ → E, IntegrableOn H (Ioc a b) ∧
     ∀ᵐ t ∂(volume.restrict (Ioo a b)), ∃ h : F t ∈ A.domain, A ⟨F t, h⟩ = H t
 
-/-- The forcing class of [QuennevilleBelair2015], Thm 4.3 on `[a,b]`:
-`F ∈ C([a,b], X)` and `F ∈ W^{1,1}(a,b; X) ∪ L¹(a,b; D(A))`, the hypotheses on the forcing in
-the Hille–Yosida corollary the thesis cites, [CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9. -/
+/-- The forcing class `C([a,b]; X) ∩ (W^{1,1}(a,b; X) ∪ L¹(a,b; D(A)))` of [QuennevilleBelair2015],
+Thm 4.3; [CazenaveHaraux1998], Prop 4.1.6, Cor 2.4.9 -/
 def admissible (A : E →ₗ.[𝕜] E) (a b : ℝ) (F : ℝ → E) : Prop :=
   ContinuousOn F (Icc a b) ∧ (w11 a b F ∨ l1Domain A a b F)
 
 omit [Module 𝕜 E] in
-/-- The primitive `t ↦ ∫ₐᵗ g` of `g ∈ L¹(a,b)` is continuous on `[a,b]`. -/
 theorem continuousOn_primitive {g : ℝ → E} {a b : ℝ} (hab : a ≤ b)
     (hg : IntegrableOn g (Ioc a b)) :
     ContinuousOn (fun t => ∫ s in a..t, g s) (Icc a b) := by
@@ -97,9 +64,6 @@ theorem continuousOn_primitive {g : ℝ → E} {a b : ℝ} (hab : a ≤ b)
   rwa [uIcc_of_le hab] at h
 
 omit [Module 𝕜 E] in
-/-- For continuous `F`, membership in `W^{1,1}` holds pointwise on `[a,b]`:
-`F ∈ C([a,b]; X) ∩ W^{1,1}(a,b; X)` iff `F(t) = F(a) + ∫ₐᵗ g` for all `t ∈ [a,b]`, with `g`
-integrable. -/
 theorem w11_iff {a b : ℝ} {F : ℝ → E} (hF : ContinuousOn F (Icc a b)) :
     w11 a b F ↔ ∃ g : ℝ → E, IntegrableOn g (Ioc a b) ∧
       ∀ t ∈ Icc a b, F t = F a + ∫ s in a..t, g s := by
@@ -126,9 +90,6 @@ theorem w11_iff {a b : ℝ} {F : ℝ → E} (hF : ContinuousOn F (Icc a b)) :
     exact hpt t (Ioo_subset_Icc_self ht)
 
 omit [Module 𝕜 E] in
-/-- A continuous `F` with a derivative `F'` on `(a,b)` off a countable set, `F'` integrable on
-`(a,b)`, is in `W^{1,1}(a,b; X)` (fundamental theorem of calculus,
-`integral_eq_of_hasDerivAt_off_countable_of_le`), with `g = F'`. -/
 theorem w11_of_hasDerivAt [CompleteSpace E] {a b : ℝ} {F F' : ℝ → E} {s : Set ℝ}
     (hs : s.Countable) (hFc : ContinuousOn F (Icc a b))
     (hd : ∀ t ∈ Ioo a b \ s, HasDerivAt F (F' t) t) (hi : IntegrableOn F' (Ioc a b)) :
@@ -140,7 +101,6 @@ theorem w11_of_hasDerivAt [CompleteSpace E] {a b : ℝ} {F F' : ℝ → E} {s : 
       (hi.mono_set (Ioc_subset_Ioc le_rfl ht.2)))
   rw [this]; abel
 
-/-- `C([a,b]; D(A))` forcing is admissible (through the `L¹(a,b; D(A))` branch). -/
 theorem contDomain.admissible {A : E →ₗ.[𝕜] E} {a b : ℝ} {F : ℝ → E}
     (hF : contDomain A a b F) : ForcingClass.admissible A a b F := by
   obtain ⟨hFD, hFc, H, hHc, hH⟩ := hF
@@ -149,22 +109,17 @@ theorem contDomain.admissible {A : E →ₗ.[𝕜] E} {a b : ℝ} {F : ℝ → E
   · filter_upwards [ae_restrict_mem measurableSet_Ioo] with t ht
     exact ⟨hFD t (Ioo_subset_Icc_self ht), hH t (Ioo_subset_Icc_self ht)⟩
 
-/-- Continuous forcing with an integrable derivative off a countable set is admissible (through
-the `W^{1,1}` branch). -/
 theorem derivOffCountable.admissible [CompleteSpace E] {A : E →ₗ.[𝕜] E} {a b : ℝ} {F : ℝ → E}
     (hF : derivOffCountable a b F) : ForcingClass.admissible A a b F := by
   obtain ⟨hFc, F', s, hs, hi, hd⟩ := hF
   exact ⟨hFc, Or.inl (w11_of_hasDerivAt hs hFc hd hi.1)⟩
 
-/-- `C¹([a,b]; X)` forcing is admissible: a continuous `F` whose derivative on `(a,b)` extends
-continuously to `[a,b]` (through the `W^{1,1}` branch). -/
 theorem admissible_of_C1 [CompleteSpace E] {A : E →ₗ.[𝕜] E} {a b : ℝ} {F F' : ℝ → E}
     (hFc : ContinuousOn F (Icc a b)) (hF' : ContinuousOn F' (Icc a b))
     (hd : ∀ t ∈ Ioo a b, HasDerivAt F (F' t) t) : ForcingClass.admissible A a b F :=
   ⟨hFc, Or.inl (w11_of_hasDerivAt countable_empty hFc (fun t ht => hd t ht.1)
     ((hF'.integrableOn_compact isCompact_Icc).mono_set Ioc_subset_Icc_self))⟩
 
-/-- Forcing terms are only seen on `[a,b]`. -/
 theorem admissible.congr {A : E →ₗ.[𝕜] E} {a b : ℝ} {F G : ℝ → E}
     (hF : admissible A a b F) (hFG : EqOn F G (Icc a b)) : admissible A a b G := by
   obtain ⟨hFc, hW | ⟨H, hH, hae⟩⟩ := hF
@@ -185,23 +140,22 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
 namespace ForcingClass
 
-/-- `F ∈ C([0,T]; D(A))`; see `Evolution.ForcingClass.contDomain`. -/
+/-- `F ∈ C([0,T]; D(A))`. -/
 abbrev contDomain (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   Evolution.ForcingClass.contDomain A 0 T F
 
-/-- See `Evolution.ForcingClass.derivOffCountable`. -/
+/-- `F` continuous on `[0,T]` with an integrable derivative off a countable set. -/
 abbrev derivOffCountable (T : ℝ) (F : ℝ → E) : Prop :=
   Evolution.ForcingClass.derivOffCountable 0 T F
 
-/-- `F ∈ W^{1,1}(0,T; X)`; see `Evolution.ForcingClass.w11`. -/
+/-- `F ∈ W^{1,1}(0,T; X)`. -/
 abbrev w11 (T : ℝ) (F : ℝ → E) : Prop := Evolution.ForcingClass.w11 0 T F
 
-/-- `F ∈ L¹(0,T; D(A))`; see `Evolution.ForcingClass.l1Domain`. -/
+/-- `F(t) ∈ D(A)` a.e. on `(0,T)`, with `A F` a.e. equal to an integrable function. -/
 abbrev l1Domain (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   Evolution.ForcingClass.l1Domain A 0 T F
 
-/-- The forcing class of [QuennevilleBelair2015], Thm 4.3 on `[0,T]`; see
-`Evolution.ForcingClass.admissible`. -/
+/-- The forcing class of [QuennevilleBelair2015], Thm 4.3 on `[0,T]`. -/
 abbrev admissible (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   Evolution.ForcingClass.admissible A 0 T F
 
@@ -238,26 +192,22 @@ end ForcingClass
 
 /-! ### Short names -/
 
-/-- The forcing class `C([0,T]; D(A))`; see `ForcingClass.contDomain`. -/
+/-- The forcing class `C([0,T]; D(A))`. -/
 abbrev ForcingDL (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.contDomain A T F
 
-/-- The `W^{1,1}`-type forcing class of continuous `F` with an integrable derivative off a
-countable set; see `ForcingClass.derivOffCountable`. -/
+/-- The forcing class of continuous `F` with an integrable derivative off a countable set. -/
 abbrev ForcingW11 (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.derivOffCountable T F
 
-/-- `C([0,T]; D(A)) ∪ ForcingW11`, a subclass of `ForcingClass.admissible`
-(`ForcingDLOrW11.admissible`). Cf. the class `C([0,T]; X) ∩ (W^{1,1}(0,T; X) ∪ L¹(0,T; D(A)))`
-of [QuennevilleBelair2015], Thm 4.3. -/
+/-- The forcing class `C([0,T]; D(A)) ∪ ForcingW11`. -/
 def ForcingDLOrW11 (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop :=
   ForcingDL A T F ∨ ForcingW11 T F
 
-/-- `F ∈ W^{1,1}(0,T; X)`; see `ForcingClass.w11`. -/
+/-- `F ∈ W^{1,1}(0,T; X)`. -/
 abbrev IsW11 (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.w11 T F
 
-/-- `F ∈ L¹(0,T; D(A))`; see `ForcingClass.l1Domain`. -/
+/-- `F(t) ∈ D(A)` a.e. on `(0,T)`, with `A F` a.e. equal to an integrable function. -/
 abbrev IsL1D (A : E →ₗ.[ℝ] E) (T : ℝ) (F : ℝ → E) : Prop := ForcingClass.l1Domain A T F
 
-/-- `ForcingDLOrW11` is admissible. -/
 theorem ForcingDLOrW11.admissible [CompleteSpace E] {A : E →ₗ.[ℝ] E} {T : ℝ} {F : ℝ → E}
     (hF : ForcingDLOrW11 A T F) : ForcingClass.admissible A T F :=
   hF.elim ForcingClass.contDomain.admissible ForcingClass.derivOffCountable.admissible

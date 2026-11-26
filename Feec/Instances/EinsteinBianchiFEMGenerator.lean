@@ -7,33 +7,18 @@ public import Mathlib.Analysis.Calculus.Deriv.Prod
 /-!
 # The source-free scheme (6.3) as a skew bounded generator
 
-The semi-discrete BGG system (6.3) of [QuennevilleBelair2015], §6.2, without source, is a
-differential-algebraic system on the finite element spaces `Vₕ⁰ × Ṽₕ⁰ × Ṽₕ¹ × Vₕ² × Ṽₕ²` with a
-multiplier `λₕ ∈ Vₕ¹`. Its solutions are the orbits of a skew operator on the **hidden-constraint
-space** of energy states `(σ, u, M, ρ)` with `u ⊥ d̃(ker S₀,ₕ)`: eliminating `φₕ = Φ(σₕ, 0)`
-(`Feec.BGG.phiMap`) and `λₕ = (S₀,ₕ*)⁻¹ d̃* uₕ` gives
+The solutions of the source-free semi-discrete BGG system (6.3) of [QuennevilleBelair2015], §6.2
+are the orbits of a skew generator on the hidden-constraint space of energy states, for every BGG
+segment with `d̃` injective and `S₀,ₕ` onto ([QuennevilleBelair2015], Prop 6.2 (adapted)).
 
-`σ' = d* λ(u)`, `u' = -d̃ Φ(σ, 0) - S₁* M - d̃* ρ`, `M' = S₁ u`, `ρ' = d̃ u`.
+## Main results
 
-This file makes this precise, for any BGG segment `D` of finite-dimensional inner product spaces
-with `d̃ : Ṽₕ⁰ → Ṽₕ¹` injective and `S₀,ₕ` onto (the hypotheses of the corrected Prop 6.2).
-
-## Main definitions and results
-
-* `EState`: the energy space `Vₕ⁰ × Ṽₕ¹ × Vₕ² × Ṽₕ²` (`L²`-sum inner product), `hiddenSpace`,
-  and its type `HiddenState` with instances fixed once (synthesis on concrete finite element
-  spaces is expensive).
-* `waveOp` (on all energy states, mapping into the hidden space, `waveOp_mem_hiddenSpace`) and the
-  generator `waveGen : HiddenState D →L[ℝ] HiddenState D`, **skew** in the energy inner product
-  (`waveGen_skew`), so `e^{t Lₕ}` is unitary.
-* `DiscreteSolution.eq_group`: every solution of (6.3) without source is, on `[0, T]`, the orbit of
-  `e^{t Lₕ}` from its initial energy state; `exists_discreteSolution_group`: every orbit from the
-  hidden space is a solution of (6.3).
+* `waveGen_skew`: the generator is skew in the energy inner product.
+* `DiscreteSolution.eq_group`, `exists_discreteSolution_group`: the solutions are the orbits.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), Prop 6.2)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -131,7 +116,6 @@ variable {P0 Pt1 P2 Pt2 : Type*}
   [NormedAddCommGroup P2] [InnerProductSpace ℝ P2]
   [NormedAddCommGroup Pt2] [InnerProductSpace ℝ Pt2]
 
-/-- **The energy inner product**: `⟪x, y⟫ = ⟪σ, σ'⟫ + ⟪u, u'⟫ + ⟪M, M'⟫ + ⟪ρ, ρ'⟫`. -/
 theorem EState.inner_def (x y : EState P0 Pt1 P2 Pt2) :
     ⟪x, y⟫ = ⟪x.σ, y.σ⟫ + ⟪x.u, y.u⟫ + ⟪x.M, y.M⟫ + ⟪x.ρ, y.ρ⟫ := by
   simp only [WithLp.prod_inner_apply, EState.σ, EState.u, EState.M, EState.ρ]
@@ -163,7 +147,6 @@ def EState.mkL : (P0 × Pt1 × P2 × Pt2) ≃L[ℝ] EState P0 Pt1 P2 Pt2 :=
 @[simp] theorem EState.mkL_apply (a : P0 × Pt1 × P2 × Pt2) :
     EState.mkL a = EState.mk a.1 a.2.1 a.2.2.1 a.2.2.2 := rfl
 
-/-- A trajectory of energy states has the right derivative of its components. -/
 theorem EState.hasDerivWithinAt_mk {σ : ℝ → P0} {u : ℝ → Pt1} {M : ℝ → P2} {ρ : ℝ → Pt2}
     {σ' : P0} {u' : Pt1} {M' : P2} {ρ' : Pt2} {s : Set ℝ} {t : ℝ}
     (hσ : HasDerivWithinAt σ σ' s t) (hu : HasDerivWithinAt u u' s t)
@@ -202,7 +185,6 @@ def EState.mapL (f0 : P0 →L[ℝ] Q0) (f1 : Pt1 →L[ℝ] Qt1) (f2 : P2 →L[�
     (f3 : Pt2 →L[ℝ] Qt2) (x : EState P0 Pt1 P2 Pt2) :
     EState.mapL f0 f1 f2 f3 x = EState.mk (f0 x.σ) (f1 x.u) (f2 x.M) (f3 x.ρ) := rfl
 
-/-- Componentwise isometries give an isometry of energy states. -/
 theorem EState.norm_mapL {f0 : P0 →L[ℝ] Q0} {f1 : Pt1 →L[ℝ] Qt1} {f2 : P2 →L[ℝ] Q2}
     {f3 : Pt2 →L[ℝ] Qt2} (h0 : ∀ x, ‖f0 x‖ = ‖x‖) (h1 : ∀ x, ‖f1 x‖ = ‖x‖)
     (h2 : ∀ x, ‖f2 x‖ = ‖x‖) (h3 : ∀ x, ‖f3 x‖ = ‖x‖) (x : EState P0 Pt1 P2 Pt2) :
@@ -224,8 +206,7 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
   [NormedAddCommGroup Pt2] [InnerProductSpace ℝ Pt2]
   (D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2)
 
-/-- The **hidden-constraint space** (C2) of (6.3): energy states with `u ⊥ d̃(ker S₀,ₕ)`. Every
-solution of (6.3) lies in it (`Feec.BGG.DiscreteSolution.hidden_constraint`). -/
+/-- The hidden-constraint space (C2) of (6.3): energy states with `u ⊥ d̃(ker S₀,ₕ)`. -/
 def hiddenSpace : Submodule ℝ (EState P0 Pt1 P2 Pt2) where
   carrier := {x | ∀ ψ, D.S0 ψ = 0 → ⟪x.u, D.dt0 ψ⟫ = 0}
   add_mem' {x y} hx hy ψ hψ := by
@@ -237,7 +218,7 @@ def hiddenSpace : Submodule ℝ (EState P0 Pt1 P2 Pt2) where
 theorem mem_hiddenSpace {x : EState P0 Pt1 P2 Pt2} :
     x ∈ hiddenSpace D ↔ ∀ ψ, D.S0 ψ = 0 → ⟪x.u, D.dt0 ψ⟫ = 0 := Iff.rfl
 
-/-- The hidden space as a type whose instances are fixed once, generically. -/
+/-- The hidden-constraint space as a type. -/
 def HiddenState : Type _ := hiddenSpace D
 
 instance HiddenState.instNormedAddCommGroup : NormedAddCommGroup (HiddenState D) :=
@@ -313,7 +294,7 @@ section FiniteDimensional
 variable [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P1] [FiniteDimensional ℝ P2]
   [FiniteDimensional ℝ Pt0] [FiniteDimensional ℝ Pt1] [FiniteDimensional ℝ Pt2]
 
-/-- Explicit instance: synthesis is expensive on concrete finite element spaces. -/
+/-- The energy space of finite-dimensional spaces is finite-dimensional. -/
 instance EState.finiteDimensional : FiniteDimensional ℝ (EState P0 Pt1 P2 Pt2) :=
   inferInstance
 
@@ -330,7 +311,7 @@ instance HiddenState.instFiniteDimensional : FiniteDimensional ℝ (HiddenState 
 
 variable (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
 
-/-- A left inverse of `S₀,ₕ*` (injective since `S₀,ₕ` is onto). -/
+/-- A left inverse of `S₀,ₕ*`. -/
 def adjS0Inv : Pt0 →ₗ[ℝ] P1 :=
   (LinearMap.exists_leftInverse_of_injective (LinearMap.adjoint D.S0)
     (LinearMap.ker_eq_bot.mpr (adjoint_S0_injective hS))).choose
@@ -345,7 +326,6 @@ theorem adjS0Inv_adjoint (μ : P1) : adjS0Inv D hS (LinearMap.adjoint D.S0 μ) =
 def lamMap : Pt1 →ₗ[ℝ] P1 := adjS0Inv D hS ∘ₗ LinearMap.adjoint D.dt0
 
 omit [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt2] in
-/-- On hidden states, `S₀,ₕ* λ(u) = d̃* u`. -/
 theorem adjoint_S0_lamMap {u : Pt1} (hu : ∀ ψ, D.S0 ψ = 0 → ⟪u, D.dt0 ψ⟫ = 0) :
     LinearMap.adjoint D.S0 (lamMap D hS u) = LinearMap.adjoint D.dt0 u := by
   obtain ⟨μ, hμ⟩ := exists_adjoint_S0 (D := D) (z := LinearMap.adjoint D.dt0 u) fun ψ hψ => by
@@ -354,7 +334,6 @@ theorem adjoint_S0_lamMap {u : Pt1} (hu : ∀ ψ, D.S0 ψ = 0 → ⟪u, D.dt0 ψ
   rw [← hμ, adjS0Inv_adjoint]
 
 omit [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt2] in
-/-- The multiplier is the one of (6.3a): `λ` with `S₀,ₕ* λ = d̃* u` is `λ(u)`. -/
 theorem lamMap_eq {u : Pt1} {μ : P1} (h : LinearMap.adjoint D.S0 μ = LinearMap.adjoint D.dt0 u) :
     lamMap D hS u = μ := by
   change adjS0Inv D hS (LinearMap.adjoint D.dt0 u) = μ
@@ -363,8 +342,7 @@ theorem lamMap_eq {u : Pt1} {μ : P1} (h : LinearMap.adjoint D.S0 μ = LinearMap
 /-- `σ ↦ Φ(σ, 0)`. -/
 def phi0 : P0 →ₗ[ℝ] Pt0 := phiMap D hdinj hS ∘ₗ LinearMap.inl ℝ P0 Pt1
 
-/-- **The operator of (6.3) without source** on all energy states:
-`(σ, u, M, ρ) ↦ (d* λ(u), -d̃ Φ(σ, 0) - S₁* M - d̃* ρ, S₁ u, d̃ u)`. -/
+/-- The operator of (6.3) without source on energy states. -/
 def waveOp : EState P0 Pt1 P2 Pt2 →ₗ[ℝ] EState P0 Pt1 P2 Pt2 where
   toFun x := EState.mk (LinearMap.adjoint D.d0 (lamMap D hS x.u))
     (-D.dt0 (phi0 D hdinj hS x.σ) - LinearMap.adjoint D.S1 x.M -
@@ -387,8 +365,6 @@ def waveOp : EState P0 Pt1 P2 Pt2 →ₗ[ℝ] EState P0 Pt1 P2 Pt2 where
 @[simp] theorem waveOp_M (x : EState P0 Pt1 P2 Pt2) : (waveOp D hdinj hS x).M = D.S1 x.u := rfl
 @[simp] theorem waveOp_ρ (x : EState P0 Pt1 P2 Pt2) : (waveOp D hdinj hS x).ρ = D.dt1 x.u := rfl
 
-/-- `waveOp` maps every energy state into the hidden space: `d̃Φ(σ, 0) ⊥ d̃(ker S₀,ₕ)`,
-`S₁ d̃ = 0` on `ker S₀,ₕ` and `d̃ d̃ = 0`. -/
 theorem waveOp_mem_hiddenSpace (x : EState P0 Pt1 P2 Pt2) :
     waveOp D hdinj hS x ∈ hiddenSpace D := fun ψ hψ => by
   rw [waveOp_u, inner_sub_left, inner_sub_left, inner_neg_left, inner_phiMap hdinj hS _ hψ,
@@ -396,8 +372,6 @@ theorem waveOp_mem_hiddenSpace (x : EState P0 Pt1 P2 Pt2) :
     D.dt1_dt0, inner_zero_right, inner_zero_right, inner_zero_left]
   ring
 
-/-- The pairing of `waveOp` on hidden states: `⟪L x, y⟫ = ⟪u, d̃Φ_y⟫ - ⟪d̃Φ_x, u'⟫ - ⟪M, S₁u'⟫
-- ⟪ρ, d̃u'⟫ + ⟪S₁u, M'⟫ + ⟪d̃u, ρ'⟫` (antisymmetric in `x`, `y`). -/
 theorem inner_waveOp {x y : EState P0 Pt1 P2 Pt2} (hx : x ∈ hiddenSpace D) :
     ⟪waveOp D hdinj hS x, y⟫ = ⟪x.u, D.dt0 (phiMap D hdinj hS (y.σ, 0))⟫ -
       ⟪D.dt0 (phiMap D hdinj hS (x.σ, 0)), y.u⟫ - ⟪x.M, D.S1 y.u⟫ - ⟪x.ρ, D.dt1 y.u⟫ +
@@ -408,7 +382,6 @@ theorem inner_waveOp {x y : EState P0 Pt1 P2 Pt2} (hx : x ∈ hiddenSpace D) :
     inner_neg_left, LinearMap.adjoint_inner_left, LinearMap.adjoint_inner_left]
   ring
 
-/-- `waveOp` is skew on the hidden space. -/
 theorem waveOp_skew {x y : EState P0 Pt1 P2 Pt2} (hx : x ∈ hiddenSpace D)
     (hy : y ∈ hiddenSpace D) : ⟪waveOp D hdinj hS x, y⟫ = -⟪x, waveOp D hdinj hS y⟫ := by
   rw [inner_waveOp D hdinj hS hx, real_inner_comm (waveOp D hdinj hS y) x,
@@ -423,7 +396,7 @@ theorem inner_waveOp_self {x : EState P0 Pt1 P2 Pt2} (hx : x ∈ hiddenSpace D) 
   rw [real_inner_comm (waveOp D hdinj hS x) x] at h
   linarith
 
-/-- **The discrete generator** of (6.3) without source, on the hidden space. -/
+/-- The discrete generator of (6.3) without source, on the hidden space. -/
 def waveGen : HiddenState D →L[ℝ] HiddenState D :=
   LinearMap.toContinuousLinearMap
     ((waveOp D hdinj hS).restrict (p := hiddenSpace D) (q := hiddenSpace D)
@@ -452,9 +425,6 @@ theorem hasDerivAt_waveGroupH (v : HiddenState D) (t : ℝ) :
 
 variable {D}
 
-/-- **A solution of (6.3) without source solves `ξ' = Lₕ ξ`** (right derivatives on `[0, T)`):
-`σ' = d* λ` with `λ = λ(u)` from (6.3a), `φ = Φ(σ, 0)` (`Feec.BGG.DiscreteSolution.phi_eq`),
-and (6.3b)–(6.3d). -/
 theorem DiscreteSolution.hasDerivWithinAt_state {T : ℝ} (s : DiscreteSolution D T 0) {t : ℝ}
     (ht : t ∈ Ico 0 T) :
     HasDerivWithinAt (DiscreteSolution.state D s)
@@ -495,9 +465,7 @@ theorem DiscreteSolution.hasDerivWithinAt_state {T : ℝ} (s : DiscreteSolution 
   rw [hσ', hu', hM', hρ'] at h
   exact h
 
-/-- **Every solution of (6.3) without source is the orbit of `e^{t Lₕ}`** from its initial energy
-state, on `[0, T]` (energy argument: the difference has right derivative `Lₕ e`, and
-`⟪Lₕ e, e⟫ = 0`). -/
+/-- **Every solution of (6.3) without source is the orbit of `e^{t Lₕ}`** from its initial state. -/
 theorem DiscreteSolution.eq_group {T : ℝ} (hT : 0 ≤ T) (s : DiscreteSolution D T 0) :
     ∀ t ∈ Icc 0 T, ((waveGroupH D hdinj hS).S t (DiscreteSolution.hiddenInit hT s)).toEState =
       DiscreteSolution.state D s t := by
@@ -528,9 +496,8 @@ theorem DiscreteSolution.eq_group {T : ℝ} (hT : 0 ≤ T) (s : DiscreteSolution
     zero_pow, pow_eq_zero_iff, norm_eq_zero] at this
   exact (sub_eq_zero.1 this).symm
 
-/-- **Every orbit of `e^{t Lₕ}` from the hidden space is a solution of (6.3) without source**
-(existence by the corrected Prop 6.2, `Feec.BGG.exists_discreteSolution_iff_compatible_u`, and
-identification by `DiscreteSolution.eq_group`). -/
+/-- **Every orbit of `e^{t Lₕ}` from the hidden space is a solution of (6.3) without source.**
+[QuennevilleBelair2015], Prop 6.2 (adapted) -/
 theorem exists_discreteSolution_group {T : ℝ} (hT : 0 < T) (v : HiddenState D) :
     ∃ s : DiscreteSolution D T 0, DiscreteSolution.hiddenInit hT.le s = v ∧
       ∀ t ∈ Icc 0 T, ((waveGroupH D hdinj hS).S t v).toEState = DiscreteSolution.state D s t := by

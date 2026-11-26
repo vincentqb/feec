@@ -7,29 +7,12 @@ public import Mathlib.MeasureTheory.Function.L2Space
 /-!
 # Carlson's inequality on the line
 
-**Carlson's inequality** bounds the `L¹` norm of a function on `ℝ` by the `L²` norms of `g` and
-`t g`: if `g` and `t ↦ t • g t` are square integrable, then `g` is integrable and
-
-  `(∫ ‖g‖)⁴ ≤ 4π² (∫ ‖g‖²) (∫ ‖t g‖²)`.
-
-The proof is one pointwise inequality, `‖g‖ ≤ (λ/2)(1 + t²/T²)‖g‖² + 1/(2λ (1 + t²/T²))`
-(AM–GM), integrated (`∫ (1 + t²/T²)⁻¹ = π T`) and optimized in `λ` and `T`
-(`sq_le_four_mul_of_forall_le`). Through Plancherel's theorem it bounds the total variation of a
-measure by the `L²` norms of its Fourier transform and of the derivative of the Fourier
-transform; this is the estimate behind Brenner–Thomée's stability bound `‖r(τA)ⁿ‖ ≤ C √n`
-(`Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`).
-
-## Main results
-
-* `sq_le_four_mul_of_forall_le`: `c ≤ α s + β / s` for all `s > 0` gives `c² ≤ 4 α β`;
-* **`MeasureTheory.MemLp.integral_norm_pow_four_le`** (Carlson): the inequality above;
-  `MeasureTheory.MemLp.integrable_of_mul` (integrability).
+If `g` and `t ↦ t • g t` are square integrable on `ℝ`, then `g` is integrable and
+`(∫ ‖g‖)⁴ ≤ 4π² (∫ ‖g‖²) (∫ ‖t g‖²)` ([LarssonMaligrandaPecaricPersson2006]).
 
 ## References
 
 * [L. Larsson, L. Maligranda, J. Pečarić, L.-E. Persson, *Multiplicative Inequalities of Carlson Type and Interpolation*][LarssonMaligrandaPecaricPersson2006]
-  (Carlson's inequality)
-* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -38,8 +21,6 @@ open MeasureTheory Real
 
 @[expose] public noncomputable section
 
-/-- **Optimizing `α s + β / s`**: if `0 ≤ c ≤ α s + β / s` for all `s > 0`, with `α, β ≥ 0`, then
-`c² ≤ 4 α β`. -/
 theorem sq_le_four_mul_of_forall_le {c α β : ℝ} (hc : 0 ≤ c) (hα : 0 ≤ α) (hβ : 0 ≤ β)
     (h : ∀ s > 0, c ≤ α * s + β / s) : c ^ 2 ≤ 4 * α * β := by
   rcases hc.eq_or_lt with rfl | hc
@@ -59,7 +40,6 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
 namespace MeasureTheory.MemLp
 
-/-- The pointwise inequality behind Carlson's: `‖v‖ ≤ (λ/2)(‖v‖² + ‖t v‖²/T²) + 1/(2λ(1 + (t/T)²))`. -/
 theorem norm_le_carlson {lam T : ℝ} (hlam : 0 < lam) (hT : 0 < T) (t : ℝ) (v : E) :
     ‖v‖ ≤ lam / 2 * (‖v‖ ^ 2 + ‖t • v‖ ^ 2 / T ^ 2) + 1 / (2 * lam) * (1 + (t / T) ^ 2)⁻¹ := by
   set w := 1 + (t / T) ^ 2
@@ -74,7 +54,6 @@ theorem norm_le_carlson {lam T : ℝ} (hlam : 0 < lam) (hT : 0 < T) (t : ℝ) (v
     field_simp; ring
   linarith
 
-/-- `∫ (1 + (t/T)²)⁻¹ = π T`. -/
 theorem integral_inv_one_add_div_sq {T : ℝ} (hT : 0 < T) :
     ∫ t : ℝ, (1 + (t / T) ^ 2)⁻¹ = π * T := by
   rw [Measure.integral_comp_div (fun x : ℝ => (1 + x ^ 2)⁻¹) T, integral_univ_inv_one_add_sq,
@@ -82,7 +61,6 @@ theorem integral_inv_one_add_div_sq {T : ℝ} (hT : 0 < T) :
 
 variable {g : ℝ → E}
 
-/-- A function with `g` and `t g` square integrable is integrable. -/
 theorem integrable_of_mul (hg : MemLp g 2) (hg' : MemLp (fun t : ℝ => t • g t) 2) :
     Integrable g := by
   have h1 := (memLp_two_iff_integrable_sq_norm hg.aestronglyMeasurable).1 hg
@@ -93,8 +71,8 @@ theorem integrable_of_mul (hg : MemLp g 2) (hg' : MemLp (fun t : ℝ => t • g 
     (h3.const_mul (1 / (2 * 1)))) hg.aestronglyMeasurable (Filter.Eventually.of_forall fun t => ?_)
   exact norm_le_carlson one_pos one_pos t (g t)
 
-/-- **Carlson's inequality** on `ℝ`: `(∫ ‖g‖)⁴ ≤ 4π² (∫ ‖g‖²) (∫ ‖t g‖²)`.
-[LarssonMaligrandaPecaricPersson2006] -/
+/-- **Carlson's inequality**: if `g` and `t ↦ t • g t` are square integrable, then
+`(∫ ‖g‖)⁴ ≤ 4π² (∫ ‖g‖²) (∫ ‖t g‖²)`. -/
 theorem integral_norm_pow_four_le (hg : MemLp g 2) (hg' : MemLp (fun t : ℝ => t • g t) 2) :
     (∫ t, ‖g t‖) ^ 4 ≤ 4 * π ^ 2 * (∫ t, ‖g t‖ ^ 2) * ∫ t, ‖t • g t‖ ^ 2 := by
   set I := ∫ t, ‖g t‖

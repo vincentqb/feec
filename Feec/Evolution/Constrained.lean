@@ -6,23 +6,13 @@ public import Feec.ForMathlib.LinearPMap.Reducing
 /-!
 # Constraint propagation for `U' = A U + F`
 
-A closed subspace `K` *propagates* under `U' = A U + F` if every strong solution with initial
-value and forcing in `K` stays in `K`. For a dissipative generator this holds as soon as
-`P_K D(A) ⊆ D(A)` and `A (D(A) ∩ K) ⊆ K`, in particular when `K` reduces `A`.
-
-## Main results
-
-* `IsStrongSolution.mem_of_invariant`: energy method on `V = (1 - P_K) U`:
-  `d/dt ‖V‖² = 2 re ⟪A V, V⟫ ≤ 0`. No density, closedness, skew-adjointness or semigroup is
-  needed.
-* `IsStrongSolution.mem_of_isReducing`: the same for a reducing subspace `K`
-  (`LinearPMap.IsReducing`). [QuennevilleBelair2015], Thm 4.4, Cor 4.5 (generalized from skew-adjoint to
-  dissipative `A`, with no density hypothesis).
+For a dissipative generator `A` and a closed subspace `K` with `P_K D(A) ⊆ D(A)` and
+`A (D(A) ∩ K) ⊆ K`, in particular a reducing subspace, strong solutions with initial value and
+forcing in `K` stay in `K`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (Thm 4.4, Cor 4.5)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -40,11 +30,7 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 /-- **Constraint propagation** for a dissipative generator: if `P_K D(A) ⊆ D(A)` and
-`A (D(A) ∩ K) ⊆ K`, every strong solution of `U' = A U + F` on `[a,b]` with `U a ∈ K` and
-`K`-valued forcing stays in `K`.
-
-Energy method on `V = (1 - P_K) U`: `d/dt ‖V‖² = 2 re ⟪A V, V⟫ ≤ 0`. The two hypotheses are
-weaker than `K` reducing `A` (`IsStrongSolution.mem_of_isReducing`). -/
+`A (D(A) ∩ K) ⊆ K`, strong solutions with `U a ∈ K` and `K`-valued forcing stay in `K`. -/
 theorem mem_of_invariant (hA : A.IsDissipative) {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
     (hP : ∀ x : A.domain, K.starProjection (x : E) ∈ A.domain)
     (hAK : ∀ x : A.domain, (x : E) ∈ K → A x ∈ K) (hU : IsStrongSolution A (Icc a b) F U)
@@ -86,10 +72,8 @@ theorem mem_of_invariant (hA : A.IsDissipative) {K : Submodule 𝕜 E} [K.HasOrt
       zero_add]
     exact hA ⟨_, hVt⟩
 
-/-- **Constraint propagation through a reducing subspace**: if `K` reduces the dissipative
-generator `A`, every strong solution of `U' = A U + F` on `[a,b]` with `U a ∈ K` and `K`-valued
-forcing stays in `K`. [QuennevilleBelair2015], Thm 4.4 and Cor 4.5 (generalized from skew-adjoint to dissipative
-`A`, with no density hypothesis). -/
+/-- **Constraint propagation through a reducing subspace** `K` of a dissipative generator.
+[QuennevilleBelair2015], Thm 4.4, Cor 4.5 (adapted) -/
 theorem mem_of_isReducing (hA : A.IsDissipative) {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
     (hK : A.IsReducing K) (hU : IsStrongSolution A (Icc a b) F U) (h0 : U a ∈ K)
     (hF : ∀ t ∈ Icc a b, F t ∈ K) : ∀ t ∈ Icc a b, U t ∈ K :=

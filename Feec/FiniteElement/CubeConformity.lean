@@ -9,51 +9,18 @@ public import Feec.Mesh.Freudenthal
 /-!
 # `HΛ`-conformity of the cubical spaces `Q_r⁻Λᵏ(𝒯_h)`
 
-On the uniform cubical mesh of the cube `(0, L)ⁿ` (any side `L > 0`) with `N` cells per direction
-(`Feec.FiniteElement.CubeMesh`; here the coordinates are `Fin n` and the mesh is isotropic, the
-Freudenthal refinement being so, while `Feec.FiniteElement.CubeMesh` allows `N : d → ℕ`), a
-piecewise polynomial form `(ω_m)_m` (in local coordinates)
-is the field `cellField L ω m = F_m^{-*} ω_m` on the cell `m`, `F_m(y) = h (m + y)`,
-`h = L / N`. We show that
-tangential continuity (`cubeCompatible`: equal traces on common faces) gives
-`HΛᵏ((0, L)ⁿ)`-conformity, with the weak exterior derivative the piecewise one
-([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §5).
-
-The proof reuses the simplicial conformity theorem `extDeriv_pieceL2_mem_maximal_domain` on the
-Freudenthal refinement of the cubical mesh (`cubeRefinement`, whose simplices `h (m + K_σ)`
-lie in the cells `m`): two simplices sharing a facet `F` lie in cells `m`, `m'` whose closures
-contain `F`; in the directions fixed by the common face, the tangent vectors of `F` vanish and
-the local coordinates are the fixed values, so the tangential traces of the two cell fields are
-those of the (equal) polynomial traces of `ω_m` and `ω_{m'}` (`tangentialTraceEq_cellField`).
-
-## Main definitions
-
-* `Feec.FiniteElement.Cube.cellField L ω m`: the field of the cell `m` in global coordinates, and
-  `cellPullback L m`: the pullback to its local coordinates;
-* `Feec.FiniteElement.Cube.cubeRefinement n L N`, `simplexCell`, `closedCell`: the Freudenthal
-  refinement and the cell of each of its simplices;
-* `Feec.FiniteElement.Cube.cubeGlue n L N k`, `cubeV n L N b k`, `cubeSubcomplex`: the gluing into
-  `L²((0, L)ⁿ; Λᵏ)`, the glued spaces `Vₕᵏ` and the subcomplex they form.
+On the uniform cubical mesh of `(0, L)ⁿ`, tangentially continuous piecewise polynomial forms lie in
+`HΛᵏ((0, L)ⁿ)` ([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §5) and form a subcomplex.
 
 ## Main results
 
-* `extDeriv_cellField`: `d` of a cell field is the cell field of `d`;
-* `tangentialTraceEq_cellField`: tangential continuity across common faces;
-* `cellField_mem_maximal_domain`: **`HΛᵏ`-conformity of tangentially continuous piecewise
-  polynomial forms**, `d_max` being the piecewise `d`, and
-  `cellField_mem_maximal_domain_of_mem`: the global spaces `Q_b⁻Λᵏ(𝒯_h) ⊆ HΛᵏ((0, L)ⁿ)`;
-* `cubeSubcomplex`: **the glued spaces form a subcomplex of the maximal de Rham complex**
-  `HΛ((0, L)ⁿ)`;
-* `cubeGlue_injective`, `finrank_cubeV`: the gluing is injective, so
-  **`dim Vₕᵏ = Σ_{#s = k} Πⱼ (N b_j + 1 - [j ∈ s])`**.
+* `Cube.cellField_mem_maximal_domain`: tangentially continuous piecewise forms lie in `HΛᵏ`.
+* `Cube.finrank_cubeV`: `dim Vₕᵏ = Σ_{#s = k} Πⱼ (N b_j + 1 - [j ∈ s])` for `b_j ≥ 1`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (piecewise smooth forms with single-valued traces lie in `HΛᵏ`)
-* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §5
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -78,8 +45,7 @@ theorem affine_cellOffset (m : CubeCell fun _ : Fin n => N) (x : Fin n → ℝ) 
   simp [affine_scalarMat, cellOffset, sub_eq_add_neg]
 
 variable (L) in
-/-- The field of the cell `m` in the global coordinates: `ω_m` pulled back by `x ↦ x / h - m`,
-`h = L / N` (`scalarMat n (N / L) = h⁻¹ I`). -/
+/-- The field of the cell `m` in global coordinates: `ω_m` pulled back by `x ↦ x / h - m`. -/
 def cellField (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
     (m : CubeCell fun _ : Fin n => N) : FormField n :=
   affinePullback (scalarMat n (N / L)) (cellOffset m) (evalForm n (ω m))
@@ -89,7 +55,6 @@ theorem contDiff_cellField (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ 
   rw [cellField, ← evalForm_polyPullback]
   exact contDiff_evalForm _
 
-/-- `d` of a cell field is the cell field of `d`. -/
 theorem extDeriv_cellField (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n))
     (m : CubeCell fun _ : Fin n => N) :
     extDeriv (cellField L ω m) = cellField L (fun m => Koszul.extDeriv (ω m)) m := by
@@ -104,12 +69,10 @@ theorem isDeg_cellField {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) → PolyFo
   IsDeg.affinePullback (fun y s hs => by simp [evalForm_apply, hk s hs]) _ _ x
 
 variable (L) in
-/-- The pullback `ŵ = F_m^* w` of a form field to the local coordinates of the cell `m`,
-`F_m(y) = h (y + m)`, `h = L / N`. -/
+/-- The pullback `F_m^* w` of a form field to the local coordinates of the cell `m`. -/
 def cellPullback (m : CubeCell fun _ : Fin n => N) (w : FormField n) : FormField n :=
   affinePullback (scalarMat n (L / N)) (fun i => L / N * ((m i : ℕ) : ℝ)) w
 
-/-- The point `F_m(y) = h (y + m)` of the cell `m` above `y`. -/
 theorem affine_cellPullback (m : CubeCell fun _ : Fin n => N) (y : Fin n → ℝ) :
     affine (scalarMat n (L / N)) (fun i => L / N * ((m i : ℕ) : ℝ)) y =
       (fun i => L / N * ((m i : ℕ) : ℝ)) + (L / N) • y := by
@@ -120,8 +83,6 @@ variable [Fact (0 < L)]
 theorem cellScale_ne_zero [NeZero N] : (N : ℝ) / L ≠ 0 :=
   div_ne_zero (Nat.cast_ne_zero.2 (NeZero.ne N)) (Fact.out : 0 < L).ne'
 
-/-- The local coordinates back to the global ones: `F_m^* F_m^{-*} = id`, so the pullback of the
-cell field of `m` is `ω_m`. -/
 theorem cellPullback_cellField [NeZero N]
     (ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)) (m : CubeCell fun _ : Fin n => N) :
     cellPullback L m (cellField L ω m) = evalForm n (ω m) := by
@@ -133,7 +94,6 @@ theorem cellPullback_cellField [NeZero N]
   field_simp
   ring
 
-/-- The global coordinates back to the local ones: `F_m^{-*} F_m^* = id`. -/
 theorem affinePullback_cellPullback [NeZero N] (m : CubeCell fun _ : Fin n => N)
     (w : FormField n) :
     affinePullback (scalarMat n (N / L)) (cellOffset m) (cellPullback L m w) = w := by
@@ -149,8 +109,7 @@ theorem affinePullback_cellPullback [NeZero N] (m : CubeCell fun _ : Fin n => N)
 variable [NeZero N]
 
 variable (n L N) in
-/-- The Freudenthal refinement of the cubical mesh of `(0, L)ⁿ` with `N` cells per direction:
-each cell `m` is split into the `n!` simplices `h (m + K_σ)`, `h = L / N`. -/
+/-- The Freudenthal refinement of the cubical mesh of `(0, L)ⁿ` with `N` cells per direction. -/
 abbrev cubeRefinement : SimplicialMesh n := freudenthalMesh 0 L Fact.out N
 
 variable (L) in
@@ -194,7 +153,6 @@ theorem simplexCell_closedInterior_subset {T : Affine.Simplex ℝ (Fin n → ℝ
   constructor <;> linarith [this.1, this.2]
 
 omit [NeZero N] in
-/-- The closed cell as a product of intervals. -/
 theorem closedCell_eq_pi (m : CubeCell fun _ : Fin n => N) :
     closedCell L m = Set.univ.pi fun j =>
       Set.Icc (L / N * ((m j : ℕ) : ℝ)) (L / N * (((m j : ℕ) : ℝ) + 1)) := by
@@ -210,7 +168,6 @@ theorem closedCell_eq_pi (m : CubeCell fun _ : Fin n => N) :
   constructor <;> rintro ⟨h1, h2⟩ <;> constructor <;> linarith
 
 omit [NeZero N] in
-/-- Two points of a closed cell are within the cell size `h = L / N` (in the sup norm). -/
 theorem dist_le_of_mem_closedCell {m : CubeCell fun _ : Fin n => N} {x z : Fin n → ℝ}
     (hx : x ∈ closedCell L m) (hz : z ∈ closedCell L m) : dist x z ≤ L / N := by
   rw [closedCell_eq_pi] at hx hz
@@ -221,7 +178,6 @@ theorem dist_le_of_mem_closedCell {m : CubeCell fun _ : Fin n => N} {x z : Fin n
   constructor <;> nlinarith [h1.1, h1.2, h2.1, h2.2]
 
 omit [Fact (0 < L)] [NeZero N] in
-/-- A point of two closed cells: the cells meet. -/
 theorem adj_of_mem_closedCell {m m' : CubeCell fun _ : Fin n => N} {x : Fin n → ℝ}
     (hx : x ∈ closedCell L m) (hx' : x ∈ closedCell L m') : CubeCell.Adj _ m m' := fun j => by
   have h1 := hx j
@@ -231,8 +187,6 @@ theorem adj_of_mem_closedCell {m m' : CubeCell fun _ : Fin n => N} {x : Fin n �
   exact ⟨by exact_mod_cast e1, by exact_mod_cast e2⟩
 
 omit [Fact (0 < L)] [NeZero N] in
-/-- The local coordinates of a point of two closed cells are the values fixed by their common
-face. -/
 theorem localCoord_eq_of_commonFace {m m' : CubeCell fun _ : Fin n => N} {x : Fin n → ℝ}
     (hx : x ∈ closedCell L m) (hx' : x ∈ closedCell L m') {j : Fin n} {c : ℝ}
     (hc : commonFace _ m m' j = some c) : N / L * x j - m j = c := by
@@ -249,9 +203,6 @@ theorem localCoord_eq_of_commonFace {m m' : CubeCell fun _ : Fin n => N} {x : Fi
   · rw [h] at hc; cases hc
 
 omit [Fact (0 < L)] [NeZero N] in
-/-- **The tangential components of the cell fields agree** at a point of two closed cells: the
-components `dx_s` along free directions of the common face (`commonFace m m' j = none` for
-`j ∈ s`) are the evaluations of the equal traces of `ω_m` and `ω_{m'}`. -/
 theorem cellField_apply_eq_of_free {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)}
     (hω : ω ∈ cubeCompatible fun _ : Fin n => N) {m m' : CubeCell fun _ : Fin n => N}
     {x : Fin n → ℝ} (hx : x ∈ closedCell L m) (hx' : x ∈ closedCell L m') {s : Finset (Fin n)}
@@ -283,10 +234,6 @@ theorem cellField_apply_eq_of_free {ω : CubeCell (fun _ : Fin n => N) → PolyF
       simp only [cubeTrace]; rw [ite_eq_left hsf'],
     eval_faceSubst_congr hyy, eval_faceSubst hy']
 
-/-- **Tangential continuity of the cell fields**: on a set `F` of points of two closed cells, the
-fields of the cells have the same tangential traces (the tangent vectors of `F` vanish in the
-directions fixed by the common face, and the components along the free directions agree,
-`cellField_apply_eq_of_free`). -/
 theorem tangentialTraceEq_cellField {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)}
     (hω : ω ∈ cubeCompatible fun _ : Fin n => N) (k : ℕ) {m m' : CubeCell fun _ : Fin n => N}
     {F : Finset (Fin n → ℝ)} (hF : ∀ v ∈ F, v ∈ closedCell L m ∧ v ∈ closedCell L m')
@@ -324,11 +271,8 @@ theorem cubeRefinement_domain :
 theorem isOpen_cubeRefinement_domain : IsOpen (cubeRefinement n L N).domain := by
   rw [cubeRefinement_domain]; exact isOpen_set_pi Set.finite_univ fun _ _ => isOpen_Ioo
 
-/-- **`HΛᵏ`-conformity of the cubical spaces** ([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §5): a
-tangentially continuous piecewise polynomial `k`-form on the cubical mesh of `(0, L)ⁿ` with `N`
-cells per direction lies in `HΛᵏ((0, L)ⁿ) = D(d_max)`, and `d_max` is the piecewise exterior
-derivative. The piecewise field is glued on the Freudenthal refinement, each simplex carrying the
-field of its cell. -/
+/-- A tangentially continuous piecewise polynomial `k`-form on the cubical mesh lies in
+`HΛᵏ((0, L)ⁿ)`, with the piecewise `d` ([AFW2006], §5; [ArnoldBoffiBonizzoni2015], §5). -/
 theorem cellField_mem_maximal_domain [NeZero n] (k : ℕ)
     {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)}
     (hω : ω ∈ cubeCompatible fun _ : Fin n => N) (hk : ∀ m, IsDeg k (ω m)) :
@@ -360,7 +304,6 @@ theorem cellField_mem_maximal_domain [NeZero n] (k : ℕ)
   refine ⟨h, hval.trans (pieceL2_congr _ _ _ _ fun T _ => ?_)⟩
   simp only [extDeriv_cellField]
 
-/-- The global spaces `Q_b⁻Λᵏ(𝒯_h)` are `HΛᵏ`-conforming. -/
 theorem cellField_mem_maximal_domain_of_mem [NeZero n] {b : Fin n → ℕ} (k : ℕ)
     {ω : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)}
     (hω : ω ∈ cubeGlobalSpace (fun _ : Fin n => N) b k) :
@@ -394,7 +337,7 @@ theorem cellField_sub (ω η : CubeCell (fun _ : Fin n => N) → PolyForm ℝ (F
   simp [cellField, affinePullback_apply, map_sub, pullback_sub]
 
 variable (n L N) in
-/-- **Gluing** a piecewise polynomial form into `L²((0, L)ⁿ; Λᵏ)`. -/
+/-- The gluing of a piecewise polynomial form into `L²((0, L)ⁿ; Λᵏ)`. -/
 def cubeGlue (k : ℤ) : (CubeCell (fun _ : Fin n => N) → PolyForm ℝ (Fin n)) →ₗ[ℝ]
     L2F ℝ (cubeRefinement n L N).domain (formIdx n k) where
   toFun ω := pieceL2 (cubeRefinement n L N) (cubeRefinement n L N).domain
@@ -446,9 +389,7 @@ theorem maximal_apply_mem_cubeV [NeZero n] (b : Fin n → ℕ) (i : ℤ)
     exact Submodule.zero_mem _
 
 variable (n L N) in
-/-- **The cubical finite element subcomplex** `Q_b⁻Λ(𝒯_h) ⊆ HΛ((0, L)ⁿ)` of the maximal de Rham
-complex: the glued global spaces are finite-dimensional, lie in `D(d_max)`, and
-`d Vₕᵏ ⊆ Vₕᵏ⁺¹`. -/
+/-- The cubical finite element subcomplex `Q_b⁻Λ(𝒯_h)` of `HΛ((0, L)ⁿ)`. -/
 def cubeSubcomplex [NeZero n] (b : Fin n → ℕ) :
     ((deRham ℝ n).maximalComplex
       (isOpen_cubeRefinement_domain (n := n) (L := L) (N := N))).Subcomplex where
@@ -476,7 +417,6 @@ instance (b : Fin n → ℕ) (k : ℤ) [NeZero n] :
 
 /-! ### Injectivity of the gluing and the dimension of `Vₕᵏ` -/
 
-/-- **The gluing is injective** on `Q_b⁻Λᵏ(𝒯_h)`. -/
 theorem cubeGlue_injective [NeZero n] (b : Fin n → ℕ) (k : ℕ) :
     Function.Injective (cubeGlue n L N k ∘ₗ
       (cubeGlobalSpace (fun _ : Fin n => N) b k).subtype) := by
@@ -551,8 +491,7 @@ theorem cubeGlue_injective [NeZero n] (b : Fin n → ℕ) (k : ℕ) :
     rw [← this, cellPullback, affinePullback_apply, hzero _ hy, pullback_zero]
     rfl
 
-/-- **`dim Vₕᵏ = dim Q_b⁻Λᵏ(𝒯_h)`**: the glued spaces have the dimension of the global spaces,
-`Σ_{#s = k} Πⱼ (N b_j + 1 - [j ∈ s])`. -/
+/-- `dim Vₕᵏ = Σ_{#s = k} Πⱼ (N b_j + 1 - [j ∈ s])` for `b_j ≥ 1`. -/
 theorem finrank_cubeV [NeZero n] {b : Fin n → ℕ} (hb : ∀ j, 1 ≤ b j) (k : ℕ) :
     Module.finrank ℝ (cubeV n L N b k) =
       ∑ s ∈ powersetCard k univ, ∏ j, (N * b j + 1 - if j ∈ s then 1 else 0) := by

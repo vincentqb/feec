@@ -4,70 +4,23 @@ public import Feec.Models.Cube.RowWiseIdent
 public import Feec.Domain.DiagonalPullback
 
 /-!
-# The thesis' complex on a box with unequal sides: the anisotropic parity model
+# The grad–curl complex on a box with unequal sides: the anisotropic parity model
 
-For a box `B = ∏ (aᵢ, aᵢ + ℓᵢ)` (`ℓᵢ > 0`, not necessarily equal) the diagonal affine map
-`T x = d * (x - a)`, `dᵢ = 1/(2ℓᵢ)`, maps `B` onto the cube `Q = (0, ½)³`. Unlike for a cube
-(`Feec.Models.Cube.Ident`), the pull-back does not just rescale the complex: by the chain rule
-(`Feec.Domain.ConstCoeffOp.minimal_pullDiag`) the complex `H̊¹(B) → H̊(curl, B) → L²(B)`
-(`Feec.Models.BoundedDomain.gradCurl`) becomes on `Q` the **weighted complex** of
-`grad_d`, `curl_d` (`∂ᵢ ↦ dᵢ ∂ᵢ`). Its Fourier model is the torus symbol complex of the grad–curl
-fibre complex along the **anisotropic frequency map** `n ↦ ξ_d(n) = d * 2πn`
-(`Box.symD`, `Feec.Fourier.FibreComplex.toSymbolComplex`), compressed along the row-wise parity
-extension `J` of `Feec.Models.Cube.RowWise`.
-
-The comparison goes through the cube: with the column scalings `D = diag d`,
-`grad_{ξ_d} = (grad_ξ ·) D` and `curl_{ξ_d} (E D) = det D · (curl_ξ E) D⁻¹` (fibrewise,
-`Box.gradCurl_m_dfreq`; on test fields `Feec.Domain.curlOp_diagScale_smul`), so
-
-* the anisotropic torus complex is the transport of the real torus grad–curl complex along the
-  constant fibre scalings `Box.phiT` (`Box.realD_eq_torusD`);
-* the box complex is the transport of the cube complex along the scalings `Box.phiQ` followed by
-  the pull-back (`Box.complexBox_eq_transport`), and the scalings commute with `J` and with the
-  row-wise reflections (they act entrywise on the columns, which carry the parities);
-* hence the box complex **is the compression** of the anisotropic torus complex along `J ∘ P⁻¹`
-  (`Box.complexBox_eq_compress`, from `Feec.Models.Cube.RowWise.cubeComplex_eq_compress`).
-
-The fibre spectral facts only use `ξ ≠ 0`: the nonzero eigenvalue of `-W_ξ²` is `|ξ|²`
-(`Feec.Models.Cube.Parity.eq_zero_of_slots`, valid at every `ξ`), the frequencies on a sphere
-`|ξ_d(n)| = ω` form a finite set (`Box.finite_dfreq`), `ξ_d(n) = 0` only for `n = 0`; and the
-vanishing of trigonometric polynomials in a row-wise parity class that are symmetric and
-trace-free on `Q` (`Feec.Models.Cube.Parity.eq_zero_of_finite_of_parity`) does not involve the
-frequencies at all. So the spectral results of the torus hold along every frequency map with
-finite spheres that vanishes only at `0` (`Feec.Models.Cube.Parity.symAlong`), and in particular
-on the anisotropic torus (`Box.mem_invariantCore_torusD_iff`, `Box.mem_stationary_torusD_of`).
-
-## Main definitions
-
-* `Box.openBox`, `Box.dB`, `Box.bB`: the box and the map onto `Q`.
-* `Box.dfreq`, `Box.symD`, `Box.realD`: the anisotropic torus complex; `Box.phiT`, `Box.torusD`.
-* `Box.phiQ`, `Box.JB`, `Box.complexBox`.
+On a box `∏ (aᵢ, aᵢ + ℓᵢ)`, the grad–curl complex (`Box.complexBox`) is a compression of the
+anisotropic torus grad–curl complex with frequencies `ξ_d(n) = d * 2πn`, `dᵢ = 1/(2ℓᵢ)`
+(`Box.torusD`), on which the spectral results of the torus hold.
 
 ## Main results
 
-* `HilbertComplex.Involutions.transport`, `HilbertComplex.eq_compress_of`,
-  `HilbertComplex.transport_transport_compress`.
-* `Box.gradCurl_m_dfreq`, **`Box.realD_eq_torusD`**, `Box.eigenDense_torusD`,
-  `Box.isPurePoint_torusD`, `Box.finite_dfreq`.
-* **`Box.complexBox_eq_compress`**.
-* **`Box.mem_invariantCore_torusD_iff`**, `Box.mem_stationary_torusD_of`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection, change of variables)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `Box.complexBox_eq_compress`: the box complex is a compression of the anisotropic torus complex.
+* `Box.eigenDense_torusD`: a complete set of eigenvectors on the anisotropic torus.
+* `Box.mem_invariantCore_torusD_iff`: `K*` consists of stationary data on the anisotropic torus.
 -/
 
 open scoped InnerProductSpace ComplexConjugate
 open MeasureTheory Set LinearPMap Feec.Fourier Feec.ShortHilbertComplex
 
 @[expose] public noncomputable section
-
-/-! ### Transport, compression and involutions -/
 
 namespace Feec.HilbertComplex
 
@@ -76,7 +29,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W V V'
   [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
   [∀ i, NormedAddCommGroup (V' i)] [∀ i, InnerProductSpace 𝕜 (V' i)] [∀ i, CompleteSpace (V' i)]
 
-/-- **Involutions commuting with the weights pass to the transport** (chain-rule factors `1`). -/
+/-- Involutions commuting with the weights pass to the transport with chain-rule factors `1`. -/
 def Involutions.transport {H : HilbertComplex 𝕜 c W} {κ : Type*} (I : H.Involutions κ)
     (e : ∀ i, W i ≃L[𝕜] W i) (he : ∀ k i x, e i (I.R k i x) = I.R k i (e i x)) :
     (H.transport e (fun _ _ => 1) fun _ _ => one_ne_zero).Involutions κ where
@@ -103,8 +56,6 @@ def Involutions.transport {H : HilbertComplex 𝕜 c W} {κ : Type*} (I : H.Invo
 variable {H : HilbertComplex 𝕜 c W} {J : ∀ i, V i →L[𝕜] W i} {s : ℝ}
   [∀ i, (LinearMap.range (J i : V i →ₗ[𝕜] W i)).HasOrthogonalProjection]
 
-/-- **A criterion for compressions**: a complex `H'` whose domains are the preimages of those of
-`H` under `J` and whose differentials are intertwined by `J` is the compression of `H`. -/
 theorem eq_compress_of (hs : 0 < s) (hJ : ∀ i (x y : V i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : V i →ₗ[𝕜] W i))
     {H' : HilbertComplex 𝕜 c V}
@@ -119,9 +70,6 @@ theorem eq_compress_of (hs : 0 < s) (hJ : ∀ i (x y : V i), ⟪J i x, J i y⟫_
     change J j _ = J j _
     rw [J_compress_d, hcomm i j ⟨x, hx⟩]
 
-/-- **Transports of a compression are compressions of a transport**: if `J φ = ψ J`, then
-transporting the compression `H_J` along `φ` and then along `P` is the compression of the
-transport of `H` along `ψ`, along `J ∘ P⁻¹`. -/
 theorem transport_transport_compress (hs : 0 < s)
     (hJ : ∀ i (x y : V i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : V i →ₗ[𝕜] W i))
@@ -168,8 +116,6 @@ open Models.Cube.MirrorTorus (sgn)
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 attribute [local instance] Models.Cube.RealTorus.isScalarTower
-
-/-! ### The column scalings -/
 
 variable {d : R3}
 
@@ -227,8 +173,6 @@ theorem curl_dfreq (hd : ∀ i, 0 < d i) (n : Fin 3 → ℤ) (M : Mat) :
     Fourier.Torus.freq_apply, w1, w2, Fin.sum_univ_three, leviCivita3_apply]
   fin_cases b <;> simp <;> field_simp
 
-/-- **The fibre identity**: `grad_{ξ_d} = (grad_ξ ·) D` and
-`curl_{ξ_d} = (det D · (·) D⁻¹) ∘ curl_ξ ∘ (· D)⁻¹`. -/
 theorem gradCurl_m_dfreq (hd : ∀ i, 0 < d i) (i j : Fin 3) (n : Fin 3 → ℤ)
     (v : W3 Vec Mat Mat i) :
     gradCurl.m i j (dfreq d n) v =
@@ -238,8 +182,6 @@ theorem gradCurl_m_dfreq (hd : ∀ i, 0 < d i) (i j : Fin 3) (n : Fin 3 → ℤ)
     | exact grad_dfreq hd n v
     | exact curl_dfreq hd n v
     | (change (0 : _ →L[ℂ] _) _ = fibW hd _ ((0 : _ →L[ℂ] _) _); simp)
-
-/-! ### The anisotropic torus complex -/
 
 theorem compLpL_count_apply {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
     (L : E →L[ℂ] E) (u : Lp E 2 (Measure.count : Measure (Fin 3 → ℤ))) (n : Fin 3 → ℤ) :
@@ -270,8 +212,7 @@ theorem coeFn_cfib_symm {E : Type*} [NormedAddCommGroup E] [InnerProductSpace �
     ((cfib L).symm u : (Fin 3 → ℤ) → E) n = L.symm (u n) :=
   compLpL_count_apply _ u n
 
-/-- The weights of the anisotropic torus complex: the constant fibre scalings `fibW`, as real
-isomorphisms of the torus spaces. -/
+/-- The constant fibre scalings `fibW`, as real isomorphisms of the torus spaces. -/
 def phiT (hd : ∀ i, 0 < d i) (i : Fin 3) : Space i ≃L[ℝ] Space i :=
   (cfib (fibW hd i)).restrictScalars ℝ
 
@@ -284,8 +225,7 @@ theorem coeFn_phiT_symm (hd : ∀ i, 0 < d i) (i : Fin 3) (u : Space i) (n : Fin
   coeFn_cfib_symm _ u n
 
 variable (d) in
-/-- **The anisotropic torus symbol complex**: the grad–curl fibre complex along the frequency
-map `n ↦ ξ_d(n) = d * 2πn`. -/
+/-- The anisotropic torus symbol complex, along the frequencies `n ↦ ξ_d(n) = d * 2πn`. -/
 abbrev symD : SymbolComplex ℂ (Measure.count : Measure (Fin 3 → ℤ)) ComplexShape.fin3
     (W3 Vec Mat Mat) :=
   Models.Cube.Parity.symAlong (dfreq d)
@@ -298,15 +238,13 @@ variable (d) in
 abbrev complexD : HilbertComplex ℂ ComplexShape.fin3 Space := (symD d).toHilbertComplex
 
 variable (d) in
-/-- **The anisotropic torus complex over `ℝ`.** -/
+/-- The anisotropic torus complex over `ℝ`. -/
 abbrev realD : HilbertComplex ℝ ComplexShape.fin3 Space := (complexD d).restrictScalars
 
 /-- The transport of the real torus grad–curl complex along the fibre scalings. -/
 abbrev torusD (hd : ∀ i, 0 < d i) : HilbertComplex ℝ ComplexShape.fin3 Space :=
   Models.Cube.RealTorus.gradCurl.transport (phiT hd) (fun _ _ => 1) fun _ _ => one_ne_zero
 
-/-- **The anisotropic torus complex is the transport of the torus complex along the column
-scalings** (domains included). -/
 theorem realD_eq_torusD (hd : ∀ i, 0 < d i) : realD d = torusD hd := by
   refine HilbertComplex.ext_d (funext fun i => funext fun j => ?_)
   have hpt : ∀ x : Space i, ∀ n, (symD d).m i j n ((x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n) =
@@ -334,8 +272,6 @@ theorem realD_eq_torusD (hd : ∀ i, 0 < d i) : realD d = torusD hd := by
     exact (Fourier.coeFn_d_count (Fourier.Torus.symbolComplex gradCurl)
       ⟨(phiT hd i).symm x, hx'⟩ n).symm
 
-/-! ### The spectrum of the anisotropic torus complex -/
-
 section Spectral
 
 open Models.Cube (rowAction)
@@ -358,16 +294,13 @@ theorem dfreq_eq_zero_iff {n : Fin 3 → ℤ} (hd : ∀ i, 0 < d i) : dfreq d n 
     ext j
     simp
 
-/-- **The anisotropic torus wave group has an eigenbasis** (the Fourier modes,
-`Feec.Models.Cube.Parity.eigenDense_symAlong`). -/
+/-- The anisotropic torus wave group has a dense set of eigenvectors. -/
 theorem eigenDense_torusD (hd : ∀ i, 0 < d i) : (torusD hd).waveGroup.EigenDense := by
   rw [← realD_eq_torusD hd]; exact Models.Cube.Parity.eigenDense_symAlong _
 
-/-- **The anisotropic torus wave group has pure point spectrum.** -/
 theorem isPurePoint_torusD (hd : ∀ i, 0 < d i) : (torusD hd).waveGroup.IsPurePoint :=
   (torusD hd).isIsometric_waveGroup.isPurePoint_of_eigenDense (eigenDense_torusD hd)
 
-/-- **The anisotropic frequencies on a sphere `|ξ_d(n)| = ω` form a finite set.** -/
 theorem finite_dfreq (hd : ∀ i, 0 < d i) (ω : ℝ) : {n : Fin 3 → ℤ | ‖dfreq d n‖ = ω}.Finite := by
   refine (Fourier.Torus.finite_bandN (Nat.ceil (ω * ∑ j, (d j)⁻¹))).subset fun n hn j => ?_
   have hn : ‖dfreq d n‖ = ω := hn
@@ -387,9 +320,8 @@ theorem finite_dfreq (hd : ∀ i, 0 < d i) (ω : ℝ) : {n : Fin 3 → ℤ | ‖
   have : |(n j : ℝ)| ≤ (Nat.ceil (ω * ∑ j, (d j)⁻¹) : ℝ) := (h2.trans h3).trans (Nat.le_ceil _)
   exact_mod_cast this
 
-/-- **`K*` on the anisotropic torus**: for closed `S₁, S₂` of symmetric trace-free (on `Q`) fields
-of the electric and magnetic parity classes, the invariant core of `{0} × S₁ × S₂` under the
-anisotropic torus wave group consists of its stationary data. -/
+/-- On the anisotropic torus, for closed constraints `S₁, S₂` of parity fields that are symmetric
+and trace-free on `Q`, the invariant core of `{0} × S₁ × S₂` consists of its stationary data. -/
 theorem mem_invariantCore_torusD_iff (hd : ∀ i, 0 < d i) {S1 : Submodule ℝ (Space 1)}
     {S2 : Submodule ℝ (Space 2)} [S1.HasOrthogonalProjection] [S2.HasOrthogonalProjection]
     (hS1 : S1 ≤ rowAction.fixed 1 ⊓ Models.Cube.Parity.boxSym ⊓ Models.Cube.Parity.boxTr)
@@ -402,8 +334,6 @@ theorem mem_invariantCore_torusD_iff (hd : ∀ i, 0 < d i) {S1 : Submodule ℝ (
   rw [← realD_eq_torusD hd]
   exact Models.Cube.Parity.mem_invariantCore_symAlong_iff _ (finite_dfreq hd) hS1 hS2 y
 
-/-- **Stationary data `(σ, E, B)` of the anisotropic torus complex with `E` of electric parity
-have `E = 0`** (the electric harmonic fields vanish). -/
 theorem mem_stationary_torusD_of (hd : ∀ i, 0 < d i) {y : PiLp 2 Space}
     (h1 : (y 1 : Space 1) ∈ rowAction.fixed 1)
     (hst : y ∈ (torusD hd).waveGroup.stationary) : (y 1 : Space 1) = 0 := by
@@ -412,8 +342,6 @@ theorem mem_stationary_torusD_of (hd : ∀ i, 0 < d i) {y : PiLp 2 Space}
     (fun _ => (dfreq_eq_zero_iff hd).1) h1 hst
 
 end Spectral
-
-/-! ### The parity extension and the weights -/
 
 section Weights
 
@@ -448,7 +376,6 @@ theorem fibW_cjF (hd : ∀ i, 0 < d i) (i : Fin 3) (v : W3 Vec Mat Mat i) :
       entryConj (eScale (w2 d) (w2_ne_zero hd) v)
     intro v; ext p; simp [eScale_apply, entryConj_apply]
 
-/-- **The weights commute with the row-wise reflections and the conjugation.** -/
 theorem phiT_realR (hd : ∀ i, 0 < d i) (k : Option (Fin 3)) (i : Fin 3) (x : Space i) :
     phiT hd i (realR k i x) = realR k i (phiT hd i x) := by
   cases k with
@@ -475,7 +402,6 @@ theorem fixed_realInvolutionsD (hd : ∀ i, 0 < d i) (i : Fin 3) :
   rw [HilbertComplex.Involutions.mem_fixed_toAction, HilbertComplex.Involutions.mem_fixed_toAction]
   rfl
 
-/-- **The real parity fields reduce the anisotropic torus complex.** -/
 theorem reducingSubcomplex_range (hd : ∀ i, 0 < d i) :
     (torusD hd).ReducingSubcomplex fun i => LinearMap.range (J i : WQ i →ₗ[ℝ] Space i) := by
   have h := (realInvolutionsD hd).toAction.reducingSubcomplex_fixed
@@ -501,7 +427,6 @@ theorem JR_scaleF {P : Type*} [Fintype P] (pc : P → Fin 3 → ℂ) (w : P → 
     exact RCLike.real_smul_eq_coe_smul (K := ℂ) _ _
   rw [this, _root_.map_smul, Models.Cube.RowWise.mFourierCoeff_smul]
 
-/-- **The parity extension commutes with the weights**: `J ∘ φ_Q = φ_𝕋 ∘ J`. -/
 theorem J_phiQ (hd : ∀ i, 0 < d i) (i : Fin 3) (u : WQ i) :
     J i (phiQ hd i u) = phiT hd i (J i u) := by
   fin_cases i
@@ -515,8 +440,6 @@ theorem J_phiQ (hd : ∀ i, 0 < d i) (i : Fin 3) (u : WQ i) :
 
 end Weights
 
-/-! ### The box and its complex -/
-
 section BoxComplex
 
 open Models.Cube.Geometry (Q)
@@ -524,7 +447,7 @@ open Models.Cube.RowWise (J WQ cubeComplex)
 open Models.BoundedDomain (gradCurl)
 open Domain (L2F)
 
-/-- **The open box** `∏ (aᵢ, aᵢ + ℓᵢ)`. -/
+/-- The open box `∏ (aᵢ, aᵢ + ℓᵢ)`. -/
 def openBox (a ℓ : R3) : Set R3 := univ.pi fun i => Ioo (a i) (a i + ℓ i)
 
 theorem isOpen_openBox (a ℓ : R3) : IsOpen (openBox a ℓ) :=
@@ -564,8 +487,7 @@ theorem preimage_Q (hℓ : ∀ i, 0 < ℓ i) :
 abbrev WB (a ℓ : R3) : Fin 3 → Type :=
   W3 (L2F ℝ (openBox a ℓ) (Fin 3)) (L2F ℝ (openBox a ℓ) Ix) (L2F ℝ (openBox a ℓ) Ix)
 
-/-- **The thesis' complex on the box** `∏ (aᵢ, aᵢ + ℓᵢ)`: `H̊¹ → H̊(curl) → L²`, the minimal
-realizations of `grad` and `curl`. -/
+/-- The complex `H̊¹ → H̊(curl) → L²` on the box `∏ (aᵢ, aᵢ + ℓᵢ)`. -/
 abbrev complexBox (a ℓ : R3) : HilbertComplex ℝ ComplexShape.fin3 (WB a ℓ) :=
   (gradCurl ℝ (isOpen_openBox a ℓ)).toHilbertComplex
 
@@ -586,10 +508,6 @@ theorem inner_pullB (hℓ : ∀ i, 0 < ℓ i) (i : Fin 3) (x y : WQ i) :
   · exact Domain.inner_pullDiagF _ _ _ _ x y
   · exact Domain.inner_pullDiagF _ _ _ _ x y
 
-/-- **The box complex is the cube complex reweighted by the column scalings and pulled back**:
-`H̊¹(B) → H̊(curl, B) → L²(B)` is the transport of `H̊¹(Q) → H̊(curl, Q) → L²(Q)` along
-`φ_Q` (`grad_d = (grad ·) D`, `curl_d (· D) = det D · (curl ·) D⁻¹`) and then along the
-pull-back (`Feec.Domain.ConstCoeffOp.minimal_pullDiag`). -/
 theorem complexBox_eq_transport (hℓ : ∀ i, 0 < ℓ i) :
     complexBox a ℓ = (cubeComplex.transport (phiQ (dB_pos hℓ)) (fun _ _ => 1)
       fun _ _ => one_ne_zero).transport (pullB hℓ) (fun _ _ => 1) fun _ _ => one_ne_zero := by
@@ -631,7 +549,6 @@ abbrev JB (hℓ : ∀ i, 0 < ℓ i) (i : Fin 3) : WB a ℓ i →L[ℝ] Space i :
 theorem JB_apply (hℓ : ∀ i, 0 < ℓ i) (i : Fin 3) (x : WB a ℓ i) :
     JB hℓ i x = J i ((pullB hℓ i).symm x) := rfl
 
-/-- `JB` scales inner products by `8 |∏ dᵢ|`. -/
 theorem inner_JB (hℓ : ∀ i, 0 < ℓ i) (i : Fin 3) (x y : WB a ℓ i) :
     ⟪JB hℓ i x, JB hℓ i y⟫_ℝ = ((8 * Domain.jacD (dB ℓ) : ℝ) : ℝ) * ⟪x, y⟫_ℝ := by
   rw [JB_apply, JB_apply, Models.Cube.RowWise.inner_J]
@@ -665,7 +582,7 @@ theorem reducingSubcomplex_rangeJB (hℓ : ∀ i, 0 < ℓ i) :
 theorem scaleJB_pos (hℓ : ∀ i, 0 < ℓ i) : (0 : ℝ) < 8 * Domain.jacD (dB ℓ) :=
   mul_pos (by norm_num) (Domain.jacD_pos (dB_ne_zero hℓ))
 
-/-- **The box complex is the compression of the anisotropic torus complex** along the parity
+/-- The box complex is the compression of the anisotropic torus complex along the parity
 extension of the pulled-back fields. -/
 theorem complexBox_eq_compress (hℓ : ∀ i, 0 < ℓ i) :
     complexBox a ℓ = (torusD (dB_pos hℓ)).compress (JB hℓ) (scaleJB_pos hℓ) (inner_JB hℓ)

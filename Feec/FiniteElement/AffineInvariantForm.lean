@@ -5,38 +5,19 @@ public import Feec.FiniteElement.InvariantForm
 /-!
 # The affinely invariant spaces of polynomial differential forms
 
-For `0 < k < n` and `K` a field of characteristic `0`, the nonzero finite-dimensional spaces of
-polynomial `k`-forms on `Kⁿ` mapped into themselves by the pullback of every affine map
-`φ : Kⁿ → Kⁿ` (equivalently, of every invertible one, `isAffineInvariant_of_forall_units`) are
-exactly the spaces
-
-  `X(r, s, k, n) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`,  `r ≥ 0`, `-1 ≤ s ≤ r`
-
-(`κP_{-1} = 0`) of [AFW2006], Theorems 3.5–3.6: the full spaces `P_rΛᵏ = X(r, r - 1)`, the trimmed
-spaces `P_{r+1}⁻Λᵏ = X(r, r)` and, for `s < r - 1`, the spaces of forms of `P_rΛᵏ` with
-`dω ∈ P_sΛ^{k+1}`. The proof follows [AFW2006], §3.4, with the representation theory of `GL(n)`
-replaced by the elementary `IsLinearInvariant.eq_of_le_homForm` (`Feec.FiniteElement.InvariantForm`):
-an affinely invariant space is the sum of the summands `dH_{j+1}Λ^{k-1}` and `κH_{j-1}Λ^{k+1}` of
-its homogeneous components that it contains (`IsLinearInvariant.le_of_summands`), and the
-translations force these to be initial segments in `j` (Lemma 3.7).
+For `0 < k < n` in characteristic `0`, every nonzero finite-dimensional affinely invariant space of
+polynomial `k`-forms is one of the spaces `X(r, s, k, n)`, `-1 ≤ s ≤ r` (`κP_{-1} = 0`)
+([AFW2006], Thms 3.5–3.6).
 
 ## Main results
 
-* **[AFW2006], Theorem 3.5**: `isAffineInvariant_sup` (`X(r, s, k, n)` is affinely invariant for
-  `s ≤ r`, `k ≥ 1`), `isAffineInvariant_map_extDeriv` (`s = -1`); the cases `s = r`
-  (`sup_eq_polyFormMinus`: `X(r, r) = P_{r+1}⁻Λᵏ`), `s = r - 1` (`sup_eq_polyForm`:
-  `X(r + 1, r) = P_{r+1}Λᵏ`; `map_extDeriv_polyForm_one_eq`: `X(0, -1) = P_0Λᵏ`). The description
-  of the third kind (`s < r - 1`) as `P_{s+1}Λᵏ + dP_{r+1}Λ^{k-1} = {ω ∈ P_rΛᵏ | dω ∈ P_sΛ^{k+1}}`
-  is not formalized.
-* **[AFW2006], Lemma 3.7** (translations): `IsAffineInvariant.closed_le_of_succ`,
-  `IsAffineInvariant.koszulClosed_le_of_succ`, `IsAffineInvariant.closed_le_of_koszulClosed_le`.
-* **[AFW2006], Theorem 3.6**: `IsAffineInvariant.eq_sup`, **the classification of the affinely
-  invariant spaces of polynomial `k`-forms**, `0 < k < n`.
+* `isAffineInvariant_sup`: `X(r, s, k, n) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` is affinely invariant.
+* `sup_eq_polyFormMinus`, `sup_eq_polyForm`: `P_{r+1}⁻Λᵏ` and `P_{r+1}Λᵏ` are such spaces.
+* `IsAffineInvariant.eq_sup`: the classification of the affinely invariant spaces.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.4: (3.18), (3.19), Theorem 3.5, Theorem 3.6, Lemma 3.7
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006], §3.4
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -73,7 +54,6 @@ theorem single_X_pow_ne_zero (t : Finset (Fin n)) (p : Fin n) (j : ℕ) :
   have := congrFun h t
   simp at this
 
-/-- `x_p^j dx_t` is closed for `p ∈ t`: it is a multiple of `d(x_p^{j+1} dx_{t ∖ p})`. -/
 theorem extDeriv_single_X_pow_of_mem {t : Finset (Fin n)} {p : Fin n} (hp : p ∈ t) (j : ℕ) :
     Koszul.extDeriv (Pi.single t (X p ^ j) : PolyForm K (Fin n)) = 0 := by
   have h := extDeriv_single_X_pow (K := K) (notMem_erase p t) j
@@ -87,7 +67,6 @@ theorem extDeriv_single_X_pow_of_mem {t : Finset (Fin n)} {p : Fin n} (hp : p �
     rw [h, smul_smul, inv_mul_cancel₀ hc, one_smul]
   rw [this, Koszul.extDeriv_smul, Koszul.extDeriv_extDeriv, smul_zero]
 
-/-- A nonzero closed form of `H_rΛᵏ`, `r + k > 0`, is not `κ`-closed. -/
 theorem koszul_ne_zero_of_extDeriv_eq_zero {r k : ℕ} (hrk : 0 < r + k) {ω : PolyForm K (Fin n)}
     (h : ω ∈ homForm K (Fin n) r k) (hd : Koszul.extDeriv ω = 0) (h0 : ω ≠ 0) :
     Koszul.koszul ω ≠ 0 := fun hκ => h0 <| by
@@ -95,7 +74,6 @@ theorem koszul_ne_zero_of_extDeriv_eq_zero {r k : ℕ} (hrk : 0 < r + k) {ω : P
   rw [hκ, Koszul.extDeriv_zero] at this
   exact (smul_eq_zero.1 this.symm).resolve_left (Nat.cast_ne_zero.2 hrk.ne')
 
-/-- A nonzero `κ`-closed form of `H_rΛᵏ`, `r + k > 0`, is not closed. -/
 theorem extDeriv_ne_zero_of_koszul_eq_zero {r k : ℕ} (hrk : 0 < r + k) {ω : PolyForm K (Fin n)}
     (h : ω ∈ homForm K (Fin n) r k) (hκ : Koszul.koszul ω = 0) (h0 : ω ≠ 0) :
     Koszul.extDeriv ω ≠ 0 := fun hd => h0 <| by
@@ -150,14 +128,12 @@ theorem homComp_smul (j : ℕ) (c : K) (ω : PolyForm K (Fin n)) :
   funext s; simp [Koszul.homComp_apply]
 
 omit [CharZero K] in
-/-- The translate of `x_q^m dx_t` by `c e_p`: `(x_q + c [q = p])^m dx_t`. -/
 theorem translate_single_X_pow (p : Fin n) (c : K) (t : Finset (Fin n)) (q : Fin n) (m : ℕ) :
     polyPullback idMatrix (Pi.single p c : Fin n → K) (Pi.single t (X q ^ m)) =
       Pi.single t ((X q + C ((Pi.single p c : Fin n → K) q)) ^ m) := by
   rw [polyPullback_idMatrix_single, map_pow, polySubst_idMatrix_X]
 
 omit [CharZero K] in
-/-- `homComp j` of the translate of `x_p^{j+1} dx_t` by `e_p` is `(j + 1) x_p^j dx_t`. -/
 theorem homComp_translate_single_X_pow (p : Fin n) (t : Finset (Fin n)) (j : ℕ) :
     homComp j (polyPullback idMatrix (Pi.single p 1 : Fin n → K)
         (Pi.single t (X p ^ (j + 1)))) =
@@ -167,7 +143,6 @@ theorem homComp_translate_single_X_pow (p : Fin n) (t : Finset (Fin n)) (j : ℕ
   simp [Nat.choose_succ_self_right]
 
 omit [CharZero K] in
-/-- Contraction with `e_p`: `ι_{e_p}(f dx_t) = ε(p, t ∖ p) f dx_{t ∖ p}` for `p ∈ t`. -/
 theorem interior_single_single {p : Fin n} {t : Finset (Fin n)} (hp : p ∈ t)
     (f : MvPolynomial (Fin n) K) :
     interior (fun l => C ((Pi.single p 1 : Fin n → K) l)) (Pi.single t f : PolyForm K (Fin n)) =
@@ -198,10 +173,6 @@ theorem exists_card_eq_mem {k : ℕ} (hk : 1 ≤ k) (hkn : k ≤ n) :
 
 /-! ### The translation lemmas ([AFW2006], Lemma 3.7) -/
 
-/-- **[AFW2006], Lemma 3.7 (1)**, in the form used in the proof of Theorem 3.6: in an affinely
-invariant space, the closed forms of degree `j + 1` bring those of degree `j` (`1 ≤ k ≤ n`): the
-translate of `x_p^{j+1} dx_t` (`p ∈ t`) by `e_p` has the degree-`j` part `(j + 1) x_p^j dx_t`,
-closed, nonzero, hence not `κ`-closed. -/
 theorem IsAffineInvariant.closed_le_of_succ {V : Submodule K (PolyForm K (Fin n))}
     (hV : IsAffineInvariant V) {j k : ℕ} (hk : 1 ≤ k) (hkn : k ≤ n)
     (h : homForm K (Fin n) (j + 1) k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ≤ V) :
@@ -219,10 +190,6 @@ theorem IsAffineInvariant.closed_le_of_succ {V : Submodule K (PolyForm K (Fin n)
     (koszul_ne_zero_of_extDeriv_eq_zero (by omega) (single_X_pow_mem_homForm ht p j)
       (extDeriv_single_X_pow_of_mem hp j) (single_X_pow_ne_zero t p j))
 
-/-- **[AFW2006], Lemma 3.7 (2)**, in the form used in the proof of Theorem 3.6: the `κ`-closed forms
-of degree `j + 2` bring those of degree `j + 1` (`k < n`): for `ω = κ(x_p^{j+1} dx_t)` (`p ∈ t`,
-`#t = k + 1`) the degree-`(j+1)` part `μ` of the translate by `e_p` has
-`dμ = (j + k + 2)(j + 1) x_p^j dx_t ≠ 0`. -/
 theorem IsAffineInvariant.koszulClosed_le_of_succ {V : Submodule K (PolyForm K (Fin n))}
     (hV : IsAffineInvariant V) {j k : ℕ} (hkn : k + 1 ≤ n)
     (h : homForm K (Fin n) (j + 2) k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ≤ V) :
@@ -244,11 +211,6 @@ theorem IsAffineInvariant.koszulClosed_le_of_succ {V : Submodule K (PolyForm K (
   exact smul_ne_zero (mul_ne_zero (Nat.cast_ne_zero.2 (by omega))
     (Nat.cast_ne_zero.2 (by omega))) (single_X_pow_ne_zero t p j)
 
-/-- **[AFW2006], Lemma 3.7 (3)**, in the form used in the proof of Theorem 3.6: the `κ`-closed forms
-of degree `j + 1` bring the closed forms of degree `j` (`1 ≤ k < n`): for `ω = κ(x_q^j dx_t)`
-(`p ≠ q` in `t`, `#t = k + 1`) the translate by `e_p` is
-`ω + ι_{e_p}(x_q^j dx_t) = ω ± x_q^j dx_{t ∖ p}`, whose degree-`j` part is closed, nonzero, hence
-not `κ`-closed. -/
 theorem IsAffineInvariant.closed_le_of_koszulClosed_le {V : Submodule K (PolyForm K (Fin n))}
     (hV : IsAffineInvariant V) {j k : ℕ} (hk : 1 ≤ k) (hkn : k + 1 ≤ n)
     (h : homForm K (Fin n) (j + 1) k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ≤ V) :
@@ -289,14 +251,12 @@ theorem IsAffineInvariant.closed_le_of_koszulClosed_le {V : Submodule K (PolyFor
 /-! ### The affinely invariant spaces `X(r, s, k, n)` ([AFW2006], Theorem 3.5) -/
 
 omit [CharZero K] in
-/-- **`dP_{r+1}Λ^{k-1}` is affinely invariant** ([AFW2006], (3.18)): `φ^* d = d φ^*` and
-`φ^* P_{r+1}Λ^{k-1} ⊆ P_{r+1}Λ^{k-1}`. -/
+/-- `dP_rΛᵏ` is affinely invariant; [AFW2006], (3.18). -/
 theorem isAffineInvariant_map_extDeriv (r k : ℕ) :
     IsAffineInvariant ((polyForm K (Fin n) r k).map (extDerivₗ K (Fin n))) := by
   rintro B b _ ⟨η, hη, rfl⟩
   exact ⟨_, polyPullback_mem_polyForm B b hη, (polyPullback_extDeriv B b η).symm⟩
 
-/-- `P_sΛᵏ ⊆ dP_{s+1}Λ^{k-1} + κP_sΛ^{k+1}` for `k ≥ 1` ((3.11), and `P_0Λᵏ = dP_1Λ^{k-1}`). -/
 theorem polyForm_le_sup {s k : ℕ} (hk : 1 ≤ k) :
     polyForm K (Fin n) s k ≤ (polyForm K (Fin n) (s + 1) (k - 1)).map (extDerivₗ K (Fin n)) ⊔
       (polyForm K (Fin n) s (k + 1)).map (koszulₗ K (Fin n)) := by
@@ -308,9 +268,7 @@ theorem polyForm_le_sup {s k : ℕ} (hk : 1 ≤ k) :
   · rw [← Koszul.map_koszul_polyForm_sup_map_extDeriv s k, sup_comm]
     exact sup_le_sup_left (Submodule.map_mono (Koszul.polyForm_mono (Nat.le_succ s) _)) _
 
-/-- **[AFW2006], Theorem 3.5**: for `1 ≤ k` and `s ≤ r`, the space
-`X(r, s, k, n) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` is affinely invariant: by (3.18) and
-`φ^* κ ω - κ φ^* ω = φ^* ι_b ω ∈ P_sΛᵏ ⊆ dP_{s+1}Λ^{k-1} + κP_sΛ^{k+1}` ((3.19), (3.11)). -/
+/-- `X(r, s, k, n)` is affinely invariant for `k ≥ 1`, `s ≤ r`; [AFW2006], Thm 3.5. -/
 theorem isAffineInvariant_sup {r s k : ℕ} (hk : 1 ≤ k) (hs : s ≤ r) :
     IsAffineInvariant ((polyForm K (Fin n) (r + 1) (k - 1)).map (extDerivₗ K (Fin n)) ⊔
       (polyForm K (Fin n) s (k + 1)).map (koszulₗ K (Fin n))) := by
@@ -339,7 +297,7 @@ theorem map_extDeriv_polyForm_le {r k : ℕ} (hk : 1 ≤ k) :
   have := Koszul.extDeriv_mem_polyForm hη
   rwa [Nat.add_sub_cancel, Nat.sub_add_cancel hk] at this
 
-/-- **[AFW2006], Theorem 3.5, case `s = r`**: `X(r, r, k, n) = P_{r+1}⁻Λᵏ`. -/
+/-- `X(r, r, k, n) = P_{r+1}⁻Λᵏ` for `k ≥ 1`; [AFW2006], Thm 3.5. -/
 theorem sup_eq_polyFormMinus {r k : ℕ} (hk : 1 ≤ k) :
     (polyForm K (Fin n) (r + 1) (k - 1)).map (extDerivₗ K (Fin n)) ⊔
       (polyForm K (Fin n) r (k + 1)).map (koszulₗ K (Fin n)) = polyFormMinus K (Fin n) (r + 1) k := by
@@ -347,8 +305,7 @@ theorem sup_eq_polyFormMinus {r k : ℕ} (hk : 1 ≤ k) :
   exact le_antisymm (sup_le_sup_right (map_extDeriv_polyForm_le hk) _)
     (sup_le (polyForm_le_sup hk) le_sup_right)
 
-/-- **[AFW2006], Theorem 3.5, case `s = r - 1`**: `X(r, r - 1, k, n) = P_rΛᵏ` (`r ≥ 1`; for
-`r = 0`, `s = -1`: `dP_1Λ^{k-1} = P_0Λᵏ`). -/
+/-- `X(r + 1, r, k, n) = P_{r+1}Λᵏ` for `k ≥ 1`; [AFW2006], Thm 3.5. -/
 theorem sup_eq_polyForm {r k : ℕ} (hk : 1 ≤ k) :
     (polyForm K (Fin n) (r + 2) (k - 1)).map (extDerivₗ K (Fin n)) ⊔
       (polyForm K (Fin n) r (k + 1)).map (koszulₗ K (Fin n)) = polyForm K (Fin n) (r + 1) k := by
@@ -370,7 +327,6 @@ theorem map_extDeriv_polyForm_one_eq {k : ℕ} (hk : 1 ≤ k) :
 /-! ### The classification ([AFW2006], Theorem 3.6) -/
 
 omit [CharZero K] in
-/-- A finite-dimensional space of polynomial `k`-forms lies in some `P_NΛᵏ`. -/
 theorem exists_le_polyForm {V : Submodule K (PolyForm K (Fin n))} [FiniteDimensional K V]
     {k : ℕ} (hdeg : ∀ ω ∈ V, IsDeg k ω) : ∃ N, V ≤ polyForm K (Fin n) N k := by
   obtain ⟨S, hS⟩ := (Submodule.fg_iff_finiteDimensional V).2 inferInstance
@@ -381,7 +337,6 @@ theorem exists_le_polyForm {V : Submodule K (PolyForm K (Fin n))} [FiniteDimensi
   exact ⟨hdeg ω hωV, fun t => le_trans (le_sup (f := fun t => (ω t).totalDegree) (mem_univ t))
     (le_sup (f := fun ω => univ.sup fun t => (ω t).totalDegree) hω)⟩
 
-/-- The closed forms of `H_jΛᵏ` (`k ≥ 1`) lie in `dP_{a+1}Λ^{k-1}` for `j ≤ a`. -/
 theorem closed_le_map_extDeriv {j a k : ℕ} (hk : 1 ≤ k) (hja : j ≤ a) :
     homForm K (Fin n) j k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ≤
       (polyForm K (Fin n) (a + 1) (k - 1)).map (extDerivₗ K (Fin n)) := by
@@ -389,7 +344,6 @@ theorem closed_le_map_extDeriv {j a k : ℕ} (hk : 1 ≤ k) (hja : j ≤ a) :
   obtain ⟨η, hη, rfl⟩ := Koszul.exists_extDeriv_eq_of_extDeriv_eq_zero (by omega) hξ hdξ
   exact ⟨η, Koszul.polyForm_mono (by omega) _ (Koszul.homForm_le_polyForm _ _ hη), rfl⟩
 
-/-- The `κ`-closed forms of `H_{i+1}Λᵏ` lie in `κP_bΛ^{k+1}` for `i ≤ b`. -/
 theorem koszulClosed_le_map_koszul {i b k : ℕ} (hib : i ≤ b) :
     homForm K (Fin n) (i + 1) k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ≤
       (polyForm K (Fin n) b (k + 1)).map (koszulₗ K (Fin n)) := by
@@ -404,11 +358,6 @@ theorem koszulClosed_zero_eq_bot {k : ℕ} (hk : 1 ≤ k) :
   exact eq_bot_iff.2 fun ξ ⟨hξ, hκξ⟩ => (Submodule.mem_bot K).2
     (Koszul.eq_zero_of_mem_homForm_zero_of_koszul_eq_zero hξ hκξ)
 
-/-- **A linearly invariant space of `k`-forms of bounded degree is the sum of the summands
-`dH_{j+1}Λ^{k-1}`, `κH_{j-1}Λ^{k+1}` it contains**: it lies in every `T` containing them, as each
-homogeneous component of its elements splits into the two summands (`homForm_split`) and a
-nonzero part reaches its whole summand (`IsLinearInvariant.closed_le`,
-`IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero`). -/
 theorem IsLinearInvariant.le_of_summands {V T : Submodule K (PolyForm K (Fin n))}
     (hV : IsLinearInvariant V) {k N : ℕ} (hk : 1 ≤ k) (hN : V ≤ polyForm K (Fin n) N k)
     (hD : ∀ j, homForm K (Fin n) j k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ≤ V →
@@ -430,16 +379,8 @@ theorem IsLinearInvariant.le_of_summands {V T : Submodule K (PolyForm K (Fin n))
     · rw [hκ, Koszul.extDeriv_zero, smul_zero]; exact T.zero_mem
     · exact hD j (hV.closed_le hξ hξH hκ) h2
 
-/-- **[AFW2006], Theorem 3.6: the affinely invariant spaces of polynomial `k`-forms.** For
-`0 < k < n`, a nonzero finite-dimensional space `V` of polynomial `k`-forms on `Kⁿ` with
-`φ^* V ⊆ V` for every affine map `φ : Kⁿ → Kⁿ` is one of the spaces `X(r, s, k, n)` of
-`isAffineInvariant_sup`: `V = dP_{r+1}Λ^{k-1}` (`s = -1`) or
-`V = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` with `0 ≤ s ≤ r`. Proof of [AFW2006] with the
-representation theory of `GL(n)` replaced by `IsLinearInvariant.eq_of_le_homForm` (elementary:
-pullbacks and multi-weight parts): `V` is the sum of the summands `dH_{j+1}Λ^{k-1}` and
-`κH_{j-1}Λ^{k+1}` it contains (`IsLinearInvariant.le_of_summands`), and by the translation
-lemmas (Lemma 3.7) those summands form initial segments, the `κ`-segment ending at most one
-degree above the `d`-segment. -/
+/-- For `0 < k < n`, a nonzero finite-dimensional affinely invariant space of polynomial `k`-forms
+is `dP_{r+1}Λ^{k-1}` or `dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`, `s ≤ r`; [AFW2006], Thm 3.6. -/
 theorem IsAffineInvariant.eq_sup {V : Submodule K (PolyForm K (Fin n))} (hV : IsAffineInvariant V)
     [FiniteDimensional K V] {k : ℕ} (hdeg : ∀ ω ∈ V, IsDeg k ω) (hk : 0 < k) (hkn : k < n)
     (hne : V ≠ ⊥) :

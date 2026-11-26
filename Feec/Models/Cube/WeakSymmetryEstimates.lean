@@ -8,55 +8,20 @@ public import Feec.FiniteElement.GlobalInverseEstimate
 /-!
 # The weak-symmetry maps on the Freudenthal meshes of the cube: Props 5.8 and 5.9
 
-On the level-`(N + 1)` Freudenthal meshes of `Q = (0, ½)³` (`Feec.Models.Cube.FEM.mesh 3 N`,
-mesh size `h_N = 1 / (2 (N + 1))`), for the elements of Table 5.1 of [QuennevilleBelair2015]
-(`P₂Λ⁰ ⊗ ℝ³ → P₂⁻Λ¹ ⊗ ℝ³` and the lowest-order Nédélec and Raviart–Thomas spaces), with constants
-independent of `N`:
+For the elements of [QuennevilleBelair2015], Table 5.1, on the Freudenthal meshes of `Q = (0, ½)³`:
+`L²` bounds of `S₀,ₕ`, `S₁,ₕ`, the consistency of `S₀,ₕ` and lower bounds for the approximation of
+`S¹`, uniform in `N`.
 
-* **Prop 5.8, adapted** (`norm_glue_bggS0h_le`, `norm_glue_bggS1h_le`): `‖S₀,ₕψ‖ ≤ C ‖ψ‖` and
-  `‖S₁,ₕv‖ ≤ C ‖v‖` in `L²(Q)`. The proof is local, not through global `ℓ¹` sums of DOFs: on each
-  simplex `S_h = Π' S`, and `Π'` is `L²`-bounded on polynomial fields uniformly on the homothetic
-  copies `t + h K_σ` of the Kuhn simplices (`exists_formL2Sq_localInterp_le`).
-* **Prop 5.9(1)** (`norm_sub_glue_bggS0h_le`): `‖(I − Π¹) S⁰ψ‖ ≤ C h ‖∇ψ‖` on `P₂Λ⁰ ⊗ ℝ³`
-  (the kernel lemma `Feec.FiniteElement.exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`).
-* **Prop 5.9(2) is false** (`exists_interpolationError_ge`, `not_exists_interpolationError_bound`):
-  there is `c > 0` such that on every mesh `mesh 3 (N + 2)` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`
-  (vanishing boundary DOFs), `v ≠ 0`, with `‖(I − Π²) S¹ v‖ ≥ c ‖v‖_{H(curl)}` for the canonical
-  interpolant `Π²`; hence no bound `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` holds. **Projection
-  independence** (`exists_bestApproxError_ge`, `not_exists_bestApprox_bound`):
-  the same `v_N` satisfies `‖S¹ v_N − w‖ ≥ c' ‖v_N‖_{H(curl)}` for *every* piecewise `P₁⁻Λ²`
-  field `w`, because `δ₀ = dist_{L²(K₁)}(Ẑ, P₁⁻Λ²) > 0` (`refDist_pos`); so the hypothesis
-  `happ1` of `Feec.BGG.Discrete.error_estimate` fails for every projection `P²` onto the
-  Raviart–Thomas spaces of Table 5.1 (canonical or smoothed). `v_N` is also piecewise linear,
-  `v_N ∈ P₁Λ¹ ⊗ ℝ³` (`vN_mem_polySpace`), the space of the thesis' statement. The field is
-  `v_N = (0, 0, grad Π̃⁰ f_N)` (`vN`), `f_N(x) = F(h⁻¹(x − t_N))` with `F = χ y₀²/2` a smooth
-  bump profile, quadratic on one simplex `T₀ = t_N + h K_id`: `curl v_N = 0` (`dPiecewise_vN`),
-  `‖v_N‖² ≤ C h` (`exists_sum_formL2Sq_vN_le`: `L∞`-stability of `Π̃¹`, bounded overlap), while
-  on `T₀` the field `S¹ v_N` pulls back to `h Ẑ`, `Ẑ = S¹(0, 0, y₀ dy₀)` not a Raviart–Thomas
-  field (`refZ_notMem`), so `‖(I − Π²) S¹ v_N‖²_{L²(T₀)} = h c₀`, `c₀ > 0` (`formL2Sq_simplex₀`,
-  `refGap_pos`).
-* **`S` and the smoothing** (`smoothForm_wsL2`): `R S u = c S R̃ u` for the smoothing operators of
-  `Feec.FiniteElement.smoothForm` (extension by zero, mollification, dilation by `c`).
-* **`grad` is injective on `P₂Λ̊⁰ ⊗ ℝ³`** (`eq_zero_of_dPiecewise_tensor_eq_zero`; any family,
-  `eq_zero_of_dPiecewise_eq_zero`), from `ℌ⁰(H̊Λ(Q)) = 0`.
+## Main results
 
-**The canonical interpolants.** The interpolants of the global trimmed families on a mesh simplex
-`T` are the interpolants `Feec.FiniteElement.polyMinusInterp` of `LocalDof` for the lexicographic
-vertex order (`Feec.FiniteElement.PolySeq.localInterp_eq_polyMinusInterp`); the mesh simplices
-are `t + h_N K_σ` with `K_σ` the Kuhn simplices (`exists_mesh_simplex_eq`), reordered
-lexicographically (`lexSimplex`, `kuhnLex`, `localInterp_lowestOrder_eq`), so the local estimates
-of `Feec.FiniteElement.PolyInterpolation` hold with constants uniform over the `3!` simplices.
+* `norm_glue_bggS0h_le`, `norm_glue_bggS1h_le`: Prop 5.8 (adapted), `L²` bounds of `S₀,ₕ`, `S₁,ₕ`.
+* `norm_sub_glue_bggS0h_le`: `‖(I − Π¹) S⁰ψ‖ ≤ C h ‖∇ψ‖` on `P₂Λ⁰ ⊗ ℝ³` (Prop 5.9(1)).
+* `not_exists_interpolationError_bound`: no bound `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` holds.
+* `not_exists_bestApprox_bound`: the same with `Π² S¹ v` replaced by any piecewise `P₁⁻Λ²` field.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, Props 5.8–5.9, Table 5.1
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.2 (canonical interpolants), §5.4 (scaling arguments)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
-  (interpolation error on affine-equivalent families)
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
-* [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -113,8 +78,6 @@ theorem closedInterior_mapEquiv_lexSimplex (K : Affine.Simplex ℝ (Fin n → �
       (mapEquiv (boxMap t h hh) K).closedInterior := by
   rw [← convexHull_vertexSet, ← convexHull_vertexSet, vertexSet_mapEquiv_lexSimplex]
 
-/-- **The interpolant of `P₁⁻Λᵏ⁺¹` on `T = t + h K`** is `polyMinusInterp` on the homothetic image
-of the lexicographically ordered `K`. -/
 theorem localInterp_lowestOrder_eq (K : Affine.Simplex ℝ (Fin n → ℝ) n) (t : Fin n → ℝ)
     {h : ℝ} (hh : 0 < h) {k : ℕ} (hk : k + 1 ≤ n) (w : contDegForms n (k + 1)) :
     (((polyElement n PolySeq.lowestOrder).localInterp (mapEquiv (boxMap t h hh.ne') K) (k + 1)
@@ -135,10 +98,6 @@ section LocalBounds
 
 variable {r k : ℕ}
 
-/-- **`L²`-boundedness of the canonical interpolant on polynomial fields**: for `T = t + h K`,
-`‖Π_T u‖_{L²(T)} ≤ C ‖u‖_{L²(T)}` on `P_rΛᵏ`, with `Π_T` the interpolant of `P_{r'}⁻Λᵏ`
-(`r' ≤ r`) and `C` depending only on `K`, `r`, `r'`, `k` (a finite-dimensional bound on `K`,
-transported by the naturality of `Π` under homotheties). -/
 theorem exists_formL2Sq_polyMinusInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) {r' : ℕ}
     (hr' : 1 ≤ r') (hk : k ≤ n) (hrr : r' ≤ r) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n}
@@ -187,8 +146,6 @@ theorem exists_formL2Sq_polyMinusInterp_le (K : Affine.Simplex ℝ (Fin n → �
     _ = h ^ k * (C * √(formL2Sq (mapEquiv (boxMap t h hh.ne') K).closedInterior u)) := by
         rw [h2]; ring
 
-/-- `exists_formL2Sq_polyMinusInterp_le` with one constant for finitely many reference
-simplices. -/
 theorem exists_formL2Sq_polyMinusInterp_le_uniform {ι : Type*} [Finite ι]
     (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) {r' : ℕ} (hr' : 1 ≤ r') (hk : k ≤ n)
     (hrr : r' ≤ r) :
@@ -205,8 +162,6 @@ theorem exists_formL2Sq_polyMinusInterp_le_uniform {ι : Type*} [Finite ι]
     (hC i hh t hu).trans (mul_le_mul_of_nonneg_right (Finset.single_le_sum (f := C)
       (fun j _ => hC0 j) (Finset.mem_univ i)) (Real.sqrt_nonneg _))⟩
 
-/-- The kernel lemma `exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq` with one constant for
-finitely many reference simplices. -/
 theorem exists_formL2Sq_sub_polyMinusInterp_le_uniform {ι : Type*} [Finite ι]
     (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) {r' : ℕ} (hr' : 1 ≤ r') (hk : k ≤ n)
     (hrr : r' ≤ r) :
@@ -231,9 +186,6 @@ end LocalBounds
 
 section Glue
 
-/-- **The squared norm of a glued field is the sum of the local squared norms**, on meshes whose
-open simplices lie in the meshed domain (the reverse inequality of
-`Feec.FiniteElement.norm_sq_pieceL2_le`). -/
 theorem norm_sq_pieceL2_eq (M : SimplicialMesh n)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {ι : Type*} [Fintype ι]
     (v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → ℝ)
@@ -271,8 +223,6 @@ theorem interior_subset_mesh_domain {N : ℕ} :
     ∀ T ∈ (mesh n N).simplices, interior T.closedInterior ⊆ (mesh n N).domain := fun T hT => by
   rw [mesh_domain]; exact interior_closedInterior_subset_cubeDomain hT
 
-/-- **`‖glue u‖² = Σ_T ‖u_T‖²_{L²(T)}`** on the Freudenthal meshes of the cube
-(`LocalElement.norm_sq_glue`). -/
 theorem norm_sq_glue_eq (E : LocalElement n) {N k : ℕ} (u : E.Piecewise (mesh n N) k) :
     ‖E.glue (mesh n N) k u‖ ^ 2 =
       ∑ T : (mesh n N).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
@@ -281,7 +231,6 @@ theorem norm_sq_glue_eq (E : LocalElement n) {N k : ℕ} (u : E.Piecewise (mesh 
     ← Finset.sum_coe_sort]
   exact Finset.sum_congr rfl fun T _ => by rw [E.extendPW_of_mem _ u T.2]
 
-/-- `norm_sq_glue_eq` for integer degrees `k ≥ 0`. -/
 theorem norm_sq_glue_eq_int (E : LocalElement n) {N : ℕ} {k : ℤ} (hk : 0 ≤ k)
     (u : E.Piecewise (mesh n N) k.toNat) :
     ‖E.glue (mesh n N) k u‖ ^ 2 =
@@ -290,7 +239,6 @@ theorem norm_sq_glue_eq_int (E : LocalElement n) {N : ℕ} {k : ℤ} (hk : 0 ≤
   obtain ⟨k', rfl⟩ := Int.eq_ofNat_of_zero_le hk
   exact norm_sq_glue_eq E u
 
-/-- `‖Σ_a uₐ‖² = Σₐ ‖uₐ‖²` for the componentwise gluing. -/
 theorem norm_sq_tensorGlue (E : LocalElement n) {M : SimplicialMesh n} {m : ℕ} {k : ℤ}
     (u : Fin m → E.Piecewise M k.toNat) :
     ‖E.tensorGlue M m k u‖ ^ 2 = ∑ a, ‖E.glue M k (u a)‖ ^ 2 := by
@@ -302,7 +250,6 @@ end Glue
 
 section Pointwise
 
-/-- `(S v)_t = Σ_{a,r} c(t; a, r) (vₐ)_r` for vectors of `k`-forms. -/
 theorem coordWedgeSum_eq_sum_wsCoeff {k : ℕ} {v : Fin n → Finset (Fin n) → ℝ}
     (hv : ∀ a, IsDeg k (v a)) (t : formIdx n ((k : ℤ) + 1)) :
     coordWedgeSum v t.1 = ∑ p : Fin n × formIdx n k, wsCoeff k t p * v p.1 p.2.1 := by
@@ -313,7 +260,6 @@ theorem coordWedgeSum_eq_sum_wsCoeff {k : ℕ} {v : Fin n → Finset (Fin n) →
   conv_lhs => rw [e]
   exact coordWedgeSum_formExt (fun a r => v a r.1) t
 
-/-- The algebra of `‖S‖² ≤ k + 1`: `Σ_t (Σ_p c(t; p) x_p)² ≤ (k + 1) Σ_p x_p²`. -/
 theorem sum_sq_wsCoeff_le (k : ℤ) (x : Fin n × formIdx n k → ℝ) :
     ∑ t : formIdx n (k + 1), (∑ p, wsCoeff k t p * x p) ^ 2 ≤ ((k : ℝ) + 1) * ∑ p, x p ^ 2 := by
   have hpt : ∀ t : formIdx n (k + 1),
@@ -347,8 +293,6 @@ theorem sum_sq_wsCoeff_le (k : ℤ) (x : Fin n × formIdx n k → ℝ) :
             omega⟩
           simp
 
-/-- **`|S v|² ≤ (k + 1) Σₐ |vₐ|²` pointwise** (`k`-forms; the Frobenius norms of the
-coefficients). -/
 theorem sum_sq_coordWedgeSum_le {k : ℕ} {v : Fin n → Finset (Fin n) → ℝ}
     (hv : ∀ a, IsDeg k (v a)) :
     ∑ s, (coordWedgeSum v s) ^ 2 ≤ ((k : ℝ) + 1) * ∑ a, ∑ s, (v a s) ^ 2 := by
@@ -369,7 +313,6 @@ theorem sum_sq_coordWedgeSum_le {k : ℕ} {v : Fin n → Finset (Fin n) → ℝ}
   refine Fintype.sum_equiv (Equiv.subtypeEquivRight fun s => by push_cast; rfl) _ _ fun t => ?_
   rfl
 
-/-- **`S⁰` is an isometry pointwise**: `|S⁰ψ|² = Σₐ |ψₐ|²` for vectors of `0`-forms. -/
 theorem sum_sq_coordWedgeSum_zero {v : Fin n → Finset (Fin n) → ℝ} (hv : ∀ a, IsDeg 0 (v a)) :
     ∑ s, (coordWedgeSum v s) ^ 2 = ∑ a, ∑ s, (v a s) ^ 2 := by
   have hdeg : IsDeg 1 (coordWedgeSum v) := isDeg_coordWedgeSum hv
@@ -401,7 +344,6 @@ theorem continuous_sum_sq {u : FormField n} (hu : Continuous u) :
     Continuous fun x => ∑ s, (u x s) ^ 2 :=
   continuous_finsetSum _ fun s _ => continuous_sq_coeff hu s
 
-/-- `ξ ∧ ·` maps `P_rΛᵏ` to `P_rΛᵏ⁺¹` for a constant covector `ξ`. -/
 theorem wedge_mem_polySpace {r k : ℕ} (ξ : Fin n → ℝ) {w : FormField n}
     (hw : w ∈ polySpace n r k) : (fun x => wedge ξ (w x)) ∈ polySpace n r (k + 1) := by
   obtain ⟨Ω, hΩ, rfl⟩ := hw
@@ -417,7 +359,6 @@ theorem wedge_mem_polySpace {r k : ℕ} (ξ : Fin n → ℝ) {w : FormField n}
   · funext x s
     simp [evalForm_apply, wedge_apply, mul_comm]
 
-/-- `S` maps `(P_rΛᵏ)ⁿ` to `P_rΛᵏ⁺¹`. -/
 theorem coordWedgeField_mem_polySpace {r k : ℕ} {v : Fin n → FormField n}
     (hv : ∀ a, v a ∈ polySpace n r k) : coordWedgeField v ∈ polySpace n r (k + 1) := by
   have : coordWedgeField v = ∑ a, fun x => wedge (Pi.single a 1) (v a x) := by
@@ -431,7 +372,6 @@ theorem integral_sum_sq_eq_formL2Sq {S : Set (Fin n → ℝ)} (hS : IsCompact S)
   exact integral_finsetSum _ fun s _ =>
     (continuous_sq_coeff hu s).continuousOn.integrableOn_compact hS
 
-/-- `‖S v‖²_{L²(S)} ≤ (k + 1) Σₐ ‖vₐ‖²_{L²(S)}`. -/
 theorem formL2Sq_coordWedgeField_le {S : Set (Fin n → ℝ)} (hS : IsCompact S) {k : ℕ}
     {v : Fin n → FormField n} (hc : ∀ a, Continuous (v a)) (hv : ∀ a x, IsDeg k (v a x)) :
     formL2Sq S (coordWedgeField v) ≤ ((k : ℝ) + 1) * ∑ a, formL2Sq S (v a) := by
@@ -446,7 +386,6 @@ theorem formL2Sq_coordWedgeField_le {S : Set (Fin n → ℝ)} (hS : IsCompact S)
     hS.measurableSet fun x _ => ?_
   exact sum_sq_coordWedgeSum_le fun a => hv a x
 
-/-- `‖S⁰ψ‖²_{L²(S)} = Σₐ ‖ψₐ‖²_{L²(S)}`. -/
 theorem formL2Sq_coordWedgeField_zero {S : Set (Fin n → ℝ)} (hS : IsCompact S)
     {v : Fin n → FormField n} (hc : ∀ a, Continuous (v a)) (hv : ∀ a x, IsDeg 0 (v a x)) :
     formL2Sq S (coordWedgeField v) = ∑ a, formL2Sq S (v a) := by
@@ -473,8 +412,6 @@ theorem exists_mesh_simplex_eq {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ)
 abbrev kuhnLex (σ : Equiv.Perm (Fin n)) : Affine.Simplex ℝ (Fin n → ℝ) n :=
   lexSimplex (kuhnSimplex σ)
 
-/-- **The local bound of `S_h = Π' S`** on every mesh simplex, with a constant independent of the
-mesh: `‖Π'_T (S v)‖²_{L²(T)} ≤ C ‖S v‖²_{L²(T)}` for `S v ∈ P_rΛᵏ⁺¹`. -/
 theorem exists_formL2Sq_localInterp_le {k r : ℕ} (hk : k + 1 ≤ n) (hr : 1 ≤ r) :
     ∃ C, 0 ≤ C ∧ ∀ (N : ℕ) (T : (mesh n N).simplices) {w : FormField n}
       (hw : w ∈ polySpace n r (k + 1)),
@@ -509,11 +446,10 @@ theorem exists_formL2Sq_localInterp_le {k r : ℕ} (hk : k + 1 ≤ n) (hr : 1 �
 
 end MeshLocal
 
-/-! ### Prop 5.8, adapted -/
+/-! ### Prop 5.8 (adapted) -/
 
 section Prop58
 
-/-- `S_h` on a mesh simplex as the interpolant of a polynomial field. -/
 theorem wsPiecewise_apply_eq (S : PolySeq) {N k : ℕ}
     (u : Fin n → (polyElement n S).Piecewise (mesh n N) k) (T : (mesh n N).simplices) {r : ℕ}
     (hw : coordWedgeField (fun a => ((u a T : (polyElement n S).space T k) : FormField n)) ∈
@@ -525,12 +461,10 @@ theorem wsPiecewise_apply_eq (S : PolySeq) {N k : ℕ}
           (polySpace_le_contDegForms r (k + 1) hw).1⟩ :
           (polyElement n PolySeq.lowestOrder).space T (k + 1)) : FormField n) := rfl
 
-/-- The fields of a polynomial family lie in `P_{r_k}Λᵏ`. -/
 theorem mem_polySpace_of_space (S : PolySeq) {k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (u : (polyElement n S).space T k) : (u : FormField n) ∈ polySpace n (S.deg k) k :=
   S.space_le_polySpace k u.2
 
-/-- The local form of Prop 5.8 for `S⁰`: `‖S₀,ₕψ‖²_{L²(T)} ≤ C Σₐ ‖ψₐ‖²_{L²(T)}`. -/
 theorem exists_formL2Sq_wsPiecewise_zero_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0)
     (T : (mesh 3 N).simplices),
@@ -552,7 +486,6 @@ theorem exists_formL2Sq_wsPiecewise_zero_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
   rw [wsPiecewise_apply_eq _ _ _ hw]
   exact h1
 
-/-- The local form of Prop 5.8 for `S¹`: `‖S₁,ₕv‖²_{L²(T)} ≤ C Σₐ ‖vₐ‖²_{L²(T)}`. -/
 theorem exists_formL2Sq_wsPiecewise_one_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1)
     (T : (mesh 3 N).simplices),
@@ -582,7 +515,6 @@ theorem exists_formL2Sq_wsPiecewise_one_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
         mul_le_mul_of_nonneg_left h2 hC0
     _ = _ := by ring
 
-/-- Summing a local bound over the mesh. -/
 theorem norm_le_of_local {N : ℕ} {E E' : LocalElement n} {k k' : ℕ} {m : ℕ}
     (u : E'.Piecewise (mesh n N) k') (ψ : Fin m → E.Piecewise (mesh n N) k) {C : ℝ} (hC0 : 0 ≤ C)
     (hloc : ∀ T : (mesh n N).simplices,
@@ -606,8 +538,7 @@ theorem norm_le_of_local {N : ℕ} {E E' : LocalElement n} {k k' : ℕ} {m : ℕ
   rw [mul_pow, Real.sq_sqrt hC0]
   exact hsq
 
-/-- **[QuennevilleBelair2015], Prop 5.8, adapted (`S₀,ₕ`)**: `‖S₀,ₕψ‖_{L²(Q)} ≤ C ‖ψ‖_{L²(Q)}`
-on `P₂Λ⁰ ⊗ ℝ³`, `C` independent of the mesh level. -/
+/-- **The `L²` bound of `S₀,ₕ`**, uniform in `N` ([QuennevilleBelair2015], Prop 5.8 (adapted)). -/
 theorem norm_glue_bggS0h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 0),
     ‖(polyElement 3 PolySeq.lowestOrder).glue (mesh 3 N) ((0 : ℕ) + 1 : ℕ)
@@ -619,8 +550,7 @@ theorem norm_glue_bggS0h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
   obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_wsPiecewise_zero_le
   exact ⟨√C, Real.sqrt_nonneg _, fun N ψ => norm_le_of_local _ _ hC0 fun T => hC N _ T⟩
 
-/-- **[QuennevilleBelair2015], Prop 5.8, adapted (`S₁,ₕ`)**: `‖S₁,ₕv‖_{L²(Q)} ≤ C ‖v‖_{L²(Q)}`
-on `P₂⁻Λ¹ ⊗ ℝ³`. -/
+/-- **The `L²` bound of `S₁,ₕ`**, uniform in `N` ([QuennevilleBelair2015], Prop 5.8 (adapted)). -/
 theorem norm_glue_bggS1h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
     ‖(polyElement 3 PolySeq.lowestOrder).glue (mesh 3 N) ((1 : ℕ) + 1 : ℕ)
@@ -648,7 +578,6 @@ theorem pieceFun_sum_mul (M : SimplicialMesh n) {β : Type*} (u : Finset β) (c 
   · simp [Set.indicator_of_mem hx]
   · simp [Set.indicator_of_notMem hx]
 
-/-- **`S` of a glued field is the glued field of the local `S`**: `S(glue ψ) = glue(T ↦ S ψ_T)`. -/
 theorem wsL2_tensorGlue (E : LocalElement n) (M : SimplicialMesh n) {k : ℕ}
     (ψ : Fin n → E.Piecewise M k) :
     wsL2 (Ω := M.domain) k (E.tensorGlue M n k ψ) =
@@ -697,7 +626,6 @@ theorem isDeg_zero_partialDerivForm {u : FormField n} (hu : ∀ x, IsDeg 0 (u x)
   have : (fun y => u y s) = fun _ => 0 := funext fun y => hu y s hs
   simp only [partialDerivForm, this, partialDeriv_const]
 
-/-- `‖D S⁰ψ‖²_{L²(S)} = Σₐ ‖Dψₐ‖²_{L²(S)}` for polynomial `ψ`. -/
 theorem formGradL2Sq_coordWedgeField_zero {S : Set (Fin n → ℝ)} (hS : IsCompact S) {r : ℕ}
     {v : Fin n → FormField n} (hv : ∀ a, v a ∈ polySpace n r 0) :
     formGradL2Sq S (coordWedgeField v) = ∑ a, formGradL2Sq S (v a) := by
@@ -734,7 +662,6 @@ theorem formGradL2Sq_coordWedgeField_zero {S : Set (Fin n → ℝ)} (hS : IsComp
   exact sum_sq_coordWedgeSum_zero fun a =>
     isDeg_zero_partialDerivForm (isDeg_of_mem_polySpace (hv a)) j x
 
-/-- For `0`-forms, `‖Du‖_{L²(S)} = ‖du‖_{L²(S)}` (`du = Σⱼ ∂ⱼu dxⱼ`). -/
 theorem formGradL2Sq_eq_formL2Sq_extDeriv {S : Set (Fin n → ℝ)} {u : FormField n}
     (hu : ∀ x, IsDeg 0 (u x)) : formGradL2Sq S u = formL2Sq S (extDeriv u) := by
   have hdeg : ∀ x, IsDeg 1 (extDeriv u x) := IsDeg.extDeriv hu
@@ -758,8 +685,6 @@ theorem formGradL2Sq_eq_formL2Sq_extDeriv {S : Set (Fin n → ℝ)} {u : FormFie
   funext x
   simp [extDeriv_apply, ExteriorFibre.sgn, Finset.filter_singleton]
 
-/-- The kernel lemma on every mesh simplex, with a constant independent of the mesh:
-`‖w − Π'_T w‖²_{L²(T)} ≤ C h² ‖Dw‖²_{L²(T)}` for `w ∈ P_rΛᵏ⁺¹`. -/
 theorem exists_formL2Sq_sub_localInterp_le {k r : ℕ} (hk : k + 1 ≤ n) (hr : 1 ≤ r) :
     ∃ C, 0 ≤ C ∧ ∀ (N : ℕ) (T : (mesh n N).simplices) {w : FormField n}
       (hw : w ∈ polySpace n r (k + 1)),
@@ -812,8 +737,6 @@ theorem pieceL2_sub (M : SimplicialMesh n) (S : Set (Fin n → ℝ)) {ι : Type*
   · simp [Set.indicator_of_mem hx]
   · simp [Set.indicator_of_notMem hx]
 
-/-- `‖S(glue ψ) − glue u‖² ≤ Σ_T ‖S ψ_T − u_T‖²_{L²(T)}` on the cube meshes (`ψ` a vector of
-`k`-forms, `u` a `(k+1)`-form). -/
 theorem norm_sq_wsL2_sub_glue_le {N k : ℕ} (E E' : LocalElement n)
     (ψ : Fin n → E.Piecewise (mesh n N) k) (u : E'.Piecewise (mesh n N) (k + 1)) :
     ‖wsL2 (Ω := (mesh n N).domain) (k : ℤ) (E.tensorGlue (mesh n N) n (k : ℤ) ψ) -
@@ -840,7 +763,6 @@ theorem norm_sq_wsL2_sub_glue_le {N k : ℕ} (E E' : LocalElement n)
   simp only [formComp, E.extendPW_of_mem _ _ T.2, E'.extendPW_of_mem _ _ T.2,
     coordWedgeField_apply, Pi.sub_apply]
 
-/-- The local form of Prop 5.9(1): `‖(I − Π¹)S⁰ψ‖²_{L²(T)} ≤ C h² Σₐ ‖dψₐ‖²_{L²(T)}`. -/
 theorem exists_formL2Sq_sub_wsPiecewise_zero_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 0)
     (T : (mesh 3 N).simplices),
@@ -876,9 +798,7 @@ theorem norm_sq_tensorGlue_dPiecewise {N : ℕ} (E : LocalElement n) {m : ℕ}
   rw [norm_sq_glue_eq_int _ (by norm_num)]
   rfl
 
-/-- **[QuennevilleBelair2015], Prop 5.9(1)**: `‖(I − Π¹) S⁰ψ‖_{L²(Q)} ≤ C h ‖∇ψ‖_{L²(Q)}` on
-`P₂Λ⁰ ⊗ ℝ³`, `C` independent of the mesh (`S⁰ψ` is the `L²` field `wsL2 0`, `(I − Π¹) S⁰ψ` its
-difference with `S₀,ₕψ = Π¹S⁰ψ`, and `∇ψ` the glued `dψ`). -/
+/-- **`‖(I − Π¹) S⁰ψ‖ ≤ C h ‖∇ψ‖` on `P₂Λ⁰ ⊗ ℝ³`** ([QuennevilleBelair2015], Prop 5.9(1)). -/
 theorem norm_sub_glue_bggS0h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 0),
     ‖wsL2 (Ω := (mesh 3 N).domain) ((0 : ℕ) : ℤ) ((polyElement 3 PolySeq.lagrangeP2).tensorGlue
@@ -914,8 +834,6 @@ theorem norm_sub_glue_bggS0h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
 
 end Prop59
 
-/-! ### Strong approximation for `C¹` fields -/
-
 section Strong
 
 end Strong
@@ -924,18 +842,13 @@ end Strong
 
 section SmoothingInjective
 
-/-- `u ↦ R̃ u` (extension by zero, mollification, dilation) as a linear map on `L²(Ω)`. -/
+/-- `u ↦ R̃ u` as a linear map on `L²(Ω)`. -/
 def smoothExtₗ {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ)) (hΩ : MeasurableSet Ω) :
     L2 ℝ Ω →ₗ[ℝ] (Fin n → ℝ) → ℝ where
   toFun u := smoothExt Ω p (u : (Fin n → ℝ) → ℝ)
   map_add' u v := smoothExt_coe_add hΩ u v
   map_smul' a u := smoothExt_coe_smul hΩ a u
 
-/-- **`S` commutes with the smoothing up to the dilation factor**: `R S u = c S R̃ u`, with
-`R`, `R̃` the smoothing of `L²` forms of degrees `k + 1`, `k` (`smoothForm`: extension by zero,
-mollification, pullback by the dilation `x ↦ c (x − x₀) + x₀`) — the mollification commutes
-with the constant-coefficient map `S`, and the dilation contributes the factor `c` of
-`affinePullback_scalarMat_coordWedgeField`. -/
 theorem smoothForm_wsL2 {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
     (hΩ : MeasurableSet Ω) (k : ℕ) (u : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :
     (smoothForm p hΩ ((k : ℤ) + 1) (wsL2 (Ω := Ω) (k : ℤ) u) : FormField n) =
@@ -969,8 +882,6 @@ theorem eq_zero_of_minimal_eq_zero_of_eq {Ω : Set (Fin 3 → ℝ)} (hΩ : Ω = 
   subst hΩ
   exact D0_eq_zero hx
 
-/-- **`d` is injective on `Λ̊_h⁰`** (any element family on the cube meshes): `ℌ⁰(H̊Λ(Q)) = 0`
-and the glued fields of `Λ̊_h⁰` lie in `D(d_min)`. -/
 theorem eq_zero_of_dPiecewise_eq_zero (E : LocalElement 3) (N : ℕ) (u : E.globalSpace₀ (mesh 3 N) 0)
     (hu : E.dPiecewise (mesh 3 N) 0 (u : E.Piecewise (mesh 3 N) 0) = 0) : u = 0 := by
   obtain ⟨h, hval⟩ := E.glue_mem_minimal (mesh 3 N) (isOpen_mesh_domain 3 N) (center 3)
@@ -982,8 +893,6 @@ theorem eq_zero_of_dPiecewise_eq_zero (E : LocalElement 3) (N : ℕ) (u : E.glob
       (map_zero _).symm)
   exact Subtype.ext this
 
-/-- **`grad` is injective on `P₂Λ̊⁰ ⊗ ℝ³`** (row-wise; the injectivity used in the BGG
-construction of [QuennevilleBelair2015], §5.3). -/
 theorem eq_zero_of_dPiecewise_tensor_eq_zero (N : ℕ)
     (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace₀ (mesh 3 N) 0)
     (hψ : ∀ a, (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 N) 0
@@ -992,7 +901,7 @@ theorem eq_zero_of_dPiecewise_tensor_eq_zero (N : ℕ)
 
 end SmoothingInjective
 
-/-! ### Prop 5.9(2) is false -/
+/-! ### A lower bound for `(I − Π²) S¹` -/
 
 section Prop59Two
 
@@ -1039,7 +948,6 @@ theorem refZ_mem : refZ ∈ polySpace 3 1 2 := by
     simpa using extDeriv_mem_polySpace refQ_mem
   · simp [ha]
 
-/-- The coefficient of `dy₀ ∧ dy₂` of a trimmed linear `2`-form does not depend on `y₀`. -/
 theorem apply_single_eq_of_mem_p1MinusForms {u : FormField 3} (hu : u ∈ p1MinusForms 3 2) :
     u (Pi.single 0 1) {0, 2} = u 0 {0, 2} := by
   induction hu using Submodule.span_induction with
@@ -1108,8 +1016,6 @@ theorem formL2Sq_smul (S : Set (Fin 3 → ℝ)) (c : ℝ) (u : FormField 3) :
     formL2Sq S (c • u) = c ^ 2 * formL2Sq S u := by
   simp only [formL2Sq, Pi.smul_apply, smul_eq_mul, mul_pow, integral_const_mul, Finset.mul_sum]
 
-/-- **The local gap on a scaled simplex**: if `H^* Z = h Ẑ` for `T = t + h K_id`, then
-`‖Z − Π_T Z‖²_{L²(T)} = h c₀`. -/
 theorem formL2Sq_sub_localInterp_of_pullback {h : ℝ} (hh : 0 < h) (t : Fin 3 → ℝ)
     {T : Affine.Simplex ℝ (Fin 3 → ℝ) 3}
     (hT : T = mapEquiv (boxMap t h hh.ne') (kuhnSimplex (1 : Equiv.Perm (Fin 3))))
@@ -1164,12 +1070,11 @@ theorem formL2Sq_sub_localInterp_of_pullback {h : ℝ} (hh : 0 < h) (t : Fin 3 �
 abbrev refEmb : polySpace 3 1 2 →ₗ[ℝ] Domain.L2F ℝ refK.closedInterior (Finset (Fin 3)) :=
   l2EmbedOf (polySpace 3 1 2) (polySpace_le_contForms 1 2) refK.isCompact_closedInterior
 
-/-- The image of `P₁⁻Λ² ⊆ P₁Λ²` in `L²(K₁)` (finite-dimensional, hence closed). -/
+/-- The image of `P₁⁻Λ² ⊆ P₁Λ²` in `L²(K₁)`. -/
 def refMinusL2 : Submodule ℝ (Domain.L2F ℝ refK.closedInterior (Finset (Fin 3))) :=
   ((polyMinusSpace 3 1 2).comap (polySpace 3 1 2).subtype).map refEmb
 
-/-- `δ₀ = dist_{L²(K₁)}(Ẑ, P₁⁻Λ²)`: the distance of `Ẑ` to the whole lowest-order
-Raviart–Thomas space, not only to its canonical interpolant (compare `refGap`). -/
+/-- `δ₀ = dist_{L²(K₁)}(Ẑ, P₁⁻Λ²)`, the distance of `Ẑ` to the Raviart–Thomas space. -/
 def refDist : ℝ := Metric.infDist (refEmb ⟨refZ, refZ_mem⟩) (refMinusL2 : Set _)
 
 theorem refDist_pos : 0 < refDist := by
@@ -1186,7 +1091,6 @@ theorem refDist_pos : 0 < refDist := by
   subst this
   exact refZ_notMem ((polyMinusSpace_one_eq_p1MinusForms 2).le hp)
 
-/-- `‖Ẑ − p‖²_{L²(K₁)} ≥ δ₀²` for every `p ∈ P₁⁻Λ²`. -/
 theorem refDist_sq_le {p : FormField 3} (hp : p ∈ polyMinusSpace 3 1 2) :
     refDist ^ 2 ≤ formL2Sq refK.closedInterior (refZ - p) := by
   have hpp : p ∈ polySpace 3 1 2 := polyMinusSpace_le_polySpace hp
@@ -1201,8 +1105,6 @@ theorem refDist_sq_le {p : FormField 3} (hp : p ∈ polyMinusSpace 3 1 2) :
   rw [← hn]
   exact pow_le_pow_left₀ Metric.infDist_nonneg h1 2
 
-/-- **The local best-approximation gap on a scaled simplex**: if `H^* Z = h Ẑ` for
-`T = t + h K_id`, then `‖Z − w‖²_{L²(T)} ≥ h δ₀²` for every `w ∈ P₁⁻Λ²`. -/
 theorem mul_refDist_sq_le_formL2Sq {h : ℝ} (hh : 0 < h) (t : Fin 3 → ℝ)
     {Z : FormField 3} (hZ : Z ∈ polySpace 3 1 2)
     (hpull : affinePullback (scalarMat 3 h) t Z = h • refZ)
@@ -1284,7 +1186,7 @@ theorem exists_bound_extDeriv_refF : ∃ G, 0 ≤ G ∧ ∀ y, ‖extDeriv refF 
   · rw [extDeriv_refF_eq_zero hy, norm_zero]; exact le_max_right _ _
 
 
-/-! #### The counterexample fields on the level-`(N + 3)` meshes -/
+/-! #### The fields of the lower bounds on the level-`(N + 3)` meshes -/
 
 /-- The lattice index `(1, 1, 1)`. -/
 def cornerIdx (N : ℕ) : Fin 3 → Fin (N + 2 + 1) := fun _ => ⟨1, by omega⟩
@@ -1314,7 +1216,7 @@ theorem resc_apply (N : ℕ) (x : Fin 3 → ℝ) (i : Fin 3) :
   field_simp
   ring
 
-/-- The pullback of a field to the mesh scale: `x ↦ G(h⁻¹ (x − t_N))`. -/
+/-- The pullback of a field by `x ↦ h⁻¹ (x − t_N)`. -/
 def scaled (N : ℕ) (G : FormField 3) : FormField 3 :=
   affinePullback (scalarMat 3 (hN (N + 2))⁻¹) (-((hN (N + 2))⁻¹ • corner N)) G
 
@@ -1412,8 +1314,6 @@ theorem extDeriv_fN_eq_zero {N : ℕ} {x : Fin 3 → ℝ} (hx : 2 * hN (N + 2) <
   rw [lt_inv_mul_iff₀ hh]
   linarith
 
-/-- **`L∞`-stability of the canonical interpolant** of a global family on the cube meshes:
-`|(Π_h w)_T| ≤ A sup_T |w|` on every simplex, `A` independent of the mesh. -/
 theorem exists_abs_globalInterp_le (S : PolySeq) (k : ℕ) :
     ∃ A, 0 ≤ A ∧ ∀ (N : ℕ) (T : (mesh n N).simplices) (w : contForms n) {β : ℝ}, 0 ≤ β →
       (∀ x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior, ∀ s,
@@ -1452,7 +1352,7 @@ def phiN (N : ℕ) : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N +
   (polyElement 3 PolySeq.lagrangeP2).globalInterp (mesh 3 (N + 2)) 0
     (Submodule.inclusion c1Forms_le_contForms (fN1 N))
 
-/-- **The counterexample** `v_N = (0, 0, grad φ_N) ∈ P₂⁻Λ¹ ⊗ ℝ³`. -/
+/-- The field `v_N = (0, 0, grad φ_N) ∈ P₂⁻Λ¹ ⊗ ℝ³` of the lower bounds. -/
 def vN (N : ℕ) : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1 :=
   Pi.single 2 ((polyElement 3 PolySeq.lagrangeP2).dGlobal (mesh 3 (N + 2)) 0 (phiN N))
 
@@ -1535,7 +1435,6 @@ theorem pullback_ZN (N : ℕ) :
     rw [pullback_scaled]
   · rw [Pi.single_eq_of_ne hi, Pi.single_eq_of_ne hi, affinePullback_zero]
 
-/-- **The lower bound on `T₀`**: `‖(I − Π²) S¹ v_N‖²_{L²(T₀)} = h_N c₀`. -/
 theorem formL2Sq_simplex₀ (N : ℕ) :
     formL2Sq (simplex₀ N).closedInterior
       (coordWedgeField (fun a => (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise
@@ -1562,7 +1461,6 @@ theorem formL2Sq_simplex₀ (N : ℕ) :
 
 
 open Classical in
-/-- The pointwise bound on `d f_N`, localized at `c_N`. -/
 theorem abs_extDeriv_fN_le {G : ℝ} (hG : ∀ y, ‖extDeriv refF y‖ ≤ G) (N : ℕ)
     (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3) :
     ∀ x ∈ T.closedInterior, ∀ s, |extDeriv (fN N) x s| ≤
@@ -1578,7 +1476,6 @@ theorem abs_extDeriv_fN_le {G : ℝ} (hG : ∀ y, ‖extDeriv refF y‖ ≤ G) (
     rw [extDeriv_fN_eq_zero hd]
     simp
 
-/-- **The upper bound** `‖v_N‖²_{L²(Q)} ≤ C h_N`. -/
 theorem exists_sum_formL2Sq_vN_le : ∃ C, 0 ≤ C ∧ ∀ N : ℕ,
     ∑ T : (mesh 3 (N + 2)).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin 3 → ℝ) 3).closedInterior
       ((((vN N 2 : (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1) :
@@ -1642,7 +1539,6 @@ theorem exists_sum_formL2Sq_vN_le : ∃ C, 0 ≤ C ∧ ∀ N : ℕ,
     _ = _ := by ring
 
 
-/-- `‖S(glue ψ) − glue u‖² = Σ_T ‖S ψ_T − u_T‖²_{L²(T)}` on the cube meshes. -/
 theorem norm_sq_wsL2_sub_glue_eq {n N k : ℕ} (E E' : LocalElement n)
     (ψ : Fin n → E.Piecewise (mesh n N) k) (u : E'.Piecewise (mesh n N) (k + 1)) :
     ‖wsL2 (Ω := (mesh n N).domain) (k : ℤ) (E.tensorGlue (mesh n N) n (k : ℤ) ψ) -
@@ -1684,7 +1580,6 @@ theorem vN_mem₀ (N : ℕ) (a : Fin 3) :
   · rw [vN_ne_two ha]
     exact Submodule.zero_mem _
 
-/-- `curl v_N = 0`: `v_N` is a row-wise gradient. -/
 theorem dPiecewise_vN (N : ℕ) :
     (fun a => (polyElement 3 PolySeq.lagrangeP2).dPiecewise (mesh 3 (N + 2)) 1
       (vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1)) = 0 := by
@@ -1744,11 +1639,6 @@ theorem le_norm_sq_wsL2_sub_glue_vN (N : ℕ) :
   exact (formL2Sq_simplex₀ N).symm.le.trans h1
 
 
-/-- **[QuennevilleBelair2015], Prop 5.9(2) is false.** There is `c > 0` such that on every mesh
-`(mesh 3 (N + 2))` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³` (vanishing boundary DOFs), `v ≠ 0`, with
-`‖(I − Π²) S¹ v‖_{L²(Q)} ≥ c ‖v‖_{H(curl)}`, where `S¹ v` is the `L²` field `wsL2 1`,
-`Π² S¹ v = S₁,ₕ v` and `‖v‖²_{H(curl)} = ‖v‖² + ‖curl v‖²` (row-wise). The field is
-`v_N = (0, 0, grad Π̃⁰ f_N)` (`vN`); `curl v_N = 0` (`dPiecewise_vN`). -/
 theorem exists_interpolationError_ge : ∃ c, 0 < c ∧ ∀ N : ℕ,
     ∃ v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1,
       (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) ∈
@@ -1817,10 +1707,8 @@ theorem exists_interpolationError_ge : ∃ c, 0 < c ∧ ∀ N : ℕ,
             _ ≤ _ := hL
       _ = L := Real.sqrt_sq hL0
 
-/-- **No `O(h)` bound for `(I − Π²) S¹` on `P₂⁻Λ̊¹ ⊗ ℝ³`**, `Π²` the canonical interpolant: the
-estimate `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` of [QuennevilleBelair2015], Prop 5.9(2) fails for
-every `C`. For an arbitrary projection onto the Raviart–Thomas space (the hypothesis `happ1` of
-`Feec.BGG.Discrete.error_estimate`) see `not_exists_bestApprox_bound`. -/
+/-- **No bound `‖(I − Π²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` holds on `P₂⁻Λ̊¹ ⊗ ℝ³`**, `Π²` the canonical
+interpolant (the estimate of [QuennevilleBelair2015], Prop 5.9(2)). -/
 theorem not_exists_interpolationError_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
     (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
     (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1) ∈
@@ -1862,8 +1750,6 @@ theorem not_exists_interpolationError_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
 
 /-! #### Projection independence: no `O(h)` approximation of `S¹ v_N` by `P₁⁻Λ²` fields -/
 
-/-- `v_N` is also a piecewise linear field: `v_N ∈ P₁Λ¹ ⊗ ℝ³` (piecewise `grad` of `P₂`), the space
-over which [QuennevilleBelair2015], Prop 5.9(2) literally quantifies. -/
 theorem vN_mem_polySpace (N : ℕ) (a : Fin 3) (T : (mesh 3 (N + 2)).simplices) :
     (((vN N a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) T :
       (polyElement 3 PolySeq.lagrangeP2).space _ 1) : FormField 3) ∈ polySpace 3 1 1 := by
@@ -1879,8 +1765,6 @@ theorem vN_mem_polySpace (N : ℕ) (a : Fin 3) (T : (mesh 3 (N + 2)).simplices) 
   · rw [vN_ne_two ha]
     exact Submodule.zero_mem _
 
-/-- `‖S¹(glue v_N) − glue w‖² ≥ h δ₀²` for **every** piecewise `P₁⁻Λ²` field `w` (in particular
-every element of the global Raviart–Thomas space, whatever projection produced it). -/
 theorem le_norm_sq_wsL2_vN_sub_glue (N : ℕ)
     (w : (polyElement 3 PolySeq.lowestOrder).Piecewise (mesh 3 (N + 2)) 2) :
     hN (N + 2) * refDist ^ 2 ≤
@@ -1909,13 +1793,6 @@ theorem le_norm_sq_wsL2_vN_sub_glue (N : ℕ)
   exact mul_refDist_sq_le_formL2Sq (hN_pos (N + 2)) (corner N) (ZN_mem N) (pullback_ZN N)
     (by exact (w (simplex₀' N)).2)
 
-/-- **[QuennevilleBelair2015], Prop 5.9(2) is false, independently of the projection.** There is
-`c > 0` such that on every mesh `mesh 3 (N + 2)` there is `v ∈ P₂⁻Λ̊¹ ⊗ ℝ³` (vanishing boundary
-DOFs), which is also in `P₁Λ¹ ⊗ ℝ³` (piecewise linear), `v ≠ 0`, with
-`‖S¹ v − w‖_{L²(Q)} ≥ c ‖v‖_{H(curl)}` for **every** piecewise `P₁⁻Λ²` field `w`. Hence
-`inf_{w_h ∈ P₁⁻Λ²_h} ‖S¹ v − w_h‖` is not `O(h) ‖v‖_{H(curl)}`: no map `P²` with values in the
-Raviart–Thomas space (canonical, smoothed, or `L²` projection) satisfies the bound
-`‖(I − P²) S¹ v‖ ≤ C h ‖v‖_{H(curl)}` on `P₂⁻Λ̊¹ ⊗ ℝ³`. The field is `v_N` (`vN`). -/
 theorem exists_bestApproxError_ge : ∃ c, 0 < c ∧ ∀ N : ℕ,
     ∃ v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 (N + 2)) 1,
       (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 (N + 2)) 1) ∈
@@ -1976,12 +1853,7 @@ theorem exists_bestApproxError_ge : ∃ c, 0 < c ∧ ∀ N : ℕ,
             _ ≤ _ := hL
       _ = L := Real.sqrt_sq hL0
 
-/-- **No `O(h)` best approximation of `S¹` on `P₂⁻Λ̊¹ ⊗ ℝ³` by `P₁⁻Λ²`**: there is no `C` with
-`inf_{w} ‖S¹ v − w‖ ≤ C h ‖v‖_{H(curl)}` (`w` over piecewise `P₁⁻Λ²` fields) for all meshes and all
-`v ∈ P₂⁻Λ̊¹ ⊗ ℝ³`. Consequently the hypothesis
-`happ1 : ‖S¹ v − P² S¹ v‖ ≤ C_app h ‖v‖_{H(curl)}` of `Feec.BGG.Discrete.error_estimate` cannot hold,
-with `N`-independent `C_app`, for any choice of `P²` with values in the Raviart–Thomas spaces of
-Table 5.1 ([QuennevilleBelair2015], Prop 5.9(2)). -/
+/-- **No `O(h)` approximation of `S¹` on `P₂⁻Λ̊¹ ⊗ ℝ³` by piecewise `P₁⁻Λ²` fields.** -/
 theorem not_exists_bestApprox_bound : ¬ ∃ C : ℝ, ∀ (N : ℕ)
     (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
     (∀ a, (v a : (polyElement 3 PolySeq.lagrangeP2).Piecewise (mesh 3 N) 1) ∈

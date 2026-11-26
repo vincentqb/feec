@@ -7,90 +7,21 @@ public import Mathlib.Algebra.Order.Chebyshev
 /-!
 # Sobolev spaces of integer order and weak derivatives on the cube
 
-The Sobolev spaces `Hˢ(Q; Λᵏ)`, `Hˢ_J(Q; Λᵏ)` of `Feec.Models.Cube.Sobolev` are defined on the
-Fourier side of the torus `𝕋ⁿ = ℝⁿ/ℤⁿ` (restrictions to `Q = (0, ½)ⁿ`, parity extensions). For
-`s = 1` they were identified with the weak-derivative spaces (`mem_sobolevQ_one_iff`,
-`mem_sobolevPar_one_iff`). This file treats every integer order `m`, and proves the Bernstein
-inequality used by the optimal finite element rates of `Feec.Models.Cube.SobolevRateHigh`.
+Weak derivatives of the forms of `Hᵐ(Q; Λᵏ)`, `Q = (0, ½)ⁿ`, the spaces `Hᵐ(𝕋ⁿ)` and `Hᵐ_J(Q; Λᵏ)`
+by weak derivatives, and a Bernstein inequality for the Fourier truncations.
 
-## Weak derivatives
+## Main results
 
-* `HasWeakDeriv Ω l f v`: `∫_Ω f ∂^l φ = (-1)^{|l|} ∫_Ω v φ` for every `φ ∈ C_c^∞(Ω)`, along a
-  word `l = [j₁, …, j_p]` of directions (`iterPartial`; words of length `p` cover the
-  multi-indices of order `p`, partial derivatives of test functions commuting).
-  `HasWeakDerivs Ω m u`: every coefficient `u_t` has weak derivatives in `L²(Ω)` along every word
-  of length `≤ m`. They are unique (`HasWeakDeriv.unique`), pass to `L²` limits
-  (`hasWeakDeriv_of_tendsto`), and classical integration by parts of every order holds
-  (`integral_mul_iterPartial`). `weakHmNormSq`: the squared norm `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²`
-  over ordered words `r`
-  (a mixed derivative of multi-index `α` is counted `|α|!/α!` times; equivalent, up to
-  constants depending on `m`, to the norm over multi-indices).
-* **Forward direction** (`hasWeakDerivs_of_mem_sobolevQ`): every `u ∈ Hᵐ(Q; Λᵏ)` has weak
-  derivatives up to order `m` in `L²(Q)`; the derivative along `l` is the restriction of the
-  Fourier multiplier `mulSeq l x` (`hasWeakDeriv_of_memSob`), the `L²` limit of the classical
-  derivatives of the truncations (graph convergence, `hasWeakDeriv_Jinvf_trunc`), and
-  `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖² ≤ (Σ_{p ≤ m} nᵖ) ‖u‖²_{Hᵐ(Q)}` (`weakHmNormSq_le_qNorm_sq`).
-* **The torus** (`HasWeakDerivT`, `HasWeakDerivsT`, with `iterPartialT`, test functions the smooth
-  functions of `𝕋ⁿ`): `x ∈ Hᵐ(𝕋ⁿ; Λᵏ)` iff every component of `physF k x` has weak derivatives up
-  to order `m` in `L²(𝕋ⁿ)` (**`memSob_nat_iff`**; `⇐` by testing against the characters, the pure
-  derivatives `∂_j^m` and the power-mean inequality). Hence **`mem_sobolevPar_nat_iff`**:
-  `u ∈ Hᵐ_J(Q)` iff the parity extension `JfJ J k u` has weak derivatives up to order `m` in
-  `L²(𝕋ⁿ)`.
-* **The parity classes of every integer order, intrinsically on `Q`**
-  (**`mem_sobolevPar_add_one_iff`**): `u ∈ H^{m+1}_J(Q; Λᵏ)` iff `u ∈ H¹_J(Q; Λᵏ)` and every first
-  weak derivative `∂_j u` (in `L²(Q)`) lies in `Hᵐ_{J ∆ {j}}(Q; Λᵏ)` (`∂_j` flips the parity in
-  `x_j`, `realParJ_mulSeq_single`; the weak derivative is the restriction of `∂_j (JfJ J k u)` by
-  uniqueness, `mulSeq_eq_of_hasWeakDeriv`; `x ∈ H^{m+1}(𝕋ⁿ)` iff every `∂_j x ∈ Hᵐ(𝕋ⁿ)`,
-  `memSob_nat_add_one_iff`). With `mem_sobolevPar_one_iff` this is the backward direction for the
-  parity classes: weak derivatives on `Q` plus vanishing traces of the derivatives give `Hᵐ_J`.
-  For `m = 2` (**`mem_sobolevPar_two_iff`**, `⇒` is `mem_sobolevPar_two_compat`): `u ∈ H²_J(Q)`
-  iff `u_t ∈ H¹(Q)` with vanishing traces on the faces normal to `J ∆ t`, and every `∂_j u_t` is
-  the coefficient of `w_j ∈ H¹_{J ∆ {j}}(Q)`, i.e. `∂_j u_t ∈ H¹(Q)` with vanishing traces on the
-  faces normal to `(J ∆ {j}) ∆ t`; on the faces normal to `j` this is the **compatibility
-  condition** `∂_j u_t = 0` for `j ∉ J ∆ t` (the odd-order normal derivatives of the even
-  reflection).
-* **Norms on the parity classes**: the recursion `‖u‖²_{m+1,J} = ‖u‖²_{m,J} + Σ_j ‖∂_j u‖²_{m,J∆{j}}`
-  (`parNorm_add_one_sq`, from `sobSum_add_one`) and the recursion of the weak norm
-  (`weakHmNormSq_succ`) give the equivalence
-  `weakHmNormSq Q m u ≤ ‖u‖²_{m,J} ≤ 2ᵐ weakHmNormSq Q m u` on `Hᵐ_J(Q)`
-  (`weakHmNormSq_le_parNorm_sq`, `parNorm_sq_le_weakHmNormSq`).
-
-## The Bernstein inequality
-
-The truncation `u_M = (x_M)|_Q` is the restriction of the smooth form `truncField k x M` (real
-parts of the exponential sums `expSum`, `trigLift_eq_re_expSum`). Its iterated partial derivatives
-are exponential sums with the symbols `symb l` (`iterPartial_re_expSum`), the iterated Fréchet
-derivative on coordinate vectors is the iterated partial derivative
-(`iteratedFDeriv_apply_single_eq_foldr`, `iterPartial_eq_foldr`), multilinear maps are bounded
-by their coordinate values (`norm_le_sum_apply_single`, `norm_le_sum_proj`), and Parseval on
-`Q ⊆ 𝕋ⁿ` (`integral_re_expSum_sq_le`) gives **`sum_norm_iteratedFDeriv_truncQ_sq_le`**:
-`‖Dᵖ u_M‖²_{L²(Q)} ≤ 2ⁿ nᵖ (1 + n(2πM)²)^{p-s} ‖x‖²_{Hˢ(𝕋ⁿ)}` for `s ≤ p`. This generalizes
-`grad_Jinvf_sum_le`, `grad_truncQ_le` (`p = 1`) to every order.
-
-## What is not formalized
-
-* **The backward direction on `Q` without boundary conditions**: `HasWeakDerivs Q m u →
-  u ∈ sobolevQ n k m` (with the reverse norm inequality) for `m ≥ 2`. It needs an `Hᵐ` extension
-  operator from `Q` to a period cell, e.g. the reflection of [Hestenes1941] with `m + 1`
-  coefficients across each face, applied face by face and periodized, together with the
-  approximation of `Hᵐ(Q)` functions by functions smooth up to the boundary (the matching
-  conditions of the reflection only remove the boundary terms for test functions vanishing to
-  order `m` on the face). For `m = 1` the even reflection suffices (`mem_sobolevQ_one_iff`).
-  Consequently the planned `mem_sobolevQ_nat_iff` is proved only as `⇒`
-  (`hasWeakDerivs_of_mem_sobolevQ`), and the planned norm equivalence `qNorm_nat_sq_equiv` only as
-  `weakHmNormSq_le_qNorm_sq`. In the parity classes both directions and both norm inequalities are
-  proved (above).
-
-No hypothesis is assumed.
+* `hasWeakDerivs_of_mem_sobolevQ`: the forms of `Hᵐ(Q)` have weak derivatives up to order `m`.
+* `memSob_nat_iff`: `Hᵐ(𝕋ⁿ)` is the space of forms with weak derivatives up to order `m`.
+* `mem_sobolevPar_add_one_iff`, `mem_sobolevPar_two_iff`: the parity classes by weak derivatives.
+* `weakHmNormSq_le_parNorm_sq`, `parNorm_sq_le_weakHmNormSq`: the equivalence of the norms.
+* `sum_norm_iteratedFDeriv_truncQ_sq_le`: the Bernstein inequality for the Fourier truncations.
 
 ## References
 
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.1 (weak derivatives, `W^{m,p}`), §9.2 (extension)
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2 (weak derivatives), §5.4
-  (extensions)
-* [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
-  (higher-order reflection)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011]
+* [L. C. Evans, *Partial Differential Equations*][Evans2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -108,7 +39,7 @@ open Feec.Fourier.Exterior (Form)
 open Feec.Fourier.Torus (freq bandN finite_bandN norm_freq_sq)
 open UnitAddTorus Feec.Fourier.TorusWeak
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 /-- The local Haar measure on `ℝ/ℤ` is a probability measure. -/
@@ -171,7 +102,6 @@ theorem hasFDerivAt_expSum (S : Finset (Fin n → ℤ)) (c : (Fin n → ℤ) →
       simpa [smul_smul] using this
   exact h
 
-/-- `∂ⱼ Σ c_m e_m = Σ (2πi m_j) c_m e_m`. -/
 theorem partialDeriv_expSum (S : Finset (Fin n → ℤ)) (c : (Fin n → ℤ) → ℂ) (j : Fin n) :
     partialDeriv j (expSum S c) =
       expSum S (fun m => 2 * Real.pi * Complex.I * m j * c m) := by
@@ -213,8 +143,7 @@ section IterPartial
 
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-/-- **Iterated partial derivatives** along a list of directions:
-`∂^{[j₁, …, j_p]} f = ∂_{j₁} ⋯ ∂_{j_p} f`. -/
+/-- The iterated partial derivative `∂^{[j₁, …, j_p]} f = ∂_{j₁} ⋯ ∂_{j_p} f` along a word. -/
 def iterPartial : List (Fin n) → ((Fin n → ℝ) → F) → (Fin n → ℝ) → F
   | [], f => f
   | j :: l, f => partialDeriv j (iterPartial l f)
@@ -224,7 +153,6 @@ def iterPartial : List (Fin n) → ((Fin n → ℝ) → F) → (Fin n → ℝ) �
 theorem iterPartial_cons (j : Fin n) (l : List (Fin n)) (f : (Fin n → ℝ) → F) :
     iterPartial (j :: l) f = partialDeriv j (iterPartial l f) := rfl
 
-/-- `∂^l f` as a fold of the partial derivatives along `l`. -/
 theorem iterPartial_eq_foldr (l : List (Fin n)) (f : (Fin n → ℝ) → F) :
     iterPartial l f = l.foldr (fun j g => partialDeriv j g) f := by
   induction l with
@@ -243,7 +171,6 @@ theorem contDiff_iterPartial {f : (Fin n → ℝ) → F} (hf : ContDiff ℝ ∞ 
   | nil => exact hf
   | cons j l ih => exact ih.partialDeriv (by simp) j
 
-/-- Iterated partial derivatives commute with continuous linear maps. -/
 theorem iterPartial_clm {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G] (T : F →L[ℝ] G)
     {f : (Fin n → ℝ) → F} (hf : ContDiff ℝ ∞ f) (l : List (Fin n)) :
     iterPartial l (fun y => T (f y)) = fun y => T (iterPartial l f y) := by
@@ -254,7 +181,6 @@ theorem iterPartial_clm {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G] (
     rw [iterPartial_cons, ih, iterPartial_cons]
     exact T.partialDeriv_comp ((contDiff_iterPartial hf l).differentiable (by simp) y) j
 
-/-- Functions equal on an open set have equal iterated partial derivatives there. -/
 theorem iterPartial_eqOn {O : Set (Fin n → ℝ)} (hO : IsOpen O) {f g : (Fin n → ℝ) → F}
     (h : EqOn f g O) (l : List (Fin n)) : EqOn (iterPartial l f) (iterPartial l g) O := by
   induction l with
@@ -267,7 +193,6 @@ theorem iterPartial_eqOn {O : Set (Fin n → ℝ)} (hO : IsOpen O) {f g : (Fin n
 
 end IterPartial
 
-/-- **Derivatives of real exponential sums**: `∂^l Re (Σ c_m e_m) = Re (Σ symb_l(m) c_m e_m)`. -/
 theorem iterPartial_re_expSum (S : Finset (Fin n → ℤ)) (c : (Fin n → ℤ) → ℂ)
     (l : List (Fin n)) :
     iterPartial l (fun y => (expSum S c y).re) =
@@ -290,9 +215,6 @@ theorem norm_sq_eq_integral_sq' {α : Type*} [MeasurableSpace α] {μ : Measure 
   refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
   simp [sq]
 
-/-- **Parseval on `Q` for exponential sums**: `‖Re Σ c_m e_m‖²_{L²(Q)} ≤ Σ |c_m|²` (the
-restriction to `Q ⊆ 𝕋ⁿ` of the real part is a contraction, and the characters are orthonormal on
-`𝕋ⁿ`). -/
 theorem integral_re_expSum_sq_le (S : Finset (Fin n → ℤ)) (c : (Fin n → ℤ) → ℂ) :
     ∫ y in Q (Fin n), ((expSum S c y).re) ^ 2 ≤ ∑ m ∈ S, ‖c m‖ ^ 2 := by
   set G : C(UnitAddTorus (Fin n), ℂ) := ∑ m ∈ S, c m • mFourier m
@@ -334,8 +256,6 @@ theorem iterPartial_zero (l : List (Fin n)) : iterPartial l (fun _ => (0 : ℝ))
     funext y
     simp [partialDeriv]
 
-/-- **A multilinear map on `(ℝⁿ, sup)` is bounded by its values on coordinate vectors**:
-`‖A‖ ≤ Σ_r ‖A(e_{r₀}, …, e_{r_{p-1}})‖`. -/
 theorem norm_le_sum_apply_single {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] {p : ℕ}
     (A : ContinuousMultilinearMap ℝ (fun _ : Fin p => Fin n → ℝ) F) :
     ‖A‖ ≤ ∑ r : Fin p → Fin n, ‖A (fun l => Pi.single (r l) 1)‖ := by
@@ -356,7 +276,6 @@ theorem norm_le_sum_apply_single {F : Type*} [NormedAddCommGroup F] [NormedSpace
   gcongr with l
   exact norm_le_pi_norm (v l) (r l)
 
-/-- **A multilinear map into a sup-normed product is bounded by its components**. -/
 theorem norm_le_sum_proj {ι : Type*} [Fintype ι] {p : ℕ}
     (A : ContinuousMultilinearMap ℝ (fun _ : Fin p => Fin n → ℝ) (ι → ℝ)) :
     ‖A‖ ≤ ∑ s, ‖(ContinuousLinearMap.proj s : (ι → ℝ) →L[ℝ] ℝ).compContinuousMultilinearMap A‖ := by
@@ -372,8 +291,6 @@ theorem norm_le_sum_proj {ι : Type*} [Fintype ι] {p : ℕ}
     _ ≤ _ := h
     _ ≤ _ := mul_le_mul_of_nonneg_right h2 (by positivity)
 
-/-- **The norm of the iterated derivative of a smooth form field by partial derivatives**:
-`‖Dᵖ w(y)‖ ≤ Σ_s Σ_r |∂^r w_s(y)|`. -/
 theorem norm_iteratedFDeriv_le_sum_iterPartial {ι : Type*} [Fintype ι]
     {w : (Fin n → ℝ) → ι → ℝ} (hw : ContDiff ℝ ∞ w) (p : ℕ) (y : Fin n → ℝ) :
     ‖iteratedFDeriv ℝ p w y‖ ≤
@@ -390,7 +307,6 @@ theorem norm_iteratedFDeriv_le_sum_iterPartial {ι : Type*} [Fintype ι]
   rw [iteratedFDeriv_apply_single_eq_foldr hs (by exact_mod_cast le_top), iterPartial_eq_foldr,
     Real.norm_eq_abs]
 
-/-- `Σ_r |symb_r(m)|² = |2πm|^{2p}` over the words `r` of length `p`. -/
 theorem sum_norm_symb_sq (p : ℕ) (m : Fin n → ℤ) :
     ∑ r : Fin p → Fin n, ‖symb (List.ofFn r) m‖ ^ 2 = (‖freq m‖ ^ 2) ^ p := by
   simp_rw [norm_symb_sq, List.map_ofFn, List.prod_ofFn, Function.comp_apply]
@@ -412,16 +328,13 @@ theorem integrable_sq_of_continuous {f : (Fin n → ℝ) → ℝ} (hf : Continuo
     Integrable (fun y => f y ^ 2) (volume.restrict (Q (Fin n))) :=
   (Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn hf).integrable_sq
 
-/-- The restriction of a trigonometric polynomial is the real part of an exponential sum. -/
 theorem trigLift_eq_re_expSum (x : Seq n k) (S : Finset (Fin n → ℤ)) (t : formIdx n (k : ℤ)) :
     trigLift k x S t = fun y => (expSum S (fun m => cf x m t) y).re := by
   funext y
   simp only [trigLift, trigPoly, ContinuousMap.coe_sum, ContinuousMap.coe_smul, Finset.sum_apply,
     Pi.smul_apply, smul_eq_mul, expSum, expChar_eq_mFourier, repr_physF]
 
-/-- **The Fourier truncation as a smooth form field on `ℝⁿ`**: the real trigonometric polynomial
-`(x_M)ₜ = Re Σ_{|m|_∞ ≤ M} x(m)ₜ e_m` in the components `#t = k`, `0` in the others. Its
-restriction to `Q` is `Jinvf k (trunc M k x)` (`Jinvf_trunc_eq_truncField`). -/
+/-- The Fourier truncation `Re Σ_{|m|_∞ ≤ M} x(m) e_m` of `x` as a smooth form field on `ℝⁿ`. -/
 def truncField (k : ℕ) (x : Seq n k) (M : ℕ) : (Fin n → ℝ) → Finset (Fin n) → ℝ :=
   fun y s => Feec.Domain.formExt
     (fun t : formIdx n (k : ℤ) => trigLift k (trunc M k x) (bandS M) t y) s
@@ -449,14 +362,12 @@ theorem Jinvf_trunc_eq_toL2F (x : Seq n k) (M : ℕ) :
     Jinvf k (trunc M k x) = toL2F (memLp_trigLift k (trunc M k x) (bandS M)) :=
   Jinvf_eq_toL2F fun _ hm => trunc_eq_zero_of_notMem x hm
 
-/-- The components of the truncation field are real exponential sums. -/
 theorem truncField_comp_eq (x : Seq n k) (M : ℕ) (t : formIdx n (k : ℤ)) :
     (fun y => truncField k x M y t.1) =
       fun y => (expSum (bandS M) (fun m => cf (trunc M k x) m t) y).re := by
   funext y
   rw [truncField_val, trigLift_eq_re_expSum]
 
-/-- The iterated partial derivatives of the truncation field, in `L²(Q)`, by Parseval. -/
 theorem integral_iterPartial_truncField_sq_le (x : Seq n k) (M : ℕ) (l : List (Fin n))
     (t : formIdx n (k : ℤ)) :
     ∫ y in Q (Fin n), (iterPartial l (fun z => truncField k x M z t.1) y) ^ 2 ≤
@@ -466,8 +377,6 @@ theorem integral_iterPartial_truncField_sq_le (x : Seq n k) (M : ℕ) (l : List 
   refine Finset.sum_congr rfl fun m _ => ?_
   rw [norm_mul, mul_pow]
 
-/-- **Bernstein inequality for the Fourier truncations**, in the iterated Fréchet derivative:
-`∫_Q ‖Dᵖ (x_M)‖² ≤ 2ⁿ nᵖ ‖x_M‖²_{Hᵖ(𝕋ⁿ)}` (sup norms on `ℝⁿ` and on the fibre `Λ`). -/
 theorem integral_norm_iteratedFDeriv_truncField_sq_le (x : Seq n k) (M p : ℕ) :
     ∫ y in Q (Fin n), ‖iteratedFDeriv ℝ p (truncField k x M) y‖ ^ 2 ≤
       2 ^ n * n ^ p * sobSum p (trunc M k x) := by
@@ -535,10 +444,8 @@ theorem integral_norm_iteratedFDeriv_truncField_sq_le (x : Seq n k) (M p : ℕ) 
         Summable.sum_le_tsum _ (fun m _ => mul_nonneg (weight_nonneg _ _) (sq_nonneg _))
           (memSob_trunc (p : ℝ) M x)
 
-/-- **Bernstein inequality** (`sum_norm_iteratedFDeriv_truncQ_sq_le`): for `x ∈ Hˢ(𝕋ⁿ)` and an
-integer order `p ≥ s`, the truncation `u_M = (x_M)|_Q` satisfies
-`‖Dᵖ u_M‖²_{L²(Q)} ≤ 2ⁿ nᵖ (1 + n (2πM)²)^{p - s} ‖x‖²_{Hˢ(𝕋ⁿ)}`. This generalizes
-`grad_Jinvf_sum_le` and `grad_truncQ_le` (`p = 1`) to every order. -/
+/-- **Bernstein inequality**: for `x ∈ Hˢ(𝕋ⁿ)` and an integer order `p ≥ s`, the truncation
+`u_M = (x_M)|_Q` satisfies `‖Dᵖ u_M‖²_{L²(Q)} ≤ 2ⁿ nᵖ (1 + n (2πM)²)^{p - s} ‖x‖²_{Hˢ(𝕋ⁿ)}`. -/
 theorem sum_norm_iteratedFDeriv_truncQ_sq_le {s : ℝ} {p : ℕ} (hsp : s ≤ p) {x : Seq n k}
     (hx : MemSob s x) (M : ℕ) :
     ∫ y in Q (Fin n), ‖iteratedFDeriv ℝ p (truncField k x M) y‖ ^ 2 ≤
@@ -561,23 +468,16 @@ theorem isTest_iterPartial {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F
   | nil => exact hφ
   | cons j l ih => exact ih.fderiv_apply (Pi.single j 1)
 
-/-- **`v` is the weak derivative `∂^l f`** of `f ∈ L²(Ω)` along the word `l = [j₁, …, j_p]`:
-`∫_Ω f ∂_{j₁} ⋯ ∂_{j_p} φ = (-1)^p ∫_Ω v φ` for every `φ ∈ C_c^∞(Ω)` ([Brezis2011], §9.1;
-[Evans2010], §5.2.1). Words of length `p` cover the multi-indices of order `p` (partial
-derivatives of test functions commute). -/
+/-- `v = ∂^l f` weakly on `Ω` along the word `l` ([Brezis2011], §9.1; [Evans2010], §5.2.1). -/
 def HasWeakDeriv (Ω : Set (Fin n → ℝ)) (l : List (Fin n)) (f v : L2 ℝ Ω) : Prop :=
   ∀ φ : (Fin n → ℝ) → ℝ, IsTest Ω φ →
     ∫ x in Ω, (f : (Fin n → ℝ) → ℝ) x * iterPartial l φ x =
       (-1) ^ l.length * ∫ x in Ω, (v : (Fin n → ℝ) → ℝ) x * φ x
 
-/-- **Weak derivatives up to order `m`** (`HasWeakDerivs Ω m u`): every coefficient `u_t` of
-`u ∈ L²(Ω; Λᵏ)` has weak derivatives `∂^l u_t ∈ L²(Ω)` along every word of length `≤ m`, i.e.
-`u ∈ Hᵐ(Ω; Λᵏ)` in the sense of weak derivatives ([Brezis2011], §9.1). -/
+/-- Every coefficient of `u` has weak derivatives in `L²(Ω)` along every word of length `≤ m`. -/
 def HasWeakDerivs (Ω : Set (Fin n → ℝ)) (m : ℕ) {k : ℤ} (u : L2F ℝ Ω (formIdx n k)) : Prop :=
   ∀ t : formIdx n k, ∀ l : List (Fin n), l.length ≤ m → ∃ v : L2 ℝ Ω, HasWeakDeriv Ω l (u t) v
 
-/-- **Uniqueness of weak derivatives** (`Ω` open; the fundamental lemma
-`Feec.Domain.L2.eq_zero_of_forall_integral`). -/
 theorem HasWeakDeriv.unique (hΩ : IsOpen Ω) {l : List (Fin n)} {f v v' : L2 ℝ Ω}
     (h : HasWeakDeriv Ω l f v) (h' : HasWeakDeriv Ω l f v') : v = v' := by
   refine sub_eq_zero.1 (Feec.Domain.L2.eq_zero_of_forall_integral hΩ (v - v') fun g hg => ?_)
@@ -603,8 +503,6 @@ theorem HasWeakDeriv.unique (hΩ : IsOpen Ω) {l : List (Fin n)} {f v v' : L2 �
         integral_sub (hint v) (hint v')
     _ = 0 := by rw [e3, sub_self]
 
-/-- **Classical integration by parts of every order**: for `g` smooth and `φ ∈ C_c^∞(Ω)`,
-`∫_Ω g ∂^l φ = (-1)^{|l|} ∫_Ω (∂^{l^R} g) φ` (`l^R` the reversed word). -/
 theorem integral_mul_iterPartial {g : (Fin n → ℝ) → ℝ} (hg : ContDiff ℝ ∞ g)
     {φ : (Fin n → ℝ) → ℝ} (hφ : IsTest Ω φ) (l : List (Fin n)) :
     ∫ x in Ω, g x * iterPartial l φ x =
@@ -631,8 +529,6 @@ theorem integral_mul_iterPartial {g : (Fin n → ℝ) → ℝ} (hg : ContDiff �
     simp only [iterPartial_cons, iterPartial_nil]
     ring
 
-/-- **Weak derivatives pass to `L²` limits**: if `f_M → f`, `v_M → v` in `L²(Ω)` and
-`v_M = ∂^l f_M` weakly, then `v = ∂^l f` weakly. -/
 theorem hasWeakDeriv_of_tendsto {l : List (Fin n)} {fM vM : ℕ → L2 ℝ Ω} {f v : L2 ℝ Ω}
     (hf : Tendsto fM atTop (𝓝 f)) (hv : Tendsto vM atTop (𝓝 v))
     (h : ∀ M, HasWeakDeriv Ω l (fM M) (vM M)) : HasWeakDeriv Ω l f v := by
@@ -681,8 +577,7 @@ theorem norm_symb_sq_le (l : List (Fin n)) (m : Fin n → ℤ) :
       _ = _ := mul_comm _ _
 
 open scoped Classical in
-/-- **The symbol multiplier** `x ↦ (symb_l(m) x(m))_m`, the Fourier coefficients of `∂^l` (`0` if
-the result is not in `ℓ²`). -/
+/-- The symbol multiplier `x ↦ (symb_l(m) x(m))_m` of `∂^l` (`0` if the result is not in `ℓ²`). -/
 def mulSeq (l : List (Fin n)) (x : Seq n k) : Seq n k :=
   if h : Summable fun m => ‖symb l m • cf x m‖ ^ 2 then
     (memLp_of_summable h).toLp fun m => symb l m • cf x m
@@ -702,7 +597,6 @@ theorem cf_mulSeq {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List (Fin n)}
     (Fin n → ℤ) → Form ℂ (Fin n) k) m = _
   rw [MemLp.coeFn_toLp_count]
 
-/-- `‖∂^l x‖_{L²(𝕋ⁿ)}² ≤ ‖x‖²_{H^{|l|}(𝕋ⁿ)}`. -/
 theorem norm_mulSeq_sq_le {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List (Fin n)}
     (hl : (l.length : ℝ) ≤ s) : ‖mulSeq l x‖ ^ 2 ≤ sobSum s x := by
   rw [norm_sq_eq_tsum]
@@ -712,7 +606,6 @@ theorem norm_mulSeq_sq_le {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List (F
       (sq_nonneg _)
   · simpa [cf_mulSeq hx hl] using summable_symb_smul hx hl
 
-/-- The weak derivatives of the truncations are the truncations of the multiplied sequence. -/
 theorem hasWeakDeriv_Jinvf_trunc {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List (Fin n)}
     (hl : (l.length : ℝ) ≤ s) (M : ℕ) (t : formIdx n (k : ℤ)) :
     HasWeakDeriv (Q (Fin n)) l (Jinvf k (trunc M k x) t) (Jinvf k (trunc M k (mulSeq l x)) t) := by
@@ -745,9 +638,6 @@ theorem hasWeakDeriv_Jinvf_trunc {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : 
   rw [h1, h2, integral_mul_iterPartial (contDiff_re_expSum _ _) hφ l, iterPartial_re_expSum]
   simp_rw [symb_reverse]
 
-/-- **The weak derivatives of `x|_Q`** for `x ∈ Hˢ(𝕋ⁿ)` and a word `l` with `|l| ≤ s`: the weak
-derivative of `u_t = (x|_Q)_t` along `l` is `(Jinvf (mulSeq l x))_t`, the `L²(Q)` limit of the
-classical derivatives of the truncations (graph convergence). -/
 theorem hasWeakDeriv_of_memSob {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List (Fin n)}
     (hl : (l.length : ℝ) ≤ s) (t : formIdx n (k : ℤ)) :
     HasWeakDeriv (Q (Fin n)) l (Jinvf k x t) (Jinvf k (mulSeq l x) t) := by
@@ -756,9 +646,8 @@ theorem hasWeakDeriv_of_memSob {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : Li
   exact hasWeakDeriv_of_tendsto ((hc.tendsto x).comp (tendsto_trunc k x))
     ((hc.tendsto _).comp (tendsto_trunc k _)) fun M => hasWeakDeriv_Jinvf_trunc hx hl M t
 
-/-- **Forward direction of the identification** (`hasWeakDerivs_of_mem_sobolevQ`): every
-`u ∈ Hᵐ(Q; Λᵏ)` (restriction of an `Hᵐ(𝕋ⁿ)` form, `m ∈ ℕ`) has weak derivatives in `L²(Q)` up to
-order `m` (`HasWeakDerivs (Q (Fin n)) m u`). -/
+/-- **The forms of `Hᵐ(Q; Λᵏ)` have weak derivatives**: every `u ∈ Hᵐ(Q; Λᵏ)`, `m ∈ ℕ`, has weak
+derivatives in `L²(Q)` up to order `m`. -/
 theorem hasWeakDerivs_of_mem_sobolevQ {m : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hu : u ∈ sobolevQ n k m) : HasWeakDerivs (Q (Fin n)) m u := by
   obtain ⟨x, hx, rfl⟩ := hu
@@ -792,7 +681,6 @@ theorem isSmooth_iterPartialT {φ : UnitAddTorus (Fin n) → ℂ} (hφ : IsSmoot
   | nil => exact hφ
   | cons j l ih => exact isSmooth_partialT ih j
 
-/-- `(∂^l φ)^(m) = symb_l(m) φ̂(m)`. -/
 theorem mFourierCoeff_iterPartialT {φ : UnitAddTorus (Fin n) → ℂ} (hφ : IsSmooth φ)
     (l : List (Fin n)) (m : Fin n → ℤ) :
     mFourierCoeff (iterPartialT l φ) m = symb l m * mFourierCoeff φ m := by
@@ -844,7 +732,6 @@ theorem mFourierCoeff_physF (x : Seq n k) (t : formIdx n (k : ℤ)) (m : Fin n �
     mFourierCoeff (physF k x t : UnitAddTorus (Fin n) → ℂ) m = cf x m t := by
   rw [← mFourierBasis_repr, repr_physF]
 
-/-- **`Hᵐ(𝕋ⁿ)` has weak derivatives up to order `m`** (the multiplier `mulSeq`). -/
 theorem hasWeakDerivT_physF {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List (Fin n)}
     (hl : (l.length : ℝ) ≤ s) (t : formIdx n (k : ℤ)) :
     HasWeakDerivT l (physF k x t) (physF k (mulSeq l x) t) := by
@@ -858,7 +745,6 @@ theorem hasWeakDerivT_physF {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List 
   change _ = _ * (_ * (symb l m * cf x m t))
   ring
 
-/-- Conversely, a weak derivative on `𝕋ⁿ` has the Fourier coefficients `symb_l(m) f̂(m)`. -/
 theorem HasWeakDerivT.mFourierCoeff_eq {l : List (Fin n)}
     {f v : Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin n)))} (h : HasWeakDerivT l f v)
     (m : Fin n → ℤ) : mFourierCoeff (v : UnitAddTorus (Fin n) → ℂ) m =
@@ -881,9 +767,6 @@ theorem HasWeakDerivT.mFourierCoeff_eq {l : List (Fin n)}
   rw [← e]
   ring
 
-/-- **The power-mean inequality** `(1 + |ξ|²)^{m+1} ≤ (n + 1)ᵐ (1 + Σ_j ξ_j^{2(m+1)})`, at the
-frequency `q`: `⟨ξ_q⟩^{2(m+1)} |x(q)|² ≤ (n + 1)ᵐ (|x(q)|² + Σ_{j,t} (2π q_j)^{2(m+1)} |x(q)_t|²)`.
--/
 theorem weight_mul_le_pure (x : Seq n k) (m : ℕ) (q : Fin n → ℤ) :
     weight ((m + 1 : ℕ) : ℝ) q * ‖cf x q‖ ^ 2 ≤ (n + 1 : ℝ) ^ m *
       (‖cf x q‖ ^ 2 + ∑ j, ∑ t : formIdx n (k : ℤ),
@@ -911,9 +794,6 @@ theorem weight_mul_le_pure (x : Seq n k) (m : ℕ) (q : Fin n → ℤ) :
       refine Finset.sum_congr rfl fun j _ => ?_
       rw [norm_cf_sq_eq_sum k, Finset.mul_sum]
 
-/-- **The Sobolev sum by the pure derivatives**: if `v j t = ∂_j^{m+1} (physF x)_t` weakly on
-`𝕋ⁿ`, then `Σ_q ⟨ξ_q⟩^{2(m+1)} |x(q)|² ≤ (n + 1)ᵐ (‖x‖² + Σ_{j,t} ‖v j t‖²)`
-(`weight_mul_le_pure`). -/
 theorem sobSum_le (x : Seq n k) {m : ℕ}
     (v : Fin n → formIdx n (k : ℤ) → Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin n))))
     (hv : ∀ j t, HasWeakDerivT (List.replicate (m + 1) j) (physF k x t) (v j t)) :
@@ -938,10 +818,8 @@ theorem sobSum_le (x : Seq n k) {m : ℕ}
       (weight_mul_le_pure x m) hb.summable
   exact (hs.tsum_le_tsum (weight_mul_le_pure x m) hb.summable).trans_eq hb.tsum_eq
 
-/-- **The integer Sobolev spaces of the torus are the spaces of weak derivatives**:
-`x ∈ Hᵐ(𝕋ⁿ; Λᵏ)` iff every component of the physical form `physF k x` has weak derivatives up
-to order `m` in `L²(𝕋ⁿ)`. The direction `⇐` uses only the pure derivatives `∂_j^m` and the
-power-mean inequality `(1 + |ξ|²)ᵐ ≤ (n + 1)^{m-1} (1 + Σ_j ξ_j^{2m})` (`weight_mul_le_pure`). -/
+/-- **The integer Sobolev spaces of the torus are the spaces of weak derivatives**: `x ∈ Hᵐ(𝕋ⁿ)`
+iff the components of `physF k x` have weak derivatives up to order `m` in `L²(𝕋ⁿ)`. -/
 theorem memSob_nat_iff (x : Seq n k) (m : ℕ) :
     MemSob m x ↔ ∀ t, HasWeakDerivsT m (physF k x t) := by
   constructor
@@ -962,9 +840,6 @@ theorem memSob_nat_iff (x : Seq n k) (m : ℕ) :
       (weight_mul_le_pure x m) (((summable_norm_sq x).add
         (summable_sum fun j _ => summable_sum fun t _ => hpure j t)).mul_left _)
 
-/-- **`mem_sobolevPar_nat_iff`**: `u ∈ Hᵐ_J(Q; Λᵏ)` (`m ∈ ℕ`) iff every component of the parity
-extension `JfJ J k u` (as a function on `𝕋ⁿ`, `physF k (JfJ J k u)`) has weak derivatives up to
-order `m` in `L²(𝕋ⁿ)`. -/
 theorem mem_sobolevPar_nat_iff (J : Finset (Fin n)) (m : ℕ)
     (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     u ∈ sobolevPar J k m ↔ ∀ t, HasWeakDerivsT m (physF k (JfJ J k u) t) := by
@@ -980,19 +855,11 @@ section Norm
 variable {k : ℕ}
 
 open scoped Classical in
-/-- **The `Hᵐ` norm by weak derivatives** (squared):
-`Σ_t Σ_{p ≤ m} Σ_{|r| = p} ‖∂^r u_t‖²_{L²(Ω)}` over the words `r` of length `≤ m` (a missing
-weak derivative contributes `0`; on open `Ω` the weak derivatives are unique,
-`HasWeakDeriv.unique`). The sum is over ordered words, so a mixed derivative of multi-index `α`
-is counted `|α|!/α!` times; this is equivalent to the sum over multi-indices up to constants
-depending only on `m`. -/
+/-- The squared `Hᵐ` norm `Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²` by weak derivatives along words `r`. -/
 def weakHmNormSq (Ω : Set (Fin n → ℝ)) (m : ℕ) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) : ℝ :=
   ∑ t : formIdx n k', ∑ p ∈ Finset.range (m + 1), ∑ r : Fin p → Fin n,
     if h : ∃ v, HasWeakDeriv Ω (List.ofFn r) (u t) v then ‖h.choose‖ ^ 2 else 0
 
-/-- **Comparison of the norms** (the forward half of the planned `qNorm_nat_sq_equiv`, the direction
-available without an extension operator): for `u ∈ Hᵐ(Q; Λᵏ)`,
-`Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖² ≤ (Σ_{p ≤ m} nᵖ) ‖u‖²_{Hᵐ(Q)}`. -/
 theorem weakHmNormSq_le_qNorm_sq {m : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hu : u ∈ sobolevQ n k m) :
     weakHmNormSq (Q (Fin n)) m u ≤ (∑ p ∈ Finset.range (m + 1), (n : ℝ) ^ p) * qNorm k m u ^ 2 := by
@@ -1056,9 +923,6 @@ section ParityTwo
 
 variable {k : ℕ}
 
-/-- **The parity of a first derivative**: if `x` is real of the class `J`, the Fourier
-coefficients `2πi m_j x(m)` of `∂_j x` are real of the class `J ∆ {j}` (`∂_j` flips the parity
-in `x_j`). -/
 theorem realParJ_mulSeq_single {J : Finset (Fin n)} {x : Seq n k} (hJ : RealParJ J k x)
     {s : ℝ} (hx : MemSob s x) (hs : 1 ≤ s) (j : Fin n) :
     RealParJ (symmDiff J {j}) k (mulSeq [j] x) := by
@@ -1086,14 +950,6 @@ theorem realParJ_mulSeq_single {J : Finset (Fin n)} {x : Seq n k} (hJ : RealParJ
       simp [hij, this]
       ring_nf
 
-/-- **`H²` in the parity classes, with the compatibility conditions** (one inclusion of the
-`m = 2` characterization): for `u ∈ H²_J(Q; Λᵏ)`, every coefficient `u_t` lies in `H¹(Q)` with
-vanishing trace on the faces normal to `J ∆ t` (`mem_sobolevPar_one_iff`), and every first weak
-derivative `∂_j u_t` is the coefficient of a form `w_j ∈ H¹_{J ∆ {j}}(Q; Λᵏ)`: `∂_j u_t ∈ H¹(Q)`
-with vanishing trace on the faces normal to `(J ∆ {j}) ∆ t`. For the faces normal to `j` this is
-the **compatibility condition on the normal derivative**: `∂_j u_t = 0` on `{x_j ∈ {0, ½}}`
-whenever `j ∉ J ∆ t` (the components without a Dirichlet condition there have a vanishing normal
-derivative, the odd-order normal derivatives of the even reflection). -/
 theorem mem_sobolevPar_two_compat (J : Finset (Fin n))
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k 2) :
     (∀ t : formIdx n (k : ℤ),
@@ -1129,11 +985,8 @@ section WeakSucc
 
 variable {Ω : Set (Fin n → ℝ)}
 
-/-- The empty word: every `f` is its own weak derivative of order `0`. -/
 theorem hasWeakDeriv_nil_self (f : L2 ℝ Ω) : HasWeakDeriv Ω [] f f := fun φ _ => by simp
 
-/-- **Weak derivatives along `j :: l` from a first derivative**: if `g = ∂_j f` weakly, then
-`v = ∂^{j :: l} f` weakly iff `v = ∂^l g` weakly (test with `∂^l φ`). -/
 theorem hasWeakDeriv_cons_iff {j : Fin n} {f g : L2 ℝ Ω}
     (hg : HasWeakDeriv Ω [j] f g) (l : List (Fin n)) (v : L2 ℝ Ω) :
     HasWeakDeriv Ω (j :: l) f v ↔ HasWeakDeriv Ω l g v := by
@@ -1147,14 +1000,12 @@ theorem hasWeakDeriv_cons_iff {j : Fin n} {f g : L2 ℝ Ω}
   constructor <;> intro h <;> linear_combination -h
 
 open scoped Classical in
-/-- The order-`0` term of `weakHmNormSq` is `‖f‖²`. -/
 theorem dite_hasWeakDeriv_nil (hΩ : IsOpen Ω) (f : L2 ℝ Ω) :
     (if h : ∃ v, HasWeakDeriv Ω [] f v then ‖h.choose‖ ^ 2 else 0) = ‖f‖ ^ 2 := by
   have hex : ∃ v, HasWeakDeriv Ω [] f v := ⟨f, hasWeakDeriv_nil_self f⟩
   rw [dite_eq_left hex, hex.choose_spec.unique hΩ (hasWeakDeriv_nil_self f)]
 
 open scoped Classical in
-/-- The term of `weakHmNormSq` along `j :: l` for `f` is the term along `l` for `∂_j f`. -/
 theorem dite_hasWeakDeriv_cons (hΩ : IsOpen Ω) {j : Fin n} {f g : L2 ℝ Ω}
     (hg : HasWeakDeriv Ω [j] f g) (l : List (Fin n)) :
     (if h : ∃ v, HasWeakDeriv Ω (j :: l) f v then ‖h.choose‖ ^ 2 else 0) =
@@ -1166,7 +1017,6 @@ theorem dite_hasWeakDeriv_cons (hΩ : IsOpen Ω) {j : Fin n} {f g : L2 ℝ Ω}
       (e.2 h).choose_spec.unique hΩ ((hasWeakDeriv_cons_iff hg l _).2 h.choose_spec)]
   · rw [dite_eq_right (mt e.1 h), dite_eq_right h]
 
-/-- `weakHmNormSq Ω 0 u = ‖u‖²`. -/
 theorem weakHmNormSq_zero (hΩ : IsOpen Ω) {k' : ℤ} (u : L2F ℝ Ω (formIdx n k')) :
     weakHmNormSq Ω 0 u = ‖u‖ ^ 2 := by
   classical
@@ -1184,8 +1034,6 @@ theorem weakHmNormSq_mono {m m' : ℕ} (h : m ≤ m') {k' : ℤ} (u : L2F ℝ Ω
     (Finset.range_subset_range.2 (by omega)) fun p _ _ => Finset.sum_nonneg fun r _ => ?_
   split_ifs <;> positivity
 
-/-- **The recursion of the weak `Hᵐ` norm**: if `w_j = ∂_j u` weakly (coefficientwise), then
-`Σ_{|r| ≤ m+1} ‖∂^r u‖² = ‖u‖² + Σ_j Σ_{|r| ≤ m} ‖∂^r w_j‖²` (words `j :: r`). -/
 theorem weakHmNormSq_succ (hΩ : IsOpen Ω) {m : ℕ} {k' : ℤ} {u : L2F ℝ Ω (formIdx n k')}
     {w : Fin n → L2F ℝ Ω (formIdx n k')} (hw : ∀ j t, HasWeakDeriv Ω [j] (u t) (w j t)) :
     weakHmNormSq Ω (m + 1) u = ‖u‖ ^ 2 + ∑ j, weakHmNormSq Ω m (w j) := by
@@ -1221,7 +1069,6 @@ theorem norm_cf_mulSeq_single_sq {x : Seq n k} (hx1 : MemSob 1 x) (j : Fin n) (q
   rw [cf_mulSeq hx1 (by simp), norm_smul, mul_pow, norm_symb_sq]
   simp
 
-/-- `⟨ξ⟩^{2(s+1)} |x(q)|² = ⟨ξ⟩^{2s} |x(q)|² + Σ_j ⟨ξ⟩^{2s} |(∂_j x)(q)|²`. -/
 theorem weight_add_one_mul {x : Seq n k} (hx1 : MemSob 1 x) (s : ℝ) (q : Fin n → ℤ) :
     weight (s + 1) q * ‖cf x q‖ ^ 2 =
       weight s q * ‖cf x q‖ ^ 2 + ∑ j, weight s q * ‖cf (mulSeq [j] x) q‖ ^ 2 := by
@@ -1232,7 +1079,6 @@ theorem weight_add_one_mul {x : Seq n k} (hx1 : MemSob 1 x) (s : ℝ) (q : Fin n
   simp_rw [this, ← Finset.mul_sum]
   ring
 
-/-- `x ∈ H^{s+1}(𝕋ⁿ)` iff `x ∈ Hˢ(𝕋ⁿ)` and every `∂_j x ∈ Hˢ(𝕋ⁿ)` (for `x ∈ H¹`). -/
 theorem memSob_add_one_iff {x : Seq n k} (hx1 : MemSob 1 x) (s : ℝ) :
     MemSob (s + 1) x ↔ MemSob s x ∧ ∀ j, MemSob s (mulSeq [j] x) := by
   constructor
@@ -1249,7 +1095,6 @@ theorem memSob_add_one_iff {x : Seq n k} (hx1 : MemSob 1 x) (s : ℝ) :
     exact ((show Summable _ from hs).add (summable_sum fun j _ => hj j)).congr fun q =>
       (weight_add_one_mul hx1 s q).symm
 
-/-- `‖x‖²_{s+1} = ‖x‖²_s + Σ_j ‖∂_j x‖²_s`. -/
 theorem sobSum_add_one {x : Seq n k} (hx1 : MemSob 1 x) {s : ℝ} (h : MemSob (s + 1) x) :
     sobSum (s + 1) x = sobSum s x + ∑ j, sobSum s (mulSeq [j] x) := by
   obtain ⟨hs, hj⟩ := (memSob_add_one_iff hx1 s).1 h
@@ -1258,8 +1103,6 @@ theorem sobSum_add_one {x : Seq n k} (hx1 : MemSob 1 x) {s : ℝ} (h : MemSob (s
   rw [Summable.tsum_add hs (summable_sum fun j _ => hj j),
     Summable.tsum_finsetSum fun j _ => hj j]
 
-/-- `x ∈ H^{m+1}(𝕋ⁿ)` iff every `∂_j x ∈ Hᵐ(𝕋ⁿ)` (for `x ∈ H¹`, `m ∈ ℕ`; induction on the
-order). -/
 theorem memSob_nat_add_one_iff {x : Seq n k} (hx1 : MemSob 1 x) (m : ℕ) :
     MemSob ((m : ℝ) + 1) x ↔ ∀ j, MemSob m (mulSeq [j] x) := by
   refine ⟨fun h => ((memSob_add_one_iff hx1 m).1 h).2, fun h => ?_⟩
@@ -1275,9 +1118,6 @@ theorem memSob_nat_add_one_iff {x : Seq n k} (hx1 : MemSob 1 x) (m : ℕ) :
       exact this
   exact key m le_rfl
 
-/-- **A weak first derivative on `Q` of `u ∈ H¹_J` is the restriction of `∂_j (JfJ J k u)`**
-(uniqueness of weak derivatives), and its parity extension in the class `J ∆ {j}` is
-`∂_j (JfJ J k u)` (`realParJ_mulSeq_single`). -/
 theorem mulSeq_eq_of_hasWeakDeriv {J : Finset (Fin n)} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hu : u ∈ sobolevPar J k 1) {j : Fin n} {w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hw : ∀ t, HasWeakDeriv (Q (Fin n)) [j] (u t) (w t)) :
@@ -1291,12 +1131,8 @@ theorem mulSeq_eq_of_hasWeakDeriv {J : Finset (Fin n)} {u : L2F ℝ (Q (Fin n)) 
   refine ⟨e, ?_⟩
   rw [e, JfJ_Jinvf (realParJ_mulSeq_single (JfJ_realParJ J k u) hx1 le_rfl j)]
 
-/-- **The parity classes of every integer order on `Q`** (`mem_sobolevPar_add_one_iff`):
-`u ∈ H^{m+1}_J(Q; Λᵏ)` iff `u ∈ H¹_J(Q; Λᵏ)` and, for every `j`, the weak derivative `∂_j u`
-(coefficientwise in `L²(Q)`) exists and lies in `Hᵐ_{J ∆ {j}}(Q; Λᵏ)`. By induction on `m` (with
-`mem_sobolevPar_one_iff`) this characterizes `Hᵐ_J(Q)` intrinsically on `Q`: weak derivatives up to
-order `m` in `L²(Q)` with the vanishing traces of `∂^r u_t` (`|r| < m`) on the faces normal to
-`(J ∆ r) ∆ t` (`r` read as the set of directions of odd multiplicity). -/
+/-- **The parity classes of every integer order on `Q`**: `u ∈ H^{m+1}_J(Q)` iff `u ∈ H¹_J(Q)` and
+every weak derivative `∂_j u` exists and lies in `Hᵐ_{J ∆ {j}}(Q)`. -/
 theorem mem_sobolevPar_add_one_iff (J : Finset (Fin n)) (m : ℕ)
     (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     u ∈ sobolevPar J k ((m : ℝ) + 1) ↔ u ∈ sobolevPar J k 1 ∧ ∀ j : Fin n,
@@ -1318,11 +1154,8 @@ theorem mem_sobolevPar_add_one_iff (J : Finset (Fin n)) (m : ℕ)
     rw [← (mulSeq_eq_of_hasWeakDeriv hu1 hwd).2]
     exact hwm
 
-/-- **`H²` in the parity classes, the full characterization** (`mem_sobolevPar_two_iff`):
-`u ∈ H²_J(Q; Λᵏ)` iff every `u_t ∈ H¹(Q)` has vanishing trace on the faces normal to `J ∆ t` and
-every first weak derivative `∂_j u_t` is the coefficient of `w_j ∈ H¹_{J ∆ {j}}(Q; Λᵏ)`, i.e.
-`∂_j u_t ∈ H¹(Q)` with vanishing trace on the faces normal to `(J ∆ {j}) ∆ t` (the compatibility
-conditions on the normal derivatives). `⇒` is `mem_sobolevPar_two_compat`. -/
+/-- **`H²` in the parity classes**: `u ∈ H²_J(Q)` iff each `u_t` and `∂_j u_t` lies in `H¹(Q)`
+with vanishing traces on the faces normal to `J ∆ t` and `(J ∆ {j}) ∆ t`. -/
 theorem mem_sobolevPar_two_iff (J : Finset (Fin n)) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     u ∈ sobolevPar J k 2 ↔ (∀ t : formIdx n (k : ℤ),
       zeroF (u t) ∈ (dPart (Q (Fin n)) (symmDiff J t.1) ((0 : ℕ) : ℤ)).domain) ∧
@@ -1336,8 +1169,6 @@ theorem mem_sobolevPar_two_iff (J : Finset (Fin n)) (u : L2F ℝ (Q (Fin n)) (fo
     exact ⟨w, by simpa using hw1, hd⟩⟩
   rwa [show ((1 : ℕ) : ℝ) + 1 = 2 by norm_num] at h
 
-/-- **The recursion of the `H^{m+1}_J` norm**:
-`‖u‖²_{m+1,J} = ‖u‖²_{m,J} + Σ_j ‖∂_j u‖²_{m,J∆{j}}`. -/
 theorem parNorm_add_one_sq (J : Finset (Fin n)) {m : ℕ}
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k ((m : ℝ) + 1))
     {w : Fin n → L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
@@ -1367,9 +1198,8 @@ theorem weakHmNormSq_le_parNorm_sq (J : Finset (Fin n)) (m : ℕ)
         (sobolevPar_anti J k (by linarith) hu)) 2
     exact add_le_add h0 (Finset.sum_le_sum fun j _ => ih _ (hwm j))
 
-/-- **Norm comparison on the parity classes, `≥`** (the reverse inequality): for `u ∈ Hᵐ_J(Q)`,
-`‖u‖²_{m,J} ≤ 2ᵐ Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²_{L²(Q)}`. With `weakHmNormSq_le_parNorm_sq`, the
-`Hᵐ_J` norm is equivalent to the weak `Hᵐ(Q)` norm, with constants depending only on `m`. -/
+/-- **Norm comparison on the parity classes, `≥`**: for `u ∈ Hᵐ_J(Q)`,
+`‖u‖²_{m,J} ≤ 2ᵐ Σ_t Σ_{|r| ≤ m} ‖∂^r u_t‖²_{L²(Q)}`. -/
 theorem parNorm_sq_le_weakHmNormSq (J : Finset (Fin n)) (m : ℕ)
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u ∈ sobolevPar J k m) :
     parNorm J k m u ^ 2 ≤ 2 ^ m * weakHmNormSq (Q (Fin n)) m u := by

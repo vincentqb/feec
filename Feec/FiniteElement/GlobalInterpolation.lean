@@ -7,27 +7,17 @@ public import Feec.ForMathlib.LinearPMap.Basic
 /-!
 # The global interpolation error in `HΛ(Ω)` and `H̊Λ(Ω)`
 
-For an element family `E` on a conforming simplicial mesh `M` of an open bounded `Ω`
-(`M.domain = Ω`), the finite element subcomplexes `Vₕ ⊆ HΛ(M.domain)` and
-`V̊ₕ ⊆ H̊Λ(M.domain)` are transported to the complexes of `Ω` along the equality of domains
-(`Feec.Domain.ConstCoeffComplex.maximalSubcomplexOfEq`,
-`Feec.Domain.ConstCoeffComplex.minimalSubcomplexOfEq`), so that the meshes of a family of a fixed
-domain all give subcomplexes of one Hilbert complex.
+The finite element subcomplex approximates a `C¹` form `w` in the graph norm to within the `L²`
+errors of the canonical interpolant `Π_h` on `w` and `dw` ([Arnold2018], Ch. 7).
 
-The canonical interpolant `Π_h` commutes with `d` (`LocalElement.glue_globalInterp_mem_maximal`),
-and maps forms vanishing outside `Ω` into `V̊ₕ` (`LocalElement.globalInterp_mem_globalSpace₀`).
-Hence the **interpolation error in the graph norm** reduces to the two `L²` errors of `w` and `dw`
-on `M.domain` ([Arnold2018], Ch. 7): if `‖w - Π_h w‖ ≤ A` and `‖dw - Π_h dw‖ ≤ A'`, then
-`v = Π_h w ∈ Vₕᵏ` has `‖w - v‖ ≤ A` and `‖dw - dv‖ ≤ A'` in `HΛ(Ω)`
-(`LocalElement.exists_mem_maximalSubcomplexOfEq_le`), and in `H̊Λ(Ω)` for `w` vanishing outside
-`Ω` (`LocalElement.exists_mem_minimalSubcomplexOfEq_le`). The bounds `A, A'` are those of the
-element family and the mesh (e.g. `Feec.FiniteElement.norm_formL2_sub_glue_le` for the Whitney
-forms).
+## Main results
+
+* `LocalElement.exists_mem_maximalSubcomplexOfEq_le`: the interpolation error in `HΛ(Ω)`.
+* `LocalElement.exists_mem_minimalSubcomplexOfEq_le`: the interpolation error in `H̊Λ(Ω)`.
 
 ## References
 
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -42,8 +32,7 @@ namespace Feec.Domain.ConstCoeffComplex
 
 variable {n : ℕ} (C : ConstCoeffComplex (Fin n → ℝ) ℝ)
 
-/-- A subcomplex of the maximal complex on `Ω`, as a subcomplex of the maximal complex on
-`Ω' = Ω`. -/
+/-- A subcomplex of the maximal complex on `Ω`, as one of the maximal complex on `Ω' = Ω`. -/
 def maximalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩ' : IsOpen Ω') (S : (C.maximalComplex hΩ).Subcomplex) :
     (C.maximalComplex hΩ').Subcomplex := by
@@ -61,8 +50,7 @@ def commutingMapOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen
     (C.maximalSubcomplexOfEq h hΩ hΩ' S).CommutingMap := by
   subst h; exact Q
 
-/-- A subcomplex of the minimal complex on `Ω`, as a subcomplex of the minimal complex on
-`Ω' = Ω`. -/
+/-- A subcomplex of the minimal complex on `Ω`, as one of the minimal complex on `Ω' = Ω`. -/
 def minimalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩ' : IsOpen Ω') (S : (C.minimalComplex hΩ).Subcomplex) :
     (C.minimalComplex hΩ').Subcomplex := by
@@ -80,16 +68,12 @@ def commutingMapOfEqMin {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsO
     (C.minimalSubcomplexOfEq h hΩ hΩ' S).CommutingMap := by
   subst h; exact Q
 
-/-- Any property of subcomplexes of maximal complexes is transported by
-`maximalSubcomplexOfEq`. -/
 theorem maximalSubcomplexOfEq_induction {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩ' : IsOpen Ω') (S : (C.maximalComplex hΩ).Subcomplex)
     (P : ∀ Θ : Set (Fin n → ℝ), ∀ hΘ : IsOpen Θ, (C.maximalComplex hΘ).Subcomplex → Prop)
     (hP : P Ω hΩ S) : P Ω' hΩ' (C.maximalSubcomplexOfEq h hΩ hΩ' S) := by
   subst h; exact hP
 
-/-- Any property of subcomplexes of minimal complexes is transported by
-`minimalSubcomplexOfEq`. -/
 theorem minimalSubcomplexOfEq_induction {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩ' : IsOpen Ω') (S : (C.minimalComplex hΩ).Subcomplex)
     (P : ∀ Θ : Set (Fin n → ℝ), ∀ hΘ : IsOpen Θ, (C.minimalComplex hΘ).Subcomplex → Prop)
@@ -102,21 +86,18 @@ namespace Feec.Domain
 
 variable {n : ℕ} {Ω : Set (Fin n → ℝ)}
 
-/-- `HΛ(Ω)`, the maximal `L²` de Rham complex of an open `Ω ⊆ ℝⁿ`, on the spaces
-`L²(Ω; Λᵏ)`. -/
+/-- `HΛ(Ω)`, the maximal `L²` de Rham complex of an open `Ω ⊆ ℝⁿ`. -/
 abbrev maximalDeRham (hΩ : IsOpen Ω) :
     HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ Ω (formIdx n k) :=
   (deRham ℝ n).maximalComplex hΩ
 
-/-- `H̊Λ(Ω)`, the minimal `L²` de Rham complex of an open `Ω ⊆ ℝⁿ`, on the spaces
-`L²(Ω; Λᵏ)`. -/
+/-- `H̊Λ(Ω)`, the minimal `L²` de Rham complex of an open `Ω ⊆ ℝⁿ`. -/
 abbrev minimalDeRham (hΩ : IsOpen Ω) :
     HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ Ω (formIdx n k) :=
   (deRham ℝ n).minimalComplex hΩ
 
 end Feec.Domain
 
-/-- A point of the boundary `∂(cl Ω)` is not in the open set `Ω`. -/
 theorem Feec.Mesh.SimplicialMesh.notMem_domain_of_mem_frontier {n : ℕ}
     (M : Feec.Mesh.SimplicialMesh n) (hΩo : IsOpen M.domain) {x : Fin n → ℝ}
     (hx : x ∈ frontier (closure M.domain)) : x ∉ M.domain := fun hxΩ =>
@@ -128,8 +109,6 @@ open Feec.Domain Feec.Mesh Feec.ExteriorFibre
 
 variable {n : ℕ} (E : LocalElement n) (M : SimplicialMesh n)
 
-/-- **`Π_h` of a form vanishing on `∂(cl Ω)` has vanishing boundary DOFs**: the DOFs of a face
-in a boundary facet see only the traces there (`dof_congr`). -/
 theorem globalInterp_mem_globalSpace₀ (k : ℕ) {w : contForms n}
     (h : ∀ x ∈ frontier (closure M.domain), (w : FormField n) x = 0) :
     (E.globalInterp M k w : E.Piecewise M k) ∈ E.globalSpace₀ M k := by
@@ -140,8 +119,6 @@ theorem globalInterp_mem_globalSpace₀ (k : ℕ) {w : contForms n}
     rfl
   rw [h0, map_zero]
 
-/-- **`Π_h` commutes with `d` in `L²`**: for a `C¹` form `w`, `Π_h w ∈ D(d_max)` and
-`d_max Π_h w = Π_h dw` (glued). -/
 theorem glue_globalInterp_mem_maximal [NeZero n] (hΩo : IsOpen M.domain) (k : ℕ)
     (w : c1Forms n) :
     ∃ h : E.glue M k (E.globalInterp M k (Submodule.inclusion c1Forms_le_contForms w) :
@@ -160,9 +137,8 @@ theorem glue_globalInterp_mem_maximal [NeZero n] (hΩo : IsOpen M.domain) (k : �
 variable [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : M.domain = Ω) (hM : IsOpen M.domain)
   (hΩo : IsOpen Ω) (hb : Bornology.IsBounded Ω)
 
-/-- **The interpolation error in `HΛ(Ω)`** ([Arnold2018], Ch. 7), `Ω = M.domain`: if the
-canonical interpolants of a `C¹` form `w` of degree `k` and of `dw` are within `A` and `A'` of
-them in `L²`, then `v = Π_h w ∈ Vₕᵏ ⊆ HΛᵏ(Ω)` satisfies `‖w - v‖ ≤ A` and `‖dw - dv‖ ≤ A'`. -/
+/-- If `‖w - Π_h w‖ ≤ A` and `‖dw - Π_h dw‖ ≤ A'` in `L²` for a `C¹` `k`-form `w`, then some
+`v ∈ Vₕᵏ` has `‖w - v‖ ≤ A` and `‖dw - dv‖ ≤ A'` in `HΛ(Ω)` ([Arnold2018], Ch. 7). -/
 theorem exists_mem_maximalSubcomplexOfEq_le (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
     {A A' : ℝ}
     (hA : ‖formL2 hM.measurableSet M.isBounded_domain k ⟨w, hw.continuous⟩ -
@@ -190,9 +166,8 @@ theorem exists_mem_maximalSubcomplexOfEq_le (k : ℕ) {w : FormField n} (hw : Co
   erw [e]
   exact hA'
 
-/-- **The interpolation error in `H̊Λ(Ω)`**: for a `C¹` form `w` vanishing outside `Ω` (`Ω`
-strictly star-shaped with respect to `x₀`), `v = Π_h w ∈ V̊ₕᵏ ⊆ H̊Λᵏ(Ω)`, with the estimates of
-`exists_mem_maximalSubcomplexOfEq_le`. -/
+/-- If `‖w - Π_h w‖ ≤ A`, `‖dw - Π_h dw‖ ≤ A'` in `L²`, `w` vanishes outside `Ω` and `Ω` is strictly
+star-shaped, then some `v ∈ V̊ₕᵏ` has `‖w - v‖ ≤ A` and `‖dw - dv‖ ≤ A'` in `H̊Λ(Ω)`. -/
 theorem exists_mem_minimalSubcomplexOfEq_le (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
     (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w) (hsupp : ∀ x ∉ Ω, w x = 0) {A A' : ℝ}

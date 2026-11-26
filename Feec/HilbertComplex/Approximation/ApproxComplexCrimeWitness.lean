@@ -6,39 +6,15 @@ public import Feec.HilbertComplex.Approximation.ApproxComplexWitness
 /-!
 # Non-vacuity of `ApproxFEEC.ofComplexCrime`: a nonzero cochain defect, and rates
 
-On the complex `𝕜 --id--> 𝕜 → 0` (`Feec.HilbertComplex.ConstrainedFEEC.idComplex`):
+On `𝕜 --id--> 𝕜 → 0`, families with a nonzero cochain defect (`shifted`), an inner-product crime
+(`scaled`) and both crimes at different orders (`mixed`) satisfy the approximating FEEC theorem,
+with rates given by their crimes.
 
-* **A reading map that is not a cochain map.** The family
-  `Feec.HilbertComplex.ApproxComplexCrime.shifted` has, at level `n` with `cₙ = 1 + 1/(n+1)`, the
-  discrete differential space `𝕜 × 𝕜 × 0` with `𝐝ₙ = cₙ·d` (the differential of
-  `Feec.HilbertComplex.ApproxComplex.scaledShort`), read in `W` by the **identity**: `iₙ` is
-  isometric (`Jₙ = 1`), but `𝐝 iₙ ≠ iₙ 𝐝ₙ` (`shifted_not_cochain`). Its cochain defect is
-  `⟪κₙ(y), v⟫ = (cₙ - 1) ȳ₁ v₀` (`inner_shifted_cochainDefect`): **nonzero** at every level for
-  `y = (0, 1, 0)` (`shifted_cochainDefect_ne_zero`), and at most `(cₙ - 1) ‖y‖` in the dual
-  discrete graph norm. The family goes through `ApproxComplexCrime.ofCochainDefect` (graph-norm
-  approximation by `w = y`, error `(cₙ - 1) |y₀|`), so the approximating FEEC theorem applies with
-  all core hypotheses derived; its rate is `O(cₙ - 1)` (`shifted_rate`). The scheme is inexact
-  (`shifted_exists_sol_ne`).
-* **The rate of the inner-product crime.** The cochain family
-  `Feec.HilbertComplex.ApproxComplex.scaled` (`iₙ = diag(cₙ, 1, 1)`, `Feec.HilbertComplex.Approximation.ApproxComplexWitness`)
-  gets, through `ApproxComplex.toCrime` and `ApproxComplexCrime.rateClass`, the rate given by its
-  inner-product defect: `‖e^{tL} x - iₙ e^{tLₙ} Rₙ x‖ ≤ (C + C_ι C' t) (cₙ² - 1) ‖x‖_{D(L²)}`
-  (`scaled_rate`), with exact graph-norm approximation and zero cochain defect.
-* **Distinct orders: `min(α, β, γ)` is attained by the inner-product defect.** The family
-  `Feec.HilbertComplex.ApproxComplexCrime.mixed` (`𝐝ₙ = bₙ·d` with `bₙ = cₙ + hₙ²`, read by
-  `iₙ = diag(cₙ, 1, 1)`, `hₙ = 1/(n+1)`) has both crimes: inner-product defect positive and
-  `≤ 3 hₙ` (`mixed_innerDefect_le_mesh`), cochain defect `⟪κₙ(0, 1, 0), (1, 0, 0)⟫ = hₙ²`
-  (`inner_mixed_cochainDefect_secondDatum`), graph-norm error of `πₙ y` at most `hₙ² ‖y‖`
-  (`norm_idTotalD_sub_mixed_le`). Through `ApproxComplexCrime.rateClass_of_split` with
-  `(α, β, γ) = (2, 1, 2)` it gets a rate class of order `min(2, 1, 2) = 1` (`mixedRate_α`) and the
-  error `O(hₙ)` (`mixed_rate`, `mixed_nonvacuous`).
+## Main results
 
-## References
-
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (inner-product crimes; the cochain defect is a further crime)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `ApproxComplexCrime.shifted_nonvacuous`: an isometric reading map that is not a cochain map.
+* `ApproxComplexCrime.scaled_rate`: the error `O(cₙ² - 1)` of the inner-product crime.
+* `ApproxComplexCrime.mixed_nonvacuous`: a rate class of order `min(2, 1, 2) = 1`.
 -/
 
 open scoped InnerProductSpace
@@ -94,12 +70,10 @@ theorem norm_c0_le (u : PiLp 2 (W3 𝕜 𝕜 PUnit)) : ‖c0 u‖ ≤ ‖u‖ :=
 
 theorem norm_c1_le (u : PiLp 2 (W3 𝕜 𝕜 PUnit)) : ‖c1 u‖ ≤ ‖u‖ := PiLp.norm_apply_le u 1
 
-/-! ### The shifted family: an isometric reading map that is not a cochain map -/
+/-! ### The shifted family -/
 
 variable (𝕜) in
-/-- **Discrete differential spaces with a non-cochain reading map** for `𝕜 --id--> 𝕜 → 0`: at
-level `n`, `Xₙ = 𝕜 × 𝕜 × 0` with the differential `𝐝ₙ = cₙ·d` of `scaledShort`, read in `W` by
-the identity (`iₙ = πₙ = 1`). -/
+/-- **Discrete differential spaces** `𝕜 × 𝕜 × 0` with `𝐝ₙ = cₙ·d`, read by the identity. -/
 abbrev shiftedFamily : ApproxComplexCrime.Family (idComplex 𝕜) ℕ where
   X _ := PiLp 2 (W3 𝕜 𝕜 PUnit)
   D n := (scaledFamily 𝕜).D n
@@ -109,12 +83,10 @@ abbrev shiftedFamily : ApproxComplexCrime.Family (idComplex 𝕜) ℕ where
   proj_incl _ _ := rfl
   bound := ⟨1, fun _ => ⟨ContinuousLinearMap.norm_id_le, ContinuousLinearMap.norm_id_le⟩⟩
 
-/-- The reading map is isometric: `Jₙ = 1`. -/
 theorem shifted_J (n : ℕ) : (shiftedFamily 𝕜).J n = 1 :=
   ContinuousLinearMap.ext fun v => ext_inner_right 𝕜 fun w => by
     rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]; rfl
 
-/-- `𝐝ₙ v - 𝐝 v = (0, (cₙ - 1) v₀, 0)`. -/
 theorem shifted_D_sub (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (shiftedFamily 𝕜).D n v - (idComplex 𝕜).totalD ⟨v, mem_idComplex_totalD_domain v⟩ =
       vec3 0 ((sc n - 1) * c0 v) := by
@@ -125,7 +97,6 @@ theorem shifted_D_sub (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     rw [c1_scaled_D, c1_idTotalD, c1_vec3]
     ring
 
-/-- **The reading map is not a cochain map** at any level: `𝐝 iₙ (1, 0, 0) ≠ iₙ 𝐝ₙ (1, 0, 0)`. -/
 theorem shifted_not_cochain (n : ℕ) :
     (idComplex 𝕜).totalD ⟨firstDatum 𝕜, mem_idComplex_totalD_domain _⟩ ≠
       (shiftedFamily 𝕜).incl n ((shiftedFamily 𝕜).D n (firstDatum 𝕜)) := fun h => by
@@ -141,7 +112,6 @@ theorem shifted_not_cochain (n : ℕ) :
   rw [this, norm_one] at hn
   exact lt_irrefl _ hn
 
-/-- **The cochain defect** `⟪κₙ(y), v⟫ = (cₙ - 1) ȳ₁ v₀`. -/
 theorem inner_shifted_cochainDefect (n : ℕ) (y : (idComplex 𝕜).wave.domain)
     (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ⟪(shiftedFamily 𝕜).cochainDefect n y, v⟫_𝕜 =
@@ -156,7 +126,6 @@ theorem norm_sc_sub_one (n : ℕ) : ‖sc (𝕜 := 𝕜) n - 1‖ = perturbMesh 
     RCLike.norm_ofReal, abs_of_pos (by linarith [one_lt_perturbScale n])]
   unfold perturbScale; ring
 
-/-- **The cochain defect is at most `(cₙ - 1) ‖y‖`** in the dual discrete graph norm. -/
 theorem norm_inner_shifted_cochainDefect_le (n : ℕ) (y : (idComplex 𝕜).wave.domain)
     (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ‖⟪(shiftedFamily 𝕜).cochainDefect n y, v⟫_𝕜‖ ≤
@@ -172,8 +141,6 @@ theorem norm_inner_shifted_cochainDefect_le (n : ℕ) (y : (idComplex 𝕜).wave
       have hh := mul_nonneg (mul_nonneg hm (norm_nonneg (y : PiLp 2 (W3 𝕜 𝕜 PUnit)))) this
       nlinarith [hh]
 
-/-- **The cochain defect is nonzero** at every level: for `y = (0, 1, 0)`,
-`⟪κₙ(y), (1, 0, 0)⟫ = cₙ - 1 ≠ 0`. -/
 theorem shifted_cochainDefect_ne_zero (n : ℕ) :
     (shiftedFamily 𝕜).cochainDefect n ⟨secondDatum 𝕜, mem_idComplex_wave_domain _⟩ ≠ 0 :=
   fun h => by
@@ -186,7 +153,6 @@ theorem shifted_cochainDefect_ne_zero (n : ℕ) :
     rw [← e, norm_zero] at this
     exact (perturbMesh_pos n).ne this
 
-/-- The graph-norm error of the approximant `w = y`: `‖𝐝 y - 𝐝ₙ y‖ ≤ (cₙ - 1) ‖y‖`. -/
 theorem norm_idTotalD_sub_shifted_le (n : ℕ) (y : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ‖(idComplex 𝕜).totalD ⟨y, mem_idComplex_totalD_domain y⟩ -
       (shiftedFamily 𝕜).incl n ((shiftedFamily 𝕜).D n y)‖ ≤ perturbMesh n * ‖y‖ := by
@@ -201,9 +167,7 @@ theorem tendsto_perturbMesh : Tendsto perturbMesh atTop (𝓝 0) := by
   unfold perturbMesh; exact tendsto_one_div_add_atTop_nhds_zero_nat
 
 variable (𝕜) in
-/-- **The approximating family with a nonzero cochain defect** (constraint `K`): admissible states
-`D(L)`, core `D(L²)` (here the whole space), graph-norm approximation by `w = y` and the cochain
-defect bound `(cₙ - 1) ‖y‖`, through `ApproxComplexCrime.ofCochainDefect`. -/
+/-- **The approximating family with a nonzero cochain defect**, with constraint `K`. -/
 abbrev shifted (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
     (hK : IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) : ApproxComplexCrime (idComplex 𝕜) ℕ :=
   ofCochainDefect (shiftedFamily 𝕜) K hK atTop (idComplex 𝕜).wave.domain (fun _ hy => hy)
@@ -229,8 +193,6 @@ abbrev shifted (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
 
 variable (Q : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit))) (hQ : IsClosed (Q : Set (PiLp 2 (W3 𝕜 𝕜 PUnit))))
 
-/-- **The scheme is inexact**: from `(0, 1, 0)` the discrete solution differs from the exact one
-at some time (`(Lₙ x)₀ = -cₙ ≠ -1 = (L x)₀`). -/
 theorem shifted_exists_sol_ne (n : ℕ) :
     ∃ t, (ofComplexCrime (shifted 𝕜 Q hQ)).sol n (secondDatum 𝕜) t ≠
       (idComplex 𝕜).waveGroup.S t (secondDatum 𝕜) := by
@@ -259,7 +221,7 @@ theorem shifted_exists_sol_ne (n : ℕ) :
 
 /-! ### Rates -/
 
-/-- The class norm `‖x‖ + ‖L x‖ + ‖L² x‖` (the graph norm of `L²`). -/
+/-- The class norm `‖x‖ + ‖L x‖ + ‖L² x‖`. -/
 def l2Norm (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) : ℝ :=
   ‖x‖ + ‖waveExt (idComplex 𝕜) x‖ + ‖waveExt (idComplex 𝕜) (waveExt (idComplex 𝕜) x)‖
 
@@ -283,9 +245,7 @@ theorem norm_le_l2Norm_of_mem {x y : PiLp 2 (W3 𝕜 𝕜 PUnit)} {t : ℝ}
     subst hy
     rw [waveExt_waveGroup _ hLx, i2, i3]; linarith
 
-/-- **The rate class of the shifted family**: order `1` in `hₙ = cₙ - 1`, class norm
-`‖x‖ + ‖L x‖ + ‖L² x‖`, from the split rates (graph-norm error and cochain defect `O(hₙ)`,
-inner-product defect `0`). -/
+/-- The rate class of `shifted`, of order `1` in `cₙ - 1`. -/
 def shiftedRate (T : ℝ) : (ofComplexCrime (shifted 𝕜 Q hQ)).RateClass T :=
   (shifted 𝕜 Q hQ).rateClass T Set.univ (fun x _ => mem_idComplex_domainSq x) l2Norm
     perturbMesh 1 (2 * (1 + (shiftedFamily 𝕜).boundConst)) fun x _ n t _ y hy => by
@@ -317,9 +277,6 @@ def shiftedRate (T : ℝ) : (ofComplexCrime (shifted 𝕜 Q hQ)).RateClass T :=
           (add_nonneg (norm_nonneg _) (norm_nonneg _)))
         nlinarith
 
-/-- **The rate of the shifted family**: from the comparison initial value `Rₙ x`,
-`‖e^{tL} x - iₙ e^{tLₙ} Rₙ x‖ ≤ (C + C_ι C' t) (cₙ - 1) (‖x‖ + ‖L x‖ + ‖L² x‖)` on `[0, T]`, a rate
-given by the cochain defect `cₙ - 1`. -/
 theorem shifted_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖(idComplex 𝕜).waveGroup.S t x - (ofComplexCrime (shifted 𝕜 Q hQ)).sol n
         ((shiftedRate Q hQ T).p x n 0) t‖ ≤
@@ -333,11 +290,8 @@ theorem shifted_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : 
   rw [Real.rpow_one]
   unfold perturbScale; ring_nf
 
-/-- **Non-vacuity of `ApproxFEEC.ofComplexCrime` with a nonzero cochain defect.** On
-`𝕜 --id--> 𝕜 → 0`, the family `shifted` (differential `cₙ·d`, isometric reading map `iₙ = 1`,
-`cₙ = 1 + 1/(n+1)`) satisfies: the approximating FEEC theorem with every core hypothesis derived;
-`Jₙ = 1`; the reading map is not a cochain map at any level; the cochain defect at `(0, 1, 0)` is
-nonzero at every level; the scheme is inexact; the rate is `O(cₙ - 1)`. -/
+/-- **Non-vacuity with a nonzero cochain defect**: for `shifted`, `Jₙ = 1`, `iₙ` is not a cochain
+map, the cochain defect is nonzero, the scheme is inexact, and the error is `O(cₙ - 1)`. -/
 theorem shifted_nonvacuous :
     (ofComplexCrime (shifted 𝕜 Q hQ)).Verdict (ofComplexCrimeCore (shifted 𝕜 Q hQ)) ∧
     (∀ n, (shiftedFamily 𝕜).J n = 1) ∧
@@ -356,9 +310,7 @@ theorem shifted_nonvacuous :
 
 /-! ### The rate of the inner-product crime `scaled` -/
 
-/-- **The rate class of `scaled` through `toCrime`**: order `1` in `cₙ² - 1` (its inner-product
-defect), class norm `‖x‖ + ‖L x‖ + ‖L² x‖`: exact graph-norm approximation by `πₙ y`, zero cochain
-defect, `‖1 - Jₙ‖ ≤ cₙ² - 1`. -/
+/-- The rate class of `scaled` through `toCrime`, of order `1` in `cₙ² - 1`. -/
 def scaledRate (T : ℝ) : (ofComplexCrime (scaled 𝕜 Q hQ).toCrime).RateClass T :=
   (scaled 𝕜 Q hQ).toCrime.rateClass T Set.univ (fun x _ => mem_idComplex_domainSq x) l2Norm
     (fun n => perturbScale n ^ 2 - 1) 1
@@ -410,8 +362,7 @@ def scaledRate (T : ℝ) : (ofComplexCrime (scaled 𝕜 Q hQ).toCrime).RateClass
       rw [mul_zero, add_zero, add_zero, ← waveExt_of_mem hy1] at h4
       exact h4.trans (mul_le_mul_of_nonneg_right key (add_nonneg (norm_nonneg _) (norm_nonneg _)))
 
-/-- **The rate of `scaled` is given by its inner-product defect**: from the comparison initial
-value (the modified elliptic projection `Rₙ (x, 𝐝 x)` of `ofComplexCore`),
+/-- **The rate of `scaled`**:
 `‖e^{tL} x - iₙ e^{tLₙ} Rₙ x‖ ≤ (C + C_ι C' t) (cₙ² - 1) (‖x‖ + ‖L x‖ + ‖L² x‖)` on `[0, T]`. -/
 theorem scaled_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖(idComplex 𝕜).waveGroup.S t x - (ofComplex (scaled 𝕜 Q hQ)).sol n
@@ -430,7 +381,7 @@ theorem scaled_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : �
   rfl
 
 
-/-! ### Distinct orders: an inner-product defect `O(h)` with a cochain defect `O(h²)` -/
+/-! ### Distinct orders -/
 
 /-- The scale `bₙ = cₙ + hₙ²` of the differential of `mixedFamily`. -/
 abbrev mc (n : ℕ) : 𝕜 := ((perturbScale n + perturbMesh n ^ 2 : ℝ) : 𝕜)
@@ -445,11 +396,7 @@ theorem norm_mc_le (n : ℕ) : ‖mc (𝕜 := 𝕜) n‖ ≤ 3 := by
   unfold perturbScale; nlinarith
 
 variable (𝕜) in
-/-- **Discrete differential spaces with both crimes, at different orders** for
-`𝕜 --id--> 𝕜 → 0`: at level `n`, `Xₙ = 𝕜 × 𝕜 × 0` with the differential `𝐝ₙ = bₙ·d`,
-`bₙ = cₙ + hₙ²`, read in `W` by the non-isometric `iₙ = diag(cₙ, 1, 1)` of `scaledFamily`
-(`cₙ = 1 + hₙ`, `hₙ = 1/(n+1)`). The inner-product defect is `cₙ² - 1 = O(hₙ)`, the cochain defect
-`(bₙ - cₙ) = hₙ²`. -/
+/-- **Discrete differential spaces with both crimes**: `𝐝ₙ = bₙ·d`, `iₙ = diag(cₙ, 1, 1)`. -/
 abbrev mixedFamily : ApproxComplexCrime.Family (idComplex 𝕜) ℕ where
   X _ := PiLp 2 (W3 𝕜 𝕜 PUnit)
   D n := (scaledShort 𝕜 (mc n)).toHilbertComplex.totalDL
@@ -479,7 +426,6 @@ theorem c1_mixed_D (n : ℕ) (u : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     apply_eq_zero_of_eq_zero (show E.d 2 1 = 0 from rfl), add_zero]
   rfl
 
-/-- `‖𝐝ₙ u‖ ≤ 3 ‖u‖`. -/
 theorem norm_mixed_D_le (n : ℕ) (u : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ‖(mixedFamily 𝕜).D n u‖ ≤ 3 * ‖u‖ := by
   have e : (mixedFamily 𝕜).D n u = vec3 0 (mc n * c0 u) :=
@@ -487,21 +433,17 @@ theorem norm_mixed_D_le (n : ℕ) (u : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
   rw [e, norm_vec3_zero, norm_mul]
   exact mul_le_mul (norm_mc_le n) (norm_c0_le u) (norm_nonneg _) (by norm_num)
 
-/-- The inner-product defect of `mixedFamily` is that of `scaledFamily`: `‖1 - Jₙ‖ ≤ cₙ² - 1`. -/
 theorem mixed_innerDefect_le (n : ℕ) :
     ‖1 - (mixedFamily 𝕜).J n‖ ≤ perturbScale n ^ 2 - 1 := scaled_innerDefect_le n
 
-/-- **The inner-product defect is nonzero at every level** (`iₙ` is not isometric). -/
 theorem mixed_innerDefect_pos (n : ℕ) : 0 < ‖1 - (mixedFamily 𝕜).J n‖ := scaled_innerDefect_pos n
 
-/-- **The inner-product defect is `O(hₙ)`**: `‖1 - Jₙ‖ ≤ 3 hₙ`. -/
 theorem mixed_innerDefect_le_mesh (n : ℕ) : ‖1 - (mixedFamily 𝕜).J n‖ ≤ 3 * perturbMesh n := by
   refine (mixed_innerDefect_le n).trans ?_
   have h1 := perturbMesh_pos n
   have h2 := perturbMesh_le_one n
   unfold perturbScale; nlinarith
 
-/-- `iₙ 𝐝ₙ v - 𝐝 iₙ v = (0, hₙ² v₀, 0)`. -/
 theorem mixed_incl_D_sub (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (mixedFamily 𝕜).incl n ((mixedFamily 𝕜).D n v) -
         (idComplex 𝕜).totalD ⟨_, mem_idComplex_totalD_domain ((mixedFamily 𝕜).incl n v)⟩ =
@@ -517,7 +459,6 @@ theorem mixed_incl_D_sub (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     rw [c0_scaled_inclL, ← mc_sub_sc]
     ring
 
-/-- **The cochain defect** `⟪κₙ(y), v⟫ = hₙ² ȳ₁ v₀`. -/
 theorem inner_mixed_cochainDefect (n : ℕ) (y : (idComplex 𝕜).wave.domain)
     (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ⟪(mixedFamily 𝕜).cochainDefect n y, v⟫_𝕜 =
@@ -526,8 +467,6 @@ theorem inner_mixed_cochainDefect (n : ℕ) (y : (idComplex 𝕜).wave.domain)
     (mem_idComplex_totalD_domain ((mixedFamily 𝕜).incl n v)), mixed_incl_D_sub, inner_W3,
     c0_vec3, c1_vec3, mul_zero, zero_add]
 
-/-- **The cochain defect is exactly of order `hₙ²`**: `⟪κₙ(0, 1, 0), (1, 0, 0)⟫ = hₙ²`, in
-particular nonzero at every level. -/
 theorem inner_mixed_cochainDefect_secondDatum (n : ℕ) :
     ⟪(mixedFamily 𝕜).cochainDefect n ⟨secondDatum 𝕜, mem_idComplex_wave_domain _⟩,
       firstDatum 𝕜⟫_𝕜 = ((perturbMesh n ^ 2 : ℝ) : 𝕜) := by
@@ -544,7 +483,6 @@ theorem mixed_cochainDefect_ne_zero (n : ℕ) :
     have : (perturbMesh n ^ 2 : ℝ) = 0 := by exact_mod_cast e.symm
     exact (pow_pos hm 2).ne' this
 
-/-- **The cochain defect is at most `hₙ² ‖y‖`** in the dual discrete graph norm. -/
 theorem norm_inner_mixed_cochainDefect_le (n : ℕ) (y : (idComplex 𝕜).wave.domain)
     (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ‖⟪(mixedFamily 𝕜).cochainDefect n y, v⟫_𝕜‖ ≤
@@ -561,13 +499,10 @@ theorem norm_inner_mixed_cochainDefect_le (n : ℕ) (y : (idComplex 𝕜).wave.d
       have hh := mul_nonneg (mul_nonneg hm (norm_nonneg (y : PiLp 2 (W3 𝕜 𝕜 PUnit)))) this
       nlinarith [hh]
 
-/-- `iₙ πₙ = 1`. -/
 theorem mixed_incl_proj (n : ℕ) (y : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (mixedFamily 𝕜).incl n ((mixedFamily 𝕜).proj n y) = y :=
   PiLp.ext fun i => scaleMap_scaleMap (sc_mul_inv n) i _
 
-/-- **The graph-norm error of `w = πₙ y` is at most `hₙ² ‖y‖`**:
-`𝐝 y - iₙ 𝐝ₙ πₙ y = (0, (1 - bₙ/cₙ) y₀, 0)` and `|1 - bₙ/cₙ| = hₙ²/cₙ ≤ hₙ²`. -/
 theorem norm_idTotalD_sub_mixed_le (n : ℕ) (y : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ‖(idComplex 𝕜).totalD ⟨y, mem_idComplex_totalD_domain y⟩ -
       (mixedFamily 𝕜).incl n ((mixedFamily 𝕜).D n ((mixedFamily 𝕜).proj n y))‖ ≤
@@ -604,9 +539,7 @@ theorem tendsto_perturbMesh_sq_mul (a : ℝ) :
   simpa using (tendsto_perturbMesh.pow 2).mul_const a
 
 variable (𝕜) in
-/-- **The approximating family with both crimes** (constraint `K`), through
-`ApproxComplexCrime.ofCochainDefect`: graph-norm approximation by `w = πₙ y` (error `hₙ² ‖y‖`),
-cochain defect `≤ hₙ² ‖y‖`, inner-product defect `‖1 - Jₙ‖ ≤ cₙ² - 1 → 0`. -/
+/-- **The approximating family with both crimes**, with constraint `K`. -/
 abbrev mixed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
     (hK : IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) : ApproxComplexCrime (idComplex 𝕜) ℕ :=
   ofCochainDefect (mixedFamily 𝕜) K hK atTop (idComplex 𝕜).wave.domain (fun _ hy => hy)
@@ -626,11 +559,7 @@ abbrev mixed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
       refine (norm_inner_mixed_cochainDefect_le n ⟨y, hy⟩ v).trans ?_
       exact mul_le_mul_of_nonneg_right hn.le (by positivity))
 
-/-- **The rate class of `mixed` at order `min(2, 1, 2) = 1`**, through
-`ApproxComplexCrime.rateClass_of_split`: mesh size `hₙ = 1/(n+1)`, class norm
-`‖x‖ + ‖L x‖ + ‖L² x‖`, graph-norm best approximation `O(hₙ²)` (`Cₐ = 1`, approximant `πₙ y` of
-discrete graph norm `≤ 4 C_ι ‖y‖`), inner-product defect `O(hₙ)` at it (`‖1 - Jₙ‖ ≤ 3 hₙ`, so
-`C_β = 12 C_ι`), cochain defect `O(hₙ²)` (`C_γ = 1`). -/
+/-- The rate class of `mixed`, of order `min(2, 1, 2) = 1` in `hₙ`. -/
 def mixedRate (T : ℝ) : (ofComplexCrime (mixed 𝕜 Q hQ)).RateClass T :=
   (mixed 𝕜 Q hQ).rateClass_of_split T Set.univ (fun x _ => mem_idComplex_domainSq x) l2Norm
     perturbMesh 2 1 2 1 (3 * (4 * (mixedFamily 𝕜).boundConst)) 1
@@ -669,15 +598,9 @@ def mixedRate (T : ℝ) : (ofComplexCrime (mixed 𝕜 Q hQ)).RateClass T :=
         exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hnorm hm)
           (add_nonneg (norm_nonneg _) (norm_nonneg _))
 
-/-- The order of `mixedRate` is `min(2, 1, 2) = 1`: the inner-product defect is the binding
-crime. -/
 theorem mixedRate_α (T : ℝ) : (mixedRate Q hQ T).α = 1 := by
   change min (2 : ℝ) (min 1 2) = 1; norm_num
 
-/-- **The rate of `mixed`**: from the comparison initial value `Rₙ x`,
-`‖e^{tL} x - iₙ e^{tLₙ} Rₙ x‖ ≤ (C + C_ι C' t) hₙ (‖x‖ + ‖L x‖ + ‖L² x‖)` on `[0, T]`, with
-`C = (1 + 8 C_ι) (2 + 13 C_ι)` (`rateClass_of_split_C` with `Cₐ = 1`, `C_β = 12 C_ι`,
-`C_γ = 1`). -/
 theorem mixed_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖(idComplex 𝕜).waveGroup.S t x - (ofComplexCrime (mixed 𝕜 Q hQ)).sol n
         ((mixedRate Q hQ T).p x n 0) t‖ ≤
@@ -687,11 +610,8 @@ theorem mixed_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : �
   rw [mixedRate_α, Real.rpow_one] at h
   exact h
 
-/-- **Non-vacuity of `rateClass_of_split` with distinct orders.** On `𝕜 --id--> 𝕜 → 0`, the
-family `mixed` (differential `bₙ·d`, `bₙ = cₙ + hₙ²`, reading map `diag(cₙ, 1, 1)`) satisfies: the
-approximating FEEC theorem with every core hypothesis derived; a positive inner-product defect
-`≤ 3 hₙ`; a cochain defect of exact order `hₙ²` at `(0, 1, 0)`; and the rate class of order
-`min(2, 1, 2) = 1` with error `O(hₙ)`. -/
+/-- **Non-vacuity with distinct orders**: for `mixed`, the verdict holds, `0 < ‖1 - Jₙ‖ ≤ 3 hₙ`,
+the cochain defect has exact order `hₙ²`, and the rate class has order `1`, with error `O(hₙ)`. -/
 theorem mixed_nonvacuous :
     (ofComplexCrime (mixed 𝕜 Q hQ)).Verdict (ofComplexCrimeCore (mixed 𝕜 Q hQ)) ∧
     (∀ n, 0 < ‖1 - (mixedFamily 𝕜).J n‖ ∧ ‖1 - (mixedFamily 𝕜).J n‖ ≤ 3 * perturbMesh n) ∧

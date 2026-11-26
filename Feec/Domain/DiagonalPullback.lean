@@ -7,37 +7,13 @@ public import Feec.Domain.Operators
 /-!
 # Diagonal changes of variables
 
-`Feec.Domain.Affine` treats the dilations `T x = a • x + b` of `E`: they rescale every direction
-by the same factor, so a homogeneous constant-coefficient operator `A` of order `r` satisfies
-`A (f ∘ T) = a^r (A f) ∘ T`. This file treats the **diagonal** affine maps of `ℝⁿ`,
-`T x = d * x + b` (pointwise product, `dᵢ ≠ 0`), which map boxes with unequal sides onto each
-other. Now each variable is rescaled by its own factor and the operator changes:
-`A (f ∘ T) = (A_d f) ∘ T`, where `A_d = diagScale d A` is the operator with every direction `v`
-replaced by `d * v` (`∂ᵢ ↦ dᵢ ∂ᵢ`; `apply_comp_diagAff`). No homogeneity is needed.
+For `T x = d * x + b`, the pull-back `u ↦ u ∘ T` carries the minimal realization on `Ω'` of the
+rescaled operator `A_d`, every direction `v` replaced by `d * v`, to that of `A` on `T⁻¹ Ω'`.
 
-The pull-back `f ↦ f ∘ T` is a scaled unitary `L²(Ω'; 𝕜^ι) ≃ L²(Ω; 𝕜^ι)`, `Ω = T⁻¹ Ω'`,
-`⟪f ∘ T, g ∘ T⟫ = |∏ dᵢ|⁻¹ ⟪f, g⟫` (`pullDiagF`, `inner_pullDiagF`), and it carries the
-realizations of `A_d` on `Ω'` to those of `A` on `Ω`:
+## Main results
 
-* `ConstCoeffOp.minimal_pullDiag`: `A_min,Ω = P (A_d)_min,Ω' P⁻¹` (test graphs correspond);
-  `ConstCoeffComplex.diagScale` is again a complex.
-
-A second, purely algebraic, tool: if a constant-coefficient operator `B` is a **conjugate of `A`
-by constant diagonal fibre scalings**, `B (w • ψ) = w' • A ψ` on smooth fields, then
-`B_min = (w' •) A_min (w •)⁻¹` (`ConstCoeffOp.minimal_eq_conj_scaleF`). For the row-wise
-gradient and curl on `ℝ³` the rescaled operators are of this kind
-(`gradOp_diagScale_apply`, `curlOp_diagScale_apply`): `grad_d σ = (grad σ) D` and
-`curl_d (E D) = det D · (curl E) D⁻¹` for `D = diag d`, which is how the grad–curl complex of a
-box is compared with the one of the cube in `Feec.Models.Box`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the cube complexes, here extended to boxes)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (change of variables in Sobolev spaces)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.minimal_pullDiag`: `A_min,Ω = P (A_d)_min,Ω' P⁻¹`.
+* `ConstCoeffOp.minimal_eq_conj_scaleF`: conjugation by constant diagonal fibre scalings.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap
@@ -121,7 +97,6 @@ theorem det_diagCLM (d : Fin n → ℝ) :
     simp [Matrix.mulVec_diagonal]
   rw [this, LinearMap.det_toLin', Matrix.det_diagonal]
 
-/-- **`diagAff d b` is measure preserving from `|∏ dᵢ| · volume` to `volume`.** -/
 theorem measurePreserving_diagAff (hd : ∀ i, d i ≠ 0) (b : Fin n → ℝ) :
     MeasurePreserving (diagAff d b) (ENNReal.ofReal (jacD d) • volume) volume := by
   refine ⟨(continuous_diagAff d b).measurable, ?_⟩
@@ -201,7 +176,6 @@ theorem coeFn_pullDiagₗ (f : L2 𝕜 Ω') :
       fun x => (f : (Fin n → ℝ) → 𝕜) (diagAff d b x) :=
   (memLp_comp_diagAff hd b hΩ' hT f).coeFn_toLp
 
-/-- **Change of variables**: `∫_Ω (g ∘ T) = |∏ dᵢ|⁻¹ ∫_{Ω'} g`. -/
 theorem setIntegral_comp_diagAff (g : (Fin n → ℝ) → 𝕜) :
     ∫ x in Ω, g (diagAff d b x) = (((jacD d)⁻¹ : ℝ) : 𝕜) * ∫ y in Ω', g y := by
   subst hT
@@ -217,7 +191,6 @@ theorem setIntegral_comp_diagAff (g : (Fin n → ℝ) → 𝕜) :
     inv_mul_cancel₀ hjne, one_mul]
   rfl
 
-/-- **The pull-back scales inner products by `|∏ dᵢ|⁻¹`.** -/
 theorem inner_pullDiagₗ (f g : L2 𝕜 Ω') :
     ⟪pullDiagₗ hd b hΩ' hT f, pullDiagₗ hd b hΩ' hT g⟫_𝕜 =
       (((jacD d)⁻¹ : ℝ) : 𝕜) * ⟪f, g⟫_𝕜 := by
@@ -250,7 +223,6 @@ theorem pullDiag_apply (f : L2 𝕜 Ω') : pullDiag hd b hΩ' hT f = pullDiagₗ
 
 end Pull
 
-/-- Pulling back along `T` and then along a right inverse `T'` of `T` is the identity. -/
 theorem pullDiag_pullDiag {d d' : Fin n → ℝ} (hd : ∀ i, d i ≠ 0) (hd' : ∀ i, d' i ≠ 0)
     {b b' : Fin n → ℝ} {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : MeasurableSet Ω') (hΩ : MeasurableSet Ω)
     (hT : diagAff d b ⁻¹' Ω' = Ω) (hT' : diagAff d' b' ⁻¹' Ω = Ω')
@@ -277,8 +249,7 @@ theorem preimage_inv_of_diagAff : diagAff d⁻¹ (-(d⁻¹ * b)) ⁻¹' Ω = Ω'
 
 variable (ι : Type*) [Fintype ι]
 
-/-- **The pull-back of `L²` fields** `u ↦ u ∘ T`, `L²(Ω'; 𝕜^ι) ≃ L²(Ω; 𝕜^ι)`, `Ω = T⁻¹ Ω'`;
-a scaled unitary (`inner_pullDiagF`), with inverse the pull-back along `T⁻¹`. -/
+/-- **The pull-back of `L²` fields** `u ↦ u ∘ T`, `L²(Ω'; 𝕜^ι) ≃ L²(Ω; 𝕜^ι)`, `Ω = T⁻¹ Ω'`. -/
 def pullDiagF : L2F 𝕜 Ω' ι ≃L[𝕜] L2F 𝕜 Ω ι :=
   (PiLp.continuousLinearEquiv 2 𝕜 _).trans
     ((ContinuousLinearEquiv.piCongrRight fun _ : ι =>
@@ -306,7 +277,6 @@ theorem pullDiagF_symm_apply (u : L2F 𝕜 Ω ι) :
     (measurableSet_of_diagAff b hΩ' hT) (preimage_inv_of_diagAff hd b hT) (u i))
   rw [pullDiag_pullDiag (inv_ne_zero_pi hd) hd _ hΩ' _ hT (diagAff_inv hd b)]
 
-/-- **The pull-back scales the inner products of fields by `|∏ dᵢ|⁻¹`.** -/
 theorem inner_pullDiagF (u v : L2F 𝕜 Ω' ι) :
     ⟪pullDiagF hd b hΩ' hT ι u, pullDiagF hd b hΩ' hT ι v⟫_𝕜 =
       (((jacD d)⁻¹ : ℝ) : 𝕜) * ⟪u, v⟫_𝕜 := by
@@ -314,7 +284,6 @@ theorem inner_pullDiagF (u v : L2F 𝕜 Ω' ι) :
   exact Finset.sum_congr rfl fun i _ => inner_pullDiagₗ hd b hΩ' hT (u i) (v i)
 
 omit hΩ' [Fintype ι] in
-/-- Test functions pull back to test functions. -/
 theorem _root_.Feec.Domain.IsTest.comp_diagAff {F : Type*} [NormedAddCommGroup F]
     [NormedSpace ℝ F] {f : (Fin n → ℝ) → F} (hf : IsTest Ω' f) :
     IsTest Ω (fun x => f (diagAff d b x)) := by
@@ -331,7 +300,6 @@ theorem _root_.Feec.Domain.IsTestField.comp_diagAff {φ : ι → (Fin n → ℝ)
   IsTest.comp_diagAff hd b hT (hφ i)
 
 omit [Fintype ι] in
-/-- The pull-back of a test field is the composed test field. -/
 theorem pullDiagF_testField {φ : ι → (Fin n → ℝ) → 𝕜} (hφ : IsTestField Ω' φ) :
     pullDiagF hd b hΩ' hT ι (testField hφ) = testField (hφ.comp_diagAff hd b hT) := by
   refine WithLp.ofLp_injective 2 (funext fun i => ?_)
@@ -346,8 +314,6 @@ end PullF
 
 /-! ### The chain rule and the rescaled operator -/
 
-/-- **Chain rule** for iterated directional derivatives along `T x = d * x + b`:
-`∂^{vs} (f ∘ T) = (∂^{d * vs} f) ∘ T`. -/
 theorem iterDeriv_comp_diagAff {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     {f : (Fin n → ℝ) → F} (hf : ContDiff ℝ ∞ f) (d b : Fin n → ℝ) (vs : List (Fin n → ℝ)) :
     iterDeriv vs (fun x => f (diagAff d b x)) =
@@ -368,8 +334,7 @@ namespace ConstCoeffOp
 
 variable {ι κ : Type*}
 
-/-- **The rescaled operator** `A_d`: every direction `v` of `A` replaced by `d * v`
-(`∂ᵢ ↦ dᵢ ∂ᵢ`), so that `A (f ∘ T) = (A_d f) ∘ T` for `T x = d * x + b`. -/
+/-- **The rescaled operator** `A_d`: every direction `v` of `A` replaced by `d * v`. -/
 def diagScale (d : Fin n → ℝ) (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) :
     ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ where
   coeff j i := (A.coeff j i).map fun t => (t.1.map (diagCLM d), t.2)
@@ -383,7 +348,6 @@ theorem applyEntry_comp_diagAff (P : List (List (Fin n → ℝ) × 𝕜)) {f : (
   | cons t P ih =>
     rw [applyEntry_cons, List.map_cons, applyEntry_cons, ih, iterDeriv_comp_diagAff hf]
 
-/-- **Chain rule** for a constant-coefficient operator: `A (f ∘ T) = (A_d f) ∘ T`. -/
 theorem apply_comp_diagAff [Fintype ι] (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ)
     {f : ι → (Fin n → ℝ) → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i)) (d b : Fin n → ℝ) :
     A.apply (fun i x => f i (diagAff d b x)) =
@@ -394,7 +358,6 @@ theorem apply_comp_diagAff [Fintype ι] (A : ConstCoeffOp (Fin n → ℝ) 𝕜 �
   rw [applyEntry_comp_diagAff _ (hf i)]
   rfl
 
-/-- The rescalings compose: `(A_d)_{d'} = A_{d d'}`. -/
 theorem diagScale_diagScale (d d' : Fin n → ℝ) (A : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ) :
     diagScale d' (diagScale d A) = diagScale (d * d') A := by
   simp only [diagScale, List.map_map]
@@ -447,7 +410,6 @@ theorem graphHomeomorphDiag_apply (p : L2F 𝕜 Ω ι × L2F 𝕜 Ω κ) :
       ((pullDiagF hd b hΩ' hT ι).symm p.1, (pullDiagF hd b hΩ' hT κ).symm p.2) := rfl
 
 omit [Fintype κ] in
-/-- **Test graphs correspond** under the pull-back: those of `A` on `Ω` and of `A_d` on `Ω'`. -/
 theorem testGraph_eq_preimage_diag :
     (A.testGraph Ω : Set (L2F 𝕜 Ω ι × L2F 𝕜 Ω κ)) =
       graphHomeomorphDiag hd b hΩ' hT ⁻¹' ((diagScale d A).testGraph Ω' : Set _) := by
@@ -476,8 +438,7 @@ theorem testGraph_eq_preimage_diag :
     rw [show p = (p.1, p.2) from rfl, h1, h2]
     exact pullDiagF_mem_testGraph hd b hΩ' hT hψ
 
-/-- **The minimal realization under a diagonal change of variables**:
-`A_min,Ω = P (A_d)_min,Ω' P⁻¹`, `P u = u ∘ T`. -/
+/-- **The minimal realization under `T x = d * x + b`**: `A_min,Ω = P (A_d)_min,Ω' P⁻¹`. -/
 theorem minimal_pullDiag (hΩo' : IsOpen Ω') :
     A.minimal Ω = ((diagScale d A).minimal Ω').conjScaled (pullDiagF hd b hΩ' hT ι)
       (pullDiagF hd b hΩ' hT κ) 1 := by
@@ -537,8 +498,7 @@ theorem scaleF_testField {w : ι → 𝕜} (hw : ∀ i, w i ≠ 0) {φ : ι → 
 
 variable [Fintype ι] [Fintype κ]
 
-/-- **Conjugation by constant diagonal fibre scalings**: if `B (w • ψ) = w' • A ψ` on smooth
-fields (`wᵢ, w'ⱼ ≠ 0`), then `B_min = (w' •) A_min (w •)⁻¹`. -/
+/-- **Conjugation by constant diagonal fibre scalings**: `B_min = (w' •) A_min (w •)⁻¹`. -/
 theorem minimal_eq_conj_scaleF {A B : ConstCoeffOp (Fin n → ℝ) 𝕜 ι κ} {w : ι → 𝕜} {w' : κ → 𝕜}
     (hw : ∀ i, w i ≠ 0) (hw' : ∀ j, w' j ≠ 0)
     (hAB : ∀ ψ : ι → (Fin n → ℝ) → 𝕜, (∀ i, ContDiff ℝ ∞ (ψ i)) →
@@ -600,8 +560,7 @@ namespace ConstCoeffComplex
 
 variable (C : ConstCoeffComplex (Fin n → ℝ) 𝕜)
 
-/-- **The rescaled complex** `A_d k`: a complex again (`A_d (A_d f) = (A (A (f ∘ T))) ∘ T⁻¹`
-for `T x = d * x`). -/
+/-- **The rescaled complex** of the operators `A_d k`. -/
 abbrev diagScale (hd : ∀ i, d i ≠ 0) : ConstCoeffComplex (Fin n → ℝ) 𝕜 where
   ι := C.ι
   fintype := C.fintype
@@ -644,7 +603,6 @@ theorem fderiv_mul_coordDir {f : (Fin n → ℝ) → 𝕜} (d : Fin n → ℝ) (
     fderiv ℝ f x (d * coordDir k) = (d k : 𝕜) * fderiv ℝ f x (coordDir k) := by
   rw [mul_coordDir, ContinuousLinearMap.map_smul, RCLike.real_smul_eq_coe_mul]
 
-/-- The rescaled gradient: `(grad_d f)_{ij} = d_j ∂_j f_i`. -/
 theorem gradOp_diagScale_apply {m : ℕ} (d : Fin n → ℝ) (f : Fin m → (Fin n → ℝ) → 𝕜)
     (ij : Fin m × Fin n) (x : Fin n → ℝ) :
     (ConstCoeffOp.diagScale d (gradOp n m)).apply f ij x =
@@ -652,8 +610,6 @@ theorem gradOp_diagScale_apply {m : ℕ} (d : Fin n → ℝ) (f : Fin m → (Fin
   simp [ConstCoeffOp.apply, ConstCoeffOp.diagScale, gradOp, apply_ite (List.map _),
     ConstCoeffOp.applyEntry_ite, iterDeriv_singleton, fderiv_mul_coordDir]
 
-/-- The rescaled row-wise curl:
-`(curl_d Φ)_{ik} = d_{k+1} ∂_{k+1} Φ_{i,k+2} − d_{k+2} ∂_{k+2} Φ_{i,k+1}`. -/
 theorem curlOp_diagScale_apply {m : ℕ} (d : Fin 3 → ℝ) (Φ : Fin m × Fin 3 → (Fin 3 → ℝ) → 𝕜)
     (ik : Fin m × Fin 3) (x : Fin 3 → ℝ) :
     (ConstCoeffOp.diagScale d (curlOp m)).apply Φ ik x =
@@ -667,16 +623,12 @@ theorem curlOp_diagScale_apply {m : ℕ} (d : Fin 3 → ℝ) (Φ : Fin m × Fin 
   simp only [Fin.sum_univ_three]
   fin_cases k <;> simp [Finset.sum_add_distrib] <;> ring
 
-/-- **`grad_d σ = (grad σ) D`**: the rescaled gradient is the gradient followed by the column
-scaling `(a, b) ↦ d_b`. -/
 theorem gradOp_diagScale_smul (d : Fin n → ℝ) {m : ℕ} (ψ : Fin m → (Fin n → ℝ) → 𝕜) :
     (ConstCoeffOp.diagScale d (gradOp n m)).apply (fun i => (1 : 𝕜) • ψ i) =
       fun ij => (d ij.2 : 𝕜) • (gradOp n m).apply ψ ij := by
   funext ij x
   rw [gradOp_diagScale_apply, Pi.smul_apply, gradOp_apply, one_smul, smul_eq_mul]
 
-/-- **`curl_d (E D) = det D · (curl E) D⁻¹`** entrywise: with the column scalings
-`(a, b) ↦ d_b` on the argument and `(a, b) ↦ d_{b+1} d_{b+2}` on the value. -/
 theorem curlOp_diagScale_smul (d : Fin 3 → ℝ) {m : ℕ} {ψ : Fin m × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hψ : ∀ p, Differentiable ℝ (ψ p)) :
     (ConstCoeffOp.diagScale d (curlOp m)).apply (fun p => (d p.2 : 𝕜) • ψ p) =

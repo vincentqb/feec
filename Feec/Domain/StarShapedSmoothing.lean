@@ -6,61 +6,17 @@ public import Feec.Domain.DeRham
 /-!
 # Smoothing operators on domains star-shaped with respect to a ball
 
-Let `Ω ⊆ E = ℝⁿ` be open and bounded. For a centre `x₀`, a factor `c ≥ ½` and a bump `φ`, the
-**smoother** `R` maps `u ∈ L²(Ω)` to the restriction to `Ω` of
-`x ↦ (ū ⋆ ρ_φ)(x₀ + c (x - x₀))`, `ū` the zero extension (`smoothExt`, `smoothL2`). It is
-smooth on all of `E`, linear, bounded on `L²(Ω)` by `2ⁿ` (`norm_smoothL2_le`), and converges
-strongly to the identity as
-`c → 1` and the bump radius `→ 0` (`exists_norm_smoothL2_sub_lt`). On fields
-`u ∈ L²(Ω; ℝ^ι)` it acts componentwise with a scalar weight `a` (`smoothField`).
-
-If `Ω` is star-shaped with respect to every point of a ball `B(x₀, s)`, `R` commutes with
-constant-coefficient operators, up to the chain-rule factor of the dilation, in both families of
-realizations:
-
-* **minimal (zero trace) family**, `c > 1` and bump radius `< s (c - 1) / 2`: `R u` is a test
-  field on `Ω` (`isTestField_smoothExt`), and for a row-homogeneous `A` (orders `k j`) and
-  `u ∈ D(A_min)`, `R u ∈ D(A_min)` with `A_min (R_a u) = R_{a c^k} (A_min u)`
-  (`smoothField_mem_minimal_domain`, `minimal_smoothField`). The key identity is that the zero
-  extension of `u ∈ D(A_min)` satisfies `A ū = (A_min u)‾` in `𝒟'(E)`
-  (`sum_integral_indicator_formalAdj_eq`).
-* **maximal (no boundary condition) family**, `½ ≤ c < 1` and bump radius `< s (1 - c) / 4`:
-  only points whose `φ`-ball lies in `Ω` are sampled, and for `u ∈ D(A_max)`,
-  `R u ∈ D(A_max)` with `A_max (R_a u) = R_{a c^k} (A_max u)`
-  (`smoothField_mem_maximal_domain`, `maximal_smoothField`; pointwise on `cl Ω`,
-  `apply_smoothExt_of_maximal`); `R u` is smooth on `E`, in particular on a neighbourhood of `cl Ω`.
-
-For the de Rham complex (`Feec.Domain.deRham`), `d` is homogeneous of order one, so the
-**pullback of `k`-forms by the dilation** `x ↦ x₀ + c (x - x₀)`, which multiplies the
-coefficients of a `k`-form by `cᵏ`, commutes **exactly** with `d`: the weights `cᵏ` on `k`-forms
-give `d_min (cᵏ R ω) = c^{k+1} R (d_min ω)` (`deRham_minimal_smoothField`) and likewise for
-`d_max` (`deRham_maximal_smoothField`). These are the smoothers `R_ε` of [AFW2010], §5.5 and
-[ChristiansenWinther2008] in the case of a domain star-shaped with respect to a ball (cubes,
-convex domains).
-
-## Main definitions
-
-* `Feec.Domain.SmoothingParam`: centre, factor `c ≥ ½` and bump.
-* `Feec.Domain.smoothExt`: `x ↦ (ū ⋆ ρ)(x₀ + c (x - x₀))`.
-* `Feec.Domain.smoothL2`: the smoother on `L²(Ω)`; `Feec.Domain.smoothField`: on `L²(Ω; ℝ^ι)`
-  with a weight.
+The smoother `R u = (ū ⋆ ρ)(x₀ + c (· - x₀))|_Ω` on a bounded domain star-shaped with respect to
+a ball commutes with row-homogeneous operators up to the dilation factor, and exactly with `d`.
 
 ## Main results
 
-* `norm_smoothL2_le`: the `L²` bound.
-* `exists_norm_smoothL2_sub_lt`, `exists_norm_smoothField_sub_lt`: strong convergence.
-* `isTestField_smoothExt`, **`smoothField_mem_minimal_domain`**, **`minimal_smoothField`**.
-* **`smoothField_mem_maximal_domain`**, **`maximal_smoothField`**, `apply_smoothExt_of_maximal`.
-* **`deRham_minimal_smoothField`**, **`deRham_maximal_smoothField`**: exact commutation with `d`.
+* `minimal_smoothField`, `maximal_smoothField`: commutation with `A_min` and with `A_max`.
+* `deRham_minimal_smoothField`, `deRham_maximal_smoothField`: exact commutation with `d`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothing by dilation and mollification; pullbacks commute with `d`)
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  Ch. 4 (convolution and mollifiers)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -78,15 +34,11 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimension
 /-! ## The scalar smoother -/
 
 variable (E) in
-/-- **Smoothing parameters**: the centre `x₀` of the dilation, the factor `c ≥ ½` and the bump
-`φ` of the mollifier. -/
+/-- **Smoothing parameters**: the centre `x₀`, the factor `c ≥ ½` and the bump `φ`. -/
 structure SmoothingParam where
-  /-- the centre of the dilation -/
   center : E
-  /-- the dilation factor -/
   factor : ℝ
   half_le_factor : 1 / 2 ≤ factor
-  /-- the bump of the mollifier -/
   bump : ContDiffBump (0 : E)
 
 namespace SmoothingParam
@@ -125,7 +77,6 @@ theorem memLp_smoothExt {f : E → ℝ} (hf : MemLp (Ω.indicator f) 2 volume) :
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- The zero extension of `u ∈ L²(Ω)` is in `L²(E)`. -/
 theorem memLp_indicator (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
     MemLp (Ω.indicator (u : E → ℝ)) 2 volume :=
   (memLp_indicator_iff_restrict hΩ.nullMeasurableSet).2 (Lp.memLp u)
@@ -142,7 +93,6 @@ theorem memLp_smoothExt_restrict (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- Zero extensions of a.e. equal functions are a.e. equal. -/
 theorem indicator_ae_eq_of_restrict (hΩ : MeasurableSet Ω) {f g : E → ℝ}
     (h : f =ᵐ[volume.restrict Ω] g) : Ω.indicator f =ᵐ[volume] Ω.indicator g := by
   rw [Filter.EventuallyEq, ae_restrict_iff' hΩ] at h
@@ -212,12 +162,10 @@ theorem coeFn_smoothL2 (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
     (smoothL2 p hΩ u : E → ℝ) =ᵐ[volume.restrict Ω] smoothExt Ω p (u : E → ℝ) :=
   (memLp_smoothExt_restrict (p := p) hΩ u).coeFn_toLp
 
-/-- `‖R u‖ ≤ 2ⁿ ‖u‖`. -/
 theorem norm_smoothL2_le (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
     ‖smoothL2 p hΩ u‖ ≤ 2 ^ Module.finrank ℝ E * ‖u‖ :=
   norm_toLp_smoothExt_le hΩ u
 
-/-- `‖R u - u‖_{L²(Ω)} ≤ ‖R̃ ū - ū‖_{L²(E)}`. -/
 theorem norm_smoothL2_sub_le (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
     ‖smoothL2 p hΩ u - u‖ ≤
       (eLpNorm (smoothExt Ω p (u : E → ℝ) - Ω.indicator (u : E → ℝ)) 2 volume).toReal := by
@@ -234,8 +182,6 @@ theorem norm_smoothL2_sub_le (hΩ : MeasurableSet Ω) (u : L2 ℝ Ω) :
         rw [h1, Pi.sub_apply, h2, Pi.sub_apply, h3]
     _ ≤ _ := eLpNorm_mono_measure _ Measure.restrict_le_self
 
-/-- **Strong convergence of the smoother**: for `u ∈ L²(Ω)` and `ε > 0`, `‖R u - u‖ < ε` once
-`|c - 1|` and the bump radius are small enough (both families: `c < 1` allowed). -/
 theorem exists_norm_smoothL2_sub_lt (hΩ : MeasurableSet Ω) (x₀ : E) (u : L2 ℝ Ω) {ε : ℝ}
     (hε : 0 < ε) :
     ∃ η > 0, ∀ p : SmoothingParam E, p.center = x₀ → |p.factor - 1| < η → p.bump.rOut < η →
@@ -256,7 +202,6 @@ variable {ι : Type*}
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- A componentwise bound `‖v i‖ ≤ K ‖u i‖` gives `‖v‖ ≤ K ‖u‖` in `L²(Ω; ℝ^ι)`. -/
 theorem L2F.norm_le_of_forall [Fintype ι] {u v : L2F ℝ Ω ι} {K : ℝ} (hK : 0 ≤ K)
     (h : ∀ i, ‖v i‖ ≤ K * ‖u i‖) : ‖v‖ ≤ K * ‖u‖ := by
   have hsq : ‖v‖ ^ 2 ≤ (K * ‖u‖) ^ 2 := by
@@ -265,9 +210,7 @@ theorem L2F.norm_le_of_forall [Fintype ι] {u v : L2F ℝ Ω ι} {K : ℝ} (hK :
       rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) (h i) 2
   exact (abs_le_of_sq_le_sq' hsq (by positivity)).2
 
-/-- **The smoother on fields** with weights `w`: `(R_w u)ᵢ = wᵢ R uᵢ`. For `k`-forms the weight
-`cᵏ` makes `R_w` the pullback by the dilation followed by mollification
-(`deRham_minimal_smoothField`). -/
+/-- **The smoother on fields** with weights `w`: `(R_w u)ᵢ = wᵢ R uᵢ`. -/
 def smoothField [Fintype ι] (p : SmoothingParam E) (hΩ : MeasurableSet Ω) (w : ι → ℝ) :
     L2F ℝ Ω ι →L[ℝ] L2F ℝ Ω ι :=
   LinearMap.mkContinuous
@@ -293,8 +236,6 @@ variable [Fintype ι]
 @[simp] theorem smoothField_apply (hΩ : MeasurableSet Ω) (w : ι → ℝ) (u : L2F ℝ Ω ι) (i : ι) :
     smoothField p hΩ w u i = w i • smoothL2 p hΩ (u i) := rfl
 
-/-- **Strong convergence of the field smoother**: `R_a u → u` as `c → 1`, the bump radius `→ 0`
-and `a → 1`. -/
 theorem exists_norm_smoothField_sub_lt (hΩ : MeasurableSet Ω) (x₀ : E) (u : L2F ℝ Ω ι) {ε : ℝ}
     (hε : 0 < ε) :
     ∃ η > 0, ∀ p : SmoothingParam E, p.center = x₀ → |p.factor - 1| < η → p.bump.rOut < η →
@@ -360,16 +301,12 @@ variable {ι κ : Type*} [Fintype ι] [Fintype κ]
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] [Fintype κ] in
-/-- `∫_Ω f g = ∫_E 1_Ω f · g`. -/
 theorem integral_restrict_mul_eq (hΩ : MeasurableSet Ω) (f g : E → ℝ) :
     ∫ x, f x * g x ∂volume.restrict Ω = ∫ x, Ω.indicator f x * g x := by
   rw [← integral_indicator hΩ]
   congr 1; funext x
   by_cases hx : x ∈ Ω <;> simp [hx]
 
-/-- **Zero extensions of `D(A_min)`**: for `u ∈ D(A_min)`, `A ū = (A_min u)‾` in `𝒟'(E)`, i.e.
-`Σᵢ ∫_E ūᵢ (Aᵗ ψ)ᵢ = Σⱼ ∫_E (A_min u)‾ⱼ ψⱼ` for every `ψ ∈ C_c^∞(E; ℝ^κ)` (Green's formula with
-no boundary term, `ConstCoeffOp.minimal_green`). -/
 theorem sum_integral_indicator_formalAdj_eq (hΩ : IsOpen Ω) (A : ConstCoeffOp E ℝ ι κ)
     (u : (A.minimal Ω).domain) {ψ : κ → E → ℝ} (hψ : IsTestField (univ : Set E) ψ) :
     ∑ i, ∫ x, Ω.indicator (((u : L2F ℝ Ω ι) i : E → ℝ)) x * A.formalAdj.apply ψ i x =
@@ -385,7 +322,6 @@ theorem sum_integral_indicator_formalAdj_eq (hΩ : IsOpen Ω) (A : ConstCoeffOp 
   simp only [conj_trivial, integral_restrict_mul_eq hΩ.measurableSet] at h
   exact h.symm
 
-/-- The mollified zero extension of `u ∈ D(A_min)`: `A (ū ⋆ ρ) = (A_min u)‾ ⋆ ρ` everywhere. -/
 theorem apply_molli_indicator_of_minimal [DecidableEq κ] (hΩ : IsOpen Ω)
     (A : ConstCoeffOp E ℝ ι κ) (φ : ContDiffBump (0 : E)) (u : (A.minimal Ω).domain) (j : κ)
     (y : E) :
@@ -406,8 +342,6 @@ theorem apply_molli_indicator_of_minimal [DecidableEq κ] (hΩ : IsOpen Ω)
     simp [Pi.single_eq_of_ne hj']
   · simp
 
-/-- **The smoother commutes with a row-homogeneous operator on `D(A_min)`** (pointwise form):
-`A (a R̃ u)ⱼ = a c^{kⱼ} R̃ (A_min u)ⱼ`, by the chain rule for the dilation (`apply_dil`). -/
 theorem apply_smoothExt_of_minimal [DecidableEq κ] (hΩ : IsOpen Ω) {A : ConstCoeffOp E ℝ ι κ}
     {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (u : (A.minimal Ω).domain) (a : ℝ) (j : κ) (x : E) :
     A.apply (fun i => a • smoothExt Ω p (((u : L2F ℝ Ω ι) i : E → ℝ))) j x =
@@ -426,8 +360,6 @@ theorem apply_smoothExt_of_minimal [DecidableEq κ] (hΩ : IsOpen Ω) {A : Const
   simp only [smoothExt, dil]
   ring
 
-/-- The mollified zero extension of `u ∈ D(A_max)` at a point `y` whose `φ`-ball lies in `Ω`:
-`A (ū ⋆ ρ)(y) = ((A_max u)‾ ⋆ ρ)(y)` (only values in `Ω` are sampled). -/
 theorem apply_molli_indicator_of_maximal [DecidableEq κ] (hΩ : IsOpen Ω)
     (A : ConstCoeffOp E ℝ ι κ) (φ : ContDiffBump (0 : E)) (u : (A.maximal Ω).domain) (j : κ)
     {y : E} (hy : Metric.closedBall y φ.rOut ⊆ Ω) :
@@ -457,17 +389,13 @@ end Commute
 
 namespace SmoothingParam
 
-/-- Parameters of the **minimal (zero trace) family** for `Ω` star-shaped with respect to
-`B(x₀, s)`: centre `x₀`, `c > 1` and bump radius `< s (c - 1) / 2` (dilation towards the
-centre: the smoothed field is a test field on `Ω`). -/
+/-- Parameters of the **minimal family**: `c > 1` and bump radius `< s (c - 1) / 2`. -/
 structure IsMinimal (p : SmoothingParam E) (x₀ : E) (s : ℝ) : Prop where
   center_eq : p.center = x₀
   one_lt_factor : 1 < p.factor
   rOut_lt : p.bump.rOut < s * (p.factor - 1) / 2
 
-/-- Parameters of the **maximal (no boundary condition) family**: centre `x₀`, `½ ≤ c < 1` and
-bump radius `< s (1 - c) / 4` (expansion about the centre: only values in `Ω` are sampled at
-points of `cl Ω`). -/
+/-- Parameters of the **maximal family**: `½ ≤ c < 1` and bump radius `< s (1 - c) / 4`. -/
 structure IsMaximal (p : SmoothingParam E) (x₀ : E) (s : ℝ) : Prop where
   center_eq : p.center = x₀
   factor_lt_one : p.factor < 1
@@ -475,7 +403,6 @@ structure IsMaximal (p : SmoothingParam E) (x₀ : E) (s : ℝ) : Prop where
 
 omit [NormedSpace ℝ E] [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- Minimal-family parameters exist with `c` and the bump radius arbitrarily close to `1`, `0`. -/
 theorem exists_isMinimal (x₀ : E) {s : ℝ} (hs : 0 < s) {η : ℝ} (hη : 0 < η) :
     ∃ p : SmoothingParam E, p.IsMinimal x₀ s ∧ |p.factor - 1| < η ∧ p.bump.rOut < η := by
   set c := 1 + η / 2
@@ -493,7 +420,6 @@ theorem exists_isMinimal (x₀ : E) {s : ℝ} (hs : 0 < s) {η : ℝ} (hη : 0 <
 
 omit [NormedSpace ℝ E] [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- Maximal-family parameters exist with `c` and the bump radius arbitrarily close to `1`, `0`. -/
 theorem exists_isMaximal (x₀ : E) {s : ℝ} (hs : 0 < s) {η : ℝ} (hη : 0 < η) :
     ∃ p : SmoothingParam E, p.IsMaximal x₀ s ∧ |p.factor - 1| < η ∧ p.bump.rOut < η := by
   set t := min η (1 / 2)
@@ -519,7 +445,6 @@ section Families
 
 variable {ι κ : Type*} [Fintype ι] [Fintype κ] {x₀ : E} {s : ℝ}
 
-/-- **Minimal family: the smoothed zero extension is a test function on `Ω`.** -/
 theorem isTest_smoothExt (hb : Bornology.IsBounded Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMinimal x₀ s)
     {f : E → ℝ} (hf : LocallyIntegrable (Ω.indicator f) volume) : IsTest Ω (smoothExt Ω p f) := by
@@ -527,7 +452,6 @@ theorem isTest_smoothExt (hb : Bornology.IsBounded Ω)
   rwa [← hp.center_eq] at h
 
 omit [Fintype ι] in
-/-- Minimal family: `R_a u` is the test field `a R̃ u`. -/
 theorem isTestField_smoothExt (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMinimal x₀ s)
     (a : ℝ) (u : L2F ℝ Ω ι) :
@@ -541,7 +465,6 @@ theorem smoothField_eq_testField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     smoothField p hΩ.measurableSet (fun _ => a) u =
       testField (isTestField_smoothExt hΩ hb hstar hp a u) := rfl
 
-/-- **Minimal family: `R_a` maps `L²(Ω; ℝ^ι)` into `D(A_min)`** (into `C_c^∞(Ω)`). -/
 theorem smoothField_mem_minimal_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMinimal x₀ s)
     (A : ConstCoeffOp E ℝ ι κ) (a : ℝ) (u : L2F ℝ Ω ι) :
@@ -549,8 +472,7 @@ theorem smoothField_mem_minimal_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBound
   rw [smoothField_eq_testField hΩ hb hstar hp]
   exact A.testField_mem_minimal_domain hΩ _
 
-/-- **Minimal family: `R` commutes with a row-homogeneous `A_min` up to the chain-rule factor**:
-`A_min (R_a u) = R_{a c^k} (A_min u)` for `u ∈ D(A_min)` (rows of order `kⱼ`). -/
+/-- **Minimal family**: `A_min (R_a u) = R_{a c^k} (A_min u)` for a row-homogeneous `A`. -/
 theorem minimal_smoothField [DecidableEq κ] (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMinimal x₀ s)
     {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (a : ℝ)
@@ -570,8 +492,6 @@ theorem minimal_smoothField [DecidableEq κ] (hΩ : IsOpen Ω) (hb : Bornology.I
   simp only [Pi.smul_apply, smul_eq_mul]
   exact apply_smoothExt_of_minimal hΩ hA u a j x
 
-/-- Maximal family, pointwise: at every point of `cl Ω`,
-`A (a R̃ u)ⱼ = a c^{kⱼ} R̃ (A_max u)ⱼ` for `u ∈ D(A_max)`. -/
 theorem apply_smoothExt_of_maximal [DecidableEq κ] (hΩ : IsOpen Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
     {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k)
@@ -608,7 +528,6 @@ theorem memLp_apply_smoothExt_of_maximal [DecidableEq κ] (hΩ : IsOpen Ω)
   rw [apply_smoothExt_of_maximal hΩ hstar hp hA u a j (subset_closure hx)]
   simp only [Pi.smul_apply, smul_eq_mul]
 
-/-- **Maximal family: `R_a` maps `D(A_max)` into `D(A_max)`** for a row-homogeneous `A`. -/
 theorem smoothField_mem_maximal_domain [DecidableEq κ] (hΩ : IsOpen Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
     {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (a : ℝ)
@@ -623,8 +542,7 @@ theorem smoothField_mem_maximal_domain [DecidableEq κ] (hΩ : IsOpen Ω)
     (memLp_apply_smoothExt_of_maximal hΩ hstar hp hA u a)
   exact h
 
-/-- **Maximal family: `R` commutes with a row-homogeneous `A_max` up to the chain-rule factor**:
-`A_max (R_a u) = R_{a c^k} (A_max u)` for `u ∈ D(A_max)`. -/
+/-- **Maximal family**: `A_max (R_a u) = R_{a c^k} (A_max u)` for a row-homogeneous `A`. -/
 theorem maximal_smoothField [DecidableEq κ] (hΩ : IsOpen Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
     {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (a : ℝ)
@@ -656,7 +574,6 @@ section DeRham
 variable {n : ℕ} {Ω : Set (Fin n → ℝ)} {x₀ : Fin n → ℝ} {s : ℝ}
   (p : SmoothingParam (Fin n → ℝ))
 
-/-- The exterior derivative is homogeneous of order one. -/
 theorem extDerivOp_isRowHomogeneous (k : ℤ) :
     (extDerivOp ℝ n k).IsRowHomogeneous fun _ => 1 := by
   intro t r term hterm
@@ -669,9 +586,7 @@ theorem factor_zpow_mul_factor (k : ℤ) :
   funext _
   rw [pow_one, zpow_add_one₀ p.factor_pos.ne']
 
-/-- **The pullback of `k`-forms by the dilation commutes exactly with `d_min`**: with the
-weights `cᵏ` on `k`-forms (`ω ↦ cᵏ (ω ∘ dil)` is the pullback of `ω` by `x ↦ x₀ + c (x - x₀)`),
-`d_min (cᵏ R ω) = c^{k+1} R (d_min ω)` on `H̊Λᵏ(Ω)` ([AFW2010], §5.5). -/
+/-- **The dilation pullback of `k`-forms commutes exactly with `d_min`** ([AFW2010], §5.5). -/
 theorem deRham_minimal_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMinimal x₀ s)
     (k : ℤ) (u : ((extDerivOp ℝ n k).minimal Ω).domain) :
@@ -681,8 +596,7 @@ theorem deRham_minimal_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
         ((extDerivOp ℝ n k).minimal Ω u) := by
   rw [minimal_smoothField hΩ hb hstar hp (extDerivOp_isRowHomogeneous k), factor_zpow_mul_factor]
 
-/-- **The pullback of `k`-forms by the dilation commutes exactly with `d_max`** (maximal
-family, `c < 1`): `d_max (cᵏ R ω) = c^{k+1} R (d_max ω)` on `HΛᵏ(Ω)`. -/
+/-- **The pullback of `k`-forms by the dilation commutes exactly with `d_max`** (`c < 1`). -/
 theorem deRham_maximal_smoothField (hΩ : IsOpen Ω)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (hp : p.IsMaximal x₀ s)
     (k : ℤ) (u : ((extDerivOp ℝ n k).maximal Ω).domain) :

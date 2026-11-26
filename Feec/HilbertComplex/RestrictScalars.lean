@@ -7,27 +7,9 @@ public import Mathlib.MeasureTheory.Function.L2Space
 /-!
 # Complex Hilbert complexes viewed over `ℝ`
 
-A Hilbert complex over `ℂ` whose spaces carry compatible real inner products
-(`⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ`, e.g. `L²` spaces of `ℂⁿ`-valued fields) is a Hilbert complex over `ℝ`
-with the same domains and differentials (`HilbertComplex.restrictScalars`). The adjoints commute
-with the restriction of scalars (`LinearPMap.adjoint_restrictScalars`), so the dual complex, the
-wave operator and the reducing subcomplexes are the same over `ℝ` and over `ℂ`. Over `ℝ`, the
-real fields of a conjugation (an antilinear symmetry) form a reducing subcomplex, which they do
-not over `ℂ`.
-
-## Main definitions and results
-
-* `HilbertComplex.restrictScalars H : HilbertComplex ℝ c W`.
-* **`dual_restrictScalars`**: `(H_ℝ)* = (H*)_ℝ`; **`wave_restrictScalars`**: `L_ℝ = (L)_ℝ`.
-* `Submodule.starProjection_restrictScalars`: the real and complex projections onto a complex
-  subspace agree; **`ReducingSubcomplex.restrictScalars`**.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (real fields)
-
-Bibliography: [references.bib](../../docs/references.bib)
+A Hilbert complex over `ℂ` whose spaces carry compatible real inner products,
+`⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ`, is a Hilbert complex over `ℝ` with the same domains, differentials, dual
+complex and wave operator, in which reducing subcomplexes over `ℂ` stay reducing.
 -/
 
 @[expose] public noncomputable section
@@ -47,7 +29,6 @@ instance restrictScalars_hasOrthogonalProjection (K : Submodule ℂ E) [K.HasOrt
   have : CompleteSpace (K.restrictScalars ℝ) := hc.completeSpace_coe
   infer_instance
 
-/-- **The real and the complex orthogonal projections onto a complex subspace agree.** -/
 theorem starProjection_restrictScalars (hre : ∀ x y : E, ⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ)
     (K : Submodule ℂ E) [K.HasOrthogonalProjection] (x : E) :
     (K.restrictScalars ℝ).starProjection x = K.starProjection x := by
@@ -66,8 +47,6 @@ theorem EuclideanSpace.real_inner_eq_re_inner {ι : Type*} [Fintype ι]
   refine Finset.sum_congr rfl fun j _ => ?_
   rw [mul_comm]; rfl
 
-/-- On `L²(μ; E)`, the real inner product is the real part of the complex one when this holds on
-the fibre. -/
 theorem MeasureTheory.L2.real_inner_eq_re_inner {α : Type*} [MeasurableSpace α]
     {μ : MeasureTheory.Measure α} {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
     [InnerProductSpace ℝ E] (hE : ∀ v w : E, ⟪v, w⟫_ℝ = re ⟪v, w⟫_ℂ)
@@ -99,7 +78,6 @@ theorem dual_restrictScalars (hre : ∀ i (x y : W i), ⟪x, y⟫_ℝ = re ⟪x,
   ext_d (funext fun i => funext fun j =>
     (H.d j i).adjoint_restrictScalars (hre j) (hre i) (H.dense j i))
 
-/-- The boundaries and cycles do not depend on the scalars. -/
 theorem mem_cycles_restrictScalars {i : ι} {x : W i} :
     x ∈ H.restrictScalars.cycles i ↔ x ∈ H.cycles i := by
   simp only [cycles, LinearPMap.mem_ker_iff]
@@ -121,7 +99,7 @@ theorem ReducingSubcomplex.restrictScalars (hre : ∀ i (x y : W i), ⟪x, y⟫_
 
 variable [Fintype ι]
 
-/-- **The real wave operator is the complex one** (same domain, same values). -/
+/-- **The real wave operator is the complex one.** -/
 theorem wave_restrictScalars (hre : ∀ i (x y : W i), ⟪x, y⟫_ℝ = re ⟪x, y⟫_ℂ) :
     H.restrictScalars.wave = H.wave.restrictScalars := by
   have hdual := dual_restrictScalars (H := H) hre

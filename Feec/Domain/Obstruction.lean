@@ -7,36 +7,15 @@ public import Feec.Evolution.Tangent
 /-!
 # Boundary obstructions to constraint propagation
 
-A constraint subspace `K` of `L²(Ω)` may fail to be approximable by constrained fields satisfying
-a boundary condition: `K ∩ D(A_min)` need not be dense in `K`. This file isolates the mechanism
-behind the bounded-domain refutations of thesis Props 4.17/4.19, in general form.
+The obstruction `K ⊓ (K ⊓ D)ᗮ` is the part of a closed constraint subspace `K` that `K ∩ D` cannot
+approximate; for a short Hilbert complex, a `G ⊥ K₁ ∩ D(d₁)` with `⟪G, d₁† B₀⟫ ≠ 0` makes every
+strong solution of `U' = L U` from `(0, E₀, B₀)` leave `K₁` within every `[0, T]`.
 
-## Main definitions and results
+## Main results
 
-* `Feec.Domain.obstruction D K = K ⊓ (K ⊓ D)ᗮ`: the part of a closed subspace `K` that the
-  constrained domain `K ∩ D` cannot approximate; `K = cl (K ∩ D) ⊕ obstruction D K`
-  (`closure_sup_obstruction`), and `K ∩ D` is dense in `K` iff the obstruction vanishes
-  (`dense_iff_obstruction_eq_bot`).
-* **Projection and density hypotheses.** `topologicalClosure_inf_eq_of_mapsTo`: if `P_K` maps a
-  dense set into `D`, then `K ∩ D` is dense in `K`
-  (`Submodule.orthogonal_le_topologicalClosure_of_dense` applied to `Kᗮ`); so when `K ∩ D` is
-  not dense, every dense set has a point `x` with `P_K x ∉ D`.
-* **Boundary form.** `ConstCoeffOp.mem_minimal_domain_iff`: `u ∈ D(A_min)` iff the boundary form
-  `⟪A_max u, v⟫ - ⟪u, (Aᵗ)_max v⟫` vanishes for all `v ∈ D((Aᵗ)_max)` (no traces needed).
-* **The `Ė(0)` argument** (`ShortHilbertComplex.adjoint_mem_closure_of_propagates`): if a strong
-  solution of `U' = L U` from `(0, E₀, B₀)` keeps its middle component in `K₁` on `[0, T]`,
-  `T > 0`, then `d₁† B₀ ∈ cl (K₁ ∩ D(d₁))`. Hence (`not_propagates_of_inner_ne_zero`) a single
-  `G ⊥ K₁ ∩ D(d₁)` with `⟪G, d₁† B₀⟫ ≠ 0` makes every strong solution leave the constraint at
-  once.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17, the projection and density hypotheses)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (minimal and maximal domains,
-  boundary conditions)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `dense_iff_obstruction_eq_bot`: `K ∩ D` is dense in `K` iff the obstruction vanishes.
+* `ShortHilbertComplex.adjoint_mem_closure_of_propagates`: the `Ė(0)` argument.
+* `ShortHilbertComplex.not_propagates_of_inner_ne_zero`: the loss of the constraint.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap
@@ -53,7 +32,6 @@ section AdjointAntitone
 variable {𝕜 : Type*} [RCLike 𝕜] {H₁ H₂ : Type*} [NormedAddCommGroup H₁] [InnerProductSpace 𝕜 H₁]
   [CompleteSpace H₁] [NormedAddCommGroup H₂] [InnerProductSpace 𝕜 H₂]
 
-/-- **Adjoints reverse extensions**: `T ≤ S` (densely defined `T`) implies `S† ≤ T†`. -/
 theorem _root_.LinearPMap.adjoint_le_adjoint_of_le {T S : H₁ →ₗ.[𝕜] H₂}
     (hT : Dense (T.domain : Set H₁)) (h : T ≤ S) : S† ≤ T† := by
   refine LinearPMap.IsFormalAdjoint.le_adjoint hT fun x y => ?_
@@ -72,8 +50,6 @@ section ClosedGraph
 variable {𝕜 : Type*} [RCLike 𝕜] {E F : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
   [CompleteSpace E] [NormedAddCommGroup F] [NormedSpace 𝕜 F] [CompleteSpace F]
 
-/-- **Closed-graph bound for a projection hypothesis**: if `T` is closed and a bounded `P` maps
-`D(T)` into itself, then `x ↦ T (P x)` is bounded in the graph norm of `T`. -/
 theorem _root_.LinearPMap.exists_norm_apply_le_of_mapsTo {T : E →ₗ.[𝕜] F} (hT : T.IsClosed)
     (P : E →L[𝕜] E) (hP : ∀ x : T.domain, P x ∈ T.domain) :
     ∃ C : ℝ, ∀ x : T.domain, ‖T ⟨P x, hP x⟩‖ ≤ C * ‖((x : E), T x)‖ := by
@@ -118,8 +94,7 @@ section Abstract
 variable {𝕜 : Type*} [RCLike 𝕜] {H : Type*} [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
   [CompleteSpace H]
 
-/-- The **obstruction** of a constraint subspace `K` for a domain `D`: the part of `K`
-orthogonal to the constrained domain `K ∩ D`. -/
+/-- The **obstruction** of `K` for `D`: the part of `K` orthogonal to `K ∩ D`. -/
 def obstruction (D K : Submodule 𝕜 H) : Submodule 𝕜 H := K ⊓ (K ⊓ D)ᗮ
 
 variable {D K : Submodule 𝕜 H}
@@ -132,7 +107,6 @@ omit [CompleteSpace H] in
 theorem obstruction_eq : obstruction D K = K ⊓ (K ⊓ D).topologicalClosureᗮ := by
   rw [obstruction, Submodule.orthogonal_closure]
 
-/-- `K = cl (K ∩ D) ⊕ obstruction D K` for closed `K`. -/
 theorem closure_sup_obstruction (hK : IsClosed (K : Set H)) :
     (K ⊓ D).topologicalClosure ⊔ obstruction D K = K := by
   have hle : (K ⊓ D).topologicalClosure ≤ K :=
@@ -154,10 +128,6 @@ theorem dense_iff_obstruction_eq_bot (hK : IsClosed (K : Set H)) :
     rwa [h, sup_bot_eq] at this
 
 omit [CompleteSpace H] in
-/-- **The projection hypothesis on a dense set gives density**: if the orthogonal projection onto
-`K` maps a dense set into `D`, then `K ∩ D` is dense in `K`
-(`Submodule.orthogonal_le_topologicalClosure_of_dense` applied to `Kᗮ`, whose projection is
-`1 - P_K`). -/
 theorem topologicalClosure_inf_eq_of_mapsTo [K.HasOrthogonalProjection] {s : Set H}
     (hs : Dense s) (hP : Set.MapsTo K.starProjection s D) : (K ⊓ D).topologicalClosure = K := by
   have h := Kᗮ.orthogonal_le_topologicalClosure_of_dense hs (K ⊓ D) fun v hv => by
@@ -178,13 +148,10 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasureSpace E]
   {𝕜 : Type*} [RCLike 𝕜] {ι κ : Type*} [Fintype ι] [Fintype κ] {Ω : Set E}
   (A : ConstCoeffOp E 𝕜 ι κ)
 
-/-- `A_min = ((Aᵗ)_max)†`. -/
 theorem adjoint_formalAdj_maximal (hΩ : IsOpen Ω) :
     (A.formalAdj.maximal Ω)† = A.minimal Ω := by
   rw [A.formalAdj.adjoint_maximal hΩ, formalAdj_formalAdj]
 
-/-- **The minimal domain is the kernel of the boundary form**: `u ∈ D(A_min)` iff there is `w`
-with `⟪w, v⟫ = ⟪u, (Aᵗ)_max v⟫` for every `v ∈ D((Aᵗ)_max)`; then `w = A_min u`. -/
 theorem mem_minimal_domain_iff (hΩ : IsOpen Ω) {u : L2F 𝕜 Ω ι} :
     u ∈ (A.minimal Ω).domain ↔ ∃ w : L2F 𝕜 Ω κ, ∀ v : (A.formalAdj.maximal Ω).domain,
       ⟪w, (v : L2F 𝕜 Ω κ)⟫_𝕜 = ⟪u, A.formalAdj.maximal Ω v⟫_𝕜 := by
@@ -213,9 +180,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] [CompleteSpace W₂]
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
 
-/-- **The tangent condition at every time**: if a strong solution of `U' = L U` on `[0, T]`,
-`T > 0`, keeps its middle component in `K₁`, then
-`d₀ U₀(t) - d₁† U₂(t) ∈ cl (K₁ ∩ D(d₁))` for every `t ∈ [0, T]`. -/
 theorem wave_one_mem_closure_of_propagates [NormedSpace ℝ (PiLp 2 (W3 W₀ W₁ W₂))]
     [IsScalarTower ℝ 𝕜 (PiLp 2 (W3 W₀ W₁ W₂))] {K₁ : Submodule 𝕜 W₁} {T : ℝ} (hT : 0 < T)
     {U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)} (hU : IsStrongSolution S.wave (Icc 0 T) 0 U)
@@ -240,9 +204,8 @@ theorem wave_one_mem_closure_of_propagates [NormedSpace ℝ (PiLp 2 (W3 W₀ W�
   rw [Pi.zero_apply, add_zero] at h
   exact h
 
-/-- **The `Ė(0)` argument** (thesis' proof of Prop 4.17): if a strong solution of `U' = L U`
-from `(0, E₀, B₀)` keeps its middle component in `K₁` on `[0, T]`, `T > 0`, then
-`d₁† B₀ ∈ cl (K₁ ∩ D(d₁))`. -/
+/-- **The `Ė(0)` argument**: a strong solution of `U' = L U` from `(0, E₀, B₀)` keeping `K₁` on
+`[0, T]`, `T > 0`, has `d₁† B₀ ∈ cl (K₁ ∩ D(d₁))`. -/
 theorem adjoint_mem_closure_of_propagates [NormedSpace ℝ (PiLp 2 (W3 W₀ W₁ W₂))]
     [IsScalarTower ℝ 𝕜 (PiLp 2 (W3 W₀ W₁ W₂))] {K₁ : Submodule 𝕜 W₁} {T : ℝ} (hT : 0 < T)
     {U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)} (hU : IsStrongSolution S.wave (Icc 0 T) 0 U)
@@ -262,9 +225,7 @@ theorem adjoint_mem_closure_of_propagates [NormedSpace ℝ (PiLp 2 (W3 W₀ W₁
   have := (Submodule.neg_mem_iff _).1 h
   convert this using 2
 
-/-- **Instantaneous loss of the constraint.** If `G ⊥ K₁ ∩ D(d₁)` and `⟪G, d₁† B₀⟫ ≠ 0`, then
-for every `T > 0` every strong solution of `U' = L U` on `[0, T]` from `(0, E₀, B₀)` has its
-middle component outside `K₁` at some `t ∈ [0, T]`. -/
+/-- **Instantaneous loss of the constraint** when `G ⊥ K₁ ∩ D(d₁)` and `⟪G, d₁† B₀⟫ ≠ 0`. -/
 theorem not_propagates_of_inner_ne_zero [NormedSpace ℝ (PiLp 2 (W3 W₀ W₁ W₂))]
     [IsScalarTower ℝ 𝕜 (PiLp 2 (W3 W₀ W₁ W₂))] {K₁ : Submodule 𝕜 W₁} {G : W₁}
     (hG : G ∈ (K₁ ⊓ S.d₁.domain)ᗮ) (B₀ : S.d₁†.domain) (hB : ⟪G, S.d₁† B₀⟫_𝕜 ≠ 0) {T : ℝ}

@@ -6,60 +6,9 @@ public import Feec.Physics.Maxwell.Constraints
 /-!
 # Maxwell's equations in a linear medium
 
-A linear, possibly anisotropic and inhomogeneous medium has a permittivity `ε` and a permeability
-`μ`: bounded, self-adjoint, uniformly positive operators on the electric and magnetic `L²`
-spaces (e.g. multiplication by measurable scalar or Hermitian matrix fields with
-`λ ≤ ε(x), μ(x) ≤ Λ`, `Feec.Physics.Maxwell.Coefficients`). Maxwell's
-equations in the medium read
-
-  `ε E' = ε dσ − d† H`,  `μ H' = d E`,  `σ' = −d† (ε E)`
-
-on a short complex `W₀ --d₀--> W₁ --d₁--> W₂` (the window `V a → V (a+1) → V (a+2)` of any
-Hilbert complex, `grad → curl` with a perfect electric or magnetic conductor on an open
-`Ω ⊆ ℝ³`): `E` is the electric field, `H` the magnetic field (`B = μ H` the magnetic flux), `σ`
-the gauge field of the Hodge wave formulation (the physical system is `σ = 0`). With
-`H ↦ −H` this is `ε E' = curl H`, `μ H' = −curl E` (`σ = 0`). Here `d† H` uses the adjoint
-`d₁†` (the curl with the complementary boundary condition), and `ε dσ` is the gauge coupling.
-
-A medium is given by factors `ε = e† e`, `μ = m† m` with bounded isomorphisms `e`, `m`
-(`Maxwell.Medium`); over `ℂ` every bounded self-adjoint uniformly positive `ε`, `μ` has such
-factors (`e = ε^{1/2}`, `m = μ^{1/2}`, `Maxwell.Medium.exists_eq`). In the variables
-`(σ, e E, m H)` the system is the Hodge wave equation of the conjugated complex
-`d₀' = e d₀`, `d₁' = (m⁻¹)† d₁ e⁻¹` (`Maxwell.Medium.complex`), whose wave operator is
-skew-adjoint. This gives:
-
-## Main definitions
-
-* `Maxwell.Medium`: the factors `e`, `m`; `Medium.ε`, `Medium.μ`; `Medium.cond`, the condition
-  number; `Medium.state`: the change of variables `(σ, E, H) ↦ (σ, e E, m H)`.
-* `Medium.maxwell S`: the Maxwell operator of the medium on `W₀ × W₁ × W₂`, with domain and
-  action `mem_maxwell_domain`, `ε_electric_maxwell_apply`, `μ_magnetic_maxwell_apply`.
-* `Medium.energy`: `½ (‖σ‖² + ⟪ε E, E⟫ + ⟪μ H, H⟫)`; `Medium.gauss S Y`: the weighted Gauss
-  laws `σ = 0`, `d₀† (ε E) = 0` (`div (ε E) = 0`), `μ H ∈ Y` (`div (μ H) = 0` for `Y = N(d₂)`).
-
-## Main results
-
-* `Medium.isStrongSolution_iff`: strong solutions of `U' = M U + F` are, in the variables
-  `(σ, e E, m H)`, the strong solutions of the Hodge wave equation of the conjugated complex.
-* `Medium.existsUnique`: **well-posedness** for data in the domain and admissible forcing
-  (Stone's theorem for the conjugated complex).
-* `Medium.energy_eq`: **conservation of the weighted energy**.
-* `Medium.gauss_propagates`, `Medium.gauss_existsUnique`: **the weighted Gauss laws
-  propagate**.
-
-The finite element discretizations of Maxwell's equations in a medium, and their FEEC verdicts,
-are in `Feec.Instances.MaxwellMedia` (the conforming families of the reweighted complex).
-
-## References
-
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (evolution problems:
-  the Hodge wave equation and Maxwell's equations)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (weighted inner products on a Hilbert complex)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.9 (Prop 4.16: the vector wave equation and its divergence constraint)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+Maxwell's equations in a linear medium with `ε = e† e`, `μ = m† m`, on a short complex: in the
+variables `(σ, e E, m H)` they are the Hodge wave equation of a conjugated complex, hence well
+posed (`Medium.existsUnique`), with conserved energy and propagating weighted Gauss laws.
 -/
 
 open scoped InnerProductSpace
@@ -73,16 +22,13 @@ universe u
 
 open ShortHilbertComplex HilbertComplex
 
-/-- A **linear medium** on the electric space `W₁` and the magnetic space `W₂`: bounded
-isomorphisms `e`, `m` with permittivity `ε = e† e` and permeability `μ = m† m`. -/
+/-- A linear medium: bounded isomorphisms `e`, `m` with `ε = e† e` and `μ = m† m`. -/
 structure Medium (𝕜 : Type*) [RCLike 𝕜] (W₁ W₂ : Type*) [NormedAddCommGroup W₁]
     [InnerProductSpace 𝕜 W₁] [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] where
-  /-- the factor of the permittivity, `ε = e† e` (e.g. `e = ε^{1/2}`) -/
+  /-- the factor of the permittivity, `ε = e† e` -/
   e : W₁ ≃L[𝕜] W₁
-  /-- the factor of the permeability, `μ = m† m` (e.g. `m = μ^{1/2}`) -/
+  /-- the factor of the permeability, `μ = m† m` -/
   m : W₂ ≃L[𝕜] W₂
-
-/-! ### Components of the state `(σ, E, H)` -/
 
 section Components
 
@@ -108,8 +54,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₁ W₂ : Type*}
   [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁] [NormedAddCommGroup W₂]
   [InnerProductSpace 𝕜 W₂] (M : Medium 𝕜 W₁ W₂)
 
-/-- **The condition number of a medium**, `max (‖e‖ ‖e⁻¹‖) (‖m‖ ‖m⁻¹‖)`: for `e = ε^{1/2}`,
-`m = μ^{1/2}` with `λ ≤ ε, μ ≤ Λ` at most `√(Λ / λ)`. -/
+/-- The condition number `max (‖e‖ ‖e⁻¹‖) (‖m‖ ‖m⁻¹‖)` of a medium. -/
 def cond : ℝ :=
   max (‖(M.e : W₁ →L[𝕜] W₁)‖ * ‖(M.e.symm : W₁ →L[𝕜] W₁)‖)
     (‖(M.m : W₂ →L[𝕜] W₂)‖ * ‖(M.m.symm : W₂ →L[𝕜] W₂)‖)
@@ -126,7 +71,6 @@ theorem ε_apply (x : W₁) : M.ε x = M.e.adjoint (M.e x) := rfl
 theorem re_inner_ε_apply (x : W₁) : RCLike.re ⟪M.ε x, x⟫_𝕜 = ‖M.e x‖ ^ 2 :=
   ContinuousLinearMap.re_inner_adjoint_comp_self_apply _ x
 
-/-- `ε e⁻¹ = e†`. -/
 theorem ε_e_symm_apply (x : W₁) : M.ε (M.e.symm x) = M.e.adjoint x := by
   rw [ε_apply, ContinuousLinearEquiv.apply_symm_apply]
 
@@ -144,7 +88,6 @@ theorem μ_apply (x : W₂) : M.μ x = M.m.adjoint (M.m x) := rfl
 theorem re_inner_μ_apply (x : W₂) : RCLike.re ⟪M.μ x, x⟫_𝕜 = ‖M.m x‖ ^ 2 :=
   ContinuousLinearMap.re_inner_adjoint_comp_self_apply _ x
 
-/-- `μ m⁻¹ = m†`. -/
 theorem μ_m_symm_apply (x : W₂) : M.μ (M.m.symm x) = M.m.adjoint x := by
   rw [μ_apply, ContinuousLinearEquiv.apply_symm_apply]
 
@@ -162,8 +105,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
 
 variable (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
 
-/-- The conjugated complex `d₀' = e d₀`, `d₁' = (m⁻¹)† d₁ e⁻¹` of a medium: its standard inner
-products are the weighted ones `⟪ε E, E⟫`, `⟪μ⁻¹ B, B⟫`. -/
+/-- The conjugated complex `d₀' = e d₀`, `d₁' = (m⁻¹)† d₁ e⁻¹` of a medium. -/
 def complex : ShortHilbertComplex 𝕜 W₀ W₁ W₂ :=
   S.conj (ContinuousLinearEquiv.refl 𝕜 W₀) M.e M.m.adjoint.symm
 
@@ -190,14 +132,10 @@ def state : PiLp 2 (W3 W₀ W₁ W₂) ≃L[𝕜] PiLp 2 (W3 W₀ W₁ W₂) :=
     (fun x => PiLp.ext fun i => (M.stateW W₀ i).symm_apply_apply (x i))
     (fun x => PiLp.ext fun i => (M.stateW W₀ i).apply_symm_apply (x i))
 
-/-- The **Maxwell operator of the medium** on `W₀ × W₁ × W₂`: `Φ⁻¹ L' Φ` for the wave operator
-`L'` of the conjugated complex and the change of variables `Φ = M.state`. Explicitly
-(`ε_electric_maxwell_apply`, `μ_magnetic_maxwell_apply`)
-`(σ, E, H) ↦ (−d₀† (ε E), d₀ σ − ε⁻¹ d₁† H, μ⁻¹ d₁ E)`. -/
+/-- The Maxwell operator `(σ, E, H) ↦ (−d₀† (ε E), d₀ σ − ε⁻¹ d₁† H, μ⁻¹ d₁ E)` of the medium. -/
 def maxwell : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) :=
   (M.complex S).wave.conj (M.state W₀).symm (M.state W₀).symm
 
-/-- `D(M) = {(σ, E, H) | σ ∈ D(d₀), E ∈ D(d₁), ε E ∈ D(d₀†), H ∈ D(d₁†)}`. -/
 theorem mem_maxwell_domain {U : PiLp 2 (W3 W₀ W₁ W₂)} : U ∈ (M.maxwell S).domain ↔
     gauge U ∈ S.d₀.domain ∧ electric U ∈ S.d₁.domain ∧ M.ε (electric U) ∈ S.d₀†.domain ∧
       magnetic U ∈ S.d₁†.domain := by
@@ -215,7 +153,6 @@ variable {M S}
 theorem state_mem_wave_domain (x : (M.maxwell S).domain) :
     M.state W₀ x ∈ (M.complex S).wave.domain := x.2
 
-/-- `ε (M U)_E = ε d₀ σ − d₁† H`: Ampère's law `ε E' = ε d₀ σ − d₁† H`. -/
 theorem ε_electric_maxwell_apply (x : (M.maxwell S).domain) :
     M.ε (electric (M.maxwell S x)) =
       M.ε (S.d₀ ⟨gauge x.1, (M.mem_maxwell_domain S |>.1 x.2).1⟩) -
@@ -235,7 +172,6 @@ theorem ε_electric_maxwell_apply (x : (M.maxwell S).domain) :
   change M.m.adjoint.symm.adjoint (M.m (magnetic x.1)) = magnetic x.1
   rw [ContinuousLinearEquiv.adjoint_symm_adjoint_apply, ContinuousLinearEquiv.symm_apply_apply]
 
-/-- `μ (M U)_H = d₁ E`: Faraday's law `μ H' = d₁ E`. -/
 theorem μ_magnetic_maxwell_apply (x : (M.maxwell S).domain) :
     M.μ (magnetic (M.maxwell S x)) =
       S.d₁ ⟨electric x.1, (M.mem_maxwell_domain S |>.1 x.2).2.1⟩ := by
@@ -250,7 +186,6 @@ theorem μ_magnetic_maxwell_apply (x : (M.maxwell S).domain) :
 
 variable (M S)
 
-/-- The wave operator of the conjugated complex is skew-adjoint (no closed range needed). -/
 theorem isSkewAdjoint_wave_complex : (M.complex S).wave.IsSkewAdjoint :=
   (M.complex S).isSkewAdjoint_wave
 
@@ -269,10 +204,8 @@ theorem isStrongSolution_iff {I : Set ℝ} {F U : ℝ → PiLp 2 (W3 W₀ W₁ W
         (fun t => M.state W₀ (U t)) :=
   Evolution.isStrongSolution_conj_symm_iff (M.state W₀)
 
-/-- **Well-posedness of Maxwell's equations in a medium**: for initial data in the domain and
-admissible forcing `F ∈ C([a,b]) ∩ (W^{1,1} ∪ L¹(D(M)))` there is a classical solution of
-`U' = M U + F`, `U a = U₀`, unique among strong solutions (Stone's theorem for the skew-adjoint
-wave operator of the conjugated complex). -/
+/-- Well-posedness in a medium: data in the domain and admissible forcing give a classical
+solution of `U' = M U + F`, unique among strong solutions. -/
 theorem existsUnique {U₀ : PiLp 2 (W3 W₀ W₁ W₂)} (hU₀ : U₀ ∈ (M.maxwell S).domain)
     {F : ℝ → PiLp 2 (W3 W₀ W₁ W₂)} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible (M.maxwell S) a b F) :
@@ -292,14 +225,13 @@ def energy (U : PiLp 2 (W3 W₀ W₁ W₂)) : ℝ :=
 
 omit [CompleteSpace W₀] [NormedSpace ℝ W₀] [IsScalarTower ℝ 𝕜 W₀] [NormedSpace ℝ W₁]
   [IsScalarTower ℝ 𝕜 W₁] [NormedSpace ℝ W₂] [IsScalarTower ℝ 𝕜 W₂] in
-/-- The weighted energy is half the squared norm of the conjugated variables. -/
 theorem energy_eq_norm_state (U : PiLp 2 (W3 W₀ W₁ W₂)) :
     M.energy U = ‖M.state W₀ U‖ ^ 2 / 2 := by
   rw [energy, re_inner_ε_apply, re_inner_μ_apply, PiLp.norm_sq_eq_of_L2, Fin.sum_univ_three]
   rfl
 
-/-- **Conservation of the weighted energy**: a strong solution of the free Maxwell equations
-in the medium has `½ (‖σ‖² + ⟪ε E, E⟫ + ⟪μ H, H⟫)` constant in time. -/
+/-- Conservation of the weighted energy: a strong solution of the free Maxwell equations in the
+medium has `½ (‖σ‖² + ⟪ε E, E⟫ + ⟪μ H, H⟫)` constant in time. -/
 theorem energy_eq {a b : ℝ} {U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)}
     (hU : Evolution.IsStrongSolution (M.maxwell S) (Icc a b) 0 U) :
     ∀ t ∈ Icc a b, M.energy (U t) = M.energy (U a) := by
@@ -320,15 +252,12 @@ section Gauss
 
 variable (Y : Submodule 𝕜 W₂)
 
-/-- The **weighted Gauss laws** `σ = 0`, `d₀† (ε E) = 0` (`div (ε E) = 0`) and `μ H ∈ Y`
-(`div (μ H) = 0` for `Y = N(d₂)`), in the physical variables `(σ, E, H)`: the pull-back of the
-constraint family `{0} × N(d₀'†) × (m⁻¹)† Y` of the conjugated complex. -/
+/-- The weighted Gauss laws `σ = 0`, `d₀† (ε E) = 0` and `μ H ∈ Y`. -/
 def gauss : Submodule 𝕜 (PiLp 2 (W3 W₀ W₁ W₂)) :=
   (totalSub ((M.complex S).divFreeSub (Y.map (M.m.adjoint.symm : W₂ →ₗ[𝕜] W₂)))).comap
     (M.state W₀ : PiLp 2 (W3 W₀ W₁ W₂) →ₗ[𝕜] PiLp 2 (W3 W₀ W₁ W₂))
 
 variable {Y} in
-/-- If `R(d₁) ⊆ Y`, the conjugated `d₁'` maps into `(m⁻¹)† Y`. -/
 theorem complex_d₁_mem (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y)
     (x : (M.complex S).d₁.domain) :
     (M.complex S).d₁ x ∈ Y.map (M.m.adjoint.symm : W₂ →ₗ[𝕜] W₂) := by
@@ -339,9 +268,8 @@ variable [NormedSpace ℝ W₀] [IsScalarTower ℝ 𝕜 W₀] [NormedSpace ℝ W
 
 variable {Y} [Y.HasOrthogonalProjection]
 
-/-- **The weighted Gauss laws propagate** for Maxwell's equations in any medium, on any short
-complex, for any closed `Y ⊇ R(d₁)`: strong solutions with data and forcing satisfying `σ = 0`,
-`d₀† (ε E) = 0`, `μ H ∈ Y` satisfy them for all times. No closed range or density hypothesis. -/
+/-- The weighted Gauss laws `σ = 0`, `d₀† (ε E) = 0`, `μ H ∈ Y` propagate in any medium, on any
+short complex, for any `Y ⊇ R(d₁)` with an orthogonal projection. -/
 theorem gauss_propagates (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {t₀ t₁ : ℝ}
     {F U : ℝ → PiLp 2 (W3 W₀ W₁ W₂)}
     (hU : Evolution.IsStrongSolution (M.maxwell S) (Icc t₀ t₁) F U)
@@ -350,9 +278,8 @@ theorem gauss_propagates (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {t₀ t₁
   (M.complex S).divFree_propagates _ (M.complex_d₁_mem S hY) ((M.isStrongSolution_iff S).1 hU)
     h0 hF
 
-/-- **Well-posedness in the weighted Gauss-law subspace**: for data in the domain satisfying the
-weighted Gauss laws and admissible forcing satisfying them, there is a unique classical
-solution, and it satisfies the weighted Gauss laws for all times. -/
+/-- Data in the domain and admissible forcing satisfying the weighted Gauss laws give a classical
+solution, unique among strong ones, which satisfies them. -/
 theorem gauss_existsUnique (hY : ∀ x : S.d₁.domain, S.d₁ x ∈ Y) {U₀ : PiLp 2 (W3 W₀ W₁ W₂)}
     (hU₀ : U₀ ∈ (M.maxwell S).domain) (hU₀Y : U₀ ∈ M.gauss S Y) {F : ℝ → PiLp 2 (W3 W₀ W₁ W₂)}
     {a b : ℝ} (hF : Evolution.ForcingClass.admissible (M.maxwell S) a b F)
@@ -370,9 +297,8 @@ end Medium
 
 /-! ### Every medium has weights (over `ℂ`) -/
 
-/-- **Every linear medium is a `Maxwell.Medium`** (over `ℂ`): bounded, self-adjoint, uniformly
-positive `ε`, `μ` (e.g. multiplication by measurable Hermitian matrix fields with
-`λ ≤ ε(x), μ(x) ≤ Λ`, `Maxwell.Medium.exists_anisotropic`) have the factors `e = ε^{1/2}`, `m = μ^{1/2}`. -/
+/-- Over `ℂ`, for bounded self-adjoint uniformly positive `ε`, `μ` there is a `Maxwell.Medium`
+with permittivity `ε` and permeability `μ`. -/
 theorem Medium.exists_eq {W₁ W₂ : Type*} [NormedAddCommGroup W₁] [InnerProductSpace ℂ W₁]
     [CompleteSpace W₁] [NormedAddCommGroup W₂] [InnerProductSpace ℂ W₂] [CompleteSpace W₂]
     {ε : W₁ →L[ℂ] W₁} {μ : W₂ →L[ℂ] W₂} (hε : IsSelfAdjoint ε) (hμ : IsSelfAdjoint μ)

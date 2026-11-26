@@ -8,85 +8,18 @@ public import Mathlib.Topology.MetricSpace.HausdorffDistance
 /-!
 # The dissipative FEEC theorem
 
-Boundary conditions that absorb energy (radiation conditions, impedance conditions, damping) give
-generators that are only **m-dissipative**: `re ⟪A x, x⟫ ≤ 0` and `μ - A` onto, i.e.
-(Lumer–Phillips, `LinearPMap.isMDissipative_iff_exists_contraction`) generators of contraction
-semigroups `S(t)`, `t ≥ 0`. This file states the FEEC theorem for them. It is the base of a tower:
-the skew-adjoint case (`Feec.HilbertComplex.SkewFEEC`, a unitary group) extends the structure
-defined here, and the Hodge wave case (`Feec.HilbertComplex.ApproxFEEC`) is the skew-adjoint case
-for the wave operator `L = 𝐝 - 𝐝†` of a Hilbert complex.
-
-A **dissipative FEEC discretization** (`Feec.HilbertComplex.DissipFEEC`) of `ξ' = A ξ` for an
-m-dissipative `A` on a Hilbert space `E` consists of a closed constraint subspace `K`, Hilbert
-spaces `Xₕ` with their own inner products (not subspaces of `E`, not necessarily
-finite-dimensional), bounded **dissipative** discrete generators `Lₕ` (`re ⟪Lₕ v, v⟫ ≤ 0`, so
-`e^{tLₕ}` is a contraction for `t ≥ 0`: uniform stability), and uniformly bounded reading maps
-`ιₕ : Xₕ → E` with uniformly bounded left inverses `πₕ` (`πₕ ιₕ = 1`). Neither `ιₕ` nor `πₕ` is
-assumed isometric, a cochain map, or to commute with anything; `ιₕ πₕ → 1` is not assumed
-either: it is derived (`DissipFEEC.tendsto_incl_proj`). The exact flow is the Lumer–Phillips
-semigroup `DissipFEEC.S` of `A`, the discrete solution is `ιₕ e^{tLₕ} v` (`DissipFEEC.sol`).
-
-**Consistency** is tested along exact orbits, never in operator norm. A **comparison**
-(`DissipFEEC.Comparison`) assigns to each datum `x` discrete trajectories `pₕ(t)` with derivatives
-`pₕ'(t)`; its **consistency defect** is `pₕ' - Lₕ pₕ`. A **core** (`DissipFEEC.Core`) is a subspace
-of data whose comparisons approximate the orbit (`ιₕ pₕ(t) → S(t) x`) with defects tending to `0`,
-both uniformly on `[0, T]` (the orbit form of the consistency hypothesis of the Trotter–Kato
-theorem); a **rate class** (`DissipFEEC.RateClass`) has comparisons with rates. The energy
-estimate `norm_sub_le_of_defect_of_dissipative`, which needs only `re ⟪Lₕ e, e⟫ ≤ 0`, reads
-
-`‖S(t) x - ιₕ e^{tLₕ} pₕ(0)‖ ≤ ‖S(t) x - ιₕ pₕ(t)‖ + ‖ιₕ‖ ∫₀ᵗ ‖pₕ' - Lₕ pₕ‖`,
-
-**best approximation plus consistency**, a semi-discrete (evolution) analogue of the elliptic
-estimates of [HolstStern2012], Thm 3.9, Thm 3.10: inner-product and commutation crimes both enter
-through the orbit defect `pₕ' - Lₕ pₕ`.
+The FEEC theorem for `ξ' = A ξ` with `A` m-dissipative, discretized by bounded dissipative
+generators on Hilbert spaces read through uniformly bounded maps, with consistency tested along the
+exact orbits as in the Trotter–Kato theorem ([Pazy1983], §3.4).
 
 ## Main results
 
-The **dissipative FEEC theorem** `dissipFEEC` (statement `DissipFEEC.Verdict`, a structure whose
-fields are the conclusions) bundles the following results; `dissipFEEC_converges_core` and
-`dissipFEEC_leaves_of_not_isReducing` are not fields, being the cases `vₕ = pₕ(0)` of
-`converges` and `Q ∈ {K, Kᗮ}` of `leaves`, nor are `DissipFEEC.Verdict.detects` (a departure
-from a closed set has residuals of positive limit, eventually above half of it) and
-`DissipFEEC.Verdict.tendsto_infDist_zero_iff` (the residuals tend to `0` at all times iff the
-solution stays in the set), corollaries of `tendsto_infDist`:
-
-1. well-posedness (Lumer–Phillips, `dissipFEEC_wellPosed`): for `ξ₀ ∈ D(A)`, `t ↦ S(t) ξ₀` is a
-   classical solution and the only strong one, with the energy identity
-   `‖S(t) ξ₀‖² = ‖ξ₀‖² + ∫₀ᵗ 2 re ⟪S(s) A ξ₀, S(s) ξ₀⟫ ds`; the energy of every datum is
-   nonincreasing;
-2. constraint propagation (`dissipFEEC_propagates_iff`): `S(t) K ⊆ K` for all `t ≥ 0`
-   (`DissipFEEC.Keeps`) iff the resolvents `(μ - A)⁻¹` map `K` into `K`, iff for one `μ > 0` the
-   stationary problem `μ u - A u = f` is solvable in `D(A) ∩ K` for all `f ∈ K`; `K` reduces `A`
-   iff both `K` and `Kᗮ` are invariant;
-3. convergence: on the core (`dissipFEEC_converges_core`), on its closure for every family `vₕ`
-   with `ιₕ vₕ → ξ₀` (`dissipFEEC_converges`; `ιₕ πₕ ξ₀ → ξ₀` gives one), with rates for a rate
-   class (`dissipFEEC_rate`:
-   `‖S(t) ξ₀ - ιₕ e^{tLₕ} v‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`);
-4. the constraint residual `dist(ιₕ e^{tLₕ} vₕ, K)`: for invariant `K` it is bounded by the error
-   and tends to `0` (`dissipFEEC_residual_le`, `dissipFEEC_residual`); for every set `Q` the
-   distances `dist(ιₕ e^{tLₕ} vₕ, Q)` tend to `dist(S(t) ξ₀, Q)`, which is positive when the
-   solution has left a closed `Q` (`dissipFEEC_tendsto_infDist`); a set that is not kept is left by
-   one of its data before any time `T > 0` (`dissipFEEC_leaves`; a non-reducing `K` is left by a
-   datum of `K` or of `Kᗮ`, `dissipFEEC_leaves_of_not_isReducing`), by a datum of `D(A) ∩ Q` when
-   `Q` is closed and `D(A) ∩ Q` is dense in it (`DissipFEEC.SmoothDense`,
-   `dissipFEEC_leaves_smooth`).
-
-The **Trotter–Kato bridge** `DissipFEEC.Core.ofOperator` builds a core `D(A)` from bounded
-`Rₕ : E → Xₕ` with `ιₕ Rₕ → 1` strongly and a defect identity `Rₕ A - Lₕ Rₕ = Δₕ A + Δₕ'` on `D(A)`
-with uniformly bounded defects tending to `0` strongly (uniformity on `[0, T]` from compactness of
-the orbits); `Core.ofOperator_data_closure`: that core is dense, so convergence holds for every
-datum.
+* `norm_sub_le_of_defect_of_dissipative`: best approximation plus integrated consistency defect.
+* `dissipFEEC`: the dissipative FEEC theorem.
 
 ## References
 
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.4 (Thm 4.3 Lumer–Phillips), §3.4 (Trotter–Kato approximation theorems), §4.1 (classical and
-  strong solutions)
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (Thm 3.9, Thm 3.10, elliptic analogues)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.4 (Thms 4.6, 4.7), §4.10 (Prop. 4.17): the skew-adjoint case; the thesis has no dissipative
-  generators
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -108,9 +41,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {X E : Type*}
   [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X] [NormedSpace ℝ X]
   [IsScalarTower ℝ 𝕜 X] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
-/-- **The abstract consistency estimate for a dissipative generator** (energy method): for a
-bounded `L` on `X` with `re ⟪L x, x⟫ ≤ 0`, a bounded `ι : X → E`, a target `u` and a comparison
-trajectory `p` with right derivative `p'` on `[0, T]`,
+/-- **The consistency estimate**: for a bounded dissipative `L` and a comparison trajectory `p`,
 `‖u(t) - ι e^{tL} p(0)‖ ≤ ‖u(t) - ι p(t)‖ + ‖ι‖ ∫₀ᵗ ‖p' - L p‖`. -/
 theorem norm_sub_le_of_defect_of_dissipative (L : X →L[𝕜] X)
     (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) (ι : X →L[𝕜] E) {u : ℝ → E} {p p' : ℝ → X} {T : ℝ}
@@ -148,7 +79,6 @@ theorem norm_sub_le_of_defect_of_dissipative (L : X →L[𝕜] X)
     _ ≤ ‖u t - ι (p t)‖ + ‖ι‖ * ‖e t‖ := (norm_add_le _ _).trans (by gcongr; exact ι.le_opNorm _)
     _ ≤ _ := by gcongr
 
-/-- `e^{tL}` is a contraction for `t ≥ 0` when `L` is bounded and dissipative. -/
 theorem norm_ofBounded_apply_le (L : X →L[𝕜] X) (hL : ∀ x, RCLike.re ⟪L x, x⟫_𝕜 ≤ 0) {t : ℝ}
     (ht : 0 ≤ t) (x : X) : ‖(C0Group.ofBounded L).S t x‖ ≤ ‖x‖ := by
   rw [C0Group.ofBounded_S]; exact LumerPhillips.norm_exp_smul_apply_le hL ht x
@@ -159,8 +89,6 @@ end Defect
 
 section Compact
 
-/-- **Pointwise convergence to `0` is uniform on compact sets** for a family of functions with a
-uniform Lipschitz-type bound `f h ζ ≤ f h ζ' + M ‖ζ - ζ'‖` (finite cover by small balls). -/
 theorem eventually_forall_lt_of_tendsto {κ F : Type*} [SeminormedAddCommGroup F] {l : Filter κ}
     {f : κ → F → ℝ} {M : ℝ} (hf : ∀ h ζ ζ', f h ζ ≤ f h ζ' + M * ‖ζ - ζ'‖)
     (hlim : ∀ ζ, Tendsto (fun h => f h ζ) l (𝓝 0)) {S : Set F} (hS : IsCompact S) {ε : ℝ}
@@ -187,8 +115,6 @@ theorem eventually_forall_lt_of_tendsto {κ F : Type*} [SeminormedAddCommGroup F
     nlinarith
   linarith [hh z hz]
 
-/-- Uniformly bounded linear maps converging pointwise to `0` converge uniformly on compact
-sets (the codomains may vary). -/
 theorem eventually_forall_norm_lt_of_tendsto {𝕜 κ F : Type*} [RCLike 𝕜]
     [SeminormedAddCommGroup F] [NormedSpace 𝕜 F] {G : κ → Type*}
     [∀ h, SeminormedAddCommGroup (G h)] [∀ h, NormedSpace 𝕜 (G h)] {l : Filter κ}
@@ -200,9 +126,6 @@ theorem eventually_forall_norm_lt_of_tendsto {𝕜 κ F : Type*} [RCLike 𝕜]
     rw [e]
     exact (norm_add_le _ _).trans (by linarith [hM h (ζ - ζ')])) hlim hS hε
 
-/-- **Pointwise convergence of uniformly bounded operators is uniform along a curve with compact
-image**: `Pₕ ζ → P₀ ζ` for every `ζ` and `‖Pₕ‖ ≤ C` give `Pₕ (f t) → P₀ (f t)` uniformly on `S`
-when `f(S)` is compact. -/
 theorem tendstoUniformlyOn_apply_of_tendsto {𝕜 κ F G : Type*} [RCLike 𝕜]
     [SeminormedAddCommGroup F] [NormedSpace 𝕜 F] [SeminormedAddCommGroup G] [NormedSpace 𝕜 G]
     {l : Filter κ} {P : κ → F →L[𝕜] G} {P₀ : F →L[𝕜] G} (hP : ∃ C, ∀ h, ‖P h‖ ≤ C)
@@ -220,9 +143,6 @@ theorem tendstoUniformlyOn_apply_of_tendsto {𝕜 κ F G : Type*} [RCLike 𝕜]
   filter_upwards [eventually_forall_norm_lt_of_tendsto hB hB0 hf hε] with h hh t ht
   simpa [dist_eq_norm] using hh _ (mem_image_of_mem _ ht)
 
-/-- **Defects dominated by uniformly bounded operators tending to `0` pointwise tend to `0`
-uniformly along compact orbits**: `‖dₕ(t)‖ ≤ ‖Δₕ (f t)‖ + ‖Δₕ' (g t)‖` on `S`, with `f(S)` and
-`g(S)` compact, give `‖dₕ‖ → 0` uniformly on `S`. -/
 theorem tendstoUniformlyOn_norm_of_le {𝕜 κ F : Type*} [RCLike 𝕜] [SeminormedAddCommGroup F]
     [NormedSpace 𝕜 F] {G D : κ → Type*} [∀ h, SeminormedAddCommGroup (G h)]
     [∀ h, NormedSpace 𝕜 (G h)] [∀ h, SeminormedAddCommGroup (D h)] {l : Filter κ}
@@ -244,7 +164,6 @@ theorem tendstoUniformlyOn_norm_of_le {𝕜 κ F : Type*} [RCLike 𝕜] [Seminor
   rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg (norm_nonneg _)]
   linarith [hd h t ht, h1 _ (mem_image_of_mem _ ht), h2 _ (mem_image_of_mem _ ht)]
 
-/-- `∫₀ᵗ g ≤ M t` for `‖g‖ ≤ M` on `[0, t]` (no integrability needed). -/
 theorem integral_le_mul_of_norm_le {g : ℝ → ℝ} {t M : ℝ} (ht : 0 ≤ t)
     (hg : ∀ s ∈ Icc 0 t, ‖g s‖ ≤ M) : ∫ s in (0 : ℝ)..t, g s ≤ M * t := by
   have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := t) (f := g)
@@ -258,20 +177,14 @@ end Compact
 
 variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
-/-- A **dissipative FEEC discretization** of `ξ' = A ξ` for an m-dissipative `A` on `E`: a closed
-constraint `K`; Hilbert spaces `Xₕ` with their own inner products and bounded dissipative
-generators `Lₕ` (`re ⟪Lₕ v, v⟫ ≤ 0`, so `e^{tLₕ}` is a contraction for `t ≥ 0`); uniformly bounded
-`ιₕ : Xₕ → E`, `πₕ : E → Xₕ` with `πₕ ιₕ = 1`. `ιₕ` need not be an inclusion, an isometry or a
-cochain map, and `ιₕ πₕ → 1` is not assumed (it is derived on the closure of a core,
-`tendsto_incl_proj`). The m-dissipativity of `A` is a field, not a parameter, so that a projection
-`F.X h` carries `A` once. [HolstStern2012], §3; [Pazy1983], §3.4 -/
+/-- A **dissipative FEEC discretization** of `ξ' = A ξ`, `A` m-dissipative. -/
 structure DissipFEEC (A : E →ₗ.[𝕜] E) (κ : Type*) where
   /-- the generator is m-dissipative -/
   isMDissipative : A.IsMDissipative
   /-- the constraint subspace -/
   K : Submodule 𝕜 E
   isClosed_K : IsClosed (K : Set E)
-  /-- the filter along which the discretization is refined -/
+  /-- the filter of refinement -/
   l : Filter κ
   /-- the discrete spaces -/
   X : κ → Type u
@@ -283,7 +196,7 @@ structure DissipFEEC (A : E →ₗ.[𝕜] E) (κ : Type*) where
   /-- the discrete generators -/
   L : ∀ h, X h →L[𝕜] X h
   dissipative : ∀ h x, RCLike.re ⟪L h x, x⟫_𝕜 ≤ 0
-  /-- the maps reading discrete states in `E` -/
+  /-- the reading maps -/
   incl : ∀ h, X h →L[𝕜] E
   /-- their left inverses -/
   proj : ∀ h, E →L[𝕜] X h
@@ -312,7 +225,6 @@ theorem norm_incl_le (h : κ) : ‖F.incl h‖ ≤ F.boundConst :=
 theorem norm_proj_le (h : κ) : ‖F.proj h‖ ≤ F.boundConst :=
   (F.bound.choose_spec h).2.trans (le_max_left _ _)
 
-/-- **Stability of the reading map**: `‖v‖ ≤ C ‖ιₕ v‖` (from `πₕ ιₕ = 1`). -/
 theorem norm_le_norm_incl (h : κ) (v : F.X h) : ‖v‖ ≤ F.boundConst * ‖F.incl h v‖ :=
   calc ‖v‖ = ‖F.proj h (F.incl h v)‖ := by rw [F.proj_incl]
     _ ≤ ‖F.proj h‖ * ‖F.incl h v‖ := (F.proj h).le_opNorm _
@@ -321,7 +233,6 @@ theorem norm_le_norm_incl (h : κ) (v : F.X h) : ‖v‖ ≤ F.boundConst * ‖F
 theorem norm_incl_apply_le (h : κ) (v : F.X h) : ‖F.incl h v‖ ≤ F.boundConst * ‖v‖ :=
   ((F.incl h).le_opNorm v).trans (mul_le_mul_of_nonneg_right (F.norm_incl_le h) (norm_nonneg _))
 
-/-- `ιₕ Rₕ` is uniformly bounded when `Rₕ` is. -/
 theorem bound_incl_comp {G : Type*} [SeminormedAddCommGroup G] [NormedSpace 𝕜 G]
     {R : ∀ h, G →L[𝕜] F.X h} (hR : ∃ C, ∀ h, ‖R h‖ ≤ C) : ∃ C, ∀ h, ‖F.incl h ∘L R h‖ ≤ C :=
   let ⟨C, hC⟩ := hR
@@ -338,7 +249,7 @@ theorem norm_incl_proj_le (h : κ) (y : E) :
     _ ≤ F.boundConst * (F.boundConst * ‖y‖) := mul_le_mul_of_nonneg_left h2 h0
     _ = _ := by ring
 
-/-- The discrete evolution `e^{t Lₕ}` (a contraction for `t ≥ 0`). -/
+/-- The discrete evolution `e^{t Lₕ}`. -/
 def group (h : κ) : C0Group 𝕜 (F.X h) := C0Group.ofBounded (F.L h)
 
 theorem norm_group_apply_le (h : κ) {t : ℝ} (ht : 0 ≤ t) (v : F.X h) :
@@ -361,11 +272,7 @@ theorem norm_sol_sub_sol_le (h : κ) (v w : F.X h) {t : ℝ} (ht : 0 ≤ t) :
 /-- `v` converges to `x` through the reading maps, `ιₕ vₕ → x`. -/
 abbrev Converges (v : ∀ h, F.X h) (x : E) : Prop := Tendsto (fun h => F.incl h (v h)) F.l (𝓝 x)
 
-/-- **Comparison trajectories** on `[0, T]`: for each datum `x` of `Data`, discrete trajectories
-`pₕ(t)` with right derivatives `pₕ'(t)`. Consistency is tested along them (orbit form), never in
-operator norm: for the BGG scheme of [QuennevilleBelair2015], (6.5), the static strong consistency
-bound of Prop. 5.9(2) fails on the Freudenthal meshes of the cube with constants independent of `h`
-(`Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`). -/
+/-- **Comparison trajectories** `pₕ(t)` on `[0, T]`, with right derivatives `pₕ'(t)`. -/
 structure Comparison (T : ℝ) where
   /-- the data -/
   Data : Set E
@@ -397,24 +304,19 @@ def Comparison.restrict {T : ℝ} (P : F.Comparison T) (D : Set E) (hD : D ⊆ P
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 omit [CompleteSpace E] in
-/-- The discrete solution is differentiable: `(d/dt) ιₕ e^{tLₕ} v = ιₕ Lₕ e^{tLₕ} v`. -/
 theorem hasDerivAt_sol (h : κ) (v : F.X h) (t : ℝ) :
     HasDerivAt (F.sol h v) (F.incl h (F.L h ((F.group h).S t v))) t :=
   ((F.incl h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt t
     (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (F.L h) v t)
 
-/-- The **exact flow** `S(t)` of `F`: the Lumer–Phillips contraction semigroup of `A` (only
-`t ≥ 0` matters). -/
+/-- The **exact flow** `S(t)`: the contraction semigroup generated by `A`. -/
 def S (t : ℝ) : E →L[𝕜] E := F.isMDissipative.semigroup.S t
 
 theorem S_def (t : ℝ) : F.S t = F.isMDissipative.semigroup.S t := rfl
 
-/-- The orbits of the exact flow are continuous on `[0, T]`. -/
 theorem continuousOn_S (x : E) (T : ℝ) : ContinuousOn (fun t => F.S t x) (Icc 0 T) :=
   (F.isMDissipative.semigroup.strongCont x).mono Icc_subset_Ici_self
 
-/-- **Inexactness criterion**: if the discrete initial velocity `ιₕ Lₕ v` differs from `A x`,
-the discrete solution from `v` differs from `S(t) x` at some time `t ≥ 0`. -/
 theorem exists_sol_ne {x : E} (hx : x ∈ A.domain) (h : κ) (v : F.X h)
     (hne : F.incl h (F.L h v) ≠ A ⟨x, hx⟩) : ∃ t, 0 ≤ t ∧ F.sol h v t ≠ F.S t x := by
   by_contra hc
@@ -437,9 +339,7 @@ abbrev Leaves (x : E) (Q : Set E) (T : ℝ) : Prop := ∃ t ∈ Icc 0 T, F.S t x
 abbrev SmoothDense (_ : DissipFEEC.{u} A κ) (Q : Set E) : Prop :=
   ∀ k ∈ Q, k ∈ closure ((A.domain : Set E) ∩ Q)
 
-/-- A **rate class** on `[0, T]`: comparison trajectories with best approximation
-`‖S(t) x - ιₕ pₕ(t)‖ ≤ C hᵅ ‖x‖_c` and consistency `‖pₕ' - Lₕ pₕ‖ ≤ C' hᵅ ‖x‖_c`.
-Cf. [HolstStern2012], Thm 3.10 (elliptic analogue) -/
+/-- A **rate class**: comparisons with approximation and consistency defect `O(hᵅ)` on `[0, T]`. -/
 structure RateClass (T : ℝ) extends F.Comparison T where
   /-- the norm of the class -/
   classNorm : E → ℝ
@@ -456,9 +356,7 @@ structure RateClass (T : ℝ) extends F.Comparison T where
   consistency : ∀ x ∈ Data, ∀ h, ∀ t ∈ Icc 0 T,
     ‖toComparison.defect x h t‖ ≤ C' * meshSize h ^ α * classNorm x
 
-/-- An **orbit-consistent core**: a subspace of data with comparisons on every horizon `[0, T]`
-approximating the exact orbit `S(t) x` through `ιₕ`, with consistency defects tending to `0`,
-both uniformly on `[0, T]`. [Pazy1983], §3.4 -/
+/-- An **orbit-consistent core**: comparisons approximating the orbits, with defects `→ 0`. -/
 structure Core where
   /-- the core -/
   Data : Submodule 𝕜 E
@@ -470,9 +368,6 @@ structure Core where
   tendsto_defect : ∀ T, ∀ x ∈ Data, TendstoUniformlyOn
     (fun h t => ‖(cmp T).defect x h t‖) (fun _ => 0) F.l (Icc 0 T)
 
-/-- **Best approximation plus consistency**: the error of the discrete solution from the
-comparison initial value is at most the approximation error plus `‖ιₕ‖` times the integrated
-consistency defect. Cf. [HolstStern2012], Thm 3.9 (elliptic analogue) -/
 theorem norm_sub_sol_le {T : ℝ} (P : F.Comparison T) {x : E} (hx : x ∈ P.Data) (h : κ) :
     ∀ t ∈ Icc 0 T, ‖F.S t x - F.sol h (P.p x h 0) t‖ ≤
       ‖F.S t x - F.incl h (P.p x h t)‖ + ‖F.incl h‖ * ∫ s in (0 : ℝ)..t, ‖P.defect x h s‖ :=
@@ -480,16 +375,11 @@ theorem norm_sub_sol_le {T : ℝ} (P : F.Comparison T) {x : E} (hx : x ∈ P.Dat
     (P.continuousOn x hx h) (P.continuousOn' x hx h) (P.hasDerivWithinAt x hx h)
 
 variable {F} in
-/-- The comparison initial values of a core read in `E` converge to the datum. -/
 theorem Core.tendsto_incl_p (Z : F.Core) {T : ℝ} (hT : 0 ≤ T) {x : E} (hx : x ∈ Z.Data) :
     F.Converges (fun h => (Z.cmp T).p x h 0) x := by
   have h0 := (Z.tendsto_approx T x hx).tendsto_at (show (0 : ℝ) ∈ Icc 0 T from ⟨le_rfl, hT⟩)
   rwa [S_def, C0Semigroup.S_zero_apply] at h0
 
-/-- **The approximation property, derived**: `ιₕ πₕ x → x` on the closure of a core. At a point
-`y` of the core, `πₕ ιₕ = 1` and the uniform bounds give `‖ιₕ πₕ y - y‖ ≤ (1 + C²) ‖y - ιₕ v‖` for
-the comparison initial values `v`, which approximate `y`; the uniform bound `‖ιₕ πₕ‖ ≤ C²` carries
-the convergence to the closure (`ContinuousLinearMap.tendsto_apply_of_mem_closure`). -/
 theorem tendsto_incl_proj (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) :
     F.Converges (fun h => F.proj h x) x := by
   refine ContinuousLinearMap.tendsto_apply_of_mem_closure (T := fun h => F.incl h ∘L F.proj h)
@@ -521,8 +411,7 @@ omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 theorem genExt_of_mem {x : E} (hx : x ∈ A.domain) : genExt A x = A ⟨x, hx⟩ := by
   unfold genExt; simp [hx]
 
-/-- Comparison trajectories `pₕ(t) = Rₕ S(t) x` of a bounded `Rₕ : E → Xₕ` on `D(A)`, with
-derivatives `Rₕ S(t) A x`. -/
+/-- Comparison trajectories `pₕ(t) = Rₕ S(t) x` on `D(A)`, with derivatives `Rₕ S(t) A x`. -/
 def Comparison.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (T : ℝ) : F.Comparison T where
   Data := A.domain
   p x h t := R h (F.S t x)
@@ -534,10 +423,7 @@ def Comparison.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (T : ℝ) : F.Comparis
     rw [← genExt_of_mem hx] at hd
     exact ((R h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivWithinAt t hd
 
-/-- **The Trotter–Kato bridge**: uniformly bounded `Rₕ : E → Xₕ` with `ιₕ Rₕ y → y`, and a defect
-identity `Rₕ (A y) - Lₕ (Rₕ y) = Δₕ (A y) + Δₕ' y` on `D(A)` with uniformly bounded `Δₕ`, `Δₕ'`
-tending to `0` pointwise, give the core `D(A)`; uniformity on `[0, T]` comes from the
-compactness of the orbits `S([0, T]) x`, `S([0, T]) A x`. [Pazy1983], §3.4 -/
+/-- **The Trotter–Kato bridge**: the core `D(A)` of `Rₕ` ([Pazy1983], §3.4). -/
 def Core.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h‖ ≤ C)
     (happrox : ∀ y, Tendsto (fun h => F.incl h (R h y)) F.l (𝓝 y))
     (Δ Δ' : ∀ h, E →L[𝕜] F.X h) (hΔ : ∃ C, ∀ h, ‖Δ h‖ ≤ C ∧ ‖Δ' h‖ ≤ C)
@@ -560,8 +446,6 @@ def Core.ofOperator (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h�
       rw [genExt_of_mem hx, e]
       exact norm_add_le _ _
 
-/-- **The Trotter–Kato core is dense**: its data `D(A)` are dense (an m-dissipative operator is
-densely defined), so `dissipFEEC_converges` applies to every datum. -/
 theorem Core.ofOperator_data_closure (R : ∀ h, E →L[𝕜] F.X h) (hR : ∃ C, ∀ h, ‖R h‖ ≤ C)
     (happrox : ∀ y, Tendsto (fun h => F.incl h (R h y)) F.l (𝓝 y))
     (Δ Δ' : ∀ h, E →L[𝕜] F.X h) (hΔ : ∃ C, ∀ h, ‖Δ h‖ ≤ C ∧ ‖Δ' h‖ ≤ C)
@@ -582,10 +466,6 @@ variable {A : E →ₗ.[𝕜] E} {κ : Type*} (F : DissipFEEC.{u} A κ)
 
 open DissipFEEC
 
-/-- **1. Well-posedness and energy** (Lumer–Phillips): for `x ∈ D(A)`, `t ↦ S(t) x` is a
-classical solution on `[0, T]`, the only strong solution, with the energy identity
-`‖S(t) x‖² = ‖x‖² + ∫₀ᵗ 2 re ⟪S(s) A x, S(s) x⟫ ds`; for every datum the energy is
-nonincreasing. -/
 theorem dissipFEEC_wellPosed (x : A.domain) (T : ℝ) :
     Evolution.IsClassicalSolution A (Icc 0 T) 0 (fun t => F.S t x) ∧
     (∀ U, U 0 = (x : E) → Evolution.IsStrongSolution A (Icc 0 T) 0 U →
@@ -600,7 +480,6 @@ theorem dissipFEEC_wellPosed (x : A.domain) (T : ℝ) :
   refine ⟨hcl, fun U hU0 hU => ?_, fun t ht => F.isMDissipative.norm_sq_semigroup_apply x ht⟩
   exact hU.unique F.isMDissipative.dissipative hcl.toIsStrongSolution (by rw [hU0, S_def]; simp)
 
-/-- **1. The energy is nonincreasing**, `‖S(t) x‖ ≤ ‖S(s) x‖` for `0 ≤ s ≤ t`, for every datum. -/
 theorem dissipFEEC_antitone (x : E) : AntitoneOn (fun t => ‖F.S t x‖) (Ici 0) := by
   intro s (hs : 0 ≤ s) t _ hst
   have e : F.S t x = F.S (t - s) (F.S s x) := by
@@ -612,9 +491,6 @@ theorem dissipFEEC_antitone (x : E) : AntitoneOn (fun t => ‖F.S t x‖) (Ici 0
     simpa [S_def] using mul_le_mul_of_nonneg_right
       (F.isMDissipative.isContraction_semigroup _ (by linarith)) (norm_nonneg (F.S s x)))
 
-/-- **2. Constraint propagation**: `S(t) K ⊆ K` for all `t ≥ 0` iff the resolvents map `K` into
-`K`, iff the stationary problem is solvable within `K`; `K` reduces `A` iff `K` and `Kᗮ` are both
-invariant. -/
 theorem dissipFEEC_propagates_iff :
     (F.Keeps F.K ↔ ∀ μ : ℝ, 0 < μ → ∀ y ∈ F.K, Operator.resolvent A (μ : 𝕜) y ∈ F.K) ∧
     (F.Keeps F.K ↔
@@ -623,7 +499,6 @@ theorem dissipFEEC_propagates_iff :
   ⟨F.isMDissipative.invariant_iff_resolvent F.isClosed_K,
     F.isMDissipative.invariant_iff_exists_solve F.isClosed_K, F.isMDissipative.isReducing_iff⟩
 
-/-- **3a. Convergence on the core**, from the comparison initial values, uniformly on `[0, T]`. -/
 theorem dissipFEEC_converges_core (Z : F.Core) (T : ℝ) {x : E} (hx : x ∈ Z.Data) :
     TendstoUniformlyOn (fun h t => F.sol h ((Z.cmp T).p x h 0) t) (fun t => F.S t x) F.l
       (Icc 0 T) := by
@@ -660,9 +535,6 @@ theorem dissipFEEC_converges_core (Z : F.Core) (T : ℝ) {x : E} (hx : x ∈ Z.D
   rw [dist_eq_norm] at this
   linarith
 
-/-- **3b. Convergence on the closure of the core**, for every family `vₕ` with `ιₕ vₕ → x`,
-uniformly on `[0, T]` (stability `‖v‖ ≤ C ‖ιₕ v‖`, contractivity of `S(t)` and `e^{tLₕ}`, and
-density). -/
 theorem dissipFEEC_converges (Z : F.Core) (T : ℝ) {x : E} (hx : x ∈ Z.Data.topologicalClosure)
     {v : ∀ h, F.X h} (hv : F.Converges v x) :
     TendstoUniformlyOn (fun h t => F.sol h (v h) t) (fun t => F.S t x) F.l (Icc 0 T) := by
@@ -722,10 +594,6 @@ theorem dissipFEEC_converges (Z : F.Core) (T : ℝ) {x : E} (hx : x ∈ Z.Data.t
   have hxy' : ‖x - y‖ < ε / (4 * B) := hxy
   linarith [a3.trans (mul_le_mul_of_nonneg_left a4 hC)]
 
-/-- **3c. The rate: best approximation plus consistency** (plus the initial mismatch), for data in
-a rate class and every discrete initial value `v`:
-`‖S(t) x - ιₕ e^{tLₕ} v‖ ≤ (C + ‖ιₕ‖ C' t) hᵅ ‖x‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`.
-Cf. [HolstStern2012], Thm 3.10 (elliptic analogue) -/
 theorem dissipFEEC_rate {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data) (h : κ)
     (v : F.X h) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖F.S t x - F.sol h v t‖ ≤
@@ -751,16 +619,11 @@ theorem dissipFEEC_rate {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data
   rw [this]
   linarith
 
-/-- **4a. The constraint residual is bounded by the error** (invariant `K`, datum in `K`,
-`t ≥ 0`). -/
 theorem dissipFEEC_residual_le (hK : F.Keeps F.K) {x : E} (hxK : x ∈ F.K) (h : κ) (v : F.X h)
     {t : ℝ} (ht : 0 ≤ t) : infDist (F.sol h v t) F.K ≤ ‖F.S t x - F.sol h v t‖ := by
   rw [norm_sub_rev, ← dist_eq_norm]
   exact infDist_le_dist_of_mem (hK t ht x hxK)
 
-/-- **4a. Residual of an invariant constraint**: for `x ∈ K` in the closure of the core and
-every convergent family of discrete initial values, the residual tends to `0` uniformly on
-`[0, T]`. -/
 theorem dissipFEEC_residual (hK : F.Keeps F.K) (Z : F.Core) (T : ℝ) {x : E}
     (hx : x ∈ Z.Data.topologicalClosure) (hxK : x ∈ F.K) {v : ∀ h, F.X h}
     (hv : F.Converges v x) :
@@ -774,9 +637,6 @@ theorem dissipFEEC_residual (hK : F.Keeps F.K) (Z : F.Core) (T : ℝ) {x : E}
   rw [dist_eq_norm, zero_sub, norm_neg, Real.norm_of_nonneg infDist_nonneg]
   exact (dissipFEEC_residual_le F hK hxK h (v h) ht.1).trans_lt this
 
-/-- **4b. The residuals detect departures**: for every set `Q`, datum `x` in the closure of the
-core, convergent family `vₕ` and `t ≥ 0`, `dist(ιₕ e^{tLₕ} vₕ, Q) → dist(S(t) x, Q)`; the limit is
-positive when `Q` is closed and `S(t) x ∉ Q`. -/
 theorem dissipFEEC_tendsto_infDist (Z : F.Core) (Q : Set E) {x : E}
     (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x) {t : ℝ}
     (ht : 0 ≤ t) :
@@ -784,8 +644,6 @@ theorem dissipFEEC_tendsto_infDist (Z : F.Core) (Q : Set E) {x : E}
   ((continuous_infDist_pt Q).tendsto _).comp
     ((dissipFEEC_converges F Z t hx hv).tendsto_at ⟨ht, le_rfl⟩)
 
-/-- **4c. A set that is not kept is left arbitrarily soon**: if `S(t) Q ⊄ Q` for some `t ≥ 0`,
-then for every `T > 0` some datum of `Q` leaves `Q` by time `T` (`S(t) = S(t - T) S(T)`). -/
 theorem dissipFEEC_leaves {Q : Set E} (hQ : ¬ F.Keeps Q) {T : ℝ} (hT : 0 < T) :
     ∃ x ∈ Q, F.Leaves x Q T := by
   by_contra hc
@@ -794,8 +652,6 @@ theorem dissipFEEC_leaves {Q : Set E} (hQ : ¬ F.Keeps Q) {T : ℝ} (hT : 0 < T)
   by_contra hout
   exact hc ⟨y, hy, s, hs, hout⟩
 
-/-- **4c. A non-reducing constraint is left** by a datum of `K` or of `Kᗮ` before any time
-`T > 0` (`K` reduces `A` iff both are kept). -/
 theorem dissipFEEC_leaves_of_not_isReducing (hK : ¬ A.IsReducing F.K) {T : ℝ} (hT : 0 < T) :
     ∃ Q : Submodule 𝕜 E, (Q = F.K ∨ Q = F.Kᗮ) ∧ ∃ x ∈ Q, F.Leaves x Q T := by
   by_cases hk : F.Keeps F.K
@@ -803,8 +659,6 @@ theorem dissipFEEC_leaves_of_not_isReducing (hK : ¬ A.IsReducing F.K) {T : ℝ}
       (fun h => hK ((dissipFEEC_propagates_iff F).2.2.2 ⟨hk, h⟩)) hT⟩
   · exact ⟨F.K, Or.inl rfl, dissipFEEC_leaves F hk hT⟩
 
-/-- **4c. A closed set that is not kept is left by a smooth datum**: if `D(A) ∩ Q` is dense in
-the closed `Q`, some datum of `D(A) ∩ Q` leaves `Q` by any time `T > 0`. -/
 theorem dissipFEEC_leaves_smooth {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Keeps Q)
     (hD : F.SmoothDense Q) {T : ℝ} (hT : 0 < T) :
     ∃ x ∈ (A.domain : Set E) ∩ Q, F.Leaves x Q T := by
@@ -816,78 +670,57 @@ theorem dissipFEEC_leaves_smooth {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Keeps
         by_contra fun hout => hc ⟨y, hy, s, hs, hout⟩⟩
   exact F.isMDissipative.semigroup.mem_of_dense hQc hD fun y hy => (hP y hy t ht).2
 
-/-- The conclusions of the dissipative FEEC theorem (`dissipFEEC`) for `F` and the core `Z`. -/
+/-- The conclusions of the dissipative FEEC theorem for `F` and the core `Z`. -/
 structure DissipFEEC.Verdict (Z : F.Core) : Prop where
-  /-- for `x ∈ D(A)`, the orbit `t ↦ S(t) x` is a classical solution of `u' = A u` on `[0, T]` -/
+  /-- the orbits of `D(A)` are classical solutions -/
   isClassicalSolution (x : A.domain) (T : ℝ) :
     Evolution.IsClassicalSolution A (Icc 0 T) 0 (fun t => F.S t x)
-  /-- and the only strong one -/
+  /-- and the only strong ones -/
   unique (x : A.domain) (T : ℝ) (U : ℝ → E) (hU0 : U 0 = (x : E))
     (hU : Evolution.IsStrongSolution A (Icc 0 T) 0 U) : EqOn U (fun t => F.S t x) (Icc 0 T)
-  /-- the energy identity `‖S(t) x‖² = ‖x‖² + ∫₀ᵗ 2 re ⟪S(s) A x, S(s) x⟫ ds` on `D(A)` -/
+  /-- the energy identity on `D(A)` -/
   energy (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     ‖F.S t x‖ ^ 2 = ‖(x : E)‖ ^ 2 + ∫ s in (0 : ℝ)..t, 2 * RCLike.re ⟪F.S s (A x), F.S s x⟫_𝕜
-  /-- the energy `‖S(t) x‖` of every datum is nonincreasing -/
+  /-- the energy is nonincreasing -/
   antitone (x : E) : AntitoneOn (fun t => ‖F.S t x‖) (Ici 0)
-  /-- `K` is kept iff the resolvents `(μ - A)⁻¹`, `μ > 0`, map `K` into `K` -/
+  /-- `K` is kept iff the resolvents map `K` into `K` -/
   keeps_iff_resolvent :
     F.Keeps F.K ↔ ∀ μ : ℝ, 0 < μ → ∀ y ∈ F.K, Operator.resolvent A (μ : 𝕜) y ∈ F.K
-  /-- `K` is kept iff for one `μ > 0` the stationary problem `μ u - A u = f` is solvable in
-  `D(A) ∩ K` for all `f ∈ K` -/
+  /-- `K` is kept iff the stationary problem is solvable in `D(A) ∩ K` -/
   keeps_iff_solvable : F.Keeps F.K ↔
     ∃ μ : ℝ, 0 < μ ∧ ∀ y ∈ F.K, ∃ u : A.domain, (u : E) ∈ F.K ∧ (μ : 𝕜) • (u : E) - A u = y
   /-- `K` reduces `A` iff `K` and `Kᗮ` are kept -/
   isReducing_iff : A.IsReducing F.K ↔ F.Keeps F.K ∧ F.Keeps F.Kᗮ
-  /-- on the closure of the core, the discrete states `πₕ x` converge to `x` -/
+  /-- `ιₕ πₕ x → x` on the closure of the core -/
   tendsto_incl_proj {x : E} (hx : x ∈ Z.Data.topologicalClosure) :
     F.Converges (fun h => F.proj h x) x
-  /-- on the closure of the core, from every family `ιₕ vₕ → x`, the discrete solutions converge
-  to `S(t) x` uniformly on `[0, T]` -/
+  /-- convergence on the closure of the core, uniformly on `[0, T]` -/
   converges {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x)
     (T : ℝ) : TendstoUniformlyOn (fun h t => F.sol h (v h) t) (fun t => F.S t x) F.l (Icc 0 T)
-  /-- the rate: best approximation plus consistency plus initial mismatch -/
+  /-- the rate -/
   rate {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data) (h : κ) (v : F.X h) {t : ℝ}
     (ht : t ∈ Icc 0 T) : ‖F.S t x - F.sol h v t‖ ≤
       (R.C + ‖F.incl h‖ * R.C' * t) * (R.meshSize h ^ R.α * R.classNorm x) +
         ‖F.incl h‖ * ‖R.p x h 0 - v‖
-  /-- for a kept `K`, the residual `dist(ιₕ e^{tLₕ} v, K)` is at most the error from `x ∈ K` -/
+  /-- for a kept `K`, the residual is at most the error -/
   residual_le (hK : F.Keeps F.K) {x : E} (hxK : x ∈ F.K) (h : κ) (v : F.X h) {t : ℝ}
     (ht : 0 ≤ t) : infDist (F.sol h v t) F.K ≤ ‖F.S t x - F.sol h v t‖
-  /-- for a kept `K` and `x ∈ K` in the closure of the core, the residuals of every convergent
-  family tend to `0` uniformly on `[0, T]` -/
+  /-- and tends to `0` uniformly on `[0, T]` -/
   residual_tendsto (hK : F.Keeps F.K) {x : E} (hxK : x ∈ F.K)
     (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x) (T : ℝ) :
     TendstoUniformlyOn (fun h t => infDist (F.sol h (v h) t) F.K) (fun _ => 0) F.l (Icc 0 T)
-  /-- on the closure of the core, the distances of the discrete solutions to any set `Q` tend
-  to that of the exact one (positive once it has left a closed `Q`) -/
+  /-- the distances to any set converge to that of the exact solution -/
   tendsto_infDist (Q : Set E) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h}
     (hv : F.Converges v x) {t : ℝ} (ht : 0 ≤ t) :
     Tendsto (fun h => infDist (F.sol h (v h) t) Q) F.l (𝓝 (infDist (F.S t x) Q))
-  /-- a set that is not kept is left by one of its data before any time `T > 0` -/
+  /-- a set that is not kept is left before any time `T > 0` -/
   leaves {Q : Set E} (hQ : ¬ F.Keeps Q) {T : ℝ} (hT : 0 < T) : ∃ x ∈ Q, F.Leaves x Q T
-  /-- a closed set that is not kept, with a dense part in `D(A)`, is left by a datum of that
-  part before any time `T > 0` -/
+  /-- by a datum of its dense smooth part when it is closed -/
   leaves_smooth {Q : Set E} (hQc : IsClosed Q) (hQ : ¬ F.Keeps Q) (hD : F.SmoothDense Q) {T : ℝ}
     (hT : 0 < T) : ∃ x ∈ (A.domain : Set E) ∩ Q, F.Leaves x Q T
 
-/-- **The dissipative FEEC theorem.** For a dissipative FEEC discretization `F` of `ξ' = A ξ`
-with `A` m-dissipative (discrete Hilbert spaces with their own inner products, bounded
-dissipative generators, uniformly bounded reading maps with uniformly bounded left inverses;
-variational crimes allowed) and an orbit-consistent core `Z`:
-
-1. (**well-posedness**, Lumer–Phillips) for `ξ₀ ∈ D(A)`, `t ↦ S(t) ξ₀` is a classical solution
-   and the only strong one, with the energy identity; the energy of every datum is nonincreasing;
-2. (**propagation**) `S(t) K ⊆ K` for `t ≥ 0` iff `(μ - A)⁻¹ K ⊆ K` for `μ > 0`, iff the
-   stationary problem is solvable in `D(A) ∩ K`; `K` reduces `A` iff `K` and `Kᗮ` are invariant;
-3. (**convergence**) on the closure of the core, for every family with `ιₕ vₕ → ξ₀` (and
-   `vₕ = πₕ ξ₀` is one), uniformly on `[0, T]`, and the rate
-   `(C + ‖ιₕ‖ C' t) hᵅ ‖ξ₀‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`;
-4. (**constraint residual**) for invariant `K`: bounded by the error, tends to `0`; the
-   distances of the discrete solutions to any set tend to that of the exact solution; a set that
-   is not kept is left by one of its data before any `T > 0`, by a smooth datum when it is closed
-   with a dense smooth part.
-
-Cf. [Pazy1983], §1.4 (Thm 4.3), §3.4; [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues) -/
+/-- **The dissipative FEEC theorem**: a dissipative FEEC discretization with an orbit-consistent
+core satisfies `DissipFEEC.Verdict` (cf. [Pazy1983], §1.4, Thm 4.3, §3.4). -/
 theorem dissipFEEC (Z : F.Core) : F.Verdict Z where
   isClassicalSolution x T := (dissipFEEC_wellPosed F x T).1
   unique x T U hU0 hU := (dissipFEEC_wellPosed F x T).2.1 U hU0 hU
@@ -906,10 +739,6 @@ theorem dissipFEEC (Z : F.Core) : F.Verdict Z where
   leaves_smooth := fun {_} hQc hQ hD {_} hT => dissipFEEC_leaves_smooth F hQc hQ hD hT
 
 variable {F} in
-/-- **A departure is detected by the residuals** (a corollary of the verdict, not a field): if
-`S(t) x ∉ Q` (`t ≥ 0`) for a closed nonempty `Q`, then `dist(S(t) x, Q) > 0`, and when `x` is in
-the closure of the core, the residuals `dist(ιₕ e^{tLₕ} vₕ, Q)` of every family `ιₕ vₕ → x` tend to
-it (`tendsto_infDist`), so they eventually exceed half of it. -/
 theorem DissipFEEC.Verdict.detects {Z : F.Core} (V : F.Verdict Z) {Q : Set E} (hQc : IsClosed Q)
     (hQ : Q.Nonempty) {x : E} {t : ℝ} (ht : 0 ≤ t) (hout : F.S t x ∉ Q) :
     0 < infDist (F.S t x) Q ∧ (x ∈ Z.Data.topologicalClosure → ∀ v : ∀ h, F.X h,
@@ -922,10 +751,6 @@ theorem DissipFEEC.Verdict.detects {Z : F.Core} (V : F.Verdict Z) {Q : Set E} (h
   exact ⟨hlim, (tendsto_order.1 hlim).1 _ (half_lt_self hpos)⟩
 
 variable {F} in
-/-- **The residuals vanish in the limit exactly along the data that stay** (a corollary of the
-verdict, not a field): for a closed nonempty `Q`, a datum `x` in the closure of the core and a
-family `ιₕ vₕ → x`, the residuals `dist(ιₕ e^{tLₕ} vₕ, Q)` tend to `0` at every `t ≥ 0` iff
-`S(t) x ∈ Q` for every `t ≥ 0` (`tendsto_infDist`; limits are unique along a nontrivial filter). -/
 theorem DissipFEEC.Verdict.tendsto_infDist_zero_iff {Z : F.Core} (V : F.Verdict Z) [F.l.NeBot]
     {Q : Set E} (hQc : IsClosed Q) (hQ : Q.Nonempty) {x : E}
     (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x) :

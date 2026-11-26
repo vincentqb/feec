@@ -6,44 +6,13 @@ public import Feec.Models.Cube.DeRhamIdent
 # Hodge theory of `HΛ((0, ½)ⁿ)` and `H̊Λ((0, ½)ⁿ)`: Poincaré, closed range, harmonic forms,
 compactness
 
-From the identification of the de Rham complexes of `Q = (0, ½)ⁿ` with the parity classes of the
-torus de Rham complex (`Feec.Models.Cube.DeRhamIdent.HQmin_eq_compress`,
-`Feec.Models.Cube.DeRhamIdent.HQmax_eq_compress`) this file proves, for the `ℤ`-indexed complexes
-`Hmax n = HΛ(Q)` and `Hmin n = H̊Λ(Q)` (`Feec.Domain.DeRham` on `Q`), in every dimension `n` and
-degree:
+The Poincaré inequality, compactness and harmonic forms of `HΛ(Q)` and `H̊Λ(Q)` on `Q = (0, ½)ⁿ`,
+from the torus through compressions.
 
-* **the Poincaré inequality** `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ` (`Hmax_norm_le`,
-  `Hmin_norm_le`);
-* **the compactness property** (`Hmax_hasCompactProperty`, `Hmin_hasCompactProperty`; Rellich and
-  Gaffney on the cube);
-* **the harmonic forms**: `ℌᵏ(HΛ(Q)) = 0` for `k ≠ 0` and `ℌ⁰(HΛ(Q))` is the line of the constants
-  (`Hmax_harmonic_eq_bot`, `Hmax_harmonic_zero`); `ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ n` and `ℌⁿ(H̊Λ(Q))` is
-  the line of the constant volume form `dx₁ ∧ ⋯ ∧ dxₙ` (`Hmin_harmonic_eq_bot`,
-  `Hmin_harmonic_top`); so `HΛ(Q)` has closed range and finite-dimensional cohomology in every
-  degree (`Hmax_closedRangeAt`, instance `Hmax_finiteDimensional_cohomology`).
+## Main results
 
-The constant is the one of the torus, `(2π)⁻¹` (the first nonzero frequency `2π` of `𝕋ⁿ`); it is
-sharp, since `cos 2πx` on `(0, ½)` is a Neumann eigenfunction, but sharpness is not formalized. The transfer from the torus uses two abstract
-facts on compressions along scaled isometries: the Poincaré inequality passes with the same
-constant (`Feec.HilbertComplex.norm_le_of_mem_orthogonal_compress`) and the harmonic forms are
-those whose image is harmonic (`Feec.HilbertComplex.mem_harmonic_compress_iff`); the windows
-`Λ⁰ → ⋯ → Λⁿ` pass to the `ℤ`-indexed complexes since the spaces outside `0 ≤ k ≤ n` are zero
-(`Feec.HilbertComplex.norm_le_of_mem_orthogonal_cycles_of_window`,
-`Feec.HilbertComplex.hasCompactProperty_of_window`, `Feec.HilbertComplex.harmonic_le_window`).
-The statements on `Feec.Models.Cube.FEM.complex` and `Feec.Models.Cube.FEM.complexMin`, in the form
-consumed by the finite element method, are in `Feec.Models.Cube.DeRhamIdentFEM`.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (Poincaré inequality, closed range), §4.3 (compactness, harmonic forms of the de Rham
-  complex)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (harmonic forms and
-  cohomology of the de Rham complex with boundary conditions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (Poincaré ⇔ closed range, compactness property)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `Hmax_norm_le`, `Hmin_norm_le`: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`.
+* `Hmax_harmonic_zero`, `Hmin_harmonic_top`: the harmonic forms of degree `0` and `n`.
 -/
 
 open scoped InnerProductSpace ComplexConjugate Topology Finset
@@ -67,7 +36,6 @@ include hs hJ hR
 theorem J_injective_compress (i : ι) : Function.Injective (J i) :=
   (ScaledEmbedding.ofCompress hs hJ hR).J_injective i
 
-/-- The kernels of a compression are the preimages of the kernels. -/
 theorem mem_ker_compress_iff {i j : ι} {x : W' i} :
     x ∈ ((H.compress J hs hJ hR).d i j).ker ↔ J i x ∈ (H.d i j).ker := by
   rw [mem_ker_iff, mem_ker_iff]
@@ -82,8 +50,6 @@ theorem mem_ker_compress_iff {i j : ι} {x : W' i} :
     rw [J_compress_d, _root_.map_zero, ← hy2]
     exact apply_congr' _ _ _ hy1
 
-/-- The kernels of the adjoints of a compression are the preimages of the kernels of the
-adjoints. -/
 theorem mem_ker_adjoint_compress_iff {i j : ι} {y : W' j} :
     y ∈ (((H.compress J hs hJ hR).d i j)†).ker ↔ J j y ∈ ((H.d i j)†).ker := by
   rw [mem_ker_iff, mem_ker_iff]
@@ -165,7 +131,6 @@ theorem RT_adjoint (a b : Fin (Fintype.card (Fin n) + 1)) :
   ((Torus.DeRham.window (Fin n)).d a b).adjoint_restrictScalars (real_inner_TW a)
     (real_inner_TW b) ((Torus.DeRham.window (Fin n)).dense a b)
 
-/-- **The compactness property of the real torus window** (Rellich on `𝕋ⁿ`). -/
 theorem RT_hasCompactProperty : (RT n).HasCompactProperty := fun a => by
   obtain ⟨K, hK, hsub⟩ := Torus.DeRham.window_hasCompactProperty (d := Fin n) a
   refine ⟨K, hK, fun x hx hx' h1 h2 h3 => ?_⟩
@@ -177,8 +142,6 @@ theorem RT_hasCompactProperty : (RT n).HasCompactProperty := fun a => by
     apply_eq_of_eq (RT_adjoint p a) ⟨x, hx'⟩ ⟨x, hx''⟩ rfl
   rw [← e]; exact h3
 
-/-- **The Poincaré inequality of the real torus window**: `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on
-`D(d) ∩ N(d)ᗮ` (real orthogonality). -/
 theorem RT_norm_le (a b : Fin (Fintype.card (Fin n) + 1)) (u : ((RT n).d a b).domain)
     (hu : (u : TW n a) ∈ ((RT n).d a b).kerᗮ) :
     ‖(u : TW n a)‖ ≤ (2 * Real.pi)⁻¹ * ‖(RT n).d a b u‖ := by
@@ -199,7 +162,6 @@ theorem RT_norm_le (a b : Fin (Fintype.card (Fin n) + 1)) (u : ((RT n).d a b).do
     · simpa using h2
   exact DeRham.window_norm_le_of_mem_orthogonal (d := Fin n) ⟨u.1, u.2⟩ hu'
 
-/-- **The harmonic forms of the real torus window** are the constant forms. -/
 theorem mem_RT_harmonic_iff {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a} :
     x ∈ (RT n).harmonic a ↔ ∀ m, m ≠ 0 → (x : (Fin n → ℤ) → Form ℂ (Fin n) a) m = 0 := by
   rw [← DeRham.mem_window_harmonic_iff]
@@ -211,19 +173,16 @@ theorem mem_RT_harmonic_iff {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a} :
 
 /-! ### The windows of `H̊Λ(Q)` and `HΛ(Q)` -/
 
-/-- **The compactness property of `H̊Λ(Q)`** (window). -/
 theorem HQmin_hasCompactProperty : (HQmin n).HasCompactProperty := by
   rw [HQmin_eq_compress]
   exact Feec.HilbertComplex.hasCompactProperty_compress two_pow_pos (inner_J true)
     (reducing_range true) RT_hasCompactProperty
 
-/-- **The compactness property of `HΛ(Q)`** (window). -/
 theorem HQmax_hasCompactProperty : (HQmax n).HasCompactProperty := by
   rw [HQmax_eq_compress]
   exact Feec.HilbertComplex.hasCompactProperty_compress two_pow_pos (inner_J false)
     (reducing_range false) RT_hasCompactProperty
 
-/-- **The Poincaré inequality of `H̊Λ(Q)`** (window), constant `(2π)⁻¹`. -/
 theorem HQmin_norm_le (a b : Fin (Fintype.card (Fin n) + 1)) (u : ((HQmin n).d a b).domain)
     (hu : (u : WQ n a) ∈ ((HQmin n).d a b).kerᗮ) :
     ‖(u : WQ n a)‖ ≤ (2 * Real.pi)⁻¹ * ‖(HQmin n).d a b u‖ := by
@@ -236,7 +195,6 @@ theorem HQmin_norm_le (a b : Fin (Fintype.card (Fin n) + 1)) (u : ((HQmin n).d a
       (reducing_range true) (RT_norm_le a b) u hu
   exact key _ HQmin_eq_compress u hu
 
-/-- **The Poincaré inequality of `HΛ(Q)`** (window), constant `(2π)⁻¹`. -/
 theorem HQmax_norm_le (a b : Fin (Fintype.card (Fin n) + 1)) (u : ((HQmax n).d a b).domain)
     (hu : (u : WQ n a) ∈ ((HQmax n).d a b).kerᗮ) :
     ‖(u : WQ n a)‖ ≤ (2 * Real.pi)⁻¹ * ‖(HQmax n).d a b u‖ := by
@@ -261,8 +219,6 @@ theorem mem_HQmax_harmonic_iff {a : Fin (Fintype.card (Fin n) + 1)} {x : WQ n a}
   rw [HQmax_eq_compress, Feec.HilbertComplex.mem_harmonic_compress_iff, mem_RT_harmonic_iff]
   rfl
 
-/-- A harmonic real parity sequence has only the zero mode, whose coefficients are fixed by every
-`± ε_j`. -/
 theorem eq_zero_of_harmonic_parity {rel : Bool} {k : ℕ} {x : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hx : ∀ m, m ≠ 0 → (Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0)
     (ht : ∀ t : formIdx n k, ∃ j, DeRham.parSign rel * DeRham.reflSign j t.1 ≠ 1) :
@@ -281,7 +237,6 @@ theorem eq_zero_of_harmonic_parity {rel : Bool} {k : ℕ} {x : L2F ℝ (Q (Fin n
     rw [this]; rfl
   · exact hx m hm
 
-/-- **No harmonic forms of `HΛ(Q)` in positive degrees** (window). -/
 theorem HQmax_harmonic_eq_bot {a : Fin (Fintype.card (Fin n) + 1)} (ha : (a : ℕ) ≠ 0) :
     (HQmax n).harmonic a = ⊥ := by
   rw [eq_bot_iff]
@@ -291,7 +246,6 @@ theorem HQmax_harmonic_eq_bot {a : Fin (Fintype.card (Fin n) + 1)} (ha : (a : �
   obtain ⟨j, hj⟩ : t.1.Nonempty := Finset.card_pos.1 (by have := t.2; omega)
   exact ⟨j, by simp [DeRham.parSign, DeRham.reflSign, hj]; norm_num⟩
 
-/-- **No harmonic forms of `H̊Λ(Q)` below the top degree** (window). -/
 theorem HQmin_harmonic_eq_bot {a : Fin (Fintype.card (Fin n) + 1)}
     (ha : (a : ℕ) ≠ Fintype.card (Fin n)) : (HQmin n).harmonic a = ⊥ := by
   rw [eq_bot_iff]
@@ -320,8 +274,6 @@ def zeroCoeff (rel : Bool) (k : ℕ) (t₀ : formIdx n k)
       from (RCLike.real_smul_eq_coe_smul c _), DeRham.coeFn_smul_count]
     simp
 
-/-- **A degree with a single index set has at most one harmonic direction**: on forms whose
-extension has only the zero mode, the real zero-mode coefficient is injective. -/
 theorem injective_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : formIdx n k)
     (h₀ : ∀ t, t = t₀) (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
@@ -369,7 +321,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {V : ℤ → Type*} [∀ i, NormedAddCommG
   (hf : ∀ a b : Fin (N + 1), (ComplexShape.up ℤ).Rel ((a : ℕ) : ℤ) ((b : ℕ) : ℤ) →
     (ComplexShape.window (N + 1)).Rel a b)
 
-/-- The adjoint of the zero map has full domain and vanishes. -/
 theorem mem_adjoint_zero_domain {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace E] (y : F) :
     y ∈ ((0 : E →ₗ.[𝕜] F)†).domain :=
@@ -397,7 +348,6 @@ theorem mem_ker_of_eq_zero {E F : Type*} [AddCommGroup E] [Module 𝕜 E] [AddCo
   subst hT
   exact mem_ker_iff.2 ⟨⟨x, Submodule.mem_top⟩, rfl, rfl⟩
 
-/-- At the last index of the window, the outgoing differential is `0`. -/
 theorem window_d_next_last (a : Fin (N + 1)) (ha : ¬ (a : ℕ) < N) :
     (H.restrict (fun a : Fin (N + 1) => ((a : ℕ) : ℤ)) hf).d a
       ((ComplexShape.window (N + 1)).next a) = 0 :=
@@ -406,7 +356,6 @@ theorem window_d_next_last (a : Fin (N + 1)) (ha : ¬ (a : ℕ) < N) :
     have := ((ComplexShape.window (N + 1)).next a).2
     omega
 
-/-- At the first index of the window, the incoming differential is `0`. -/
 theorem window_d_prev_zero (a : Fin (N + 1)) (ha : (a : ℕ) = 0) :
     (H.restrict (fun a : Fin (N + 1) => ((a : ℕ) : ℤ)) hf).d
       ((ComplexShape.window (N + 1)).prev a) a = 0 :=
@@ -414,8 +363,6 @@ theorem window_d_prev_zero (a : Fin (N + 1)) (ha : (a : ℕ) = 0) :
     change (((ComplexShape.window (N + 1)).prev a : Fin (N + 1)) : ℕ) + 1 = (a : ℕ) at h
     omega
 
-/-- **The Poincaré inequality on `ℤ` from the window**, when the spaces outside `0, …, N` are
-zero. -/
 theorem norm_le_of_mem_orthogonal_cycles_of_window {C : ℝ} (hC : 0 ≤ C)
     (hlow : ∀ i : ℤ, i < 0 → Subsingleton (V i)) (hhigh : ∀ i : ℤ, (N : ℤ) < i → Subsingleton (V i))
     (hP : ∀ (a b : Fin (N + 1))
@@ -444,8 +391,6 @@ theorem norm_le_of_mem_orthogonal_cycles_of_window {C : ℝ} (hC : 0 ≤ C)
     have hm : m < N := by omega
     exact hP ⟨m, by omega⟩ ⟨m + 1, by omega⟩ z hz
 
-/-- **The compactness property on `ℤ` from the window**, when the spaces outside `0, …, N` are
-zero. -/
 theorem hasCompactProperty_of_window
     (hlow : ∀ i : ℤ, i < 0 → Subsingleton (V i)) (hhigh : ∀ i : ℤ, (N : ℤ) < i → Subsingleton (V i))
     (hW : (H.restrict (fun a : Fin (N + 1) => ((a : ℕ) : ℤ)) hf).HasCompactProperty) :
@@ -497,7 +442,6 @@ theorem hasCompactProperty_of_window
         positivity
       exact key _ h0
 
-/-- **The harmonic forms on `ℤ` are harmonic in the window.** -/
 theorem harmonic_le_window (a : Fin (N + 1)) :
     H.harmonic ((a : ℕ) : ℤ) ≤
       (H.restrict (fun a : Fin (N + 1) => ((a : ℕ) : ℤ)) hf).harmonic a := by
@@ -640,7 +584,6 @@ theorem toL2F_eq_zero {Ω : Set (Fin n → ℝ)} {ι : Type} [Fintype ι] {ψ : 
   change ((hψ i).toLp (ψ i) : (Fin n → ℝ) → ℝ) y = _
   rw [h1, h2, h0]; rfl
 
-/-- The adjoint of an operator out of a zero space has full domain and vanishes. -/
 theorem mem_ker_adjoint_of_subsingleton {E F : Type*} [NormedAddCommGroup E]
     [InnerProductSpace ℝ E] [CompleteSpace E] [Subsingleton E] [NormedAddCommGroup F]
     [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (y : F) : y ∈ (T†).ker :=
@@ -649,7 +592,6 @@ theorem mem_ker_adjoint_of_subsingleton {E F : Type*} [NormedAddCommGroup E]
       rw [show x = 0 from Subsingleton.elim _ _, T.map_zero], inner_zero_right]⟩⟩,
     rfl, Subsingleton.elim _ _⟩
 
-/-- **Operators into a zero space have full minimal domain**: test fields are dense. -/
 theorem minimal_domain_eq_top_of_isEmpty {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) {ι κ : Type}
     [Fintype ι] [Fintype κ] [IsEmpty κ] (A : Feec.Domain.ConstCoeffOp (Fin n → ℝ) ℝ ι κ) :
     (A.minimal Ω).domain = ⊤ := by
@@ -690,8 +632,7 @@ theorem oneQ_mem_harmonic : oneQ n ∈ (Hmax n).harmonic 0 := by
     have : Subsingleton (L2F ℝ (Q (Fin n)) (formIdx n (-1))) := hlow _ (-1) (by norm_num)
     exact mem_ker_adjoint_of_subsingleton _ _
 
-/-- The constant volume form `dx₁ ∧ ⋯ ∧ dxₙ` on `Q`, in a degree `idx = n` given by its index
-set. -/
+/-- The constant volume form `dx₁ ∧ ⋯ ∧ dxₙ` on `Q`, in a degree `idx = n`. -/
 abbrev volQ {idx : ℤ} (h : ((#(Finset.univ : Finset (Fin n)) : ℕ) : ℤ) = idx) :
     L2F ℝ (Q (Fin n)) (formIdx n idx) :=
   constForm measurableSet_Q (isBounded_openCube _ _) ⟨Finset.univ, h⟩
@@ -743,12 +684,10 @@ theorem harmonic_eq_bot_of_window {H : HilbertComplex ℝ (ComplexShape.up ℤ)
   rw [eq_bot_iff, ← hW m hm rfl]
   exact Feec.HilbertComplex.harmonic_le_window H hf ⟨m, hm⟩
 
-/-- **No harmonic forms of `HΛ(Q)` in degrees `≠ 0`.** -/
 theorem Hmax_harmonic_eq_bot {k : ℤ} (hk : k ≠ 0) : (Hmax n).harmonic k = ⊥ :=
   harmonic_eq_bot_of_window ι_rel fun m hm e =>
     HQmax_harmonic_eq_bot (a := ⟨m, hm⟩) (by change m ≠ 0; omega)
 
-/-- **No harmonic forms of `H̊Λ(Q)` in degrees `≠ n`.** -/
 theorem Hmin_harmonic_eq_bot {k : ℤ} (hk : k ≠ n) : (Hmin n).harmonic k = ⊥ :=
   harmonic_eq_bot_of_window ι_rel fun m hm e =>
     HQmin_harmonic_eq_bot (a := ⟨m, hm⟩) (by
@@ -808,11 +747,10 @@ theorem Hmin_harmonic_top : (Hmin n).harmonic n = ℝ ∙ volQ (card_univ_eq n) 
     exact hne (by simpa [this] using hmem)
   exact eq_span_singleton_of_mem_of_finrank_eq_one (by omega) hmem hne
 
-/-- `j - 1 → j` is an arrow of `ComplexShape.up ℤ`. -/
 theorem rel_sub_one (j : ℤ) : (ComplexShape.up ℤ).Rel (j - 1) j := by
   change j - 1 + 1 = j; ring
 
-/-- **Closed range of `HΛ(Q)` in every degree** (the Poincaré inequality `Hmax_norm_le`). -/
+/-- **Closed range of `HΛ(Q)` in every degree.** -/
 theorem Hmax_closedRangeAt (j : ℤ) : (Hmax n).ClosedRangeAt j :=
   ((Hmax n).closedRangeAt_iff_poincare_of_rel (rel_sub_one j)).2
     ⟨_, fun x hx => Hmax_norm_le (rel_sub_one j) x hx⟩
@@ -823,8 +761,7 @@ instance Hmax_finiteDimensional_harmonic (k : ℤ) : FiniteDimensional ℝ ((Hma
   · subst hk; rw [Hmax_harmonic_zero]; infer_instance
   · rw [Hmax_harmonic_eq_bot hk]; infer_instance
 
-/-- **The cohomology of `HΛ(Q)` is finite-dimensional in every degree** (harmonic forms represent
-it under closed range). -/
+/-- **The cohomology of `HΛ(Q)` is finite-dimensional in every degree.** -/
 instance Hmax_finiteDimensional_cohomology (k : ℤ) :
     FiniteDimensional ℝ
       (((Feec.Domain.deRham ℝ n).maximalComplex (isOpen_Q (d := Fin n))).cohomology k) :=

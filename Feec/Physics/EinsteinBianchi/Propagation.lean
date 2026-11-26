@@ -9,18 +9,12 @@ public import Mathlib.Analysis.Calculus.ParametricIntegral
 /-!
 # Constraint propagation for the linearized Einstein–Bianchi system on `ℝ³`
 
-**Prop 3.6** (corrected and proved directly on `ℝ³`): for `C²` solutions `E, B` of
-`Ė = -curl B`, `Ḃ = curl E` with compact spatial support (locally uniformly in time), TSD data
-(symmetric, trace-free, divergence-free) stay TSD for all `t ≥ 0`. The proof: the divergences are
-conserved (`div_const_field`, from `div curl = 0`), and the violation energy
-`e = (tr E)² + 4|vskw E|² + (tr B)² + 4|vskw B|²` satisfies `½ ∂_t e = div F`, so `∫ e` is
-conserved (`tsd_propagates`). `propagation_hyps_nonvacuous` shows the hypotheses other than TSD
-data are satisfiable by nonzero fields.
+For `C²` solutions of `Ė = -curl B`, `Ḃ = curl E` on `ℝ³` with compact spatial support, locally
+uniformly in time, TSD data stay TSD for all `t ≥ 0` ([QuennevilleBelair2015], Prop 3.6 (adapted)).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 3.6 (the thesis' route via Cor 4.5 is replaced)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -34,44 +28,36 @@ namespace Feec.EinsteinBianchi
 
 section Calculus
 
-/-! ### Regularity and product rules for the violation energy and flux -/
-
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
   {M N P Q : X → Matrix (Fin 3) (Fin 3) ℝ}
 
-/-- Components of the violation flux (Thesis Prop 3.6, energy step). -/
 theorem flux_apply (E B : Matrix (Fin 3) (Fin 3) ℝ) (c : Fin 3) :
     flux E B c = 2 * E.trace * vskw B c - 2 * B.trace * vskw E c +
       4 * (vskw E ⨯₃ vskw B) c := by
   simp [flux]
 
-/-- Components of the linearized violation flux (Thesis Prop 3.6, energy step). -/
 theorem fluxD_apply (E B dE dB : Matrix (Fin 3) (Fin 3) ℝ) (c : Fin 3) :
     fluxD E B dE dB c = 2 * dE.trace * vskw B c + 2 * E.trace * vskw dB c -
       2 * dB.trace * vskw E c - 2 * B.trace * vskw dE c +
       4 * ((vskw dE ⨯₃ vskw B) c + (vskw E ⨯₃ vskw dB) c) := by
   simp [fluxD]; ring
 
-/-- `tr M` is `C¹` if `M` is (regularity for Thesis Prop 3.6). -/
 theorem cd_trace (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j) :
     ContDiff ℝ 1 fun y => (M y).trace := by
   simp only [Matrix.trace, Matrix.diag]
   exact ContDiff.sum fun i _ => hM i i
 
-/-- `vskw M` is `C¹` if `M` is (regularity for Thesis Prop 3.6). -/
 theorem cd_vskw (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j) (a : Fin 3) :
     ContDiff ℝ 1 fun y => vskw (M y) a := by
   simp only [vskw_apply, invOf_eq_inv]
   exact contDiff_const.mul
     (ContDiff.sum fun b _ => ContDiff.sum fun c _ => contDiff_const.mul (hM b c))
 
-/-- Dot products of `C¹` vector fields are `C¹` (regularity for Thesis Prop 3.6). -/
 theorem cd_dot {u v : X → Fin 3 → ℝ} (hu : ∀ a, ContDiff ℝ 1 fun y => u y a)
     (hv : ∀ a, ContDiff ℝ 1 fun y => v y a) : ContDiff ℝ 1 fun y => u y ⬝ᵥ v y := by
   simp only [dotProduct]
   exact ContDiff.sum fun a _ => (hu a).mul (hv a)
 
-/-- Cross products of `C¹` vector fields are `C¹` (regularity for Thesis Prop 3.6). -/
 theorem cd_cross {u v : X → Fin 3 → ℝ} (hu : ∀ a, ContDiff ℝ 1 fun y => u y a)
     (hv : ∀ a, ContDiff ℝ 1 fun y => v y a) (a : Fin 3) :
     ContDiff ℝ 1 fun y => (u y ⨯₃ v y) a := by
@@ -80,7 +66,6 @@ theorem cd_cross {u v : X → Fin 3 → ℝ} (hu : ∀ a, ContDiff ℝ 1 fun y =
   · exact ((hu 2).mul (hv 0)).sub ((hu 0).mul (hv 2))
   · exact ((hu 0).mul (hv 1)).sub ((hu 1).mul (hv 0))
 
-/-- `energyD` of `C¹` fields is `C¹` (regularity for Thesis Prop 3.6). -/
 theorem cd_energyD (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
     (hN : ∀ i j, ContDiff ℝ 1 fun y => N y i j) (hP : ∀ i j, ContDiff ℝ 1 fun y => P y i j)
     (hQ : ∀ i j, ContDiff ℝ 1 fun y => Q y i j) :
@@ -91,7 +76,6 @@ theorem cd_energyD (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
     ((contDiff_const.mul (cd_trace hN)).mul (cd_trace hQ))).add
     (contDiff_const.mul (cd_dot (cd_vskw hN) (cd_vskw hQ)))
 
-/-- The violation energy of `C¹` fields is `C¹` (regularity for Thesis Prop 3.6). -/
 theorem cd_energy (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
     (hN : ∀ i j, ContDiff ℝ 1 fun y => N y i j) :
     ContDiff ℝ 1 fun y => energy (M y) (N y) := by
@@ -99,7 +83,6 @@ theorem cd_energy (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
   exact ((((cd_trace hM).pow 2).add (contDiff_const.mul (cd_dot (cd_vskw hM) (cd_vskw hM)))).add
     ((cd_trace hN).pow 2)).add (contDiff_const.mul (cd_dot (cd_vskw hN) (cd_vskw hN)))
 
-/-- The violation flux of `C¹` fields is `C¹` (regularity for Thesis Prop 3.6). -/
 theorem cd_flux (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
     (hN : ∀ i j, ContDiff ℝ 1 fun y => N y i j) (c : Fin 3) :
     ContDiff ℝ 1 fun y => flux (M y) (N y) c := by
@@ -108,7 +91,6 @@ theorem cd_flux (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
     ((contDiff_const.mul (cd_trace hN)).mul (cd_vskw hM c))).add
     (contDiff_const.mul (cd_cross (cd_vskw hM) (cd_vskw hN) c))
 
-/-- `fluxD` of `C¹` fields is `C¹` (regularity for Thesis Prop 3.6). -/
 theorem cd_fluxD (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
     (hN : ∀ i j, ContDiff ℝ 1 fun y => N y i j) (hP : ∀ i j, ContDiff ℝ 1 fun y => P y i j)
     (hQ : ∀ i j, ContDiff ℝ 1 fun y => Q y i j) (c : Fin 3) :
@@ -123,20 +105,17 @@ theorem cd_fluxD (hM : ∀ i j, ContDiff ℝ 1 fun y => M y i j)
 
 variable {m n : ℝ → Matrix (Fin 3) (Fin 3) ℝ} {m' n' : Matrix (Fin 3) (Fin 3) ℝ} {s : ℝ}
 
-/-- Derivative of `tr m(r)` along a curve (product rules for Thesis Prop 3.6). -/
 theorem hd_trace (hm : ∀ i j, HasDerivAt (fun r => m r i j) (m' i j) s) :
     HasDerivAt (fun r => (m r).trace) m'.trace s := by
   simp only [Matrix.trace, Matrix.diag]
   exact HasDerivAt.fun_sum fun i _ => hm i i
 
-/-- Derivative of `vskw m(r)` along a curve (product rules for Thesis Prop 3.6). -/
 theorem hd_vskw (hm : ∀ i j, HasDerivAt (fun r => m r i j) (m' i j) s) (a : Fin 3) :
     HasDerivAt (fun r => vskw (m r) a) (vskw m' a) s := by
   simp only [vskw_apply, invOf_eq_inv]
   exact (HasDerivAt.fun_sum fun b _ => HasDerivAt.fun_sum fun c _ =>
     (hm b c).const_mul _).const_mul _
 
-/-- Product rule for the dot product (Thesis Prop 3.6). -/
 theorem hd_dot {u v : ℝ → Fin 3 → ℝ} {u' v' : Fin 3 → ℝ}
     (hu : ∀ a, HasDerivAt (fun r => u r a) (u' a) s)
     (hv : ∀ a, HasDerivAt (fun r => v r a) (v' a) s) :
@@ -146,7 +125,6 @@ theorem hd_dot {u v : ℝ → Fin 3 → ℝ} {u' v' : Fin 3 → ℝ}
   convert this using 1
   rw [← Finset.sum_add_distrib]
 
-/-- Product rule for the cross product (Thesis Prop 3.6). -/
 theorem hd_cross {u v : ℝ → Fin 3 → ℝ} {u' v' : Fin 3 → ℝ}
     (hu : ∀ a, HasDerivAt (fun r => u r a) (u' a) s)
     (hv : ∀ a, HasDerivAt (fun r => v r a) (v' a) s) (a : Fin 3) :
@@ -162,7 +140,6 @@ theorem hd_cross {u v : ℝ → Fin 3 → ℝ} {u' v' : Fin 3 → ℝ}
     · funext r; simp [cross_apply]
     · simp [cross_apply]; ring
 
-/-- Chain rule for the violation energy: its derivative is `energyD` (Thesis Prop 3.6). -/
 theorem hd_energy (hm : ∀ i j, HasDerivAt (fun r => m r i j) (m' i j) s)
     (hn : ∀ i j, HasDerivAt (fun r => n r i j) (n' i j) s) :
     HasDerivAt (fun r => energy (m r) (n r)) (energyD (m s) (n s) m' n') s := by
@@ -173,7 +150,6 @@ theorem hd_energy (hm : ∀ i j, HasDerivAt (fun r => m r i j) (m' i j) s)
     dotProduct_comm (vskw n') (vskw (n s))]
   push_cast; ring
 
-/-- Chain rule for the violation flux: its derivative is `fluxD` (Thesis Prop 3.6). -/
 theorem hd_flux (hm : ∀ i j, HasDerivAt (fun r => m r i j) (m' i j) s)
     (hn : ∀ i j, HasDerivAt (fun r => n r i j) (n' i j) s) (c : Fin 3) :
     HasDerivAt (fun r => flux (m r) (n r) c) (fluxD (m s) (n s) m' n' c) s := by
@@ -192,7 +168,6 @@ section FiniteSpeed
 /-- The point `(t, x) ∈ ℝ⁴`. -/
 abbrev ev (t : ℝ) (x : Fin 3 → ℝ) : Fin 4 → ℝ := Fin.cons t x
 
-/-- `f(t) = f(0)` for `t ≥ 0` if `f' = 0` on `t > 0`. -/
 theorem const_of_deriv_pos {f f' : ℝ → ℝ} (hd : ∀ t, HasDerivAt f (f' t) t)
     (h0 : ∀ t, 0 < t → f' t = 0) (t : ℝ) (ht : 0 ≤ t) : f t = f 0 := by
   rcases ht.eq_or_lt with h | h
@@ -204,7 +179,6 @@ theorem const_of_deriv_pos {f f' : ℝ → ℝ} (hd : ∀ t, HasDerivAt f (f' t)
   · linarith
   · linarith
 
-/-- If two functions agree on `{t > 0}`, so do their partial derivatives there. -/
 theorem partialDeriv_congr_pos {f g : (Fin 4 → ℝ) → ℝ} (h : ∀ Z : (Fin 4 → ℝ), 0 < Z 0 → f Z = g Z) {Y : (Fin 4 → ℝ)}
     (hY : 0 < Y 0) (μ : Fin 4) : partialDeriv μ f Y = partialDeriv μ g Y := by
   have ho : IsOpen {Z : (Fin 4 → ℝ) | 0 < Z 0} := isOpen_lt continuous_const (continuous_apply 0)
@@ -221,7 +195,6 @@ def TSDAt (M : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (Y : (Fin 4 → �
 
 variable {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
 
-/-- `∂_μ` of `curl B` is `curl` of the jet of `∂_μ B`. -/
 theorem partialDeriv_curl (hB : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j) (Y : (Fin 4 → ℝ)) (μ : Fin 4) (i j : Fin 3) :
     partialDeriv μ (fun Z => curl (sp (jet4 B Z)) i j) Y = curl (sp (jet42 B Y μ)) i j := by
   have hd : ∀ c a d, Differentiable ℝ (partialDeriv c fun Z => B Z a d) := fun c a d =>
@@ -233,8 +206,8 @@ theorem partialDeriv_curl (hB : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j) (Y : (
   rw [partialDeriv_fintype_sum (fun d => ((hd c.succ i d).const_mul _) Y)]
   exact Finset.sum_congr rfl fun d _ => partialDeriv_const_mul ((hd c.succ i d) Y) _ _
 
-/-- **Thesis Prop 3.6, step 1** (field version): the divergence constraints propagate for
-`t ≥ 0`, by `∂_t div E = -div curl B = 0` (`div_propagation`). -/
+/-- For `C²` solutions of `Ė = -curl B`, `Ḃ = curl E` on `t > 0`, the divergences of `E` and `B`
+are constant in time for `t ≥ 0`. -/
 theorem div_const_field (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j)
     (hEeq : ∀ Y : (Fin 4 → ℝ), 0 < Y 0 → jet4 E Y 0 = -curl (sp (jet4 B Y)))
@@ -284,7 +257,6 @@ theorem div_const_field (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     simpa [div, sp, jet4] using this
   exact ⟨key E hEc fun Y hY => (prop Y hY).1, key B hBc fun Y hY => (prop Y hY).2⟩
 
-/-- The partial derivatives of the violation flux of `C¹` fields (product rule). -/
 theorem partialDeriv_flux (hE1 : ∀ i j, ContDiff ℝ 1 fun Y => E Y i j)
     (hB1 : ∀ i j, ContDiff ℝ 1 fun Y => B Y i j) (Y : (Fin 4 → ℝ)) (μ : Fin 4) (c : Fin 3) :
     partialDeriv μ (fun Y => flux (E Y) (B Y) c) Y =
@@ -297,41 +269,18 @@ theorem partialDeriv_flux (hE1 : ∀ i j, ContDiff ℝ 1 fun Y => E Y i j)
   simp only [zero_smul, add_zero] at h2
   exact h1.unique h2
 
-/-- `vskw 0 = 0`. -/
 @[simp] theorem vskw_zero : vskw (0 : Matrix (Fin 3) (Fin 3) ℝ) = 0 := by
   ext a; simp [vskw_apply, invOf_eq_inv]
 
-/-- `energyD` vanishes where the fields vanish (Thesis Prop 3.6, compact support). -/
 theorem energyD_zero_left (dE dB : Matrix (Fin 3) (Fin 3) ℝ) : energyD 0 0 dE dB = 0 := by
   simp [energyD]
 
-/-- `fluxD` vanishes where the fields vanish (Thesis Prop 3.6, compact support). -/
 theorem fluxD_zero_left (dE dB : Matrix (Fin 3) (Fin 3) ℝ) (c : Fin 3) :
     fluxD 0 0 dE dB c = 0 := by
   simp [fluxD]
 
-/-- **Thesis Prop 3.6** (constraint propagation for the linearized EB system), on `ℝ³`.
-Let `E, B : ℝ⁴ → ℝ^{3×3}` be `C²` (jointly in `(t, x)`), have compact spatial support locally
-uniformly in time (for each `s` a compact `K_s ⊆ ℝ³` containing the spatial supports for all
-`|r - s| ≤ 1`), and solve `Ė = -curl B`, `Ḃ = curl E` for `t > 0`. If `E(0, ·)` and `B(0, ·)`
-are TSD (symmetric, trace-free, divergence-free), then `E(t, ·)` and `B(t, ·)` are TSD for all
-`t ≥ 0`.
-
-The support hypothesis is local in time on purpose: by finite propagation speed it holds for
-solutions with compactly supported Cauchy data, whereas a support set uniform in all `t` would
-force (via the strong Huygens principle for the wave equation satisfied by TSD solutions) `E` and
-`B` to vanish, making the statement vacuous.
-
-Thesis gap: the thesis argues by "Theorem 4.5" (i.e. Cor 4.5), with neither the domain, the
-boundary conditions nor the functional-analytic hypotheses of Cor 4.5 (skew-adjointness,
-`P_K D(L) ⊆ D(L)`, density) specified or verified; on bounded domains these are exactly the
-hypotheses later only conjectured in Prop 4.17. Correction: we state the result on `ℝ³` with
-compact spatial support and prove it directly, by (1) `∂_t div E = -div curl B = 0`
-(`div_const_field`) and (2) the energy method for the violations `(tr E, vskw E, tr B, vskw B)`:
-`½ ∂_t e = div F` (`energy_flux`), so `∫ e(t) dx` is constant, and `e(0) = 0`, `e ≥ 0` give
-`e(t) ≡ 0` (`energy_eq_zero_iff`). Also: "Similarly, `curl E` is TSD" should read `curl B`.
-
-See [QuennevilleBelair2015], Prop 3.6 (thesis proof via [QuennevilleBelair2015], Cor 4.5). -/
+/-- `C²` solutions of `Ė = -curl B`, `Ḃ = curl E` (`t > 0`) with compact spatial support, locally
+uniformly in time, and TSD data stay TSD for `t ≥ 0`. [QuennevilleBelair2015], Prop 3.6 (adapted) -/
 theorem tsd_propagates (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j)
     (hsupp : ∀ s : ℝ, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧
@@ -475,16 +424,11 @@ noncomputable def bump3 : ContDiffBump (0 : Fin 3 → ℝ) := ⟨1, 2, one_pos, 
 noncomputable def hessField (Y : (Fin 4 → ℝ)) : Matrix (Fin 3) (Fin 3) ℝ :=
   Matrix.of fun a b => partialDeriv a (partialDeriv b bump3) (spatialProj ℝ 3 Y)
 
-/-- Entries of the Hessian of `bump3` are smooth. -/
 theorem contDiff_hess (a b : Fin 3) : ContDiff ℝ ∞ (partialDeriv a (partialDeriv b bump3)) :=
   ((((bump3.contDiff (n := ⊤))).partialDeriv (m := ∞) (by simp) b).partialDeriv (m := ∞)
     (by simp) a)
 
-/-- Non-vacuity of the hypotheses of `tsd_propagates` other than TSD initial data: the static fields
-`E = ∇²φ`, `B = 0` with `φ` a smooth bump are `C²`, have compact spatial support, solve the
-linearized EB system, and are nonzero. (They are not TSD at `t = 0`, since `tr E = Δφ ≢ 0`; a
-nonzero solution with TSD data, e.g. the linearized Weyl field of a TT wave with compactly
-supported Cauchy data, needs the solution theory of the wave equation and is not constructed.) -/
+/-- Some nonzero `C²` fields with compact spatial support solve `Ė = -curl B`, `Ḃ = curl E`. -/
 theorem propagation_hyps_nonvacuous :
     ∃ E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ,
       (∀ i j, ContDiff ℝ 2 fun Y => E Y i j) ∧ (∀ i j, ContDiff ℝ 2 fun Y => B Y i j) ∧

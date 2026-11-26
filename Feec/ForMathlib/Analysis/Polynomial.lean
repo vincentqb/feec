@@ -6,19 +6,13 @@ public import Mathlib.Topology.Algebra.Polynomial
 /-!
 # Rational functions bounded towards infinity
 
-**`Polynomial.natDegree_le_of_norm_div_le`**: over a normed field, if `‖P(z)/Q(z)‖ ≤ C` along a
-filter converging to infinity (for instance along the imaginary axis of `ℂ`), then
-`deg P ≤ deg Q`: the rational function `P/Q` is bounded at infinity. It is the contrapositive of
-`Polynomial.isLittleO_cobounded_of_degree_lt`. It shows that a stability function bounded on the
-imaginary axis has `deg P ≤ deg Q` ([HairerWanner1996], §IV.3).
-
-**`Polynomial.X_pow_dvd_of_isBigO`**: over a nontrivially normed field, a polynomial that is
-`O(zⁿ)` at `0` is divisible by `Xⁿ`; it turns the order condition `r(z) - e^z = O(z^{p+1})` of a
-stability function into a divisibility of polynomials.
+Over a normed field, if `‖P(z)/Q(z)‖ ≤ C` along a filter converging to infinity, then
+`deg P ≤ deg Q`, as for the stability functions of [HairerWanner1996], §IV.3; a polynomial that is
+`O(zⁿ)` at `0` is divisible by `Xⁿ`.
 
 ## References
 
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -31,9 +25,6 @@ namespace Polynomial
 
 variable {𝕜 : Type*} [NormedField 𝕜] {P Q : 𝕜[X]}
 
-/-- **A rational function bounded towards infinity is bounded at infinity**: if, eventually along
-a nontrivial filter `l` converging to infinity, `Q(z) ≠ 0` and `‖P(z)/Q(z)‖ ≤ C`, then
-`deg P ≤ deg Q`. -/
 theorem natDegree_le_of_norm_div_le {l : Filter 𝕜} [l.NeBot] (hl : l ≤ cobounded 𝕜) {C : ℝ}
     (hQ : ∀ᶠ z in l, Q.eval z ≠ 0) (hC : ∀ᶠ z in l, ‖P.eval z / Q.eval z‖ ≤ C) :
     P.natDegree ≤ Q.natDegree := by
@@ -47,8 +38,6 @@ theorem natDegree_le_of_norm_div_le {l : Filter 𝕜} [l.NeBot] (hl : l ≤ cobo
   rw [inv_mul_eq_div, le_div_iff₀ (by positivity)] at hz
   nlinarith [mul_le_mul_of_nonneg_right (le_abs_self C) hq.le]
 
-/-- **A polynomial that is `O(zⁿ)` at `0` is divisible by `Xⁿ`**: write `P = Xᵐ U` with
-`U(0) ≠ 0`; if `m < n`, then `U(z) = O(z^{n-m}) → 0` on the punctured neighbourhood of `0`. -/
 theorem X_pow_dvd_of_isBigO {𝕂 : Type*} [NontriviallyNormedField 𝕂] {P : 𝕂[X]} {n : ℕ}
     (h : (fun z => P.eval z) =O[𝓝 0] fun z => z ^ n) : X ^ n ∣ P := by
   rcases eq_or_ne P 0 with rfl | hP

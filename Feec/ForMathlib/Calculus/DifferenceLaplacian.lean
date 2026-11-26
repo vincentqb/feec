@@ -5,32 +5,9 @@ public import Feec.ForMathlib.Calculus.SecondDifference
 /-!
 # The difference Laplacian of a function on `ℝⁿ`
 
-The `(2n + 1)`-point **difference Laplacian** of `f : ℝⁿ → ℝ` with step `h`,
-`(Dₕ f)(x) = Σₗ (f(x + h eₗ) - 2 f(x) + f(x - h eₗ)) / h²` (`FiniteDifference.diffLaplacian`),
-is the function whose values at the nodes of a grid are those of the finite difference Laplacian
-`FiniteDifference.laplacian` of the nodal values. Its iterates are bounded by the pure second
-derivatives:
-
-* `Dₕ` commutes with the partial derivatives of a differentiable function
-  (`FiniteDifference.partialDeriv_diffLaplacian`), hence with the words
-  `∂²_{i₁} ⋯ ∂²_{i_k}` of pure second partial derivatives (`FiniteDifference.secondPartials`,
-  `FiniteDifference.secondPartials_diffLaplacian`), the iterated derivatives
-  `D^{2k} f(x)(e_{i₁}, e_{i₁}, …, e_{i_k}, e_{i_k})` of a `C^{2k}` function
-  (`FiniteDifference.iteratedFDeriv_apply_pairs`);
-* `|Dₕ g| ≤ n B` for `|∂ᵢ² g| ≤ B` (`FiniteDifference.abs_diffLaplacian_le`, the second
-  difference `Feec.abs_axis_secondDiff_le`), so `|Dₕᵏ f| ≤ nᵏ B` for `f ∈ C^{2k}` with
-  `|∂²_{i₁} ⋯ ∂²_{i_k} f| ≤ B` (`FiniteDifference.abs_iterate_diffLaplacian_le`).
-
-A function odd about the hyperplane `xᵢ = c` (`FiniteDifference.IsOddAbout`) vanishes on it
-(`FiniteDifference.IsOddAbout.eq_zero`), and `Dₕ` keeps it odd
-(`FiniteDifference.IsOddAbout.diffLaplacian`): this is how odd extensions turn the difference
-Laplacian with homogeneous Dirichlet data into `Dₕ`.
-
-## References
-
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The `(2n + 1)`-point difference Laplacian `Dₕ` commutes with the partial derivatives of
+differentiable functions, satisfies `|Dₕᵏ f| ≤ nᵏ B` for `f ∈ C^{2k}` whose words of `k` pure
+second partial derivatives are bounded by `B`, and keeps functions odd about a hyperplane odd.
 -/
 
 open Set Finset
@@ -41,16 +18,13 @@ namespace FiniteDifference
 
 variable {n : ℕ}
 
-/-- **The difference Laplacian** `(Dₕ f)(x) = Σₗ (f(x + h eₗ) - 2 f(x) + f(x - h eₗ)) / h²` of a
-function on `ℝⁿ`. -/
+/-- The difference Laplacian `(Dₕ f)(x) = Σₗ (f(x + h eₗ) - 2 f(x) + f(x - h eₗ)) / h²`. -/
 def diffLaplacian (h : ℝ) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   ∑ l, (f (x + h • Pi.single l 1) - 2 * f x + f (x + (-h) • Pi.single l 1)) / h ^ 2
 
 /-- The word `∂²_{i₁} ⋯ ∂²_{i_k} f` of pure second partial derivatives, `w = [i₁, …, i_k]`. -/
 def secondPartials (w : List (Fin n)) (f : (Fin n → ℝ) → ℝ) : (Fin n → ℝ) → ℝ :=
   w.foldr (fun i g => partialDeriv i (partialDeriv i g)) f
-
-/-! ### Smoothness and derivatives -/
 
 theorem contDiff_secondPartials {f : (Fin n → ℝ) → ℝ} (w : List (Fin n)) {m : ℕ}
     (hf : ContDiff ℝ (m + 2 * w.length : ℕ) f) : ContDiff ℝ m (secondPartials w f) := by
@@ -63,9 +37,6 @@ theorem contDiff_secondPartials {f : (Fin n → ℝ) → ℝ} (w : List (Fin n))
       h.partialDeriv (by exact_mod_cast le_refl (m + 1 + 1)) i
     exact h1.partialDeriv (by exact_mod_cast le_refl (m + 1)) i
 
-/-- **Words of pure second partial derivatives are iterated derivatives on paired coordinate
-vectors**: for `f ∈ C^{2m}` and directions `l`,
-`D^{2m} f(x)(e_{l 0}, e_{l 0}, …, e_{l (m-1)}, e_{l (m-1)}) = ∂²_{l 0} ⋯ ∂²_{l (m-1)} f(x)`. -/
 theorem iteratedFDeriv_apply_pairs {f : (Fin n → ℝ) → ℝ} {m : ℕ} (hf : ContDiff ℝ (2 * m : ℕ) f)
     (l : ℕ → Fin n) (x : Fin n → ℝ) :
     iteratedFDeriv ℝ (2 * m) f x (fun j => Pi.single (l ((j : ℕ) / 2)) 1) =
@@ -91,7 +62,6 @@ theorem _root_.ContDiff.diffLaplacian (h : ℝ) {f : (Fin n → ℝ) → ℝ} {k
   refine ContDiff.div_const (((hf.comp (contDiff_id.add contDiff_const)).sub
     (contDiff_const.mul hf)).add (hf.comp (contDiff_id.add contDiff_const))) _
 
-/-- `Dₕ` commutes with the partial derivatives of a differentiable function. -/
 theorem partialDeriv_diffLaplacian (h : ℝ) {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f)
     (i : Fin n) : partialDeriv i (diffLaplacian h f) = diffLaplacian h (partialDeriv i f) := by
   funext x
@@ -117,8 +87,6 @@ theorem partialDeriv_diffLaplacian (h : ℝ) {f : (Fin n → ℝ) → ℝ} (hf :
   simp
   exact Finset.sum_congr rfl fun l _ => by ring
 
-/-- `Dₕ` commutes with the words of pure second partial derivatives of a `C^{2|w|+1}`
-function. -/
 theorem secondPartials_diffLaplacian (h : ℝ) {f : (Fin n → ℝ) → ℝ} (w : List (Fin n))
     (hf : ContDiff ℝ (2 * w.length + 1 : ℕ) f) :
     secondPartials w (diffLaplacian h f) = diffLaplacian h (secondPartials w f) := by
@@ -134,10 +102,6 @@ theorem secondPartials_diffLaplacian (h : ℝ) {f : (Fin n → ℝ) → ℝ} (w 
       partialDeriv_diffLaplacian h (f := partialDeriv i (secondPartials w f))
         ((hc.partialDeriv (m := (1 + 1 : ℕ)) (by norm_num) i).differentiable (by norm_num))]
 
-/-! ### The bound -/
-
-/-- **The difference Laplacian is bounded by the second derivatives**:
-`|Dₕ g(x)| ≤ n B` for `|∂ᵢ² g| ≤ B`, `h ≠ 0`. -/
 theorem abs_diffLaplacian_le {h B : ℝ} (hh : h ≠ 0) {g : (Fin n → ℝ) → ℝ} (hg : ContDiff ℝ 2 g)
     (hB : ∀ i y, |partialDeriv i (partialDeriv i g) y| ≤ B) (x : Fin n → ℝ) :
     |diffLaplacian h g x| ≤ n * B := by
@@ -150,7 +114,6 @@ theorem abs_diffLaplacian_le {h B : ℝ} (hh : h ≠ 0) {g : (Fin n → ℝ) →
         exact Feec.abs_axis_secondDiff_le hg x l fun τ _ => hB l _
     _ = n * B := by simp
 
-/-- **`|Dₕᵏ f| ≤ nᵏ B`** for `f ∈ C^{2k}` with `|∂²_{i₁} ⋯ ∂²_{i_k} f| ≤ B`, `h ≠ 0`. -/
 theorem abs_iterate_diffLaplacian_le {h : ℝ} (hh : h ≠ 0) (k : ℕ) {f : (Fin n → ℝ) → ℝ} {B : ℝ}
     (hf : ContDiff ℝ (2 * k : ℕ) f)
     (hB : ∀ (l : Fin k → Fin n) x, |secondPartials (List.ofFn l) f x| ≤ B) (x : Fin n → ℝ) :
@@ -168,21 +131,16 @@ theorem abs_iterate_diffLaplacian_le {h : ℝ} (hh : h ≠ 0) (k : ℕ) {f : (Fi
     have := hB (Fin.cons i l) z
     rwa [List.ofFn_succ, Fin.cons_zero] at this
 
-/-! ### Odd functions -/
-
-/-- `f` is **odd about the hyperplane** `xᵢ = c`: odd under the reflection `xᵢ ↦ 2c - xᵢ`. -/
+/-- `f` is odd about the hyperplane `xᵢ = c`: odd under the reflection `xᵢ ↦ 2c - xᵢ`. -/
 def IsOddAbout (i : Fin n) (c : ℝ) (f : (Fin n → ℝ) → ℝ) : Prop :=
   ∀ x, f (Function.update x i (2 * c - x i)) = -f x
 
-/-- An odd function vanishes on the hyperplane of the reflection. -/
 theorem IsOddAbout.eq_zero {i : Fin n} {c : ℝ} {f : (Fin n → ℝ) → ℝ} (hf : IsOddAbout i c f)
     {x : Fin n → ℝ} (hx : x i = c) : f x = 0 := by
   have h := hf x
   rw [hx, show 2 * c - c = c by ring, Function.update_eq_self_iff.2 hx.symm] at h
   linarith
 
-/-- A product `κ ∏ⱼ Gⱼ(xⱼ)` whose `i`-th factor is odd about `c` is odd about the hyperplane
-`xᵢ = c`. -/
 theorem isOddAbout_const_mul_prod (G : Fin n → ℝ → ℝ) (i : Fin n) (c : ℝ)
     (hG : ∀ y, G i (2 * c - y) = -G i y) (κ : ℝ) :
     IsOddAbout i c fun x => κ * ∏ j, G j (x j) := by
@@ -210,7 +168,6 @@ private theorem update_reflect_add (i l : Fin n) (c t : ℝ) (x : Fin n → ℝ)
     · subst hl; simp [hj]
     · simp [hj, hl]
 
-/-- `Dₕ` keeps odd functions odd. -/
 theorem IsOddAbout.diffLaplacian {i : Fin n} {c : ℝ} {f : (Fin n → ℝ) → ℝ}
     (hf : IsOddAbout i c f) (h : ℝ) : IsOddAbout i c (diffLaplacian h f) := by
   intro x

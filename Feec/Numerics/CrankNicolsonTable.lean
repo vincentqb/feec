@@ -9,26 +9,13 @@ public import Mathlib.Analysis.SpecialFunctions.Pow.Real
 /-!
 # The Crank–Nicolson experiment: plane-wave test solution and Table 7.1
 
-Numerical checks behind the thesis' Crank–Nicolson experiment for the linearized
-Einstein–Bianchi system.
-
-* **The plane-wave test solution.** The thesis gives only the electric part
-  `E = E₀ sin(ω(z - t))`. With the magnetic partner `B = B₀ sin(ω(z - t))`, both fields are
-  symmetric, trace-free and row-wise divergence-free, and solve `Ė = -curl B`, `Ḃ = curl E`
-  classically on `ℝ³` (`planeWave_solves`; amplitude identities `planeWave_amplitudes`). The
-  row-wise `curl`/`div` are `Feec.MatrixSymbol.curl`/`div` applied to the true spatial jet.
-* **Table 7.1.** Step counts `⌊T/Δt_k⌋ = 900, 1272, 1800, 2545` for `Δt_k = 1/(120 √2^k)` and
-  `T = 7.5` (`stepCount_table`); the runs on meshes `k = 1, 3` stop short of `T`
-  (`finalTime_table`); cell counts `6 (4·2^k)³` (`cellCount_table`).
-
-The Crank–Nicolson schemes themselves are `Feec.TimeStepping.cayley` (any skew-adjoint
-generator) with the block-matrix form in `Feec.TimeStepping.BlockMatrix`.
+The plane-wave test solution of the Crank–Nicolson experiment for the linearized Einstein–Bianchi
+system, and the step, final-time and cell counts of its Table 7.1.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (Table 7.1, the plane-wave test), §3.5 (plane waves)
-* [R. M. Wald, *General Relativity*][Wald1984] (linearized plane waves in TT gauge)
+  Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -51,7 +38,7 @@ def curlZ (P : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
 /-- Electric amplitude of the plane wave. [QuennevilleBelair2015], Ch. 7 -/
 def amplitudeE (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ap, -Ax, 0; -Ax, Ap, 0; 0, 0, 0]
 
-/-- Magnetic amplitude of the plane wave (absent from the thesis). [QuennevilleBelair2015], Ch. 7 -/
+/-- Magnetic amplitude of the plane wave. -/
 def amplitudeB (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ax, Ap, 0; Ap, Ax, 0; 0, 0, 0]
 
 theorem curl_zJet (P : Matrix (Fin 3) (Fin 3) ℝ) : MatrixSymbol.curl (zJet P) = curlZ P := by
@@ -73,8 +60,6 @@ theorem div_smul (c : ℝ) (J : Fin 3 → Matrix (Fin 3) (Fin 3) ℝ) :
   ext a
   simp [MatrixSymbol.div, Finset.mul_sum]
 
-/-- **Amplitude identities** for `Ė = -curl B`, `Ḃ = curl E`: `curl_z B₀ = E₀`,
-`curl_z E₀ = -B₀`, both symmetric, trace-free, with vanishing third column. [QuennevilleBelair2015], Ch. 7 -/
 theorem planeWave_amplitudes (Ap Ax : ℝ) :
     curlZ (amplitudeB Ap Ax) = amplitudeE Ap Ax ∧ curlZ (amplitudeE Ap Ax) = -amplitudeB Ap Ax ∧
     (amplitudeE Ap Ax).IsSymm ∧ (amplitudeB Ap Ax).IsSymm ∧
@@ -109,7 +94,6 @@ theorem hasFDerivAt_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x :
   · ext y; simp [planeWave, mul_comm]
   · ext v; simp; ring
 
-/-- The spatial jet of `P sin(ω(z - t))` is `ω cos(ω(z - t))` times the `z`-jet `P`. -/
 theorem jetOf_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x : Fin 3 → ℝ) :
     jetOf (planeWave P ω t) x = (ω * Real.cos (ω * (x 2 - t))) • zJet P := by
   ext c a b
@@ -124,10 +108,8 @@ theorem hasDerivAt_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (ω t : ℝ) (x : 
   · ext t; simp [planeWave, mul_comm]
   · simp only [_root_.id]; ring
 
-/-- **The plane-wave test solution** is a classical TSD solution of `Ė = -curl B`, `Ḃ = curl E`
-on `ℝ³`: `E = E₀ sin(ω(z - t))`, `B = B₀ sin(ω(z - t))` are symmetric, trace-free and row-wise
-divergence-free, and solve the system entrywise at every `(x, t)`. Not claimed: the homogeneous
-essential boundary conditions on the unit cube, which this wave violates. [QuennevilleBelair2015], Ch. 7 -/
+/-- **The plane-wave test solution**: `E₀ sin(ω(z - t))` and `B₀ sin(ω(z - t))` are TSD and solve
+`Ė = -curl B`, `Ḃ = curl E`. [QuennevilleBelair2015], Ch. 7 (adapted) -/
 theorem planeWave_solves (Ap Ax ω t : ℝ) (x : Fin 3 → ℝ) :
     (∀ a b, HasDerivAt (fun t => planeWave (amplitudeE Ap Ax) ω t x a b)
       (-(MatrixSymbol.curl (jetOf (planeWave (amplitudeB Ap Ax) ω t) x)) a b) t) ∧
@@ -158,7 +140,7 @@ theorem planeWave_solves (Ap Ax ω t : ℝ) (x : Fin 3 → ℝ) :
 /-- Time step on mesh `k = 0, …, 3`: `Δt_k = 1 / (120 √2^k)`. [QuennevilleBelair2015], Ch. 7 -/
 def dt (k : ℕ) : ℝ := 1 / (120 * Real.sqrt 2 ^ k)
 
-/-- Number of Crank–Nicolson steps taken to reach `T = 7.5`. -/
+/-- Number `⌊T / Δt_k⌋` of Crank–Nicolson steps for the final time `T = 7.5`. -/
 def stepCount (k : ℕ) : ℕ := ⌊(7.5 : ℝ) / dt k⌋₊
 
 theorem sqrt_two_bounds : (1.4142 : ℝ) < Real.sqrt 2 ∧ Real.sqrt 2 < 1.4143 := by
@@ -169,13 +151,11 @@ theorem sqrt_two_bounds : (1.4142 : ℝ) < Real.sqrt 2 ∧ Real.sqrt 2 < 1.4143 
 theorem div_dt (k : ℕ) : (7.5 : ℝ) / dt k = 7.5 * (120 * Real.sqrt 2 ^ k) := by
   rw [dt, div_div_eq_mul_div, div_one]
 
-/-- `⌊7.5 · 120√2⌋ = 1272`. -/
 theorem floor_mesh_one : ⌊(7.5 : ℝ) * (120 * Real.sqrt 2)⌋₊ = 1272 := by
   obtain ⟨h1, h2⟩ := sqrt_two_bounds
   rw [Nat.floor_eq_iff (by positivity)]
   constructor <;> push_cast <;> nlinarith
 
-/-- `⌊7.5 · 240√2⌋ = 2545`. -/
 theorem floor_mesh_three : ⌊(7.5 : ℝ) * (240 * Real.sqrt 2)⌋₊ = 2545 := by
   obtain ⟨h1, h2⟩ := sqrt_two_bounds
   rw [Nat.floor_eq_iff (by positivity)]
@@ -194,8 +174,8 @@ theorem stepCount_table :
   · rw [s3, show (7.5 : ℝ) * (120 * (2 * Real.sqrt 2)) = 7.5 * (240 * Real.sqrt 2) by ring]
     exact floor_mesh_three
 
-/-- **Final times**: on meshes `k = 1, 3` the final time `N_k Δt_k` falls short of `T = 7.5`
-(`T/Δt` is not an integer there); on meshes `k = 0, 2` it is exactly `7.5`. [QuennevilleBelair2015], Ch. 7 -/
+/-- **Final times**: on meshes `k = 1, 3` the final time `N_k Δt_k` falls short of `T = 7.5`; on
+meshes `k = 0, 2` it is exactly `7.5`. [QuennevilleBelair2015], Ch. 7 -/
 theorem finalTime_table :
     (stepCount 0 : ℝ) * dt 0 = 7.5 ∧ (stepCount 1 : ℝ) * dt 1 < 7.5 ∧
     (stepCount 2 : ℝ) * dt 2 = 7.5 ∧ (stepCount 3 : ℝ) * dt 3 < 7.5 := by
@@ -210,7 +190,6 @@ theorem finalTime_table :
   · rw [s2]; norm_num
   · rw [pow_succ, s2, mul_one_div, div_lt_iff₀ (by positivity)]; push_cast; nlinarith
 
-/-- **Cell counts** `6 (4·2^k)³` of the structured 6-tetrahedra-per-cube meshes. [QuennevilleBelair2015], Ch. 7 -/
 theorem cellCount_table :
     (List.range 4).map (fun k => 6 * (4 * 2 ^ k) ^ 3) = [384, 3072, 24576, 196608] := by
   decide

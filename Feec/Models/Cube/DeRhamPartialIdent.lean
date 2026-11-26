@@ -6,68 +6,19 @@ public import Feec.Models.Cube.DeRhamIdentPoincare
 /-!
 # The de Rham complex of `(0, ½)ⁿ` with vanishing traces on part of the boundary
 
-For a set `J` of directions, `HΛ_J(Q)` on `Q = (0, ½)ⁿ` is the de Rham complex with vanishing
-tangential traces on the faces `{y_j ∈ {0, ½}}`, `j ∈ J`, and no condition on the other faces
-([AFW2010], §4.3; [Arnold2018], Ch. 6). This file defines it and identifies it with the mixed
-parity class of `Feec.Models.Cube.DeRhamPartial`.
-
-**The domain spaces** (on every open `Ω ⊆ Q`). `d_J = dPart Ω J k` is `d_max` restricted to the
-graph-norm closure of the forms of `D(d_max)` vanishing a.e. near the faces normal to `J`
-(`faceNbhd`, `VanishNear`, `coreSub`): it is closed (`isClosed_dPart`),
-`d_min ≤ d_J ≤ d_max` (`minimal_le_dPart`, `dPart_le_maximal`), `d_∅ = d_max` (`dPart_empty`),
-and the `d_J` form a Hilbert complex `HQpartZ` on `ℤ` (`mapsTo_dPart`, `dPart_comp`: `d_max` is
-local, `maximal_vanishNear`). On `Q`, `d_univ = d_min` (`dPart_univ`).
-
-**The identification** (`HQpart_eq_compress`). The per-direction parity extension `JfJ J k`
-(odd in `x_j` for the tangential components when `j ∈ J`, for the normal components when
-`j ∉ J`) is a scaled isometry onto the real mixed parity class (`inner_JfJ`, `range_JJ`), and
-the window `HQpart n J` of `HΛ_J(Q)` is the compression of the real torus de Rham complex along
-it. Both inclusions:
-
-* `D(d_J) → torus`: Green's identity `⟪d_J u, φ dx_t⟫ = ⟪u, dᵗ(φ dx_t)⟫` holds against the smooth
-  `φ` vanishing on the faces normal to `t ∖ J` (`greenForJ_dPart`): on the core by a cut-off in
-  the `J` directions only (`chiJ`), then by closure; so `d_ξ (JfJ u) = JfJ (d_J u)`
-  (`coeff_d_dPart`, from `coeff_d_of_greenForJ`);
-* torus `→ D(d_J)`: the Fourier truncations of `JfJ u` are trigonometric polynomials whose
-  tangential components vanish on the faces normal to `J` (`trigLift_eq_zero_of_faceJ`), and
-  **smooth forms with vanishing tangential trace on the `J`-faces lie in `D(d_J)`**
-  (`mem_dPart_of_smooth`, by the `J`-direction cut-off `χ_m ψ` with the commutator bound), so
-  closedness gives `u ∈ D(d_J)` (`mem_dPart_of_JfJ`).
-
-Conversely Green's identity characterizes `D(d_J)` (`greenForJ_iff`).
-
-**Hodge theory of `HΛ_J(Q)`** (`Hpart n J`, the complex on `ℤ`; `HQpart n J`, its window). The
-Poincaré inequality `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d_J) ∩ (𝔷ⁱ)ᗮ` (`Hpart_norm_le`), the compactness
-property (`Hpart_hasCompactProperty`), closed range in every degree (`Hpart_closedRangeAt`), the
-harmonic forms `ℌᵏ = 0` for `k ≠ |J|` and `ℌ^{|J|} = ℝ · dx_J` (`Hpart_harmonic_eq_bot`,
-`Hpart_harmonic_card`), and the cohomology `dim Hᵏ = [k = |J|]` (`finrank_Hpart_cohomology`).
-The constant is the one of the torus, `(2π)⁻¹`.
-
-## Main definitions
-
-* `pcJ`, `JfJ`, `RealParJ`, `reflJ`, `realInvolutionsJ`, `realActionJ`, `JJ`; `GreenForJ`.
-* `chiJ`; `faceNbhd`, `VanishNear`, `coreSub`, `dCore`, `dPart`, `HQpartZ`, `HQpart`, `Hpart`;
-  `formJ`.
+The complex `HΛ_J(Q)` with vanishing tangential traces on the faces normal to `J` ([AFW2010], §4.3;
+[Arnold2018], Ch. 6), its identification with the mixed parity class, and its Hodge theory.
 
 ## Main results
 
-* **`inner_JfJ`**, **`range_JJ`**, `reducing_rangeJ`, `JfJ_univ`.
-* **`coeff_d_of_greenForJ`**, **`greenForJ_dPart`**, `coeff_d_dPart`.
-* `isClosed_dPart`, `minimal_le_dPart`, `dPart_le_maximal`, `dPart_empty`, **`maximal_vanishNear`**,
-  `mapsTo_dPart`.
-* **`mem_dPart_of_smooth`**, **`mem_dPart_of_JfJ`**, **`greenForJ_iff`**,
-  **`HQpart_eq_compress`**, **`dPart_univ`**.
-* **`Hpart_norm_le`**, **`Hpart_hasCompactProperty`**, `Hpart_closedRangeAt`,
-  **`Hpart_harmonic_eq_bot`**, **`Hpart_harmonic_card`**, `finrank_Hpart_cohomology`.
+* `greenForJ_iff`: Green's identity characterizes `D(d_J)`.
+* `HQpart_eq_compress`: `HΛ_J(Q)` is a compression of the torus window.
+* `Hpart_harmonic_card`, `finrank_Hpart_cohomology`: `ℌ^{|J|} = ℝ · dx_J`, `dim Hᵏ = [k = |J|]`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (the de Rham complex with boundary conditions)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (boundary conditions on
-  part of the boundary, harmonic forms)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2, §9.4 (extension by reflection, cut-off arguments)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -88,8 +39,7 @@ variable {n : ℕ}
 
 /-! ### The parity vectors of the mixed class -/
 
-/-- The parity vector of the coefficient of `dx_s` in the mixed class `J`: `u_s ∘ R_j = c_j u_s`
-with `c_j = ε_j ε_j(s)` (`ε_j = -1` for `j ∈ J`). -/
+/-- The parity vector of the coefficient of `dx_s` in the mixed class `J`, `c_j = ε_j ε_j(s)`. -/
 def pcJ (J s : Finset (Fin n)) (j : Fin n) : ℂ := DeRham.mixedSign J j * DeRham.reflSign j s
 
 /-- The parity vector of a component of a `k`-form in the mixed class `J`. -/
@@ -105,7 +55,6 @@ theorem conj_pcJF (J : Finset (Fin n)) {k : ℤ} (s : formIdx n k) (j : Fin n) :
     conj (pcJF J s j) = pcJF J s j := by
   unfold pcJF pcJ DeRham.mixedSign DeRham.reflSign; split_ifs <;> simp
 
-/-- **Removing `j` reverses the parity of `x_j`.** -/
 theorem update_pcJ_erase (J : Finset (Fin n)) {s : Finset (Fin n)} {j : Fin n} (hj : j ∈ s) :
     Function.update (pcJ J s) j (-pcJ J s j) = pcJ J (s.erase j) := by
   funext i
@@ -120,8 +69,7 @@ theorem pcJ_univ : pcJ (Finset.univ : Finset (Fin n)) = pcF true := by
 
 /-! ### The parity extension in the mixed class -/
 
-/-- **The parity extension of real `k`-forms on `Q` in the mixed class `J`**, on the Fourier side
-of `𝕋ⁿ`. -/
+/-- **The parity extension of real `k`-forms on `Q`, mixed class `J`**, on the Fourier side. -/
 def JfJ (J : Finset (Fin n)) (k : ℕ) : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)) →L[ℝ]
     Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)) :=
   JR (pcJF_mul_self J)
@@ -134,13 +82,11 @@ theorem JR_congr {d P : Type*} [Fintype d] [DecidableEq d] [Fintype P] {c c' : P
     JR hc = JR hc' := by
   subst h; rfl
 
-/-- **`J = univ` is the relative extension.** -/
 theorem JfJ_univ (k : ℕ) : JfJ (Finset.univ : Finset (Fin n)) k = Jf true k := by
   unfold JfJ Jf
   rw [JR_congr (show (fun s : formIdx n (k : ℤ) => pcJF Finset.univ s) = fun s => pc true s from
     funext fun s => by rw [pcJF, pcJ_univ]; rfl) _ (pc_mul_self true)]
 
-/-- **The coefficients of `JfJ`**: `(JfJ u)(m)_t = ∫_Q u_t · fold_{c(t)} e_{-m}`. -/
 theorem coeff_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) :
     (JfJ J k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m t =
@@ -156,15 +102,13 @@ theorem Jinvf_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formI
 theorem injective_JfJ (J : Finset (Fin n)) (k : ℕ) : Function.Injective (JfJ (n := n) J k) :=
   fun u v h => by rw [← Jinvf_JfJ J k u, h, Jinvf_JfJ]
 
-/-- **The extension scales inner products by `2ⁿ`.** -/
 theorem inner_JfJ (J : Finset (Fin n)) (k : ℕ) (u v : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     ⟪JfJ J k u, JfJ J k v⟫_ℝ = 2 ^ n * ⟪u, v⟫_ℝ := by
   rw [MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, JfJ_apply,
     JfJ_apply, ← MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner,
     inner_JR, Fintype.card_fin]
 
-/-- **The real coefficient sequences of the mixed class `J`**: `x(-m) = conj x(m)` and
-`x(flip_j m)_t = ε_j ε_j(t) x(m)_t`. -/
+/-- **The real coefficient sequences of the mixed class `J`.** -/
 def RealParJ (J : Finset (Fin n)) (k : ℕ)
     (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))) : Prop :=
   (∀ m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (-m) t =
@@ -180,7 +124,6 @@ theorem JfJ_realParJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (fo
   · rw [JfJ_apply]
     exact (mem_fieldParity_iff.1 (JR_mem_fieldParity (pcJF_mul_self J) u)) j m _
 
-/-- **Real mixed parity sequences are extensions of `k`-forms on `Q`.** -/
 theorem JfJ_Jinvf {J : Finset (Fin n)} {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealParJ J k x) :
     JfJ J k (Jinvf k x) = x := by
@@ -219,14 +162,12 @@ theorem reflJ_cnj (J : Finset (Fin n)) (j : Fin n) (i : Fin (Fintype.card (Fin n
   · simp [DeRham.mixedSign]; split_ifs <;> simp
   · congr 1; simp [DeRham.reflSign]; split_ifs <;> simp
 
-/-- The real unitaries of the real mixed parity model: the conjugation (`none`) and the
-reflections (`some j`). -/
+/-- The real unitaries of the real mixed parity model: the conjugation and the reflections. -/
 def realRJ (J : Finset (Fin n)) : Option (Fin n) → ∀ i, TW n i ≃ₗᵢ[ℝ] TW n i
   | none => cnj
   | some j => reflJ J j
 
-/-- **The reflections `ε_j R_j^*` together with the real structure**, as commuting real unitary
-involutions of the real torus window. -/
+/-- **The reflections `ε_j R_j^*` and the real structure**: commuting real unitary involutions. -/
 def realInvolutionsJ (J : Finset (Fin n)) : (RT n).Involutions (Option (Fin n)) where
   R := realRJ J
   invol k i u := by
@@ -257,7 +198,6 @@ instance (J : Finset (Fin n)) (i : Fin (Fintype.card (Fin n) + 1)) :
     CompleteSpace ((realActionJ (n := n) J).fixed i) :=
   ((realActionJ J).isClosed_fixed i).completeSpace_coe
 
-/-- **The real mixed parity class, coefficientwise.** -/
 theorem mem_realFixedJ_iff {J : Finset (Fin n)} {i : Fin (Fintype.card (Fin n) + 1)} {u : TW n i} :
     u ∈ (realActionJ J).fixed i ↔ RealParJ J i u := by
   rw [(realInvolutionsJ J).mem_fixed_toAction]
@@ -299,7 +239,6 @@ theorem inner_JJ (J : Finset (Fin n)) (a : Fin (Fintype.card (Fin n) + 1)) (x y 
     ⟪JJ J a x, JJ J a y⟫_ℝ = ((2 ^ n : ℝ) : ℝ) * ⟪x, y⟫_ℝ :=
   inner_JfJ J a x y
 
-/-- **The range of the extension is the real mixed parity class.** -/
 theorem range_JJ (J : Finset (Fin n)) (a : Fin (Fintype.card (Fin n) + 1)) :
     LinearMap.range (JJ J a : WQ n a →ₗ[ℝ] TW n a) = (realActionJ J).fixed a := by
   ext x
@@ -311,7 +250,6 @@ instance (J : Finset (Fin n)) (a : Fin (Fintype.card (Fin n) + 1)) :
     (LinearMap.range (JJ J a : WQ n a →ₗ[ℝ] TW n a)).HasOrthogonalProjection := by
   rw [range_JJ]; infer_instance
 
-/-- **The ranges of the extension form a reducing subcomplex** of the real torus window. -/
 theorem reducing_rangeJ (J : Finset (Fin n)) :
     (RT n).ReducingSubcomplex fun a => LinearMap.range (JJ J a : WQ n a →ₗ[ℝ] TW n a) := by
   have h := (realActionJ (n := n) J).reducingSubcomplex_fixed
@@ -320,7 +258,6 @@ theorem reducing_rangeJ (J : Finset (Fin n)) :
 
 /-! ### Green's identity with mixed boundary conditions and the torus symbol -/
 
-/-- **The coefficients of `JfJ` on all index sets**. -/
 theorem ext_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (m : Fin n → ℤ) (r : Finset (Fin n)) :
     Feec.Fourier.Exterior.ext k ((JfJ J k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m) r =
@@ -336,10 +273,7 @@ theorem ext_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx
     filter_upwards [Lp.coeFn_zero ℝ 2 (volume.restrict (Q (Fin n)))] with y hy
     rw [hy]; simp
 
-/-- **Green's identity of `(u, w)` with mixed boundary conditions**, in coordinates:
-`∫_Q w_t φ = -Σ_{j ∈ t} ε(j, t) ∫_Q u_{t ∖ j} ∂_j φ` for smooth `φ` bounded with bounded first
-derivatives vanishing on the faces normal to the directions of `t ∖ J` (vanishing normal trace
-off the faces normal to `J`). -/
+/-- **Green's identity of `(u, w)` with mixed boundary conditions**, in coordinates. -/
 def GreenForJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))) : Prop :=
   ∀ (t : formIdx n ((k : ℤ) + 1)) (φ : (Fin n → ℝ) → ℝ), ContDiff ℝ (⊤ : ℕ∞) φ →
@@ -355,7 +289,6 @@ def AdmJ (J : Finset (Fin n)) {k : ℤ} (t : formIdx n (k + 1)) (φ : (Fin n →
   (∃ M, ∀ y, |φ y| ≤ M) ∧ (∃ L, ∀ j y, |fderiv ℝ φ y (Pi.single j 1)| ≤ L) ∧
     ∀ j ∈ t.1, j ∉ J → ∀ y : Fin n → ℝ, (y j = 0 ∨ y j = 1 / 2) → φ y = 0
 
-/-- **Green's identity from the inner products** (mixed class). -/
 theorem greenForJ_of_inner {J : Finset (Fin n)} {k : ℕ}
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))}
     (h : ∀ (t : formIdx n ((k : ℤ) + 1)) (φ : (Fin n → ℝ) → ℝ) (hφ : ContDiff ℝ (⊤ : ℕ∞) φ),
@@ -398,8 +331,6 @@ theorem greenForJ_of_inner {J : Finset (Fin n)} {k : ℕ}
   filter_upwards [Lp.coeFn_zero ℝ 2 (volume.restrict (Q (Fin n)))] with y hy
   rw [hy]; simp
 
-/-- **The torus symbol on the extension, mixed class**: if `(u, w)` satisfies `GreenForJ`, then
-`d_ξ (JfJ u)(m) = (JfJ w)(m)` at every frequency `m` (`ξ = 2πm`). -/
 theorem coeff_d_of_greenForJ {J : Finset (Fin n)} {k : ℕ}
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))}
     (h : GreenForJ J k u w) (m : Fin n → ℤ) :
@@ -491,7 +422,7 @@ open RowWise (mN mN_pos eta eta_nonneg eta_le_one abs_eta_le_one contDiff_eta et
 
 variable {d : Type*} [Fintype d] [DecidableEq d]
 
-/-- The cut-off in the directions of `J`: `χ_m^J(y) = ∏_{i ∈ J} η_m(yᵢ)` (`chi` for `J = univ`). -/
+/-- The cut-off in the directions of `J`: `χ_m^J(y) = ∏_{i ∈ J} η_m(yᵢ)`. -/
 def chiJ (J : Finset d) (m : ℕ) (y : d → ℝ) : ℝ := ∏ i ∈ J, eta m (y i)
 
 omit [DecidableEq d] in
@@ -504,7 +435,6 @@ theorem abs_chiJ_le_one (J : Finset d) (m : ℕ) (y : d → ℝ) : |chiJ J m y| 
   exact Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun i _ => abs_eta_le_one m _
 
 omit [Fintype d] [DecidableEq d] in
-/-- `χ_m^J` vanishes at distance `≤ 1/(2 m')` of the faces normal to `J`. -/
 theorem chiJ_eq_zero_of {J : Finset d} {m : ℕ} {y : d → ℝ} {j : d} (hj : j ∈ J)
     (h : y j ≤ 1 / (2 * mN m) ∨ 1 / 2 - 1 / (2 * mN m) ≤ y j) : chiJ J m y = 0 := by
   refine Finset.prod_eq_zero hj ?_
@@ -513,13 +443,11 @@ theorem chiJ_eq_zero_of {J : Finset d} {m : ℕ} {y : d → ℝ} {j : d} (hj : j
   rcases h with h | h <;> linarith [this.1, this.2]
 
 omit [Fintype d] [DecidableEq d] in
-/-- `χ_m^J = 1` at distance `≥ 1/m'` of the faces normal to `J`. -/
 theorem chiJ_eq_one_of {J : Finset d} {m : ℕ} {y : d → ℝ}
     (h : ∀ j ∈ J, 1 / mN m ≤ y j ∧ y j ≤ 1 / 2 - 1 / mN m) : chiJ J m y = 1 :=
   Finset.prod_eq_one fun j hj => eta_eq_one (h j hj).1 (h j hj).2
 
 omit [DecidableEq d] in
-/-- **Near each point of `Q`, `χ_m^J = 1` for all large `m`.** -/
 theorem eventually_chiJ_eq_one (J : Finset d) {y : d → ℝ} (hy : y ∈ Q d) :
     ∀ᶠ m in atTop, chiJ J m =ᶠ[𝓝 y] fun _ => 1 := by
   have hy' := mem_Q.1 hy
@@ -553,7 +481,6 @@ theorem eventually_chiJ_eq_one (J : Finset d) {y : d → ℝ} (hy : y ∈ Q d) :
   have h2 := (hδi i).trans (min_le_right _ _)
   constructor <;> linarith
 
-/-- **The derivative of the cut-off in a direction of `J`**: `|∂_c χ_m^J(y)| ≤ |η_m'(y_c)|`. -/
 theorem abs_fderiv_chiJ_le {J : Finset d} (m : ℕ) {c : d} (hc : c ∈ J) (y : d → ℝ) :
     |fderiv ℝ (chiJ J m) y (Pi.single c 1)| ≤ |deriv (eta m) (y c)| := by
   have hd : ∀ s, HasDerivAt (eta m) (deriv (eta m) s) s := fun s =>
@@ -582,7 +509,6 @@ theorem abs_fderiv_chiJ_le {J : Finset d} (m : ℕ) {c : d} (hc : c ∈ J) (y : 
         mul_le_mul_of_nonneg_left hR (abs_nonneg _)
     _ = _ := mul_one _
 
-/-- **The cut-off is constant in the directions off `J`.** -/
 theorem fderiv_chiJ_of_notMem {J : Finset d} (m : ℕ) {c : d} (hc : c ∉ J) (y : d → ℝ) :
     fderiv ℝ (chiJ J m) y (Pi.single c 1) = 0 := by
   have hl := ((contDiff_chiJ (d := d) J m).differentiable (by simp)
@@ -596,8 +522,6 @@ theorem fderiv_chiJ_of_notMem {J : Finset d} (m : ℕ) {c : d} (hc : c ∉ J) (y
   rw [e] at hl
   exact hl.unique (hasDerivAt_const _ _)
 
-/-- **The commutator bound in a direction of `J`**: `|∂_c χ_m^J · f| ≤ 4 M₀ L` on `Q` for `f`
-vanishing on the faces `y_c ∈ {0, ½}` with `|∂_c f| ≤ L`. -/
 theorem abs_fderiv_chiJ_mul_le {J : Finset d} {M₀ : ℝ}
     (hM₀ : ∀ x, |deriv Real.smoothTransition x| ≤ M₀) (m : ℕ) {f : (d → ℝ) → ℝ}
     (hf : Differentiable ℝ f) {c : d} (hc : c ∈ J) {L : ℝ}
@@ -678,11 +602,7 @@ abbrev dCore (J : Finset (Fin n)) (k : ℤ) :
   ((extDerivOp ℝ n k).maximal Ω).domRestrict (coreSub Ω J (formIdx n k))
 
 variable (Ω) in
-/-- **The exterior derivative with vanishing tangential traces on the faces normal to `J`**,
-`d_J`: the closure (in the graph norm) of `d_max` on the forms vanishing near those faces. The
-faces are those of the cube `Q = (0, ½)ⁿ` (`faceNbhd` is in the coordinates of `Q`), so `d_J` has
-its intended meaning for `Ω = Q`; for a general open `Ω ⊆ Q` it imposes the condition only where
-`∂Ω` meets those faces. -/
+/-- **`d_J`**: the closure of `d_max` on the forms vanishing near the faces normal to `J`. -/
 def dPart (J : Finset (Fin n)) (k : ℤ) :
     L2F ℝ Ω (formIdx n k) →ₗ.[ℝ] L2F ℝ Ω (formIdx n (k + 1)) :=
   (dCore Ω J k).closure
@@ -708,11 +628,9 @@ theorem dPart_graph (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) :
     (dPart Ω J k).graph = (dCore Ω J k).graph.topologicalClosure :=
   (isClosable_dCore hΩ J k).graph_closure_eq_closure_graph.symm
 
-/-- **`d_J` is closed.** -/
 theorem isClosed_dPart (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) : (dPart Ω J k).IsClosed :=
   (isClosable_dCore hΩ J k).closure_isClosed
 
-/-- **`d_J ≤ d_max`.** -/
 theorem dPart_le_maximal (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) :
     dPart Ω J k ≤ (extDerivOp ℝ n k).maximal Ω := by
   refine le_of_le_graph ?_
@@ -720,12 +638,10 @@ theorem dPart_le_maximal (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) :
   exact Submodule.topologicalClosure_minimal _ (le_graph_of_le domRestrict_le)
     ((extDerivOp ℝ n k).isClosed_maximal hΩ)
 
-/-- `d_J` is `d_max` on its domain. -/
 theorem dPart_apply_eq (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) (x : (dPart Ω J k).domain) :
     dPart Ω J k x = (extDerivOp ℝ n k).maximal Ω ⟨x, (dPart_le_maximal hΩ J k).1 x.2⟩ :=
   (dPart_le_maximal hΩ J k).2 rfl
 
-/-- A compact subset of `Q` stays at a positive distance from the faces. -/
 theorem exists_pos_of_isCompact_subset_Q {K : Set (Fin n → ℝ)} (hK : IsCompact K)
     (hKQ : K ⊆ Q (Fin n)) : ∃ δ : ℝ, 0 < δ ∧ ∀ y ∈ K, ∀ j, δ ≤ y j ∧ y j ≤ 1 / 2 - δ := by
   rcases K.eq_empty_or_nonempty with rfl | hne
@@ -746,7 +662,6 @@ theorem exists_pos_of_isCompact_subset_Q {K : Set (Fin n → ℝ)} (hK : IsCompa
     have h1 := (Finset.inf'_le δ (Finset.mem_univ j)).trans (hδK j y hy)
     exact ⟨h1.trans (min_le_left _ _), by linarith [h1.trans (min_le_right _ _)]⟩
 
-/-- **Test forms vanish near the faces**: a test field on `Ω ⊆ Q` vanishes near every face. -/
 theorem vanishNear_testField (hΩQ : Ω ⊆ Q (Fin n)) (J : Finset (Fin n)) {ι : Type*} [Fintype ι]
     {φ : ι → (Fin n → ℝ) → ℝ} (hφ : Feec.Domain.IsTestField Ω φ) :
     VanishNear Ω J (Feec.Domain.testField hφ) := by
@@ -762,7 +677,6 @@ theorem vanishNear_testField (hΩQ : Ω ⊆ Q (Fin n)) (J : Finset (Fin n)) {ι 
   have := hδK y (mem_iUnion.2 ⟨i, hyK⟩) j
   rcases hj with hj | hj <;> linarith [this.1, this.2]
 
-/-- **`d_min ≤ d_J`** (`Ω ⊆ Q`): test forms vanish near the faces. -/
 theorem minimal_le_dPart (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Q (Fin n)) (J : Finset (Fin n)) (k : ℤ) :
     (extDerivOp ℝ n k).minimal Ω ≤ dPart Ω J k := by
   refine le_of_le_graph ?_
@@ -779,7 +693,6 @@ theorem dense_dPart (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Q (Fin n)) (J : Finset (Fin
     Dense ((dPart Ω J k).domain : Set (L2F ℝ Ω (formIdx n k))) :=
   ((extDerivOp ℝ n k).dense_minimal_domain hΩ).mono (minimal_le_dPart hΩ hΩQ J k).1
 
-/-- **`d_∅ = d_max`**: no boundary condition. -/
 theorem dPart_empty (hΩ : IsOpen Ω) (k : ℤ) :
     dPart Ω (∅ : Finset (Fin n)) k = (extDerivOp ℝ n k).maximal Ω := by
   have hc : dCore Ω (∅ : Finset (Fin n)) k = (extDerivOp ℝ n k).maximal Ω := by
@@ -797,8 +710,6 @@ theorem dPart_empty (hΩ : IsOpen Ω) (k : ℤ) :
 
 /-! ### Locality of `d_max` and the complex `HΛ_J` -/
 
-/-- **`d_max` is local**: if `u ∈ D(d_max)` vanishes a.e. near the faces normal to `J`, so does
-`d_max u` (with the same width). -/
 theorem maximal_vanishNear (hΩ : IsOpen Ω) {J : Finset (Fin n)} {k : ℤ}
     (u : ((extDerivOp ℝ n k).maximal Ω).domain) {δ : ℝ}
     (hu : ∀ i, ∀ᵐ y ∂(volume.restrict Ω), y ∈ faceNbhd J δ →
@@ -846,7 +757,6 @@ theorem dCore_mapsTo (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) {x : L2F �
     ⟨δ, hδ, maximal_vanishNear hΩ ⟨x, hx⟩ hv⟩,
     Feec.Domain.ConstCoeffOp.maximal_comp hΩ (Feec.Domain.isComplexPair_extDerivOp k) ⟨x, hx⟩⟩
 
-/-- The graph of `d_J` maps into the graph of `d_J` by `(x, y) ↦ (y, 0)`. -/
 theorem dPart_graph_mapsTo (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ)
     {x : L2F ℝ Ω (formIdx n k)} {y : L2F ℝ Ω (formIdx n (k + 1))}
     (h : (x, y) ∈ (dPart Ω J k).graph) :
@@ -869,8 +779,7 @@ theorem dPart_comp (hΩ : IsOpen Ω) (J : Finset (Fin n)) (k : ℤ) (x : (dPart 
     dPart Ω J (k + 1) ⟨_, mapsTo_dPart hΩ J k x⟩ = 0 :=
   ((image_iff (mapsTo_dPart hΩ J k x)).2 (dPart_graph_mapsTo hΩ J k ((dPart Ω J k).mem_graph x))).symm
 
-/-- **The de Rham complex `HΛ_J(Ω)`** (`Ω ⊆ Q` open): vanishing tangential traces on the faces
-normal to the directions of `J`, as a Hilbert complex on `ℤ`. -/
+/-- **The de Rham complex `HΛ_J(Ω)`** (`Ω ⊆ Q` open), as a Hilbert complex on `ℤ`. -/
 def HQpartZ (hΩ : IsOpen Ω) (hΩQ : Ω ⊆ Q (Fin n)) (J : Finset (Fin n)) :
     HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ Ω (formIdx n k) :=
   Feec.HilbertComplex.ofSucc (dPart Ω J) (dense_dPart hΩ hΩQ J) (isClosed_dPart hΩ J)
@@ -897,8 +806,6 @@ theorem exists_mN_le {δ : ℝ} (hδ : 0 < δ) : ∃ m : ℕ, 1 / mN m ≤ δ / 
   rw [div_lt_iff₀ hδ] at this
   linarith
 
-/-- `χ_m^J = 1` near every point at distance `≥ δ` of the faces normal to `J`, for
-`1/m' ≤ δ/2`. -/
 theorem chiJ_eventuallyEq_one {J : Finset (Fin n)} {m : ℕ} {δ : ℝ} (hm : 1 / mN m ≤ δ / 2)
     {y : Fin n → ℝ} (hy : y ∉ faceNbhd J δ) : chiJ J m =ᶠ[𝓝 y] fun _ => 1 := by
   have hδ : 0 < δ := by have := mN_pos m; have : 0 < 1 / mN m := by positivity
@@ -916,8 +823,6 @@ theorem chiJ_eventuallyEq_one {J : Finset (Fin n)} {m : ℕ} {δ : ℝ} (hm : 1 
     by_contra h; exact hy ⟨j, hj, Or.inr (by linarith [not_le.1 h])⟩
   constructor <;> linarith
 
-/-- The cut-off of a scalar function in the directions of `J`: smooth, bounded and with bounded
-derivatives when `φ` is. -/
 theorem bounds_chiJ_mul (J : Finset (Fin n)) (m : ℕ) {φ : (Fin n → ℝ) → ℝ}
     (hφ : ContDiff ℝ (⊤ : ℕ∞) φ) {M L : ℝ} (hM : ∀ y, |φ y| ≤ M)
     (hL : ∀ j y, |fderiv ℝ φ y (Pi.single j 1)| ≤ L) :
@@ -948,9 +853,6 @@ theorem bounds_chiJ_mul (J : Finset (Fin n)) (m : ℕ) {φ : (Fin n → ℝ) →
             mul_le_mul hd (hM y) (abs_nonneg _) (by have := mN_pos m; positivity)
         _ = _ := rfl
 
-/-- **Green's identity on the core**: for `a ∈ D(d_max)` vanishing near the faces normal to `J`,
-`⟪d a, φ dx_t⟫ = ⟪a, dᵗ (φ dx_t)⟫` for the admissible `φ` (vanishing on the faces normal to
-`t ∖ J`), by a cut-off in the directions of `J`. -/
 theorem inner_maximal_single1_of_vanishNear {J : Finset (Fin n)} {k : ℤ}
     (a : ((extDerivOp ℝ n k).maximal (Q (Fin n))).domain)
     (ha : VanishNear (Q (Fin n)) J (a : L2F ℝ (Q (Fin n)) (formIdx n k)))
@@ -1020,8 +922,6 @@ theorem inner_maximal_single1_of_vanishNear {J : Finset (Fin n)} {k : ℤ}
       · simp [single1, hp]
   rw [h1, h2, h3]
 
-/-- **Green's identity on `D(d_J)`**: `⟪d_J u, φ dx_t⟫ = ⟪u, dᵗ (φ dx_t)⟫` for the smooth `φ`
-vanishing on the faces normal to the directions of `t ∖ J`. -/
 theorem greenForJ_dPart (J : Finset (Fin n)) (k : ℕ)
     (u : (dPart (Q (Fin n)) J (k : ℤ)).domain) :
     GreenForJ J k u (dPart (Q (Fin n)) J (k : ℤ) u) := by
@@ -1038,7 +938,6 @@ theorem greenForJ_dPart (J : Finset (Fin n)) (k : ℕ)
   rw [dPart_graph isOpen_Q, ← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hu
   exact closure_minimal hsub hS hu
 
-/-- **`d_ξ (JfJ u) = JfJ (d_J u)`** fibrewise, for `u ∈ D(d_J)`. -/
 theorem coeff_d_dPart (J : Finset (Fin n)) (k : ℕ) (u : (dPart (Q (Fin n)) J (k : ℤ)).domain)
     (m : Fin n → ℤ) :
     (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (Feec.Fourier.Torus.freq m)
@@ -1063,10 +962,7 @@ theorem formExt_chiJ_mul (J : Finset (Fin n)) {k : ℤ} (ψ : formIdx n k → (F
   · rfl
   · funext y; simp
 
-/-- **Smooth forms with vanishing tangential trace on the faces normal to `J` lie in `D(d_J)`**:
-a smooth `k`-form on `ℝⁿ`, bounded with bounded first derivatives, whose components `ψ_s` vanish
-on `{y_j ∈ {0, ½}}` for `j ∈ J ∖ s`, restricts to `Q` in `D(d_J)`, with `d_J ψ = d ψ`
-(cut-off `χ_m^J ψ`, the commutator bounded by the vanishing trace). -/
+/-- **Smooth forms with vanishing tangential trace on the faces normal to `J` lie in `D(d_J)`.** -/
 theorem mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ} {ψ : formIdx n k → (Fin n → ℝ) → ℝ}
     (hψ : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) {M : ℝ} (hM : ∀ s y, |ψ s y| ≤ M) {L : ℝ}
     (hL0 : 0 ≤ L) (hL : ∀ s j y, |fderiv ℝ (ψ s) y (Pi.single j 1)| ≤ L)
@@ -1157,9 +1053,6 @@ theorem mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ} {ψ : formIdx n k →
       filter_upwards [hev y hy] with m hm
       exact (apply_congr_of_eventuallyEq _ hm q).symm
 
-/-- `mem_dPart_of_smooth` without the integrability hypotheses: a smooth form and its exterior
-derivative are square integrable on the bounded cube `Q`, and the form lies in `D(d_J)` with
-`d_J ψ = d ψ`. -/
 theorem exists_mem_dPart_of_smooth {J : Finset (Fin n)} {k : ℤ}
     {ψ : formIdx n k → (Fin n → ℝ) → ℝ} (hψ : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) {M : ℝ}
     (hM : ∀ s y, |ψ s y| ≤ M) {L : ℝ} (hL0 : 0 ≤ L)
@@ -1185,7 +1078,6 @@ section Converse
 open Feec.Fourier.Torus (bandN finite_bandN)
 
 open scoped Classical in
-/-- **Truncation preserves the real mixed parity classes.** -/
 theorem realParJ_trunc {J : Finset (Fin n)} {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealParJ J k x)
     (N : ℕ) : RealParJ J k (trunc N k x) := by
@@ -1199,8 +1091,6 @@ theorem realParJ_trunc {J : Finset (Fin n)} {k : ℕ}
     · simp [hm, (Fourier.Torus.flipAt_mem_bandN j).2 hm, hx.2 j m t]
     · simp [hm, mt (Fourier.Torus.flipAt_mem_bandN j).1 hm]
 
-/-- **Odd trigonometric polynomials vanish on the faces**, mixed class: the tangential components
-(`j ∉ s`) vanish on `{y_j ∈ {0, ½}}` for `j ∈ J`. -/
 theorem trigLift_eq_zero_of_faceJ {J : Finset (Fin n)} {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealParJ J k x)
     {S : Finset (Fin n → ℤ)} (hSr : ∀ j, ∀ m ∈ S, Fourier.Torus.flipAt j m ∈ S)
@@ -1219,8 +1109,6 @@ theorem trigLift_eq_zero_of_faceJ {J : Finset (Fin n)} {k : ℕ}
     linear_combination h / 2
   simp [trigLift, h0]
 
-/-- **`J⁻¹ (HΛ(𝕋ⁿ) ∩ mixed parity class) ⊆ HΛ_J(Q)`**: if the coefficients of `JfJ u` are mapped
-by the torus symbol onto an `ℓ²` sequence `y`, then `u ∈ D(d_J)` and `JfJ (d_J u) = y`. -/
 theorem mem_dPart_of_JfJ {J : Finset (Fin n)} {k : ℕ}
     {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     {y : Lp (Form ℂ (Fin n) (k + 1)) 2 (Measure.count : Measure (Fin n → ℤ))}
@@ -1265,10 +1153,7 @@ theorem mem_dPart_of_JfJ {J : Finset (Fin n)} {k : ℕ}
   rw [← coeff_d_dPart J k ⟨u, hu⟩ m]
   exact h m
 
-/-- **The Green characterization of `D(d_J)`**: `u ∈ D(d_J)` with `d_J u = w` iff Green's identity
-`⟪w, φ dx_t⟫ = ⟪u, dᵗ(φ dx_t)⟫` holds against the smooth `φ` (bounded, with bounded first
-derivatives) vanishing on the faces normal to the directions of `t ∖ J`, i.e. against the smooth
-forms whose normal components vanish on the faces not normal to `J`. -/
+/-- **Green's identity against the admissible smooth forms characterizes `D(d_J)`.** -/
 theorem greenForJ_iff {J : Finset (Fin n)} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))} :
     GreenForJ J k u w ↔ ∃ h : u ∈ (dPart (Q (Fin n)) J (k : ℤ)).domain,
@@ -1297,7 +1182,6 @@ theorem HQpart_d_succ (J : Finset (Fin n)) (a : Fin (Fintype.card (Fin n) + 1))
     (HQpart n J).d a ⟨(a : ℕ) + 1, hb⟩ = dPart (Q (Fin n)) J ((a : ℕ) : ℤ) :=
   HQpartZ_d isOpen_Q subset_rfl J ((a : ℕ) : ℤ)
 
-/-- **The extension maps `HΛ_J(Q)` into the torus domains and intertwines `d`.** -/
 theorem mapsTo_comm_part (J : Finset (Fin n)) (a b : Fin (Fintype.card (Fin n) + 1))
     (x : ((HQpart n J).d a b).domain) :
     ∃ h : JJ J a x ∈ ((RT n).d a b).domain,
@@ -1317,8 +1201,6 @@ theorem mapsTo_comm_part (J : Finset (Fin n)) (a b : Fin (Fintype.card (Fin n) +
     rw [LinearPMap.apply_eq_zero_of_eq_zero h0,
       LinearPMap.apply_eq_zero_of_eq_zero ((HQpart n J).shape a b hab), _root_.map_zero]
 
-/-- **The trace part**: a form whose mixed extension lies in the torus domain lies in
-`HΛ_J(Q)`. -/
 theorem mem_domain_of_JJ_part (J : Finset (Fin n)) (a b : Fin (Fintype.card (Fin n) + 1))
     (x : WQ n a) (h : JJ J a x ∈ ((RT n).d a b).domain) : x ∈ ((HQpart n J).d a b).domain := by
   by_cases hab : (ComplexShape.window (Fintype.card (Fin n) + 1)).Rel a b
@@ -1330,9 +1212,7 @@ theorem mem_domain_of_JJ_part (J : Finset (Fin n)) (a b : Fin (Fintype.card (Fin
       fun m => (RT_d_apply ⟨_, h⟩ m).symm).1
   · rw [(HQpart n J).shape a b hab]; exact Submodule.mem_top
 
-/-- **`HΛ_J(Q)` is the compression of the real torus de Rham complex along the parity extension
-in the mixed class `J`** (vanishing tangential traces on the faces normal to `J`, vanishing
-normal traces in the model on the other faces). -/
+/-- **`HΛ_J(Q)` is the compression of the real torus de Rham window along the mixed extension.** -/
 theorem HQpart_eq_compress (J : Finset (Fin n)) :
     HQpart n J = (RT n).compress (JJ J) two_pow_pos (inner_JJ J) (reducing_rangeJ J) := by
   refine Feec.HilbertComplex.ext_d (funext fun a => funext fun b => ?_)
@@ -1378,13 +1258,11 @@ end Window
 
 section Hodge
 
-/-- **The compactness property of `HΛ_J(Q)`** (window). -/
 theorem HQpart_hasCompactProperty (J : Finset (Fin n)) : (HQpart n J).HasCompactProperty := by
   rw [HQpart_eq_compress]
   exact Feec.HilbertComplex.hasCompactProperty_compress two_pow_pos (inner_JJ J)
     (reducing_rangeJ J) RT_hasCompactProperty
 
-/-- **The Poincaré inequality of `HΛ_J(Q)`** (window), constant `(2π)⁻¹`. -/
 theorem HQpart_norm_le (J : Finset (Fin n)) (a b : Fin (Fintype.card (Fin n) + 1))
     (u : ((HQpart n J).d a b).domain) (hu : (u : WQ n a) ∈ ((HQpart n J).d a b).kerᗮ) :
     ‖(u : WQ n a)‖ ≤ (2 * Real.pi)⁻¹ * ‖(HQpart n J).d a b u‖ := by
@@ -1404,7 +1282,6 @@ theorem mem_HQpart_harmonic_iff {J : Finset (Fin n)} {a : Fin (Fintype.card (Fin
   rw [HQpart_eq_compress, Feec.HilbertComplex.mem_harmonic_compress_iff, mem_RT_harmonic_iff]
   rfl
 
-/-- The zero mode of a mixed extension vanishes off the index set `J`. -/
 theorem JfJ_zero_eq_zero_of_ne {J : Finset (Fin n)} {k : ℕ}
     (x : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) {t : {s : Finset (Fin n) // (#s : ℤ) = k}}
     (ht : t.1 ≠ J) : (JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 t = 0 := by
@@ -1417,7 +1294,6 @@ theorem JfJ_zero_eq_zero_of_ne {J : Finset (Fin n)} {k : ℕ}
   by_contra hne
   exact hj (mul_right_cancel₀ hne (e.symm.trans (one_mul _).symm))
 
-/-- **No harmonic forms of `HΛ_J(Q)` outside degree `|J|`** (window). -/
 theorem HQpart_harmonic_eq_bot {J : Finset (Fin n)} {a : Fin (Fintype.card (Fin n) + 1)}
     (ha : (a : ℕ) ≠ #J) : (HQpart n J).harmonic a = ⊥ := by
   rw [eq_bot_iff]
@@ -1448,8 +1324,6 @@ def zeroCoeffJ (J : Finset (Fin n)) (k : ℕ) (t₀ : {s : Finset (Fin n) // (#s
       from (RCLike.real_smul_eq_coe_smul c _), DeRham.coeFn_smul_count]
     simp
 
-/-- On forms whose mixed extension has only the zero mode, the real zero-mode coefficient at `J`
-is injective: such forms are multiples of `dx_J`. -/
 theorem injective_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : (#J : ℤ) = k)
     (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
@@ -1495,8 +1369,7 @@ abbrev Hpart (J : Finset (Fin n)) :
     HilbertComplex ℝ (ComplexShape.up ℤ) fun k => L2F ℝ (Q (Fin n)) (formIdx n k) :=
   HQpartZ (isOpen_Q (d := Fin n)) subset_rfl J
 
-/-- **The Poincaré inequality of `HΛ_J(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`, every
-degree. -/
+/-- **The Poincaré inequality of `HΛ_J(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`. -/
 theorem Hpart_norm_le (J : Finset (Fin n)) {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (z : ((Hpart n J).d i j).domain)
     (hz : (z : L2F ℝ (Q (Fin n)) (formIdx n i)) ∈ ((Hpart n J).cycles i)ᗮ) :
@@ -1504,25 +1377,20 @@ theorem Hpart_norm_le (J : Finset (Fin n)) {i j : ℤ} (hij : (ComplexShape.up �
   Feec.HilbertComplex.norm_le_of_mem_orthogonal_cycles_of_window (Hpart n J) ι_rel
     (by positivity) (hlow _) (hhigh _) (fun a b u hu => HQpart_norm_le J a b u hu) hij z hz
 
-/-- **The compactness property of `HΛ_J(Q)`** (Rellich and Gaffney with mixed boundary
-conditions on the cube), every degree. -/
+/-- **The compactness property of `HΛ_J(Q)`**, every degree. -/
 theorem Hpart_hasCompactProperty (J : Finset (Fin n)) : (Hpart n J).HasCompactProperty :=
   Feec.HilbertComplex.hasCompactProperty_of_window (Hpart n J) ι_rel (hlow _) (hhigh _)
     (HQpart_hasCompactProperty J)
 
-/-- **Closed range of `HΛ_J(Q)` in every degree.** -/
 theorem Hpart_closedRangeAt (J : Finset (Fin n)) (j : ℤ) : (Hpart n J).ClosedRangeAt j :=
   ((Hpart n J).closedRangeAt_iff_poincare_of_rel (rel_sub_one j)).2
     ⟨_, Hpart_norm_le J (rel_sub_one j)⟩
 
-/-- **No harmonic forms of `HΛ_J(Q)` in degrees `k ≠ |J|`.** -/
 theorem Hpart_harmonic_eq_bot {J : Finset (Fin n)} {k : ℤ} (hk : k ≠ (#J : ℤ)) :
     (Hpart n J).harmonic k = ⊥ :=
   harmonic_eq_bot_of_window ι_rel fun m hm e =>
     HQpart_harmonic_eq_bot (a := ⟨m, hm⟩) (by change m ≠ #J; omega)
 
-/-- `dx_J ∈ D(d_J)` with `d_J dx_J = 0`: its only component is `J`, with no tangential
-direction in `J`. -/
 theorem constForm_mem_dPart (J : Finset (Fin n)) {k : ℤ} (hk : (#J : ℤ) = k) :
     ∃ h : constForm measurableSet_Q (isBounded_openCube _ _) (⟨J, hk⟩ : formIdx n k) ∈
       (dPart (Q (Fin n)) J k).domain, dPart (Q (Fin n)) J k ⟨_, h⟩ = 0 := by
@@ -1550,8 +1418,6 @@ theorem constForm_mem_dPart (J : Finset (Fin n)) {k : ℤ} (hk : (#J : ℤ) = k)
     Subtype.ext hv1'.symm, hv2]
   exact toL2F_eq_zero (fun t y => extDerivOp_apply_const _ t y) _
 
-/-- **`dx_J` is harmonic in `HΛ_J(Q)`**: closed by `constForm_mem_dPart`, coclosed by Green's
-identity `⟪d_J u, dx_J⟫ = ∫_Q (d_J u)_J = 0` (no normal condition on `t = J`). -/
 theorem constForm_mem_harmonic (J : Finset (Fin n)) {k : ℤ} (hk : (#J : ℤ) = k) :
     constForm measurableSet_Q (isBounded_openCube _ _) (⟨J, hk⟩ : formIdx n k) ∈
       (Hpart n J).harmonic k := by
@@ -1612,8 +1478,7 @@ theorem Hpart_harmonic_card_spec (J : Finset (Fin n)) :
       finrank_le_one_of_zeroCoeffJ (k := (a : ℕ)) rfl _ hS⟩
   exact key
 
-/-- **The harmonic `|J|`-forms of `HΛ_J(Q)` are the line of the constant form `dx_J`**:
-`H^{|J|}(Q, Γ_J) ≅ ℝ`. -/
+/-- **The harmonic `|J|`-forms of `HΛ_J(Q)` are the line of the constant form `dx_J`.** -/
 theorem Hpart_harmonic_card (J : Finset (Fin n)) :
     (Hpart n J).harmonic (#J : ℤ) = ℝ ∙ formJ n J := by
   obtain ⟨hfin, hle⟩ := Hpart_harmonic_card_spec J
@@ -1624,7 +1489,6 @@ theorem Hpart_harmonic_card (J : Finset (Fin n)) :
     exact hne (by simpa [this] using hmem)
   exact eq_span_singleton_of_mem_of_finrank_eq_one (by omega) hmem hne
 
-/-- **The dimensions of the harmonic forms of `HΛ_J(Q)`**: `1` in degree `|J|`, `0` otherwise. -/
 theorem finrank_Hpart_harmonic (J : Finset (Fin n)) (k : ℤ) :
     Module.finrank ℝ ((Hpart n J).harmonic k) = if k = (#J : ℤ) then 1 else 0 := by
   split_ifs with hk

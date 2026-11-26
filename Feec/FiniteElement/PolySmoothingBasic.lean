@@ -7,35 +7,19 @@ public import Feec.FiniteElement.PolyComplex
 /-!
 # Degrees of freedom of the higher-order families on simplicial meshes
 
-The mesh-independent ingredients of the smoothed-projection estimates for an admissible sequence
-`S` (`Feec.FiniteElement.PolySeq`), used on shape-regular meshes of star-shaped domains
-(`Feec.Models.StarShaped.PolySmoothing`) and on the cube
-(`Feec.Models.Cube.PolySmoothingEstimates`):
+For an admissible sequence, every degree of freedom is an integral of the values against a
+coefficient field of size `O(hᵏ)` on simplices with edges bounded by `h`.
 
-* **Trace determination on every face** (`PolySeq.pullback_eq_of_dof_eq`, from
-  `PolySeq.affinePullback_lexEnum_eq_of_dof_eq`): fields of the global space have the
-  same trace on every common face of two simplices (`PolySeq.pullback_eq_of_mem_globalSpace`).
-* **Degrees of freedom as integrals of the values** (`PolySeq.dof_eq_integral`): the moment DOF
-  `ℓ_{g,i}(ω) = ∫_{T̂_m} F_q^* ω_k ∧ ηᵢ` (`q` the lexicographic parametrization of the face `g`) is
-  `∫_{T̂_m} Σₛ ω(F_q ξ)ₛ cₛ(ξ) dξ` with a coefficient vector `c = dofCoeff` bounded by the `k × k`
-  minors of the edge matrix and the test forms (`sum_abs_dofCoeff_le`,
-  `PolySeq.exists_coeffBound_of_le`), which only sees the trace on `g`
-  (`sum_mul_dofCoeff_eq_of_pullback_eq`); hence `|ℓ_{g,i}(ω)| ≲ |edges|ᵏ sup_T |ω|`
-  (`PolySeq.abs_dof_le_of_coeff_le`).
+## Main results
 
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §4.5–4.6 (the moment degrees of freedom)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `PolySeq.dof_eq_integral`: the degrees of freedom as integrals of the values.
+* `PolySeq.exists_coeffBound_of_le`: the coefficient fields are `O(hᵏ)`.
+* `PolySeq.abs_dof_le_of_coeff_le`: the degrees of freedom are stable in the sup norm.
 -/
 
 @[expose] public noncomputable section
 
 open MeasureTheory Set Finset Filter
-
-/-! ### Traces on the faces of a simplex -/
 
 namespace Feec.FiniteElement
 
@@ -47,8 +31,6 @@ namespace PolySeq
 
 variable (S : PolySeq)
 
-/-- The pointwise form of `affinePullback_lexEnum_eq_of_dof_eq`: at every point of the
-parametrized face, the pullbacks of the values agree. -/
 theorem pullback_eq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {g : Finset (Fin n → ℝ)} {k m : ℕ} (hT : g ⊆ vertexSet T) (hc : #g = m + 1)
     {w η : FormField n} (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
@@ -60,10 +42,7 @@ theorem pullback_eq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
 
 end PolySeq
 
-/-! ### The degrees of freedom as integrals of the values against coefficient fields -/
-
-/-- The coefficient vector of the moment `∫_{T̂_m} F_q^* ω ∧ η` at `ξ ∈ T̂_m`, on degree-`k`
-fields: `ω ↦ Σₛ ω(F_q ξ)ₛ cₛ(ξ)`. -/
+/-- The coefficient vector `c(ξ)` of the moment `∫_{T̂_m} F_q^* ω ∧ η` on degree-`k` fields. -/
 def dofCoeff {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m) (k : ℕ) (ξ : Fin m → ℝ) :
     Finset (Fin n) → ℝ := fun s =>
   if #s = k then wedgeForm (wedgeProd (simplexMatrix q) s) (η ξ) univ else 0
@@ -76,8 +55,6 @@ theorem wedgeField_affinePullback_degField_eq {m : ℕ} (q : Fin (m + 1) → Fin
   refine Finset.sum_congr rfl fun s _ => ?_
   split_ifs <;> simp [simplexMap]
 
-/-- **The moment as an integral of the values**: `∫_{T̂_m} F_q^* ω_k ∧ η = ∫_{T̂_m} Σₛ ω(F_q ξ)ₛ
-cₛ(ξ) dξ`. -/
 theorem vertexMoment_degField_eq {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m)
     (k : ℕ) (ω : FormField n) :
     vertexMoment q η (degField k ω) =
@@ -86,8 +63,6 @@ theorem vertexMoment_degField_eq {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (
   exact setIntegral_congr_fun (measurableSet_refSimplex m) fun ξ _ =>
     wedgeField_affinePullback_degField_eq q η k ω ξ
 
-/-- **The coefficient vector only sees the trace**: for degree-`k` vectors with the same pullback
-along the edge matrix, the pairings with `c(ξ)` agree. -/
 theorem sum_mul_dofCoeff_eq_of_pullback_eq {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ)
     (η : FormField m) {k : ℕ} (ξ : Fin m → ℝ) {α β : Finset (Fin n) → ℝ} (hα : IsDeg k α)
     (hβ : IsDeg k β) (h : pullback (simplexMatrix q) α = pullback (simplexMatrix q) β) :
@@ -109,7 +84,6 @@ theorem abs_shuffleSgn {d : Type*} [LinearOrder d] (s t : Finset d) :
   have h2 : |(shuffleSgn s t : ℝ)| * |(shuffleSgn s t : ℝ)| = 1 := by rw [← abs_mul, h, abs_one]
   nlinarith [abs_nonneg (shuffleSgn s t : ℝ)]
 
-/-- `|(α ∧ β)_{univ}| ≤ Σ_a |α_a| ‖β‖`. -/
 theorem abs_wedgeForm_univ_le {m : ℕ} (α β : Finset (Fin m) → ℝ) :
     |wedgeForm α β univ| ≤ (∑ a, |α a|) * ‖β‖ := by
   rw [wedgeForm_apply, Finset.powerset_univ, Finset.sum_mul]
@@ -119,8 +93,6 @@ theorem abs_wedgeForm_univ_le {m : ℕ} (α β : Finset (Fin m) → ℝ) :
   have := norm_le_pi_norm β (univ \ a)
   rwa [Real.norm_eq_abs] at this
 
-/-- **Size of the coefficient vector**: if the edge vectors of `q` have entries `≤ a`, then
-`Σₛ |cₛ(ξ)| ≤ 2ⁿ 2ᵐ k! aᵏ ‖η(ξ)‖`. -/
 theorem sum_abs_dofCoeff_le {m : ℕ} {q : Fin (m + 1) → Fin n → ℝ} {a : ℝ} (ha0 : 0 ≤ a)
     (ha : ∀ i l, |simplexMatrix q i l| ≤ a) (η : FormField m) (k : ℕ) (ξ : Fin m → ℝ) :
     ∑ s, |dofCoeff q η k ξ s| ≤ 2 ^ n * (2 ^ m * (k.factorial * a ^ k)) * ‖η ξ‖ := by
@@ -153,7 +125,6 @@ theorem sum_abs_dofCoeff_le {m : ℕ} {q : Fin (m + 1) → Fin n → ℝ} {a : �
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_finset, Fintype.card_fin,
           nsmul_eq_mul]; push_cast; ring
 
-/-- The lexicographic parametrization of a face of `T` maps the reference simplex into `T`. -/
 theorem simplexMap_lexEnum_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)}
     (hgT : g ⊆ vertexSet T) {m : ℕ} (hg : #g = m + 1) {ξ : Fin m → ℝ}
     (hξ : ξ ∈ refSimplex m) :
@@ -166,15 +137,14 @@ namespace PolySeq
 
 variable (S : PolySeq)
 
-/-- **The degrees of freedom as integrals of the values**: `ℓ_{g,i}(ω) = ∫_{T̂_m} Σₛ ω(F_q ξ)ₛ
-cₛ(ξ) dξ`, `q = lexEnum g m`, `m = #g - 1`, `cₛ = dofCoeff q ηᵢ k`. -/
+/-- **The degrees of freedom as integrals of the values** (`m = #g - 1`):
+`ℓ_{g,i}(ω) = ∫_{T̂_m} Σₛ ω(F_q ξ)ₛ cₛ(ξ) dξ` with `q = lexEnum g m` and `c = dofCoeff q ηᵢ k`. -/
 theorem dof_eq_integral (g : Finset (Fin n → ℝ)) (k : ℕ) (i : S.DofIdx g k) (ω : contForms n) :
     S.dof g k i ω = ∫ ξ in refSimplex (#g - 1),
       ∑ s, (ω : FormField n) (simplexMap (lexEnum g (#g - 1)) ξ) s *
         dofCoeff (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) k ξ s := by
   rw [dof_apply, vertexMoment_degField_eq]
 
-/-- A uniform bound of the test forms on the reference simplices. -/
 theorem exists_testBound (k : ℕ) : ∃ M, 0 ≤ M ∧ ∀ m ≤ n,
     ∀ (i : Fin (Module.finrank ℝ (S.test k m))), ∀ ξ ∈ refSimplex m,
       ‖(S.testBasis k m i : FormField m) ξ‖ ≤ M := by
@@ -217,9 +187,8 @@ theorem exists_coeffBound_of_le (k : ℕ) : ∃ D, 0 ≤ D ∧
         gcongr
     _ = _ := by ring
 
-/-- **Stability of the degrees of freedom in the sup norm**: if the coefficient fields of the
-moment `ℓ_{g,i}` of a face `g` of `T` satisfy `Σₛ |cₛ| ≤ K` on the reference simplex, then
-`|ℓ_{g,i}(ω)| ≤ K sup_T |ω|` for every continuous form `ω`. -/
+/-- **Stability of the degrees of freedom in the sup norm**: if the coefficient fields of
+`ℓ_{g,i}`, `g` a face of `T`, satisfy `Σₛ |cₛ| ≤ K`, then `|ℓ_{g,i}(ω)| ≤ K sup_T |ω|`. -/
 theorem abs_dof_le_of_coeff_le {k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (i : S.DofIdx g k) (ω : contForms n)
     {K B : ℝ} (hK : ∀ ξ ∈ refSimplex (#g - 1),
@@ -257,7 +226,6 @@ theorem abs_dof_le_of_coeff_le {k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ)
     _ = _ := mul_one _
 
 variable {S} in
-/-- Global fields have the same pullback along a common face (`pullback_eq_of_dof_eq`). -/
 theorem pullback_eq_of_mem_globalSpace {M : SimplicialMesh n} {k : ℕ}
     {u : (polyElement n S).Piecewise M k} (hu : u ∈ (polyElement n S).globalSpace M k)
     (T T' : M.simplices) {g : Finset (Fin n → ℝ)} {m : ℕ}

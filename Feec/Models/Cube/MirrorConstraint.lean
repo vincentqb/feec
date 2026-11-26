@@ -6,41 +6,8 @@ public import Feec.Models.Cube.MirrorBGG
 /-!
 # The mirror constraint from the TSD conditions
 
-The constraint of the mirror complex on `Q = (0, ½)³` is defined on the Fourier side: `E` lies in
-`Mirror.tsdQ 1` iff the coefficients of its mirror extension are TSD at every frequency, which
-encodes the wall conditions besides the TSD conditions in `Q` (`Mirror.mem_tsdQ_one`). This file
-proves the converse on the operator domains: **the wall conditions follow from the domain
-conditions**. A field `E ∈ D(curl)` (with `E_{nτ} = 0`) that is symmetric, trace-free and weakly
-divergence-free in `Q` (against test fields compactly supported in `Q`) lies in the electric
-constraint, and likewise `B ∈ D(curl†)` (with `B_{ττ} = 0`) in the magnetic constraint.
-
-## Method
-
-For a symmetric trace-free `M` with `C = curl M` (row-wise), row `l` of the divergence is a skew
-part of the curl: `Σ_c ∫_Q M_{lc} ∂_c ψ = ∫_Q (C_{l+1,l+2} - C_{l+2,l+1}) ψ` for the trace test
-functions `ψ` of the Green's formulas of `MirrorTrace` (`Mirror.sum_integral_fderiv_eq`). Against
-`ψ ∈ C_c^∞(Q)` the left side vanishes, so `C_{l+1,l+2} = C_{l+2,l+1}`
-(`Mirror.curl_apply_eq_of_tsd`); hence the left side vanishes for every trace test function,
-which is the weak equation `div (ext M) = 0` on `𝕋³` (`MirrorTrace.isWeakFO_extL2_iff_trace`),
-i.e. `M̂(k) ξ_k = 0` at every frequency.
-
-## Main results
-
-* `Mirror.mem_tsdQ_one_of_tsd`, `Mirror.mem_tsdQ_two_of_tsd`: the converses of
-  `Mirror.mem_tsdQ_one`, `Mirror.mem_tsdQ_two` on `D(curl)` and `D(curl†)`, and
-  `Mirror.mem_adjoint_d₀_of_mem_tsdQ`: electric constraint states lie in `ker grad†`.
-* `MirrorBGG.mem_tsdQ_one_of_tsd`, `MirrorBGG.mem_tsdQ_two_of_tsd`: the same on the domains of
-  the second BGG operator `(S₁, curl)` and of its adjoint, and
-  `MirrorBGG.mem_adjoint_d₀_of_mem_tsdQ`: electric constraint states lie in `ker (grad grad)†`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17), Ch. 6
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+On the operator domains of the mirror complexes on `Q = (0, ½)³`, the wall conditions of the TSD
+constraint follow from the TSD conditions in `Q` (`Mirror.mem_tsdQ_one_of_tsd`, …).
 -/
 
 open scoped InnerProductSpace ComplexConjugate LinearPMap
@@ -54,7 +21,6 @@ open Geometry MirrorExt MirrorTrace Feec.Fourier Feec.Fourier.GradCurl
 open Feec.Models.BoundedDomain (R3)
 open Feec.Models.Cube.MirrorTorus (sgn sgn_mul_self)
 
-/-- `∫_Q u g = ⟪ḡ, u⟫` for continuous `g`. -/
 theorem setIntegral_mul_eq_inner (u : Domain.L2 ℂ (Q (Fin 3))) {g : R3 → ℂ} (hg : Continuous g) :
     ∫ y in Q (Fin 3), (u : R3 → ℂ) y * g y =
       ⟪toL2Q (n := 2) (Complex.continuous_conj.comp hg), u⟫_ℂ := by
@@ -64,9 +30,6 @@ theorem setIntegral_mul_eq_inner (u : Domain.L2 ℂ (Q (Fin 3))) {g : R3 → ℂ
 
 variable {cm cc : Fin 3 × Fin 3 → Fin 3 → ℂ} {cv : Fin 3 → Fin 3 → ℂ}
 
-/-- **Row `l` of the divergence of a symmetric trace-free field is a skew part of its curl**:
-for `C = curl M` in the weak form `CurlTrace cc`,
-`Σ_c ∫_Q M_{lc} ∂_c ψ = ∫_Q C_{l+1,l+2} ψ - ∫_Q C_{l+2,l+1} ψ`. -/
 theorem sum_integral_fderiv_eq {M C : MQ} (hsym : ∀ i j, M (i, j) = M (j, i))
     (htr : ∑ i, M (i, i) = 0) (hC : CurlTrace cc M C) (l : Fin 3) {ψ : R3 → ℂ}
     (h₁ : IsTraceTest (cc (l + 1, l + 2)) ψ) (h₂ : IsTraceTest (cc (l + 2, l + 1)) ψ) :
@@ -94,15 +57,11 @@ theorem sum_integral_fderiv_eq {M C : MQ} (hsym : ∀ i j, M (i, j) = M (j, i))
   rw [hsum]
   linear_combination htr' - e₁ + e₂
 
-/-- Compactly supported smooth functions in `Q` are trace test functions of every parity. -/
 theorem isTraceTest_of_isTest {d : Type*} [Fintype d] (c : d → ℂ) {ψ : (d → ℝ) → ℂ}
     (hψ : Domain.IsTest (Q d) ψ) : IsTraceTest c ψ :=
   ⟨hψ.contDiff.of_le (by exact_mod_cast le_top), fun j _ y _ hy => hψ.eq_zero_of_notMem
     fun hQ => by have h := mem_Q.1 hQ j; rcases hy with hy | hy <;> simp [hy] at h⟩
 
-/-- **The skew part of the curl of a TSD field vanishes**: for `M` symmetric, trace-free and
-weakly divergence-free in `Q`, and `C = curl M` in the weak form `CurlTrace cc`,
-`C_{l+1,l+2} = C_{l+2,l+1}`. -/
 theorem curl_apply_eq_of_tsd {M C : MQ} (hsym : ∀ i j, M (i, j) = M (j, i))
     (htr : ∑ i, M (i, i) = 0)
     (hdiv : ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -142,10 +101,6 @@ theorem curl_apply_eq_of_tsd {M C : MQ} (hsym : ∀ i j, M (i, j) = M (j, i))
 variable (hcm : ∀ p k, cm p k * cm p k = 1) (hcv : ∀ a k, cv a k * cv a k = 1)
 
 include hcv in
-/-- **Divergence-free rows on `Q` are divergence-free on `𝕋³`**: if
-`Σ_c ∫_Q M_{lc} ∂_c ψ = 0` for every trace test function `ψ` of the parity `cv l` (the weak form
-of `div_l M = 0` with `M_{l,τ} n_τ = 0` on the faces), then `Σ_c M̂_{lc}(k) ξ_c = 0`,
-`ξ = 2πk`. -/
 theorem sum_extF_mul_freq_eq_zero
     (hpar : ∀ a b, Function.update (cm (a, b)) b (-cm (a, b) b) = cv a) {M : MQ} (l : Fin 3)
     (h : ∀ ψ : R3 → ℂ, IsTraceTest (cv l) ψ →
@@ -172,8 +127,6 @@ theorem sum_extF_mul_freq_eq_zero
     rw [h ψ hψ, setIntegral_mul_eq_inner _ hψ.contDiff.continuous, inner_zero_right, neg_zero]
 
 include hcm in
-/-- **The extension of a TSD field with divergence-free rows on `𝕋³` is TSD fibrewise**, for
-parities `cm` symmetric in the indices and constant on the diagonal. -/
 theorem extF_mem_tsd (hsymc : ∀ a b, cm (a, b) = cm (b, a)) (hdiag : ∀ a, cm (a, a) = cm (0, 0))
     {M : MQ} (hsym : ∀ i j, M (i, j) = M (j, i)) (htr : ∑ i, M (i, i) = 0) (k : Fin 3 → ℤ)
     (hdiv : ∀ l, ∑ c, (extF hcm M : (Fin 3 → ℤ) → Mat) k (l, c) * (2 * Real.pi * k c) = 0) :
@@ -195,9 +148,6 @@ theorem extF_mem_tsd (hsymc : ∀ a b, cm (a, b) = cm (b, a)) (hdiag : ∀ a, cm
     rfl
 
 include hcm hcv in
-/-- **TSD fields in the domain of a mirror curl have TSD extensions**: `M` symmetric, trace-free
-and weakly divergence-free in `Q`, with `C = curl M` in the weak form `CurlTrace cc`, has
-fibrewise TSD extension by the parities `cm`. -/
 theorem extF_mem_tsd_of_tsd (hpar : ∀ a b, Function.update (cm (a, b)) b (-cm (a, b) b) = cv a)
     (hsymc : ∀ a b, cm (a, b) = cm (b, a)) (hdiag : ∀ a, cm (a, a) = cm (0, 0))
     (hcc₁ : ∀ l, cc (l + 1, l + 2) = cv l) (hcc₂ : ∀ l, cc (l + 2, l + 1) = cv l) {M C : MQ}
@@ -211,9 +161,7 @@ theorem extF_mem_tsd_of_tsd (hpar : ∀ a b, Function.update (cm (a, b)) b (-cm 
       rw [sum_integral_fderiv_eq hsym htr hC l (by rwa [hcc₁]) (by rwa [hcc₂]),
         curl_apply_eq_of_tsd hsym htr hdiv hC l, sub_self]) k
 
-/-- **The electric mirror constraint from the TSD conditions**: `E ∈ D(curl)` (mirror condition
-`E_{nτ} = 0`) symmetric, trace-free and weakly divergence-free in `Q` lies in `tsdQ 1`; the
-condition `E_{τn} = 0` of the constraint follows. Converse of `mem_tsdQ_one`. -/
+/-- **TSD fields of `D(curl)` lie in the electric mirror constraint `tsdQ 1`.** -/
 theorem mem_tsdQ_one_of_tsd {E : MQ} (hE : E ∈ (complexQ.d 1 2).domain)
     (hsym : ∀ i j, E (i, j) = E (j, i)) (htr : ∑ i, E (i, i) = 0)
     (hdiv : ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -228,9 +176,7 @@ theorem mem_tsdQ_one_of_tsd {E : MQ} (hE : E ∈ (complexQ.d 1 2).domain)
       (fun l => funext fun k => by fin_cases l <;> fin_cases k <;> simp [cB, cV, sgn])
       ((complexQ_d₁_iff E _).1 ⟨hE, rfl⟩) hsym htr hdiv k
 
-/-- **The magnetic mirror constraint from the TSD conditions**: `B ∈ D(curl†)` (mirror condition
-`B_{ττ} = 0`) symmetric, trace-free and weakly divergence-free in `Q` lies in `tsdQ 2`; the
-condition `B_{nn} = 0` of the constraint follows. Converse of `mem_tsdQ_two`. -/
+/-- **TSD fields of `D(curl†)` lie in the magnetic mirror constraint `tsdQ 2`.** -/
 theorem mem_tsdQ_two_of_tsd {B : MQ} (hB : B ∈ ((complexQ.d 1 2)†).domain)
     (hsym : ∀ i j, B (i, j) = B (j, i)) (htr : ∑ i, B (i, i) = 0)
     (hdiv : ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -247,8 +193,7 @@ theorem mem_tsdQ_two_of_tsd {B : MQ} (hB : B ∈ ((complexQ.d 1 2)†).domain)
       (fun l => funext fun k => by fin_cases l <;> fin_cases k <;> simp [cE, cPV, sgn])
       ((complexQ_adjoint_d₁_iff B _).1 ⟨hB, rfl⟩) hsym htr hdiv k
 
-/-- **Electric constraint states are in `ker grad†`**: `E ∈ tsdQ 1` lies in the domain of
-`d₀† = -div` with `d₀† E = 0` (TSD fields on the torus are divergence-free). -/
+/-- **Electric constraint states are in `ker grad†`.** -/
 theorem mem_adjoint_d₀_of_mem_tsdQ {E : MQ} (hE : E ∈ tsdQ 1) :
     ∃ h : E ∈ ((complexQ.d 0 1)†).domain, (complexQ.d 0 1)† ⟨E, h⟩ = 0 := by
   obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 (constraint_le_ker_adjoint hE)
@@ -266,8 +211,6 @@ open Geometry MirrorExt Feec.Fourier Feec.Fourier.GradCurl Feec.Fourier.BGG
 open Feec.Models.BoundedDomain (R3)
 open Feec.Models.Cube.Mirror (MQ eight_pos)
 
-/-- `D((S₁, curl)†) ∩ ({0} × L²) ⊆ {0} × D(curl†)`: if `(0, B)` lies in the domain of the adjoint of
-the second BGG operator, `B` lies in the domain of the adjoint of the mirror curl. -/
 theorem mem_adjoint_curl_domain {B : MQ}
     (hB : (WithLp.toLp 2 (0, B) : W2Q) ∈ ((complexQ.d 1 2)†).domain) :
     B ∈ ((Mirror.complexQ.d 1 2)†).domain := by
@@ -285,9 +228,7 @@ theorem mem_adjoint_curl_domain {B : MQ}
     Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n]
   exact adjoint_bgg_inr _ _
 
-/-- **The electric BGG constraint from the TSD conditions**: `E` in the domain of the second BGG
-operator `(S₁, curl)`, symmetric, trace-free and weakly divergence-free in `Q`, lies in
-`tsdQ 1`. Converse of `tsd_of_mem_tsdQ` in the electric slot. -/
+/-- **TSD fields of the domain of `(S₁, curl)` lie in the electric BGG constraint `tsdQ 1`.** -/
 theorem mem_tsdQ_one_of_tsd {E : MQ} (hE : E ∈ (complexQ.d 1 2).domain)
     (hsym : ∀ i j, E (i, j) = E (j, i)) (htr : ∑ i, E (i, i) = 0)
     (hdiv : ∀ φ : Fin 3 → R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -296,9 +237,7 @@ theorem mem_tsdQ_one_of_tsd {E : MQ} (hE : E ∈ (complexQ.d 1 2).domain)
     E ∈ tsdQ 1 :=
   Mirror.mem_tsdQ_one_of_tsd (complexQ_d₁_eq ⟨E, hE⟩).fst hsym htr hdiv
 
-/-- **The magnetic BGG constraint from the TSD conditions**: `B` with `(0, B)` in the domain of
-the adjoint of `(S₁, curl)`, symmetric, trace-free and weakly divergence-free in `Q`, lies in the
-magnetic constraint (`(0, B) ∈ tsdQ 2` by `mem_tsdQ_two`). -/
+/-- **TSD fields `B` with `(0, B) ∈ D((S₁, curl)†)` lie in the magnetic BGG constraint.** -/
 theorem mem_tsdQ_two_of_tsd {B : MQ}
     (hB : (WithLp.toLp 2 (0, B) : W2Q) ∈ ((complexQ.d 1 2)†).domain)
     (hsym : ∀ i j, B (i, j) = B (j, i)) (htr : ∑ i, B (i, i) = 0)
@@ -308,8 +247,7 @@ theorem mem_tsdQ_two_of_tsd {B : MQ}
     B ∈ Mirror.tsdQ 2 :=
   Mirror.mem_tsdQ_two_of_tsd (mem_adjoint_curl_domain hB) hsym htr hdiv
 
-/-- **Electric constraint states are in `ker (grad grad)†`**: `E ∈ tsdQ 1` lies in the domain of
-`d₀† = div div` with `d₀† E = 0`. -/
+/-- **Electric constraint states are in `ker (grad grad)†`.** -/
 theorem mem_adjoint_d₀_of_mem_tsdQ {E : MQ} (hE : E ∈ tsdQ 1) :
     ∃ h : E ∈ ((complexQ.d 0 1)†).domain, (complexQ.d 0 1)† ⟨E, h⟩ = 0 := by
   obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 (Models.Torus.BGG.constraint_le_ker_adjoint hE)

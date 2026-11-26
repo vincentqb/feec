@@ -5,79 +5,17 @@ public import Feec.Models.Cube.Mirror
 /-!
 # Mirror boundary conditions as trace conditions
 
-The mirror complex on `Q = (0, ½)³` (`Feec.Models.Cube.Mirror.complexQ`, Prop 4.17 with tensorial
-mirror conditions) is defined by the method of images: a field lies in a domain iff its extension
-by the mirror parities lies in the corresponding torus Sobolev space. This file characterizes
-these domains on `Q` itself by **Green's formulas with vanishing boundary terms**, the weak form
-of trace conditions (as for `H̊(curl)` in `Feec.Domain.ConstCoeffOp.mem_minimal_domain_iff`),
-tested against the **trace test functions** `MirrorTrace.IsTraceTest c`: `ψ ∈ C¹(ℝ³)` with `ψ = 0`
-on the closed faces `{x_j = 0}`, `{x_j = ½}` of `Q̄` for which `c_j = -1`, and no condition on the
-other faces (no periodicity, no reflection symmetry). The free traces of `ψ` on the faces with
-`c_j = 1` carry the boundary conditions:
-
-| operator | parity of the test function | Green's formula | boundary condition |
-|---|---|---|---|
-| `d₀ = grad` | `cE (a, b)` | `∫ σ_a ∂_b ψ = -∫ G_{ab} ψ` | `σ · n = 0` |
-| `d₁ = curl` | `cB (a, b)` | `∫ (E_{a,b+2} ∂_{b+1} ψ - E_{a,b+1} ∂_{b+2} ψ) = -∫ C_{ab} ψ` | `E_{nτ} = 0` |
-| `d₀† = -div` | `cV a` | `Σ_c ∫ M_{ac} ∂_c ψ = ∫ D_a ψ` | `E_{τn} = 0` |
-| `d₁† = curl` | `cE (a, b)` | as for `d₁` | `B_{ττ} = 0` |
-
-(`Mirror.complexQ_d₀_iff`, `complexQ_d₁_iff`, `complexQ_adjoint_d₀_iff`,
-`complexQ_adjoint_d₁_iff`). Hence `D(L)` of the mirror complex is described by these formulas
-(`Mirror.mem_wave_domain_iff_trace`), and Prop 4.17 holds on `Q` with these boundary conditions,
-with existence and uniqueness and TSD propagation (`Mirror.existsUnique_memQ_trace`). The same
-holds on **every open cube** `∏ (bᵢ, bᵢ + s)` (`Mirror.complexCube`), with the trace test
-functions of the cube (`Mirror.IsTraceTestCube`, `Mirror.mem_wave_domain_cube_iff_trace`,
-`Mirror.existsUnique_memCube_trace`).
-
-The boundary conditions in the last column are the reading of the Green's formulas (the faces on
-which `ψ` is free and the boundary term `∫_{∂Q} f_p ψ n_c` that the formula forces to vanish);
-pointwise traces of `L²` fields with `L²` derivatives are not formalized.
-
-## Method
-
-For a first-order operator `g = Σ α_{cp} ∂_c f_p` whose terms all have the same output parity,
-the weak equation on `𝕋³` for the extensions (`Feec.Fourier.TorusWeak.IsWeakFO`, tested against
-all smooth `φ` on `𝕋³`) is first shown equivalent to the Green's formula on `Q` against the
-**smooth parity functions** (`MirrorTrace.IsParSmooth`, smooth `ℤ³`-periodic functions with the
-reflection parities; `MirrorTrace.isWeakFO_extL2_iff`): a parity function `f` pairs with `φ` as
-with its parity projection `P_c φ = 2⁻³ Σ_ε sign_c(ε) φ ∘ R_ε` (`MirrorTrace.integral_mul_parProj`),
-the tiling of `𝕋³` by the eight reflected boxes gives `∫_{𝕋³} (ext_c g) G = 8 ∫_Q g G` for `G` of
-parity `c` (`MirrorTrace.integral_extL2_mul`), and `∂_k` commutes with `P` up to the reversal of
-the parity of `x_k` (`MirrorTrace.partialT_parProj`).
-
-The smooth parity functions are trace test functions (`MirrorTrace.IsParSmooth.isTraceTest`). For
-the converse (`MirrorTrace.isWeakFO_extL2_iff_trace`), the extension of a trace test function `ψ`
-is weakly differentiable on `𝕋³` with derivative the extension of `∂_k ψ`
-(`MirrorTrace.mFourierCoeff_extL2_fderiv`): its Fourier coefficients are pairings on `Q` with the
-smooth parity functions `P_c e_{-m}`, and the divergence theorem on the box `[0, ½]³`
-(`MirrorTrace.ibp_Q`) has no boundary terms because on each face either `ψ` or `P_c e_{-m}`
-vanishes. Parseval then turns the Fourier form of the weak equation into the Green's formula.
-
-## Scope
-
-Only the first-order complex of Prop 4.17 is treated. The complex (4.16) of Prop 4.19
-(`Feec.Models.Cube.MirrorSym`) has the second-order differential `grad grad`, for which the torus
-weak theory (`Feec.Fourier.TorusWeak`) has no counterpart; its mirror conditions are not
-characterized here.
+The domains of the mirror complex on `Q = (0, ½)³`, and the data space of its Hodge wave equation,
+are characterized by Green's formulas against trace test functions, on `Q` and on every open cube.
 
 ## Main results
 
-* `MirrorTrace.IsTraceTest`, `MirrorTrace.ibp_Q`, `MirrorTrace.mFourierCoeff_extL2_fderiv`,
-  **`MirrorTrace.isWeakFO_extL2_iff_trace`**; `MirrorTrace.IsParSmooth`,
-  `MirrorTrace.isWeakFO_extL2_iff`.
-* **`Mirror.complexQ_d₀_iff`**, **`Mirror.complexQ_d₁_iff`**, **`Mirror.complexQ_adjoint_d₀_iff`**,
-  **`Mirror.complexQ_adjoint_d₁_iff`** (and the `_isParSmooth` forms),
-  **`Mirror.mem_wave_domain_iff_trace`**, **`Mirror.existsUnique_memQ_trace`**.
-* `Mirror.IsTraceTestCube`, **`Mirror.mem_wave_domain_cube_iff_trace`**,
-  **`Mirror.existsUnique_memCube_trace`**.
+* `Mirror.mem_wave_domain_iff_trace`, `Mirror.existsUnique_memQ_trace`: on `Q`.
+* `Mirror.mem_wave_domain_cube_iff_trace`, `Mirror.existsUnique_memCube_trace`: on every cube.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -91,15 +29,14 @@ namespace Feec.Models.Cube.MirrorTrace
 
 open Geometry MirrorExt
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 variable {d : Type*} [Fintype d] [DecidableEq d]
 
 /-! ### Parity projections of smooth functions on the torus -/
 
-/-- The **parity projection** `P_c φ = 2⁻ᵈ Σ_ε sign_c(ε) φ ∘ R_ε` of a function on `𝕋ᵈ`: the
-part of `φ` with parity `c` (odd in `x_j` for `c_j = -1`, even for `c_j = 1`). -/
+/-- The **parity projection** `P_c φ = 2⁻ᵈ Σ_ε sign_c(ε) φ ∘ R_ε`, the part of `φ` of parity `c`. -/
 def parProj (c : d → ℂ) (φ : UnitAddTorus d → ℂ) (x : UnitAddTorus d) : ℂ :=
   ((2 ^ Fintype.card d : ℝ) : ℂ)⁻¹ * ∑ ε : d → Bool, sign c ε * φ (reflB ε x)
 
@@ -120,7 +57,6 @@ theorem isSmooth_parProj (c : d → ℂ) {φ : UnitAddTorus d → ℂ} (hφ : Is
 theorem continuous_parProj (c : d → ℂ) {φ : UnitAddTorus d → ℂ} (hφ : IsSmooth φ) :
     Continuous (parProj c φ) := (isSmooth_parProj c hφ).continuous
 
-/-- **Parity of the projection.** -/
 theorem parProj_reflB {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (φ : UnitAddTorus d → ℂ)
     (η : d → Bool) (x : UnitAddTorus d) : parProj c φ (reflB η x) = sign c η * parProj c φ x := by
   rw [parProj, parProj, Finset.mul_sum, Finset.mul_sum, Finset.mul_sum]
@@ -139,7 +75,6 @@ theorem parProj_reflB {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (φ : UnitAddT
   linear_combination (-(((2 ^ Fintype.card d : ℝ) : ℂ)⁻¹ * sign c ε *
     φ (reflB (fun j => xor (ε j) (η j)) x))) * hη
 
-/-- A function with parity `c` is its own parity projection. -/
 theorem parProj_of_parity {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {φ : UnitAddTorus d → ℂ}
     (hφ : ∀ η x, φ (reflB η x) = sign c η * φ x) : parProj c φ = φ := by
   funext x
@@ -150,8 +85,6 @@ theorem parProj_of_parity {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {φ : Unit
   push_cast
   field_simp
 
-/-- **Derivatives of parity projections**: `∂_k (P_c φ) = P_{c'} (∂_k φ)`, with the parity of
-`x_k` reversed (`c'_k = -c_k`). -/
 theorem partialT_parProj (c : d → ℂ) {φ : UnitAddTorus d → ℂ} (hφ : IsSmooth φ) (k : d) :
     partialT k (parProj c φ) = parProj (Function.update c k (-c k)) (partialT k φ) := by
   funext x
@@ -186,7 +119,6 @@ theorem partialT_parProj (c : d → ℂ) {φ : UnitAddTorus d → ℂ} (hφ : Is
 
 /-! ### Pairings of parity functions -/
 
-/-- **Parity functions transform by their sign**: `f ∘ R_ε = sign_c(ε) f` a.e. -/
 theorem comp_reflB_ae {c : d → ℂ} {f : T2 d} (hf : f ∈ paritySub c) (ε : d → Bool) :
     (fun x => (f : UnitAddTorus d → ℂ) (reflB ε x)) =ᵐ[volume]
       fun x => sign c ε * (f : UnitAddTorus d → ℂ) x := by
@@ -208,7 +140,6 @@ theorem comp_reflB_ae {c : d → ℂ} {f : T2 d} (hf : f ∈ paritySub c) (ε : 
   filter_upwards [hg, hsf] with x h1 h2
   rw [← h1, congrFun e' x, h2]
 
-/-- **Pairing against the parity projection**: `∫ f φ = ∫ f (P_c φ)` for `f` of parity `c`. -/
 theorem integral_mul_parProj {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {f : T2 d}
     (hf : f ∈ paritySub c) {φ : UnitAddTorus d → ℂ} (hφ : Continuous φ) :
     ∫ x, (f : UnitAddTorus d → ℂ) x * φ x =
@@ -243,8 +174,6 @@ theorem integral_mul_parProj {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {f : T2
   push_cast
   field_simp
 
-/-- **Pairing of an extension with a parity function**: `∫_{𝕋ᵈ} (ext_c g) G = 2ᵈ ∫_Q g G` for
-`G` continuous with parity `c`. -/
 theorem integral_extL2_mul {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g : Domain.L2 ℂ (Q d))
     {G : UnitAddTorus d → ℂ} (hG : Continuous G) (hpar : ∀ η x, G (reflB η x) = sign c η * G x) :
     ∫ x, (extL2 hc g : UnitAddTorus d → ℂ) x * G x =
@@ -270,7 +199,6 @@ theorem integral_extL2_mul {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g : Doma
     filter_upwards [coeFn_resQ F] with y h
     rw [← h, resQ_extL2]
 
-/-- **Pairing of an extension with a smooth function**: `∫_{𝕋ᵈ} (ext_c g) φ = 2ᵈ ∫_Q g (P_c φ)`. -/
 theorem integral_extL2_mul_smooth {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g : Domain.L2 ℂ (Q d))
     {φ : UnitAddTorus d → ℂ} (hφ : IsSmooth φ) :
     ∫ x, (extL2 hc g : UnitAddTorus d → ℂ) x * φ x =
@@ -279,8 +207,6 @@ theorem integral_extL2_mul_smooth {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (g
   rw [integral_mul_parProj hc (extL2_mem hc g) hφ.continuous]
   exact integral_extL2_mul hc g (continuous_parProj c hφ) (parProj_reflB hc φ)
 
-/-- **Pairing an extension with a derivative**: if `c'` is `c` with the parity of `x_k`
-reversed, `∫_{𝕋ᵈ} (ext_{c'} g) ∂_k φ = 2ᵈ ∫_Q g ∂_k (P_c φ)`. -/
 theorem integral_extL2_mul_partialT {c c' : d → ℂ} (hc' : ∀ j, c' j * c' j = 1) {k : d} (hu : Function.update c' k (-c' k) = c)
     (g : Domain.L2 ℂ (Q d)) {φ : UnitAddTorus d → ℂ} (hφ : IsSmooth φ) :
     ∫ x, (extL2 hc' g : UnitAddTorus d → ℂ) x * partialT k φ x =
@@ -306,11 +232,7 @@ theorem integral_extL2_mul_partialT {c c' : d → ℂ} (hc' : ∀ j, c' j * c' j
 /-- The reflection `y ↦ (±y_j)_j` of `ℝᵈ` (`-y_j` where `ε j`). -/
 def reflR (ε : d → Bool) (y : d → ℝ) : d → ℝ := fun j => if ε j then -y j else y j
 
-/-- **A smooth parity function** for the sign vector `c` (`c_j = ±1`): `ψ ∈ C^∞(ℝᵈ)`, `ℤᵈ`-periodic,
-with `ψ ∘ R_ε = (∏_{ε_j} c_j) ψ` for every reflection `R_ε y = (±y_j)_j` (odd in `y_j` for
-`c_j = -1`, even for `c_j = 1`). These are the smooth functions on `[0, ½]ᵈ` whose extension by
-the parity `c` is smooth: on a face `y_j ∈ {0, ½}` they vanish if `c_j = -1` and have vanishing
-normal derivative if `c_j = 1`. -/
+/-- **A smooth parity function**: smooth, `ℤᵈ`-periodic, with `ψ ∘ R_ε = (∏_{ε_j} c_j) ψ`. -/
 structure IsParSmooth (c : d → ℂ) (ψ : (d → ℝ) → ℂ) : Prop where
   contDiff : ContDiff ℝ ∞ ψ
   periodic : ∀ (m : d → ℤ) (y : d → ℝ), ψ (y + fun j => (m j : ℝ)) = ψ y
@@ -331,7 +253,6 @@ theorem per_comp_proj {ψ : (d → ℝ) → ℂ}
   rw [e, hψ]
 
 omit [DecidableEq d] in
-/-- A smooth parity function is the lift of a smooth parity function on the torus. -/
 theorem IsParSmooth.torus {c : d → ℂ} {ψ : (d → ℝ) → ℂ} (hψ : IsParSmooth c ψ) :
     IsSmooth (per ψ) ∧ (∀ η x, per ψ (reflB η x) = sign c η * per ψ x) ∧ per ψ ∘ proj = ψ := by
   have h1 := per_comp_proj hψ.periodic
@@ -342,7 +263,6 @@ theorem IsParSmooth.torus {c : d → ℂ} {ψ : (d → ℝ) → ℂ} (hψ : IsPa
     hψ.parity]
 
 omit [DecidableEq d] in
-/-- The lift of a smooth parity function on the torus is a smooth parity function. -/
 theorem isParSmooth_comp_proj {c : d → ℂ} {φ : UnitAddTorus d → ℂ} (hφ : IsSmooth φ)
     (hpar : ∀ η x, φ (reflB η x) = sign c η * φ x) : IsParSmooth c (φ ∘ proj) where
   contDiff := hφ
@@ -355,13 +275,6 @@ theorem isParSmooth_comp_proj {c : d → ℂ} {φ : UnitAddTorus d → ℂ} (hφ
 
 variable {P : Type*} [Fintype P]
 
-/-- **Weak first-order operators on mirror extensions are Green's formulas on `Q`**. Let
-`g = Σ_{c,p} α_{cp} ∂_c f_p` be a first-order operator whose terms all have output parity `cout`
-(the parity `cin p` of `f_p` with the parity of `x_c` reversed, whenever `α_{cp} ≠ 0`). Then the
-extensions satisfy `ext g = Σ α_{cp} ∂_c (ext f_p)` weakly on `𝕋ᵈ` iff
-`Σ_{c,p} α_{cp} ∫_Q f_p ∂_c ψ = -∫_Q g ψ` for every smooth parity function `ψ` with parity
-`cout`. For `ψ ∈ C_c^∞(Q)` this is the weak operator on `Q`; the other `ψ` impose the boundary
-conditions encoded by the parities. -/
 theorem isWeakFO_extL2_iff (α : d → P → ℂ) {cin : P → d → ℂ} (hcin : ∀ p j, cin p j * cin p j = 1)
     {cout : d → ℂ} (hcout : ∀ j, cout j * cout j = 1)
     (hpar : ∀ c p, α c p ≠ 0 → Function.update (cin p) c (-cin p c) = cout)
@@ -408,15 +321,11 @@ theorem isWeakFO_extL2_iff (α : d → P → ℂ) {cin : P → d → ℂ} (hcin 
 /-- The closed cube `Q̄ = [0, ½]ᵈ`. -/
 abbrev Qc (d : Type*) : Set (d → ℝ) := Icc 0 fun _ => 1 / 2
 
-/-- **Trace test functions** for the sign vector `c` (`c_j = ±1`): `ψ ∈ C¹(ℝᵈ)` with `ψ = 0` on the
-closed faces `{x_j = 0}`, `{x_j = ½}` of `Q̄` for which `c_j = -1`, and no condition on the other
-faces. Green's formulas against this class are the weak form of the boundary conditions on the
-faces with `c_j = 1` (where the trace of `ψ` is free). -/
+/-- **Trace test functions**: `ψ ∈ C¹(ℝᵈ)` vanishing on the faces normal to `e_j` if `c_j = -1`. -/
 structure IsTraceTest (c : d → ℂ) (ψ : (d → ℝ) → ℂ) : Prop where
   contDiff : ContDiff ℝ 1 ψ
   vanish : ∀ j, c j = -1 → ∀ y ∈ Qc d, (y j = 0 ∨ y j = 1 / 2) → ψ y = 0
 
-/-- **Smooth parity functions vanish on the faces where they are odd.** -/
 theorem IsParSmooth.eq_zero {c : d → ℂ} {ψ : (d → ℝ) → ℂ} (hψ : IsParSmooth c ψ) {j : d}
     (hj : c j = -1) {y : d → ℝ} (hy : y j = 0 ∨ y j = 1 / 2) : ψ y = 0 := by
   have h := hψ.parity (single j) y
@@ -434,21 +343,16 @@ theorem IsParSmooth.eq_zero {c : d → ℂ} {ψ : (d → ℝ) → ℂ} (hψ : Is
   rw [e] at h
   linear_combination h / 2
 
-/-- Smooth parity functions are trace test functions. -/
 theorem IsParSmooth.isTraceTest {c : d → ℂ} {ψ : (d → ℝ) → ℂ} (hψ : IsParSmooth c ψ) :
     IsTraceTest c ψ :=
   ⟨hψ.contDiff.of_le (by exact_mod_cast le_top), fun _ hj _ _ hy => hψ.eq_zero hj hy⟩
 
 omit [DecidableEq d] in
-/-- Complex conjugates of trace test functions are trace test functions. -/
 theorem IsTraceTest.star {c : d → ℂ} {ψ : (d → ℝ) → ℂ} (hψ : IsTraceTest c ψ) :
     IsTraceTest c fun y => conj (ψ y) :=
   ⟨Complex.conjCLE.toContinuousLinearMap.contDiff.comp hψ.contDiff,
     fun j hj y hy h => by simp [hψ.vanish j hj y hy h]⟩
 
-/-- **Integration by parts on `Q` in the direction `e_c`** (the divergence theorem on the box
-`[0, ½]ⁿ⁺¹`): `∫_Q (∂_c u) v = -∫_Q u ∂_c v` for `C¹` functions whose product vanishes on the two
-faces of `Q̄` normal to `e_c`. -/
 theorem ibp_Q {n : ℕ} (c : Fin (n + 1)) {u v : (Fin (n + 1) → ℝ) → ℂ}
     (hu : ContDiff ℝ 1 u) (hv : ContDiff ℝ 1 v)
     (hb : ∀ y ∈ Icc (0 : Fin (n + 1) → ℝ) (fun _ => 1 / 2), (y c = 0 ∨ y c = 1 / 2) →
@@ -553,11 +457,6 @@ private theorem mFourierCoeff_eq_integral_mul (F : UnitAddTorus (Fin (n + 1)) �
     mFourierCoeff F m = ∫ x, F x * mFourier (-m) x := by
   simp only [mFourierCoeff, smul_eq_mul, mul_comm]
 
-/-- **Derivatives of extensions of trace test functions**: for `ψ` a trace test function of parity
-`c`, the extension of `∂_k ψ` by the parity `c` with the parity of `x_k` reversed is the weak
-derivative `∂_k` of the extension of `ψ` on `𝕋ᵈ`: `(ext ∂_k ψ)^(m) = 2πi m_k (ext ψ)^(m)`. The
-boundary terms of the integration by parts on `Q` vanish, since `ψ = 0` on the faces normal to
-`e_k` where `c_k = -1`, and the parity function `P_{c'} e_{-m}` vanishes there where `c_k = 1`. -/
 theorem mFourierCoeff_extL2_fderiv {c : Fin (n + 1) → ℂ} (hc : ∀ j, c j * c j = 1)
     {ψ : (Fin (n + 1) → ℝ) → ℂ} (hψ : IsTraceTest c ψ) (k : Fin (n + 1)) (m : Fin (n + 1) → ℤ) :
     mFourierCoeff (extL2 (sq_update hc k) (toL2Q (hψ.continuous_fderiv k)) :
@@ -617,10 +516,7 @@ private theorem inner_L2_eq_tsum (A B : Lp ℂ 2 (volume : Measure (UnitAddTorus
 variable {P : Type*} [Fintype P]
 
 /-- **Weak first-order operators on mirror extensions are Green's formulas against trace test
-functions.** In the setting of `isWeakFO_extL2_iff`, the weak equation on `𝕋ᵈ` for the extensions
-is equivalent to `Σ_{c,p} α_{cp} ∫_Q f_p ∂_c ψ = -∫_Q g ψ` for every `ψ ∈ C¹(ℝᵈ)` vanishing on
-the closed faces of `Q̄` normal to the `e_j` with `cout_j = -1` (`IsTraceTest cout ψ`); no
-periodicity or reflection symmetry of `ψ` is required. -/
+functions** `ψ` with `IsTraceTest cout ψ`. -/
 theorem isWeakFO_extL2_iff_trace (α : Fin (n + 1) → P → ℂ) {cin : P → Fin (n + 1) → ℂ}
     (hcin : ∀ p j, cin p j * cin p j = 1) {cout : Fin (n + 1) → ℂ}
     (hcout : ∀ j, cout j * cout j = 1)
@@ -676,10 +572,7 @@ theorem isWeakFO_extL2_iff_trace (α : Fin (n + 1) → P → ℂ) {cin : P → F
   refine Finset.sum_congr rfl fun p _ => ?_
   ring
 
-/-- **A class of test functions for Green's formulas** on `Q`: the weak first-order equations on
-`𝕋ⁿ⁺¹` for mirror extensions are equivalent to the Green's formulas on `Q` tested against the
-functions `ψ` with `T cout ψ`. The trace test functions are such a class
-(`isGreenClass_isTraceTest`). -/
+/-- **A class of test functions for Green's formulas** on `Q` for the mirror extensions. -/
 def IsGreenClass (T : (Fin (n + 1) → ℂ) → ((Fin (n + 1) → ℝ) → ℂ) → Prop) : Prop :=
   ∀ {P : Type} [Fintype P] (α : Fin (n + 1) → P → ℂ) {cin : P → Fin (n + 1) → ℂ}
     (hcin : ∀ p j, cin p j * cin p j = 1) {cout : Fin (n + 1) → ℂ}
@@ -707,7 +600,6 @@ open Geometry MirrorExt MirrorTrace Feec.Fourier Feec.Fourier.GradCurl
 open Feec.HilbertComplex (totalSub)
 open Feec.Models.BoundedDomain (R3)
 
-/-- Graphs of the mirror complex are the graphs of the torus complex along `J`. -/
 theorem complexQ_graph_iff {i j : Fin 3} (x : SpaceQ i) (y : SpaceQ j) :
     (∃ h : x ∈ (complexQ.d i j).domain, complexQ.d i j ⟨x, h⟩ = y) ↔
       ∃ h : J i x ∈ (Models.Torus.GradCurl.complex.d i j).domain,
@@ -718,7 +610,6 @@ theorem complexQ_graph_iff {i j : Fin 3} (x : SpaceQ i) (y : SpaceQ j) :
   · rintro ⟨h, e⟩
     exact ⟨mem_complexQ_domain_iff.2 h, embeddingQ.J_injective j ((J_complexQ_d _).trans e)⟩
 
-/-- Graphs of the adjoints of the mirror complex are those of the torus adjoints along `J`. -/
 theorem complexQ_adjoint_graph_iff {i j : Fin 3} (y : SpaceQ j) (x : SpaceQ i) :
     (∃ h : y ∈ ((complexQ.d i j)†).domain, (complexQ.d i j)† ⟨y, h⟩ = x) ↔
       ∃ h : J j y ∈ ((Models.Torus.GradCurl.complex.d i j)†).domain,
@@ -730,14 +621,6 @@ theorem complexQ_adjoint_graph_iff {i j : Fin 3} (y : SpaceQ j) (x : SpaceQ i) :
     exact ⟨mem_complexQ_adjoint_domain_iff.2 h,
       embeddingQ.J_injective i ((J_complexQ_adjoint _).trans e)⟩
 
-/-- **`d₀` of the mirror complex is the gradient with the mirror condition `σ · n = 0`**, as a
-Green's formula: `σ ∈ D(d₀)` with `d₀ σ = G` iff for all `a, b` and every test function `ψ` of
-a Green class `T` (`MirrorTrace.IsGreenClass`) with the parity `cE (a, b)` of `G_{ab}`,
-`∫_Q σ_a ∂_b ψ = -∫_Q G_{ab} ψ`. For the trace test functions (`complexQ_d₀_iff`): for
-`ψ ∈ C_c^∞(Q)` this says `G = ∇σ` weakly; for `b = a`, `ψ` is free on every face and the boundary
-term `∫_{x_a ∈ {0, ½}} σ_a ψ` imposes `σ_a = 0` on the faces normal to `e_a`; for `b ≠ a`, `ψ`
-vanishes on the faces normal to `e_b`, where the boundary term lives, and no condition is
-imposed. -/
 theorem complexQ_d₀_iff_of {T : (Fin 3 → ℂ) → (R3 → ℂ) → Prop}
     (hT : IsGreenClass T) (σ : VQ) (G : MQ) :
     (∃ h : σ ∈ (complexQ.d 0 1).domain, complexQ.d 0 1 ⟨σ, h⟩ = G) ↔
@@ -815,13 +698,6 @@ theorem sum_div_coeff (a : Fin 3) (X : Fin 3 → Fin 3 × Fin 3 → ℂ) :
   simp only [ite_mul, neg_one_mul, zero_mul, Finset.sum_ite_eq', Finset.mem_univ, ite_true,
     Finset.sum_neg_distrib]
 
-/-- **`d₁` of the mirror complex is the row-wise curl with the mirror condition `E_{nτ} = 0`**:
-`E ∈ D(d₁)` with `d₁ E = C` iff for all `a, b` and every test function `ψ` of a Green class `T` with the
-parity `cB (a, b)` of `C_{ab}`,
-`∫_Q (E_{a,b+2} ∂_{b+1} ψ - E_{a,b+1} ∂_{b+2} ψ) = -∫_Q C_{ab} ψ`. The free traces of `ψ` sit
-on the faces `x_a ∈ {0, ½}` (for `b + 1 = a` or `b + 2 = a`), which imposes that the tangential
-components `E_{ac}`, `c ≠ a`, of row `a` vanish on the faces normal to `e_a`; on the other faces
-`ψ` vanishes and no condition is imposed. -/
 theorem complexQ_d₁_iff_of {T : (Fin 3 → ℂ) → (R3 → ℂ) → Prop}
     (hT : IsGreenClass T) (E C : MQ) :
     (∃ h : E ∈ (complexQ.d 1 2).domain, complexQ.d 1 2 ⟨E, h⟩ = C) ↔
@@ -858,11 +734,6 @@ theorem complexQ_d₁_iff_of {T : (Fin 3 → ℂ) → (R3 → ℂ) → Prop}
       ∫ y in Q (Fin 3), (E p : R3 → ℂ) y * fderiv ℝ ψ y (Pi.single c 1))]
     exact h a b ψ hψ
 
-/-- **`d₀†` of the mirror complex is `-div` with the mirror condition `E_{τn} = 0`**:
-`M ∈ D(d₀†)` with `d₀† M = D` iff for all `a` and every test function `ψ` of a Green class `T` with the
-parity `cV a` of `D_a`, `Σ_c ∫_Q M_{ac} ∂_c ψ = ∫_Q D_a ψ`. The free traces of `ψ` sit on the
-faces `x_c ∈ {0, ½}`, `c ≠ a`, which imposes `M_{ac} = 0` there (the off-diagonal normal
-components vanish). -/
 theorem complexQ_adjoint_d₀_iff_of {T : (Fin 3 → ℂ) → (R3 → ℂ) → Prop}
     (hT : IsGreenClass T) (M : MQ) (D : VQ) :
     (∃ h : M ∈ ((complexQ.d 0 1)†).domain, (complexQ.d 0 1)† ⟨M, h⟩ = D) ↔
@@ -893,7 +764,6 @@ theorem complexQ_adjoint_d₀_iff_of {T : (Fin 3 → ℂ) → (R3 → ℂ) → P
     rw [sum_div_coeff a (fun c p =>
       ∫ y in Q (Fin 3), (M p : R3 → ℂ) y * fderiv ℝ ψ y (Pi.single c 1)), h a ψ hψ]
 
-/-- The adjoint of the torus curl is the torus curl (`curl_ξ† = curl_ξ`). -/
 theorem adjoint_torus_curl : (Models.Torus.GradCurl.complex.d 1 2)† =
     Operator.mulOp Measure.count fun n => gradCurl.m 1 2 (Fourier.Torus.freq n) := by
   rw [show (Models.Torus.GradCurl.complex.d 1 2)† = Operator.mulOp Measure.count fun n =>
@@ -903,12 +773,6 @@ theorem adjoint_torus_curl : (Models.Torus.GradCurl.complex.d 1 2)† =
   funext n
   exact adjoint_curl _
 
-/-- **`d₁†` of the mirror complex is the row-wise curl with the complementary mirror condition
-`B_{ττ} = 0`**: `B ∈ D(d₁†)` with `d₁† B = C` iff for all `a, b` and every test function `ψ` of
-a Green class `T` with the parity `cE (a, b)` of `C_{ab}`,
-`∫_Q (B_{a,b+2} ∂_{b+1} ψ - B_{a,b+1} ∂_{b+2} ψ) = -∫_Q C_{ab} ψ`. On a face normal to `e_k`, `ψ`
-has a free trace exactly when `a ≠ k`, and the boundary term then involves `B_{ad}` with
-`a, d ≠ k`: every tangential–tangential component of `B` vanishes on the faces. -/
 theorem complexQ_adjoint_d₁_iff_of {T : (Fin 3 → ℂ) → (R3 → ℂ) → Prop}
     (hT : IsGreenClass T) (B C : MQ) :
     (∃ h : B ∈ ((complexQ.d 1 2)†).domain, (complexQ.d 1 2)† ⟨B, h⟩ = C) ↔
@@ -951,7 +815,6 @@ theorem complexQ_adjoint_d₁_iff_of {T : (Fin 3 → ℂ) → (R3 → ℂ) → P
 
 /-! #### The four operators against trace test functions and against smooth parity functions -/
 
-/-- **`d₀` with `σ · n = 0` as Green's formulas against `C¹` trace test functions.** -/
 theorem complexQ_d₀_iff (σ : VQ) (G : MQ) :
     (∃ h : σ ∈ (complexQ.d 0 1).domain, complexQ.d 0 1 ⟨σ, h⟩ = G) ↔
       ∀ a b : Fin 3, ∀ ψ : R3 → ℂ, IsTraceTest (cE (a, b)) ψ →
@@ -959,7 +822,6 @@ theorem complexQ_d₀_iff (σ : VQ) (G : MQ) :
           -∫ y in Q (Fin 3), (G (a, b) : R3 → ℂ) y * ψ y :=
   complexQ_d₀_iff_of isGreenClass_isTraceTest σ G
 
-/-- **`d₁` with `E_{nτ} = 0` as Green's formulas against `C¹` trace test functions.** -/
 theorem complexQ_d₁_iff (E C : MQ) :
     (∃ h : E ∈ (complexQ.d 1 2).domain, complexQ.d 1 2 ⟨E, h⟩ = C) ↔
       ∀ a b : Fin 3, ∀ ψ : R3 → ℂ, IsTraceTest (cB (a, b)) ψ →
@@ -968,7 +830,6 @@ theorem complexQ_d₁_iff (E C : MQ) :
           -∫ y in Q (Fin 3), (C (a, b) : R3 → ℂ) y * ψ y :=
   complexQ_d₁_iff_of isGreenClass_isTraceTest E C
 
-/-- **`d₀†` with `E_{τn} = 0` as Green's formulas against `C¹` trace test functions.** -/
 theorem complexQ_adjoint_d₀_iff (M : MQ) (D : VQ) :
     (∃ h : M ∈ ((complexQ.d 0 1)†).domain, (complexQ.d 0 1)† ⟨M, h⟩ = D) ↔
       ∀ a : Fin 3, ∀ ψ : R3 → ℂ, IsTraceTest (cV a) ψ →
@@ -976,7 +837,6 @@ theorem complexQ_adjoint_d₀_iff (M : MQ) (D : VQ) :
           ∫ y in Q (Fin 3), (D a : R3 → ℂ) y * ψ y :=
   complexQ_adjoint_d₀_iff_of isGreenClass_isTraceTest M D
 
-/-- **`d₁†` with `B_{ττ} = 0` as Green's formulas against `C¹` trace test functions.** -/
 theorem complexQ_adjoint_d₁_iff (B C : MQ) :
     (∃ h : B ∈ ((complexQ.d 1 2)†).domain, (complexQ.d 1 2)† ⟨B, h⟩ = C) ↔
       ∀ a b : Fin 3, ∀ ψ : R3 → ℂ, IsTraceTest (cE (a, b)) ψ →
@@ -985,7 +845,7 @@ theorem complexQ_adjoint_d₁_iff (B C : MQ) :
           -∫ y in Q (Fin 3), (C (a, b) : R3 → ℂ) y * ψ y :=
   complexQ_adjoint_d₁_iff_of isGreenClass_isTraceTest B C
 
-/-! #### The data space of Prop 4.17 with mirror boundary conditions, by Green's formulas -/
+/-! #### The data space with mirror boundary conditions, by Green's formulas -/
 
 /-- `G = ∇σ` on `Q` with `σ · n = 0`, as Green's formulas against the `C¹` trace test functions. -/
 def GradTrace (σ : VQ) (G : MQ) : Prop :=
@@ -993,26 +853,21 @@ def GradTrace (σ : VQ) (G : MQ) : Prop :=
     ∫ y in Q (Fin 3), (σ a : R3 → ℂ) y * fderiv ℝ ψ y (Pi.single b 1) =
       -∫ y in Q (Fin 3), (G (a, b) : R3 → ℂ) y * ψ y
 
-/-- `C = curl E` (row-wise) on `Q`, with the boundary condition encoded by the parities `c` of
-`C` (`cB` for `E_{nτ} = 0`, `cE` for `B_{ττ} = 0`), as Green's formulas against the `C¹` trace
-test functions. -/
+/-- `C = curl E` (row-wise) on `Q` with the boundary condition of the parities `c`, by Green. -/
 def CurlTrace (c : Fin 3 × Fin 3 → Fin 3 → ℂ) (E C : MQ) : Prop :=
   ∀ a b : Fin 3, ∀ ψ : R3 → ℂ, IsTraceTest (c (a, b)) ψ →
     (∫ y in Q (Fin 3), (E (a, b + 2) : R3 → ℂ) y * fderiv ℝ ψ y (Pi.single (b + 1) 1)) -
       ∫ y in Q (Fin 3), (E (a, b + 1) : R3 → ℂ) y * fderiv ℝ ψ y (Pi.single (b + 2) 1) =
       -∫ y in Q (Fin 3), (C (a, b) : R3 → ℂ) y * ψ y
 
-/-- `D = -div M` (row-wise) on `Q` with `M_{τn} = 0`, as Green's formulas against the `C¹` trace
-test functions. -/
+/-- `D = -div M` (row-wise) on `Q` with `M_{τn} = 0`, as Green's formulas. -/
 def DivTrace (M : MQ) (D : VQ) : Prop :=
   ∀ a : Fin 3, ∀ ψ : R3 → ℂ, IsTraceTest (cV a) ψ →
     ∑ c, ∫ y in Q (Fin 3), (M (a, c) : R3 → ℂ) y * fderiv ℝ ψ y (Pi.single c 1) =
       ∫ y in Q (Fin 3), (D a : R3 → ℂ) y * ψ y
 
-/-- **The data space `D(L)` of the mirror complex by Green's formulas**: `(σ, E, B) ∈ D(L)` iff
-`∇σ ∈ L²` with `σ · n = 0`, `curl E ∈ L²` with `E_{nτ} = 0`, `div E ∈ L²` with `E_{τn} = 0`, and
-`curl B ∈ L²` with `B_{ττ} = 0`, each in the weak form `GradTrace`, `CurlTrace cB`, `DivTrace`,
-`CurlTrace cE`. -/
+/-- **The data space `D(L)` of the mirror complex by Green's formulas**, the weak forms
+`GradTrace`, `CurlTrace cB`, `DivTrace` and `CurlTrace cE`. -/
 theorem mem_wave_domain_iff_trace (U : PiLp 2 SpaceQ) :
     U ∈ complexQ.wave.domain ↔
       (∃ G, GradTrace (U 0) G) ∧ (∃ C, CurlTrace cB (U 1) C) ∧ (∃ D, DivTrace (U 1) D) ∧
@@ -1029,12 +884,8 @@ theorem mem_wave_domain_iff_trace (U : PiLp 2 SpaceQ) :
       ((complexQ_d₁_iff _ _).2 hC).1 ((complexQ_adjoint_d₀_iff _ _).2 hD).1
       ((complexQ_adjoint_d₁_iff _ _).2 hC').1
 
-/-- **Prop 4.17 on `Q = (0, ½)³` with the mirror boundary conditions as trace conditions**: for
-a datum `U₀ = (σ₀, E₀, B₀)` satisfying the Green's formulas of `mem_wave_domain_iff_trace`
-(`σ₀ · n = 0`, `E₀`: `E_{nτ} = 0` and `E_{τn} = 0`, `B₀`: `B_{ττ} = 0`) and lying in the
-constraint `{0} × TSD × TSD`, and admissible forcing in the constraint, the Hodge wave equation
-has a classical solution, unique among strong solutions, which stays in the constraint.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **Existence, uniqueness and TSD propagation on `Q`** for data given by Green's formulas in the
+TSD constraint and admissible TSD forcing ([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem existsUnique_memQ_trace {U₀ : PiLp 2 SpaceQ}
     (hU₀ : (∃ G, GradTrace (U₀ 0) G) ∧ (∃ C, CurlTrace cB (U₀ 1) C) ∧ (∃ D, DivTrace (U₀ 1) D) ∧
       ∃ C, CurlTrace cE (U₀ 2) C)
@@ -1063,15 +914,12 @@ theorem cubeMap_apply (b : R3) (s : ℝ) (x : R3) (j : Fin 3) :
 private theorem aff_apply' (a : ℝ) (b y : R3) (j : Fin 3) : Domain.aff a b y j = a * y j + b j := by
   simp [Domain.aff]
 
-/-- **Trace test functions on the cube** `∏ (bᵢ, bᵢ + s)` for the parity `c`: `φ ∈ C¹(ℝ³)` with
-`φ = 0` on the closed faces `{x_j = b_j}`, `{x_j = b_j + s}` of the closed cube for which
-`c_j = -1`. -/
+/-- **Trace test functions on the cube** `∏ (bᵢ, bᵢ + s)` for the parity `c`. -/
 structure IsTraceTestCube (b : R3) (s : ℝ) (c : Fin 3 → ℂ) (φ : R3 → ℂ) : Prop where
   contDiff : ContDiff ℝ 1 φ
   vanish : ∀ j, c j = -1 → ∀ x ∈ Icc b (b + fun _ => s), (x j = b j ∨ x j = b j + s) → φ x = 0
 
 include hs in
-/-- Trace test functions on `Q` transplant to trace test functions on the cube. -/
 theorem isTraceTestCube_comp_cubeMap {c : Fin 3 → ℂ} {ψ : R3 → ℂ} (hψ : IsTraceTest c ψ) :
     IsTraceTestCube b s c (ψ ∘ cubeMap b s) := by
   have h2s : 0 < 2 * s := by positivity
@@ -1088,7 +936,6 @@ theorem isTraceTestCube_comp_cubeMap {c : Fin 3 → ℂ} {ψ : R3 → ℂ} (hψ 
     · right; rw [cubeMap_apply, h]; field_simp; ring
 
 include hs in
-/-- Trace test functions on the cube transplant to trace test functions on `Q`. -/
 theorem IsTraceTestCube.comp_aff {c : Fin 3 → ℂ} {φ : R3 → ℂ} (hφ : IsTraceTestCube b s c φ) :
     IsTraceTest c (φ ∘ Domain.aff (2 * s) b) := by
   have h2s : 0 < 2 * s := by positivity
@@ -1118,7 +965,6 @@ theorem jacCube_ne_zero (hs : 0 < s) : jacCube s ≠ 0 :=
 private theorem two_s_ne_zero (hs : 0 < s) : ((2 * s : ℝ) : ℂ) ≠ 0 :=
   RCLike.ofReal_ne_zero.2 (mul_pos two_pos hs).ne'
 
-/-- **Pairings on the cube by change of variables**: `∫_C (u ∘ T) (ψ ∘ T) = |2s|³ ∫_Q u ψ`. -/
 theorem setIntegral_pullCube_mul {P : Type*} [Fintype P] (u : Domain.L2F ℂ (Q (Fin 3)) P) (p : P)
     (ψ : R3 → ℂ) :
     ∫ x in Geometry.openCube b s, (pullCube b s hs P u p : R3 → ℂ) x * (ψ ∘ cubeMap b s) x =
@@ -1133,8 +979,6 @@ theorem fderiv_comp_cubeMap {ψ : R3 → ℂ} (hψ : ContDiff ℝ 1 ψ) (x : R3)
     (Domain.hasFDerivAt_aff _ _ x)).fderiv, ContinuousLinearMap.comp_apply,
     smul_apply, ContinuousLinearMap.id_apply, map_smul, Complex.real_smul]
 
-/-- **Derivative pairings on the cube by change of variables**:
-`∫_C (u ∘ T) ∂_k (ψ ∘ T) = (2s)⁻¹ |2s|³ ∫_Q u ∂_k ψ`. -/
 theorem setIntegral_pullCube_mul_fderiv {P : Type*} [Fintype P] (u : Domain.L2F ℂ (Q (Fin 3)) P)
     (p : P) {ψ : R3 → ℂ} (hψ : ContDiff ℝ 1 ψ) (k : Fin 3) :
     ∫ x in Geometry.openCube b s, (pullCube b s hs P u p : R3 → ℂ) x *
@@ -1168,16 +1012,14 @@ private theorem scale_iff {c J A B : ℂ} (hc : c ≠ 0) (hJ : J ≠ 0) :
 
 /-! #### Green's formulas on the cube -/
 
-/-- `G = ∇σ` on the cube `C = ∏ (bᵢ, bᵢ + s)` with `σ · n = 0`, as Green's formulas against the
-`C¹` trace test functions of `C`. -/
+/-- `G = ∇σ` on the cube `∏ (bᵢ, bᵢ + s)` with `σ · n = 0`, as Green's formulas. -/
 def GradTraceCube (b : R3) (s : ℝ) (σ : Domain.L2F ℂ (Geometry.openCube b s) (Fin 3))
     (G : Domain.L2F ℂ (Geometry.openCube b s) (Fin 3 × Fin 3)) : Prop :=
   ∀ a b' : Fin 3, ∀ φ : R3 → ℂ, IsTraceTestCube b s (cE (a, b')) φ →
     ∫ x in Geometry.openCube b s, (σ a : R3 → ℂ) x * fderiv ℝ φ x (Pi.single b' 1) =
       -∫ x in Geometry.openCube b s, (G (a, b') : R3 → ℂ) x * φ x
 
-/-- `C = curl E` (row-wise) on the cube, with the boundary condition encoded by the parities `c`
-of `C`, as Green's formulas. -/
+/-- `C = curl E` (row-wise) on the cube, with the boundary condition of the parities `c`. -/
 def CurlTraceCube (b : R3) (s : ℝ) (c : Fin 3 × Fin 3 → Fin 3 → ℂ)
     (E C : Domain.L2F ℂ (Geometry.openCube b s) (Fin 3 × Fin 3)) : Prop :=
   ∀ a b' : Fin 3, ∀ φ : R3 → ℂ, IsTraceTestCube b s (c (a, b')) φ →
@@ -1266,10 +1108,7 @@ private theorem exists_pullCube_iff {P : Type*} [Fintype P]
     refine ⟨_, (h ((pullCube b s hs P).symm G')).1 ?_⟩
     rwa [ContinuousLinearEquiv.apply_symm_apply]
 
-/-- **The data space `D(L)` of the mirror complex on every open cube by Green's formulas**: for
-`C = ∏ (bᵢ, bᵢ + s)`, `(σ, E, B) ∈ D(L)` iff `∇σ ∈ L²(C)` with `σ · n = 0`, `curl E ∈ L²(C)` with
-`E_{nτ} = 0`, `div E ∈ L²(C)` with `E_{τn} = 0`, and `curl B ∈ L²(C)` with `B_{ττ} = 0` on `∂C`,
-each as Green's formulas against the `C¹` trace test functions of `C` (`IsTraceTestCube`). -/
+/-- **The data space `D(L)` of the mirror complex on every open cube by Green's formulas.** -/
 theorem mem_wave_domain_cube_iff_trace (U : PiLp 2 (SpaceCube b s)) :
     U ∈ (complexCube b s hs).wave.domain ↔
       (∃ G, GradTraceCube b s (U 0) G) ∧ (∃ C, CurlTraceCube b s cB (U 1) C) ∧
@@ -1289,11 +1128,9 @@ theorem mem_wave_domain_cube_iff_trace (U : PiLp 2 (SpaceCube b s)) :
   · exact (exists_pullCube_iff hs fun G => divTraceCube_pull_iff hs _ G).trans (by rw [← e1])
   · exact (exists_pullCube_iff hs fun G => curlTraceCube_pull_iff hs cE _ G).trans (by rw [← e2])
 
-/-- **Prop 4.17 on every open cube with the mirror boundary conditions as trace conditions**: on
-`C = ∏ (bᵢ, bᵢ + s)`, a datum satisfying the Green's formulas of `mem_wave_domain_cube_iff_trace`
-and lying in the TSD constraint, with admissible forcing in the constraint, has a classical
-solution, unique among strong solutions, which stays in the constraint.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- **Existence, uniqueness and TSD propagation on every open cube** for data given by Green's
+formulas in the TSD constraint and admissible TSD forcing
+([QuennevilleBelair2015], Prop 4.17 (adapted)). -/
 theorem existsUnique_memCube_trace {U₀ : PiLp 2 (SpaceCube b s)}
     (hU₀ : (∃ G, GradTraceCube b s (U₀ 0) G) ∧ (∃ C, CurlTraceCube b s cB (U₀ 1) C) ∧
       (∃ D, DivTraceCube b s (U₀ 1) D) ∧ ∃ C, CurlTraceCube b s cE (U₀ 2) C)

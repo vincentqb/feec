@@ -7,40 +7,17 @@ public import Feec.Models.BoundedDomain.SymCurl
 /-!
 # The strong-symmetry complex (4.16) on the cube with mirror boundary conditions
 
-The complex `H²(R) --grad grad--> H(curl, S) --curl--> L²(T)` of Thesis (4.16) on the torus
-(`Feec.Models.Torus.SymCurl.complex`, Fourier side) carries the mirror symmetries of
-`Feec.Models.Cube.Mirror`: `u` even, `S(R_k x) = D_k S(x) D_k`, `T(R_k x) = -D_k T(x) D_k`
-(`MirrorSym.symmetries`). The TSD constraint `{0} × L²(TSD ∩ S) × L²(TSD ∩ T)` is invariant, so
-it descends, by the same general mechanism as for `Feec.Models.Cube.Mirror`, to
-
-* the **parity model** `MirrorSym.complex` (the fixed complex);
-* the **cube `Q = (0, ½)³`** `MirrorSym.complexQ`: `L²(Q) → L²(Q; S) → L²(Q; T)` (the
-  bounded-domain spaces `Feec.Models.BoundedDomain.symSub`, `trSub`), the compression of the torus
-  complex along the mirror extensions (`∂_n u = 0`, `S_{nτ} = 0`); the constraint spaces consist
-  of TSD fields (`mem_tsdQ_one`,
-  `mem_tsdQ_two`, with the wall conditions `S_{τn} = 0`, `T_{nn} = 0`);
-* **every open cube** `∏ (bᵢ, bᵢ + s)` (`MirrorSym.complexCube`), with the chain-rule factors
-  `(2s)⁻²` on the Hessian and `(2s)⁻¹` on the curl.
-
-This is Thesis Prop 4.19 with mirror boundary conditions; with the thesis' conditions it fails on
-every bounded domain (`Feec.Counterexamples.BoundedSymTSD`).
+The complex `H²(R) --grad grad--> H(curl, S) --curl--> L²(T)` with mirror boundary conditions: the
+TSD constraint reduces it on `Q = (0, ½)³` and on every open cube, so TSD data propagate.
 
 ## Main results
 
-* **`MirrorSym.reducingSubcomplex`**, `MirrorSym.propagates`, `MirrorSym.existsUnique_mem`,
-  `MirrorSym.invariantCore_eq`, `MirrorSym.exists_nonstationary`.
-* **`MirrorSym.reducingSubcomplexQ`**, `MirrorSym.propagatesQ`, `MirrorSym.existsUnique_memQ`,
-  `MirrorSym.invariantCore_eqQ`, `MirrorSym.exists_nonstationaryQ`,
-  `MirrorSym.complexQ_d₁_eq`.
-* **`MirrorSym.reducingSubcomplexCube`**, `MirrorSym.propagatesCube`,
-  `MirrorSym.existsUnique_memCube`, `MirrorSym.invariantCore_eqCube`,
-  `MirrorSym.exists_nonstationaryCube`.
+* `MirrorSym.reducingSubcomplexQ`, `MirrorSym.reducingSubcomplexCube`: TSD reduces the complex.
+* `MirrorSym.existsUnique_memQ`: existence, uniqueness and TSD propagation on `Q`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.11 (Prop 4.19, (4.16)–(4.18))
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the complex (4.16))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -59,7 +36,7 @@ open Feec.Models.Cube.MirrorTorus (sgn_mul_self freq_flipAt)
 open Feec.Fourier.Torus (flipAt flipAt_comm)
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 
-/-! ### The mirror symmetries of the torus complex (4.16) -/
+/-! ### The mirror symmetries of the torus complex -/
 
 /-- `S ↪ ℂ³ˣ³`. -/
 def symι : Sym →ₗᵢ[ℂ] Mat := symSub.subtypeₗᵢ
@@ -141,7 +118,7 @@ theorem curlS_flip (k : Fin 3) (n : Fin 3 → ℤ) (M : SymCurl.Sym) :
       trR k (curlS (Fourier.Torus.freq n) M) :=
   SymCurl.Tr.ext (curl_flip k n (M : Mat))
 
-/-- **The mirror reflections of the torus complex (4.16)**, as fibre symmetries. -/
+/-- **The mirror reflections of the torus complex**, as fibre symmetries. -/
 def symmetries : (Fourier.Torus.symbolComplex symCurl).Symmetries (Fin 3) where
   R := flipRefl
   ρ := fib
@@ -170,11 +147,11 @@ def symmetries : (Fourier.Torus.symbolComplex symCurl).Symmetries (Fin 3) where
     · exact symR_comm k l v
     · exact trR_comm k l v
 
-/-- **The mirror action of `(ℤ/2)³`** on the torus complex (4.16). -/
+/-- **The mirror action of `(ℤ/2)³`** on the torus complex. -/
 abbrev action : Models.Torus.SymCurl.complex.Action (Multiplicative (Fin 3 → ZMod 2)) :=
   symmetries.toAction
 
-/-- **The mirror cube complex (4.16)** (parity model). -/
+/-- **The mirror cube complex** (parity model). -/
 abbrev complex := action.fixedComplex
 
 theorem mem_fixed_iff {i : Fin 3} {x : Models.Torus.SymCurl.Space i} :
@@ -229,25 +206,19 @@ theorem act_mem_constraint (g : Multiplicative (Fin 3 → ZMod 2)) (i : Fin 3)
   symmetries.act_mem_fibreSub (K := fun i n => SymCurl.tsdK i (Fourier.Torus.freq n))
     (fun k i n _ hv => fib_mem_tsdK k i n hv) g i hx
 
-/-- The TSD constraint of the mirror cube complex (4.16). -/
+/-- The TSD constraint of the mirror cube complex. -/
 abbrev constraint (i : Fin 3) : Submodule ℂ (action.fixed i) :=
   (Models.Torus.SymCurl.constraint i).comap (action.fixed i).subtype
 
-/-- **The TSD constraint reduces the mirror cube complex (4.16).**
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   action.reducingSubcomplex_comap_fixed Models.Torus.SymCurl.reducingSubcomplex act_mem_constraint
 
-/-- **Prop 4.19 on the cube with mirror boundary conditions** (parity model).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => action.fixed i}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ totalSub constraint) (hF : ∀ t ∈ Icc a b, F t ∈ totalSub constraint) :
     ∀ t ∈ Icc a b, U t ∈ totalSub constraint :=
   reducingSubcomplex.propagates hU h0 hF
 
-/-- Prop 4.19 on the mirror cube with existence and uniqueness (parity model).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem existsUnique_mem {U₀ : PiLp 2 fun i => action.fixed i} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ totalSub constraint) {F : ℝ → PiLp 2 fun i => action.fixed i} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -258,8 +229,6 @@ theorem existsUnique_mem {U₀ : PiLp 2 fun i => action.fixed i} (hU₀ : U₀ �
         EqOn V U (Icc a b) :=
   reducingSubcomplex.existsUnique_mem hU₀ hU₀K hF hFK
 
-/-- `K* = K` on the mirror cube (4.16) (parity model).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem invariantCore_eq :
     complex.waveGroup.invariantCore (totalSub constraint) = totalSub constraint :=
   reducingSubcomplex.invariantCore_eq
@@ -314,7 +283,7 @@ theorem cosS_mem_adjoint_domain : cosS ∈ ((Models.Torus.SymCurl.complex.d 0 1)
   rw [Models.Torus.SymCurl.adjoint_d 0 1]
   exact mem_mulDomain_of_finite _ {k0, -k0} fun _ hn => cosS_eq_zero hn
 
-/-- The datum `(0, E₀, 0)` of (4.18) on the torus. -/
+/-- The datum `(0, E₀, 0)` on the torus. -/
 def cosState : PiLp 2 Models.Torus.SymCurl.Space := WithLp.toLp 2 (Pi.single 1 cosS)
 
 theorem cosState_zero : cosState 0 = 0 :=
@@ -369,8 +338,6 @@ theorem cosState_mem_constraint (i : Fin 3) :
   · change cosState 1 ∈ _; rw [cosState_one]; exact cosS_mem_constraint
   · change cosState 2 ∈ _; rw [cosState_two]; exact Submodule.zero_mem _
 
-/-- **A non-stationary TSD datum on the mirror cube (4.16)** (parity model).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem exists_nonstationary :
     ∃ y ∈ complex.wave.domain, y ∈ totalSub constraint ∧ y ∉ complex.waveGroup.stationary := by
   obtain ⟨h1, h2⟩ := action.reducingSubcomplex_fixed.not_mem_stationary
@@ -394,7 +361,7 @@ abbrev SQ : Type := Models.BoundedDomain.symSub ℂ (Q (Fin 3))
 /-- `L²(Q; T)`. -/
 abbrev TQ : Type := Models.BoundedDomain.trSub ℂ (Q (Fin 3))
 
-/-- The spaces `L²(Q)`, `L²(Q; S)`, `L²(Q; T)` of the mirror complex (4.16) on `Q`. -/
+/-- The spaces `L²(Q)`, `L²(Q; S)`, `L²(Q; T)` of the mirror complex on `Q`. -/
 abbrev SpaceQ (i : Fin 3) : Type := W3 RQ SQ TQ i
 
 theorem extF_cE_mem_symSub (x : SQ) (n : Fin 3 → ℤ) :
@@ -431,8 +398,7 @@ def J₂ : TQ →L[ℂ] Lp SymCurl.Tr 2 (Measure.count : Measure (Fin 3 → ℤ)
   corestrictLp trι ((extF cB_sq).comp (Models.BoundedDomain.trSub ℂ (Q (Fin 3))).subtypeL)
     extF_cB_mem_trSub
 
-/-- **The mirror extensions** `L²(Q) → ℓ²(ℤ³)`, `L²(Q; S) → ℓ²(ℤ³; S)`, `L²(Q; T) → ℓ²(ℤ³; T)`:
-`u` even in every variable, `S` with the tensor parities, `T` with the pseudo-tensor parities. -/
+/-- **The mirror extensions** of `L²(Q)`, `L²(Q; S)`, `L²(Q; T)` to coefficient sequences. -/
 def J : ∀ i : Fin 3, SpaceQ i →L[ℂ] Models.Torus.SymCurl.Space i
   | 0 => J₀
   | 1 => J₁
@@ -516,9 +482,7 @@ theorem reducingSubcomplex_range :
   convert action.reducingSubcomplex_fixed using 1
   exact funext range_J
 
-/-- **The mirror complex (4.16) of genuine fields on `Q`**:
-`L²(Q) --grad grad--> L²(Q; S) --curl--> L²(Q; T)` with `∂_n u = 0` and `S_{nτ} = 0`, the
-compression of the torus complex along the mirror extensions. -/
+/-- **The mirror complex of genuine fields on `Q`**, `L²(Q) → L²(Q; S) → L²(Q; T)`. -/
 abbrev complexQ : HilbertComplex ℂ ComplexShape.fin3 SpaceQ :=
   Models.Torus.SymCurl.complex.compress J eight_pos inner_J reducingSubcomplex_range
 
@@ -550,21 +514,19 @@ theorem exists_J_eq_starProjection (i : Fin 3) (x : SpaceQ i) :
   obtain ⟨y, hy⟩ := h
   exact ⟨y, hy⟩
 
-/-- **TSD reduces the mirror complex (4.16) on `Q`.**
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
+/-- **TSD reduces the mirror complex on `Q`** ([QuennevilleBelair2015], Prop 4.19 (adapted)). -/
 theorem reducingSubcomplexQ : complexQ.ReducingSubcomplex tsdQ :=
   embeddingQ.reducingSubcomplex_comap Models.Torus.SymCurl.reducingSubcomplex
     exists_J_eq_starProjection
 
-/-- **Prop 4.19 on `Q` with mirror boundary conditions.**
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem propagatesQ {a b : ℝ} {F U : ℝ → PiLp 2 SpaceQ}
     (hU : Evolution.IsStrongSolution complexQ.wave (Icc a b) F U) (h0 : U a ∈ totalSub tsdQ)
     (hF : ∀ t ∈ Icc a b, F t ∈ totalSub tsdQ) : ∀ t ∈ Icc a b, U t ∈ totalSub tsdQ :=
   reducingSubcomplexQ.propagates hU h0 hF
 
-/-- Prop 4.19 on `Q` with existence and uniqueness.
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
+/-- **Existence and uniqueness of TSD solutions**: for TSD data in `D(L)` and admissible TSD
+forcing, a classical solution, unique among strong solutions, that stays TSD
+([QuennevilleBelair2015], Prop 4.19 (adapted)). -/
 theorem existsUnique_memQ {U₀ : PiLp 2 SpaceQ} (hU₀ : U₀ ∈ complexQ.wave.domain)
     (hU₀S : U₀ ∈ totalSub tsdQ) {F : ℝ → PiLp 2 SpaceQ} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complexQ.wave a b F)
@@ -575,13 +537,10 @@ theorem existsUnique_memQ {U₀ : PiLp 2 SpaceQ} (hU₀ : U₀ ∈ complexQ.wave
         EqOn V U (Icc a b) :=
   reducingSubcomplexQ.existsUnique_mem hU₀ hU₀S hF hFS
 
-/-- `K* = K` on `Q` for (4.16).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
+/-- `K* = K` on `Q` ([QuennevilleBelair2015], Prop 4.19 (adapted)). -/
 theorem invariantCore_eqQ : complexQ.waveGroup.invariantCore (totalSub tsdQ) = totalSub tsdQ :=
   reducingSubcomplexQ.invariantCore_eq
 
-/-- **The constraint on `Q` consists of TSD fields** (symmetric, trace-free, weakly
-divergence-free), for `S`. -/
 theorem mem_tsdQ_one {S : SQ} (hS : S ∈ tsdQ 1) :
     (∀ i j, (S : MQ) (i, j) = (S : MQ) (j, i)) ∧ ∑ i, (S : MQ) (i, i) = 0 ∧
       ∀ φ : Fin 3 → Feec.Models.BoundedDomain.R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -598,7 +557,6 @@ theorem mem_tsdQ_one {S : SQ} (hS : S ∈ tsdQ 1) :
   exact tsd_of_extF_mem Mirror.cV_sq cE_sq (fun a b => funext fun k => by simp only [cE]; ring)
     (fun a => funext fun k => by simp only [cE, sgn_mul_self]) cE_eq_update hE
 
-/-- **The constraint on `Q` consists of TSD fields**, for `T`. -/
 theorem mem_tsdQ_two {T : TQ} (hT : T ∈ tsdQ 2) :
     (∀ i j, (T : MQ) (i, j) = (T : MQ) (j, i)) ∧ ∑ i, (T : MQ) (i, i) = 0 ∧
       ∀ φ : Fin 3 → Feec.Models.BoundedDomain.R3 → ℂ, ∀ hφ : Domain.IsTestField (Q (Fin 3)) φ,
@@ -617,8 +575,6 @@ theorem mem_tsdQ_two {T : TQ} (hT : T ∈ tsdQ 2) :
 
 /-! #### `d₁` is the mirror curl -/
 
-/-- **The curl on symmetric coefficient sequences** is the curl of the underlying matrix fields:
-`D(curl_S) ⊆ H(curl)` on `𝕋³`. -/
 theorem torus_d₁_eq (v : Models.Torus.SymCurl.Space 1)
     (hv : v ∈ (Models.Torus.SymCurl.complex.d 1 2).domain) :
     ∃ h : liftLp symι v ∈ (Models.Torus.GradCurl.complex.d 1 2).domain,
@@ -633,8 +589,7 @@ theorem torus_d₁_eq (v : Models.Torus.SymCurl.Space 1)
           (liftLp_apply trι (Models.Torus.SymCurl.complex.d 1 2 ⟨v, hv⟩) n).symm)
   exact ⟨h, e.symm⟩
 
-/-- **`d₁` is the mirror curl of Prop 4.17**: `D(d₁) ⊆ D(d₁^{mirror})` and `d₁ S = curl S`
-(`Feec.Models.Cube.Mirror.complexQ`, the weak curl on `Q`). -/
+/-- **`d₁` is the mirror curl**: `d₁ S = curl S`, the differential of `Mirror.complexQ`. -/
 theorem complexQ_d₁_eq (S : (complexQ.d 1 2).domain) :
     ∃ h : Subtype.val (S.1 : SQ) ∈ (Mirror.complexQ.d 1 2).domain,
       Subtype.val (complexQ.d 1 2 S : TQ) = Mirror.complexQ.d 1 2 ⟨_, h⟩ := by
@@ -666,7 +621,7 @@ def cosSQ : SQ := ⟨cosEQ, cosEQ_mem_symSub⟩
 theorem J_cosSQ : J₁ cosSQ = cosS :=
   (liftLp symι).injective ((liftLp_J₁ cosSQ).trans (J_cosEQ.trans liftLp_cosS.symm))
 
-/-- The datum `(0, E₀, 0)` of (4.18) on `Q`. -/
+/-- The datum `(0, E₀, 0)` on `Q`. -/
 def cosStateQ : PiLp 2 SpaceQ := WithLp.toLp 2 (Pi.single 1 cosSQ)
 
 theorem cosStateQ_zero : cosStateQ 0 = 0 :=
@@ -698,8 +653,6 @@ theorem complexQ_d_cosSQ_ne : complexQ.d 1 2 ⟨cosSQ, cosSQ_mem_domain⟩ ≠ 0
   rw [h, _root_.map_zero] at h1
   exact curlS_cosS_ne ((apply_congr' _ _ _ J_cosSQ.symm).trans h1.symm)
 
-/-- **A non-stationary TSD datum on `Q`** for (4.18).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem exists_nonstationaryQ :
     ∃ y ∈ complexQ.wave.domain, y ∈ totalSub tsdQ ∧ y ∉ complexQ.waveGroup.stationary := by
   have hd : HilbertComplex.totalJ J cosStateQ ∈ Models.Torus.SymCurl.complex.wave.domain :=
@@ -821,9 +774,7 @@ theorem kappa_ne_zero (hs : 0 < s) (i j : Fin 3) : kappa s i j ≠ 0 := by
   · exact RCLike.ofReal_ne_zero.2 (pow_ne_zero 2 (inv_two_mul_ne hs))
   · exact RCLike.ofReal_ne_zero.2 (inv_two_mul_ne hs)
 
-/-- **The mirror complex (4.16) on the open cube** `∏ (bᵢ, bᵢ + s)`: the transport of `complexQ`
-along the pull-back by `x ↦ (x - b)/(2s)`, with the chain-rule factors `(2s)⁻²` (Hessian) and
-`(2s)⁻¹` (curl). -/
+/-- **The mirror complex on the open cube** `∏ (bᵢ, bᵢ + s)`, the transport of `complexQ`. -/
 abbrev complexCube (b : R3) (s : ℝ) (hs : 0 < s) :
     HilbertComplex ℂ ComplexShape.fin3 (SpaceCube b s) :=
   complexQ.transport (eCube b s hs) (kappa s) (kappa_ne_zero hs)
@@ -840,23 +791,19 @@ abbrev tsdCube (b : R3) (s : ℝ) (hs : 0 < s) (i : Fin 3) : Submodule ℂ (Spac
 instance (i : Fin 3) : (tsdCube b s hs i).HasOrthogonalProjection :=
   (embeddingCube hs).comap_hasOrthogonalProjection i _
 
-/-- **TSD reduces the mirror complex (4.16) on every open cube.**
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
+/-- **TSD reduces the mirror complex on every open cube**
+([QuennevilleBelair2015], Prop 4.19 (adapted)). -/
 theorem reducingSubcomplexCube : (complexCube b s hs).ReducingSubcomplex (tsdCube b s hs) :=
   (embeddingCube hs).reducingSubcomplex_comap reducingSubcomplexQ fun i x =>
     ⟨eCube b s hs i ((tsdQ i).starProjection ((eCube b s hs i).symm x)),
       (eCube b s hs i).symm_apply_apply _⟩
 
-/-- **Prop 4.19 on every open cube with mirror boundary conditions.**
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem propagatesCube {a c : ℝ} {F U : ℝ → PiLp 2 (SpaceCube b s)}
     (hU : Evolution.IsStrongSolution (complexCube b s hs).wave (Icc a c) F U)
     (h0 : U a ∈ totalSub (tsdCube b s hs)) (hF : ∀ t ∈ Icc a c, F t ∈ totalSub (tsdCube b s hs)) :
     ∀ t ∈ Icc a c, U t ∈ totalSub (tsdCube b s hs) :=
   (reducingSubcomplexCube hs).propagates hU h0 hF
 
-/-- Prop 4.19 on every open cube, with existence and uniqueness (e.g. on `(0, π)³`, `(0, 1)³`).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem existsUnique_memCube {U₀ : PiLp 2 (SpaceCube b s)}
     (hU₀ : U₀ ∈ (complexCube b s hs).wave.domain) (hU₀S : U₀ ∈ totalSub (tsdCube b s hs))
     {F : ℝ → PiLp 2 (SpaceCube b s)} {a c : ℝ}
@@ -868,14 +815,12 @@ theorem existsUnique_memCube {U₀ : PiLp 2 (SpaceCube b s)}
         EqOn V U (Icc a c) :=
   (reducingSubcomplexCube hs).existsUnique_mem hU₀ hU₀S hF hFS
 
-/-- `K* = K` on every open cube for (4.16).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem invariantCore_eqCube :
     (complexCube b s hs).waveGroup.invariantCore (totalSub (tsdCube b s hs)) =
       totalSub (tsdCube b s hs) :=
   (reducingSubcomplexCube hs).invariantCore_eq
 
-/-- The datum `(0, E₀ ∘ T, 0)` of (4.18) on the cube. -/
+/-- The datum `(0, E₀ ∘ T, 0)` on the cube. -/
 def cosStateCube (b : R3) (s : ℝ) (hs : 0 < s) : PiLp 2 (SpaceCube b s) :=
   HilbertComplex.totalMap (eCube b s hs) cosStateQ
 
@@ -919,8 +864,6 @@ theorem wave_cosStateCube_ne :
   show cosSQ = (eCube b s hs 1).symm (eCube b s hs 1 (cosStateQ 1))
   rw [ContinuousLinearEquiv.symm_apply_apply, cosStateQ_one]
 
-/-- **A non-stationary TSD datum on every open cube** for (4.18).
-See [QuennevilleBelair2015], §4.11 (Prop 4.19, corrected). -/
 theorem exists_nonstationaryCube :
     ∃ y ∈ (complexCube b s hs).wave.domain, y ∈ totalSub (tsdCube b s hs) ∧
       y ∉ (complexCube b s hs).waveGroup.stationary :=

@@ -6,42 +6,14 @@ public import Feec.Physics.EinsteinBianchi.WaveFEMTangential
 /-!
 # The tangential-trace rates on the cube, unconditionally
 
-The rates of `Feec.Models.Cube.WeakSymmetryFEM` and `Feec.Models.Cube.WeakSymmetryWave` (Thm 5.5,
-the elliptic projection (6.4) and the scheme (6.5) for solutions that are `C²` up to `∂Q` with
-vanishing tangential traces) and the headline theorems of
-`Feec.Physics.EinsteinBianchi.WaveFEMTangential` take the regularity hypothesis
-`curl H̊(curl) = curl S⁰ H̊¹(Q; ℝ³)` (`CurlPotential`, or its constant `C_R`) as a hypothesis. It is
-a theorem (`Feec.Models.Cube.WeakSymmetry.curlPotential`,
-`exists_curlPotential_bound`, `Feec.Models.Cube.RegularDecomposition`), and this file states them
-without it.
-
-## Main results
-
-* `Feec.Models.Cube.WeakSymmetry.cubeFEM_rate_tr'` (Thm 5.5),
-  `cubeFEM_ellipticProjection_rate_tr'` (the `O(h)` rate of
-  the elliptic projection (6.4)), `cubeWave_rate_tr'` (the `O(h)` rate of (6.5));
-* `Feec.EinsteinBianchi.StaticFEM.staticFEM_rate_tr_cube`;
-* `Feec.EinsteinBianchi.WaveFEM.waveFEM_rate_tr_cube`, `waveFEM_rate_tr_nonvacuous_cube`.
-
-## The failing datum is not in the rate class
-
-The TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of
-`Feec.Counterexamples.BoundedBGG.bggComplex_verdict` (transported to this model in
-`Feec.Physics.EinsteinBianchi.MatrixModel` and `Feec.Physics.EinsteinBianchi.BoundedFailure`) is
-**not covered** by these rates. Its magnetic rows `ρₐ(0)` (the `2`-forms of the rows of `β`) have
-nonzero tangential components on `∂Q`: the first row of `β` is `x₃ e₂`, whose `2`-form has the
-`{0, 2}` component `-y₂`, tangential to the faces `{y₁ = 0}` and `{y₁ = ½}`; so `ρ(0)` is in no
-class `IsCsFormTr s 2 L` and no classical solution of the rate class starts from it
-(`Feec.EinsteinBianchi.BoundedFailure.not_isCsFormTr_rhoBeta`, `not_isRateClass_of_rho`).
-Moreover `u'(0) = diag(1, −1, 0)` violates the
-boundary condition `u(t) ∈ H̊Λ¹(Q)³`, so the solution is not expected to be `C²` up to `∂Q` for
-`t > 0` (not formalized). Its convergence without rate, with no hypothesis, is
-`Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`.
+The rates of `Feec.Models.Cube.WeakSymmetryFEM`, `Feec.Models.Cube.WeakSymmetryWave` and
+`Feec.Physics.EinsteinBianchi.WaveFEMTangential` for solutions that are `C²` up to `∂Q` with
+vanishing tangential traces, with the regularity hypothesis `CurlPotential` discharged by
+`Feec.Models.Cube.WeakSymmetry.curlPotential`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, Thm 5.5; §6.2 (6.4), §6.3 ((6.5), Table 6.1)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -62,8 +34,8 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 1000000 in
-/-- **[QuennevilleBelair2015], Thm 5.5 for solutions with vanishing tangential traces,
-unconditionally**: `cubeFEM_rate_tr` with the constant of `curlPotential`. -/
+/-- The rate of `cubeFEM_rate_tr` for solutions with vanishing tangential traces, without the
+regularity hypothesis. [QuennevilleBelair2015], Thm 5.5 -/
 theorem cubeFEM_rate_tr' :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
       {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
@@ -89,8 +61,8 @@ theorem cubeFEM_rate_tr' :
   exists_curlPotential_bound.elim fun _ h => cubeFEM_rate_tr hT hB h.1 h.2
 
 set_option maxHeartbeats 4000000 in
-/-- **The `O(h)` rate of the elliptic projection (6.4) on the cube, unconditionally**:
-`cubeFEM_ellipticProjection_rate_tr` with the constant of `curlPotential`. -/
+/-- The `O(h)` rate of the elliptic projection (6.4) on the cube: the conclusion of
+`cubeFEM_ellipticProjection_rate_tr` without the regularity hypothesis. -/
 theorem cubeFEM_ellipticProjection_rate_tr' :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2}
       (ℓ : U1 →ₗ[ℝ] ℝ) {L : ℝ}, 0 ≤ L → bggSegment.d0 σ = bggSegment.S0 φ →
@@ -104,8 +76,8 @@ theorem cubeFEM_ellipticProjection_rate_tr' :
   exists_curlPotential_bound.elim fun _ h => cubeFEM_ellipticProjection_rate_tr hT hB h.1 h.2
 
 set_option maxHeartbeats 4000000 in
-/-- **The `O(h)` rate of the scheme (6.5) for states with vanishing tangential traces,
-unconditionally**: `cubeWave_rate_tr` with the constant of `curlPotential`. -/
+/-- The `O(h)` rate of the scheme (6.5) for states with vanishing tangential traces: the
+conclusion of `cubeWave_rate_tr` without the regularity hypothesis. -/
 theorem cubeWave_rate_tr' :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
       (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ},
@@ -133,8 +105,7 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
 
 set_option maxHeartbeats 1000000 in
-/-- **`staticFEM_rate_tr`, unconditionally**: the static rates for solutions with vanishing
-tangential traces, with the regularity hypothesis discharged by `curlPotential`. -/
+/-- The conclusions of `staticFEM_rate_tr` without the regularity hypothesis. -/
 theorem staticFEM_rate_tr_cube :
     ∃ (p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -191,8 +162,7 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
 
 set_option maxHeartbeats 4000000 in
-/-- **`waveFEM_rate_tr`, unconditionally**: the rate of (6.5) for solutions with vanishing
-tangential traces, with the regularity hypothesis discharged by `curlPotential`. -/
+/-- The conclusions of `waveFEM_rate_tr` without the regularity hypothesis. -/
 theorem waveFEM_rate_tr_cube :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -236,8 +206,7 @@ theorem waveFEM_rate_tr_cube :
   waveFEM_rate_tr curlPotential
 
 set_option maxHeartbeats 4000000 in
-/-- **Non-vacuity of `waveFEM_rate_tr_cube`**: `waveFEM_rate_tr_nonvacuous` with the regularity
-hypothesis discharged. -/
+/-- The conclusions of `waveFEM_rate_tr_nonvacuous` without the regularity hypothesis. -/
 theorem waveFEM_rate_tr_nonvacuous_cube {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) {T : ℝ}

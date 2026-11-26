@@ -8,27 +8,8 @@ public import Feec.Semigroup.Invariance
 /-!
 # Hilbert-complex facts used by the mirror cube models
 
-Small general statements about the constructions behind the mirror cube complexes
-(`Feec.Models.Cube.Mirror`, `MirrorSym`, `MirrorBGG`): projections onto action-invariant
-subspaces preserve the fixed vectors, the inverse of a transport is a scaled embedding, the wave
-domains of compressions and of transports along uniformly scaled isometries, and the fact that
-vectors not killed by the wave operator are not stationary for the wave group. (The components of
-the wave operator of a window complex `W₀ → W₁ → W₂`, `Feec.HilbertComplex.wave_apply_fin3_zero`,
-… are in `Feec.HilbertComplex.Dirac`.)
-
-## Main results
-
-* `Feec.HilbertComplex.Action.starProjection_mem_fixed`.
-* `Feec.HilbertComplex.ScaledEmbedding.ofTransportSymm`: `e⁻¹` embeds `H.transport e κ` in `H`.
-* `Feec.HilbertComplex.mem_wave_domain_compress_iff`, `mem_wave_domain_transport_iff`.
-* `Feec.HilbertComplex.not_mem_stationary_of_wave_ne_zero`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10
-
-Bibliography: [references.bib](../../../docs/references.bib)
+Fixed vectors under projections onto invariant subspaces, inverses of transports, the wave domains
+of compressions and transports, and non-stationary vectors.
 -/
 
 open scoped InnerProductSpace ComplexConjugate
@@ -44,8 +25,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 /-! ### Invariant subspaces and fixed vectors -/
 
-/-- If a closed subspace `K` is invariant under a unitary action, its orthogonal projection
-maps fixed vectors to fixed vectors. -/
+/-- The projection onto an action-invariant closed subspace maps fixed vectors to fixed vectors. -/
 theorem Action.starProjection_mem_fixed {Γ : Type*} [Group Γ] (A : H.Action Γ) {i : ι}
     {K : Submodule 𝕜 (W i)} [K.HasOrthogonalProjection] (hA : ∀ g, ∀ x ∈ K, A.act g i x ∈ K)
     {x : W i} (hx : x ∈ A.fixed i) : K.starProjection x ∈ A.fixed i := fun g => by
@@ -77,8 +57,7 @@ def _root_.ContinuousLinearEquiv.restrictSub {X Y : Type*} [NormedAddCommGroup X
 variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
   [∀ i, CompleteSpace (W' i)]
 
-/-- **The inverse of a transport is a scaled embedding**: `e⁻¹` maps `H.transport e κ` into `H`,
-with scales `s⁻¹` and chain-rule factors `κ⁻¹`. -/
+/-- **The inverse of a transport is a scaled embedding** of `H.transport e κ` in `H`. -/
 def ScaledEmbedding.ofTransportSymm (e : ∀ i, W i ≃L[𝕜] W' i) (κ : ι → ι → 𝕜)
     (hκ : ∀ i j, κ i j ≠ 0) (s : ι → ℝ) (hs : ∀ i, 0 < s i)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s i : 𝕜) * ⟪x, y⟫_𝕜) :
@@ -103,7 +82,6 @@ def ScaledEmbedding.ofTransportSymm (e : ∀ i, W i ≃L[𝕜] W' i) (κ : ι �
     rw [h, _root_.map_smul, ContinuousLinearEquiv.symm_apply_apply, inv_smul_smul₀ (hκ i j)]
   mem_domain_of_map i j x h := h
 
-/-- A scaled embedding maps the kernel of `d` into the kernel of `d'`. -/
 theorem ScaledEmbedding.apply_eq_zero {H' : HilbertComplex 𝕜 c W'} (E : ScaledEmbedding H H')
     {i j : ι} (x : (H.d i j).domain) (h : H.d i j x = 0) :
     H'.d i j ⟨E.J i x, E.mapsTo i j x⟩ = 0 := by
@@ -125,8 +103,7 @@ theorem mem_wave_domain_compress_iff {J : ∀ i, W' i →L[𝕜] W i} {s : ℝ} 
   · exact mem_compress_domain_iff hs hJ hR
   · exact mem_adjoint_compress_iff hs hJ hR
 
-/-- **The wave domain of a transport** along uniformly scaled isometries is the image of the
-wave domain. -/
+/-- **The wave domain of a transport** along scaled isometries is the image of the wave domain. -/
 theorem mem_wave_domain_transport_iff {e : ∀ i, W i ≃L[𝕜] W' i} {κ : ι → ι → 𝕜}
     (hκ : ∀ i j, κ i j ≠ 0) {s : ℝ} (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) {y : PiLp 2 W'} :
@@ -138,14 +115,11 @@ theorem mem_wave_domain_transport_iff {e : ∀ i, W i ≃L[𝕜] W' i} {κ : ι 
   rw [adjoint_transportD hs he (hκ i j)]
   exact Iff.rfl
 
-/-- An intertwining map sends vectors with `B (J x) ≠ 0` to vectors with `A x ≠ 0`. -/
 theorem _root_.LinearPMap.Intertwines.apply_ne_zero {E F : Type*} [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {T : E →L[𝕜] F}
     {A : E →ₗ.[𝕜] E} {B : F →ₗ.[𝕜] F} (h : Intertwines T A B) (x : A.domain)
     (hx : B ⟨T x, h.mapsTo x⟩ ≠ 0) : A x ≠ 0 := fun h0 => hx (by rw [h.comm, h0, _root_.map_zero])
 
-/-- **The wave domain of a compressed complex** (a reducing subcomplex as a complex) is the
-preimage of the wave domain. -/
 theorem ReducingSubcomplex.mem_wave_domain_iff {S : ∀ i, Submodule 𝕜 (W i)}
     [∀ i, CompleteSpace (S i)] [∀ i, (S i).HasOrthogonalProjection] (h : H.ReducingSubcomplex S)
     {y : PiLp 2 fun i => S i} :
@@ -178,8 +152,6 @@ theorem not_mem_stationary_of_wave_ne_zero (x : H.wave.domain) (hx : H.wave x �
   rw [← h0]
   exact apply_eq_of_eq (generator_waveGroup (H := H)).symm x ⟨x, hx'⟩ rfl
 
-/-- **Non-stationary vectors of a reducing subcomplex**: if the inclusion of `y` lies in `D(L)`
-and is not killed by `L`, then `y` is not stationary for the compressed wave group. -/
 theorem ReducingSubcomplex.not_mem_stationary {S : ∀ i, Submodule 𝕜 (W i)}
     [∀ i, CompleteSpace (S i)] [∀ i, (S i).HasOrthogonalProjection] (h : H.ReducingSubcomplex S)
     {y : PiLp 2 fun i => S i} (hy : ReducingSubcomplex.totalIncl S y ∈ H.wave.domain)
@@ -190,8 +162,6 @@ theorem ReducingSubcomplex.not_mem_stationary {S : ∀ i, Submodule 𝕜 (W i)}
     (h.wave_toHilbertComplex.apply_ne_zero ⟨y, hy'⟩ hne)⟩
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- **Non-stationary vectors of a compression**: if `J y ∈ D(L)` and `L (J y) ≠ 0`, then `y` lies
-in the wave domain of the compression and is not stationary. -/
 theorem not_mem_stationary_compress {J : ∀ i, W' i →L[𝕜] W i} {s : ℝ} (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     [∀ i, (LinearMap.range (J i : W' i →ₗ[𝕜] W i)).HasOrthogonalProjection]

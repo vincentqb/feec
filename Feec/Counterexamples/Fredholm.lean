@@ -9,38 +9,20 @@ public import Mathlib.Analysis.PSeries
 /-!
 # Fredholm Hilbert complexes need not have closed range
 
-Thesis §4.2 claims that "a Fredholm Hilbert complex is always closed", with Fredholm meaning
-that every space of harmonic forms `ℌⁱ = 𝔷ⁱ ∩ (𝔅ⁱ)ᗮ` is finite-dimensional. This is false. Let
-`A = diag(1/(n+1))` on `ℓ²(ℕ, 𝕜)`: bounded, injective, compact, with dense non-closed range.
+For `A = diag(1/(n+1))` on `ℓ²(ℕ, 𝕜)`, the short complex `ℓ² --A--> ℓ² → 0` and the periodic
+complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ⋯` have `ℌᵏ = 0`, so they are Fredholm in the sense of
+[QuennevilleBelair2015], §4.2, but `R(A)` is not closed.
 
-* `Fredholm.complex`: the short complex `ℓ² --A--> ℓ² → 0` (`ShortHilbertComplex.ofOp`). Every
-  `ℌⁱ` vanishes (`Fredholm.harmonic_eq_bot`), but `𝔅¹ = R(A)` is not closed
-  (`Fredholm.not_closedRangeAt_one`), so the complex is not exact at `1` although `ℌ¹ = 0`, and
-  it fails the compactness property at `0` and `1`. Headline: `fredholm_not_closedRange`.
-* `Fredholm.periodic`: the two-sided periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯`
-  on `ComplexShape.up ℤ` (`A` from the even degrees), with `ℌᵏ = 0` at every index and `𝔅ᵏ`
-  closed exactly in the even degrees (`periodic_closedRangeAt_iff`, `periodic_not_closedRange`).
+## Main results
 
-The correct statements are "finite-dimensional cohomology ⇒ closed range"
-(`Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`) and "compactness ⇒ closed
-range and finite-dimensional harmonic forms"
-(`Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`).
-
-The compactness property itself holds on infinite-dimensional spaces:
-`ℓ² --A⁻¹--> ℓ² → 0`, `A⁻¹ = diag(n+1)` (`Fredholm.invDiag`: closed, densely defined,
-self-adjoint and onto, acting coordinatewise: `invDiag_isClosed`, `dense_invDiag_domain`,
-`adjoint_invDiag`, `range_invDiag`, `invDiag_apply`; `Fredholm.invComplex`), has it at every index
-(`hasCompactProperty_infiniteDimensional`).
+* `fredholm_not_closedRange`: `ℓ² --A--> ℓ² → 0` has `ℌⁱ = 0`, but `𝔅¹` is not closed.
+* `Fredholm.periodic_closedRangeAt_iff`: the periodic complex has closed range in even degrees only.
+* `hasCompactProperty_infiniteDimensional`: `ℓ² --A⁻¹--> ℓ² → 0` has the compactness property.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (the refuted sentence and the compactness property)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (Fredholm complexes:
-  finite-dimensional cohomology)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
+  §4.2
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -69,7 +51,6 @@ theorem natCast_add_one_ne_zero (n : ℕ) : (n : 𝕜) + 1 ≠ 0 := fun h => by
   rw [h, norm_zero] at this
   linarith [(n.cast_nonneg : (0 : ℝ) ≤ n)]
 
-/-- `|a/(n+1)| ≤ |a|`. -/
 theorem norm_div_succ_le (a : 𝕜) (n : ℕ) : ‖a / ((n : 𝕜) + 1)‖ ≤ ‖a‖ := by
   rw [norm_div, norm_natCast_add_one]
   exact div_le_self (norm_nonneg _) (by linarith [(n.cast_nonneg : (0 : ℝ) ≤ n)])
@@ -82,12 +63,11 @@ def diagₗ : L2 𝕜 →ₗ[𝕜] L2 𝕜 where
   map_smul' c x := lp.ext <| funext fun n => by simp [mul_div_assoc]
 
 variable (𝕜) in
-/-- `A = diag(1/(n+1)) : ℓ² → ℓ²`: bounded, injective, compact, with dense non-closed range. -/
+/-- `A = diag(1/(n+1))` as a bounded operator on `ℓ²`. -/
 def diag : L2 𝕜 →L[𝕜] L2 𝕜 :=
   (diagₗ 𝕜).mkContinuous 1 fun x => by
     rw [one_mul]; exact lp.norm_mono two_ne_zero fun n => norm_div_succ_le _ n
 
-/-- `(A x)_n = x_n / (n+1)`. -/
 theorem diag_apply (x : L2 𝕜) (n : ℕ) : diag 𝕜 x n = x n / ((n : 𝕜) + 1) := rfl
 
 theorem norm_diag_apply_le (x : L2 𝕜) : ‖diag 𝕜 x‖ ≤ ‖x‖ :=
@@ -101,7 +81,6 @@ theorem diag_injective : Function.Injective (diag 𝕜) := by
   simp only [diag_apply] at this
   simpa [div_eq_zero_iff, natCast_add_one_ne_zero] using this
 
-/-- `A e_n = e_n / (n+1)`. -/
 theorem diag_single (n : ℕ) :
     diag 𝕜 (lp.single 2 n 1) = lp.single 2 n (1 / ((n : 𝕜) + 1)) := by
   refine lp.ext <| funext fun m => ?_
@@ -110,11 +89,9 @@ theorem diag_single (n : ℕ) :
   · subst h; simp
   · simp [lp.single_apply, Pi.single_eq_of_ne h]
 
-/-- `‖e_n‖ = 1`. -/
 theorem norm_single (n : ℕ) : ‖(lp.single 2 n 1 : L2 𝕜)‖ = 1 := by
   rw [lp.norm_single (by norm_num), norm_one]
 
-/-- `R(A)` is dense: anything orthogonal to every `A e_n` vanishes. -/
 theorem eq_zero_of_inner_diag_single {y : L2 𝕜} (hy : ∀ n, ⟪diag 𝕜 (lp.single 2 n 1), y⟫_𝕜 = 0) :
     y = 0 := by
   refine lp.ext (funext fun n => ?_)
@@ -122,14 +99,12 @@ theorem eq_zero_of_inner_diag_single {y : L2 𝕜} (hy : ∀ n, ⟪diag 𝕜 (lp
   rw [diag_single, lp.inner_single_left] at this
   simpa [natCast_add_one_ne_zero] using this
 
-/-- `R(A)ᗮ = 0`. -/
 theorem orthogonal_range_diag : (LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜))ᗮ = ⊥ := by
   rw [eq_bot_iff]
   intro y hy
   exact (Submodule.mem_bot 𝕜).2 (eq_zero_of_inner_diag_single fun n =>
     (Submodule.mem_orthogonal _ _).1 hy _ ⟨_, rfl⟩)
 
-/-- `A` is symmetric (its weights are real). -/
 theorem inner_diag_left (a b : L2 𝕜) : ⟪diag 𝕜 a, b⟫_𝕜 = ⟪a, diag 𝕜 b⟫_𝕜 := by
   rw [lp.inner_eq_tsum, lp.inner_eq_tsum]
   congr 1; funext n
@@ -147,7 +122,6 @@ def harm : L2 𝕜 :=
     rw [ENNReal.toReal_ofNat, norm_div, norm_one, norm_natCast_add_one, Real.rpow_two, div_pow,
       one_pow])⟩
 
-/-- `(1/(n+1))ₙ ∉ R(A)`: its preimage would be the constant sequence `1`. -/
 theorem harm_not_mem_range : (harm : L2 𝕜) ∉ LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜) := by
   rintro ⟨f, hf⟩
   have h1 : ∀ n, f n = 1 := fun n => by
@@ -159,7 +133,6 @@ theorem harm_not_mem_range : (harm : L2 𝕜) ∉ LinearMap.range (diag 𝕜 : L
   simp only [h1, norm_one, Real.one_rpow] at ht
   exact one_ne_zero (tendsto_nhds_unique tendsto_const_nhds ht)
 
-/-- `R(A)` is not closed (it is dense and proper). -/
 theorem not_isClosed_range_diag :
     ¬ IsClosed (LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜) : Set (L2 𝕜)) := fun h => by
   have htop : LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜) = ⊤ := by
@@ -172,7 +145,6 @@ theorem not_isClosed_range_diag :
 
 /-! ### Compactness of `A` -/
 
-/-- The unit vectors `e_n` of `ℓ²` are orthonormal. -/
 theorem orthonormal_single : Orthonormal 𝕜 (fun n : ℕ => (lp.single 2 n (1 : 𝕜) : L2 𝕜)) := by
   rw [orthonormal_iff_ite]
   intro i j
@@ -181,12 +153,11 @@ theorem orthonormal_single : Orthonormal 𝕜 (fun n : ℕ => (lp.single 2 n (1 
   · subst h; simp
   · simp [h]
 
-/-- `ℓ²` is infinite-dimensional. -/
 theorem not_finiteDimensional_L2 : ¬ FiniteDimensional 𝕜 (L2 𝕜) := fun _ =>
   Module.Finite.not_linearIndependent_of_infinite _ (orthonormal_single (𝕜 := 𝕜)).linearIndependent
 
 variable (𝕜) in
-/-- Truncation `A_N = Σ_{n<N} (1/(n+1)) ⟨e_n, ·⟩ e_n` of `A` (finite rank). -/
+/-- The finite-rank truncation `A_N = Σ_{n<N} (1/(n+1)) ⟨e_n, ·⟩ e_n` of `A`. -/
 def diagTrunc (N : ℕ) : L2 𝕜 →L[𝕜] L2 𝕜 :=
   ∑ n ∈ Finset.range N, (1 / ((n : 𝕜) + 1)) •
     (ContinuousLinearMap.toSpanSingleton 𝕜 (lp.single 2 n (1 : 𝕜) : L2 𝕜)).comp
@@ -218,7 +189,6 @@ theorem isCompactOperator_diagTrunc (N : ℕ) : IsCompactOperator (diagTrunc �
   exact (h1.clm_comp (ContinuousLinearMap.toSpanSingleton 𝕜 (lp.single 2 n (1 : 𝕜) : L2 𝕜))).smul
     (1 / ((n : 𝕜) + 1))
 
-/-- `‖A - A_N‖ ≤ 1/(N+1)`. -/
 theorem norm_sub_diagTrunc_le (N : ℕ) (x : L2 𝕜) :
     ‖(diag 𝕜 - diagTrunc 𝕜 N) x‖ ≤ 1 / ((N : ℝ) + 1) * ‖x‖ := by
   have hN : (0 : ℝ) < (N : ℝ) + 1 := by positivity
@@ -235,7 +205,6 @@ theorem norm_sub_diagTrunc_le (N : ℕ) (x : L2 𝕜) :
     _ = 1 / ((N : ℝ) + 1) * ‖x‖ := by
         rw [norm_smul, RCLike.norm_ofReal, abs_of_pos (by positivity)]
 
-/-- `A = diag(1/(n+1))` is a compact operator (norm limit of the `A_N`). -/
 theorem isCompactOperator_diag : IsCompactOperator (diag 𝕜) := by
   refine isCompactOperator_of_tendsto (l := atTop) (F := diagTrunc 𝕜) ?_
     (Eventually.of_forall isCompactOperator_diagTrunc)
@@ -274,14 +243,12 @@ def complex : HilbertComplex 𝕜 ComplexShape.fin3 (ShortHilbertComplex.W3 (L2 
 
 theorem complex_d01 : (complex 𝕜).d 0 1 = diagPMap 𝕜 := rfl
 
-/-- `𝔷⁰ = N(A) = 0`. -/
 theorem cycles_zero : (complex 𝕜).cycles 0 = ⊥ := by
   rw [(complex 𝕜).cycles_eq (show ComplexShape.fin3.Rel 0 1 from rfl), complex_d01, eq_bot_iff]
   intro x hx
   exact (Submodule.mem_bot 𝕜).2 (diag_injective ((mem_ker_toPMap_top_iff.1 hx).trans
     (_root_.map_zero _).symm))
 
-/-- `𝔅¹ = R(A)`. -/
 theorem boundaries_one :
     (complex 𝕜).boundaries 1 = LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜) := by
   rw [(complex 𝕜).boundaries_eq (show ComplexShape.fin3.Rel 0 1 from rfl), complex_d01]
@@ -304,7 +271,6 @@ theorem harmonic_two : (complex 𝕜).harmonic 2 = ⊥ := by
   intro x _
   exact (Submodule.mem_bot 𝕜).2 (Subsingleton.elim (α := PUnit) _ _)
 
-/-- **Every harmonic space vanishes**: `ℌ⁰ = N(A) = 0`, `ℌ¹ ⊆ R(A)ᗮ = 0`, `W² = 0`. -/
 theorem harmonic_eq_bot (i : Fin 3) : (complex 𝕜).harmonic i = ⊥ := by
   fin_cases i
   exacts [harmonic_zero, harmonic_one, harmonic_two]
@@ -312,7 +278,6 @@ theorem harmonic_eq_bot (i : Fin 3) : (complex 𝕜).harmonic i = ⊥ := by
 theorem finiteDimensional_harmonic (i : Fin 3) : FiniteDimensional 𝕜 ((complex 𝕜).harmonic i) := by
   rw [harmonic_eq_bot]; infer_instance
 
-/-- `𝔅¹ = R(A)` is not closed. -/
 theorem not_closedRangeAt_one : ¬ (complex 𝕜).ClosedRangeAt 1 := by
   rw [HilbertComplex.ClosedRangeAt, boundaries_one]
   exact not_isClosed_range_diag
@@ -352,8 +317,7 @@ theorem periodicD_comp (k : ℤ) (x : (periodicD 𝕜 k).domain) :
     rw [e, LinearPMap.map_zero]
 
 variable (𝕜) in
-/-- The two-sided periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on
-`ComplexShape.up ℤ`: `A` from the even degrees, `0` from the odd ones. -/
+/-- The periodic complex on `ComplexShape.up ℤ`: `A` from even degrees, `0` from odd ones. -/
 def periodic : HilbertComplex 𝕜 (ComplexShape.up ℤ) (fun _ : ℤ => L2 𝕜) :=
   HilbertComplex.ofSucc (periodicD 𝕜) (fun k => by rw [periodicD_domain]; exact dense_univ)
     periodicD_closed periodicD_mapsTo periodicD_comp
@@ -361,7 +325,6 @@ def periodic : HilbertComplex 𝕜 (ComplexShape.up ℤ) (fun _ : ℤ => L2 𝕜
 theorem periodic_d_succ (k : ℤ) : (periodic 𝕜).d k (k + 1) = periodicD 𝕜 k :=
   show HilbertComplex.ofSuccD (periodicD 𝕜) k (k + 1) = _ from HilbertComplex.ofSuccD_succ _ k
 
-/-- In even degrees, `𝔷ᵏ = N(A) = 0`. -/
 theorem periodic_cycles_of_even {k : ℤ} (hk : Even k) : (periodic 𝕜).cycles k = ⊥ := by
   rw [(periodic 𝕜).cycles_eq (show (ComplexShape.up ℤ).Rel k (k + 1) from rfl), periodic_d_succ,
     periodicD_of_even hk, eq_bot_iff]
@@ -369,20 +332,17 @@ theorem periodic_cycles_of_even {k : ℤ} (hk : Even k) : (periodic 𝕜).cycles
   exact (Submodule.mem_bot 𝕜).2 (diag_injective ((mem_ker_toPMap_top_iff.1 hx).trans
     (_root_.map_zero _).symm))
 
-/-- In odd degrees, `𝔅ᵏ⁺¹ = R(A)` for `k` even. -/
 theorem periodic_boundaries_of_even {k : ℤ} (hk : Even k) :
     (periodic 𝕜).boundaries (k + 1) = LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜) := by
   rw [(periodic 𝕜).boundaries_eq (show (ComplexShape.up ℤ).Rel k (k + 1) from rfl),
     periodic_d_succ, periodicD_of_even hk, range_toPMap_top]
 
-/-- In even degrees, `𝔅ᵏ⁺¹ = 0` for `k` odd. -/
 theorem periodic_boundaries_of_odd {k : ℤ} (hk : Odd k) : (periodic 𝕜).boundaries (k + 1) = ⊥ := by
   rw [(periodic 𝕜).boundaries_eq (show (ComplexShape.up ℤ).Rel k (k + 1) from rfl),
     periodic_d_succ, periodicD_of_odd hk, eq_bot_iff]
   rintro _ ⟨x, rfl⟩
   exact (Submodule.mem_bot 𝕜).2 (apply_eq_zero_of_eq_zero rfl x)
 
-/-- **Every harmonic space of the periodic complex vanishes.** -/
 theorem periodic_harmonic_eq_bot (k : ℤ) : (periodic 𝕜).harmonic k = ⊥ := by
   rw [eq_bot_iff]
   intro x hx
@@ -392,14 +352,12 @@ theorem periodic_harmonic_eq_bot (k : ℤ) : (periodic 𝕜).harmonic k = ⊥ :=
     rw [periodic_boundaries_of_even ⟨j, two_mul j⟩, orthogonal_range_diag] at h
     exact h
 
-/-- `𝔅ᵏ⁺¹ = R(A)` is not closed for every even `k`. -/
 theorem periodic_not_closedRangeAt {k : ℤ} (hk : Even k) :
     ¬ (periodic 𝕜).ClosedRangeAt (k + 1) := by
   rw [HilbertComplex.ClosedRangeAt, periodic_boundaries_of_even hk]
   exact not_isClosed_range_diag
 
-/-- **The periodic complex has closed range exactly in the even degrees**: `𝔅ᵏ = 0` for `k` even,
-`𝔅ᵏ = R(A)`, dense and not closed, for `k` odd. -/
+/-- The periodic complex has closed range exactly in the even degrees. -/
 theorem periodic_closedRangeAt_iff (k : ℤ) : (periodic 𝕜).ClosedRangeAt k ↔ Even k := by
   obtain ⟨m, rfl⟩ : ∃ m, m + 1 = k := ⟨k - 1, sub_add_cancel k 1⟩
   rcases Int.even_or_odd m with hm | hm
@@ -426,7 +384,6 @@ theorem invDiag_domain : (invDiag 𝕜).domain = LinearMap.range (diag 𝕜 : L2
 theorem invDiag_isClosed : (invDiag 𝕜).IsClosed :=
   (inverse_closed_iff ker_diagPMap).2 (diag 𝕜).isClosed_toPMap_top
 
-/-- `A (A⁻¹ u) = u`. -/
 theorem diag_invDiag (u : (invDiag 𝕜).domain) : diag 𝕜 (invDiag 𝕜 u) = u := by
   have h : ((u : L2 𝕜), invDiag 𝕜 u) ∈ (diagPMap 𝕜).inverse.graph := (invDiag 𝕜).mem_graph u
   rw [inverse_graph ker_diagPMap] at h
@@ -437,19 +394,16 @@ theorem diag_invDiag (u : (invDiag 𝕜).domain) : diag 𝕜 (invDiag 𝕜 u) = 
   dsimp only at hy1 hy2
   rw [← he.1, ← he.2, ← hy2, ← hy1]; rfl
 
-/-- `A⁻¹ (A v) = v`. -/
 theorem invDiag_diag (v : L2 𝕜) (h : diag 𝕜 v ∈ (invDiag 𝕜).domain) :
     invDiag 𝕜 ⟨diag 𝕜 v, h⟩ = v :=
   diag_injective (diag_invDiag _)
 
-/-- The coordinates of `A⁻¹ u`: `(A⁻¹ u)ₙ = (n + 1) uₙ`. -/
 theorem invDiag_apply (u : (invDiag 𝕜).domain) (n : ℕ) :
     invDiag 𝕜 u n = ((n : 𝕜) + 1) * (u : L2 𝕜) n := by
   have h := congrArg (fun y : L2 𝕜 => y n) (diag_invDiag u)
   simp only [diag_apply] at h
   rw [← h, mul_div_cancel₀ _ (natCast_add_one_ne_zero n)]
 
-/-- **`A⁻¹` is onto**: `A⁻¹ (A y) = y`. -/
 theorem range_invDiag : LinearMap.range (invDiag 𝕜).toFun = ⊤ :=
   LinearPMap.inverse_range ker_diagPMap
 
@@ -457,7 +411,6 @@ theorem dense_invDiag_domain : Dense ((invDiag 𝕜).domain : Set (L2 𝕜)) := 
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
     invDiag_domain, orthogonal_range_diag]
 
-/-- `A⁻¹` is self-adjoint. -/
 theorem adjoint_invDiag : (invDiag 𝕜)† = invDiag 𝕜 := by
   have hD := dense_invDiag_domain (𝕜 := 𝕜)
   have hsymm : (invDiag 𝕜).IsFormalAdjoint (invDiag 𝕜) := fun p q => by
@@ -477,19 +430,16 @@ theorem adjoint_invDiag : (invDiag 𝕜)† = invDiag 𝕜 := by
   rw [invDiag_domain, hz]
   exact ⟨z, rfl⟩
 
-/-- The `A⁻¹`-graph unit ball lies in the compact set `cl A(B̄(0,1))`. -/
 theorem mem_closure_image_diag {u : (invDiag 𝕜).domain} (hu : ‖invDiag 𝕜 u‖ ≤ 1) :
     (u : L2 𝕜) ∈ closure (diag 𝕜 '' Metric.closedBall 0 1) :=
   subset_closure ⟨invDiag 𝕜 u, mem_closedBall_zero_iff.2 hu, diag_invDiag u⟩
 
 variable (𝕜) in
-/-- The short complex `ℓ² --A⁻¹--> ℓ² → 0`, `A⁻¹ = diag(n+1)` (the model of `d` with compact
-resolvent). -/
+/-- The short complex `ℓ² --A⁻¹--> ℓ² → 0`, `A⁻¹ = diag(n+1)`. -/
 def invComplex :
     HilbertComplex 𝕜 ComplexShape.fin3 (ShortHilbertComplex.W3 (L2 𝕜) (L2 𝕜) PUnit) :=
   (ShortHilbertComplex.ofOp (invDiag 𝕜) dense_invDiag_domain invDiag_isClosed).toHilbertComplex
 
-/-- `ℓ² --A⁻¹--> ℓ² → 0` has the compactness property at every index. -/
 theorem invComplex_hasCompactProperty : (invComplex 𝕜).HasCompactProperty := by
   have hK := isCompactOperator_diag.isCompact_closure_image_closedBall
     (f := (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜)) 1
@@ -523,11 +473,8 @@ open Ell2 (L2)
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-- **A Fredholm Hilbert complex need not have closed range.** The short complex
-`ℓ² --A--> ℓ² → 0`, `A = diag(1/(n+1))` on `ℓ²(ℕ, 𝕜)`, of closed densely defined (indeed
-bounded) operators has `ℌⁱ = 0` at every index, so it is Fredholm in the thesis' sense, but
-`𝔅¹ = R(A)` is not closed; hence `𝔅¹ ≠ 𝔷¹` although `ℌ¹ = 0`, and the compactness property fails
-at `0` and `1`. [QuennevilleBelair2015], §4.2 (refuted) -/
+/-- The short complex `ℓ² --A--> ℓ² → 0` has `ℌⁱ = 0` at every index, but `𝔅¹ = R(A)` is not
+closed and the compactness property fails at `0` and `1`. Cf. [QuennevilleBelair2015], §4.2 -/
 theorem fredholm_not_closedRange :
     (∀ i, (complex 𝕜).harmonic i = ⊥) ∧ (∀ i, FiniteDimensional 𝕜 ((complex 𝕜).harmonic i)) ∧
       ¬ (complex 𝕜).ClosedRangeAt 1 ∧ (complex 𝕜).boundaries 1 ≠ (complex 𝕜).cycles 1 ∧
@@ -538,16 +485,13 @@ theorem fredholm_not_closedRange :
       (h.closedRangeAt_of_rel (show ComplexShape.fin3.Rel 0 1 from rfl)),
     fun h => not_closedRangeAt_one h.closedRangeAt⟩
 
-/-- "Every Fredholm Hilbert complex has closed range" is false, already for short complexes on
-`ℓ²(ℕ, 𝕜)`. [QuennevilleBelair2015], §4.2 (refuted) -/
 theorem not_forall_closedRangeAt_of_finiteDimensional_harmonic :
     ¬ ∀ H : HilbertComplex 𝕜 ComplexShape.fin3 (ShortHilbertComplex.W3 (L2 𝕜) (L2 𝕜) PUnit),
       (∀ i, FiniteDimensional 𝕜 (H.harmonic i)) → ∀ i, H.ClosedRangeAt i :=
   fun h => not_closedRangeAt_one (h _ finiteDimensional_harmonic 1)
 
-/-- **Periodic form**: `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on `ComplexShape.up ℤ` has
-`ℌᵏ = 0` for every `k`, but `𝔅ᵏ⁺¹ = R(A)` is not closed for every even `k`, so the complex is not
-exact there. [QuennevilleBelair2015], §4.2 (refuted) -/
+/-- The periodic complex has `ℌᵏ = 0` for every `k`, while `𝔅ᵏ⁺¹ = R(A)` is not closed for
+every even `k`. -/
 theorem periodic_not_closedRange :
     (∀ k, (periodic 𝕜).harmonic k = ⊥) ∧
       ∀ k, Even k → ¬ (periodic 𝕜).ClosedRangeAt (k + 1) ∧
@@ -555,10 +499,8 @@ theorem periodic_not_closedRange :
   ⟨periodic_harmonic_eq_bot, fun _ hk => ⟨periodic_not_closedRangeAt hk,
     (periodic 𝕜).boundaries_ne_cycles_of_not_closedRangeAt (periodic_not_closedRangeAt hk)⟩⟩
 
-/-- **The compactness property on an infinite-dimensional space.** On `ℓ²(ℕ, 𝕜)`, which is
-infinite-dimensional, the short complex `ℓ² --A⁻¹--> ℓ² → 0` with `A⁻¹ = diag(n+1)` (compact
-resolvent: the model of `d` on a compact manifold) has the compactness property at every index.
-[QuennevilleBelair2015], §4.2 -/
+/-- `ℓ²(ℕ, 𝕜)` is infinite-dimensional, and `ℓ² --A⁻¹--> ℓ² → 0` has the compactness property at
+every index. -/
 theorem hasCompactProperty_infiniteDimensional :
     ¬ FiniteDimensional 𝕜 (L2 𝕜) ∧ (invComplex 𝕜).HasCompactProperty :=
   ⟨not_finiteDimensional_L2, invComplex_hasCompactProperty⟩

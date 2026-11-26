@@ -7,33 +7,9 @@ public import Feec.Operator.Resolvent
 /-!
 # The abstract Hodge Laplacian
 
-For a skew-adjoint `A` on a Hilbert space, `-A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}` is
-self-adjoint and nonnegative, `⟪-A² x, x⟫ = ‖A x‖²`, `ker (-A²) = ker A`, and
-`1 - A² = (1 + A)(1 - A)` is invertible with inverse `(1 - A²)⁻¹ = -R(-1) R(1)`, built from the
-two resolvents `R(±1) = (±1 - A)⁻¹` of `A`. This works over `ℝ` and `ℂ` alike (no `i A` is needed).
-
-Applied to the wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex, `Δ = -L²` is the
-**Hodge Laplacian** `𝐝 𝐝* + 𝐝* 𝐝`:
-
-## Main results
-
-* `LinearPMap.IsSkewAdjoint.isSelfAdjoint_neg_sq`, `LinearPMap.IsSkewAdjoint.dense_sq_domain`.
-* `LinearPMap.isSelfAdjoint_of_isSymmetric_of_surjective`: a densely defined symmetric `T` with
-  `1 + T` onto is self-adjoint.
-* `LinearPMap.IsSkewAdjoint.isResolvent_sq`: the resolvent of `A²` at `1`, with norm `≤ 1`.
-* `Feec.HilbertComplex.isSelfAdjoint_hodgeLaplacian`,
-  `Feec.HilbertComplex.re_inner_hodgeLaplacian_self` (`re ⟪Δ x, x⟫ = ‖𝐝 x‖² + ‖𝐝* x‖²`),
-  `Feec.HilbertComplex.mem_ker_hodgeLaplacian_iff` (`ker Δ = ⊕ ℌⁱ`, no closed range needed).
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2 (the abstract Hodge Laplacian)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (the Laplacian `D²` of a Hilbert
-  complex)
-
-Bibliography: [references.bib](../../docs/references.bib)
+For a skew-adjoint `A`, `-A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}` is self-adjoint, with
+`ker A² = ker A`; for the wave operator `L` of a finite Hilbert complex this gives the Hodge
+Laplacian `Δ = -L²`.
 -/
 
 open scoped InnerProductSpace
@@ -86,12 +62,10 @@ def sqSnd (x : A.sq.domain) : A.domain := ⟨A (sqFst x), x.2.2⟩
 
 theorem sq_apply (x : A.sq.domain) : A.sq x = A (sqSnd x) := rfl
 
-/-- `⟪A² x, y⟫ = -⟪A x, A y⟫` for skew-symmetric `A`. -/
 theorem IsSkewSymmetric.inner_sq_left (hA : A.IsSkewSymmetric) (x : A.sq.domain)
     (y : A.domain) : ⟪A.sq x, (y : E)⟫ = -⟪A (sqFst x), A y⟫ :=
   hA (sqSnd x) y
 
-/-- `-A²` is symmetric for skew-symmetric `A`. -/
 theorem IsSkewSymmetric.isSymmetric_neg_sq (hA : A.IsSkewSymmetric) : (-A.sq).IsSymmetric := by
   intro x y
   change ⟪-A.sq x, (y : E)⟫ = ⟪(x : E), -A.sq y⟫
@@ -99,7 +73,6 @@ theorem IsSkewSymmetric.isSymmetric_neg_sq (hA : A.IsSkewSymmetric) : (-A.sq).Is
   have h2 : ⟪A (sqFst x), A (sqFst y)⟫ = -⟪(x : E), A.sq y⟫ := hA (sqFst x) (sqSnd y)
   rw [inner_neg_left, inner_neg_right, h1, h2, neg_neg]
 
-/-- `⟪x - A² x, x⟫ = ‖x‖² + ‖A x‖²` for skew-symmetric `A`. -/
 theorem IsSkewSymmetric.re_inner_sub_sq_self (hA : A.IsSkewSymmetric) (x : A.sq.domain) :
     RCLike.re ⟪(x : E) - A.sq x, (x : E)⟫ = ‖(x : E)‖ ^ 2 + ‖A (sqFst x)‖ ^ 2 := by
   have h1 : ⟪A.sq x, (x : E)⟫ = -⟪A (sqFst x), A (sqFst x)⟫ := hA.inner_sq_left x (sqFst x)
@@ -107,7 +80,6 @@ theorem IsSkewSymmetric.re_inner_sub_sq_self (hA : A.IsSkewSymmetric) (x : A.sq.
     inner_self_eq_norm_sq, inner_self_eq_norm_sq]
   ring
 
-/-- `1 - A²` is injective on `D(A²)` for skew-symmetric `A`. -/
 theorem IsSkewSymmetric.eq_zero_of_sub_sq_eq_zero (hA : A.IsSkewSymmetric) {x : A.sq.domain}
     (h : (x : E) - A.sq x = 0) : x = 0 := by
   have := hA.re_inner_sub_sq_self x
@@ -115,7 +87,6 @@ theorem IsSkewSymmetric.eq_zero_of_sub_sq_eq_zero (hA : A.IsSkewSymmetric) {x : 
   have : ‖(x : E)‖ ^ 2 = 0 := by nlinarith [sq_nonneg ‖(x : E)‖, sq_nonneg ‖A (sqFst x)‖]
   exact Subtype.ext (by simpa using this)
 
-/-- A densely defined symmetric `T` with `1 + T` onto `E` is self-adjoint. -/
 theorem isSelfAdjoint_of_isSymmetric_of_surjective [CompleteSpace E] {T : E →ₗ.[𝕜] E}
     (hD : Dense (T.domain : Set E)) (hT : T.IsSymmetric)
     (hs : ∀ y, ∃ x : T.domain, (x : E) + T x = y) : IsSelfAdjoint T := by
@@ -138,7 +109,6 @@ variable [CompleteSpace E]
 
 namespace IsSkewAdjoint
 
-/-- **`x - A² x = f` is solvable** for skew-adjoint `A`: `x = -R(-1) R(1) f`. -/
 theorem neg_resolvent_mem_sq_domain (hA : A.IsSkewAdjoint) (f : E) :
     -resolvent A (-1) (resolvent A 1 f) ∈ A.sq.domain ∧
       ∀ h : -resolvent A (-1) (resolvent A 1 f) ∈ A.sq.domain,
@@ -176,7 +146,6 @@ theorem neg_resolvent_mem_sq_domain (hA : A.IsSkewAdjoint) (f : E) :
 /-- The solution operator `(1 - A²)⁻¹ = -R(-1) R(1)` of a skew-adjoint `A`. -/
 def sqResolvent (A : E →ₗ.[𝕜] E) : E →L[𝕜] E := -(resolvent A (-1)).comp (resolvent A 1)
 
-/-- **The resolvent of `A²` at `1`**: `(1 - A²)⁻¹ = -R(-1) R(1)` for skew-adjoint `A`. -/
 theorem isResolvent_sq (hA : A.IsSkewAdjoint) : IsResolvent A.sq 1 (sqResolvent A) where
   mem_domain f := (hA.neg_resolvent_mem_sq_domain f).1
   sub_apply f := by
@@ -197,7 +166,6 @@ theorem isResolvent_sq (hA : A.IsSkewAdjoint) : IsResolvent A.sq 1 (sqResolvent 
       exact sub_self _
     exact congrArg Subtype.val (sub_eq_zero.1 this)
 
-/-- `D(A²)` is dense for skew-adjoint `A`. -/
 theorem dense_sq_domain (hA : A.IsSkewAdjoint) : Dense (A.sq.domain : Set E) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
     Submodule.eq_bot_iff]
@@ -226,7 +194,6 @@ theorem isSelfAdjoint_neg_sq (hA : A.IsSkewAdjoint) : IsSelfAdjoint (-A.sq) := b
   rw [neg_apply, ← sub_eq_add_neg]
   simpa using hR.sub_apply_toDomain f
 
-/-- `ker A² = ker A` for skew-symmetric `A`. -/
 theorem mem_ker_sq_iff (hA : A.IsSkewAdjoint) {x : E} : x ∈ A.sq.ker ↔ x ∈ A.ker := by
   rw [mem_ker_iff, mem_ker_iff]
   constructor
@@ -254,25 +221,21 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- The **Hodge Laplacian** `Δ = -L² = 𝐝 𝐝* + 𝐝* 𝐝` of a finite Hilbert complex, where
-`L = 𝐝 − 𝐝*` is the wave operator; its `i`-th component is the Hodge Laplacian
-`d (d*)ⁱ + (d*) dⁱ` at index `i`. -/
+/-- The **Hodge Laplacian** `Δ = -L²` of a finite Hilbert complex. -/
 def hodgeLaplacian : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := -H.wave.sq
 
-/-- **The Hodge Laplacian is self-adjoint**, with no closed-range hypothesis. -/
+/-- **The Hodge Laplacian is self-adjoint.** -/
 theorem isSelfAdjoint_hodgeLaplacian : IsSelfAdjoint H.hodgeLaplacian :=
   H.isSkewAdjoint_wave.isSelfAdjoint_neg_sq
 
 theorem dense_hodgeLaplacian_domain : Dense (H.hodgeLaplacian.domain : Set (PiLp 2 W)) :=
   H.isSkewAdjoint_wave.dense_sq_domain
 
-/-- `⟪Δ x, y⟫ = ⟪L x, L y⟫`. -/
 theorem inner_hodgeLaplacian_left (x : H.hodgeLaplacian.domain) (y : H.wave.domain) :
     ⟪H.hodgeLaplacian x, (y : PiLp 2 W)⟫ = ⟪H.wave (sqFst x), H.wave y⟫ := by
   change ⟪-H.wave.sq x, (y : PiLp 2 W)⟫ = _
   rw [inner_neg_left, H.isSkewAdjoint_wave.isSkewSymmetric.inner_sq_left x y, neg_neg]
 
-/-- **`Δ ≥ 0`**: `re ⟪Δ x, x⟫ = ‖𝐝 x‖² + ‖𝐝* x‖²`. -/
 theorem re_inner_hodgeLaplacian_self (x : H.hodgeLaplacian.domain) :
     RCLike.re ⟪H.hodgeLaplacian x, (x : PiLp 2 W)⟫ =
       ‖H.totalD ⟨x, x.2.1.1⟩‖ ^ 2 + ‖H.dual.totalD ⟨x, x.2.1.2⟩‖ ^ 2 := by
@@ -285,7 +248,6 @@ theorem re_inner_hodgeLaplacian_self_nonneg (x : H.hodgeLaplacian.domain) :
     0 ≤ RCLike.re ⟪H.hodgeLaplacian x, (x : PiLp 2 W)⟫ := by
   rw [re_inner_hodgeLaplacian_self]; positivity
 
-/-- `𝐝 x = 0` iff every component is a cycle. -/
 theorem totalD_eq_zero_iff (x : H.totalD.domain) :
     H.totalD x = 0 ↔ ∀ i, (x : PiLp 2 W) i ∈ H.cycles i := by
   constructor
@@ -305,8 +267,6 @@ theorem totalD_eq_zero_iff (x : H.totalD.domain) :
         Subtype.ext hy, hy0]
     · exact apply_eq_zero_of_eq_zero (H.d_eq_zero_of_ne_next hj) _
 
-/-- **`ker L = ⊕ ℌⁱ`**: `x` is in the kernel of the wave operator iff every component is
-harmonic. -/
 theorem mem_ker_wave_iff {x : PiLp 2 W} : x ∈ H.wave.ker ↔ ∀ i, x i ∈ H.harmonic i := by
   constructor
   · intro hx
@@ -334,7 +294,7 @@ theorem mem_ker_wave_iff {x : PiLp 2 W} : x ∈ H.wave.ker ↔ ∀ i, x i ∈ H.
     rw [(H.totalD_eq_zero_iff ⟨x, hx1⟩).2 hc, (H.dual.totalD_eq_zero_iff ⟨x, hx2⟩).2 hd, sub_zero]
 
 /-- **`ker Δ = ⊕ ℌⁱ`**: the kernel of the Hodge Laplacian consists of the families of harmonic
-forms (no closed range needed). -/
+forms. -/
 theorem mem_ker_hodgeLaplacian_iff {x : PiLp 2 W} :
     x ∈ H.hodgeLaplacian.ker ↔ ∀ i, x i ∈ H.harmonic i := by
   rw [← H.mem_ker_wave_iff, ← H.isSkewAdjoint_wave.mem_ker_sq_iff, hodgeLaplacian,

@@ -5,35 +5,14 @@ public import Feec.Mesh.Kuhn
 /-!
 # Freudenthal triangulations of boxes and their uniform refinement
 
-The Freudenthal triangulation of `ℝⁿ` consists of the integer translates `m + K_σ` of the Kuhn
-simplices (`Feec.Mesh.freudenthalSimplex`). Its face-to-face property is
-`inter_closedInterior_freudenthalSimplex`.
-
-For `N ≥ 1`, the level-`N` Freudenthal mesh of the box `∏ (bᵢ, bᵢ + s)` is the image of the
-triangulation of `(0, N)ⁿ` by the cells `m + K_σ`, `m ∈ {0, …, N-1}ⁿ`, under
-`x ↦ b + (s / N) x`; its simplices are `b + (s/N)(m + K_σ)` ([Freudenthal1942]; [Bey2000]).
-
-## Main definitions
-
-* `latticeMesh n N`: the `N ⁿ n!` simplices `m + K_σ`, `0 ≤ mᵢ < N`, as a mesh of `(0, N)ⁿ`.
-* `boxMap b h`: the affine map `x ↦ b + h x`.
-* `freudenthalMesh b s hs N`: the level-`N` Freudenthal mesh of `∏ (bᵢ, bᵢ + s)`.
-
-## Main results
-
-* `iUnion_freudenthalSet`: the cells `m + K_σ`, `0 ≤ mᵢ < N`, cover `[0, N]ⁿ`.
-* `latticeMesh`, `freudenthalMesh`: conforming meshes (conformity across neighbouring cells is
-  the face-to-face property of the global Freudenthal triangulation).
-* `smul_mem_freudenthalSet`: `M⁻¹ (m + K_σ) ⊆ m' + K_σ'` with `m' = ⌊c / M⌋` for the interior
-  point `c = m + g_σ`; hence `freudenthalMesh_refines`: **the level-`N M` mesh refines the level-`N`
-  mesh**.
+For `N ≥ 1`, the level-`N` Freudenthal mesh of the box `∏ (bᵢ, bᵢ + s)` has the simplices
+`b + (s/N)(m + K_σ)`, `m ∈ {0, …, N-1}ⁿ`, with `K_σ` the Kuhn simplices ([Freudenthal1942];
+[Bey2000]); the level-`N M` mesh refines the level-`N` mesh.
 
 ## References
 
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
-* [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
 * [J. Bey, *Simplicial grid refinement: on Freudenthal's algorithm and the optimal number of congruence classes*][Bey2000]
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (simplicial meshes)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -47,8 +26,6 @@ open Set
 namespace Feec.Mesh
 
 variable {n : ℕ}
-
-/-! ### Position of `m + K_σ` relative to its interior point `c = m + g_σ` -/
 
 section Sign
 
@@ -120,9 +97,6 @@ theorem sub_le_of_center_sub_le (hx : x ∈ freudenthalSet m σ) (i j : Fin n) {
     push_cast at h2
     linarith
 
-/-- **Refinement of the Freudenthal triangulation.** For `M ≥ 1`, the shrunk simplex
-`M⁻¹ (m + K_σ)` lies in the simplex `m' + K_σ'` with `m' = ⌊c / M⌋` and `σ'` sorting
-`fract (c / M)` decreasingly, `c = m + g_σ`. -/
 theorem smul_mem_freudenthalSet {M : ℕ} (hM : 0 < M) (hx : x ∈ freudenthalSet m σ) :
     (M : ℝ)⁻¹ • x ∈ freudenthalSet (fun i => ⌊freudenthalCenter m σ i / M⌋)
       (Tuple.sort fun i => -Int.fract (freudenthalCenter m σ i / M)) := by
@@ -164,12 +138,9 @@ theorem smul_mem_freudenthalSet {M : ℕ} (hM : 0 < M) (hx : x ∈ freudenthalSe
 
 end Sign
 
-/-! ### The Freudenthal mesh of `(0, N)ⁿ` -/
-
 /-- The lattice point of `m ∈ {0, …, N-1}ⁿ`. -/
 def finLattice {N : ℕ} (m : Fin n → Fin N) : Fin n → ℤ := fun i => ((m i : ℕ) : ℤ)
 
-/-- The cells `m + K_σ`, `0 ≤ mᵢ < N`, cover `[0, N]ⁿ`. -/
 theorem iUnion_freudenthalSet (N : ℕ) [NeZero N] :
     ⋃ p : (Fin n → Fin N) × Equiv.Perm (Fin n), freudenthalSet (finLattice p.1) p.2 =
       Set.Icc 0 fun _ => (N : ℝ) := by
@@ -247,8 +218,6 @@ theorem mem_latticeMesh_simplices {N : ℕ} [NeZero N] {T : Affine.Simplex ℝ (
 @[simp] theorem latticeMesh_domain (N : ℕ) [NeZero N] :
     (latticeMesh n N).domain = Set.univ.pi fun _ => Set.Ioo (0 : ℝ) N := rfl
 
-/-! ### The Freudenthal mesh of a box -/
-
 /-- The affine map `x ↦ b + h x`. -/
 def boxMap (b : Fin n → ℝ) (h : ℝ) (hh : h ≠ 0) : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ) :=
   (LinearEquiv.smulOfNeZero ℝ (Fin n → ℝ) h hh).toAffineEquiv.trans
@@ -261,8 +230,7 @@ def boxMap (b : Fin n → ℝ) (h : ℝ) (hh : h ≠ 0) : (Fin n → ℝ) ≃ᵃ
 theorem freudenthalScale_ne_zero {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N] : s / N ≠ 0 :=
   div_ne_zero hs.ne' (by exact_mod_cast NeZero.ne N)
 
-/-- **The level-`N` Freudenthal mesh** of the box `∏ (bᵢ, bᵢ + s)`: the simplices
-`b + (s / N)(m + K_σ)`, `m ∈ {0, …, N-1}ⁿ`, `σ ∈ 𝔖ₙ`. -/
+/-- The level-`N` Freudenthal mesh of `∏ (bᵢ, bᵢ + s)`: the simplices `b + (s / N)(m + K_σ)`. -/
 def freudenthalMesh (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ) [NeZero N] :
     SimplicialMesh n :=
   (latticeMesh n N).map (boxMap b (s / N) (freudenthalScale_ne_zero hs N))
@@ -315,8 +283,7 @@ theorem closedInterior_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh
   rw [closedInterior_mapEquiv, closedInterior_freudenthalSimplex]
   congr 1
 
-/-- **Uniform refinement.** The level-`N M` Freudenthal mesh of a box refines the level-`N`
-mesh. -/
+/-- The level-`N M` Freudenthal mesh of a box refines the level-`N` mesh. -/
 theorem freudenthalMesh_refines (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N M : ℕ) [NeZero N]
     [NeZero M] :
     (freudenthalMesh b s hs (N * M)).Refines (freudenthalMesh b s hs N) := by
@@ -357,8 +324,6 @@ theorem freudenthalMesh_refines (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N M 
     congr 2
     push_cast
     field_simp
-
-/-! ### Mesh size -/
 
 theorem diam_freudenthalMesh_simplex [NeZero n] (b : Fin n → ℝ) {h : ℝ} (hh : 0 < h)
     (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) :

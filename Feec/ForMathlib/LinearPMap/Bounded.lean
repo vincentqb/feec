@@ -6,21 +6,9 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 /-!
 # Bounded operators and bounded perturbations of unbounded operators
 
-* `ContinuousLinearMap.isClosed_toPMap_top`, `adjoint_toPMap_top`,
-  `isSkewAdjoint_toPMap_top_iff`: an everywhere-defined bounded operator as a `LinearPMap`.
-* Bounded perturbations `B +ᵥ T` (Mathlib's `VAdd (E →ₗ[𝕜] F) (E →ₗ.[𝕜] F)`, domain `D(T)`):
-  `IsClosed.vadd`, `adjoint_vadd` (`(B + T)† = B† + T†`), and the stability of
-  skew-symmetry, dissipativity and skew-adjointness under bounded skew / dissipative
-  perturbations (`IsSkewAdjoint.vadd`, `IsDissipative.vadd`, `IsSkewSymmetric.vadd`).
-
-## References
-
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §V.4.1 (bounded perturbations of
-  self-adjoint operators)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.1 (bounded perturbations of generators)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+An everywhere-defined bounded operator is a closed `LinearPMap` with its Hilbert adjoint as
+adjoint; a bounded perturbation `B +ᵥ T` of a closed operator is closed, `(B + T)† = B† + T†`, and
+skew-symmetry, dissipativity and skew-adjointness pass to `B +ᵥ T` from `T` and `B`.
 -/
 
 open scoped InnerProductSpace
@@ -33,7 +21,6 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
 
 namespace ContinuousLinearMap
 
-/-- An everywhere-defined continuous operator is closed. -/
 theorem isClosed_toPMap_top (A : E →L[𝕜] F) : ((A : E →ₗ[𝕜] F).toPMap ⊤).IsClosed := by
   have : (((A : E →ₗ[𝕜] F).toPMap ⊤).graph : Set (E × F)) = {p | p.2 = A p.1} := by
     ext ⟨x, y⟩
@@ -46,7 +33,6 @@ theorem isClosed_toPMap_top (A : E →L[𝕜] F) : ((A : E →ₗ[𝕜] F).toPMa
   rw [LinearPMap.IsClosed, this]
   exact isClosed_eq continuous_snd (A.continuous.comp continuous_fst)
 
-/-- The adjoint of an everywhere-defined bounded operator is its Hilbert adjoint. -/
 theorem adjoint_toPMap_top [CompleteSpace E] [CompleteSpace F] (A : E →L[𝕜] F) :
     ((A : E →ₗ[𝕜] F).toPMap ⊤).adjoint = ((adjoint A : F →L[𝕜] E) : F →ₗ[𝕜] E).toPMap ⊤ :=
   A.toPMap_adjoint_eq_adjoint_toPMap_of_dense (by simp [dense_univ])
@@ -62,7 +48,6 @@ theorem adjoint_eq_neg_iff [CompleteSpace E] (A : E →L[𝕜] E) :
     intro x y
     simp [h]
 
-/-- A bounded operator `A` is skew-adjoint as an unbounded operator iff `A† = -A`. -/
 theorem isSkewAdjoint_toPMap_top_iff [CompleteSpace E] (A : E →L[𝕜] E) :
     ((A : E →ₗ[𝕜] E).toPMap ⊤).IsSkewAdjoint ↔ adjoint A = -A := by
   unfold LinearPMap.IsSkewAdjoint
@@ -100,7 +85,6 @@ theorem neg_vadd_neg (B : M →ₗ[R] N) (T : M →ₗ.[R] N) : (-B) +ᵥ (-T) =
 
 end VAdd
 
-/-- A bounded perturbation of a closed operator is closed. -/
 theorem IsClosed.vadd {T : E →ₗ.[𝕜] F} (hT : T.IsClosed) (B : E →L[𝕜] F) :
     ((B : E →ₗ[𝕜] F) +ᵥ T).IsClosed := by
   have : (((B : E →ₗ[𝕜] F) +ᵥ T).graph : Set (E × F)) =
@@ -111,7 +95,6 @@ theorem IsClosed.vadd {T : E →ₗ.[𝕜] F} (hT : T.IsClosed) (B : E →L[𝕜
 
 variable [CompleteSpace E] [CompleteSpace F]
 
-/-- `(B + T)† = B† + T†` for a densely defined `T` and a bounded `B`. -/
 theorem adjoint_vadd (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) (B : E →L[𝕜] F) :
     ((B : E →ₗ[𝕜] F) +ᵥ T)† =
       ((ContinuousLinearMap.adjoint B : F →L[𝕜] E) : F →ₗ[𝕜] E) +ᵥ T† := by
@@ -139,7 +122,6 @@ theorem adjoint_vadd (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) (B 
 variable {A : E →ₗ.[𝕜] E}
 
 omit [CompleteSpace E] in
-/-- A skew-symmetric operator perturbed by a bounded skew operator is skew-symmetric. -/
 theorem IsSkewSymmetric.vadd (hA : A.IsSkewSymmetric) {B : E →L[𝕜] E}
     (hB : ∀ x y, ⟪B x, y⟫_𝕜 = -⟪x, B y⟫_𝕜) : ((B : E →ₗ[𝕜] E) +ᵥ A).IsSkewSymmetric := by
   intro x y
@@ -148,7 +130,6 @@ theorem IsSkewSymmetric.vadd (hA : A.IsSkewSymmetric) {B : E →L[𝕜] E}
   rw [inner_add_left, inner_add_right, hB, h, neg_add]
 
 omit [CompleteSpace E] in
-/-- A dissipative operator perturbed by a bounded dissipative operator is dissipative. -/
 theorem IsDissipative.vadd (hA : A.IsDissipative) {B : E →L[𝕜] E}
     (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) : ((B : E →ₗ[𝕜] E) +ᵥ A).IsDissipative := by
   intro x
@@ -156,7 +137,6 @@ theorem IsDissipative.vadd (hA : A.IsDissipative) {B : E →L[𝕜] E}
   rw [inner_add_left, RCLike.re.map_add]
   exact add_nonpos (hB x) (hA x)
 
-/-- A skew-adjoint operator perturbed by a bounded skew-adjoint operator is skew-adjoint. -/
 theorem IsSkewAdjoint.vadd (hA : A.IsSkewAdjoint) {B : E →L[𝕜] E}
     (hB : ContinuousLinearMap.adjoint B = -B) : ((B : E →ₗ[𝕜] E) +ᵥ A).IsSkewAdjoint := by
   unfold IsSkewAdjoint

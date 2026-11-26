@@ -7,45 +7,19 @@ public import Feec.FiniteElement.WhitneyInterpolation
 /-!
 # Inverse and DOF estimates on shape-regular simplices
 
-Every `n`-simplex is `T = F_T(T̂)`, `F_T x̂ = B_T x̂ + p₀` (`Affine.Simplex.refMap`). The
-estimates of `Feec.FiniteElement.InverseEstimate` and `Feec.FiniteElement.PolyInverseEstimate` are
-proved on homothetic copies `t + h K` of finitely many reference simplices (Freudenthal–Kuhn
-meshes); here they are transferred through the general affine map `F_T`, so that they hold with
-one constant on every family that is **shape regular** in the sense of `Feec.Mesh.IsShapeRegular`
-(`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T`, `c h_Tⁿ ≤ |det B_T|`; [Ciarlet2002], §3.1–3.2).
+Inverse and DOF estimates on the reference simplex, transferred by the affine map of each simplex,
+hold with one constant on every shape-regular family ([Ciarlet2002], §3.1–3.2).
 
-* **The reference pullback** `F_T^* u` (`refPull`) of a form field and its inverse:
-  `u(x) = (B_T⁻¹)^* (F_T^* u)(F_T⁻¹ x)` (`apply_eq_pullback_refPull`). Pullbacks of `k`-forms by a
-  matrix with entries `≤ a` are bounded by `2ⁿ (n a)ᵏ` (`norm_pullback_le`); the entries of `B_T`
-  and `B_T⁻¹` are bounded by `‖B_T‖`, `‖B_T⁻¹‖` (`abs_simplexMatrix_le`,
-  `Feec.FiniteElement.abs_inv_edgeMatrix_le`).
-  Pointwise and Lipschitz bounds (`norm_apply_le_refPull`, `norm_sub_le_refPull`,
-  `norm_refMapInv_sub_le`) and the change of variables `∫_T f = |det B_T| ∫_{T̂} f ∘ F_T`
-  (`integral_closedInterior_eq`, `abs_det_mul_formL2Sq_refPull_le`) follow.
-* **Transfer of reference inverse estimates** (`inverse_bound_of_ref`): if a space `V` of
-  continuous `k`-form fields stable under the reference pullbacks satisfies
-  `sup_{T̂} ‖u‖, Lip_{T̂}(u) ≤ A₀ ‖u‖_{L²(T̂)}`, then on every shape-regular `T`
-  `h_T^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with
-  `A = invConst n k A₀ C c`. Instances: every affine-invariant `V ≤ P_rΛᵏ`
-  (`exists_inverse_bound_of_le_polySpace`), in particular `P_rΛᵏ`
-  (`exists_inverse_bound_polySpace`) and `P_r⁻Λᵏ`, and the Whitney forms `P₁⁻Λᵏ`, coefficientwise (`exists_inverse_bound_p1MinusForms`).
-* **DOF estimates** (`dof_bound_of_ref`): `h_Tᵏ sup_T ‖u‖ ≤ 2ⁿ (n C)ᵏ B Σⱼ |ℓⱼ(F_T^* u)|` for any
-  family `ℓ` of functionals with `sup_{T̂} ‖v‖ ≤ B Σⱼ |ℓⱼ(v)|`; for unisolvent DOFs on polynomial
-  spaces `exists_dof_bound_of_le_polySpace` (for moment DOFs `ℓⱼ(F_T^* u)` are the moments of `u`
-  on the faces of `T`, `faceMoment_affine`), and for the Whitney forms in terms of the face
-  integrals of `T` itself, `exists_dof_bound_p1MinusForms` (`∫_{ĝ} F_T^* u = ± ∫_{F_T(ĝ)} u`,
-  `abs_simplexIntegral_refPull`).
+## Main results
 
-These are the local tools of the smoothed-projection estimates on general quasi-uniform
-shape-regular meshes (`Feec.FiniteElement.ShapeRegularSmoothing`,
-`Feec.Models.StarShaped.FiniteElement`).
+* `inverse_bound_of_ref`, `dof_bound_of_ref`: the transfer to a shape-regular simplex.
+* `exists_inverse_bound_of_le_polySpace`: inverse estimates for polynomial forms.
+* `exists_dof_bound_of_le_polySpace`: DOF estimates for polynomial forms.
+* `exists_inverse_bound_p1MinusForms`, `exists_dof_bound_p1MinusForms`: for the Whitney forms.
 
 ## References
 
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1 (affine
-  families, shape regularity), §3.2 (inverse inequalities)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (inverse estimates for the smoothed projection)
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -59,8 +33,6 @@ namespace Feec.FiniteElement
 open Feec.Mesh ExteriorFibre
 
 variable {n : ℕ}
-
-/-! ### The affine map `F_T` and its inverse as `affine` maps -/
 
 theorem affine_simplexMatrix_eq_refMap (T : Affine.Simplex ℝ (Fin n → ℝ) n) (x : Fin n → ℝ) :
     affine (simplexMatrix T.points) (T.points 0) x = T.refMap x := by
@@ -80,7 +52,6 @@ theorem refPull_apply (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : FormField 
 def invEdge (T : Affine.Simplex ℝ (Fin n → ℝ) n) : Fin n → Fin n → ℝ :=
   fun i j => (edgeMatrix T.points)⁻¹ i j
 
-/-- **Inverting the reference pullback**: `u(x) = (B_T⁻¹)^* (F_T^* u)(F_T⁻¹ x)`. -/
 theorem apply_eq_pullback_refPull (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : FormField n)
     (x : Fin n → ℝ) : u x = pullback (invEdge T) (refPull T u (refMapInv T x)) := by
   rw [refPull_apply, refMap_refMapInv, pullback_pullback]
@@ -105,8 +76,6 @@ theorem abs_simplexMatrix_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i j : F
   · subst hl; simp
   · simp [hl]
 
-/-- **Pointwise bound of a pullback**: `‖M^* α‖ ≤ 2ⁿ (n a)ᵏ ‖α‖` for a `k`-form `α` and a
-matrix with entries bounded by `a`. -/
 theorem norm_pullback_le {m : ℕ} {M : Fin n → Fin m → ℝ} {a : ℝ} (ha : 0 ≤ a)
     (hM : ∀ i j, |M i j| ≤ a) {k : ℕ} {α : Finset (Fin n) → ℝ} (hα : IsDeg k α) :
     ‖pullback M α‖ ≤ 2 ^ n * (m * a) ^ k * ‖α‖ := by
@@ -133,7 +102,6 @@ theorem isDeg_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : 
     (hu : ∀ x, IsDeg k (u x)) (y : Fin n → ℝ) : IsDeg k (refPull T u y) := by
   rw [refPull_apply]; exact (hu _).pullback _
 
-/-- `‖u(x)‖ ≤ 2ⁿ (n ‖B_T⁻¹‖)ᵏ ‖(F_T^* u)(F_T⁻¹ x)‖`. -/
 theorem norm_apply_le_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : FormField n}
     (hu : ∀ x, IsDeg k (u x)) (x : Fin n → ℝ) :
     ‖u x‖ ≤ 2 ^ n * (n * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖) ^ k *
@@ -141,7 +109,6 @@ theorem norm_apply_le_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) 
   rw [apply_eq_pullback_refPull T u x]
   exact norm_pullback_le (norm_nonneg _) (abs_inv_edgeMatrix_le T) (isDeg_refPull T hu _)
 
-/-- `‖u(x) - u(x')‖ ≤ 2ⁿ (n ‖B_T⁻¹‖)ᵏ ‖(F_T^* u)(F_T⁻¹ x) - (F_T^* u)(F_T⁻¹ x')‖`. -/
 theorem norm_sub_le_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : FormField n}
     (hu : ∀ x, IsDeg k (u x)) (x x' : Fin n → ℝ) :
     ‖u x - u x'‖ ≤ 2 ^ n * (n * ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ)‖) ^ k *
@@ -159,9 +126,6 @@ theorem norm_refMapInv_sub_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) (x x' :
   rw [e]
   exact (T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] Fin n → ℝ).le_opNorm _
 
-/-! ### Change of variables -/
-
-/-- **Change of variables** on a simplex: `∫_T f = |det B_T| ∫_{T̂} f ∘ F_T`. -/
 theorem integral_closedInterior_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (f : (Fin n → ℝ) → ℝ) :
     ∫ x in T.closedInterior, f x =
@@ -199,8 +163,6 @@ theorem formL2Sq_eq_integral_sum {S : Set (Fin n → ℝ)} (hS : IsCompact S) {u
   intro s _
   exact (((continuous_apply s).comp hu).pow 2).continuousOn.integrableOn_compact hS
 
-/-- **`L²` norms under the reference pullback**:
-`|det B_T| ‖F_T^* u‖²_{L²(T̂)} ≤ 8ⁿ (n ‖B_T‖)^{2k} ‖u‖²_{L²(T)}` for a continuous `k`-form. -/
 theorem abs_det_mul_formL2Sq_refPull_le {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     {u : FormField n} (hu : ∀ x, IsDeg k (u x)) (hc : Continuous u) :
     |LinearMap.det T.linearPart| * formL2Sq (Mesh.refSimplex n).closedInterior (refPull T u) ≤
@@ -254,8 +216,6 @@ theorem sqrt_abs_det_mul_le {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   refine (Real.sqrt_le_sqrt h).trans (le_of_eq ?_)
   rw [Real.sqrt_mul (by positivity), Real.sqrt_mul (by positivity), Real.sqrt_sq (by positivity)]
 
-/-! ### Transfer of reference estimates to shape-regular simplices -/
-
 /-- The constant of the transferred inverse estimates. -/
 def invConst (n k : ℕ) (A₀ C c : ℝ) : ℝ :=
   2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * (1 + C)
@@ -264,8 +224,6 @@ theorem invConst_nonneg (n k : ℕ) {A₀ C c : ℝ} (hA₀ : 0 ≤ A₀) (hC : 
     0 ≤ invConst n k A₀ C c := by
   unfold invConst; positivity
 
-/-- The scaling identity behind the transfer: `√h_Tⁿ ‖F_T^* u‖_{L²(T̂)} ≤ c^{-1/2} 8^{n/2}
-(n ‖B_T‖)ᵏ ‖u‖_{L²(T)}` when `c h_Tⁿ ≤ |det B_T|`. -/
 theorem sqrt_pow_mul_sqrt_formL2Sq_refPull_le {k : ℕ} {c : ℝ} (hc : 0 < c)
     (T : Affine.Simplex ℝ (Fin n → ℝ) n) (hh : 0 < diam T)
     (hdet : c * diam T ^ n ≤ |LinearMap.det T.linearPart|)
@@ -286,12 +244,8 @@ theorem sqrt_pow_mul_sqrt_formL2Sq_refPull_le {k : ℕ} {c : ℝ} (hc : 0 < c)
     _ ≤ √d * √LK := mul_le_mul_of_nonneg_right h2 hLK
     _ ≤ _ := h1
 
-/-- **Transfer of reference inverse estimates** to a shape-regular simplex: if a space `V` of
-continuous `k`-form fields, stable under the reference pullbacks `F_T^*`, satisfies
-`sup_{T̂} ‖u‖ ≤ A₀ ‖u‖_{L²(T̂)}` and `Lip_{T̂}(u) ≤ A₀ ‖u‖_{L²(T̂)}`, then on every simplex `T` with
-`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T`, `c h_Tⁿ ≤ |det B_T|`,
-`h_T^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with
-`A = invConst n k A₀ C c` depending only on `n, k, A₀, C, c`. -/
+/-- **Transfer of reference inverse estimates** to shape-regular simplices, for spaces `V` stable
+under `F_T^*`: `h_T^{n/2} sup_T ‖u‖` and `h_T^{n/2} h_T Lip_T(u)` are `≤ A ‖u‖_{L²(T)}`. -/
 theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
     (hVdeg : ∀ u ∈ V, ∀ x, IsDeg k (u x)) (hVc : ∀ u ∈ V, Continuous u)
     (hVA : ∀ (T : Affine.Simplex ℝ (Fin n → ℝ) n), ∀ u ∈ V, refPull T u ∈ V)
@@ -377,8 +331,6 @@ theorem inverse_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
           have h0 : 0 ≤ ‖x - x'‖ * √LT := by positivity
           nlinarith [mul_le_mul_of_nonneg_right (show C * K₀ ≤ K₀ * (1 + C) by nlinarith) h0]
 
-/-! ### Instances: polynomial forms and trimmed linear forms -/
-
 theorem norm_le_one_of_mem_refSimplex {y : Fin n → ℝ}
     (hy : y ∈ (Mesh.refSimplex n).closedInterior) : ‖y‖ ≤ 1 := by
   obtain ⟨h0, h1⟩ := mem_closedInterior_refSimplex.1 hy
@@ -386,11 +338,8 @@ theorem norm_le_one_of_mem_refSimplex {y : Fin n → ℝ}
   rw [Real.norm_eq_abs, abs_of_nonneg (h0 i)]
   exact (Finset.single_le_sum (fun j _ => h0 j) (Finset.mem_univ i)).trans h1
 
-/-- **Inverse estimates on shape-regular simplices** for spaces of polynomial forms
-(`V ≤ P_rΛᵏ`, stable under affine pullbacks, e.g. `P_rΛᵏ`, `P_r⁻Λᵏ`): with one constant `A`
-depending only on `n, k, V, C, c`, every simplex `T` of a family that is shape regular with
-constants `C, c` satisfies `h_T^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and
-`h_T^{n/2} h_T Lip_T(u) ≤ A ‖u‖_{L²(T)}` ([Ciarlet2002], §3.2). -/
+/-- **Inverse estimates on shape-regular simplices** for polynomial forms `V ≤ P_rΛᵏ` stable under
+affine pullbacks, with one constant for every shape-regular family. [Ciarlet2002], §3.2 -/
 theorem exists_inverse_bound_of_le_polySpace {r k : ℕ} {V : Submodule ℝ (FormField n)}
     (hV : V ≤ polySpace n r k)
     (hVA : ∀ (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ), ∀ u ∈ V, affinePullback B b u ∈ V)
@@ -411,7 +360,6 @@ theorem exists_inverse_bound_of_le_polySpace {r k : ℕ} {V : Submodule ℝ (For
     (fun u hu => (polySpace_le_c1 (hV hu)).continuous) (fun T u hu => hVA _ _ u hu) hA₀ href hC
     hc hh hB hBs hdet hu
 
-/-- **Inverse estimates on shape-regular simplices for `P_rΛᵏ`.** -/
 theorem exists_inverse_bound_polySpace (r k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (hc : 0 < c) :
     ∃ A, 0 ≤ A ∧ ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
       ∀ T ∈ S, 0 < diam T → ∀ u ∈ polySpace n r k,
@@ -423,9 +371,7 @@ theorem exists_inverse_bound_polySpace (r k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (h
   exists_inverse_bound_of_le_polySpace le_rfl (fun B b _ hu => affinePullback_mem_polySpace B b hu)
     hC hc
 
-/-- **Inverse estimates on shape-regular simplices for the Whitney forms `P₁⁻Λᵏ`**, coefficient-
-wise: `h_T^{n/2} |u(x)ₛ| ≤ A ‖u‖_{L²(T)}` and `h_T^{n/2} h_T |u(x)ₛ - u(x')ₛ| ≤
-A |x - x'| ‖u‖_{L²(T)}` on `T`. -/
+/-- **Inverse estimates on shape-regular simplices for the Whitney forms**, coefficientwise. -/
 theorem exists_inverse_bound_p1MinusForms (k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (hc : 0 < c) :
     ∃ A, 0 ≤ A ∧ ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
       ∀ T ∈ S, 0 < diam T → ∀ u ∈ p1MinusForms n k,
@@ -477,8 +423,6 @@ theorem exists_inverse_bound_p1MinusForms (k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (
     refine mul_le_mul_of_nonneg_left ?_ (by positivity)
     rw [← Real.norm_eq_abs, ← Pi.sub_apply]; exact norm_le_pi_norm (u x - u x') s
 
-/-! ### DOF estimates -/
-
 /-- **Transfer of reference DOF estimates**: if `sup_{T̂} ‖v‖ ≤ B Σⱼ |ℓⱼ(v)|` on `V`, then on a
 simplex with `h_T ‖B_T⁻¹‖ ≤ C`, `h_Tᵏ sup_T ‖u‖ ≤ 2ⁿ (n C)ᵏ B Σⱼ |ℓⱼ(F_T^* u)|`. -/
 theorem dof_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
@@ -508,11 +452,8 @@ theorem dof_bound_of_ref {k : ℕ} {V : Submodule ℝ (FormField n)}
           (norm_nonneg _) (by positivity)
     _ = _ := by ring
 
-/-- **DOF estimates on shape-regular simplices** for spaces of polynomial forms: for a family `ℓ`
-of linear functionals unisolvent on `V` (the DOFs on the reference simplex), with one constant
-`B` depending only on `V`, `ℓ`, `n`, `k`, `C`, every `T` of a shape-regular family satisfies
-`h_Tᵏ sup_T ‖u‖ ≤ B Σⱼ |ℓⱼ(F_T^* u)|`. For moment DOFs `ℓⱼ(F_T^* u)` are the moments of `u` on the
-faces of `T` (`faceMoment_affine`). -/
+/-- **DOF estimates on shape-regular simplices**: for functionals `ℓ` unisolvent on `V ≤ P_rΛᵏ`,
+`h_Tᵏ sup_T ‖u‖ ≤ B Σⱼ |ℓⱼ(F_T^* u)|` with one constant `B`. -/
 theorem exists_dof_bound_of_le_polySpace {r k : ℕ} {V : Submodule ℝ (FormField n)}
     (hV : V ≤ polySpace n r k)
     (hVA : ∀ (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ), ∀ u ∈ V, affinePullback B b u ∈ V)
@@ -531,8 +472,6 @@ theorem exists_dof_bound_of_le_polySpace {r k : ℕ} {V : Submodule ℝ (FormFie
   exact dof_bound_of_ref (fun u hu x => isDeg_of_mem_polySpace (hV hu) x)
     (fun T u hu => hVA _ _ u hu) ℓ hB (abs_nonneg C) hh hBs' hu hx
 
-/-- **Face integrals under the reference map**: up to orientation,
-`∫_{ĝ} F_T^* u = ∫_{F_T(ĝ)} u` for a `k`-face `ĝ` of the reference simplex. -/
 theorem abs_simplexIntegral_refPull {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     {g : Finset (Fin n → ℝ)} (hgc : g.card = k + 1) (u : FormField n) :
     |simplexIntegral (faceEnum g (k + 1)) (refPull T u)| =
@@ -566,9 +505,8 @@ theorem image_refMap_subset_vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   rw [Mesh.refSimplex_points, Affine.Simplex.refMap_refPoints]
   exact points_mem_vertexSet T i
 
-/-- **DOF estimate on shape-regular simplices for the Whitney forms**: with one constant `B`
-(depending only on `n, k, C`), if the face integrals of `z ∈ P₁⁻Λᵏ` over the `k`-faces of `T` are
-bounded by `D`, then `h_Tᵏ |z(x)ₛ| ≤ B D` on `T`. -/
+/-- **DOF estimate for the Whitney forms on shape-regular simplices**: if the face integrals of
+`z ∈ P₁⁻Λᵏ` over the `k`-faces of `T` are bounded by `D`, then `h_Tᵏ |z(x)ₛ| ≤ B D` on `T`. -/
 theorem exists_dof_bound_p1MinusForms (k : ℕ) {C c : ℝ} :
     ∃ B, 0 ≤ B ∧ ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
       ∀ T ∈ S, 0 < diam T → ∀ {z : FormField n}, z ∈ p1MinusForms n k → ∀ {D : ℝ}, 0 ≤ D →

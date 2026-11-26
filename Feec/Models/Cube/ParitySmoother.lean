@@ -13,49 +13,22 @@ public import Mathlib.LinearAlgebra.Lagrange
 /-!
 # The parity smoother on the cube
 
-For a class `J ⊆ {1, …, n}` of the partially-homogeneous complexes `HΛ_J(Q)` on the unit cube
-`Q = (0, ½)ⁿ` (`Feec.Models.Cube.DeRhamPartialIdent`; vanishing tangential trace on the faces
-normal to `e_j`, `j ∈ J`), the **parity smoother** is `R^J_ρ u = (ρ ⋆ ext_J u)|_Q`: each coefficient
-`u_s` of a `k`-form is extended to `ℝⁿ` by reflections across the faces of `Q`, odd across the
-faces where it must vanish and even across the others (the parity vector `c(J, s)`, `pvec`), and
-then mollified by a reflection-invariant kernel `ρ` of radius `< ½`. In contrast with the smoothers
-of [ChristiansenWinther2008] and [AFW2010], §5.5, no dilation is needed: the reflected extension
-already lies in the class `J`, so `R` commutes with `d_J` exactly, with the same smoother for all
-classes and both rows of the BGG complex.
-
-## Main definitions
-
-* `triW`, `pieceMap`, `bigCube`: the folding of `ℝ` onto `[0, ½]` and the `3ⁿ` reflected copies of
-  `Q` tiling `(-½, 1)ⁿ`.
-* `parExt c f`: the parity extension; `ReflKernel n`: reflection-invariant mollifiers;
-  `prodKernel`: a product of one-dimensional bumps, of any radius `r < ½`.
-* `smoothFun ρ c f = ρ ⋆ ext_c f`, `scalarSmooth ρ c`: the scalar parity smoother on `L²(Q)`;
-  `paritySmooth ρ J k`: the parity smoother on `L²(Q; Λᵏ)`.
-* `MomentKernel n m`: reflection-invariant (signed) kernels with vanishing moments of the orders
-  `1, …, m - 1`.
+For a class `J` of the complexes `HΛ_J(Q)` on `Q = (0, ½)ⁿ`, the parity smoother
+`R u = (ρ ⋆ ext_J u)|_Q` (`paritySmooth`) extends each coefficient by reflections across the faces
+of `Q`, odd or even as `J` requires, and mollifies it by a reflection-invariant kernel `ρ`.
 
 ## Main results
 
-* `integral_sq_smoothFun_le`, `norm_scalarSmoothₗ_le`, `norm_paritySmooth_le`: `‖R u‖ ≤ 3^{n/2} ‖u‖`.
-* `extD_smoothFun_eq`: for `u ∈ D(d_J)` the smoothed parity extension commutes with `d_J`,
-  pointwise on `cl Q`; `paritySmooth_mem_dPart`, `dPart_paritySmooth`: `R u ∈ D(d_J)` and
-  `d_J R u = R d_J u`.
-* `wsL2_paritySmooth`, `wsL2_paritySmooth_symmDiff`: commutation with the algebraic BGG maps
-  `S⁰, S¹` (`wsL2`) for compatible classes, the rows `a` in the classes `J ∆ {a}`.
-* `norm_sub_scalarSmooth_le_grad`: `‖f - R f‖ ≤ r √(n 3ⁿ) ‖∇ f‖` for `f ∈ D(d_{J'})` in degree `0`
-  ([Brezis2011], §9.2, for the reflection argument).
-* `integral_sq_sub_conv_le_of_moments`: the high-order estimate
-  `‖G - ρ ⋆ G‖²_{L²(Q)} ≤ ‖ρ‖₁² (rᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` for functions `G` of
-  parity `c` that are `Cᵐ` on `ℝⁿ` (the parity extensions of data on `Q` satisfying the reflection
-  compatibility conditions: for the parity `+1` in the direction `j` the odd-order normal
-  derivatives vanish on the faces normal to `e_j`, for `-1` the even-order ones, the value
-  included) and kernels with vanishing moments.
+* `norm_paritySmooth_le`: `‖R u‖ ≤ 3^{n/2} ‖u‖`.
+* `paritySmooth_mem_dPart`, `dPart_paritySmooth`: `R u ∈ D(d_J)` and `d_J R u = R d_J u`.
+* `wsL2_paritySmooth_symmDiff`: `S` intertwines the smoothers of the classes `J ∆ {a}` and `J`.
+* `norm_sub_scalarSmooth_le_grad`: `‖f - R f‖ ≤ r √(n 3ⁿ) ‖∇ f‖` in degree `0`.
+* `integral_sq_sub_conv_le_of_moments`: an error `O(rᵐ ‖Dᵐ G‖)` for kernels with vanishing moments.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.5
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011], §9.2
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -255,11 +228,9 @@ theorem eq_of_pieceMap_mem_Q {p p' : Fin n → Fin 3} {x : Fin n → ℝ}
   funext fun j => eq_of_mem_pieceIoo ((pieceMap_mem_Q_iff p x).1 hx j)
     ((pieceMap_mem_Q_iff p' x).1 hx' j)
 
-/-- Almost every point has no coordinate in `{0, ½}`. -/
 theorem ae_coord_ne : ∀ᵐ x : Fin n → ℝ, ∀ j, x j ≠ 0 ∧ x j ≠ 1 / 2 :=
   ae_all_iff.2 fun j => (Measure.ae_eval_ne _ j 0).and (Measure.ae_eval_ne _ j (1 / 2))
 
-/-- **The tiling of `U` by the reflected copies of `Q`**, pointwise. -/
 theorem sum_indicator_pieceMap {E : Type*} [AddCommMonoid E] {G : (Fin n → ℝ) → E}
     (hG : ∀ x, x ∉ bigCube n → G x = 0) {x : Fin n → ℝ} (hx : ∀ j, x j ≠ 0 ∧ x j ≠ 1 / 2) :
     ∑ p : Fin n → Fin 3, (pieceMap p ⁻¹' Q (Fin n)).indicator G x = G x := by
@@ -276,8 +247,6 @@ theorem sum_indicator_pieceMap {E : Type*} [AddCommMonoid E] {G : (Fin n → ℝ
     exact Finset.sum_eq_zero fun p _ => Set.indicator_of_notMem
       (show x ∉ pieceMap p ⁻¹' Q (Fin n) from fun h => hU (mem_bigCube_of_pieceMap_mem_Q h)) G
 
-/-- **Integration over `U` by the tiling**: for `G` vanishing off `U` and integrable on each copy,
-`G` is integrable and `∫ G = Σ_p ∫_Q G ∘ pieceMap p`. -/
 theorem integral_eq_sum_pieceMap {G : (Fin n → ℝ) → ℝ} (hG : ∀ x, x ∉ bigCube n → G x = 0)
     (hint : ∀ p : Fin n → Fin 3, IntegrableOn (fun z => G (pieceMap p z)) (Q (Fin n))) :
     Integrable G ∧ ∫ x, G x = ∑ p : Fin n → Fin 3, ∫ z in Q (Fin n), G (pieceMap p z) := by
@@ -309,8 +278,6 @@ theorem exists_pieceMap_mem_Q {x : Fin n → ℝ} (hU : x ∈ bigCube n)
   choose p hp using hq
   exact ⟨p, (pieceMap_mem_Q_iff p x).2 hp⟩
 
-/-- **Almost every point of `U` lies in the interior of one copy**, and a property holding a.e. on
-`Q` holds at its image there. -/
 theorem ae_exists_pieceMap {P : (Fin n → ℝ) → Prop} (h : ∀ᵐ z ∂volume, z ∈ Q (Fin n) → P z) :
     ∀ᵐ t ∂volume, t ∈ bigCube n →
       ∃ p : Fin n → Fin 3, pieceMap p t ∈ Q (Fin n) ∧ P (pieceMap p t) := by
@@ -331,8 +298,7 @@ def foldPt (x : Fin n → ℝ) : Fin n → ℝ := fun j => triW (x j)
 /-- The sign of the reflected copy of `Q` containing `x`, for the parity vector `c`. -/
 def extSgn (c : Fin n → ℝ) (x : Fin n → ℝ) : ℝ := ∏ j, parSgn (c j) (x j)
 
-/-- **The parity extension** `ext_c f (x) = sign_c(x) f(fold x)` of a function on `Q`: periodic of
-period `1` in every variable, with parity `c_j` in `x_j` about `0` and about `½`. -/
+/-- **The parity extension** `ext_c f (x) = sign_c(x) f(fold x)` of a function `f` on `Q`. -/
 def parExt (c : Fin n → ℝ) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   extSgn c x * f (foldPt x)
 
@@ -378,7 +344,6 @@ theorem parExt_smul (c : Fin n → ℝ) (a : ℝ) (f : (Fin n → ℝ) → ℝ) 
     parExt c (a • f) = a • parExt c f := by
   funext x; simp [parExt]; ring
 
-/-- **Periodicity of the parity extension.** -/
 theorem parExt_add_intCast (c : Fin n → ℝ) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ)
     (m : Fin n → ℤ) : parExt c f (x + fun j => (m j : ℝ)) = parExt c f x := by
   have h1 : foldPt (x + fun j => (m j : ℝ)) = foldPt x :=
@@ -387,13 +352,10 @@ theorem parExt_add_intCast (c : Fin n → ℝ) (f : (Fin n → ℝ) → ℝ) (x 
     Finset.prod_congr rfl fun j _ => by simp only [Pi.add_apply, parSgn_add_intCast]
   rw [parExt, parExt, h1, h2]
 
-/-- The fold `Σ_p sign_c(p) φ ∘ pieceMap p` of a function on `U`: `∫ ext_c f · φ = ∫_Q f · fold φ`
-(`integral_parExt_mul`). -/
+/-- The fold `Σ_p sign_c(p) φ ∘ pieceMap p` of a function on `U`. -/
 def foldFun (c : Fin n → ℝ) (φ : (Fin n → ℝ) → ℝ) (z : Fin n → ℝ) : ℝ :=
   ∑ p : Fin n → Fin 3, pieceSign c p * φ (pieceMap p z)
 
-/-- **The folding formula**: for `φ` continuous, bounded and vanishing off `U`, and `f`
-integrable on `Q`, `∫_{ℝⁿ} ext_c f · φ = ∫_Q f · fold_c φ`. -/
 theorem integral_parExt_mul (c : Fin n → ℝ) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn f (Q (Fin n))) {φ : (Fin n → ℝ) → ℝ} (hφc : Continuous φ) {M : ℝ}
     (hφM : ∀ x, |φ x| ≤ M) (hφU : ∀ x, x ∉ bigCube n → φ x = 0) :
@@ -458,8 +420,6 @@ theorem indicator_sq {s : Set (Fin n → ℝ)} (f : (Fin n → ℝ) → ℝ) (x 
     s.indicator f x ^ 2 = s.indicator (fun x => f x ^ 2) x := by
   by_cases h : x ∈ s <;> simp [h]
 
-/-- **Local `L²` bound of the parity extension**: on a ball `B̄(y, r)` centred in `cl Q`, `r < ½`,
-`∫_B |ext_c f|² ≤ 3ⁿ ∫_B |f̄|²` (`f̄` the extension of `f` by zero). -/
 theorem integral_sq_parExt_le {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn (fun z => f z ^ 2) (Q (Fin n))) {y : Fin n → ℝ}
     (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2)) {r : ℝ} (hr : r < 1 / 2) :
@@ -507,7 +467,6 @@ theorem integral_sq_parExt_le {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n 
   rw [setIntegral_indicator measurableSet_Q, Set.inter_comm]
   push_cast; ring
 
-/-- **The parity extension on `U`**: `∫_U |ext_c f|² = 3ⁿ ∫_Q |f|²`. -/
 theorem integral_sq_parExt_bigCube {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn (fun z => f z ^ 2) (Q (Fin n))) :
     IntegrableOn (fun x => parExt c f x ^ 2) (bigCube n) ∧
@@ -530,7 +489,6 @@ theorem integral_sq_parExt_bigCube {c : Fin n → ℝ} (hc : IsParity c) {f : (F
     Finset.sum_const, card_pieces, nsmul_eq_mul]
   push_cast; ring
 
-/-- The parity extension is integrable on `U` (from `f ∈ L¹(Q)`). -/
 theorem integrableOn_parExt_bigCube (c : Fin n → ℝ) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn f (Q (Fin n))) : IntegrableOn (parExt c f) (bigCube n) := by
   have hU : MeasurableSet (bigCube n) :=
@@ -556,7 +514,6 @@ theorem sub_floor_mem_bigCube (x : Fin n → ℝ) : (x - fun j => ((⌊x j⌋ : 
   have h2 := Int.lt_floor_add_one (x j)
   constructor <;> linarith
 
-/-- **The parity extension is locally integrable** (periodicity and integrability on `U`). -/
 theorem locallyIntegrable_parExt (c : Fin n → ℝ) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn f (Q (Fin n))) : LocallyIntegrable (parExt c f) volume := by
   rw [locallyIntegrable_iff]
@@ -592,7 +549,6 @@ theorem locallyIntegrable_parExt (c : Fin n → ℝ) {f : (Fin n → ℝ) → �
     funext fun x => parExt_sub_intCast c f x m
   rwa [e] at h
 
-/-- **The parity extension respects almost-everywhere equality on `Q`.** -/
 theorem parExt_ae_eq (c : Fin n → ℝ) {f g : (Fin n → ℝ) → ℝ}
     (h : f =ᵐ[volume.restrict (Q (Fin n))] g) : parExt c f =ᵐ[volume] parExt c g := by
   have hQ : ∀ᵐ z ∂volume, z ∈ Q (Fin n) → f z = g z := (ae_restrict_iff' measurableSet_Q).1 h
@@ -658,7 +614,6 @@ theorem parSgn_neg {c : ℝ} (hc : c = 1 ∨ c = -1) {x : ℝ} (h0 : Int.fract x
     simp only [ha, hb, ↓reduceIte]
     rcases hc with hc | hc <;> rw [hc] <;> norm_num
 
-/-- Almost every point has `fract (x j) ∉ {0, ½}`. -/
 theorem ae_fract_ne (j : Fin n) :
     ∀ᵐ x : Fin n → ℝ, Int.fract (x j) ≠ 0 ∧ Int.fract (x j) ≠ 1 / 2 := by
   have h : ∀ᵐ x : Fin n → ℝ, ∀ m : ℤ, x j ≠ m ∧ x j ≠ m + 1 / 2 :=
@@ -673,7 +628,6 @@ theorem ae_fract_ne (j : Fin n) :
     rw [h1] at this
     exact (hx ⌊x j⌋).2 this.symm
 
-/-- **Parity of the extension about `{x_j = 0}`**: `ext_c f ∘ R_j = c_j ext_c f` a.e. -/
 theorem parExt_coordRefl_ae {c : Fin n → ℝ} (hc : IsParity c) (f : (Fin n → ℝ) → ℝ)
     (j : Fin n) : ∀ᵐ x : Fin n → ℝ, parExt c f (coordRefl j x) = c j * parExt c f x := by
   classical
@@ -697,9 +651,7 @@ theorem parExt_coordRefl_ae {c : Fin n → ℝ} (hc : IsParity c) (f : (Fin n �
 
 /-! ### Reflection-invariant mollifiers -/
 
-/-- **A reflection-invariant mollifier**: a smooth, nonnegative, compactly supported probability
-density `ρ` on `ℝⁿ`, supported in the ball `‖x‖_∞ < r` with `r < ½`, and invariant under every
-coordinate reflection `x_j ↦ -x_j`. -/
+/-- A reflection-invariant mollifier: a smooth probability density supported in `‖x‖_∞ < r < ½`. -/
 structure ReflKernel (n : ℕ) where
   /-- the density -/
   toFun : (Fin n → ℝ) → ℝ
@@ -740,7 +692,7 @@ end ReflKernel
 
 /-! ### The smoothed parity extension -/
 
-/-- **The smoothed parity extension** `ρ ⋆ ext_c f`, a smooth function on `ℝⁿ`. -/
+/-- **The smoothed parity extension** `ρ ⋆ ext_c f`. -/
 def smoothFun (ρ : ReflKernel n) (c : Fin n → ℝ) (f : (Fin n → ℝ) → ℝ) : (Fin n → ℝ) → ℝ :=
   parExt c f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] ρ.toFun
 
@@ -759,7 +711,6 @@ theorem fderiv_smoothFun (ρ : ReflKernel n) (c : Fin n → ℝ) {f : (Fin n →
   rw [smoothFun, fderiv_convolution_apply ρ.isTest (locallyIntegrable_parExt c hf) y v,
     convolution_apply_mul]
 
-/-- Convolution with a periodic function is periodic. -/
 theorem convolution_add_intCast {g K : (Fin n → ℝ) → ℝ}
     (hg : ∀ x (m : Fin n → ℤ), g (x + fun j => (m j : ℝ)) = g x) (y : Fin n → ℝ)
     (m : Fin n → ℤ) :
@@ -772,7 +723,6 @@ theorem convolution_add_intCast {g K : (Fin n → ℝ) → ℝ}
   simp only [hg]
   congr 2; abel
 
-/-- **A continuous periodic function is bounded.** -/
 theorem exists_bound_of_periodic {F : (Fin n → ℝ) → ℝ} (hF : Continuous F)
     (hper : ∀ x (m : Fin n → ℤ), F (x + fun j => (m j : ℝ)) = F x) : ∃ M, ∀ x, |F x| ≤ M := by
   obtain ⟨M, hM⟩ := (isCompact_univ_pi fun _ => isCompact_Icc (a := (0 : ℝ)) (b := 1)).exists_bound_of_continuousOn hF.continuousOn
@@ -819,7 +769,6 @@ theorem smoothFun_add_intCast (f : (Fin n → ℝ) → ℝ) (y : Fin n → ℝ) 
     smoothFun ρ c f (y + fun j => (m j : ℝ)) = smoothFun ρ c f y :=
   convolution_add_intCast (fun x m => parExt_add_intCast c f x m) y m
 
-/-- **The smoothed extension has parity `c_j` about `{y_j = 0}`.** -/
 theorem smoothFun_coordRefl {c : Fin n → ℝ} (hc : IsParity c) (f : (Fin n → ℝ) → ℝ) (j : Fin n)
     (y : Fin n → ℝ) : smoothFun ρ c f (coordRefl j y) = c j * smoothFun ρ c f y := by
   rw [smoothFun_apply, smoothFun_apply]
@@ -840,14 +789,11 @@ theorem update_one_sub_eq (j : Fin n) (y : Fin n → ℝ) :
   · subst hi; simp [coordRefl_apply]; ring
   · simp [coordRefl_apply, hi]
 
-/-- **The smoothed extension has parity `c_j` about `{y_j = ½}`.** -/
 theorem smoothFun_update_one_sub {c : Fin n → ℝ} (hc : IsParity c) (f : (Fin n → ℝ) → ℝ)
     (j : Fin n) (y : Fin n → ℝ) :
     smoothFun ρ c f (Function.update y j (1 - y j)) = c j * smoothFun ρ c f y := by
   rw [update_one_sub_eq, smoothFun_add_intCast, smoothFun_coordRefl ρ hc]
 
-/-- **Odd directions: the smoothed extension vanishes on the faces** `{y_j ∈ {0, ½}}` when
-`c_j = -1`. -/
 theorem smoothFun_eq_zero {c : Fin n → ℝ} (hc : IsParity c) (f : (Fin n → ℝ) → ℝ) {j : Fin n}
     (hcj : c j = -1) {y : Fin n → ℝ} (hy : y j = 0 ∨ y j = 1 / 2) : smoothFun ρ c f y = 0 := by
   rcases hy with hy | hy
@@ -860,12 +806,10 @@ theorem smoothFun_eq_zero {c : Fin n → ℝ} (hc : IsParity c) (f : (Fin n → 
     rw [e, hcj] at h
     linarith
 
-/-- The smoothed extension is bounded. -/
 theorem exists_bound_smoothFun {f : (Fin n → ℝ) → ℝ} (hf : IntegrableOn f (Q (Fin n))) :
     ∃ M, ∀ y, |smoothFun ρ c f y| ≤ M :=
   exists_bound_of_periodic (contDiff_smoothFun ρ c hf).continuous (smoothFun_add_intCast ρ c f)
 
-/-- The first partial derivatives of the smoothed extension are bounded. -/
 theorem exists_bound_fderiv_smoothFun {f : (Fin n → ℝ) → ℝ} (hf : IntegrableOn f (Q (Fin n))) :
     ∃ L, 0 ≤ L ∧ ∀ j y, |fderiv ℝ (smoothFun ρ c f) y (Pi.single j 1)| ≤ L := by
   have hb : ∀ j : Fin n, ∃ M, ∀ y, |fderiv ℝ (smoothFun ρ c f) y (Pi.single j 1)| ≤ M := by
@@ -899,15 +843,12 @@ theorem eq_zero_of_notMem_bigCube {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (
     have := norm_le_pi_norm (y - t) j; rwa [Pi.sub_apply, Real.norm_eq_abs] at this
   linarith [ρ.radius_lt]
 
-/-- `ρ (y - ·)` vanishes off the closed ball `B̄(y, r)`. -/
 theorem eq_zero_of_notMem_closedBall {y t : Fin n → ℝ} (ht : t ∉ Metric.closedBall y ρ.radius) :
     ρ (y - t) = 0 := by
   refine ρ.eq_zero_of_le _ ?_
   rw [Metric.mem_closedBall, dist_comm, dist_eq_norm] at ht
   exact (not_le.1 ht).le
 
-/-- **Jensen's inequality for the mollifier**: `(ρ ⋆ g)(y)² ≤ ∫ g² ρ(y - ·)` at the points of
-`cl Q`. -/
 theorem sq_smoothFun_le {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn f (Q (Fin n))) (hf2 : IntegrableOn (fun z => f z ^ 2) (Q (Fin n)))
     {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2)) :
@@ -950,8 +891,6 @@ theorem sq_smoothFun_le {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → �
   change a ^ 2 ≤ ∫ t, g t ^ 2 * ρ (y - t)
   nlinarith
 
-/-- **The pointwise bound of the smoothed extension by the local mass**: for `y ∈ cl Q` and
-`ρ ≤ M`, `(ρ ⋆ ext_c f)(y)² ≤ 3ⁿ M ∫_{B̄(y, r)} |f̄|²` (`f̄` the extension by zero). -/
 theorem sq_smoothFun_le_ball {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn f (Q (Fin n))) (hf2 : IntegrableOn (fun z => f z ^ 2) (Q (Fin n)))
     {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2)) {M : ℝ} (hM : ∀ x, ρ x ≤ M) :
@@ -980,7 +919,6 @@ theorem sq_smoothFun_le_ball {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n �
         mul_le_mul_of_nonneg_left hgBle hM0
     _ = _ := by ring
 
-/-- **The `L²(Q)` bound of the smoothed extension**: `‖ρ ⋆ ext_c f‖²_{L²(Q)} ≤ 3ⁿ ‖f‖²_{L²(Q)}`. -/
 theorem integral_sq_smoothFun_le {c : Fin n → ℝ} (hc : IsParity c) {f : (Fin n → ℝ) → ℝ}
     (hf : IntegrableOn f (Q (Fin n))) (hf2 : IntegrableOn (fun z => f z ^ 2) (Q (Fin n))) :
     ∫ y in Q (Fin n), smoothFun ρ c f y ^ 2 ≤ 3 ^ n * ∫ z in Q (Fin n), f z ^ 2 := by
@@ -1067,8 +1005,6 @@ theorem pieceSign_update_neg (c : Fin n → ℝ) (p : Fin n → Fin 3) (j : Fin 
   refine Finset.prod_congr rfl fun i hi => ?_
   rw [Function.update_of_ne (by simpa using hi)]
 
-/-- **The partial derivatives of a fold**: `∂ⱼ fold_c φ = fold_{c'} ∂ⱼ φ`, with the parity of
-`x_j` reversed in `c'`. -/
 theorem fderiv_foldFun (c : Fin n → ℝ) {φ : (Fin n → ℝ) → ℝ} (hφ : Differentiable ℝ φ)
     (z : Fin n → ℝ) (j : Fin n) :
     fderiv ℝ (foldFun c φ) z (Pi.single j 1) =
@@ -1084,7 +1020,6 @@ theorem fderiv_foldFun (c : Fin n → ℝ) {φ : (Fin n → ℝ) → ℝ} (hφ :
   refine Finset.sum_congr rfl fun p _ => ?_
   rw [pieceSign_update_neg]; ring
 
-/-- The involution argument for the vanishing of folds on the faces. -/
 theorem foldFun_eq_zero_aux {c : Fin n → ℝ} {φ : (Fin n → ℝ) → ℝ} {z : Fin n → ℝ} {j : Fin n}
     (σ : Fin 3 → Fin 3) (hσ : ∀ q, σ (σ q) = q)
     (hfix : ∀ q, σ q = q → ∀ x : Fin n → ℝ, x j = piece q (z j) → φ x = 0)
@@ -1124,8 +1059,6 @@ theorem foldFun_eq_zero_aux {c : Fin n → ℝ} {φ : (Fin n → ℝ) → ℝ} {
     · subst hi; rw [hPj, hPj, hσ]
     · rw [hPi _ i hi, hPi p i hi]
 
-/-- **Odd folds vanish on the faces**: if `c_j = -1` and `φ` vanishes off `U`, then `fold_c φ`
-vanishes on `{z_j ∈ {0, ½}}` (everywhere in `ℝⁿ`). -/
 theorem foldFun_eq_zero {c : Fin n → ℝ} {φ : (Fin n → ℝ) → ℝ}
     (hφU : ∀ x, x ∉ bigCube n → φ x = 0) {j : Fin n} (hcj : c j = -1) {z : Fin n → ℝ}
     (hz : z j = 0 ∨ z j = 1 / 2) : foldFun c φ z = 0 := by
@@ -1151,10 +1084,7 @@ theorem foldFun_eq_zero {c : Fin n → ℝ} {φ : (Fin n → ℝ) → ℝ}
 
 /-! ### The parity vectors of the mixed class `J` -/
 
-/-- **The parity vector of the coefficient of `dx_s` in the mixed class `J`**:
-`c_j = ε_j(J) ε_j(s)` with `ε_j(J) = -1` iff `j ∈ J` and `ε_j(s) = -1` iff `j ∈ s`
-(the real form of `Feec.Models.Cube.DeRhamIdent.pcJ`): odd in `x_j` for the tangential components
-(`j ∉ s`) when `j ∈ J`, and for the normal components (`j ∈ s`) when `j ∉ J`. -/
+/-- The parity vector of `dx_s` in the class `J`: `c_j = -1` iff exactly one of `j ∈ J`, `j ∈ s`. -/
 def pvec (J s : Finset (Fin n)) : Fin n → ℝ :=
   fun j => (if j ∈ J then -1 else 1) * (if j ∈ s then -1 else 1)
 
@@ -1224,14 +1154,6 @@ theorem abs_foldFun_le {c : Fin n → ℝ} (hc : IsParity c) {φ : (Fin n → �
         rw [abs_mul, abs_pieceSign hc, one_mul]; exact hM _
     _ = 3 ^ n * M := by rw [Finset.sum_const, card_pieces, nsmul_eq_mul]; push_cast; ring
 
-/-- **The smoothed parity extension commutes with `d_J`, pointwise on `cl Q`**: for
-`u ∈ D(d_J)` and `ψ_r = ρ ⋆ ext_{c(J, r)} u_r`, the classical exterior derivative of `ψ` at every
-point of `cl Q` is the smoothed extension of `d_J u`. The proof folds the kernel `ρ(y - ·)` onto
-`Q` (`integral_parExt_mul`); the folded kernel is an admissible test function of Green's identity
-for `d_J` (`Feec.Models.Cube.DeRhamIdent.greenForJ_dPart`): it vanishes on the faces where the
-normal components of the test forms must (`foldFun_eq_zero`), and its partial derivatives are the
-folds of the partial derivatives with the parity of one variable reversed (`fderiv_foldFun`,
-`pvec_erase`). -/
 theorem extD_smoothFun_eq (ρ : ReflKernel n) (J : Finset (Fin n)) (k : ℕ)
     (u : (DeRhamIdent.dPart (Q (Fin n)) J (k : ℤ)).domain) (t : formIdx n ((k : ℤ) + 1))
     {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2)) :
@@ -1371,8 +1293,7 @@ theorem norm_scalarSmoothₗ_le {c : Fin n → ℝ} (hc : IsParity c) (f : L2 �
   rw [mul_pow, Real.sq_sqrt (by positivity)]
   exact h2
 
-/-- **The scalar parity smoother** `R_c f = (ρ ⋆ ext_c f)|_Q` on `L²(Q)`, bounded by
-`3^{n/2}` (`norm_scalarSmooth_le`). -/
+/-- **The scalar parity smoother** `R_c f = (ρ ⋆ ext_c f)|_Q` on `L²(Q)`. -/
 def scalarSmooth (c : Fin n → ℝ) (hc : IsParity c) : L2 ℝ (Q (Fin n)) →L[ℝ] L2 ℝ (Q (Fin n)) :=
   (scalarSmoothₗ ρ c).mkContinuous (√(3 ^ n)) (norm_scalarSmoothₗ_le ρ hc)
 
@@ -1409,10 +1330,7 @@ theorem norm_paritySmoothₗ_le (k : ℤ) (u : L2F ℝ (Q (Fin n)) (formIdx n k)
   L2F.norm_le_of_forall (by positivity) fun s =>
     norm_scalarSmooth_le ρ (pvec J s.1) (isParity_pvec J s.1) (u s)
 
-/-- **The parity smoother** `R^J_ρ u = (ρ ⋆ ext_J u)|_Q` on `L²(Q; Λᵏ)`: componentwise the
-smoothed parity extension with the parities `c(J, s)` of the class `J` (`pvec`). It is bounded by
-`3^{n/2}` (`norm_paritySmooth_le`), smooth and in the class `J`, hence in `D(d_J)`
-(`paritySmooth_mem_dPart`), and commutes with `d_J` (`dPart_paritySmooth`). -/
+/-- **The parity smoother** `R^J_ρ u = (ρ ⋆ ext_J u)|_Q` on `L²(Q; Λᵏ)`. -/
 def paritySmooth (k : ℤ) : L2F ℝ (Q (Fin n)) (formIdx n k) →L[ℝ] L2F ℝ (Q (Fin n)) (formIdx n k) :=
   (paritySmoothₗ ρ J k).mkContinuous (√(3 ^ n)) (norm_paritySmoothₗ_le ρ J k)
 
@@ -1441,8 +1359,6 @@ theorem contDiff_smoothComp {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (s
     ContDiff ℝ ∞ (smoothComp ρ J u s) :=
   contDiff_smoothFun ρ _ (integrableOn_L2 _)
 
-/-- **The smoothed field is in the class `J`**: its components have the parities `c(J, s)` about
-every face of `Q` (and are `1`-periodic). -/
 theorem smoothComp_coordRefl {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (s : formIdx n k)
     (j : Fin n) (y : Fin n → ℝ) :
     smoothComp ρ J u s (coordRefl j y) = pvec J s.1 j * smoothComp ρ J u s y :=
@@ -1453,13 +1369,11 @@ theorem smoothComp_update_one_sub {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n 
     smoothComp ρ J u s (Function.update y j (1 - y j)) = pvec J s.1 j * smoothComp ρ J u s y :=
   smoothFun_update_one_sub ρ (isParity_pvec J s.1) _ j y
 
-/-- **The tangential components of the smoothed field vanish on the faces normal to `J`.** -/
 theorem smoothComp_eq_zero_of_tangential {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k))
     (s : formIdx n k) {j : Fin n} (hjJ : j ∈ J) (hjs : j ∉ s.1) {y : Fin n → ℝ}
     (hy : y j = 0 ∨ y j = 1 / 2) : smoothComp ρ J u s y = 0 :=
   smoothFun_eq_zero ρ (isParity_pvec J s.1) _ (pvec_of_mem_of_notMem hjJ hjs) hy
 
-/-- **The normal components of the smoothed field vanish on the faces not normal to `J`.** -/
 theorem smoothComp_eq_zero_of_normal {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k))
     (s : formIdx n k) {j : Fin n} (hjJ : j ∉ J) (hjs : j ∈ s.1) {y : Fin n → ℝ}
     (hy : y j = 0 ∨ y j = 1 / 2) : smoothComp ρ J u s y = 0 :=
@@ -1495,8 +1409,7 @@ theorem paritySmooth_mem_dPart (k : ℤ) (u : L2F ℝ (Q (Fin n)) (formIdx n k))
   have h := v.2
   rwa [hv] at h
 
-/-- **The parity smoother commutes with `d_J`**: `d_J (R u) = R (d_J u)` for `u ∈ D(d_J)` (no
-chain-rule factor: no dilation is involved). -/
+/-- **The parity smoother commutes with `d_J`**: `d_J (R u) = R (d_J u)` for `u ∈ D(d_J)`. -/
 theorem dPart_paritySmooth (k : ℕ) (u : (DeRhamIdent.dPart (Q (Fin n)) J (k : ℤ)).domain) :
     DeRhamIdent.dPart (Q (Fin n)) J (k : ℤ) ⟨_, paritySmooth_mem_dPart ρ J k u⟩ =
       paritySmooth ρ J ((k : ℤ) + 1) (DeRhamIdent.dPart (Q (Fin n)) J (k : ℤ) u) := by
@@ -1520,10 +1433,6 @@ open Feec.FiniteElement (wsL2 wsCoeff wsL2_apply wsCoeff_eq)
 
 variable (ρ : ReflKernel n)
 
-/-- **The parity smoother commutes with the algebraic BGG maps** `S v = Σₐ dxₐ ∧ vₐ`
-(`Feec.FiniteElement.wsL2`; `S⁰` for `k = 0`, `S¹` for `k = 1`) as soon as the classes are
-compatible: every component `(a, r)` of the vector row that enters the component `t` of `S v`
-has the parity vector of `t`. One smoother then serves both rows of the BGG complex. -/
 theorem wsL2_paritySmooth (k : ℤ) (J : Finset (Fin n)) (J' : Fin n → Finset (Fin n))
     (hJ' : ∀ (t : formIdx n (k + 1)) (p : Fin n × formIdx n k), wsCoeff k t p ≠ 0 →
       pvec (J' p.1) p.2.1 = pvec J t.1)
@@ -1540,8 +1449,6 @@ theorem wsL2_paritySmooth (k : ℤ) (J : Finset (Fin n)) (J' : Fin n → Finset 
     change paritySmooth ρ (J' p.1) k (v p.1) p.2 = _
     rw [paritySmooth_apply, scalarSmooth_congr ρ _ _ (hJ' t p hp)]
 
-/-- `c(J ∆ {a}, t ∖ a) = c(J, t)` for `a ∈ t`: the `a`-th row of a vector of forms in the class
-`J ∆ {a}` matches the class `J` after `S`. -/
 theorem pvec_symmDiff_erase (J : Finset (Fin n)) {t : Finset (Fin n)} {a : Fin n} (ha : a ∈ t) :
     pvec (symmDiff J {a}) (t.erase a) = pvec J t := by
   classical
@@ -1551,9 +1458,7 @@ theorem pvec_symmDiff_erase (J : Finset (Fin n)) {t : Finset (Fin n)} {a : Fin n
     by_cases hJ : j ∈ J <;> simp [pvec, Finset.mem_symmDiff, hJ, ha]
   · simp [pvec, Finset.mem_symmDiff, hj, Finset.mem_erase]
 
-/-- **The compatible classes for `S`**: the rows `a` in the classes `J ∆ {a}`. For `k = 0`
-(`S⁰ = I` on vector proxies) the component `ψₐ` of a vector field in the class `J`, as a
-`0`-form, lies in the class `J ∆ {a}`. -/
+/-- **`S` intertwines the parity smoothers of the classes `J ∆ {a}` on the rows and of `J`.** -/
 theorem wsL2_paritySmooth_symmDiff (k : ℤ) (J : Finset (Fin n))
     (v : PiLp 2 fun _ : Fin n => L2F ℝ (Q (Fin n)) (formIdx n k)) :
     wsL2 k (WithLp.toLp 2 fun a => paritySmooth ρ (symmDiff J {a}) k (v a)) =
@@ -1584,9 +1489,7 @@ theorem prodKernel_eq_zero {r : ℝ} (hr : 0 < r) {x : Fin n → ℝ} (hx : r �
   rw [ContDiffBump.support_normed_eq, Metric.mem_ball, Real.dist_eq, sub_zero] at h
   exact absurd hj (not_le.2 h)
 
-/-- **The product kernel** `ρ(x) = ∏ⱼ η_r(xⱼ)`, `η_r` the normalized one-dimensional bump of
-radii `r/2 < r`: a reflection-invariant mollifier of radius `r` (`0 < r < ½`), with
-`ρ ≤ r⁻ⁿ` (`prodKernel_le`). -/
+/-- **The product kernel** `ρ(x) = ∏ⱼ η_r(xⱼ)` of normalized bumps, a mollifier of radius `r`. -/
 def prodKernel (r : ℝ) (hr : 0 < r) (hr' : r < 1 / 2) : ReflKernel n where
   toFun x := ∏ j, (bump1 r hr).normed volume (x j)
   isTest := by
@@ -1613,7 +1516,6 @@ def prodKernel (r : ℝ) (hr : 0 < r) (hr' : r < 1 / 2) : ReflKernel n where
 theorem prodKernel_apply (r : ℝ) (hr : 0 < r) (hr' : r < 1 / 2) (x : Fin n → ℝ) :
     prodKernel (n := n) r hr hr' x = ∏ j, (bump1 r hr).normed volume (x j) := rfl
 
-/-- **The sup bound of the product kernel**: `ρ ≤ r⁻ⁿ`. -/
 theorem prodKernel_le (r : ℝ) (hr : 0 < r) (hr' : r < 1 / 2) (x : Fin n → ℝ) :
     prodKernel (n := n) r hr hr' x ≤ (1 / r) ^ n := by
   rw [prodKernel_apply, show (1 / r) ^ n = ∏ _j : Fin n, (1 / r) by simp]
@@ -1626,8 +1528,7 @@ theorem prodKernel_le (r : ℝ) (hr : 0 < r) (hr' : r < 1 / 2) (x : Fin n → �
 
 /-! ### Symmetric functions -/
 
-/-- **A symmetric function** of parity `c`: `F ∘ R_j = c_j F` for every coordinate reflection, and
-`F` is `1`-periodic in every variable (the parity extensions of functions on `Q`). -/
+/-- A symmetric function of parity `c`: `F ∘ R_j = c_j F` for every `j`, and `1`-periodic. -/
 structure IsSymm (c : Fin n → ℝ) (F : (Fin n → ℝ) → ℝ) : Prop where
   refl : ∀ j y, F (coordRefl j y) = c j * F y
   periodic : ∀ y (m : Fin n → ℤ), F (y + fun j => (m j : ℝ)) = F y
@@ -1643,7 +1544,6 @@ theorem coordRefl_eq_update (j : Fin n) (y : Fin n → ℝ) :
   · subst hi; simp
   · simp [hi]
 
-/-- **A symmetric function on the copies of `Q`**: `F ∘ pieceMap p = sign_c(p) F`. -/
 theorem IsSymm.apply_pieceMap {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF : IsSymm c F)
     (p : Fin n → Fin 3) (z : Fin n → ℝ) : F (pieceMap p z) = pieceSign c p * F z := by
   classical
@@ -1686,7 +1586,6 @@ theorem IsSymm.apply_pieceMap {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} 
     · rw [h, piece_one, ← hya, Function.update_eq_self]; simp [pieceSgn]
     · rw [h, piece_two, ← hya, hF.update_one_sub]; simp [pieceSgn]
 
-/-- **A symmetric function is its own parity extension** (on the copies of `Q`). -/
 theorem IsSymm.parExt_eq {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF : IsSymm c F)
     {t : Fin n → ℝ} {p : Fin n → Fin 3} (hp : pieceMap p t ∈ Q (Fin n)) : parExt c F t = F t := by
   rw [parExt_eq_of_pieceMap_mem hp]
@@ -1694,8 +1593,6 @@ theorem IsSymm.parExt_eq {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ} (hF :
   rw [pieceMap_pieceMap] at h
   rw [h]
 
-/-- **The smoothed extension of a symmetric function is its mollification** at the points of
-`cl Q`. -/
 theorem IsSymm.smoothFun_eq (ρ : ReflKernel n) {c : Fin n → ℝ} {F : (Fin n → ℝ) → ℝ}
     (hF : IsSymm c F) {f : (Fin n → ℝ) → ℝ} (hf : f =ᵐ[volume.restrict (Q (Fin n))] F)
     {y : Fin n → ℝ} (hy : ∀ j, y j ∈ Icc (0 : ℝ) (1 / 2)) :
@@ -1709,7 +1606,6 @@ theorem IsSymm.smoothFun_eq (ρ : ReflKernel n) {c : Fin n → ℝ} {F : (Fin n 
     rw [hF.parExt_eq hp]
   · rw [eq_zero_of_notMem_bigCube ρ hy htU, mul_zero, mul_zero]
 
-/-- **The squared gradient of a symmetric function is even and periodic.** -/
 theorem IsSymm.sq_grad {c : Fin n → ℝ} (hc : IsParity c) {F : (Fin n → ℝ) → ℝ}
     (hF : IsSymm c F) (hd : Differentiable ℝ F) :
     IsSymm (fun _ => 1) (fun y => ∑ j, (fderiv ℝ F y (Pi.single j 1)) ^ 2) := by
@@ -1740,7 +1636,6 @@ theorem IsSymm.sq_grad {c : Fin n → ℝ} (hc : IsParity c) {F : (Fin n → ℝ
     rw [e] at h
     rw [← h]
 
-/-- **Integrals of even periodic functions over `U`**: `∫_U G = 3ⁿ ∫_Q G`. -/
 theorem integral_bigCube_eq_of_symm {G : (Fin n → ℝ) → ℝ} (hG : IsSymm (fun _ => 1) G)
     (hGi : IntegrableOn G (Q (Fin n))) :
     IntegrableOn G (bigCube n) ∧ ∫ x in bigCube n, G x = 3 ^ n * ∫ z in Q (Fin n), G z := by
@@ -1765,7 +1660,6 @@ theorem integral_bigCube_eq_of_symm {G : (Fin n → ℝ) → ℝ} (hG : IsSymm (
 
 /-! ### The `H¹` estimate for smooth fields -/
 
-/-- **Jensen's inequality for the mollifier**: `(∫ f ρ(x - ·))² ≤ ∫ f² ρ(x - ·)`. -/
 theorem ReflKernel.sq_integral_le (ρ : ReflKernel n) (x : Fin n → ℝ) {f : (Fin n → ℝ) → ℝ}
     (hf : Integrable fun t => f t * ρ (x - t)) (hf2 : Integrable fun t => f t ^ 2 * ρ (x - t)) :
     (∫ t, f t * ρ (x - t)) ^ 2 ≤ ∫ t, f t ^ 2 * ρ (x - t) := by
@@ -1787,9 +1681,6 @@ theorem ReflKernel.sq_integral_le (ρ : ReflKernel n) (x : Fin n → ℝ) {f : (
   rw [e, e1, e2, integral_const_mul, integral_const_mul, ρ.integral_comp_sub] at hvar
   nlinarith
 
-/-- **Averaging along segments**: if `F x ≤ K₀ ∫ ρ(u) ∫₀¹ H(x - τu) dτ du` with `ρ` supported in
-the ball of radius `r` and the segments of length `≤ r` from the points of `U` staying in `V`, then
-`∫_U F ≤ K₀ (∫ ρ) ∫_V H`. -/
 theorem lintegral_le_of_segment_avg {ρe H F : (Fin n → ℝ) → ℝ≥0∞} (hρm : Measurable ρe)
     (hHc : Continuous H) {U V : Set (Fin n → ℝ)} (hU : MeasurableSet U) (hV : MeasurableSet V)
     {r : ℝ} (hρr : ∀ u, ρe u ≠ 0 → ‖u‖ ≤ r)
@@ -1842,9 +1733,6 @@ theorem lintegral_le_of_segment_avg {ρe H F : (Fin n → ℝ) → ℝ≥0∞} (
     _ = _ := by rw [lintegral_mul_const _ hρm]
 
 open Feec.Models.Cube.FEM (sq_sub_le_integral_grad ofReal_intervalIntegral_le_lintegral) in
-/-- **The `L²` error of the mollifier for a `C¹` function**: if the segments from the points of `U`
-to the points sampled by `ρ` stay in `V`,
-`∫_U |w - w ⋆ ρ|² ≤ r² n ∫_V |∇w|²` (`r` the radius of `ρ`). -/
 theorem lintegral_sq_sub_conv_le (ρ : ReflKernel n) {w : (Fin n → ℝ) → ℝ} (hw : ContDiff ℝ 1 w)
     {U V : Set (Fin n → ℝ)} (hU : MeasurableSet U) (hV : MeasurableSet V)
     (hseg : ∀ x ∈ U, ∀ u : Fin n → ℝ, ‖u‖ ≤ ρ.radius → ∀ τ ∈ Icc (0 : ℝ) 1, x - τ • u ∈ V) :
@@ -1939,8 +1827,6 @@ theorem lintegral_sq_sub_conv_le (ρ : ReflKernel n) {w : (Fin n → ℝ) → �
     fun x => (hpt x).trans_eq (by rw [hΨ])
   rwa [hρ1, one_mul, hG] at h
 
-/-- **The `H¹` estimate of the parity smoother for smooth symmetric functions**:
-`∫_Q |g - R g|² ≤ r² n 3ⁿ ∫_Q |∇g|²`. -/
 theorem integral_sq_sub_smoothFun_le_of_symm (ρ : ReflKernel n) {c : Fin n → ℝ}
     (hc : IsParity c) {g : (Fin n → ℝ) → ℝ} (hg : ContDiff ℝ 1 g) (hgs : IsSymm c g) :
     ∫ y in Q (Fin n), (g y - smoothFun ρ c g y) ^ 2 ≤
@@ -2009,7 +1895,6 @@ theorem zeroForm_apply {Ω : Set (Fin n → ℝ)} (f : L2 ℝ Ω) (s : formIdx n
 theorem eq_idx₀ (s : formIdx n ((0 : ℕ) : ℤ)) : s = idx₀ :=
   Subtype.ext (Finset.card_eq_zero.1 (by exact_mod_cast s.2))
 
-/-- `Σ_t ((dψ)_t)² = |∇ψ|²` for a `0`-form. -/
 theorem sum_sq_extDerivOp_zero (ψ : formIdx n ((0 : ℕ) : ℤ) → (Fin n → ℝ) → ℝ)
     (y : Fin n → ℝ) :
     ∑ t : formIdx n (((0 : ℕ) : ℤ) + 1), ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).apply ψ t y) ^ 2 =
@@ -2030,10 +1915,6 @@ section Approx
 open DeRhamIdent UnitAddTorus Feec.Fourier.TorusWeak MirrorExt
 open Feec.Fourier.Exterior (Form)
 
-/-- **Smooth symmetric approximants in `D(d_J)` for `0`-forms**: the real trigonometric
-polynomials of the Fourier truncations of the parity extension
-(`Feec.Models.Cube.DeRhamIdent.mem_dPart_of_JfJ`) are smooth, symmetric with the parities of the
-class, and converge in the graph norm of `d_J`. -/
 theorem exists_symm_approx (J' : Finset (Fin n))
     (u : (dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∃ ψ : formIdx n ((0 : ℕ) : ℤ) → (Fin n → ℝ) → ℝ, (∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) ∧
@@ -2117,10 +1998,8 @@ theorem exists_symm_approx (J' : Finset (Fin n))
 end Approx
 
 open Feec.Models.Cube.FEM (norm_sub_le_of_approx) in
-/-- **The `H¹` estimate of the parity smoother on `D(d_{J'})`** (`0`-forms, i.e. `H¹` with
-vanishing trace on the faces normal to `J'`, the functions whose parity extension `ext_{c(J', ∅)}`
-is `H¹`): `‖f - R f‖ ≤ r √(n 3ⁿ) ‖∇f‖` ([Brezis2011], §9.2; the factor `3^{n/2}` is
-`‖∇ ext f‖_{L²(U)} / ‖∇ f‖_{L²(Q)}`). -/
+/-- **The `H¹` estimate of the parity smoother on `D(d_{J'})`** in degree `0` ([Brezis2011], §9.2):
+`‖f - R f‖ ≤ r √(n 3ⁿ) ‖∇f‖`. -/
 theorem norm_sub_scalarSmooth_le_grad (ρ : ReflKernel n) (J' : Finset (Fin n))
     (u : (DeRhamIdent.dPart (Q (Fin n)) J' ((0 : ℕ) : ℤ)).domain) :
     ‖(u : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ) : ℤ))) idx₀ -
@@ -2173,11 +2052,7 @@ theorem pvec_symmDiff_empty (J s : Finset (Fin n)) : pvec (symmDiff J s) ∅ = p
 
 /-! ### High-order estimates: kernels with vanishing moments -/
 
-/-- **A reflection-invariant kernel with vanishing moments of the orders `1, …, m - 1`** (signed in
-general, `m ≥ 3`): a smooth, compactly supported, reflection-invariant `ρ` with `∫ ρ = 1` and
-`∫ ρ(x) x_{v₁} ⋯ x_{vᵢ} dx = 0` for `1 ≤ i < m`. The moments of odd order vanish for every
-reflection-invariant kernel, so the nonnegative kernels are of this kind for `m = 2`; for every
-`m ≥ 1` a Richardson combination of dilates is one. -/
+/-- A reflection-invariant kernel with `∫ ρ = 1` and vanishing moments of orders `1, …, m - 1`. -/
 structure MomentKernel (n m : ℕ) where
   /-- the kernel -/
   toFun : (Fin n → ℝ) → ℝ
@@ -2212,8 +2087,6 @@ theorem l1_nonneg : 0 ≤ K.l1 := integral_nonneg fun _ => abs_nonneg _
 theorem eq_zero_of_lt {u : Fin n → ℝ} (h : K u ≠ 0) : ‖u‖ < K.radius := by
   by_contra h'; push Not at h'; exact h (K.eq_zero_of_le u h')
 
-/-- **Moment cancellation**: `∫ ρ(u) L(u, …, u) du = 0` for every multilinear `L` of order
-`1 ≤ i < m`. -/
 theorem integral_mul_multilinear_eq_zero {i : ℕ} (hi1 : 1 ≤ i) (him : i < m)
     (L : ContinuousMultilinearMap ℝ (fun _ : Fin i => Fin n → ℝ) ℝ) :
     ∫ u, K u * L (fun _ => u) = 0 := by
@@ -2241,7 +2114,7 @@ theorem integral_mul_multilinear_eq_zero {i : ℕ} (hi1 : 1 ≤ i) (him : i < m)
 
 end MomentKernel
 
-/-! ### Kernels with vanishing moments of every order -/
+/-! ### The high-order estimate -/
 
 namespace ReflKernel
 
@@ -2255,7 +2128,6 @@ theorem contDiff_dil (l : ℝ) : ContDiff ℝ ∞ (ρ.dil l) :=
 
 end ReflKernel
 
-/-- **Weighted Cauchy–Schwarz**: `(∫ a b)² ≤ (∫ |a|) (∫ |a| b²)`. -/
 theorem sq_integral_mul_le {a b : (Fin n → ℝ) → ℝ} (ha : Integrable a)
     (hab : Integrable fun u => |a u| * |b u|) (hab2 : Integrable fun u => |a u| * b u ^ 2) :
     (∫ u, a u * b u) ^ 2 ≤ (∫ u, |a u|) * ∫ u, |a u| * b u ^ 2 := by
@@ -2309,7 +2181,6 @@ def coordReflLIE (j : Fin n) : (Fin n → ℝ) ≃ₗᵢ[ℝ] (Fin n → ℝ) wh
     have := h (coordRefl j x)
     rwa [coordRefl_coordRefl] at this
 
-/-- **The squared `m`-th derivative of a symmetric function is even and periodic.** -/
 theorem IsSymm.sq_iteratedFDeriv {c : Fin n → ℝ} (hc : IsParity c) {F : (Fin n → ℝ) → ℝ}
     (hF : IsSymm c F) {m : ℕ} (hd : ContDiff ℝ m F) :
     IsSymm (fun _ => 1) (fun y => ‖iteratedFDeriv ℝ m F y‖ ^ 2) := by
@@ -2333,11 +2204,10 @@ theorem MomentKernel.integrable_mul {m : ℕ} (K : MomentKernel n m) {f : (Fin n
   (integrable_mul_isTest hf.locallyIntegrable K.isTest).congr
     (ae_of_all _ fun u => by simp only; ring)
 
-/-- The Taylor remainder of order `m` of `G` at `x` in the direction `-u`. -/
+/-- `(m - 1)!` times the Taylor remainder of order `m` of `G` at `x` in the direction `-u`. -/
 def taylorRem (G : (Fin n → ℝ) → ℝ) (m : ℕ) (x u : Fin n → ℝ) : ℝ :=
   ∫ τ in (0 : ℝ)..1, (1 - τ) ^ (m - 1) * iteratedFDeriv ℝ m G (x - τ • u) (fun _ => -u)
 
-/-- The Taylor remainder as a combination of values (Taylor's formula). -/
 theorem taylorRem_eq {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
     (x u : Fin n → ℝ) : taylorRem G m x u = ((m - 1).factorial : ℝ) * (G (x - u) -
       ∑ k ∈ Finset.range m, ((k.factorial : ℝ))⁻¹ * iteratedFDeriv ℝ k G x (fun _ => -u)) := by
@@ -2368,9 +2238,6 @@ theorem continuous_taylorRem {m : ℕ} (hm : 1 ≤ m) {G : (Fin n → ℝ) → �
   exact continuous_const.mul ((hG.continuous.comp (continuous_const.sub continuous_id)).sub
     (continuous_finsetSum _ fun k _ => continuous_const.mul (hcontk k)))
 
-/-- **The error of a moment kernel is the averaged Taylor remainder**:
-`G(x) - (G ⋆ ρ)(x) = -((m - 1)!)⁻¹ ∫ ρ(u) R_m(x, u) du` (the polynomial part of degree `< m`
-is reproduced by the vanishing moments). -/
 theorem sub_conv_eq_taylorRem {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
     {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G) (x : Fin n → ℝ) :
     Integrable (fun u => K u * taylorRem G m x u) ∧
@@ -2426,8 +2293,6 @@ theorem sub_conv_eq_taylorRem {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
   ring
 
 open Feec.Models.Cube.FEM (sq_intervalIntegral_le) in
-/-- **The bound of the Taylor remainder**:
-`R_m(x, u)² ≤ ‖u‖^{2m} ∫₀¹ ‖Dᵐ G(x - τ u)‖² dτ`. -/
 theorem sq_taylorRem_le {m : ℕ} {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
     (x u : Fin n → ℝ) :
     taylorRem G m x u ^ 2 ≤
@@ -2458,9 +2323,6 @@ theorem sq_taylorRem_le {m : ℕ} {G : (Fin n → ℝ) → ℝ} (hG : ContDiff �
     _ = ‖u‖ ^ (2 * m) * ‖iteratedFDeriv ℝ m G (x - τ • u)‖ ^ 2 := by ring
 
 open Feec.Models.Cube.FEM (ofReal_intervalIntegral_le_lintegral) in
-/-- **The `L²` error of a kernel with vanishing moments of orders `< m`** for a `Cᵐ` function: if the
-segments from the points of `U` to the points sampled by `ρ` stay in `V`,
-`∫_U |G - G ⋆ ρ|² ≤ ‖ρ‖₁² (rᵐ / (m - 1)!)² ∫_V ‖Dᵐ G‖²`. -/
 theorem lintegral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
     {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G) {U V : Set (Fin n → ℝ)} (hU : MeasurableSet U)
     (hV : MeasurableSet V)
@@ -2571,13 +2433,8 @@ theorem seg_mem_bigCube {r : ℝ} (hr : r < 1 / 2) {x : Fin n → ℝ} (hx : x �
   simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul]
   constructor <;> linarith [hxj.1, hxj.2, hτu.1, hτu.2]
 
-/-- **The high-order estimate of the parity smoother** ([AFW2010], §5.5; [Brezis2011], §9.2): for a
-kernel with vanishing moments of the orders `1, …, m - 1` and the parity extension `G = ext_c u`
-of a function `u` on `Q` which is `Cᵐ` on `ℝⁿ` (`G` symmetric of parity `c`; this requires the
-reflection compatibility conditions of `u` on `∂Q`),
-`‖u - R u‖²_{L²(Q)} ≤ ‖ρ‖₁² (εᵐ / (m - 1)!)² 3ⁿ ‖Dᵐ G‖²_{L²(Q)}` (`ε` the radius of `ρ`; the
-factor `3ⁿ` is `‖Dᵐ ext_c u‖²_{L²(U)} / ‖Dᵐ G‖²_{L²(Q)}`). Here `R u = (ρ ⋆ ext_c u)|_Q` and
-`ext_c u = G` (`IsSymm.parExt_eq`). For `m ≤ 2` every reflection-invariant mollifier qualifies. -/
+/-- **The high-order estimate of the parity smoother** ([AFW2010], §5.5): for a `Cᵐ` symmetric
+`G` of parity `c`, `‖G - R G‖ ≤ ‖ρ‖₁ rᵐ 3^{n/2} ‖Dᵐ G‖ / (m - 1)!` in `L²(Q)`, `r` the radius. -/
 theorem integral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm : 1 ≤ m)
     {c : Fin n → ℝ} (hc : IsParity c) {G : (Fin n → ℝ) → ℝ} (hG : ContDiff ℝ m G)
     (hGs : IsSymm c G) :
@@ -2629,7 +2486,5 @@ theorem integral_sq_sub_conv_le_of_moments {m : ℕ} (K : MomentKernel n m) (hm 
   calc ∫ x in Q (Fin n), F x
       ≤ K.l1 ^ 2 * (K.radius ^ m / (m - 1).factorial) ^ 2 * (3 ^ n * ∫ z in Q (Fin n), D z) := hL
     _ = _ := by ring
-
-/-! ### Non-vacuity: symmetric trigonometric products of every parity -/
 
 end Feec.Models.Cube.ParitySmoother

@@ -10,33 +10,15 @@ public import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
 public import Mathlib.LinearAlgebra.CrossProduct
 
 /-!
-# The grad–curl complex on a bounded domain (thesis §4.10)
+# The grad–curl complex on a bounded domain
 
-On an open `Ω ⊆ ℝ³` the thesis' complex for the Einstein–Bianchi system (4.14) is
-`H̊¹(Ω; 𝕜³) --grad--> H̊(curl, Ω; 𝕜³ˣ³) --curl--> L²(Ω; 𝕜³ˣ³)` (row-wise grad and curl), the
-**minimal complex** of the operators `Feec.Domain.gradOp 3 3`, `Feec.Domain.curlOp 3`
-(`gradCurl`); the maximal complex `H¹ → H(curl) → L²` is `gradCurlMax`, and the duality of
-`Feec.Domain.Complexes` identifies the adjoints: `d₀† = -div` on `H(div)` and `d₁† = curl` on
-`H(curl)` (`adjoint_gradCurl_d₀`, `adjoint_gradCurl_d₁`).
-
-The constraint of thesis Prop 4.17 is `L²(TSD)` (`tsd`): symmetric, trace-free, weakly
-divergence-free in `Ω`, with **no** boundary condition. On every bounded open `Ω`:
-
-* **zero mean** (`integral_eq_zero_of_mem_tsd`): every `B ∈ L²(TSD) ∩ H̊(curl)` has
-  `∫_Ω B = 0` (curl `B` is symmetric, `curl_symm_of_mem_tsd`, then Green's formula against
-  linear fields with no boundary condition, `Feec.Domain.ConstCoeffOp.minimal_green`);
-* hence (in `Feec.Counterexamples.BoundedDomainTSD`) the projection hypothesis is false
-  (`exists_projTSD_not_mem_domain`), `L²(TSD) ∩ H̊(curl)` is not dense in `L²(TSD)`
-  (`not_dense_tsd_inter`), the TSD family does not reduce the wave operator of any complex with
-  `d₁ ⊆ curl_min` (`not_isReducing_tsd`), and TSD data do **not propagate**
-  (`tsd_not_propagates`, through the `Ė(0)` obstruction
-  `Feec.ShortHilbertComplex.not_propagates_of_inner_ne_zero`).
+The complex `H̊¹(Ω; 𝕜³) --grad--> H̊(curl, Ω; 𝕜³ˣ³) --curl--> L²(Ω; 𝕜³ˣ³)` on an open `Ω ⊆ ℝ³`
+(`gradCurl`), its maximal counterpart (`gradCurlMax`), and the constraint space `L²(TSD)` (`tsd`)
+of symmetric, trace-free, weakly divergence-free fields.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Lemma 3.5), §4.10 (Prop 4.17)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -51,8 +33,7 @@ namespace Feec.Models.BoundedDomain
 /-- Points of `ℝ³`. -/
 abbrev R3 := Fin 3 → ℝ
 
-/-- The Euclidean ball `{x : |x - c| < r}` of `ℝ³` (`R3` carries the sup norm, so this is not
-`Metric.ball c r`). -/
+/-- The Euclidean ball `{x : |x - c| < r}` (`R3` carries the sup norm). -/
 def euclBall (c : R3) (r : ℝ) : Set R3 := {x | ∑ i, (x i - c i) ^ 2 < r ^ 2}
 
 theorem isOpen_euclBall (c : R3) (r : ℝ) : IsOpen (euclBall c r) :=
@@ -61,22 +42,18 @@ theorem isOpen_euclBall (c : R3) (r : ℝ) : IsOpen (euclBall c r) :=
 /-- Index pairs `(i, j)` of `3 × 3` matrices. -/
 abbrev Ix := Fin 3 × Fin 3
 
-/-! ## The complexes -/
-
 section Complexes
 
 variable {𝕜 : Type*} [RCLike 𝕜] {Ω : Set R3}
 
 variable (𝕜) in
-/-- **The thesis' complex** `H̊¹(Ω; 𝕜³) --grad--> H̊(curl, Ω; 𝕜³ˣ³) --curl--> L²(Ω; 𝕜³ˣ³)`:
-the minimal complex of the row-wise grad and curl (electric boundary conditions). -/
+/-- The complex `H̊¹(Ω; 𝕜³) → H̊(curl, Ω; 𝕜³ˣ³) → L²(Ω; 𝕜³ˣ³)` of [QuennevilleBelair2015], §4.10. -/
 def gradCurl (hΩ : IsOpen Ω) :
     ShortHilbertComplex 𝕜 (L2F 𝕜 Ω (Fin 3)) (L2F 𝕜 Ω Ix) (L2F 𝕜 Ω Ix) :=
   ConstCoeffOp.shortMinimal (gradOp 3 3) (curlOp 3) hΩ isComplexPair_grad_curl
 
 variable (𝕜) in
-/-- The maximal complex `H¹(Ω; 𝕜³) --grad--> H(curl, Ω; 𝕜³ˣ³) --curl--> L²(Ω; 𝕜³ˣ³)`
-(no boundary conditions). -/
+/-- The maximal complex `H¹(Ω; 𝕜³) → H(curl, Ω; 𝕜³ˣ³) → L²(Ω; 𝕜³ˣ³)`. -/
 def gradCurlMax (hΩ : IsOpen Ω) :
     ShortHilbertComplex 𝕜 (L2F 𝕜 Ω (Fin 3)) (L2F 𝕜 Ω Ix) (L2F 𝕜 Ω Ix) :=
   ConstCoeffOp.shortMaximal (gradOp 3 3) (curlOp 3) hΩ isComplexPair_grad_curl
@@ -87,18 +64,14 @@ def gradCurlMax (hΩ : IsOpen Ω) :
 @[simp] theorem gradCurl_d₁ (hΩ : IsOpen Ω) :
     (gradCurl 𝕜 hΩ).d₁ = (curlOp 3 : ConstCoeffOp R3 𝕜 _ _).minimal Ω := rfl
 
-/-- `d₀† = (gradᵗ)_max = -div` on `H(div, Ω; 𝕜³ˣ³)` (no boundary condition). -/
 theorem adjoint_gradCurl_d₀ (hΩ : IsOpen Ω) :
     (gradCurl 𝕜 hΩ).d₀† = (gradOp 3 3 : ConstCoeffOp R3 𝕜 _ _).formalAdj.maximal Ω :=
   ConstCoeffOp.adjoint_minimal _
 
-/-- `d₁† = (curlᵗ)_max`, the weak curl on `H(curl, Ω; 𝕜³ˣ³)` (no boundary condition). -/
 theorem adjoint_gradCurl_d₁ (hΩ : IsOpen Ω) :
     (gradCurl 𝕜 hΩ).d₁† = (curlOp 3 : ConstCoeffOp R3 𝕜 _ _).formalAdj.maximal Ω :=
   ConstCoeffOp.adjoint_minimal _
 
-/-- Duality: the adjoints of the maximal complex are the minimal realizations of the formal
-adjoints (`d₀† = -div` on `H̊(div)`, `d₁† = curl` on `H̊(curl)`). -/
 theorem adjoint_gradCurlMax_d₀ (hΩ : IsOpen Ω) :
     (gradCurlMax 𝕜 hΩ).d₀† = (gradOp 3 3 : ConstCoeffOp R3 𝕜 _ _).formalAdj.minimal Ω :=
   ConstCoeffOp.adjoint_maximal _ hΩ
@@ -109,14 +82,6 @@ theorem adjoint_gradCurlMax_d₁ (hΩ : IsOpen Ω) :
 
 end Complexes
 
-/-! ## The pointwise boundary lemma -/
-
-/-- **Pointwise boundary lemma.** A symmetric, trace-free `3 × 3` matrix whose rows all have
-zero tangential component for a unit vector `n` (`n × M_i = 0`) vanishes. Hence a TSD field with
-zero tangential trace (the `H̊(curl)` boundary condition) vanishes on `∂Ω` wherever it has a
-trace; `integral_eq_zero_of_mem_TSD_of_mem_HcurlZero` is the trace-free integrated form.
-
-See [QuennevilleBelair2015], §4.10, Prop 4.17 (the conjecture this refutes). -/
 theorem eq_zero_of_symm_of_trace_of_cross (M : Matrix (Fin 3) (Fin 3) ℝ) (n : Fin 3 → ℝ)
     (hn : n ⬝ᵥ n = 1) (hsym : Mᵀ = M) (htr : M.trace = 0) (hcross : ∀ i, n ⨯₃ M i = 0) :
     M = 0 := by
@@ -150,7 +115,6 @@ theorem eq_zero_of_symm_of_trace_of_cross (M : Matrix (Fin 3) (Fin 3) ℝ) (n : 
   rw [key' i j, hl0 i, zero_mul]; rfl
 
 
-/-! ## Partial derivatives and the row-wise curl of real fields -/
 
 /-- The row-wise curl `(curl Φ)_{ik} = ∂_{k+1} Φ_{i,k+2} - ∂_{k+2} Φ_{i,k+1}`. -/
 def curlM (Φ : Ix → R3 → ℝ) (ik : Ix) (x : R3) : ℝ :=
@@ -176,8 +140,6 @@ theorem pd_ite_zero (c : Prop) [Decidable c] (f : R3 → ℝ) (k : Fin 3) (x : R
   · rfl
   · simp [partialDeriv]
 
-/-! ## Real `L²` pairings -/
-
 variable {Ω : Set R3}
 
 theorem integral_mul_eq_inner (f : L2 ℝ Ω) {g : R3 → ℝ} (hg : MemLp g 2 (volume.restrict Ω)) :
@@ -189,21 +151,18 @@ theorem integrable_mul (f : L2 ℝ Ω) {g : R3 → ℝ} (hg : MemLp g 2 (volume.
     Integrable (fun x => f x * g x) (volume.restrict Ω) := by
   simpa using integrable_conj_mul f hg
 
-/-- `⟪B, Φ⟫ = Σ_{ij} ∫_Ω B_{ij} Φ_{ij}` for a test field `Φ`. -/
 theorem inner_testField_eq {ι : Type*} [Fintype ι] (B : L2F ℝ Ω ι) {Φ : ι → R3 → ℝ}
     (hΦ : IsTestField Ω Φ) :
     ⟪B, testField hΦ⟫_ℝ = ∑ ij, ∫ x, B ij x * Φ ij x ∂volume.restrict Ω := by
   rw [inner_testField]
   simp
 
-/-- `⟪B, Ψ⟫ = Σ_{ij} ∫_Ω B_{ij} Ψ_{ij}` for an `L²` field given by functions. -/
 theorem inner_toL2F_eq {ι : Type*} [Fintype ι] (B : L2F ℝ Ω ι) {Ψ : ι → R3 → ℝ}
     (hΨ : ∀ i, MemLp (Ψ i) 2 (volume.restrict Ω)) :
     ⟪B, toL2F hΨ⟫_ℝ = ∑ ij, ∫ x, B ij x * Ψ ij x ∂volume.restrict Ω := by
   rw [inner_toL2F]
   simp
 
-/-- Integration by parts against a test function, no boundary condition on `g ∈ C¹`. -/
 theorem integral_pd_mul {f g : R3 → ℝ} (hf : IsTest Ω f) (hg : ContDiff ℝ 1 g) (k : Fin 3) :
     ∫ x, partialDeriv k f x * g x ∂volume.restrict Ω =
       -∫ x, f x * partialDeriv k g x ∂volume.restrict Ω := by
@@ -215,7 +174,6 @@ theorem integral_pd_mul {f g : R3 → ℝ} (hf : IsTest Ω f) (hg : ContDiff ℝ
   rw [integral_restrict_of_eq_zero h0, integral_restrict_of_eq_zero h1]
   simpa [partialDeriv] using integral_conj_fderiv_mul (𝕜 := ℝ) hf hg (Pi.single k 1)
 
-/-- **Fundamental lemma** in `L²(Ω)` (`Ω` open, bounded or not). -/
 theorem L2_ext_of_integral (hΩ : IsOpen Ω) {f f' : L2 ℝ Ω}
     (h : ∀ g, IsTest Ω g →
       ∫ x, f x * g x ∂volume.restrict Ω = ∫ x, f' x * g x ∂volume.restrict Ω) : f = f' := by
@@ -223,12 +181,8 @@ theorem L2_ext_of_integral (hΩ : IsOpen Ω) {f f' : L2 ℝ Ω}
   rw [inner_sub_left, inner_toL2, inner_toL2]
   simpa [sub_eq_zero] using h g hg
 
-/-! ## The constraint space `L²(TSD)` -/
-
 variable (Ω) in
-/-- `L²(TSD)`: symmetric, trace-free matrix fields whose (row-wise) divergence vanishes weakly in
-`Ω`, with **no** boundary condition: `∫ Σ_{ij} B_{ij} ∂_j φ_i = 0` for all `φ ∈ C_c^∞(Ω; ℝ³)`.
-[QuennevilleBelair2015], Prop 4.17 -/
+/-- `L²(TSD)`: symmetric, trace-free fields with weakly vanishing row-wise divergence in `Ω`. -/
 def tsd : Submodule ℝ (L2F ℝ Ω Ix) where
   carrier := {B | (∀ i j, B (i, j) = B (j, i)) ∧ ∑ i, B (i, i) = 0 ∧
     ∀ φ : Fin 3 → R3 → ℝ, ∀ hφ : IsTestField Ω φ,
@@ -252,8 +206,6 @@ theorem mem_tsd {B : L2F ℝ Ω Ix} : B ∈ tsd Ω ↔ (∀ i j, B (i, j) = B (j
       ⟪B, testField ((gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ)⟫_ℝ = 0 :=
   Iff.rfl
 
-/-- `L²(TSD) = sym ∩ trace-free ∩ N(d₀†)`: the divergence condition is `d₀† B = 0` for the thesis'
-complex. -/
 theorem mem_tsd_iff_ker (hΩ : IsOpen Ω) {B : L2F ℝ Ω Ix} :
     B ∈ tsd Ω ↔ (∀ i j, B (i, j) = B (j, i)) ∧ ∑ i, B (i, i) = 0 ∧
       B ∈ (gradCurl ℝ hΩ).d₀†.ker := by
@@ -292,10 +244,7 @@ instance : (tsd Ω).HasOrthogonalProjection := by
   have : CompleteSpace (tsd Ω) := isClosed_tsd.completeSpace_coe
   infer_instance
 
-/-! ## Skew fields `Ψ_{j·} = e_j × ψ` and their curl -/
-
-/-- The skew matrix field with rows `e_j × ψ`:
-`skewOf ψ (j, k) = [j = k+1] ψ_{k+2} - [j = k+2] ψ_{k+1}`. -/
+/-- The skew matrix field with rows `e_j × ψ`. -/
 def skewOf (ψ : Fin 3 → R3 → ℝ) (jk : Ix) : R3 → ℝ :=
   (if jk.1 = jk.2 + 1 then ψ (jk.2 + 2) else 0) - (if jk.1 = jk.2 + 2 then ψ (jk.2 + 1) else 0)
 
@@ -314,7 +263,6 @@ theorem isTestField_skewOf {ψ : Fin 3 → R3 → ℝ} (hψ : IsTestField Ω ψ)
   unfold skewOf
   apply IsTest.sub <;> split_ifs <;> first | exact hψ _ | exact IsTest.zero
 
-/-- `curl (e_j × ψ) = e_j div ψ - ∂_j ψ`, row by row. -/
 theorem curlM_skewOf {ψ : Fin 3 → R3 → ℝ} (hψ : ∀ i, Differentiable ℝ (ψ i)) (jk : Ix)
     (x : R3) : curlM (skewOf ψ) jk x =
       (if jk.1 = jk.2 then ∑ m, partialDeriv m (ψ m) x else 0) - partialDeriv jk.1 (ψ jk.2) x := by
@@ -326,7 +274,6 @@ theorem curlM_skewOf {ψ : Fin 3 → R3 → ℝ} (hψ : ∀ i, Differentiable �
   simp only [curlM, skewOf, Pi.sub_def, partialDeriv_sub (hd _ _ _) (hd _ _ _), pd_ite_zero]
   fin_cases j <;> fin_cases k <;> simp [Fin.sum_univ_three] <;> ring
 
-/-- For a symmetric `C` and a pointwise skew-symmetric field `A`, `∫ C : A = 0`. -/
 theorem sum_integral_mul_eq_zero_of_skew {C : L2F ℝ Ω Ix} (hC : ∀ j k, C (j, k) = C (k, j))
     {A : Ix → R3 → ℝ} (hA : ∀ j k x, A (k, j) x = -A (j, k) x) :
     ∑ jk, ∫ x, C jk x * A jk x ∂volume.restrict Ω = 0 := by
@@ -343,7 +290,6 @@ theorem sum_integral_mul_eq_zero_of_skew {C : L2F ℝ Ω Ix} (hC : ∀ j k, C (j
     ring
   linarith
 
-/-- For a symmetric `C`, `∫ C : skewOf ψ = 0`. -/
 theorem sum_integral_mul_skewOf_eq_zero {C : L2F ℝ Ω Ix} (hC : ∀ j k, C (j, k) = C (k, j))
     (ψ : Fin 3 → R3 → ℝ) : ∑ jk, ∫ x, C jk x * skewOf ψ jk x ∂volume.restrict Ω = 0 :=
   sum_integral_mul_eq_zero_of_skew hC (skewOf_swap ψ)
@@ -353,7 +299,6 @@ theorem integral_ite_zero (c : Prop) [Decidable c] (f : R3 → ℝ) :
       if c then ∫ x, f x ∂volume.restrict Ω else 0 := by
   split_ifs <;> simp
 
-/-- The divergence pairing `⟪B, grad φ⟫ = Σ_{ij} ∫ B_{ij} ∂_j φ_i`. -/
 theorem inner_grad_testField (B : L2F ℝ Ω Ix) {φ : Fin 3 → R3 → ℝ} (hφ : IsTestField Ω φ) :
     ⟪B, testField ((gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ)⟫_ℝ =
       ∑ ij : Ix, ∫ x, B ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω := by
@@ -362,8 +307,6 @@ theorem inner_grad_testField (B : L2F ℝ Ω Ix) {φ : Fin 3 → R3 → ℝ} (h�
   simp only [gradOp_apply]
   rfl
 
-/-- For `B ∈ L²(TSD)` and `ψ ∈ C_c^∞(Ω; ℝ³)`: `∫ B : curl (skewOf ψ) = 0`, the weak form of
-"`curl B` is symmetric" (part of Lemma 3.5). -/
 theorem sum_integral_mul_curlM_skewOf_eq_zero {B : L2F ℝ Ω Ix} (hB : B ∈ tsd Ω)
     {ψ : Fin 3 → R3 → ℝ} (hψ : IsTestField Ω ψ) :
     ∑ jk, ∫ x, B jk x * curlM (skewOf ψ) jk x ∂volume.restrict Ω = 0 := by
@@ -389,8 +332,6 @@ theorem sum_integral_mul_curlM_skewOf_eq_zero {B : L2F ℝ Ω Ix} (hB : B ∈ ts
     rw [hsym j k]
   rw [h1, h2, sub_zero]
 
-/-- The graph-closure identity of the minimal curl against a `C¹` field with no boundary
-condition (`Ω` bounded): `∫ C : Ψ = ∫ B : curl Ψ`. -/
 theorem minimal_curl_identity (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (B : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) {Ψ : Ix → R3 → ℝ}
     (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
@@ -407,8 +348,8 @@ theorem minimal_curl_identity (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   rw [inner_toL2F_eq, inner_toL2F_eq] at this
   simpa only [← curlM_eq_formalAdj_apply] using this
 
-/-- **Lemma 3.5 (symmetry part), distributional form on `H̊(curl)`.** If `B ∈ L²(TSD)` lies in
-`D(curl_min)`, then `curl B` is symmetric. [QuennevilleBelair2015], Lemma 3.5 -/
+/-- If `B ∈ L²(TSD)` lies in `D(curl_min)`, then `curl B` is symmetric.
+[QuennevilleBelair2015], Lemma 3.5 (adapted) -/
 theorem curl_symm_of_mem_tsd (hΩ : IsOpen Ω)
     (B : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hB : (B : L2F ℝ Ω Ix) ∈ tsd Ω)
     (j k : Fin 3) :
@@ -438,10 +379,7 @@ theorem curl_symm_of_mem_tsd (hΩ : IsOpen Ω)
   simp only [Fin.isValue, Fin.reduceAdd] at k0 k1 k2
   fin_cases j <;> fin_cases k <;> simp [k0, k1, k2]
 
-/-- **Zero mean.** On a bounded open `Ω ⊆ ℝ³`, every `B ∈ L²(TSD) ∩ H̊(curl)` has
-`∫_Ω B_{ab} = 0`: formally `∫_Ω B : ∇v = ∫_{∂Ω} (B n)·v = 0`. Proof: `C = curl B` is symmetric;
-Green's formula for `curl_min` against the linear skew field `skewOf (x_a e_b)` (no boundary
-condition) gives `0 = ∫ C : Ψ = ∫ B : curl Ψ = δ_{ab} ∫ tr B - ∫ B_{ab}`. [QuennevilleBelair2015], Prop 4.17 -/
+/-- On a bounded open `Ω`, every `B ∈ L²(TSD) ∩ H̊(curl)` has zero mean. -/
 theorem integral_eq_zero_of_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (B : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hB : (B : L2F ℝ Ω Ix) ∈ tsd Ω)
     (a b : Fin 3) : ∫ x, (B : L2F ℝ Ω Ix) (a, b) x ∂volume.restrict Ω = 0 := by
@@ -475,18 +413,13 @@ theorem integral_eq_zero_of_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   fin_cases a <;> fin_cases b <;> simp [Fintype.sum_prod_type, Fin.sum_univ_three] at e ⊢ <;>
     linarith
 
-/-! ## The row-wise gradient -/
-
 /-- The row-wise gradient `(∇φ)_{ij} = ∂_j φ_i`. -/
 def gradM (φ : Fin 3 → R3 → ℝ) : Ix → R3 → ℝ := fun ij => partialDeriv ij.2 (φ ij.1)
 
-/-- `curl ∇φ = 0` for `φ ∈ C²`. -/
 theorem curlM_gradM {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, ContDiff ℝ 2 (φ i)) (ik : Ix) (x : R3) :
     curlM (gradM φ) ik x = 0 := by
   simp only [curlM, gradM]
   rw [partialDeriv_comm (hφ _), sub_self]
-
-/-! ## Continuous fields on a bounded domain -/
 
 /-- The `L²(Ω)` class of a field continuous on `ℝ³` (`Ω` bounded). -/
 def smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*} (Ψ : ι → R3 → ℝ)
@@ -498,13 +431,11 @@ theorem coeFn_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : 
     (smoothField hΩ hb Ψ hΨ i : R3 → ℝ) =ᵐ[volume.restrict Ω] Ψ i :=
   MemLp.coeFn_toLp (memLp_of_continuous hΩ.measurableSet hb (hΨ i))
 
-/-- `⟪F, Ψ⟫ = Σ_i ∫_Ω F_i Ψ_i`. -/
 theorem inner_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*} [Fintype ι]
     (Ψ : ι → R3 → ℝ) (hΨ : ∀ i, Continuous (Ψ i)) (F : L2F ℝ Ω ι) :
     ⟪F, smoothField hΩ hb Ψ hΨ⟫_ℝ = ∑ i, ∫ x, F i x * Ψ i x ∂volume.restrict Ω :=
   inner_toL2F_eq F _
 
-/-- `‖Ψ‖² = ∫_Ω Σ_i Ψ_i²`. -/
 theorem norm_sq_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*}
     [Fintype ι] (Ψ : ι → R3 → ℝ) (hΨ : ∀ i, Continuous (Ψ i)) :
     ‖smoothField hΩ hb Ψ hΨ‖ ^ 2 = ∫ x, ∑ i, Ψ i x ^ 2 ∂volume.restrict Ω := by
@@ -517,7 +448,6 @@ theorem norm_sq_smoothField (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι 
   filter_upwards [coeFn_smoothField hΩ hb Ψ hΨ i] with x hx
   rw [hx, sq]
 
-/-- A continuous field vanishing on `Ω` is `0` in `L²(Ω)`. -/
 theorem smoothField_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Type*}
     {Ψ : ι → R3 → ℝ} (hΨ : ∀ i, Continuous (Ψ i)) (h0 : ∀ i, ∀ x ∈ Ω, Ψ i x = 0) :
     smoothField hΩ hb Ψ hΨ = 0 := by
@@ -527,7 +457,6 @@ theorem smoothField_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι 
   rw [h1, h0 i x hx]
   exact h2.symm
 
-/-- A continuous field whose `L²(Ω)` class vanishes vanishes on `Ω`. -/
 theorem eqOn_zero_of_smoothField_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {ι : Type*} {Ψ : ι → R3 → ℝ} (hΨ : ∀ i, Continuous (Ψ i))
     (h0 : smoothField hΩ hb Ψ hΨ = 0) (i : ι) : ∀ x ∈ Ω, Ψ i x = 0 := by
@@ -550,10 +479,6 @@ theorem smoothField_sub (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {ι : Ty
   rw [h1, Pi.sub_apply, h2, h3]
   exact h4.symm
 
-/-! ## Smooth fields in `H(curl)` and in `D(d₁†)` -/
-
-/-- **A `C¹` field (no boundary condition) lies in `H(curl) = D(curl_max)`** with
-`curl_max Ψ = curl Ψ`. -/
 theorem smoothField_mem_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {Ψ : Ix → R3 → ℝ} (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) :
     ∃ h : smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈
@@ -572,8 +497,6 @@ theorem smoothField_mem_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded
   exact MemLp.toLp_congr (hcurl ij) (memLp_of_continuous hΩ.measurableSet hb
     (continuous_curlM hΨ ij)) (Eventually.of_forall fun x => by rw [← curlM_eq_formalAdj_apply])
 
-/-- **`C¹` fields lie in `D(d₁†)`** for every short complex with `d₁ ⊆ curl_min`, with
-`d₁† Ψ = curl Ψ` (the adjoint of a restriction extends `curl_max`). -/
 theorem smoothField_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {W₀ : Type*}
     [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
@@ -594,8 +517,6 @@ theorem smoothField_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) 
   refine ⟨hmax.1 hmem', ?_⟩
   rw [← hmax.2 (x := ⟨_, hmem'⟩) (y := ⟨_, hmax.1 hmem'⟩) rfl, hval']
 
-/-- A `C¹` field on `ℝ³` that is symmetric, trace-free and divergence-free at every point of `Ω`
-lies in `L²(TSD)` (weak divergence by integration by parts against `C_c^∞(Ω)`). -/
 theorem smoothField_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Ψ : Ix → R3 → ℝ}
     (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) (hsym : ∀ i j, ∀ x ∈ Ω, Ψ (i, j) x = Ψ (j, i) x)
     (htr : ∀ x ∈ Ω, ∑ i, Ψ (i, i) x = 0)
@@ -632,10 +553,6 @@ theorem smoothField_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Ψ 
     · rw [hdiv i x hx, mul_zero]
     · rw [(hφ i).eq_zero_of_notMem hx, zero_mul]
 
-/-! ## The projection onto `L²(TSD)` of smooth fields -/
-
-/-- A continuous field whose symmetric part is a multiple of the identity (`R + Rᵀ = s I` on `Ω`:
-skew plus scalar) is orthogonal to `L²(TSD)`. -/
 theorem inner_smoothField_eq_zero_of_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {R : Ix → R3 → ℝ} (hR : ∀ ij, Continuous (R ij)) {s : R3 → ℝ} (hs : Continuous s)
     (hRs : ∀ i j, ∀ x ∈ Ω, R (i, j) x + R (j, i) x = if i = j then s x else 0)
@@ -675,9 +592,6 @@ theorem inner_smoothField_eq_zero_of_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.I
     rw [← inner_sum, hB.2.1, inner_zero_right]
   linarith
 
-/-- **`P_{L²(TSD)}` on smooth fields**: if `D ∈ C¹` is symmetric, trace-free and divergence-free
-on `Ω` and `G + Gᵀ - 2 D = s I` on `Ω` (so `G - D` is skew plus scalar), then
-`P_{L²(TSD)} G = D`. -/
 theorem starProjection_smoothField_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {G D : Ix → R3 → ℝ} (hG : ∀ ij, Continuous (G ij)) (hD : ∀ ij, ContDiff ℝ 1 (D ij))
     (hsym : ∀ i j, ∀ x ∈ Ω, D (i, j) x = D (j, i) x) (htr : ∀ x ∈ Ω, ∑ i, D (i, i) x = 0)
@@ -693,20 +607,14 @@ theorem starProjection_smoothField_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
   rw [hsym j i x hx]
   linarith
 
-/-! ## The literal density hypothesis of Prop 4.17 -/
-
-/-- **`H̊(curl) ∩ H(div, 0)` is dense in `H(div, 0)`** on every open `Ω ⊆ ℝ³` (bounded or not,
-any `𝕜`): the literal density conjecture in the proof of Prop 4.17 is true, an instance of
-`Feec.HilbertComplex.mem_closure_domain_inter_ker_adjoint`. What fails is the inference that
-`H̊(curl) ∩ L²(TSD)` is dense in `L²(TSD)`. [QuennevilleBelair2015], Prop 4.17 -/
+/-- `H̊(curl) ∩ H(div, 0)` is dense in `H(div, 0)`. See [QuennevilleBelair2015], proof of
+Prop 4.17. -/
 theorem dense_curl_inter_divFree {𝕜 : Type*} [RCLike 𝕜] (hΩ : IsOpen Ω) {B : L2F 𝕜 Ω Ix}
     (hB : B ∈ (gradCurl 𝕜 hΩ).d₀†.ker) :
     B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).minimal Ω).domain : Set (L2F 𝕜 Ω Ix)) ∩
       (gradCurl 𝕜 hΩ).d₀†.ker) :=
   (gradCurl 𝕜 hΩ).mem_closure_domain_inter_ker_adjoint hB
 
-/-- **`H(curl) ∩ H(div, 0)` is dense in `H(div, 0)`** (the second literal conjecture of
-Prop 4.17): `H̊(curl) ⊆ H(curl)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem dense_curl_maximal_inter_divFree {𝕜 : Type*} [RCLike 𝕜] (hΩ : IsOpen Ω)
     {B : L2F 𝕜 Ω Ix} (hB : B ∈ (gradCurl 𝕜 hΩ).d₀†.ker) :
     B ∈ closure ((((curlOp 3 : ConstCoeffOp R3 𝕜 Ix Ix).maximal Ω).domain : Set (L2F 𝕜 Ω Ix)) ∩

@@ -7,40 +7,16 @@ public import Feec.Variational.GalerkinEvolution
 /-!
 # Semi-discrete Hodge wave equation: elliptic projection and convergence
 
-For an operator `T : E →ₗ.[𝕜] E` (the total differential `𝐝` of a finite Hilbert complex), the
-weak Hodge wave equation `⟪ψ, ξ'⟫ = ⟪ψ, T ξ⟫ - ⟪T ψ, ξ⟫` is posed on the graph space
-`V = Γ(T)`, as `⟪ψ, ξ'⟫ + a(ξ, ψ) = 0` with the **wave form** `a(ξ, ψ) = ⟪T ψ, ξ⟫ - ⟪ψ, T ξ⟫`,
-whose real part vanishes on the diagonal. A semi-discretization takes a finite-dimensional
-`K ⊆ V` (e.g. the total space of a finite element subcomplex) and seeks `ξₕ(t) ∈ K` with the
-same equation for test functions in `K`.
-
-## Main definitions
-
-* `Feec.HodgeWave.waveForm T`, `Feec.HodgeWave.shiftedForm T = ⟪·,·⟫ + a` (bounded sesquilinear
-  forms on `Γ(T)`).
-* `Feec.HodgeWave.ellipticProjection T K`: the elliptic projection onto a finite-dimensional
-  `K ⊆ Γ(T)` for the shifted form (the thesis' (4.11)), a bounded projection.
+The weak Hodge wave equation on the graph space `Γ(T)` of an operator `T`, semi-discretized on a
+finite-dimensional `K ⊆ Γ(T)`, with its error estimate through the elliptic projection onto `K`.
 
 ## Main results
 
-* `shiftedForm_ellipticProjection`, `ellipticProjection_mem`, `ellipticProjection_of_mem`.
-* `norm_sub_le_of_semidiscrete`: **the semi-discrete error estimate**
-  `‖ξ(t) - ξₕ(t)‖ ≤ ‖Pξ(t₀) - ξₕ(t₀)‖ + ‖e(t)‖ + (t - t₀) ‖e(t₀)‖ + (1 + (t - t₀)) ∫ ‖e'‖`
-  with `e = Pξ - ξ`, for every operator `T` and every finite-dimensional `K`, over `ℝ` and `ℂ`.
-  For the short complex of the thesis this is Thm 4.14; here the complex may have any length.
+* `HodgeWave.norm_sub_le_of_semidiscrete`: the semi-discrete error estimate.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 ((4.10), (4.11), Thm 4.14)
-* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
-  (energy-method error estimates)
-* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
-  (energy-method error estimates)
-* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
-  (mixed methods for the wave equation)
-* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
-  (FEEC for evolution problems)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -76,11 +52,9 @@ theorem shiftedForm_apply (x ψ : T.GraphSpace) :
     shiftedForm T x ψ = ⟪T.graphFst ψ, T.graphFst x⟫ + waveForm T x ψ := by
   simp [shiftedForm]
 
-/-- `re a(ψ, ψ) = 0`. -/
 theorem re_waveForm_self (ψ : T.GraphSpace) : RCLike.re (waveForm T ψ ψ) = 0 := by
   rw [waveForm_apply, _root_.map_sub, inner_re_symm, sub_self]
 
-/-- `re A(ψ, ψ) = ‖ψ‖²_E`. -/
 theorem re_shiftedForm_self (ψ : T.GraphSpace) :
     RCLike.re (shiftedForm T ψ ψ) = ‖T.graphFst ψ‖ ^ 2 := by
   rw [shiftedForm_apply, _root_.map_add, re_waveForm_self, add_zero, inner_self_eq_norm_sq]
@@ -92,7 +66,6 @@ section Projection
 variable (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K]
 
 omit [FiniteDimensional 𝕜 K] in
-/-- The shifted form restricted to `K` is injective. -/
 theorem injective_restrict_shiftedForm : Function.Injective (restrict (shiftedForm T) K K) := by
   intro x y hxy
   have h0 : restrict (shiftedForm T) K K (x - y) = 0 := by rw [_root_.map_sub, hxy, sub_self]
@@ -108,7 +81,6 @@ theorem injective_restrict_shiftedForm : Function.Injective (restrict (shiftedFo
     T.graphFst_injective (h1.trans (T.graphFst.map_zero).symm)
   exact sub_eq_zero.1 (Subtype.ext h2)
 
-/-- The shifted form restricted to `K` is onto the antidual of `K`. -/
 theorem surjective_restrict_shiftedForm : Function.Surjective (restrict (shiftedForm T) K K) := by
   set B := restrict (shiftedForm T) K K
   have hinj : Function.Injective B := injective_restrict_shiftedForm K
@@ -139,8 +111,7 @@ def shiftedFormRestrict : T.GraphSpace →L[𝕜] (K →L⋆[𝕜] 𝕜) :=
       refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun ψ => ?_
       exact (shiftedForm T).le_opNorm₂ ζ ψ
 
-/-- The **elliptic projection** onto a finite-dimensional `K ⊆ Γ(T)`:
-`P ζ ∈ K` with `A(P ζ, ψ) = A(ζ, ψ)` for `ψ ∈ K`. [QuennevilleBelair2015], (4.11) -/
+/-- The elliptic projection onto `K` for the shifted form. [QuennevilleBelair2015], (4.11) -/
 def ellipticProjection : T.GraphSpace →L[𝕜] T.GraphSpace :=
   K.subtypeL.comp (((shiftedFormEquiv K).symm : (K →L⋆[𝕜] 𝕜) →L[𝕜] K).comp
     (shiftedFormRestrict K))
@@ -148,14 +119,12 @@ def ellipticProjection : T.GraphSpace →L[𝕜] T.GraphSpace :=
 theorem ellipticProjection_mem (ζ : T.GraphSpace) : ellipticProjection K ζ ∈ K :=
   ((shiftedFormEquiv K).symm (shiftedFormRestrict K ζ)).2
 
-/-- `A(P ζ, ψ) = A(ζ, ψ)` for `ψ ∈ K`. [QuennevilleBelair2015], (4.11) -/
 theorem shiftedForm_ellipticProjection (ζ : T.GraphSpace) {ψ : T.GraphSpace} (hψ : ψ ∈ K) :
     shiftedForm T (ellipticProjection K ζ) ψ = shiftedForm T ζ ψ := by
   have h := (shiftedFormEquiv K).apply_symm_apply (shiftedFormRestrict K ζ)
   have := congrArg (fun f => f ⟨ψ, hψ⟩) h
   exact this
 
-/-- `P` is a projection: `P ζ = ζ` on `K`. -/
 theorem ellipticProjection_of_mem {ζ : T.GraphSpace} (hζ : ζ ∈ K) :
     ellipticProjection K ζ = ζ := by
   have h : restrict (shiftedForm T) K K ⟨_, ellipticProjection_mem K ζ⟩ =
@@ -163,7 +132,6 @@ theorem ellipticProjection_of_mem {ζ : T.GraphSpace} (hζ : ζ ∈ K) :
     ContinuousLinearMap.ext fun ψ => shiftedForm_ellipticProjection K ζ ψ.2
   exact congrArg Subtype.val (injective_restrict_shiftedForm K h)
 
-/-- **Galerkin orthogonality of the elliptic projection**: `A(P ζ - ζ, ψ) = 0` on `K`. -/
 theorem shiftedForm_ellipticProjection_sub (ζ : T.GraphSpace) {ψ : T.GraphSpace} (hψ : ψ ∈ K) :
     shiftedForm T (ellipticProjection K ζ - ζ) ψ = 0 := by
   rw [_root_.map_sub, _root_.sub_apply, shiftedForm_ellipticProjection K ζ hψ, sub_self]
@@ -174,14 +142,8 @@ end Projection
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **Convergence of the semi-discrete Hodge wave equation** (error estimate). Let
-`K ⊆ Γ(T)` be finite-dimensional with elliptic projection `P`, `ξ ∈ C¹([t₀,t₁]; Γ(T))` a
-solution of `⟪ψ, ξ'⟫ + a(ξ, ψ) = 0` for `ψ ∈ K` (in particular any weak solution of the Hodge
-wave equation in `C¹(Γ(T))`), and `ξₕ ∈ K` the semi-discrete solution. Then, with
-`e = P ξ - ξ` measured in `E`,
-`‖ξ(t) - ξₕ(t)‖ ≤ ‖P ξ(t₀) - ξₕ(t₀)‖ + ‖e(t)‖ + (t - t₀) ‖e(t₀)‖ + (1 + (t - t₀)) ∫ ‖e'‖`.
-[QuennevilleBelair2015], Thm 4.14; cf. the FEEC semi-discrete analysis of [GilletteHolstZhu2017]
-(the thesis cites its 2012 preprint). -/
+/-- **Convergence of the semi-discrete Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14
+(adapted)): `‖ξ - ξₕ‖` is bounded by the initial error and the elliptic projection error. -/
 theorem norm_sub_le_of_semidiscrete (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K]
     {ξ ξ' ξh ξh' : ℝ → T.GraphSpace} {t₀ t₁ : ℝ}
     (hξc : ContinuousOn ξ (Icc t₀ t₁)) (hξ'c : ContinuousOn ξ' (Icc t₀ t₁))

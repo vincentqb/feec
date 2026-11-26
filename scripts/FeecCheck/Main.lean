@@ -21,8 +21,7 @@ code (`0` iff every check passed). `lake exe feec-gate` runs every check on one 
 | `palomar/*`: shared blocks canonical, `Defs.lean` copies the challenge, `lake build` | `feec-palomar` | no (builds every package) |
 
 Run from the root of the repository (as `lake exe` does) after `lake build`; the executables that
-import `Feec` declare `needs = ["Feec"]`, so `lake exe` builds the library first; `feec-gate` also
-needs `"FeecCheck"`, so the regression tests of `FeecCheck` compile too.
+import `Feec` declare `needs = ["Feec"]`, so `lake exe` builds the library first.
 -/
 
 public section

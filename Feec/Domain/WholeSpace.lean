@@ -6,51 +6,13 @@ public import Feec.Domain.Mollify
 /-!
 # On the whole space, minimal = maximal
 
-Let `E` be a finite-dimensional real normed space with an additive Haar measure (`ℝⁿ`) and `A` a
-constant-coefficient operator of any order (`Feec.Domain.ConstCoeffOp`). Then
+On a finite-dimensional real space the minimal and maximal realizations of a constant-coefficient
+operator coincide, and compactly supported elements of a maximal domain lie in the minimal one.
 
-  `A_min(E) = A_max(E)` (`ConstCoeffOp.minimal_univ_eq_maximal_univ`):
+## Main results
 
-`C_c^∞(E)` is dense in the graph norm of the weak (maximal) realization (weak = strong for
-constant coefficients on `ℝⁿ`, in the sense of Friedrichs' identity of weak and strong
-extensions; cf. [Brezis2011], §9.1); on `ℝⁿ` there is no boundary, so
-`H̊ = H`. In particular the minimal and maximal realizations of every complex of
-constant-coefficient operators on `E` coincide
-(`ConstCoeffComplex.minimalComplex_univ_eq_maximalComplex_univ`), e.g. the de Rham complex,
-`H̊Λᵏ(ℝⁿ) = HΛᵏ(ℝⁿ)` (`deRham_minimalComplex_univ_eq_maximalComplex_univ`).
-
-Moreover (`ConstCoeffOp.mem_minimal_of_support_subset`): if `u ∈ D(A_max(E))` vanishes a.e.
-outside a compact subset of an open `Ω`, then `u|_Ω ∈ D(A_min(Ω))` and `A_min(u|_Ω) = (A u)|_Ω`.
-The same holds starting from `Ω` (`ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`): an
-element of `D(A_max(Ω))` vanishing a.e. outside a compact subset of `Ω` lies in `D(A_min(Ω))`
-(its extension by zero, `extendL2F`, lies in `D(A_max(E))`).
-
-## Proof
-
-1. **Mollification** (`kconv`): `(k ⋆ f)(x) = ∫ k(x - t) f(t) dt` with a real smooth compactly
-   supported kernel `k`. It is smooth with `∂^{vs}(k ⋆ f) = (∂^{vs} k) ⋆ f` (`iterDeriv_kconv`),
-   bounded on `L²` by **Young's inequality** `‖k ⋆ f‖₂ ≤ ‖k‖₁ ‖f‖₂` (`eLpNorm_kconv_le`), and
-   for the normalized bumps `ρ_m` (radius `→ 0`) `ρ_m ⋆ f → f` in `L²` (`tendsto_eLpNorm_kconv_sub`).
-   For `u ∈ D(A_max)`, `A (ρ ⋆ u) = ρ ⋆ A_max u` pointwise (`ConstCoeffOp.apply_kconv`).
-2. **Cut-off** (`cutoff`): `χ_R = χ(·/R)` with `χ = 1` on the unit ball; by the Leibniz rule
-   for iterated directional derivatives (`iterDeriv_mul`, a sum over the splittings of the
-   list of directions) and the uniform bounds on `∂^a χ_R` (`R ≥ 1`), every derivative of
-   `(1 - χ_R) g` is dominated by the tails `1_{|x| ≥ R} ∂^b g`, which tend to `0` in `L²` when all
-   derivatives of `g` are in `L²` (`tendsto_eLpNorm_iterDeriv_tcut_mul`).
-3. Mollify first (all derivatives of `ρ ⋆ u` are in `L²` by Young), then cut off.
-
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §4.4 (convolution and regularization), §9.1 (density of `C_c^∞(ℝⁿ)` by mollification and
-  cut-off)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (`HΛᵏ` and `H̊Λᵏ`)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.minimal_univ_eq_maximal_univ`: `A_min(E) = A_max(E)`.
+* `ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`: compact support gives `D(A_min(Ω))`.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate Convolution Topology LinearPMap
@@ -80,8 +42,6 @@ theorem kconv_apply (k : E → ℝ) (f : E → 𝕜) (x : E) :
   simp [kconv, convolution_def, RCLike.real_smul_eq_coe_mul]
 
 omit [NormedSpace ℝ E] [FiniteDimensional ℝ E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- The convolution integrand is integrable (`k` continuous with compact support, `f` locally
-integrable). -/
 theorem integrable_kconv_integrand {k : E → ℝ} (hk : Continuous k) (hks : HasCompactSupport k)
     {f : E → 𝕜} (hf : LocallyIntegrable f volume) (x : E) :
     Integrable (fun t => (k (x - t) : 𝕜) * f t) := by
@@ -110,9 +70,6 @@ theorem continuous_kconv {k : E → ℝ} (hk : Continuous k) (hks : HasCompactSu
     {f : E → 𝕜} (hf : LocallyIntegrable f volume) : Continuous (kconv k f) :=
   hks.continuous_convolution_right _ hf hk
 
-/-- **Young's inequality** for `L² ⋆ L¹` (squared, `lintegral` form): by Cauchy–Schwarz against
-the measure `|k(x - t)| dt` of total mass `‖k‖₁`, `|(k ⋆ f)(x)|² ≤ ‖k‖₁ ∫ |k(x - t)| |f(t)|² dt`,
-and Tonelli. -/
 theorem lintegral_sq_kconv_le {k : E → ℝ} (hk : Continuous k) (hks : HasCompactSupport k)
     {f : E → 𝕜}
     (hf : AEStronglyMeasurable f volume) :
@@ -167,7 +124,6 @@ theorem lintegral_sq_kconv_le {k : E → ℝ} (hk : Continuous k) (hks : HasComp
     _ = K ^ 2 * ∫⁻ t, ‖f t‖ₑ ^ (2 : ℝ) := by
       rw [lintegral_const_mul' _ _ hKtop, ← mul_assoc, sq]
 
-/-- **Young's inequality** `‖k ⋆ f‖₂ ≤ ‖k‖₁ ‖f‖₂`. -/
 theorem eLpNorm_kconv_le {k : E → ℝ} (hk : Continuous k) (hks : HasCompactSupport k)
     {f : E → 𝕜} (hf : AEStronglyMeasurable f volume) :
     eLpNorm (kconv k f) 2 volume ≤ eLpNorm k 1 volume * eLpNorm f 2 volume := by
@@ -198,7 +154,6 @@ theorem contDiff_kconv {k : E → ℝ} (hk : IsTest (univ : Set E) k) {f : E →
     (hf : LocallyIntegrable f volume) : ContDiff ℝ ∞ (kconv k f) :=
   hk.hasCompactSupport.contDiff_convolution_right _ hf hk.contDiff
 
-/-- `∂_v (k ⋆ f) = (∂_v k) ⋆ f`. -/
 theorem fderiv_kconv {k : E → ℝ} (hk : IsTest (univ : Set E) k) {f : E → 𝕜}
     (hf : LocallyIntegrable f volume) (y v : E) :
     fderiv ℝ (kconv k f) y v = kconv (fun x => fderiv ℝ k x v) f y := by
@@ -208,7 +163,6 @@ theorem fderiv_kconv {k : E → ℝ} (hk : IsTest (univ : Set E) k) {f : E → �
     (hk1.continuous_fderiv one_ne_zero)]
   rfl
 
-/-- `∂^{vs} (k ⋆ f) = (∂^{vs} k) ⋆ f`. -/
 theorem iterDeriv_kconv {k : E → ℝ} (hk : IsTest (univ : Set E) k) {f : E → 𝕜}
     (hf : LocallyIntegrable f volume) (vs : List E) :
     iterDeriv vs (kconv k f) = kconv (iterDeriv vs k) f := by
@@ -221,7 +175,6 @@ theorem iterDeriv_kconv {k : E → ℝ} (hk : IsTest (univ : Set E) k) {f : E �
     rw [ih, fderiv_kconv (hk.iterDeriv vs) hf]
     rfl
 
-/-- All derivatives of `k ⋆ f` are in `L²` (`f ∈ L²`, Young). -/
 theorem memLp_iterDeriv_kconv {k : E → ℝ} (hk : IsTest (univ : Set E) k) {f : E → 𝕜}
     (hf : MemLp f 2 volume) (vs : List E) : MemLp (iterDeriv vs (kconv k f)) 2 volume := by
   rw [iterDeriv_kconv hk (hf.locallyIntegrable (by norm_num))]
@@ -234,13 +187,10 @@ theorem memLp_of_isTest {Ω : Set E} {f : E → 𝕜} (hf : IsTest Ω f) : MemLp
   hf.continuous.memLp_of_hasCompactSupport hf.hasCompactSupport
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- `conj f · g` is integrable for `f, g ∈ L²`. -/
 theorem integrable_conj_mul_of_memLp {f g : E → 𝕜} (hf : MemLp f 2 volume)
     (hg : MemLp g 2 volume) : Integrable (fun x => conj (f x) * g x) :=
   hf.star.integrable_mul hg
 
-/-- One entry of `A` applied to `k ⋆ f` is the pairing of `f` with the formal adjoint entry
-applied to the reflected kernel `k(y - ·)`. -/
 theorem applyEntry_kconv (P : List (List E × 𝕜)) {k : E → ℝ} (hk : IsTest (univ : Set E) k)
     {f : E → 𝕜} (hf : MemLp f 2 volume) (y : E) :
     ConstCoeffOp.applyEntry P (kconv k f) y =
@@ -290,8 +240,6 @@ theorem applyEntry_kconv (P : List (List E × 𝕜)) {k : E → ℝ} (hk : IsTes
     rw [e]
     simp only [integral_conj]
 
-/-- **`A` commutes with convolution on `D(A_max(E))`**: if `A u = w` in the sense of
-distributions on `E`, then `A (k ⋆ u) = k ⋆ w` pointwise, for a real test kernel `k`. -/
 theorem ConstCoeffOp.apply_kconv {ι κ : Type*} [Fintype ι] [Fintype κ] [DecidableEq κ]
     (A : ConstCoeffOp E 𝕜 ι κ) {k : E → ℝ} (hk : IsTest (univ : Set E) k)
     {u : ι → E → 𝕜} (hu : ∀ i, MemLp (u i) 2 volume) {w : κ → E → 𝕜}
@@ -330,7 +278,6 @@ theorem ConstCoeffOp.apply_kconv {ι κ : Type*} [Fintype ι] [Fintype κ] [Deci
 
 /-! ### Convergence of mollifications in `L²` -/
 
-/-- The normalized bumps have `L¹` norm `1`. -/
 theorem eLpNorm_normed_one (φ : ContDiffBump (0 : E)) : eLpNorm (φ.normed volume) 1 volume = 1 := by
   rw [eLpNorm_one_eq_lintegral_enorm]
   have e : ∀ x, ‖φ.normed volume x‖ₑ = ENNReal.ofReal (φ.normed volume x) := fun x =>
@@ -340,8 +287,6 @@ theorem eLpNorm_normed_one (φ : ContDiffBump (0 : E)) : eLpNorm (φ.normed volu
     (Eventually.of_forall φ.nonneg_normed), φ.integral_normed, ENNReal.ofReal_one]
   all_goals exact φ.continuous_normed.aestronglyMeasurable
 
-/-- Pointwise and support estimates for a continuous compactly supported `g`: `ρ ⋆ g` is
-uniformly close to `g`, with support in a fixed ball, once the bump radius is small. -/
 theorem eLpNorm_kconv_sub_le_of_continuous {g : E → 𝕜} (hgc : Continuous g)
     (hgs : HasCompactSupport g) {ε : ℝ} (hε : 0 < ε) :
     ∃ η > 0, ∀ φ : ContDiffBump (0 : E), φ.rOut < η →
@@ -413,7 +358,6 @@ theorem tendsto_bumpSeq_rOut :
 theorem isTest_bumpSeq (m : ℕ) : IsTest (univ : Set E) ((bumpSeq m).normed volume) :=
   ⟨(bumpSeq m).contDiff_normed, (bumpSeq m).hasCompactSupport_normed, subset_univ _⟩
 
-/-- **Mollification converges in `L²`**: `ρ_m ⋆ f → f` for `f ∈ L²(E; 𝕜)`. -/
 theorem tendsto_eLpNorm_kconv_sub {f : E → 𝕜} (hf : MemLp f 2 volume) :
     Tendsto (fun m => eLpNorm (kconv ((bumpSeq m).normed volume) f - f) 2 volume) atTop (𝓝 0) := by
   refine ENNReal.tendsto_nhds_zero.2 fun ε hε => ?_
@@ -457,8 +401,7 @@ theorem tendsto_eLpNorm_kconv_sub {f : E → 𝕜} (hf : MemLp f 2 volume) :
 
 /-! ## The Leibniz rule for iterated directional derivatives -/
 
-/-- The splittings of a list of directions between two factors: `∂^{v :: vs} (θ g)` distributes
-`∂_v` on either factor of each term of `∂^{vs} (θ g)`. -/
+/-- The splittings of a list of directions between two factors (the Leibniz rule). -/
 def splits : List E → List (List E × List E)
   | [] => [([], [])]
   | v :: vs => (splits vs).flatMap fun p => [(v :: p.1, p.2), (p.1, v :: p.2)]
@@ -520,7 +463,6 @@ theorem fderiv_list_sum {α : Type*} (L : List α) {F : α → E → 𝕜} (hF :
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- **Leibniz rule**: `∂^{vs} (θ g) = Σ_{(a, b) ∈ splits vs} ∂^a θ · ∂^b g`. -/
 theorem iterDeriv_mul {θ g : E → 𝕜} (hθ : ContDiff ℝ ∞ θ) (hg : ContDiff ℝ ∞ g) (vs : List E) :
     iterDeriv vs (fun x => θ x * g x) =
       fun x => ((splits vs).map fun p => iterDeriv p.1 θ x * iterDeriv p.2 g x).sum := by
@@ -587,7 +529,6 @@ theorem hasCompactSupport_cutoff {R : ℝ} (hR : 0 < R) : HasCompactSupport (cut
   rw [le_inv_mul_iff₀ hR]; linarith
 
 omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- **Uniform bounds on the derivatives of the cut-offs** `χ_R`, `R ≥ 1`. -/
 theorem exists_bound_iterDeriv_cutoff :
     ∃ M : List E → ℝ, ∀ a, 0 ≤ M a ∧ ∀ R : ℝ, 1 ≤ R → ∀ x : E, |iterDeriv a (cutoff R) x| ≤ M a := by
   have hT : IsTest (univ : Set E) ((cutBump : ContDiffBump (0 : E)) : E → ℝ) :=
@@ -671,7 +612,6 @@ section Tendsto
 
 variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
 
-/-- The `L²` tails `1_{|x| ≥ R} h` of `h ∈ L²(E)` tend to `0` as `R → ∞`. -/
 theorem tendsto_eLpNorm_indicator_tail {h : E → F} (hh : MemLp h 2 volume) :
     Tendsto (fun R : ℝ => eLpNorm ({x | R ≤ ‖x‖}.indicator h) 2 volume) atTop (𝓝 0) := by
   refine ENNReal.tendsto_nhds_zero.2 fun ε hε => ?_
@@ -768,8 +708,6 @@ theorem tendsto_eLpNorm_of_norm_le {G : Type*} [NormedAddCommGroup G] {f : α �
 
 end Tendsto
 
-/-- **The cut-off error vanishes in `L²`**: if every derivative of the smooth `g` is in `L²(E)`,
-then every derivative of `(1 - χ_R) g` tends to `0` in `L²(E)` as `R → ∞` (`R = m + 1`). -/
 theorem tendsto_eLpNorm_iterDeriv_tcut_mul {g : E → 𝕜} (hg : ContDiff ℝ ∞ g)
     (hgL : ∀ l : List E, MemLp (iterDeriv l g) 2 volume) (vs : List E) :
     Tendsto (fun m : ℕ => eLpNorm (iterDeriv vs (fun x => tcut 𝕜 ((m : ℝ) + 1) x * g x)) 2 volume)
@@ -806,7 +744,6 @@ theorem tendsto_eLpNorm_iterDeriv_tcut_mul {g : E → 𝕜} (hg : ContDiff ℝ �
         (measurableSet_le measurable_const measurable_norm))).symm
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- Convergence in `L²(Ω; 𝕜^ι)` from componentwise convergence of representatives. -/
 theorem tendsto_toL2F {Ω : Set E} {ι : Type*} [Fintype ι] {F : ℕ → ι → E → 𝕜}
     (hF : ∀ m i, MemLp (F m i) 2 (volume.restrict Ω)) (v : L2F 𝕜 Ω ι)
     (h : ∀ i, Tendsto (fun m => eLpNorm (F m i - (v i : E → 𝕜)) 2 (volume.restrict Ω)) atTop
@@ -841,8 +778,6 @@ namespace ConstCoeffOp
 
 variable {ι κ : Type*} [Fintype ι] [Fintype κ]
 
-/-- **Cut-off step**: a smooth field all of whose derivatives are in `L²(E)` lies, with its image
-under `A`, in the closure of the test graph of `A` on `E`. -/
 theorem mem_closure_testGraph_univ (A : ConstCoeffOp E 𝕜 ι κ) {g : ι → E → 𝕜}
     (hg : ∀ i, ContDiff ℝ ∞ (g i)) (hgL : ∀ i (l : List E), MemLp (iterDeriv l (g i)) 2 volume)
     (h1 : ∀ i, MemLp (g i) 2 (volume.restrict univ))
@@ -923,7 +858,6 @@ theorem eLpNorm_restrict_univ (f : E → 𝕜) :
     eLpNorm f 2 (volume.restrict univ) = eLpNorm f 2 volume := by
   rw [Measure.restrict_univ]
 
-/-- The weak identity defining `D(A_max(E))`, as integrals over `E`. -/
 theorem maximal_univ_weak (A : ConstCoeffOp E 𝕜 ι κ) (u : (A.maximal univ).domain)
     (ψ : κ → E → 𝕜) (hψ : IsTestField (univ : Set E) ψ) :
     ∑ j, ∫ x, conj ((A.maximal univ u : L2F 𝕜 univ κ) j x) * ψ j x =
@@ -932,9 +866,6 @@ theorem maximal_univ_weak (A : ConstCoeffOp E 𝕜 ι κ) (u : (A.maximal univ).
   rw [inner_testField, inner_testField] at h
   simpa only [Measure.restrict_univ] using h
 
-/-- **Mollification step**: for `u ∈ D(A_max(E))`, the graph point `(u, A_max u)` is a limit of
-graph points `(ρ_m ⋆ u, ρ_m ⋆ A_max u)` of smooth fields all of whose derivatives are in `L²`;
-with the cut-off step, it lies in the closure of the test graph. -/
 theorem mem_closure_testGraph_of_mem_maximal_univ (A : ConstCoeffOp E 𝕜 ι κ)
     (u : (A.maximal univ).domain) :
     ((u : L2F 𝕜 univ ι), A.maximal univ u) ∈ (A.testGraph univ).topologicalClosure := by
@@ -968,8 +899,7 @@ theorem mem_closure_testGraph_of_mem_maximal_univ (A : ConstCoeffOp E 𝕜 ι κ
       exact tendsto_eLpNorm_kconv_sub (hw j)
   exact (Submodule.isClosed_topologicalClosure _).mem_of_tendsto hlim (Eventually.of_forall hmem)
 
-/-- **`A_min(E) = A_max(E)`**: on the whole space, for a constant-coefficient operator of any
-order, the closure of `A` on `C_c^∞(E)` is the weak (distributional) realization: `H̊ = H`. -/
+/-- **`A_min(E) = A_max(E)`** for a constant-coefficient operator of any order. -/
 theorem minimal_univ_eq_maximal_univ (A : ConstCoeffOp E 𝕜 ι κ) :
     A.minimal univ = A.maximal univ := by
   refine le_antisymm (A.minimal_le_maximal isOpen_univ) (LinearPMap.le_of_le_graph ?_)
@@ -994,7 +924,6 @@ theorem coeFn_restrictL2F (Ω : Set E) (v : L2F 𝕜 (univ : Set E) ι) (i : ι)
 
 omit [FiniteDimensional ℝ E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `L²(E)` convergence of representatives gives convergence of the restrictions in `L²(Ω)`. -/
 theorem tendsto_restrictL2F {Ω : Set E} (F : ℕ → ι → E → 𝕜) (v : L2F 𝕜 (univ : Set E) ι)
     (hF : ∀ m i, MemLp (F m i) 2 (volume.restrict Ω))
     (h : ∀ i, Tendsto (fun m => eLpNorm (F m i - (v i : E → 𝕜)) 2 volume) atTop (𝓝 0)) :
@@ -1008,10 +937,6 @@ theorem tendsto_restrictL2F {Ω : Set E} (F : ℕ → ι → E → 𝕜) (v : L2
   exact tendsto_of_tendsto_of_tendsto_of_le_of_le tendsto_const_nhds (h i) (fun _ => zero_le)
     fun m => eLpNorm_mono_measure _ Measure.restrict_le_self
 
-/-- **Compactly supported elements of `D(A_max(E))` restrict into `D(A_min(Ω))`**: if
-`u ∈ D(A_max(E))` vanishes a.e. outside a compact `K ⊆ Ω` (`Ω` open), then
-`u|_Ω ∈ D(A_min(Ω))` and `A_min (u|_Ω) = (A_max u)|_Ω`. (The mollifications `ρ_m ⋆ u` are test
-fields on `Ω` once the bump radius is below `dist(K, ∂Ω)`, and converge in the graph norm.) -/
 theorem mem_minimal_of_support_subset (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set E} (hΩ : IsOpen Ω)
     {K : Set E} (hK : IsCompact K) (hKΩ : K ⊆ Ω) (u : (A.maximal univ).domain)
     (hu : ∀ i, ∀ᵐ x, x ∉ K → (u : L2F 𝕜 univ ι) i x = 0) :
@@ -1081,7 +1006,6 @@ theorem mem_minimal_of_support_subset (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set 
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] [Fintype κ] in
-/-- `A f` at `x` only depends on the germ of `f` at `x`. -/
 theorem apply_congr_nhds (A : ConstCoeffOp E 𝕜 ι κ) {f g : ι → E → 𝕜} {x : E}
     (h : ∀ i, f i =ᶠ[𝓝 x] g i) (j : κ) : A.apply f j x = A.apply g j x := by
   simp only [apply, applyEntry]
@@ -1105,7 +1029,6 @@ theorem coeFn_extendL2F {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω �
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] in
-/-- Restricting the extension by zero gives back the field. -/
 theorem restrictL2F_extendL2F {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω ι) :
     restrictL2F Ω (extendL2F hΩ v) = v := by
   refine PiLp.ext fun i => Lp.ext ?_
@@ -1114,7 +1037,6 @@ theorem restrictL2F_extendL2F {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F �
   rw [h1, h2, indicator_of_mem h3]
 
 omit [FiniteDimensional ℝ E] in
-/-- `⟪ũ, φ⟫_{L²(E)} = Σᵢ ∫_Ω conj uᵢ φᵢ` for the extension by zero `ũ`. -/
 theorem inner_extendL2F_testField {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F 𝕜 Ω ι)
     {φ : ι → E → 𝕜} (hφ : IsTestField (univ : Set E) φ) :
     ⟪extendL2F hΩ v, testField hφ⟫_𝕜 = ∑ i, ∫ x, conj (v i x) * φ i x ∂volume.restrict Ω := by
@@ -1126,10 +1048,7 @@ theorem inner_extendL2F_testField {Ω : Set E} (hΩ : MeasurableSet Ω) (v : L2F
   rw [hx]
   by_cases h : x ∈ Ω <;> simp [h]
 
-/-- **Compactly supported elements of `D(A_max(Ω))` lie in `D(A_min(Ω))`**: if `u ∈ D(A_max(Ω))`
-vanishes a.e. outside a compact `K ⊆ Ω` (`Ω` open), then `u ∈ D(A_min(Ω))` (and `A_min u = A_max u`).
-With a cut-off `χ ∈ C_c^∞(Ω)` equal to `1` near `K`, the extension by zero `ũ` satisfies
-`A_max(E) ũ = (χ A_max u)~` (test against `χ ψ`), so `mem_minimal_of_support_subset` applies. -/
+/-- **Compactly supported elements of `D(A_max(Ω))` lie in `D(A_min(Ω))`.** -/
 theorem mem_minimal_of_maximal_of_support_subset (A : ConstCoeffOp E 𝕜 ι κ) {Ω : Set E}
     (hΩ : IsOpen Ω) {K : Set E} (hK : IsCompact K) (hKΩ : K ⊆ Ω) (u : (A.maximal Ω).domain)
     (hu : ∀ i, ∀ᵐ x ∂volume.restrict Ω, x ∉ K → (u : L2F 𝕜 Ω ι) i x = 0) :
@@ -1198,8 +1117,6 @@ theorem mem_minimal_of_maximal_of_support_subset (A : ConstCoeffOp E 𝕜 ι κ)
 
 end ConstCoeffOp
 
-/-- **The minimal and maximal complexes of `E` coincide**, for every complex of
-constant-coefficient operators. -/
 theorem ConstCoeffComplex.minimalComplex_univ_eq_maximalComplex_univ
     (C : ConstCoeffComplex E 𝕜) :
     C.minimalComplex isOpen_univ = C.maximalComplex isOpen_univ := by
@@ -1208,7 +1125,6 @@ theorem ConstCoeffComplex.minimalComplex_univ_eq_maximalComplex_univ
   unfold ConstCoeffComplex.minimalComplex ConstCoeffComplex.maximalComplex
   congr 1
 
-/-- **The minimal and maximal de Rham complexes of `ℝⁿ` coincide.** -/
 theorem deRham_minimalComplex_univ_eq_maximalComplex_univ (n : ℕ) :
     (deRham 𝕜 n).minimalComplex isOpen_univ = (deRham 𝕜 n).maximalComplex isOpen_univ :=
   (deRham 𝕜 n).minimalComplex_univ_eq_maximalComplex_univ

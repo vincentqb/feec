@@ -6,52 +6,22 @@ public import Feec.Models.Cube.DeRhamIdentCutoff
 /-!
 # Rates of convergence on the cube for solutions with vanishing tangential traces
 
-This module proves the rates in `H̊Λ(Q)` of the higher-order methods of
-`Feec.Models.Cube.PolyRate` on `Q = (0, ½)ⁿ` for the natural class of `C^{s+2}` forms whose
-**tangential components vanish on the faces**, and derives them for the flat class
-`FEM.IsCsFormMin` (`C^{s+2}` forms on `ℝⁿ` vanishing outside `Q`):
+Rates `h^{s+1}` for the mixed Hodge Laplacian ([AFW2010], Thm 3.9) and the semi-discrete Hodge
+wave equation ([QuennevilleBelair2015], Thm 4.14) of the complexes `H̊Λ(Q)`, `Q = (0, ½)ⁿ`, for
+`C^{s+2}` solutions with vanishing tangential traces, a class strictly larger than the flat forms
+(zero outside `Q`).
 
-* `FEM.IsTangentialZero w`: for `j ∉ t` and `y ∈ cl Q` with `y_j ∈ {0, ½}`, `(w y)_t = 0`;
-  `extDeriv` preserves it (`IsTangentialZero.extDeriv`).
-* `FEM.IsCsFormTr s j L x`: `x = w|_Q` for a `C^{s+2}` `j`-form `w` with `IsTangentialZero w`
-  and `‖Dⁱw‖, ‖Dⁱ dw‖ ≤ L` on `cl Q` for `i ≤ s + 1` (sup bounds included). Satisfiable
-  (`exists_isCsFormTr`); it contains the flat class with the same bound
-  (`IsCsFormMin.isCsFormTr`: flatness and the mean value theorem bound the lower derivatives) and
-  is strictly larger (`isCsFormTr_normalWitness`, `not_isCsFormMin_normalWitness`: the `1`-form
-  `(∏_{j ≠ 0} sin 2πy_j) dx₀` has nonzero normal component on `∂Q`).
-* `IsCsFormTr.add`, `IsCsFormTr.smul` (the class is a cone, bounds add) and `IsCsFormMin.sub`
-  (differences of flat forms are flat).
-* **`IsCsFormTr.mem_domain`**, `IsCsFormTr.d_eq`: `x ∈ D(d_min) = H̊Λʲ(Q)` and
-  `d_min x = (dw)|_Q`, for `C¹` forms with bounded first derivatives
-  (`mem_minimal_of_isTangentialZero`; the cut-off argument of
-  `Feec.Models.Cube.DeRhamIdent.mem_closure_extDerivOp_of_tangential`, which needs `C^∞`, with
-  the cut-offs `χ_m w ∈ C¹_c(Q)` placed in `D(d_min)` by
-  `Feec.Domain.ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`).
-* **`IsTangentialZero.dof_eq_zero`**: the canonical-interpolant DOFs of `w` vanish on every face of
-  a boundary facet: a boundary facet lies in one face `{y_j = c}` of the cube
-  (`exists_face_of_isBoundaryFacet`), and a simplex there only sees the components `t` with
-  `j ∉ t`. So the interpolant has vanishing boundary DOFs (`globalInterp_mem_globalSpace₀_of_tr`)
-  and `exists_mem_polyMin_le_of_tr`, `IsCsFormTr.exists_mem_polyMin_le` give
-  `‖x − v‖, ‖d(x − v)‖ ≤ B_j L h^{s+1}` for some `v ∈ V̊ₕʲ`.
-* The rates on the new class ([AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14):
-  `mixed_rate_polyTr`, `mixed_rate_polyTr_of_polyOrderAt`, `norm_sub_le_windowTr_poly_smooth`;
-  order `h²` for the bottom row of Tables 5.1/6.1 in degree `1` and on the window of degrees
-  `0, 1` (`mixed_rate_lagrangeP2Tr`, `norm_sub_le_windowTr_lagrangeP2`).
-* The rates on the flat class, through `IsCsFormMin.isCsFormTr`:
-  `IsCsFormMin.exists_mem_polyMin_le`, the Jackson estimate `polyJacksonMin`,
-  `mixed_rate_polyMin`, `mixed_rate_polyMin_of_polyOrderAt`, `mixed_rate_lagrangeP2Min`,
-  `norm_sub_le_windowMin_poly_smooth_of_polyOrderAt`, `norm_sub_le_windowMin_lagrangeP2`.
+## Main results
+
+* `IsCsFormTr.mem_domain`: the `C^{s+2}` forms with vanishing tangential traces lie in `H̊Λ(Q)`.
+* `IsCsFormMin.isCsFormTr`, `not_isCsFormMin_normalWitness`: they strictly contain the flat forms.
+* `mixed_rate_polyTr`, `mixed_rate_polyMin`: the rate `h^{s+1}` of the mixed method.
+* `norm_sub_le_windowTr_poly_smooth`: the rate `h^{s+1}` of the semi-discrete Hodge wave equation.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9 (quasi-optimality of the mixed method)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (vanishing tangential
-  traces), Ch. 7 (approximation estimates)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.4 (cut-off arguments)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -77,7 +47,6 @@ theorem mem_closure_cubeDomain {y : Fin n → ℝ} :
 theorem convex_closure_cubeDomain : Convex ℝ (closure (cubeDomain n)) :=
   (convex_cubeDomain n).closure
 
-/-- A point of `cl Q` not in `Q` lies on a face `{y_j ∈ {0, ½}}`. -/
 theorem exists_face_of_mem_closure_of_notMem {y : Fin n → ℝ} (hy : y ∈ closure (cubeDomain n))
     (hyQ : y ∉ cubeDomain n) : ∃ j, y j = 0 ∨ y j = 1 / 2 := by
   have h := mem_closure_cubeDomain.1 hy
@@ -88,13 +57,11 @@ theorem exists_face_of_mem_closure_of_notMem {y : Fin n → ℝ} (hy : y ∈ clo
 
 /-! ### Forms with vanishing tangential components on the faces -/
 
-/-- The **tangential components of `w` vanish on the faces** of `Q = (0, ½)ⁿ`: for `j ∉ t` and
-`y ∈ cl Q` with `y_j ∈ {0, ½}`, `(w y)_t = 0` (`dx_t` is tangent to `{y_j = c}` iff `j ∉ t`). -/
+/-- The tangential components of `w` vanish on `∂Q`: `(w y)_t = 0` if `y_j ∈ {0, ½}`, `j ∉ t`. -/
 def IsTangentialZero (w : FormField n) : Prop :=
   ∀ y ∈ closure (cubeDomain n), ∀ (j : Fin n) (t : Finset (Fin n)), j ∉ t →
     (y j = 0 ∨ y j = 1 / 2) → w y t = 0
 
-/-- A form vanishing outside `Q` (continuous) has vanishing tangential components. -/
 theorem isTangentialZero_of_vanish {w : FormField n}
     (hsupp : ∀ y ∉ cubeDomain n, w y = 0) : IsTangentialZero w := by
   intro y hy j t _ hyj
@@ -105,8 +72,6 @@ theorem isTangentialZero_of_vanish {w : FormField n}
     · rw [h1] at this; exact lt_irrefl _ this.2
   rw [hsupp y hyQ]; rfl
 
-/-- **The derivative along a face of a function vanishing on the face vanishes**: if
-`f = 0` on `{y ∈ cl Q : y_j = c}` and `i ≠ j`, then `∂ᵢ f = 0` there (one-sided derivative). -/
 theorem partialDeriv_eq_zero_of_face {f : (Fin n → ℝ) → ℝ} {j i : Fin n} (hij : i ≠ j) {c : ℝ}
     {y : Fin n → ℝ} (hy : y ∈ closure (cubeDomain n)) (hyj : y j = c)
     (hf0 : ∀ z ∈ closure (cubeDomain n), z j = c → f z = 0)
@@ -146,8 +111,6 @@ theorem partialDeriv_eq_zero_of_face {f : (Fin n → ℝ) → ℝ} {j i : Fin n}
     exact (uniqueDiffOn_Icc (by norm_num)).uniqueDiffWithinAt
       ⟨by norm_num, le_rfl⟩ |>.eq_deriv _ hl.hasDerivWithinAt hw
 
-/-- **`d` preserves vanishing tangential traces**: the tangential components of `dw` are
-tangential derivatives of tangential components of `w`. -/
 theorem IsTangentialZero.extDeriv {w : FormField n} (hw : Differentiable ℝ w)
     (h : IsTangentialZero w) : IsTangentialZero (FiniteElement.extDeriv w) := by
   intro y hy j t hjt hyj
@@ -163,10 +126,7 @@ theorem IsTangentialZero.extDeriv {w : FormField n} (hw : Differentiable ℝ w)
 
 /-! ### The class `IsCsFormTr` -/
 
-/-- `x ∈ L²(Q; Λʲ)` is a `C^{s+2}` form of degree `j` **with vanishing tangential traces on
-`∂Q`** (`IsTangentialZero`) whose derivatives of order `≤ s + 1` (including the values) and those
-of its exterior derivative are bounded by `L` on `cl Q` (trivially true in negative degrees).
-No condition is put on the normal components. -/
+/-- `x` is a `C^{s+2}` form with vanishing tangential traces and derivatives bounded by `L`. -/
 def IsCsFormTr (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
@@ -182,7 +142,6 @@ theorem IsCsFormTr.mono {s : ℕ} {j : ℤ} {L L' : ℝ} {x : L2F ℝ (cubeDomai
   · exact Or.inr ⟨k, hk, w, hw, hdeg, htan, fun i hi y hy =>
       ⟨(hL i hi y hy).1.trans hLL', (hL i hi y hy).2.trans hLL'⟩, he⟩
 
-/-- The class with vanishing traces is contained in the class with no boundary condition. -/
 theorem IsCsFormTr.isCsForm {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)}
     (hx : IsCsFormTr s j L x) : IsCsForm s j L x := by
   rcases hx with hj | ⟨k, hk, w, hw, hdeg, -, hL, he⟩
@@ -190,7 +149,6 @@ theorem IsCsFormTr.isCsForm {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDoma
   · exact Or.inr ⟨k, hk, w, hw, hdeg, fun y hy => (hL (s + 1) le_rfl y hy).1,
       fun y hy => (hL (s + 1) le_rfl y hy).2, he⟩
 
-/-- A bound on the derivatives of order `≤ m` on the compact `cl Q`. -/
 theorem exists_bound_iteratedFDeriv_le {m : ℕ} {w : FormField n} (hw : ContDiff ℝ m w) :
     ∃ L, 0 ≤ L ∧ ∀ i ≤ m, ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ i w y‖ ≤ L := by
   have hb : ∀ i ∈ Finset.range (m + 1), ∃ L, 0 ≤ L ∧
@@ -201,8 +159,6 @@ theorem exists_bound_iteratedFDeriv_le {m : ℕ} {w : FormField n} (hw : ContDif
   have hi' : i ∈ Finset.range (m + 1) := Finset.mem_range_succ_iff.2 hi
   exact (hB i hi' y hy).trans (Finset.single_le_sum hB0 hi')
 
-/-- **Every `C^{s+2}` form with vanishing tangential traces is `IsCsFormTr s`** for some bound
-`L ≥ 0`. -/
 theorem exists_isCsFormTr (s : ℕ) {k : ℕ} {w : FormField n}
     (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y))
     (htan : IsTangentialZero w) :
@@ -219,7 +175,6 @@ theorem exists_isCsFormTr (s : ℕ) {k : ℕ} {w : FormField n}
     fun i hi y hy => ⟨(hL i hi y hy).trans (le_max_left _ _),
       (hL' i hi y hy).trans (le_max_right _ _)⟩, rfl⟩⟩
 
-/-- The zero form is `IsCsFormTr` with every bound `L ≥ 0`. -/
 theorem isCsFormTr_zero (s : ℕ) (k : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
     IsCsFormTr s (k : ℤ) L (0 : L2F ℝ (cubeDomain n) (formIdx n k)) := by
   refine Or.inr ⟨k, rfl, 0, contDiff_const, fun y t _ => rfl, fun y _ j t _ _ => rfl,
@@ -230,7 +185,6 @@ theorem isCsFormTr_zero (s : ℕ) (k : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
     simp only [iteratedFDeriv_zero, Pi.zero_apply, norm_zero, and_self, hL0]
   · exact (map_zero _).symm
 
-/-- **Scaling of the class**: `c • x` is `IsCsFormTr` with bound `|c| L`. -/
 theorem IsCsFormTr.smul {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)}
     (hx : IsCsFormTr s j L x) (c : ℝ) : IsCsFormTr s j (|c| * L) (c • x) := by
   rcases hx with hj | ⟨k, hk, w, hw, hdeg, htan, hL, rfl⟩
@@ -252,13 +206,11 @@ theorem IsCsFormTr.smul {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain n
     exact mul_le_mul_of_nonneg_left (hL i hi y hy).2 (abs_nonneg c)
   · rw [← map_smul]; rfl
 
-/-- `d` is additive on differentiable form fields. -/
 theorem extDeriv_add_eq {w w' : FormField n} (hw : Differentiable ℝ w)
     (hw' : Differentiable ℝ w') :
     FiniteElement.extDeriv (w + w') = FiniteElement.extDeriv w + FiniteElement.extDeriv w' :=
   funext fun x => extDeriv_add_apply (hw x) (hw' x)
 
-/-- `d` commutes with differences of differentiable form fields. -/
 theorem extDeriv_sub_eq {w w' : FormField n} (hw : Differentiable ℝ w)
     (hw' : Differentiable ℝ w') :
     FiniteElement.extDeriv (w - w') = FiniteElement.extDeriv w - FiniteElement.extDeriv w' := by
@@ -269,7 +221,6 @@ theorem extDeriv_sub_eq {w w' : FormField n} (hw : Differentiable ℝ w)
     extDeriv_smul_const_apply _ (hw' x)]
   simp [sub_eq_add_neg]
 
-/-- **Sums in the class**: `x + y` is `IsCsFormTr` with bound `L + L'`. -/
 theorem IsCsFormTr.add {s : ℕ} {j : ℤ} {L L' : ℝ} {x y : L2F ℝ (cubeDomain n) (formIdx n j)}
     (hx : IsCsFormTr s j L x) (hy : IsCsFormTr s j L' y) : IsCsFormTr s j (L + L') (x + y) := by
   rcases hx with hj | ⟨k, hk, w, hw, hdeg, htan, hL, rfl⟩
@@ -295,7 +246,6 @@ theorem IsCsFormTr.add {s : ℕ} {j : ℤ} {L L' : ℝ} {x y : L2F ℝ (cubeDoma
     exact (norm_add_le _ _).trans (add_le_add (hL i hi y hy).2 (hL' i hi y hy).2)
   · rw [← map_add]; rfl
 
-/-- **Differences in the flat class**: `x − y` is `IsCsFormMin` with bound `L + L'`. -/
 theorem IsCsFormMin.sub {s : ℕ} {j : ℤ} {L L' : ℝ} {x y : L2F ℝ (cubeDomain n) (formIdx n j)}
     (hx : IsCsFormMin s j L x) (hy : IsCsFormMin s j L' y) : IsCsFormMin s j (L + L') (x - y) := by
   rcases hx with hj | ⟨k, hk, w, hw, hdeg, hsupp, hL, hdL, rfl⟩
@@ -319,7 +269,6 @@ theorem IsCsFormMin.sub {s : ℕ} {j : ℤ} {L L' : ℝ} {x y : L2F ℝ (cubeDom
     exact (norm_sub_le _ _).trans (add_le_add (hdL y hy) (hdL' y hy))
   · rw [← map_sub]; rfl
 
-/-- A component of `formL2` vanishes if the component of the form vanishes identically. -/
 theorem formL2_apply_eq_zero {j : ℤ} {w : contForms n} {t : formIdx n j}
     (h : ∀ y, (w : FormField n) y t.1 = 0) :
     formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j w t = 0 := by
@@ -330,7 +279,6 @@ theorem formL2_apply_eq_zero {j : ℤ} {w : contForms n} {t : formIdx n j}
 
 /-! ### Flat forms are in the class, with the same bound -/
 
-/-- `update y 0 ½` lies in `cl Q` for `y ∈ cl Q`. -/
 theorem update_mem_closure_cubeDomain [NeZero n] {y : Fin n → ℝ}
     (hy : y ∈ closure (cubeDomain n)) :
     Function.update y 0 (1 / 2) ∈ closure (cubeDomain n) := by
@@ -350,9 +298,6 @@ theorem norm_update_sub_le [NeZero n] {y : Fin n → ℝ} (hy : y ∈ closure (c
     linarith [h0.1]
   · simp [Function.update_of_ne hi]
 
-/-- **Derivatives of a field vanishing beyond the face `{y₀ = ½}`**: if `f = 0` on `{y₀ > ½}`
-and `‖D^p f‖ ≤ L` on `cl Q`, then `‖Dⁱ f‖ ≤ L` on `cl Q` for every `i ≤ p` (`Dⁱ f = 0` on the face
-by continuity, and the mean value theorem along a segment of length `≤ ½`). -/
 theorem norm_iteratedFDeriv_le_of_flat [NeZero n] {E : Type*} [NormedAddCommGroup E]
     [NormedSpace ℝ E] {f : (Fin n → ℝ) → E} {p : ℕ} (hf : ContDiff ℝ p f)
     (h0 : ∀ z : Fin n → ℝ, 1 / 2 < z 0 → f z = 0) {L : ℝ}
@@ -405,10 +350,7 @@ theorem norm_iteratedFDeriv_le_of_flat [NeZero n] {E : Type*} [NormedAddCommGrou
       _ ≤ L * (1 / 2) := mul_le_mul_of_nonneg_left (norm_update_sub_le hy) hL0
       _ ≤ L := by linarith
 
-/-- **The flat class is contained in `IsCsFormTr`, with the same bound**: a `C^{s+2}` form
-vanishing outside `Q` has vanishing tangential traces, and its derivatives of order `≤ s + 1`
-(and those of `dw`) are bounded by the bound `L` of the `(s+1)`-st ones
-(`norm_iteratedFDeriv_le_of_flat`). -/
+/-- **The forms vanishing outside `Q` are in `IsCsFormTr`, with the same bound.** -/
 theorem IsCsFormMin.isCsFormTr [NeZero n] {s : ℕ} {j : ℤ} {L : ℝ}
     {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsCsFormMin s j L x) : IsCsFormTr s j L x := by
   rcases hx with hj | ⟨k, hk, w, hw, hdeg, hsupp, hL, hL', he⟩
@@ -439,8 +381,7 @@ theorem IsCsFormMin.isCsFormTr [NeZero n] {s : ℕ} {j : ℤ} {L : ℝ}
 
 /-! ### A non-flat form of the class -/
 
-/-- **The witness**: the `1`-form `(∏_{j ≠ 0} sin 2πy_j) dx₀`, whose only (normal) component on
-the faces `{y₀ ∈ {0, ½}}` does not vanish; its tangential components vanish on all faces. -/
+/-- The `1`-form `(∏_{j ≠ 0} sin 2πy_j) dx₀`, a witness with a nonzero normal component on `∂Q`. -/
 def normalWitness [NeZero n] : FormField n := fun y t =>
   if t = {0} then ∏ j ∈ Finset.univ.erase (0 : Fin n), Real.sin (2 * Real.pi * y j) else 0
 
@@ -485,7 +426,6 @@ theorem normalWitnessPoint_mem_closure [NeZero n] :
 theorem normalWitnessPoint_notMem [NeZero n] : normalWitnessPoint (n := n) ∉ cubeDomain n :=
   fun h => by have := (h 0 (mem_univ 0)).1; simp [normalWitnessPoint] at this
 
-/-- **The normal component of the witness does not vanish on `∂Q`.** -/
 theorem normalWitness_ne_zero [NeZero n] :
     normalWitness normalWitnessPoint ({0} : Finset (Fin n)) ≠ 0 := by
   simp only [normalWitness, ↓reduceIte]
@@ -495,8 +435,6 @@ theorem normalWitness_ne_zero [NeZero n] :
   rw [show 2 * Real.pi * (1 / 8) = Real.pi / 4 by ring, Real.sin_pi_div_four]
   positivity
 
-/-- **The class is nonempty beyond the flat forms**: the witness lies in `IsCsFormTr s 1` for
-some bound. -/
 theorem isCsFormTr_normalWitness [NeZero n] (s : ℕ) : ∃ L, 0 ≤ L ∧ IsCsFormTr s 1 L
     (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) 1
       ⟨normalWitness, contDiff_normalWitness.continuous⟩) := by
@@ -504,8 +442,7 @@ theorem isCsFormTr_normalWitness [NeZero n] (s : ℕ) : ∃ L, 0 ≤ L ∧ IsCsF
     isDeg_normalWitness isTangentialZero_normalWitness
   exact_mod_cast h
 
-/-- **The witness is not flat**: it is not `IsCsFormMin s 1 L` for any `s, L` (every
-representative vanishing outside `Q` vanishes on `∂Q`, while the witness does not). -/
+/-- **The witness does not vanish outside `Q`**: it is not `IsCsFormMin s 1 L` for any `s, L`. -/
 theorem not_isCsFormMin_normalWitness [NeZero n] (s : ℕ) (L : ℝ) : ¬ IsCsFormMin s 1 L
     (formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) 1
       ⟨normalWitness, contDiff_normalWitness.continuous⟩) := by
@@ -536,8 +473,6 @@ theorem not_isCsFormMin_normalWitness [NeZero n] (s : ℕ) (L : ℝ) : ¬ IsCsFo
 theorem Q_subset_cubeDomain : Geometry.Q (Fin n) ⊆ cubeDomain n := fun _ hy i _ =>
   Geometry.mem_Q.1 hy i
 
-/-- **`L²(Q)`-convergence of uniformly bounded, pointwise convergent sequences** (dominated
-convergence on the bounded cube). -/
 theorem tendsto_toLp_cubeDomain_of_bdd {g : ℕ → (Fin n → ℝ) → ℝ} {h : (Fin n → ℝ) → ℝ}
     (hg : ∀ m, MemLp (g m) 2 (volume.restrict (cubeDomain n)))
     (hh : MemLp h 2 (volume.restrict (cubeDomain n))) {K : ℝ}
@@ -560,7 +495,6 @@ theorem tendsto_toLp_cubeDomain_of_bdd {g : ℕ → (Fin n → ℝ) → ℝ} {h 
     (by filter_upwards [ae_restrict_mem (isOpen_cubeDomain n).measurableSet] with y hy
         exact hlim y hy)
 
-/-- Dominated convergence for the classes `formL2` of continuous forms. -/
 theorem tendsto_formL2_of_bdd (j : ℤ) {f : ℕ → contForms n} {g : contForms n} {K : ℝ}
     (hK : ∀ m, ∀ y ∈ cubeDomain n, ∀ t, |(f m : FormField n) y t| ≤ K)
     (hlim : ∀ y ∈ cubeDomain n, ∀ t,
@@ -576,8 +510,6 @@ theorem tendsto_formL2_of_bdd (j : ℤ) {f : ℕ → contForms n} {g : contForms
       (continuous_formComp g.2 s)) (fun m y hy => hK m y hy s.1)
     (fun y hy => hlim y hy s.1)
 
-/-- **A tangential component is `O(dist)` to its faces**: for `j ∉ r` and `y ∈ Q`,
-`|(w y)_r| ≤ L min(y_j, ½ - y_j)` if `‖Dw‖ ≤ L` on `cl Q`. -/
 theorem abs_le_of_isTangentialZero {w : FormField n} (hw : Differentiable ℝ w)
     (htan : IsTangentialZero w) {L : ℝ} (hD : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L)
     {y : Fin n → ℝ} (hy : y ∈ cubeDomain n) {j : Fin n} {r : Finset (Fin n)} (hjr : j ∉ r) :
@@ -614,13 +546,6 @@ theorem abs_le_of_isTangentialZero {w : FormField n} (hw : Differentiable ℝ w)
   rw [mul_min_of_nonneg _ _ hL0]
   exact le_min h1 h2
 
-/-- **Smooth forms with vanishing tangential traces lie in `H̊Λ(Q)`**, `C¹` version: a `C¹`
-`k`-form `w` on `ℝⁿ` with `IsTangentialZero w` and `‖w‖, ‖Dw‖, ‖dw‖ ≤ L` on `cl Q` restricts to
-`x ∈ D(d_min)` with `d_min x = (dw)|_Q`. The cut-offs `χ_m w` are `C¹` with compact support in
-`Q`, hence in `D(d_min)` (`mem_minimal_of_maximal_of_support_subset`); they converge to `w` with
-`d(χ_m w) = dχ_m ∧ w + χ_m dw → dw`, dominated by the commutator bound
-`|∂ⱼχ_m · w_{t∖j}| ≤ 4 M₀ L` (`abs_le_of_isTangentialZero`, `abs_deriv_eta_mul_le`); `d_min` is
-closed. -/
 theorem mem_minimal_of_isTangentialZero [NeZero n] {k : ℕ} {w : FormField n}
     (hw : ContDiff ℝ 1 w) (hdeg : ∀ y, IsDeg k (w y)) (htan : IsTangentialZero w) {L : ℝ}
     (hM : ∀ y ∈ closure (cubeDomain n), ‖w y‖ ≤ L)
@@ -762,7 +687,6 @@ theorem IsCsFormTr.mem_domain [NeZero n] {s : ℕ} {j : ℤ} {L : ℝ}
     (fun y hy => by simpa using (hL 0 (Nat.zero_le _) y hy).2)
   rw [deRham_minimalComplex_d]; exact h
 
-/-- **`d_min` of an `IsCsFormTr` class is the class of `dw`.** -/
 theorem IsCsFormTr.d_eq [NeZero n] {s k : ℕ} {L : ℝ} {w : FormField n}
     (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y))
     (hx : IsCsFormTr s k L
@@ -775,10 +699,6 @@ theorem IsCsFormTr.d_eq [NeZero n] {s k : ℕ} {L : ℝ} {w : FormField n}
 
 /-! ### Vanishing boundary DOFs of the canonical interpolant -/
 
-/-- **Tangential traces on a face of the cube**: if the vertices of `g` lie in `cl Q ∩ {y_j = c}`
-(`c ∈ {0, ½}`), a form with vanishing tangential components has zero tangential trace on the
-simplex of `g` (the edge vectors have `j`-th coordinate `0`, so every minor of a row set containing
-`j` vanishes, and the other components vanish). -/
 theorem IsTangentialZero.tangentialTraceEq_zero {k : ℕ} {w : FormField n}
     (htan : IsTangentialZero w) {g : Finset (Fin n → ℝ)} {j : Fin n} {c : ℝ}
     (hc : c = 0 ∨ c = 1 / 2) (hg : ∀ v ∈ g, v ∈ closure (cubeDomain n) ∧ v j = c) :
@@ -805,8 +725,6 @@ theorem IsTangentialZero.tangentialTraceEq_zero {k : ℕ} {w : FormField n}
       mul_zero]
   · rw [htan x hxQ j t hjt (by rw [hxj]; exact hc), zero_mul]
 
-/-- **A boundary facet of the cube mesh lies in a face** `{y_j = c}`, `c ∈ {0, ½}`: its barycentre
-lies on `∂Q`, so some coordinate is `0` or `½` there, and then at every vertex. -/
 theorem exists_face_of_isBoundaryFacet [NeZero n] {N : ℕ} {F : Finset (Fin n → ℝ)}
     (hF : (mesh n N).IsBoundaryFacet F) :
     ∃ j : Fin n, ∃ c : ℝ, (c = 0 ∨ c = 1 / 2) ∧
@@ -851,8 +769,6 @@ theorem exists_face_of_isBoundaryFacet [NeZero n] {N : ℕ} {F : Finset (Fin n �
       (sub_nonneg.2 (hv01 v hv).2)).1 hs v hv
     linarith
 
-/-- **The canonical DOFs of a form with vanishing tangential traces vanish on the faces of
-boundary facets** (any element family: the DOFs of `g` only see the tangential trace on `g`). -/
 theorem IsTangentialZero.dof_eq_zero [NeZero n] (E : LocalElement n) {N k : ℕ} {w : contForms n}
     (htan : IsTangentialZero (w : FormField n)) {F : Finset (Fin n → ℝ)}
     (hF : (mesh n N).IsBoundaryFacet F) {g : Finset (Fin n → ℝ)} (hg : g ⊆ F)
@@ -862,8 +778,6 @@ theorem IsTangentialZero.dof_eq_zero [NeZero n] (E : LocalElement n) {N k : ℕ}
     E.dof_congr i (htan.tangentialTraceEq_zero hc fun v hv => hFj v (hg hv))
   rw [h0, map_zero]
 
-/-- **The canonical interpolant of a form with vanishing tangential traces has vanishing boundary
-DOFs**: `Π_h w ∈ Λ̊_hᵏ`. -/
 theorem globalInterp_mem_globalSpace₀_of_tr [NeZero n] (E : LocalElement n) (N k : ℕ)
     {w : contForms n} (htan : IsTangentialZero (w : FormField n)) :
     (E.globalInterp (mesh n N) k w : E.Piecewise (mesh n N) k) ∈ E.globalSpace₀ (mesh n N) k := by
@@ -877,10 +791,6 @@ section Rates
 
 variable [NeZero n]
 
-/-- **Interpolation error with vanishing boundary DOFs for vanishing tangential traces**: for a
-`C^{s+2}` form `w` whose tangential components vanish on the faces (no condition on the normal
-components), the canonical interpolant lies in `V̊ₕᵏ ⊆ H̊Λᵏ(Q)` with the estimates of
-`exists_mem_poly_le`. -/
 theorem exists_mem_polyMin_le_of_tr (S : PolySeq) (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
     (hs' : polySpace n s (k + 1) ≤ S.space n (k + 1)) {w : FormField n}
     (hw : ContDiff ℝ (s + 2) w) (hdeg : ∀ x, IsDeg k (w x))
@@ -964,8 +874,6 @@ theorem exists_mem_polyMin_le_of_tr (S : PolySeq) (N k s : ℕ) (hs : polySpace 
     rw [hvol, polyInterpConst]; push_cast; ring
 
 
-/-- **Degreewise interpolation error of order `s + 1` with vanishing boundary DOFs** in
-`H̊Λ(Q)`, for forms with vanishing tangential traces. -/
 theorem IsCsFormTr.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
     (hS : PolyOrderAt n S s j)
     {L : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsCsFormTr s j L x) (hL0 : 0 ≤ L)
@@ -996,8 +904,6 @@ theorem IsCsFormTr.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
     ⟨_, hxj⟩ rfl, e]
   linarith
 
-/-- **Graph-norm distance of a smooth form with vanishing tangential traces to `V̊ₕʲ`**:
-`dist_V(σ, V̊ₕʲ) ≤ 2 B_j L h_N^{s+1}`. -/
 theorem IsCsFormTr.infDist_domainSub_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
     (hS : PolyOrderAt n S s j) {L : ℝ} {σ : (complexMin n).domainSpace j}
     (hσ : IsCsFormTr s j L ((complexMin n).domainIncl j σ)) (hL0 : 0 ≤ L) (N : ℕ) :
@@ -1010,9 +916,7 @@ theorem IsCsFormTr.infDist_domainSub_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ
 /-! ### The rates on the class `IsCsFormTr` -/
 
 variable (n) in
-/-- **The Jackson estimate of the complexes of `S` with vanishing boundary DOFs for forms with
-vanishing tangential traces**: the forms of class `IsCsFormTr s` of the degrees where `S`
-reproduces `P_s` at the order `h_N^{s+1}` (`IsCsFormTr.exists_mem_polyMin_le`). -/
+/-- The Jackson estimate of order `h_N^{s+1}`, with vanishing boundary DOFs, for `IsCsFormTr s`. -/
 def polyJacksonTr (S : PolySeq) : (polyFamilyMin n S).Jackson ℕ where
   meshSize := meshSize
   meshSize_nonneg N := (meshSize_pos N).le
@@ -1024,9 +928,6 @@ def polyJacksonTr (S : PolySeq) : (polyFamilyMin n S).Jackson ℕ where
   jackson s N _ _ _ hL hx := by
     rw [Real.rpow_natCast, ← mul_assoc]; exact hx.2.exists_mem_polyMin_le hx.1 hL N
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing traces on
-the cube**, with no hypothesis beyond the regularity of the solution (components `IsCsFormTr`,
-i.e. `C^{s+2}` with vanishing tangential traces on `∂Q`, no condition on the normal components). -/
 theorem mixed_rate_polyTr_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
     (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j) (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) :
@@ -1055,7 +956,7 @@ theorem mixed_rate_polyTr_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
   exact h
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing traces** for
-a sequence of order `s` in every degree; see `mixed_rate_polyTr_of_polyOrderAt`. -/
+a sequence of order `s` in every degree. -/
 theorem mixed_rate_polyTr (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
@@ -1076,9 +977,6 @@ theorem mixed_rate_polyTr (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k 
       K * L * meshSize N ^ (s + 1) :=
   mixed_rate_polyTr_of_polyOrderAt S (hS.polyOrderAt i) (hS.polyOrderAt j) hij hjk
 
-/-- **Second-order convergence of the mixed method of the bottom row of Tables 5.1/6.1 with
-vanishing boundary DOFs for the Hodge Laplacian on `1`-forms** (`H̊Λ(Q)`, data with vanishing
-tangential traces): error `≤ K L h_N²`. -/
 theorem mixed_rate_lagrangeP2Tr :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n 1)} {σ : (complexMin n).domainSpace 0}
     {u : (complexMin n).domainSpace 1} {q : (complexMin n).harmonic 1},
@@ -1102,7 +1000,6 @@ theorem mixed_rate_lagrangeP2Tr :
   mixed_rate_polyTr_of_polyOrderAt (n := n) PolySeq.lagrangeP2 lagrangeP2_polyOrderAt_zero
     lagrangeP2_polyOrderAt_one rfl rfl
 
-/-- **Graph-norm rate in the total space of a window of `H̊Λ(Q)`** for a sequence of order `s`. -/
 theorem exists_mem_windowTr_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
     (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i))
     (ζ : ((complexMin n).window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
@@ -1120,9 +1017,6 @@ theorem exists_mem_windowTr_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
         fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
     fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
-/-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation with vanishing
-traces** for the higher-order complexes, on every window of `H̊Λ(Q)` (components with vanishing
-tangential traces). -/
 theorem norm_sub_le_windowTr_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ} {a : ℤ}
     {m : ℕ} (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complexMin n).window a m).totalD.GraphSpace}
@@ -1146,8 +1040,8 @@ theorem norm_sub_le_windowTr_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ} 
     ⟨exists_mem_windowTr_poly_le hS (ξ τ) hL0 (fun i => (hreg τ hτ i).1) N,
       exists_mem_windowTr_poly_le hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
 
-/-- The case of a sequence of order `s` in every degree (`PolyOrder`) of
-`norm_sub_le_windowTr_poly_smooth_of_polyOrderAt`. -/
+/-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation in `H̊Λ(Q)`** for a
+sequence of order `s` and `ξ`, `ξ'` in `IsCsFormTr s`. -/
 theorem norm_sub_le_windowTr_poly_smooth {S : PolySeq} {s : ℕ} (hS : PolyOrder n S s) (a : ℤ)
     (m : ℕ) {t₀ t₁ : ℝ} {ξ ξ' : ℝ → ((complexMin n).window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
@@ -1169,10 +1063,6 @@ theorem norm_sub_le_windowTr_poly_smooth {S : PolySeq} {s : ℕ} (hS : PolyOrder
   norm_sub_le_windowTr_poly_smooth_of_polyOrderAt (fun _ => hS.polyOrderAt _) hξ hξh h0 hL0
     hreg N ht
 
-/-- **Second-order convergence of the semi-discrete Hodge wave equation for the bottom row of
-Tables 5.1/6.1 with vanishing boundary DOFs** on the window `H̊Λ⁰ → H̊Λ¹ → H̊Λ²` (degrees `0, 1`
-of `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ²`; [QuennevilleBelair2015], Thm 4.14): for `C³` data with vanishing
-tangential traces, `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² · 6 (B₀ + B₁) L h_N²`. -/
 theorem norm_sub_le_windowTr_lagrangeP2 {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complexMin n).window 0 2).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
@@ -1194,13 +1084,8 @@ theorem norm_sub_le_windowTr_lagrangeP2 {t₀ t₁ : ℝ}
   norm_sub_le_windowTr_poly_smooth_of_polyOrderAt lagrangeP2_polyOrderAt_window hξ hξh h0 hL0
     hreg N ht
 
-/-! ### The rates on the flat class `IsCsFormMin`
+/-! ### The rates on the flat class `IsCsFormMin` -/
 
-The flat class is contained in `IsCsFormTr` with the same bound (`IsCsFormMin.isCsFormTr`), so its
-rates are corollaries of those above. -/
-
-/-- **Degreewise interpolation error of order `s + 1` with vanishing boundary DOFs** in `H̊Λ(Q)`
-for flat forms. -/
 theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
     (hS : PolyOrderAt n S s j)
     {L : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsCsFormMin s j L x) (hL0 : 0 ≤ L)
@@ -1213,8 +1098,6 @@ theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
           polyInterpBound n S j * L * meshSize N ^ (s + 1) :=
   hx.isCsFormTr.exists_mem_polyMin_le hS hL0 N
 
-/-- **Graph-norm distance of a smooth form vanishing outside `Q` to `V̊ₕʲ`**:
-`dist_V(σ, V̊ₕʲ) ≤ 2 B_j L h_N^{s+1}`. -/
 theorem IsCsFormMin.infDist_domainSub_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
     (hS : PolyOrderAt n S s j) {L : ℝ} {σ : (complexMin n).domainSpace j}
     (hσ : IsCsFormMin s j L ((complexMin n).domainIncl j σ)) (hL0 : 0 ≤ L) (N : ℕ) :
@@ -1223,8 +1106,7 @@ theorem IsCsFormMin.infDist_domainSub_polyMin_le {S : PolySeq} {s : ℕ} {j : �
   hσ.isCsFormTr.infDist_domainSub_polyMin_le hS hL0 N
 
 variable (n) in
-/-- **The Jackson estimate of the complexes of `S` with vanishing boundary DOFs**: the forms of
-class `IsCsFormMin s` at the order `h_N^{s+1}` (`IsCsFormMin.exists_mem_polyMin_le`). -/
+/-- The Jackson estimate of order `h_N^{s+1}`, with vanishing boundary DOFs, for `IsCsFormMin s`. -/
 def polyJacksonMin (S : PolySeq) : (polyFamilyMin n S).Jackson ℕ where
   meshSize := meshSize
   meshSize_nonneg N := (meshSize_pos N).le
@@ -1236,10 +1118,6 @@ def polyJacksonMin (S : PolySeq) : (polyFamilyMin n S).Jackson ℕ where
   jackson s N _ _ _ hL hx := by
     rw [Real.rpow_natCast, ← mul_assoc]; exact hx.2.exists_mem_polyMin_le hx.1 hL N
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing traces on
-the cube**, with no hypothesis beyond the regularity of the solution (components `IsCsFormMin`,
-i.e. `C^{s+2}` and vanishing outside `Q`; the case of flat forms of
-`mixed_rate_polyTr_of_polyOrderAt`). -/
 theorem mixed_rate_polyMin_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
     (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j) (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) :
@@ -1263,7 +1141,7 @@ theorem mixed_rate_polyMin_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
     hK hs hL hσ.isCsFormTr hu.isCsFormTr hb.isCsFormTr hq.isCsFormTr
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing traces** for
-a sequence of order `s` in every degree; see `mixed_rate_polyMin_of_polyOrderAt`. -/
+a sequence of order `s` in every degree and components vanishing outside `Q`. -/
 theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complexMin n).domainSpace i}
@@ -1284,9 +1162,6 @@ theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k
       K * L * meshSize N ^ (s + 1) :=
   mixed_rate_polyMin_of_polyOrderAt S (hS.polyOrderAt i) (hS.polyOrderAt j) hij hjk
 
-/-- **Second-order convergence of the mixed method of the bottom row of Tables 5.1/6.1 with
-vanishing boundary DOFs for the Hodge Laplacian on `1`-forms** (`H̊Λ(Q)`, data vanishing outside
-`Q`): error `≤ K L h_N²`. -/
 theorem mixed_rate_lagrangeP2Min :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n 1)} {σ : (complexMin n).domainSpace 0}
     {u : (complexMin n).domainSpace 1} {q : (complexMin n).harmonic 1},
@@ -1310,7 +1185,6 @@ theorem mixed_rate_lagrangeP2Min :
   mixed_rate_polyMin_of_polyOrderAt (n := n) PolySeq.lagrangeP2 lagrangeP2_polyOrderAt_zero
     lagrangeP2_polyOrderAt_one rfl rfl
 
-/-- **Graph-norm rate in the total space of a window of `H̊Λ(Q)`** for a sequence of order `s`. -/
 theorem exists_mem_windowMin_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
     (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i))
     (ζ : ((complexMin n).window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
@@ -1322,9 +1196,6 @@ theorem exists_mem_windowMin_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
         meshSize N ^ (s + 1) :=
   exists_mem_windowTr_poly_le hS ζ hL0 (fun i => (hζ i).isCsFormTr) N
 
-/-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation with vanishing
-traces** for the higher-order complexes, on every window of `H̊Λ(Q)` (components vanishing
-outside `Q`). -/
 theorem norm_sub_le_windowMin_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ} {a : ℤ}
     {m : ℕ} (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complexMin n).window a m).totalD.GraphSpace}
@@ -1347,10 +1218,6 @@ theorem norm_sub_le_windowMin_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ}
   norm_sub_le_windowTr_poly_smooth_of_polyOrderAt hS hξ hξh h0 hL0
     (fun τ hτ i => ⟨(hreg τ hτ i).1.isCsFormTr, (hreg τ hτ i).2.isCsFormTr⟩) N ht
 
-/-- **Second-order convergence of the semi-discrete Hodge wave equation for the bottom row of
-Tables 5.1/6.1 with vanishing boundary DOFs** on the window `H̊Λ⁰ → H̊Λ¹ → H̊Λ²` (degrees `0, 1`
-of `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ²`; [QuennevilleBelair2015], Thm 4.14): for `C³` data vanishing outside
-`Q`, `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² · 6 (B₀ + B₁) L h_N²`. -/
 theorem norm_sub_le_windowMin_lagrangeP2 {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complexMin n).window 0 2).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')

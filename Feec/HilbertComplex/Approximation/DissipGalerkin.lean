@@ -6,31 +6,17 @@ public import Feec.Semigroup.Impedance
 /-!
 # Conforming Galerkin schemes for impedance problems
 
-For an impedance triple `T` (`Feec.ImpedanceTriple`: energy space `V`, field `ι`, differential `c`,
-boundary trace `γ`), finite-dimensional `Vₕ ⊆ V` and closed `Wₕ ⊆ H₂` with `c Vₕ ⊆ Wₕ`
-(`Feec.ImpedanceTriple.GalerkinData`) give the **Galerkin scheme** (`galerkin`, generator `Lh`)
-on `Xₕ = ι Vₕ ⊕₂ Wₕ`:
+For an impedance triple, Galerkin spaces `Vₕ ⊆ V`, `Wₕ ⊆ H₂` with `c Vₕ ⊆ Wₕ` give a dissipative
+scheme on `ι Vₕ ⊕₂ Wₕ`, with the `dissipFEEC` verdict under the approximation property.
 
-  `⟪Ėₕ, ι v'⟫ = -⟪Pₕ, c v'⟫ - ⟪γ vₕ, γ v'⟫` for `v' ∈ Vₕ`, `Ṗₕ = c vₕ`, `Eₕ = ι vₕ`,
+## Main results
 
-whose bilinear form carries the boundary term `⟪γ vₕ, γ v'⟫`: the discrete generator is dissipative,
-`⟪Lₕ x, x⟫ = -‖γ vₕ‖²` (`inner_Lh`), so the discrete energy decreases by twice the integrated
-discrete outgoing flux (`norm_sq_galerkin_sol`). Its discrete resolvent is the Galerkin solution
-built on the `V`-orthogonal projection of the exact one (Céa's lemma with constant `1`,
-`discreteRes_galerkin`, `norm_incl_galerkinRes_sub_le`), so under the approximation property
-(`Approximates`: `Vₕ` approximates `V`, `Wₕ` approximates `H₂`) the scheme is consistent, its core
-is the Trotter–Kato core of the discrete resolvent (`DissipFEEC.Core.ofResolvent`,
-`Feec.HilbertComplex.Approximation.RitzResolvent`), and **`galerkin_verdict`** gives the full
-`dissipFEEC` verdict with a dense core: convergence for every datum, the rate bound for every rate
-class, the constraint residual in both directions. For separable `V`, `H₂`, dense-sequence spaces
-(`ofDenseSeq`) are an approximating family (`approximates_ofDenseSeq`).
+* `ImpedanceTriple.GalerkinData.galerkin_verdict`: a dense core and the `dissipFEEC` verdict.
+* `ImpedanceTriple.GalerkinData.norm_sq_galerkin_sol`: the discrete energy identity.
 
 ## References
 
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.4 (Thm 4.2, Trotter–Kato, single-space form; here with variable spaces `Xₕ`)
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], §4.6 (the impedance
-  problem)
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -58,8 +44,7 @@ variable {V H₁ H₂ Y : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V
   [NormedAddCommGroup Y] [InnerProductSpace ℝ Y] [CompleteSpace Y]
   (T : ImpedanceTriple ℝ V H₁ H₂ Y)
 
-/-- **Galerkin data** for an impedance triple: finite-dimensional `Vₕ ⊆ V` and closed `Wₕ ⊆ H₂`
-with `c Vₕ ⊆ Wₕ`, along a filter. -/
+/-- Galerkin data: finite-dimensional `Vₕ ⊆ V` and closed `Wₕ ⊆ H₂` with `c Vₕ ⊆ Wₕ`. -/
 structure GalerkinData (κ : Type*) where
   /-- the filter along which the spaces are refined -/
   l : Filter κ
@@ -111,7 +96,6 @@ def Lh (h : κ) : G.Xh h →L[ℝ] G.Xh h :=
       (G.Ch h ∘L WithLp.fstL 2 ℝ (G.Eh h) (G.Wh h)))
 
 omit [CompleteSpace V] [CompleteSpace H₁] in
-/-- **The discrete energy flux**: `⟪Lₕ x, x⟫ = -‖Γₕ e‖²`, the boundary term of the bilinear form. -/
 theorem inner_Lh (h : κ) (x : G.Xh h) : ⟪G.Lh h x, x⟫_ℝ = -‖G.Γh h x.fst‖ ^ 2 := by
   rw [WithLp.prod_inner_apply]
   simp only [Lh, ContinuousLinearMap.comp_apply, ContinuousLinearEquiv.coe_coe,
@@ -190,8 +174,7 @@ theorem norm_proj_apply_le (h : κ) (z : WithLp 2 (H₁ × H₂)) : ‖G.proj h 
 
 variable (K : Submodule ℝ (WithLp 2 (H₁ × H₂))) (hK : IsClosed (K : Set (WithLp 2 (H₁ × H₂))))
 
-/-- **The conforming Galerkin scheme as a dissipative FEEC discretization** of the impedance
-operator, for a closed constraint subspace `K`. -/
+/-- The conforming Galerkin scheme, a dissipative FEEC discretization of the impedance operator. -/
 def galerkin : DissipFEEC T.op κ where
   isMDissipative := T.isMDissipative_op
   K := K
@@ -214,15 +197,13 @@ variable (T) in
 def resWitness (z : WithLp 2 (H₁ × H₂)) : V :=
   T.witness (T.isMDissipative_op.isResolvent_one.toDomain z)
 
-/-- **The Galerkin solution** of `(1 - Lₕ) xₕ = πₕ z`: `eₕ = ι vₕ` with `vₕ` the `V`-orthogonal
-projection of the exact energy-space solution `v`, and `Pₕ = P_{Wₕ} g + c vₕ`. -/
+/-- The Galerkin solution `(ι vₕ, P_{Wₕ} g + c vₕ)`, `vₕ` the `V`-projection of the exact `v`. -/
 def galerkinRes (h : κ) (z : WithLp 2 (H₁ × H₂)) : G.Xh h :=
   WithLp.toLp 2 (G.ιh h ((G.Vh h).orthogonalProjectionOnto (resWitness T z)),
     (G.Wh h).orthogonalProjectionOnto z.snd +
       G.Ch h (G.ιh h ((G.Vh h).orthogonalProjectionOnto (resWitness T z))))
 
 omit [CompleteSpace Y] in
-/-- The exact resolvent in terms of its witness: `R z = (ι v, g + c v)` and the weak equation. -/
 theorem res_eq (z : WithLp 2 (H₁ × H₂)) :
     (Operator.resolvent T.op 1 z).fst = T.ι (resWitness T z) ∧
     (Operator.resolvent T.op 1 z).snd = z.snd + T.c (resWitness T z) ∧
@@ -268,7 +249,6 @@ theorem galerkinRes_sub (h : κ) (z : WithLp 2 (H₁ × H₂)) :
     abel
 
 
-/-- **The discrete resolvent is the Galerkin solution** (Céa: `vₕ = P_{Vₕ} v` in `V`). -/
 theorem discreteRes_galerkin (h : κ) (z : WithLp 2 (H₁ × H₂)) :
     (G.galerkin K hK).discreteRes h (G.proj h z) = G.galerkinRes h z := by
   rw [← G.galerkinRes_sub h z]
@@ -288,8 +268,6 @@ theorem norm_withLp_le (x : WithLp 2 (H₁ × H₂)) : ‖x‖ ≤ ‖x.fst‖ +
   nlinarith [norm_nonneg x.fst, norm_nonneg x.snd]
 
 omit [CompleteSpace Y] in
-/-- **Galerkin error of the resolvent**: `‖ιₕ (1 - Lₕ)⁻¹ πₕ z - (1 - A)⁻¹ z‖ ≤
-2 ‖P_{Vₕ} v - v‖_V + ‖P_{Wₕ} g - g‖`. -/
 theorem norm_incl_galerkinRes_sub_le (h : κ) (z : WithLp 2 (H₁ × H₂)) :
     ‖G.incl h (G.galerkinRes h z) - Operator.resolvent T.op 1 z‖ ≤
       2 * ‖((G.Vh h).starProjection (resWitness T z)) - resWitness T z‖ +
@@ -315,8 +293,7 @@ theorem norm_incl_galerkinRes_sub_le (h : κ) (z : WithLp 2 (H₁ × H₂)) :
   have b := norm_add_le ((G.Wh h).starProjection z.snd - z.snd) (T.c w)
   linarith [a.1, a.2]
 
-/-- **Approximation property** of the Galerkin spaces: `Vₕ` approximates every `v ∈ V` in the
-energy norm and `Wₕ` every `g ∈ H₂`. -/
+/-- The approximation property: `Vₕ` approximates `V` and `Wₕ` approximates `H₂`. -/
 def Approximates : Prop :=
   (∀ v : V, Tendsto (fun h => infDist v (G.Vh h : Set V)) G.l (𝓝 0)) ∧
     ∀ g : H₂, Tendsto (fun h => infDist g (G.Wh h : Set H₂)) G.l (𝓝 0)
@@ -332,7 +309,6 @@ theorem tendsto_starProjection {E : Type*} [NormedAddCommGroup E] [InnerProductS
 
 variable {G} in
 omit [CompleteSpace Y] in
-/-- **Consistency of the Galerkin resolvents** from the approximation property. -/
 theorem tendsto_incl_galerkinRes (hG : G.Approximates) (z : WithLp 2 (H₁ × H₂)) :
     Tendsto (fun h => G.incl h (G.galerkinRes h z)) G.l
       (𝓝 (Operator.resolvent T.op 1 z)) := by
@@ -346,8 +322,6 @@ theorem tendsto_incl_galerkinRes (hG : G.Approximates) (z : WithLp 2 (H₁ × H�
 
 variable {G} in
 omit [CompleteSpace V] [CompleteSpace H₁] [CompleteSpace Y] in
-/-- **The projections converge**: `ιₕ πₕ z → z` (`ι V` is dense in `H₁` and approximated by
-`ι Vₕ`). -/
 theorem tendsto_incl_proj (hG : G.Approximates) (z : WithLp 2 (H₁ × H₂)) :
     Tendsto (fun h => G.incl h (G.proj h z)) G.l (𝓝 z) := by
   have hE : Tendsto (fun h => (G.Eh h).starProjection z.fst) G.l (𝓝 z.fst) := by
@@ -373,7 +347,7 @@ theorem tendsto_incl_proj (hG : G.Approximates) (z : WithLp 2 (H₁ × H₂)) :
   simpa using hE.add hW
 
 variable {G} in
-/-- **The Galerkin core** (Trotter–Kato, resolvent form): `R(1) D(A)`. -/
+/-- The Galerkin core `R(1) D(A)`. -/
 def galerkinCore (hG : G.Approximates) : (G.galerkin K hK).Core :=
   DissipFEEC.Core.ofResolvent (G.galerkin K hK)
     (fun z => (tendsto_incl_galerkinRes hG z).congr fun h =>
@@ -381,11 +355,8 @@ def galerkinCore (hG : G.Approximates) : (G.galerkin K hK).Core :=
     (fun z => tendsto_incl_proj hG z)
 
 
-/-- **The Galerkin verdict**: under the approximation property, the core `R(1) D(A)` is dense
-and the conforming Galerkin scheme has the full `dissipFEEC` verdict (well-posedness,
-propagation criteria, convergence for every datum, the rate bound for every rate class (none is
-constructed here), constraint residual in both directions). [Pazy1983], §3.4 (Thm 4.2, the
-single-space form) -/
+/-- **The Galerkin verdict**: under the approximation property, the core `R(1) D(A)` is dense and
+the conforming Galerkin scheme has the full `dissipFEEC` verdict. [Pazy1983], §3.4 -/
 theorem galerkin_verdict (hG : G.Approximates) :
     (G.galerkinCore K hK hG).Data.topologicalClosure = ⊤ ∧
       (G.galerkin K hK).Verdict (G.galerkinCore K hK hG) :=
@@ -395,9 +366,8 @@ theorem galerkin_sol (h : κ) (x : G.Xh h) (t : ℝ) :
     (G.galerkin K hK).sol h x t = G.incl h ((C0Group.ofBounded (G.Lh h)).S t x) := rfl
 
 omit [CompleteSpace V] [CompleteSpace H₁] in
-/-- **The discrete energy identity**: the semi-discrete Galerkin solution
-`ιₕ e^{t Lₕ} x = (G.galerkin K hK).sol h x t` (`galerkin_sol`) loses exactly the discrete
-outgoing flux twice, `‖xₕ(t)‖² = ‖xₕ(0)‖² - 2 ∫₀ᵗ ‖γ vₕ(s)‖² ds` (`Γₕ eₕ = γ vₕ`). -/
+/-- **The discrete energy identity**: `‖xₕ(t)‖² = ‖xₕ(0)‖² - 2 ∫₀ᵗ ‖Γₕ eₕ(s)‖² ds` for `t ≥ 0`
+along the semi-discrete Galerkin flow `e^{t Lₕ}`. -/
 theorem norm_sq_galerkin_sol (h : κ) (x : G.Xh h) {t : ℝ} (ht : 0 ≤ t) :
     ‖G.incl h ((C0Group.ofBounded (G.Lh h)).S t x)‖ ^ 2 = ‖G.incl h x‖ ^ 2 -
       2 * ∫ s in (0 : ℝ)..t, ‖G.Γh h ((C0Group.ofBounded (G.Lh h)).S s x).fst‖ ^ 2 := by
@@ -430,9 +400,7 @@ open TopologicalSpace
 variable [SeparableSpace V] [SeparableSpace H₂]
 
 variable (T) in
-/-- **Galerkin spaces from dense sequences** (separable `V`, `H₂`): `Vₙ` spanned by the first `n`
-terms of a dense sequence of `V`, `Wₙ = c Vₙ + span` of the first `n` terms of a dense sequence of
-`H₂`; finite-dimensional, along `atTop`. -/
+/-- Galerkin spaces from dense sequences of `V` and `H₂`, along `atTop`. -/
 def ofDenseSeq : GalerkinData T ℕ where
   l := atTop
   Vh n := Submodule.span ℝ (Set.range fun i : Fin n => denseSeq V i)
@@ -461,7 +429,6 @@ theorem tendsto_infDist_span_denseSeq {E : Type*} [NormedAddCommGroup E] [Normed
   exact (infDist_le_dist_of_mem (hU n ⟨i, by omega⟩)).trans_lt hi
 
 omit [CompleteSpace V] [CompleteSpace H₁] [CompleteSpace H₂] [CompleteSpace Y] in
-/-- **Dense-sequence Galerkin spaces approximate** `V` and `H₂`. -/
 theorem approximates_ofDenseSeq : (ofDenseSeq T).Approximates :=
   ⟨tendsto_infDist_span_denseSeq fun _ i => Submodule.subset_span ⟨i, rfl⟩,
     tendsto_infDist_span_denseSeq fun _ i =>

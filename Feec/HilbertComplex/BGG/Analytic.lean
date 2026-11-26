@@ -7,88 +7,20 @@ public import Mathlib.Analysis.InnerProductSpace.ProdL2
 /-!
 # The analytic BGG construction: the derived complex is a closed Hilbert complex
 
-**Bounded BGG data** (`Feec.BGG.BoundedData`) are BGG data `Feec.BGG.Data` on Hilbert spaces whose
-differentials `d`, `d̃` and connecting maps `S` are bounded: the setting of the bounded Hilbert
-complexes (domain complexes) and bounded linking maps of [ArnoldHu2021], §3, (19), and of the
-Sobolev BGG sequences of [CapHu2024]. The algebraic eliminations `Γ E ⊇ Δ F` of
-`Feec.HilbertComplex.BGG.Derived` are then subspaces of `Vⁱ ⊕ Ṽⁱ` (`ℓ²` product), `Γ E` closed,
-and `Γ E ⊇ Δ F ∩ Γ E` is a subquotient of the twisted complex (`BoundedData.subquotient`, a
-`Feec.HilbertComplex.Subquotient`). The derived complex `Γ E / Δ F` is therefore realized as the
-Hilbert complex (`BoundedData.derivedComplex`) of the spaces `Υⁱ = Γⁱ ⊖ Δⁱ` with the compressed
-differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`, and the general theory of subquotients gives the
-quotient norm: the quotient norm of `Γⁱ / Δⁱ`, from the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ`, is the norm of
-`Υⁱ`, `y ↦ [y]` is an isometry `Υⁱ → Γⁱ / Δⁱ` (`BoundedData.toDerivedQuotL`), onto when `Δ F` is
-closed (`BoundedData.derivedQuotLEquiv`), and it carries the compressed differentials to the
-bounded differentials `[x] ↦ [dσ - Sφ, d̃φ]` of the quotient (`BoundedData.derivedQuotD`); this is
-the Hilbert-space structure of the subquotient model of the output complex. It exists for all
-data, as a complex of bounded operators; when `Δ F` is closed it is isomorphic, as a complex, to
-`derived E F` (`BoundedData.derivedComplexIso`). Hence, **for closed `Δ F` and under the
-elimination hypotheses `Data.Eliminates E F`**:
-
-* **the cohomology of the derived Hilbert complex is that of the twisted complex** under the
-  elimination hypotheses (`BoundedData.derivedComplexCohomologyEquiv`), so by the long exact
-  sequence of `0 → V → T → Ṽ → 0` it is **finite-dimensional, of dimension at most
-  `dim Hⁱ(V) + dim Hⁱ(Ṽ)`, where the rows have finite-dimensional cohomology**
-  (`BoundedData.finiteDimensional_derivedComplex_cohomology`,
-  `BoundedData.finrank_derivedComplex_cohomology_le`);
-* finite-dimensional cohomology of a bounded complex forces closed range
-  (`Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`), so **the derived
-  complex has closed range** at every index where the rows have finite-dimensional cohomology
-  (`BoundedData.derivedComplex_closedRangeAt`), and is **exact** where both rows are exact
-  (`BoundedData.derivedComplex_boundaries_eq`).
-
-For the BGG complexes `Data.bgg J` of [ArnoldHu2021] this is their Theorem 6 (and [CapHu2024] for
-Sobolev rows): closed range and finite-dimensional cohomology pass from the input rows to the
-output complex. Both hypotheses follow from the connecting maps: if the `Sⁱ` before `J` are
-bounded below, the exact part `Δ (· < J)` is closed (`BoundedData.isClosed_bgg_Δ`) and they are
-one-to-one, so of the elimination hypotheses only the onto-modulo-`d` conditions after `J` remain
-(`Data.eliminates_bgg`). The rows enter only through their cohomology, as complexes of
-bounded operators (`BoundedData.rowTopComplex`, `BoundedData.rowBotComplex`); for the domain
-complexes of two Hilbert complexes (`Feec.BGG.HilbertData.domainData`) this is the cohomology of
-the Hilbert complexes (`Feec.HilbertComplex.domainComplexCohomologyEquiv`), finite-dimensional
-for instance under the compactness property
-(`Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`).
-
-## Main definitions
-
-* `Feec.BGG.BoundedData 𝕜 c V Vt`: BGG data on Hilbert spaces with bounded maps.
-* `BoundedData.rowTopComplex`, `BoundedData.rowBotComplex`: the two rows as Hilbert complexes.
-* `BoundedData.twistL`: the twisted differential on `Vⁱ ⊕ Ṽⁱ`; `BoundedData.ΓL`, `BoundedData.ΔL`.
-* `BoundedData.subquotient E F`: `Γ E ⊇ Δ F ∩ Γ E` as a subquotient of the twisted complex.
-* `BoundedData.derivedSpace E F i = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)`, `BoundedData.derivedD`,
-  `BoundedData.derivedComplex`: the derived complex as a Hilbert complex.
-* `BoundedData.derivedQuotL E F i = Γⁱ / Δⁱ` with the quotient norm of the `ℓ²` norm,
-  `BoundedData.toDerivedQuotL : Υⁱ →ₗᵢ Γⁱ / Δⁱ`, `BoundedData.derivedQuotD`: the bounded
-  differentials of `Γ / Δ` for the quotient norm.
+For BGG data on Hilbert spaces with bounded differentials and connecting maps, the derived complex
+is the Hilbert complex of `Υⁱ = Γⁱ ⊖ Δⁱ`; for closed `Δ F` and under the elimination hypotheses
+it has the cohomology of the twisted complex and closed range wherever the rows have
+finite-dimensional cohomology ([ArnoldHu2021], Theorem 6; [CapHu2024]).
 
 ## Main results
 
-* `BoundedData.derivedComplexIso`: `derivedComplex` is `derived E F` (closed `Δ F`).
-* `BoundedData.toDerivedQuotL`, `BoundedData.derivedQuotLEquiv`,
-  `BoundedData.derivedQuotD_toDerivedQuotL`: **the quotient norm of `Γⁱ / Δⁱ` is the Hilbert norm
-  of `Υⁱ`** (`‖[y]‖ = ‖y‖` on `Γⁱ ⊖ Δⁱ`), so for closed `Δ F` the quotient is a Hilbert space
-  isometric to `Υⁱ`, with bounded differentials intertwined with those of `derivedComplex`.
-* `BoundedData.isClosed_bgg_Δ`: the exact part of the BGG complex is closed when the connecting
-  maps before `J` are bounded below.
-* `BoundedData.derivedComplexCohomologyEquiv`: its cohomology is that of the twisted complex.
-* **`BoundedData.derivedComplex_closedRangeAt`**, `BoundedData.isClosed_Δ_sup_map_twist` (closed
-  range in `Vⁱ × Ṽⁱ`),
-  `BoundedData.finiteDimensional_derivedComplex_cohomology`,
-  `BoundedData.finrank_derivedComplex_cohomology_le`,
-  `BoundedData.derivedComplex_boundaries_eq`.
-* `BoundedData.idShift_derivedComplex_closedRangeAt`: non-vacuity (`BoundedData.idShift`).
+* `BoundedData.derivedQuotLEquiv`: for closed `Δ F`, `Υⁱ` is isometric to `Γⁱ / Δⁱ`.
+* `BoundedData.derivedComplex_closedRangeAt`: closed range where `dim Hⁱ(V) + dim Hⁱ(Ṽ) < ∞`.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
-  and linking maps, the output complex, Theorem 6: dimension of its cohomology), §5 (its proof:
-  the twisted complex and the output complex)
-* [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024] (BGG
-  sequences of Sobolev spaces, their cohomology and closed range)
-* [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
-  (BGG sequences as subquotients of twisted de Rham sequences)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (finite-dimensional cohomology and
-  closed range)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3, §5
+* [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -101,8 +33,7 @@ universe u
 
 namespace Feec.BGG
 
-/-- **Bounded BGG data**: BGG data on Hilbert spaces whose differentials `d`, `d̃` and connecting
-maps `S` are bounded. [ArnoldHu2021], §3, (19) -/
+/-- BGG data on inner product spaces with bounded `d`, `d̃` and `S`. [ArnoldHu2021], §3, (19) -/
 structure BoundedData (𝕜 : Type*) [RCLike 𝕜] {ι : Type*} (c : ComplexShape ι) (V Vt : ι → Type u)
     [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
     [∀ i, NormedAddCommGroup (Vt i)] [∀ i, InnerProductSpace 𝕜 (Vt i)]
@@ -191,7 +122,6 @@ theorem mem_ΔL {i : ι} {x : WithLp 2 (V i × Vt i)} :
 
 theorem ΔL_le_ΓL (i : ι) : D.ΔL E F i ≤ D.ΓL E i := fun _ hx => hx.2
 
-/-- `Γ E` is closed: its conditions are equations in the bounded maps. -/
 theorem isClosed_Γ (i : ι) : IsClosed (D.Γ E i : Set (V i × Vt i)) := by
   rw [Data.Γ, Submodule.coe_inf, Submodule.coe_iInf, Submodule.coe_iInf]
   exact (isClosed_iInter fun _ => isClosed_eq continuous_fst continuous_const).inter
@@ -209,7 +139,7 @@ theorem twistL_mem_ΔL (i j : ι) {x : WithLp 2 (V i × Vt i)} (hx : x ∈ D.ΔL
     D.twistL i j x ∈ D.ΔL E F j :=
   ⟨D.twist_mem_Δ F i j hx.1, D.twist_mem_Γ E i j hx.2⟩
 
-/-- **The subquotient `Γ E / (Δ F ∩ Γ E)`** of the twisted complex on `Vⁱ ⊕ Ṽⁱ`. -/
+/-- The subquotient `Γ E / (Δ F ∩ Γ E)` of the twisted complex on `Vⁱ ⊕ Ṽⁱ`. -/
 def subquotient : HilbertComplex.Subquotient 𝕜 c fun i => WithLp 2 (V i × Vt i) where
   d := D.twistL
   shape _ _ h := D.twistL_eq_zero h
@@ -225,12 +155,10 @@ def subquotient : HilbertComplex.Subquotient 𝕜 c fun i => WithLp 2 (V i × Vt
 
 variable [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)]
 
-/-- **The derived space** `Υⁱ = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)`, the orthogonal model of `Γⁱ / Δⁱ`. -/
+/-- The derived space `Υⁱ = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)`, the orthogonal model of `Γⁱ / Δⁱ`. -/
 def derivedSpace (i : ι) : Submodule 𝕜 (WithLp 2 (V i × Vt i)) := (D.subquotient E F).space i
 
-/-- The norm of `Υⁱ`, declared on `derivedSpace` itself (with its inner product and completeness)
-so that instances of the data (e.g. on graph spaces of `L²` fields) find these instances
-syntactically instead of unfolding the generic submodule instances. -/
+/-- The norm of `Υⁱ`. -/
 instance (i : ι) : NormedAddCommGroup (D.derivedSpace E F i) := Submodule.normedAddCommGroup _
 
 /-- The inner product of `Υⁱ`. -/
@@ -239,7 +167,6 @@ instance (i : ι) : InnerProductSpace 𝕜 (D.derivedSpace E F i) := Submodule.i
 instance (i : ι) : CompleteSpace (D.derivedSpace E F i) :=
   ((D.isClosed_ΓL E i).inter (D.ΔL E F i).isClosed_orthogonal).completeSpace_coe
 
-/-- The projection onto `(Δ ∩ Γ)ᗮ` keeps `Γ`. -/
 theorem starProjection_mem_ΓL {i : ι} {t : WithLp 2 (V i × Vt i)} (ht : t ∈ D.ΓL E i) :
     (D.ΔL E F i)ᗮ.starProjection t ∈ D.ΓL E i :=
   (D.subquotient E F).starProjection_mem_Γ ht
@@ -252,24 +179,20 @@ theorem coe_derivedD (i j : ι) (y : D.derivedSpace E F i) :
     (D.derivedD E F i j y : WithLp 2 (V j × Vt j)) =
       (D.ΔL E F j)ᗮ.starProjection (D.twistL i j y) := rfl
 
-/-- **The derived complex as a Hilbert complex**: the spaces `Υⁱ = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)` with the
-bounded differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)` (`HilbertComplex.Subquotient.complex`).
-[ArnoldHu2021], Theorem 6 -/
+/-- The derived complex as the Hilbert complex of the spaces `Υⁱ`. [ArnoldHu2021], Theorem 6 -/
 def derivedComplex : HilbertComplex 𝕜 c (fun i => D.derivedSpace E F i) :=
   (D.subquotient E F).complex
 
 /-! ### The quotient norm of `Γⁱ / Δⁱ` -/
 
-/-- **`Γⁱ / Δⁱ` with the quotient norm** of the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ` (seminormed; the Hilbert
-space `Υⁱ` up to an isometry when `Δ` is closed, `derivedQuotLEquiv`). -/
+/-- `Γⁱ / Δⁱ` with the quotient norm of the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ`. -/
 abbrev derivedQuotL (i : ι) : Type u := D.ΓL E i ⧸ (D.ΔL E F i).comap (D.ΓL E i).subtype
 
-/-- **`Υⁱ → Γⁱ / Δⁱ`, `y ↦ [y]`, is an isometry** for the quotient norm
-(`HilbertComplex.Subquotient.norm_toQuot`). -/
+/-- `Υⁱ → Γⁱ / Δⁱ`, `y ↦ [y]`, an isometry for the quotient norm. -/
 def toDerivedQuotL (i : ι) : D.derivedSpace E F i →ₗᵢ[𝕜] D.derivedQuotL E F i :=
   (D.subquotient E F).toQuot i
 
-/-- **The bounded differentials of `Γ / Δ` for the quotient norm**, `[x] ↦ [twist x]`. -/
+/-- The bounded differentials of `Γ / Δ` for the quotient norm, `[x] ↦ [twist x]`. -/
 def derivedQuotD (i j : ι) : D.derivedQuotL E F i →L[𝕜] D.derivedQuotL E F j :=
   (D.subquotient E F).quotD i j
 
@@ -297,7 +220,6 @@ theorem isClosed_ΔL (hΔ : ∀ i, IsClosed (D.Δ F i : Set (V i × Vt i))) (i :
 variable {F} (hΔ : ∀ i, IsClosed (D.Δ F i : Set (V i × Vt i)))
 include hΔ
 
-/-- With `Δ` closed, `t - P_{(Δⁱ)ᗮ} t ∈ Δⁱ ∩ Γⁱ`. -/
 theorem sub_starProjection_mem_ΔL {i : ι} (t : WithLp 2 (V i × Vt i)) :
     t - (D.ΔL E F i)ᗮ.starProjection t ∈ D.ΔL E F i :=
   HilbertComplex.Subquotient.sub_starProjection_mem_Δ (Q := D.subquotient E F)
@@ -306,21 +228,16 @@ theorem sub_starProjection_mem_ΔL {i : ι} (t : WithLp 2 (V i × Vt i)) :
 theorem toDerivedQuotL_surjective (i : ι) : Function.Surjective (D.toDerivedQuotL E F i) :=
   HilbertComplex.Subquotient.toQuot_surjective (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) i
 
-/-- **`Γⁱ / Δⁱ` with the quotient norm is isometric to the Hilbert space `Υⁱ`** when `Δ` is
-closed: the quotient norm is a Hilbert norm (`HilbertComplex.Subquotient.toQuotEquiv`).
-[ArnoldHu2021], Theorem 6 -/
+/-- When `Δ` is closed, `Γⁱ / Δⁱ` with the quotient norm is isometric to `Υⁱ`. -/
 def derivedQuotLEquiv (i : ι) : D.derivedSpace E F i ≃ₗᵢ[𝕜] D.derivedQuotL E F i :=
   HilbertComplex.Subquotient.toQuotEquiv (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) i
 
-/-- **The isometry intertwines the differentials**: `[·]` carries the compressed differentials of
-`Υ` to the bounded differentials of `Γ / Δ`. -/
 theorem derivedQuotD_toDerivedQuotL (i j : ι) (y : D.derivedSpace E F i) :
     D.derivedQuotD E F i j (D.toDerivedQuotL E F i y) =
       D.toDerivedQuotL E F j (D.derivedD E F i j y) :=
   HilbertComplex.Subquotient.quotD_toQuot (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) i j y
 
-/-- **The derived Hilbert complex is the derived complex** `Γ E / Δ F` when `Δ F` is closed
-(`HilbertComplex.Subquotient.complexIso`). -/
+/-- When `Δ F` is closed, the derived Hilbert complex is the derived complex `Γ E / Δ F`. -/
 def derivedComplexIso : (D.derivedComplex E F).toModuleCat ≅ D.derived E F :=
   HilbertComplex.Subquotient.complexIso (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) ≪≫
     HomologicalComplex.Hom.isoOfComponents (fun i => (D.derivedQuotLEquivDerived E F i).toModuleIso)
@@ -337,8 +254,7 @@ def derivedComplexCohomologyEquivDerived (i : ι) :
 variable {E} (h : D.Eliminates E F)
 include h
 
-/-- **The cohomology of the derived Hilbert complex is that of the twisted complex.**
-[ArnoldHu2021], §5.2 -/
+/-- The cohomology of the derived Hilbert complex is that of the twisted complex. -/
 def derivedComplexCohomologyEquiv (i : ι) :
     (D.derivedComplex E F).cohomology i ≃ₗ[𝕜] D.twistComplex.homology i :=
   (D.derivedComplexCohomologyEquivDerived E hΔ i).trans (D.derivedHomologyIso h i).toLinearEquiv
@@ -349,7 +265,6 @@ include i
 
 open Module
 
-/-- **The derived complex has finite-dimensional cohomology where the rows do.** -/
 theorem finiteDimensional_derivedComplex_cohomology :
     FiniteDimensional 𝕜 ((D.derivedComplex E F).cohomology i) :=
   have := (D.rowTopCohomologyEquiv i).finiteDimensional
@@ -357,7 +272,6 @@ theorem finiteDimensional_derivedComplex_cohomology :
   have := D.finiteDimensional_derived_homology i h
   (D.derivedComplexCohomologyEquivDerived E hΔ i).symm.finiteDimensional
 
-/-- **`dim Hⁱ(Υ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`.** [ArnoldHu2021], Theorem 6 -/
 theorem finrank_derivedComplex_cohomology_le :
     finrank 𝕜 ((D.derivedComplex E F).cohomology i) ≤
       finrank 𝕜 (D.rowTopComplex.cohomology i) + finrank 𝕜 (D.rowBotComplex.cohomology i) := by
@@ -367,16 +281,12 @@ theorem finrank_derivedComplex_cohomology_le :
     (D.rowTopCohomologyEquiv i).finrank_eq, (D.rowBotCohomologyEquiv i).finrank_eq]
   exact D.finrank_derived_homology_le i h
 
-/-- **The derived complex has closed range** at every index where the rows have
-finite-dimensional cohomology (closed `Δ F`, under the elimination hypotheses).
-[ArnoldHu2021], Theorem 6; [CapHu2024] -/
+/-- For closed `Δ F` and under the elimination hypotheses, the derived complex has closed range
+wherever the rows have finite-dimensional cohomology. [ArnoldHu2021], Theorem 6; [CapHu2024] -/
 theorem derivedComplex_closedRangeAt : (D.derivedComplex E F).ClosedRangeAt i :=
   have := D.finiteDimensional_derivedComplex_cohomology hΔ h i
   HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology _ i
 
-/-- **Closed range in `Vⁱ × Ṽⁱ`**: the preimage `Δⁱ + T(Γⁱ⁻¹)` of the range of the differential
-of `Γ E / Δ F` into `Γⁱ / Δⁱ` is closed, so that the range is closed in the quotient
-topology of the Hilbert space `Γⁱ / Δⁱ`. -/
 theorem isClosed_Δ_sup_map_twist :
     IsClosed ((D.Δ F i ⊔ (D.Γ E (c.prev i)).map (D.twist (c.prev i) i) : Submodule 𝕜 _) :
       Set (V i × Vt i)) := by
@@ -425,7 +335,6 @@ theorem isClosed_Δ_sup_map_twist :
   rw [key]
   exact (D.isClosed_Γ E i).inter (hBd.preimage (P.continuous.comp toL.continuous))
 
-/-- **The derived complex is exact where both rows are.** -/
 theorem derivedComplex_boundaries_eq [Subsingleton (D.rowTopComplex.cohomology i)]
     [Subsingleton (D.rowBotComplex.cohomology i)] :
     (D.derivedComplex E F).boundaries i = (D.derivedComplex E F).cycles i := by
@@ -452,9 +361,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {V Vt : ℤ → Type u} [∀ i, NormedAddC
   [∀ i, InnerProductSpace 𝕜 (Vt i)] [∀ i, CompleteSpace (Vt i)]
   (D : BoundedData 𝕜 (ComplexShape.up ℤ) V Vt)
 
-/-- **The exact part of the BGG complex is closed** when the connecting maps `Sⁱ` before `J` are
-bounded below: before `J` it is `R(Sⁱ⁻¹) × Ṽⁱ`, at `J` the range of the map `ψ ↦ (-Sψ, d̃ψ)`,
-bounded below with `S`, after `J` it is `0`. -/
+/-- The exact part of `bgg J` is closed when the connecting maps `Sⁱ` before `J` are bounded
+below. -/
 theorem isClosed_bgg_Δ {J : ℤ} (hS : ∀ i < J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (i : ℤ) :
     IsClosed (D.Δ (· < J) i : Set (V i × Vt i)) := by
   rcases lt_trichotomy i J with hi | rfl | hi
@@ -501,8 +409,6 @@ def idShift : BoundedData 𝕜 (ComplexShape.up ℤ) (fun _ => 𝕜) (fun _ => �
   continuous_S _ _ := LinearMap.continuous_of_finiteDimensional _
 
 variable (𝕜) in
-/-- **Non-vacuity of the analytic BGG theorem**: the derived Hilbert complexes of `idShift` (every
-`J`) have closed range, their cohomology finite-dimensional of dimension at most `2`. -/
 theorem idShift_derivedComplex_closedRangeAt (J i : ℤ) :
     ((idShift 𝕜).derivedComplex (J < ·) (· < J)).ClosedRangeAt i ∧
       Module.finrank 𝕜 (((idShift 𝕜).derivedComplex (J < ·) (· < J)).cohomology i) ≤ 2 := by

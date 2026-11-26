@@ -6,36 +6,8 @@ public import Feec.Models.Cube.FiniteElementMethod
 /-!
 # The Poincaré hypotheses of the finite element method on the cube are theorems
 
-On the cube `Q = (0, ½)ⁿ` of `Feec.Models.Cube.FiniteElementMethod` (`FEM.cubeDomain n`), the
-de Rham complexes `FEM.complex n = HΛ(Q)` and `FEM.complexMin n = H̊Λ(Q)` satisfy, in every
-dimension and degree (from the identification with the parity classes of the torus de Rham
-complex, `Feec.Models.Cube.DeRhamIdent`):
-
-* **the Poincaré inequality** `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`, in the exact form of the
-  hypotheses `hP`, `hPi`, `hPj` of `FEM.SmoothingEstimates` (`norm_le_of_mem_orthogonal_cycles`,
-  `norm_le_of_mem_orthogonal_cycles_min`; with any constant `c_P ≥ (2π)⁻¹`:
-  `poincare`, `poincare_min`);
-* **closed range** in every degree (`closedRangeAt`, `closedRangeAt_min`);
-* **the harmonic forms**: `ℌᵏ(HΛ(Q)) = 0` for `k ≠ 0` and `ℌ⁰(HΛ(Q)) = ℝ · 1`
-  (`harmonic_eq_bot`, `harmonic_zero_eq_span`); `ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ n` and
-  `ℌⁿ(H̊Λ(Q)) = ℝ · dx₁ ∧ ⋯ ∧ dxₙ` (`harmonic_eq_bot_min`, `harmonic_top_eq_span_min`); they are
-  finite-dimensional (instances), and so is the cohomology: `dim Hᵏ(HΛ(Q)) = [k = 0]`,
-  `dim Hᵏ(H̊Λ(Q)) = [k = n]` (`finrank_cohomology`, `finrank_cohomology_min`);
-* **the compactness property** (`hasCompactProperty`, `hasCompactProperty_min`).
-
-Closed range in every degree (`closedRangeAt`, `closedRangeAt_min`) and the finite-dimensionality
-of `ℌ` are the hypotheses of the static FEEC theorem
-(`Feec.HilbertComplex.ConformingFamily.staticFEEC`) for the finite element families of the cube
-(`Feec.Models.Cube.FiniteElementConvergence`, `Feec.Models.Cube.PolyFiniteElementConvergence`).
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (Poincaré inequality), §4.3 (the de Rham complex), Thm 3.8, Thm 3.9
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (harmonic forms and
-  cohomology)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+`HΛ(Q)` and `H̊Λ(Q)` on `Q = (0, ½)ⁿ` have the Poincaré inequality, closed range and compactness in
+every degree, with `dim Hᵏ(HΛ(Q)) = [k = 0]` and `dim Hᵏ(H̊Λ(Q)) = [k = n]`.
 -/
 
 open scoped InnerProductSpace Topology Finset
@@ -57,8 +29,7 @@ theorem cubeDomain_subset_Q : cubeDomain n ⊆ Geometry.Q (Fin n) := (cubeDomain
 
 variable {n}
 
-/-- **The Poincaré inequality of `HΛ(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` for `z ∈ D(d) ∩ (𝔷ⁱ)ᗮ`, in every
-degree; the hypothesis `hP` of `FEM.SmoothingEstimates` with `c_P = (2π)⁻¹`. -/
+/-- **The Poincaré inequality of `HΛ(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`. -/
 theorem norm_le_of_mem_orthogonal_cycles {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (z : ((complex n).d i j).domain)
     (hz : (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈ ((complex n).cycles i)ᗮ) :
@@ -72,8 +43,7 @@ theorem norm_le_of_mem_orthogonal_cycles {i j : ℤ} (hij : (ComplexShape.up ℤ
     exact DeRhamIdent.Hmax_norm_le hij z hz
   exact key _ (cubeDomain_eq_Q n) _ z hz
 
-/-- **The Poincaré inequality of `H̊Λ(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` for `z ∈ D(d) ∩ (𝔷ⁱ)ᗮ`, in every
-degree; the hypothesis `hP` of `FEM.SmoothingEstimatesMin` with `c_P = (2π)⁻¹`. -/
+/-- **The Poincaré inequality of `H̊Λ(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` on `D(d) ∩ (𝔷ⁱ)ᗮ`. -/
 theorem norm_le_of_mem_orthogonal_cycles_min {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (z : ((complexMin n).d i j).domain)
     (hz : (z : L2F ℝ (cubeDomain n) (formIdx n i)) ∈ ((complexMin n).cycles i)ᗮ) :
@@ -97,7 +67,7 @@ theorem closedRangeAt_min (j : ℤ) : (complexMin n).ClosedRangeAt j :=
   ((complexMin n).closedRangeAt_iff_poincare_of_rel (DeRhamIdent.rel_sub_one j)).2
     ⟨_, norm_le_of_mem_orthogonal_cycles_min (DeRhamIdent.rel_sub_one j)⟩
 
-/-- **The compactness property of `HΛ(Q)`** (Rellich and Gaffney on the cube), every degree. -/
+/-- **The compactness property of `HΛ(Q)`**, every degree. -/
 theorem hasCompactProperty : (complex n).HasCompactProperty := by
   have key : ∀ (Ω : Set (Fin n → ℝ)) (_ : Ω = Geometry.Q (Fin n)) (hΩ : IsOpen Ω),
       ((deRham ℝ n).maximalComplex hΩ).HasCompactProperty := by
@@ -126,7 +96,6 @@ abbrev volForm : L2F ℝ (cubeDomain n) (formIdx n n) :=
   DeRhamIdent.constForm (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n)
     ⟨Finset.univ, DeRhamIdent.card_univ_eq n⟩
 
-/-- **`HΛ(Q)` has no harmonic forms in degrees `k ≠ 0`.** -/
 theorem harmonic_eq_bot {k : ℤ} (hk : k ≠ 0) : (complex n).harmonic k = ⊥ := by
   have key : ∀ (Ω : Set (Fin n → ℝ)) (_ : Ω = Geometry.Q (Fin n)) (hΩ : IsOpen Ω),
       ((deRham ℝ n).maximalComplex hΩ).harmonic k = ⊥ := by
@@ -134,7 +103,6 @@ theorem harmonic_eq_bot {k : ℤ} (hk : k ≠ 0) : (complex n).harmonic k = ⊥ 
     exact DeRhamIdent.Hmax_harmonic_eq_bot hk
   exact key _ (cubeDomain_eq_Q n) _
 
-/-- **The harmonic `0`-forms of `HΛ(Q)` are the constants.** -/
 theorem harmonic_zero_eq_span : (complex n).harmonic 0 = ℝ ∙ oneForm n := by
   have key : ∀ (Ω : Set (Fin n → ℝ)) (_ : Ω = Geometry.Q (Fin n)) (hΩ : IsOpen Ω)
       (hm : MeasurableSet Ω) (hb : Bornology.IsBounded Ω),
@@ -144,7 +112,6 @@ theorem harmonic_zero_eq_span : (complex n).harmonic 0 = ℝ ∙ oneForm n := by
     exact DeRhamIdent.Hmax_harmonic_zero
   exact key _ (cubeDomain_eq_Q n) _ _ _
 
-/-- **`H̊Λ(Q)` has no harmonic forms in degrees `k ≠ n`.** -/
 theorem harmonic_eq_bot_min {k : ℤ} (hk : k ≠ n) : (complexMin n).harmonic k = ⊥ := by
   have key : ∀ (Ω : Set (Fin n → ℝ)) (_ : Ω = Geometry.Q (Fin n)) (hΩ : IsOpen Ω),
       ((deRham ℝ n).minimalComplex hΩ).harmonic k = ⊥ := by
@@ -152,7 +119,6 @@ theorem harmonic_eq_bot_min {k : ℤ} (hk : k ≠ n) : (complexMin n).harmonic k
     exact DeRhamIdent.Hmin_harmonic_eq_bot hk
   exact key _ (cubeDomain_eq_Q n) _
 
-/-- **The harmonic `n`-forms of `H̊Λ(Q)` are the constant volume forms.** -/
 theorem harmonic_top_eq_span_min : (complexMin n).harmonic n = ℝ ∙ volForm n := by
   have key : ∀ (Ω : Set (Fin n → ℝ)) (_ : Ω = Geometry.Q (Fin n)) (hΩ : IsOpen Ω)
       (hm : MeasurableSet Ω) (hb : Bornology.IsBounded Ω),
@@ -179,7 +145,6 @@ instance finiteDimensional_harmonic_min (k : ℤ) :
   · subst hk; rw [harmonic_top_eq_span_min]; infer_instance
   · rw [harmonic_eq_bot_min hk]; infer_instance
 
-/-- **The harmonic forms of `HΛ(Q)`**: `dim ℌᵏ = [k = 0]`, the constants. -/
 theorem finrank_harmonic (k : ℤ) :
     Module.finrank ℝ ((complex n).harmonic k) = if k = 0 then 1 else 0 := by
   by_cases hk : k = 0
@@ -191,12 +156,9 @@ theorem finrank_cohomology (k : ℤ) :
     Module.finrank ℝ ((complex n).cohomology k) = if k = 0 then 1 else 0 := by
   rw [((complex n).cohomologyEquivHarmonic (closedRangeAt k)).finrank_eq, finrank_harmonic]
 
-/-- The constant volume form of `Q` is not zero in `L²`. -/
 theorem volForm_ne_zero : volForm n ≠ 0 :=
   DeRhamIdent.constForm_ne_zero _ _ (by rw [cubeDomain_eq_Q]; exact DeRhamIdent.volume_Q_ne_zero) _
 
-/-- **The harmonic forms of `H̊Λ(Q)`**: `dim ℌᵏ = [k = n]`, the constant multiples of the volume
-form. -/
 theorem finrank_harmonic_min (k : ℤ) :
     Module.finrank ℝ ((complexMin n).harmonic k) = if k = n then 1 else 0 := by
   by_cases hk : k = n
@@ -208,8 +170,6 @@ theorem finrank_cohomology_min (k : ℤ) :
     Module.finrank ℝ ((complexMin n).cohomology k) = if k = n then 1 else 0 := by
   rw [((complexMin n).cohomologyEquivHarmonic (closedRangeAt_min k)).finrank_eq,
     finrank_harmonic_min]
-
-/-! ### The finite element method with the Poincaré hypotheses discharged -/
 
 variable [NeZero n]
 

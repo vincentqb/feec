@@ -9,39 +9,14 @@ public import Mathlib.Tactic.FinCases
 public import Mathlib.Data.Fin.VecNotation
 
 /-!
-# Constant metrics in components: index raising, traces and trace reversal
+# Constant metrics in components: traces and trace reversal
 
-A constant (pseudo-)metric on an index type `ι` is a symmetric matrix `g` with inverse `gi`
-(`gi * g = 1`); the Minkowski metric `diag(-1, 1, …, 1)` is the main instance. Tensors carry
-lower indices; contractions use `gi`. The background on metrics, index raising and traces
-follows [Wald1984] ([QuennevilleBelair2015], Ch. 2).
-
-The thesis defines the signature through Sylvester's law of inertia ([Stewart1991], p. 42;
-[QuennevilleBelair2015], §2.2); that law is not formalized here, since only the Minkowski
-signature is used and it is fixed explicitly (`minkowski`, `minkowskiMatrix`).
-
-## Main definitions
-
-* `Feec.Metric.minkowski R n : Fin (n + 1) → R`, the diagonal `(-1, 1, …, 1)`, and
-  `minkowskiMatrix R n = diagonal (minkowski R n)` (its own inverse).
-* `Feec.Metric.trace gi h = gi^{ab} h_ab`.
-* `Feec.Metric.trRev g gi h = h - ½ (tr h) g`, the trace reversal `h̄`.
-
-## Main results
-
-* `isSymm_of_mul_eq_one`: the inverse of a symmetric matrix is symmetric;
-  `mul_eq_one_comm'`: `gi * g = 1 ↔ g * gi = 1`.
-* `trace_metric`: `gi^{ab} g_ab = n`; `trace_trRev`: `tr h̄ = (1 - n/2) tr h` (any dimension).
-* `trRev_trRev`: trace reversal is an involution in dimension `4`; `eq_trRev_sub`: in every
-  dimension `n ≠ 2`, `h = h̄ - (n - 2)⁻¹ (tr h̄) g`.
-* `trRev_add_sym`: the gauge law (2.5), `h ↦ h + P + Pᵀ` gives `h̄ ↦ h̄ + P + Pᵀ - (tr P) g`.
+Constant (pseudo-)metrics `g` with inverse `gi`, the Minkowski metric, the metric trace and the
+trace reversal `h̄ = h - ½ (tr h) g` ([QuennevilleBelair2015], §2.2, §2.7).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §2.2 (signature (−+++)), §2.7 ((2.5), trace reversal)
-* [R. M. Wald, *General Relativity*][Wald1984], Ch. 2–4 (§4.4: linearized gravity)
-* [J. Stewart, *Advanced General Relativity*][Stewart1991], p. 42 (Sylvester's law of inertia)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -52,13 +27,10 @@ open Matrix
 
 namespace Feec.Metric
 
-/-! ### Inverses of symmetric matrices -/
-
 section CommRing
 
 variable {ι : Type*} [Fintype ι] {R : Type*} [CommRing R]
 
-/-- A left inverse of a symmetric matrix is symmetric. -/
 theorem isSymm_of_mul_eq_one [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hinv : gi * g = 1) :
     gi.IsSymm := by
   have h1 : g * gi.transpose = 1 := by
@@ -68,14 +40,10 @@ theorem isSymm_of_mul_eq_one [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.Is
     _ = gi * (g * gi.transpose) := Matrix.mul_assoc _ _ _
     _ = gi := by rw [h1, Matrix.mul_one]
 
-/-- A left inverse is a right inverse. -/
 theorem mul_eq_one_comm' [DecidableEq ι] {g gi : Matrix ι ι R} : gi * g = 1 ↔ g * gi = 1 := mul_eq_one_comm
 
-/-! ### The Minkowski metric -/
-
 variable (R) in
-/-- The Minkowski signature `(-1, 1, …, 1)` on `Fin (n + 1)` (time index `0`).
-[QuennevilleBelair2015], §2.2 -/
+/-- The Minkowski signature `(-1, 1, …, 1)` on `Fin (n + 1)`, time index `0`. -/
 def minkowski (n : ℕ) : Fin (n + 1) → R := Fin.cons (-1) fun _ => 1
 
 variable (R) in
@@ -87,14 +55,11 @@ def minkowskiMatrix (n : ℕ) : Matrix (Fin (n + 1)) (Fin (n + 1)) R := diagonal
 @[simp] theorem minkowski_succ (n : ℕ) (i : Fin n) : minkowski R n i.succ = 1 := rfl
 
 variable (R) in
-/-- The four-dimensional Minkowski signature `(-1, 1, 1, 1)` indexed by `Fin 4` (thesis
-convention; `= minkowski R 3`). [QuennevilleBelair2015], §2.2 -/
+/-- The Minkowski signature `(-1, 1, 1, 1)` indexed by `Fin 4`. -/
 def minkowski4 : Fin 4 → R := ![-1, 1, 1, 1]
 
 theorem minkowski4_mul_self (i : Fin 4) : minkowski4 R i * minkowski4 R i = 1 := by
   fin_cases i <;> simp [minkowski4]
-
-/-! ### Traces and trace reversal -/
 
 /-- The metric trace `gi^{ab} h_ab`. [QuennevilleBelair2015], §2.7 -/
 def trace (gi h : Matrix ι ι R) : R := ∑ a, ∑ b, gi a b * h a b
@@ -114,7 +79,6 @@ theorem trace_smul (gi h : Matrix ι ι R) (c : R) : trace gi (c • h) = c * tr
 theorem trace_sub (gi h k : Matrix ι ι R) : trace gi (h - k) = trace gi h - trace gi k := by
   simp [trace, mul_sub, Finset.sum_sub_distrib]
 
-/-- `gi^{ab} g_ab = n` for a symmetric metric with inverse `gi`. -/
 theorem trace_metric [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hinv : gi * g = 1) :
     trace gi g = Fintype.card ι := by
   rw [trace_eq_trace_mul gi g hg, hinv, Matrix.trace_one]
@@ -128,13 +92,11 @@ theorem trRev_apply (g gi h : Matrix ι ι R) (a b : ι) :
     trRev g gi h a b = h a b - ⅟2 * trace gi h * g a b := by
   simp [trRev, mul_assoc]
 
-/-- `tr h̄ = (1 - n/2) tr h`, in every dimension `n`. [QuennevilleBelair2015], (2.5) -/
 theorem trace_trRev [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hinv : gi * g = 1)
     (h : Matrix ι ι R) :
     trace gi (trRev g gi h) = (1 - ⅟2 * Fintype.card ι) * trace gi h := by
   rw [trRev, trace_sub, trace_smul, trace_metric hg hinv]; ring
 
-/-- Trace reversal of a symmetric tensor is symmetric. -/
 theorem transpose_trRev {g gi h : Matrix ι ι R} (hg : g.IsSymm) (hh : hᵀ = h) :
     (trRev g gi h)ᵀ = trRev g gi h := by
   rw [trRev, transpose_sub, transpose_smul, hh, hg.eq]
@@ -143,7 +105,6 @@ theorem trRev_smul (g gi h : Matrix ι ι R) (c : R) :
     trRev g gi (c • h) = c • trRev g gi h := by
   simp only [trRev, trace_smul, smul_sub, smul_smul]; ring_nf
 
-/-- In general dimension, `trRev (trRev h) = h - (1 - n/4) (tr h) g`. -/
 theorem trRev_trRev_eq [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hinv : gi * g = 1)
     (h : Matrix ι ι R) :
     trRev g gi (trRev g gi h) = h - ((1 - ⅟2 * ⅟2 * Fintype.card ι) * trace gi h) • g := by
@@ -152,8 +113,7 @@ theorem trRev_trRev_eq [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) 
   have h2 : (⅟2 : R) * 2 = 1 := invOf_mul_self 2
   linear_combination (trace gi h) * h2
 
-/-- **(2.5)**: trace reversal is an involution in dimension four, `h = h̄ - ½ (tr h̄) g`.
-[QuennevilleBelair2015], (2.5) -/
+/-- Trace reversal is an involution in dimension four ([QuennevilleBelair2015], (2.5)). -/
 theorem trRev_trRev [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hinv : gi * g = 1)
     (hn : Fintype.card ι = 4) (h : Matrix ι ι R) : trRev g gi (trRev g gi h) = h := by
   rw [trRev_trRev_eq hg hinv, hn]
@@ -162,8 +122,8 @@ theorem trRev_trRev [DecidableEq ι] {g gi : Matrix ι ι R} (hg : g.IsSymm) (hi
     push_cast; linear_combination (-(1 : R) - 2 * ⅟2) * h2
   rw [this, zero_mul, zero_smul, sub_zero]
 
-/-- The gauge law (2.5): if `h ↦ h + P + Pᵀ` (`P_ab = ∂_a ξ_b`), then
-`h̄ ↦ h̄ + P + Pᵀ - (gi^{ab} P_ab) g`. [QuennevilleBelair2015], (2.5) -/
+/-- The gauge law: `h ↦ h + P + Pᵀ` maps `h̄` to `h̄ + P + Pᵀ - (tr P) g`
+([QuennevilleBelair2015], (2.5)). -/
 theorem trRev_add_sym {g gi : Matrix ι ι R} (hgi : gi.IsSymm) (h P : Matrix ι ι R) :
     trRev g gi (h + P + Pᵀ) = trRev g gi h + P + Pᵀ - (trace gi P) • g := by
   have hT : trace gi Pᵀ = trace gi P := by
@@ -183,8 +143,6 @@ section Field
 
 variable {ι : Type*} [Fintype ι] [DecidableEq ι] {K : Type*} [Field K] [Invertible (2 : K)]
 
-/-- In every dimension `n ≠ 2`, the trace reversal is invertible:
-`h = h̄ - (n - 2)⁻¹ (tr h̄) g`. [QuennevilleBelair2015], (2.5) (the thesis uses `n = 4` silently). -/
 theorem eq_trRev_sub {g gi : Matrix ι ι K} (hg : g.IsSymm) (hinv : gi * g = 1)
     (hn : (Fintype.card ι : K) ≠ 2) (h : Matrix ι ι K) :
     h = trRev g gi h - (((Fintype.card ι : K) - 2)⁻¹ * trace gi (trRev g gi h)) • g := by

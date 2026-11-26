@@ -5,48 +5,9 @@ public import Feec.Domain.ConstrainedComplex
 /-!
 # The Hessian complex on an open set of `ℝ³`
 
-The Hessian complex `𝕜 --grad grad--> 𝕜^{3×3}_sym --curl--> 𝕜^{3×3}_dev --div--> 𝕜³` on `ℝ³`
-(row-wise `curl` and `div`, `Feec.Domain.Operators`), with values in the symmetric (`Sym`) and
-trace-free (`T`) matrices, as a complex of constrained realizations on every open `Ω ⊆ ℝ³`
-(`hessianComplex`). On constrained fields the operators are `hess`, `curl ∘ sym` (`curlSymOp`,
-equal to `curl` on `Sym`) and `div ∘ dev` (`divDevOp`, equal to `div` on `T`); their formal
-adjoints are `div div`, `sym curl` and `-dev grad`, the operators of the div-div complex
-(`Feec.Domain.DivDivComplex`).
-
-* the complex identities `curl ∘ hess = 0` and `div ∘ curl = 0` on symmetric fields
-  (`isComplexPair_hess_curlSym`, `isComplexPair_curlSym_divDev`), with the pointwise facts that
-  Hessians are symmetric and curls of symmetric fields are trace-free
-  (`trace_curlOp_eq_zero_of_symm`);
-* the formal adjoints `hessᵗ = div div` (`Feec.Domain.hessOp_formalAdj`),
-  `(curl ∘ sym)ᵗ = sym curl` (`curlSymOp_formalAdj_apply`), `(div ∘ dev)ᵗ = -dev grad`
-  (`divDevOp_formalAdj_apply`);
-* the minimal complex `H̊(grad grad, Ω) → H̊(curl, Ω; Sym) → H̊(div, Ω; T) → L²(Ω; 𝕜³)` and the
-  maximal complex `H(grad grad, Ω) → H(curl, Ω; Sym) → H(div, Ω; T) → L²(Ω; 𝕜³)`, where
-  `H(grad grad) = {u ∈ L² : ∇²u ∈ L²}` (weakly) and `H̊(grad grad)` is the closure of the test
-  functions in its graph norm (these are `H̊²` and, for regular `Ω`, `H²`; not proved here)
-  (`hessianComplex.minimalComplex`, `hessianComplex.maximalComplex`), whose differentials are
-  the realizations of `hess`, `curl`, `div`.
-
-The duality with the div-div complex is in `Feec.Domain.DivDivComplex`. No closed-range statement
-is made (it needs the regularity of `Ω`).
-
-**As a BGG complex.** The Hessian complex is the output of the BGG construction
-(`Feec.BGG.Data.bgg`, `J = 0`) applied to the de Rham complex `ℝ → ℝ³ → ℝ³ → ℝ` stacked over the
-de Rham complex tensored with `ℝ³`, `ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, linked by `id`, `2 vskw` and
-`tr`: the first two rows of [ArnoldHu2021], (32). On smooth fields this is formalized in
-`Feec.Domain.HessianBGG`: the diagram satisfies the injectivity/surjectivity condition at `J = 0`
-and its BGG complex is the smooth version of `hessianComplex` (same operators, same constraints),
-which therefore has the cohomology of the twisted de Rham complex. The identification of the `L²`
-realizations is not formalized.
-
-## References
-
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the Hessian complex as the
-  BGG output of the first two rows of (32), `J = 0`), (6)
-* [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
-  (the Hessian and div-div complexes on general domains and their duality)
-
-Bibliography: [references.bib](../../docs/references.bib)
+The Hessian complex `𝕜 --grad grad--> Sym --curl--> T --div--> 𝕜³`, with row-wise `curl` and `div`,
+is a complex of constrained realizations on every open `Ω ⊆ ℝ³`; the formal adjoints of its
+operators are `div div`, `sym curl` and `-dev grad`.
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate LinearPMap
@@ -89,7 +50,6 @@ theorem devGradOp_apply (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
       matMulField (deviatoricMat 3) ((gradOp 3 3).apply f) :=
   postComp_apply_eq_matMulField _ _ _
 
-/-- The curl of a pointwise symmetric field is trace-free. -/
 theorem trace_curlOp_eq_zero_of_symm {Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hs : ∀ i j, Φ (i, j) = Φ (j, i)) (x : Fin 3 → ℝ) :
     ∑ i, (curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply Φ (i, i) x = 0 := by
@@ -98,7 +58,6 @@ theorem trace_curlOp_eq_zero_of_symm {Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) �
   rw [hs 0 2, hs 0 1, hs 1 2]
   ring
 
-/-- `curl` maps symmetric fields to trace-free fields: `dev (curl (sym f)) = curl (sym f)`. -/
 theorem matMulField_deviatoricMat_curlOp_symMat (f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     matMulField (deviatoricMat 3)
         ((curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply (matMulField (symMat 3) f)) =
@@ -108,7 +67,6 @@ theorem matMulField_deviatoricMat_curlOp_symMat (f : Fin 3 × Fin 3 → (Fin 3 �
 
 /-! ## The complex identities -/
 
-/-- **`curl ∘ hess = 0`** (with `curl ∘ sym`: Hessians are symmetric). -/
 theorem isComplexPair_hess_curlSym :
     (hessOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair curlSymOp := by
   intro h hh
@@ -116,7 +74,6 @@ theorem isComplexPair_hess_curlSym :
     matMulField_symMat_of_symm fun i j => hessOp_apply_swap hh i j]
   exact isComplexPair_hess_curl h hh
 
-/-- **`div ∘ curl = 0`** on symmetric fields (with `div ∘ dev`). -/
 theorem isComplexPair_curlSym_divDev :
     (curlSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair divDevOp := by
   intro f hf
@@ -131,7 +88,6 @@ theorem curlSymOp_formalAdj :
       (curlOp 3).formalAdj.postComp (symMat 3) := by
   rw [curlSymOp, formalAdj_preComp, symMat_conjTranspose (𝕜 := 𝕜)]
 
-/-- **`(curl ∘ sym)ᵗ = sym curl`.** -/
 theorem curlSymOp_formalAdj_apply (f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (curlSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply f = symCurlOp.apply f := by
   rw [curlSymOp_formalAdj, postComp_apply_eq_matMulField, curlOp_formalAdj_apply, symCurlOp,
@@ -142,7 +98,6 @@ theorem divDevOp_formalAdj :
       (divOp 3 3).formalAdj.postComp (deviatoricMat 3) := by
   rw [divDevOp, formalAdj_preComp, deviatoricMat_conjTranspose (𝕜 := 𝕜)]
 
-/-- **`(div ∘ dev)ᵗ = -dev grad`.** -/
 theorem divDevOp_formalAdj_apply (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (divDevOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply f = -devGradOp.apply f := by
   rw [divDevOp_formalAdj, postComp_apply_eq_matMulField, devGradOp_apply, ← matMulField_neg]
@@ -155,7 +110,6 @@ theorem devGradOp_formalAdj :
       (gradOp 3 3).formalAdj.preComp (deviatoricMat 3) := by
   rw [devGradOp, formalAdj_postComp, deviatoricMat_conjTranspose (𝕜 := 𝕜)]
 
-/-- **`(dev grad)ᵗ = -div ∘ dev`.** -/
 theorem devGradOp_formalAdj_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (devGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply f = -divDevOp.apply f := by
@@ -313,9 +267,7 @@ def hessianConstCoeffComplex : ConstCoeffComplex (Fin 3 → ℝ) 𝕜 where
   comp := hessianOp_comp
 
 variable (𝕜) in
-/-- **The Hessian complex on an open `Ω ⊆ ℝ³`**:
-`L²(Ω) --grad grad--> L²(Ω; Sym) --curl--> L²(Ω; T) --div--> L²(Ω; 𝕜³)`, a complex of
-constrained realizations (scalars as `𝕜^{Unit}`). -/
+/-- **The Hessian complex on an open `Ω ⊆ ℝ³`**, a complex of constrained realizations. -/
 def hessianComplex {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) : ConstrainedComplex (Fin 3 → ℝ) 𝕜 Ω :=
   ConstrainedComplex.ofMatrices hΩ (hessianConstCoeffComplex 𝕜) (hessianMat 𝕜)
     isProjMat_hessianMat hessianOp_matMapsTo hessianOp_formalAdj_matMapsTo

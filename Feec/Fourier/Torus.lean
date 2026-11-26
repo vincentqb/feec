@@ -7,39 +7,9 @@ public import Feec.Fourier.FibreReducing
 /-!
 # Symbol complexes on the torus `𝕋ᵈ = ℝᵈ/ℤᵈ`
 
-A constant-coefficient complex on `𝕋ᵈ` is, after Fourier series, a symbol complex over the
-lattice `ℤᵈ` with counting measure, at the frequencies `ξ_k = 2πk`. This file sets up that
-model for any finite index type `d` (dimension `#d`), any coefficient field `𝕜 = ℝ, ℂ` and any
-complex shape, and proves the features that distinguish the torus from `ℝᵈ`:
-
-* every symbol is measurable and every fibre projection is measurable (counting measure), so
-  fibre reducing subspaces need no measurability proof (`fibreReducing`);
-* the nonzero frequencies are bounded away from `0`, `2π ≤ |2πk|` (`two_pi_le_norm_freq`), so a
-  fibre gap on `|ξ| ≥ 2π` gives **closed range** (`closedRangeAt_of_gap`).
-
-The coefficient isometry `fieldFourier : L²(𝕋ᵈ; ℂᴾ) ≃ₗᵢ L²(ℤᵈ, count; ℂᴾ)` (Parseval, from
-Mathlib's `UnitAddTorus.mFourierBasis`) identifies the model with fields on the torus.
-
-## Main definitions and results
-
-* `Torus.freq k = 2πk ∈ ℝᵈ`; `Torus.flipAt j`, the reflection of the frequencies in the variable
-  `j`; `Torus.mode k v`, the single-frequency field `δ_k v` (`coeFn_mode`, `mulOp_mode`: a
-  multiplier acts on it by its value at `k`); `Torus.symbolComplex S`, `Torus.complex S` for a
-  continuous family of fibre complexes `S`.
-* `Torus.fibreReducing`: fibre reducing subspaces of `S` give a reducing subcomplex of the torus
-  model (hence constraint propagation, `Feec.Fourier.FibreReducing.propagates`).
-* `Torus.closedRangeAt_of_gap`, `Torus.dual_closedRangeAt_of_gap`.
-* `Torus.fieldFourier`, `Torus.fieldFourier_apply` (the entries are the Fourier coefficients
-  `mFourierCoeff`); `Torus.coe_fieldFourier_mFourierLp` (a plane wave `e^{2πi k·x} v` has the
-  coefficients `δ_k v`).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10–4.11 (the periodic analogue of the complexes (4.2), (4.16))
-* Mathlib, `Mathlib.Analysis.Fourier.AddCircleMulti`
-
-Bibliography: [references.bib](../../docs/references.bib)
+The torus model of a constant-coefficient complex on `𝕋ᵈ`: after Fourier series, a symbol complex
+over the lattice `ℤᵈ` with counting measure at the frequencies `ξ_k = 2πk`; since `2π ≤ |2πk|` for
+`k ≠ 0`, a fibre gap on `|ξ| ≥ 2π` and a symbol vanishing at `ξ = 0` give closed range.
 -/
 
 @[expose] public noncomputable section
@@ -50,8 +20,6 @@ open MeasureTheory LinearPMap Set
 namespace Feec.Fourier.Torus
 
 variable {d : Type*}
-
-/-! ### Frequencies -/
 
 /-- The frequency `ξ_k = 2πk` of the Fourier mode `e^{2πi k·x}` on `𝕋ᵈ = ℝᵈ/ℤᵈ`. -/
 def freq (k : d → ℤ) : EuclideanSpace ℝ d := WithLp.toLp 2 fun j => 2 * Real.pi * k j
@@ -64,14 +32,11 @@ def freq (k : d → ℤ) : EuclideanSpace ℝ d := WithLp.toLp 2 fun j => 2 * Re
 @[simp] theorem freq_neg (k : d → ℤ) : freq (-k) = -freq k := by
   ext j; simp
 
-/-! ### Reflections of the frequencies -/
-
 section Flip
 
 variable [DecidableEq d]
 
-/-- The reflection `k ↦ (…, -k_j, …)` of the frequencies `ℤᵈ` in the variable `j` (the Fourier
-side of the reflection `x_j ↦ -x_j` of `𝕋ᵈ`). -/
+/-- The reflection `k ↦ (…, -k_j, …)` of the frequencies `ℤᵈ` in the variable `j`. -/
 def flipAt (j : d) (k : d → ℤ) : d → ℤ := fun a => if a = j then -k a else k a
 
 @[simp] theorem flipAt_apply (j : d) (k : d → ℤ) (a : d) :
@@ -103,7 +68,6 @@ theorem norm_freq_sq (k : d → ℤ) : ‖freq k‖ ^ 2 = (2 * Real.pi) ^ 2 * �
   refine Finset.sum_congr rfl fun j _ => ?_
   rw [freq_apply, Real.norm_eq_abs, sq_abs]; ring
 
-/-- **The torus frequencies are bounded away from `0`**: `2π ≤ |2πk|` for `k ≠ 0`. -/
 theorem two_pi_le_norm_freq {k : d → ℤ} (hk : k ≠ 0) : 2 * Real.pi ≤ ‖freq k‖ := by
   obtain ⟨j, hj⟩ : ∃ j, k j ≠ 0 := by
     by_contra h; push Not at h; exact hk (funext h)
@@ -130,14 +94,11 @@ theorem freq_eq_zero_iff {k : d → ℤ} : freq k = 0 ↔ k = 0 := by
     linarith [Real.pi_pos]
   · rintro rfl; exact freq_zero
 
-/-! ### Single Fourier modes -/
-
 section Modes
 
 variable {E F : Type*} [NormedAddCommGroup E] [NormedAddCommGroup F]
 
-/-- **The single-frequency field** `δ_k v` on the Fourier side: the coefficients of the mode
-`v e^{2πi k·x}`. -/
+/-- The single-frequency field `δ_k v`, the coefficients of the mode `v e^{2πi k·x}`. -/
 def mode (k : d → ℤ) (v : E) : Lp E 2 (Measure.count : Measure (d → ℤ)) :=
   (lp.memLp_count (d → ℤ) E 2 (lp.single 2 k v)).toLp _
 
@@ -174,7 +135,6 @@ theorem mode_smul (k : d → ℤ) (c : ℂ) (v : E) : mode k (c • v) = c • m
     rw [Lp.coeFn_eq_count_iff.1 (Lp.coeFn_smul _ _)]
     simp only [coeFn_mode, Pi.smul_apply, Pi.single_smul]
 
-/-- Modes lie in the domain of every multiplier. -/
 theorem mode_mem_mulDomain (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (v : E) :
     mode k v ∈ Operator.mulDomain (Measure.count : Measure (d → ℤ)) m := by
   rw [Operator.mem_mulDomain, coeFn_mode]
@@ -188,7 +148,6 @@ theorem mode_mem_mulDomain (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (
   rw [this]
   exact lp.memLp_count (d → ℤ) F 2 _
 
-/-- A multiplier acts on a mode by its value at the frequency: `m (δ_k v) = δ_k (m k v)`. -/
 theorem mulOp_mode (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (v : E)
     (h : mode k v ∈ (Operator.mulOp (Measure.count : Measure (d → ℤ)) m).domain) :
     Operator.mulOp (Measure.count : Measure (d → ℤ)) m ⟨mode k v, h⟩ = mode k (m k v) := by
@@ -203,14 +162,11 @@ theorem mulOp_mode (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (v : E)
 
 end Modes
 
-/-! ### The torus model of a fibre complex -/
-
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {E : ι → Type*}
   [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace 𝕜 (E i)]
   [∀ i, FiniteDimensional 𝕜 (E i)]
 
-/-- The torus symbol complex of a continuous family of fibre complexes: symbols `S.m i j (2πk)`
-on `ℓ²(ℤᵈ) = L²(ℤᵈ, count)`. -/
+/-- The torus symbol complex, with symbols `S.m i j (2πk)` on `L²(ℤᵈ, count)`. -/
 def symbolComplex (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E) :
     SymbolComplex 𝕜 (Measure.count : Measure (d → ℤ)) c E :=
   S.toSymbolComplex _ freq (Measurable.of_discrete).aemeasurable
@@ -220,20 +176,17 @@ def symbolComplex (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E) :
 
 variable [∀ i, CompleteSpace (E i)]
 
-/-- **The Hilbert complex of a constant-coefficient complex on `𝕋ᵈ`** (Fourier side). -/
+/-- The Hilbert complex of a constant-coefficient complex on `𝕋ᵈ`, on the Fourier side. -/
 def complex (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E) :
     HilbertComplex 𝕜 c fun i => Lp (E i) 2 (Measure.count : Measure (d → ℤ)) :=
   (symbolComplex S).toHilbertComplex
 
-/-- On the torus, fibre reducing subspaces always give a fibre reducing family (all fibre
-projections are measurable for the counting measure). -/
 theorem fibreReducing {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E}
     {K : ∀ i, EuclideanSpace ℝ d → Submodule 𝕜 (E i)} [∀ i ξ, (K i ξ).HasOrthogonalProjection]
     (h : S.IsFibreReducing K) : FibreReducing (symbolComplex S) fun i k => K i (freq k) :=
   h.toFibreReducing _ freq _ fun _ => AEStronglyMeasurable.of_discrete
 
-/-- **Closed range on the torus**: a fibre gap at the frequencies `|ξ| ≥ 2π`, with a vanishing
-symbol at `ξ = 0`, gives closed range of the torus complex. -/
+/-- A fibre gap at `|ξ| ≥ 2π` and a vanishing symbol at `ξ = 0` give closed range on the torus. -/
 theorem closedRangeAt_of_gap {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} {i : ι} {C : ℝ}
     (h0 : S.m (c.prev i) i 0 = 0)
     (hgap : ∀ ξ : EuclideanSpace ℝ d, 2 * Real.pi ≤ ‖ξ‖ →
@@ -248,7 +201,6 @@ theorem closedRangeAt_of_gap {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} 
     simp [eq_zero_of_mem_orthogonal_ker_zero hv]
   · exact hgap _ (two_pi_le_norm_freq hk)
 
-/-- Closed range of the dual torus complex from a fibre gap of the outgoing symbol. -/
 theorem dual_closedRangeAt_of_gap {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} {i j : ι}
     (hij : c.Rel i j) {C : ℝ} (h0 : S.m i j 0 = 0)
     (hgap : ∀ ξ : EuclideanSpace ℝ d, 2 * Real.pi ≤ ‖ξ‖ →
@@ -260,14 +212,11 @@ theorem dual_closedRangeAt_of_gap {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) 
     exact closedRangeAt_of_gap h0 hgap
   exact ((complex S).dual_closedRangeAt_iff hij).2 hj
 
-/-! ### Fourier coefficients of fields on `𝕋ᵈ` -/
-
 section Coefficients
 
 variable {P : Type*} [Fintype P]
 
 omit [Fintype d] in
-/-- The swapped sequence of components is square-summable. -/
 theorem swap_memℓp (f : PiLp 2 fun _ : P => lp (fun _ : d → ℤ => ℂ) 2) :
     Memℓp (fun k => (WithLp.toLp 2 fun p => (f p : (d → ℤ) → ℂ) k : EuclideanSpace ℂ P)) 2 := by
   refine memℓp_gen ?_
@@ -310,27 +259,22 @@ omit [Fintype d] in
 @[simp] theorem swapL2_apply (f : PiLp 2 fun _ : P => lp (fun _ : d → ℤ => ℂ) 2) (k : d → ℤ)
     (p : P) : swapL2 f k p = (f p : (d → ℤ) → ℂ) k := rfl
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Mathlib.Analysis.Fourier.AddCircleMulti`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
-/-- **Fourier coefficients of `L²` fields on `𝕋ᵈ`** (Parseval): componentwise
-`UnitAddTorus.mFourierBasis.repr`, then `swapL2` and `lp.equivLpCount`; a linear isometric
-equivalence `L²(𝕋ᵈ; ℂᴾ) ≃ₗᵢ L²(ℤᵈ, count; ℂᴾ)`. -/
+/-- The Parseval isometry `L²(𝕋ᵈ; ℂᴾ) ≃ₗᵢ L²(ℤᵈ, count; ℂᴾ)` of Fourier coefficients. -/
 def fieldFourier (d P : Type*) [Fintype d] [Fintype P] :
     PiLp 2 (fun _ : P => Lp ℂ 2 (volume : Measure (UnitAddTorus d))) ≃ₗᵢ[ℂ]
       Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ)) :=
   ((LinearIsometryEquiv.piLpCongrRight 2 fun _ => UnitAddTorus.mFourierBasis.repr).trans
     swapL2).trans (lp.equivLpCount ℂ (d → ℤ) (EuclideanSpace ℂ P) 2)
 
-/-- The entries of `fieldFourier d P f` are the Fourier coefficients of the components of `f`. -/
 theorem fieldFourier_apply (f : PiLp 2 fun _ : P => Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
     (k : d → ℤ) (p : P) :
     (fieldFourier d P f : (d → ℤ) → EuclideanSpace ℂ P) k p =
       UnitAddTorus.mFourierCoeff (f p) k := by
   simp [fieldFourier, LinearIsometryEquiv.piLpCongrRight_apply, UnitAddTorus.mFourierBasis_repr]
 
-/-- **A plane wave has a single Fourier coefficient**: the field `e^{2πi k·x} v` has the
-coefficients `δ_k v`. -/
 theorem coe_fieldFourier_mFourierLp [DecidableEq (d → ℤ)] (k : d → ℤ) (v : EuclideanSpace ℂ P) :
     ⇑(fieldFourier d P (WithLp.toLp 2 fun p => v p • UnitAddTorus.mFourierLp 2 k)) =
       Pi.single k v := by

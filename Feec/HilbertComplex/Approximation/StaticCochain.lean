@@ -6,84 +6,20 @@ public import Feec.HilbertComplex.Approximation.StaticCrime
 /-!
 # The static theory with cochain reading maps
 
-The static FEEC theorem with variational crimes (`Feec.HilbertComplex.Approximation.StaticCrime`)
-in the setting of [HolstStern2012], §3: the reading maps `iₕ : Xₕ → W` are **cochain maps**
-(`iₕ Xₕ ⊆ D(𝐝)`, `𝐝 iₕ = iₕ 𝐝ₕ`; `ApproxComplexCrime.Family.IsCochain`), not necessarily
-isometric, and there are **cochain projections** `πₕ : W → Xₕ` (`πₕ iₕ = 1`, `πₕ 𝐝 = 𝐝ₕ πₕ` on
-`D(𝐝)`; `ApproxComplexCrime.Family.CochainProj`) uniformly bounded in the graph norm,
-`‖πₕ x‖ ≤ C_π (‖x‖ + ‖𝐝 x‖)` on `D(𝐝)`: the `V`-bounds of [HolstStern2012], §3.3. Only their
-values on `D(𝐝)` enter; projections bounded in `W` (as the smoothed projections of [AFW2010],
-§5.5) are the case `CochainProj.ofNormLe`. The `πₕ` are analysis data only: the discrete problem
-has the load `iₕ* f`, and they need not be the left inverses of the family (for a conforming
-family those are the orthogonal projections).
-
-In this setting every hypothesis of the static theorem with crimes beyond the inner-product
-defect and best approximation is derived: the cochain defects vanish, the uniform discrete
-Poincaré inequality holds, and the harmonic defect `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete
-harmonic forms is bounded by the approximation of `P_𝔷 u` and the inner-product defect. So the
-error estimate needs no assumed defect, and the method converges for every datum as soon as
-`‖1 - Jₕ‖_{Vₕ} → 0` and `iₕ πₕ → 1` pointwise. Here `‖1 - Jₕ‖_{Vₕ}` is the inner-product defect
-in the graph norm of `𝐝ₕ` (`ApproxComplexCrime.Family.graphDefect`, at most `‖1 - Jₕ‖`): the
-estimates apply `1 - Jₕ` only to discrete harmonic forms, discrete cycles and the discrete
-triples, whose graph norms they control.
+The static FEEC theorem with variational crimes for cochain reading maps `iₕ` with cochain
+projections `πₕ`, `πₕ iₕ = 1`, uniformly bounded in the graph norm ([HolstStern2012], §3).
 
 ## Main results
 
-* `ApproxComplexCrime.Family.IsCochain.cochainDefect_eq_zero`: the cochain defect vanishes.
-* `ApproxComplexCrime.Family.IsCochain.isPoincare`: **the uniform discrete Poincaré inequality**
-  with `c_P = (c₀ + 1) C_π C` ([HolstStern2012], Thm 3.5: `c_P ‖πₕ‖ ‖iₕ‖`, with the `V`-norm of
-  `πₕ`), through `isPoincare_of_norm_proj_le`.
-* `ApproxComplexCrime.Family.IsCochain.norm_inner_incl_harmonic_le`: **the harmonic defect**: for
-  `u ⊥ ℌ` and a discrete harmonic form `q`,
-  `|⟪iₕ q, u⟫| ≤ (C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖) ‖q‖`, `b = P_𝔷 u` (which lies in `cl 𝔅`).
-* `ApproxComplexCrime.Family.IsCochain.norm_sub_incl_harmonic_le`: **the gap from `ℌ` to
-  `iₕ ℌₕ`**: `‖p - iₕ P_ℌₕ πₕ p‖ ≤ (1 + C²) ‖p - iₕ πₕ p‖ + C C_π ‖1 - Jₕ‖_{Vₕ} ‖p‖` for `p ∈ ℌ`
-  (for subcomplexes, `Jₕ = 1`, cf. [AFW2010], Thm 3.5).
-* `ApproxComplexCrime.Family.IsCochain.staticError_le`: **the error estimate**
-  `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E + C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖)`,
-  `E` the read error of any discrete triple `x̃`, `u = G f`, `b = P_𝔷 u`: best approximation, the
-  inner-product defect, and the approximation of `P_𝔷 u` (cf. [HolstStern2012], Cor 3.11).
-  `staticError_le_of_gap`, `norm_inner_incl_harmonic_le_of_gap`: the same with `C` replaced in
-  the harmonic term by any bound `δ` of the gap `‖(1 - P_ℌ) iₕ q‖ ≤ δ ‖q‖` on `ℌₕ`.
-* `ApproxComplexCrime.Family.IsCochain.norm_incl_sub_harmonicProj_le`: **the gap from `iₕ ℌₕ`
-  to `ℌ`**: `‖(1 - P_ℌ) iₕ q‖ ≤ ‖r - iₕ πₕ r‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖q‖` on `ℌₕ`, `r = P_ℌ iₕ q` (for
-  subcomplexes, `Jₕ = 1`, cf. [AFW2010], Thm 3.5). With the factor of [HolstStern2012],
-  Cor 3.11, `μ = sup ‖r - iₕ πₕ r‖` over the unit harmonic forms `r`, the gap is bounded by
-  `δ = C μ + C_π ‖1 - Jₕ‖_{Vₕ}`, and `staticError_le_of_harmonic` is the error estimate with the
-  harmonic term `(C μ + C_π ‖1 - Jₕ‖_{Vₕ}) ‖b - iₕ πₕ b‖`.
-* `ApproxComplexCrime.Family.IsCochain.norm_sub_incl_π_le`: **quasi-optimality of `iₕ πₕ`**,
-  `‖x - iₕ πₕ x‖ ≤ (1 + C C_π) (‖x - iₕ v‖ + ‖𝐝 x - iₕ 𝐝ₕ v‖)` on `D(𝐝)` for every `v`; so
-  `staticError_le_inf`, `staticError_le_of_gap_inf`, `staticError_le_of_harmonic_inf`: the
-  estimates with `(1 + C C_π) inf_v (‖b - iₕ v‖ + ‖iₕ 𝐝ₕ v‖)` (the graph-norm distance of `b`
-  from `iₕ Xₕ`) for `‖b - iₕ πₕ b‖`, the infimum form `μ inf_v ‖P_𝔅 u - iₕ v‖_V` of Cor 3.11.
-* `ApproxComplexCrime.Family.IsCochain.staticError_le_projError`: **the error estimate at the
-  projected approximants** `(πₕ σ, πₕ u, P_ℌₕ πₕ p)`, in terms of the approximation error of
-  `iₕ πₕ` at `σ, 𝐝 σ, u, 𝐝 u, p` (`CochainProj.projError`), `‖b - iₕ πₕ b‖` and
-  `‖1 - Jₕ‖_{Vₕ} ‖X‖`; `staticError_le_of_approx`: **the static rate**, `e(f) ≤ K ε` with
-  `K = cochainRateConst C_π c_P` when `σ, u, p, b` are within `ε` of `iₕ Xₕ` in the graph norm
-  and `‖1 - Jₕ‖_{Vₕ} ‖X‖ ≤ ε` (Jackson-type data, `ε = B L mᵅ`).
-* `ApproxComplexCrime.Family.IsCochain.tendsto_staticError`: **convergence for every datum**
-  from `‖1 - Jₕ‖_{Vₕ} → 0` and `‖x - iₕ πₕ x‖ → 0` for every `x ∈ D(𝐝)` (the approximants are
-  `(πₕ σ, πₕ u, P_ℌₕ πₕ p)`).
-* `ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`: **the isomorphism on cohomology**
-  `H(𝐝) ≃ H(𝐝ₕ)` induced by `πₕ` (`CochainProj.cohomologyMap`, a cochain map,
-  `CochainProj.π_cochainMap`, through `HilbertComplex.apply_mem_cycles`, `apply_mem_boundaries`;
-  onto always, `cohomologyMap_surjective`; one-to-one under closed range and the strict gap
-  `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`, `cohomologyMap_injective`; [HolstStern2012], Thm 3.3 and,
-  under closed range, Cor 3.4).
-* `ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`: **eventually an
-  isomorphism on cohomology**: for a finite-dimensional `ℌ` and `iₕ πₕ → 1` pointwise on `ℌ`, the
-  strict gap holds eventually (`CochainProj.eventually_norm_sub_incl_π_lt`).
-* The instances: `ApproxComplex.Family.isCochain_toCrimeFamily` (cochain reading maps of graded
-  discrete complexes), `ConstrainedFEEC.cochainProj` (the total cochain projection of a
-  subcomplex family with projections bounded in `W`), `ConstrainedFEEC.toCrime_isPoincare`.
+* `ApproxComplexCrime.Family.IsCochain.isPoincare`: the uniform discrete Poincaré inequality.
+* `ApproxComplexCrime.Family.IsCochain.staticError_le`: the error estimate.
+* `ApproxComplexCrime.Family.IsCochain.staticError_le_of_approx`: the static rate.
+* `ApproxComplexCrime.Family.IsCochain.tendsto_staticError`: convergence for every datum.
+* `ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`: cohomology isomorphisms.
 
 ## References
 
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (Thm 3.3, Cor 3.4, Thm 3.5, Cor 3.11)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.5 (the gap between harmonic forms), §5.5 (bounded smoothed projections)
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -99,17 +35,14 @@ namespace Feec.HilbertComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-- `x ≤ a + b` from `x² = a² + b²`. -/
 private theorem le_add_of_sq_eq {x a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b)
     (e : x ^ 2 = a ^ 2 + b ^ 2) : x ≤ a + b := by
   nlinarith [mul_nonneg ha hb]
 
-/-- `x ≤ a + b + c` from `x² = a² + b² + c²`. -/
 private theorem le_add_add_of_sq_eq {x a b c : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c)
     (e : x ^ 2 = a ^ 2 + b ^ 2 + c ^ 2) : x ≤ a + b + c := by
   nlinarith [mul_nonneg ha hb, mul_nonneg ha hc, mul_nonneg hb hc]
 
-/-- `‖x - P_K x‖ ≤ ‖x‖`. -/
 private theorem norm_sub_starProjection_le {E : Type*} [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] (x : E) :
     ‖x - K.starProjection x‖ ≤ ‖x‖ := by
@@ -125,19 +58,15 @@ section Cycles
 
 variable (H : HilbertComplex 𝕜 c W)
 
-/-- A cycle of the total complex lies in `D(𝐝)`. -/
 theorem mem_totalD_domain_of_mem_cycles {x : PiLp 2 W} (hx : x ∈ H.total.cycles ()) :
     x ∈ H.totalD.domain := by
   obtain ⟨y, rfl, -⟩ := LinearPMap.mem_ker_iff.1 hx
   exact y.2
 
-/-- `𝐝 z` is a cycle. -/
 theorem totalD_mem_cycles (z : H.totalD.domain) : H.totalD z ∈ H.total.cycles () :=
   H.total.boundaries_le_cycles () ⟨z, rfl⟩
 
 omit [Fintype ι] in
-/-- **`P_𝔷 = P_{cl 𝔅}` on `ℌᗮ`**: for `u ⊥ ℌ`, the projections of `u` onto the cycles and onto the
-closure of the boundaries agree (`𝔷 = cl 𝔅 ⊕ ℌ`). -/
 theorem starProjection_cycles_eq_of_mem_orthogonal (E : HilbertComplex 𝕜 c W) (i : ι)
     {u : W i} (hu : u ∈ (E.harmonic i)ᗮ) :
     (E.cycles i).starProjection u = (E.boundaries i).topologicalClosure.starProjection u := by
@@ -165,20 +94,12 @@ namespace ApproxComplexCrime.Family
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (S : ApproxComplexCrime.Family.{u} H κ)
 
-/-- **The reading maps are cochain maps**: `iₕ Xₕ ⊆ D(𝐝)` and `𝐝 iₕ = iₕ 𝐝ₕ` (the morphisms
-`iₕ` of [HolstStern2012], §3.1, on the total complexes). -/
+/-- The reading maps are cochain maps: `iₕ Xₕ ⊆ D(𝐝)`, `𝐝 iₕ = iₕ 𝐝ₕ`. [HolstStern2012], §3.1 -/
 structure IsCochain : Prop where
   incl_mem : ∀ h v, S.incl h v ∈ H.totalD.domain
   totalD_incl : ∀ h v, H.totalD ⟨S.incl h v, incl_mem h v⟩ = S.incl h (S.D h v)
 
-/-- **Cochain projections bounded by `C_π` in the graph norm**: linear left inverses
-`πₕ : W → Xₕ` of the reading maps (`πₕ iₕ = 1`) with `πₕ 𝐝 = 𝐝ₕ πₕ` and
-`‖πₕ x‖ ≤ C_π (‖x‖ + ‖𝐝 x‖)` on `D(𝐝)`: the projection morphisms of [HolstStern2012], §3.1,
-which §3.3 assumes only `V`-bounded, `V = D(𝐝)` with the graph norm. The two bounds are
-equivalent up to constants: `‖x‖ + ‖𝐝 x‖ ≤ √2 ‖x‖_V`, and since `𝐝ₕ πₕ x = πₕ 𝐝 x` with
-`𝐝 x ∈ 𝔷`, `‖πₕ x‖_{Vₕ} ≤ ‖πₕ x‖ + ‖πₕ 𝐝 x‖ ≤ 2 C_π (‖x‖ + ‖𝐝 x‖)`. Only the values on `D(𝐝)`
-enter (`πₕ` need not be continuous on `W`), and a linear map on `D(𝐝)` extends linearly to `W`
-(`LinearMap.exists_extend`); projections bounded in `W` give one (`CochainProj.ofNormLe`). -/
+/-- Cochain projections `πₕ`, `πₕ iₕ = 1`, `πₕ 𝐝 = 𝐝ₕ πₕ`, bounded by `C_π` in the graph norm. -/
 structure CochainProj (Cπ : ℝ) where
   /-- the projections -/
   π : ∀ h, PiLp 2 W →ₗ[𝕜] S.X h
@@ -193,8 +114,7 @@ namespace CochainProj
 
 variable {Cπ : ℝ}
 
-/-- **Cochain projections bounded in `W`**, `‖πₕ‖ ≤ C_π`, are bounded by `C_π` in the graph
-norm. -/
+/-- Cochain projections bounded by `C_π` in `W` are bounded by `C_π` in the graph norm. -/
 def ofNormLe (π : ∀ h, PiLp 2 W →L[𝕜] S.X h) (π_incl : ∀ h v, π h (S.incl h v) = v)
     (hCπ : 0 ≤ Cπ) (norm_π_le : ∀ h, ‖π h‖ ≤ Cπ)
     (π_totalD : ∀ h (z : H.totalD.domain), π h (H.totalD z) = S.D h (π h z)) :
@@ -208,22 +128,18 @@ def ofNormLe (π : ∀ h, PiLp 2 W →L[𝕜] S.X h) (π_incl : ∀ h v, π h (S
 
 variable (P : S.CochainProj Cπ)
 
-/-- `‖πₕ x‖ ≤ C_π ‖x‖` on the cycles. -/
 theorem norm_π_apply_le_of_mem_cycles (h : κ) {x : PiLp 2 W} (hx : x ∈ H.total.cycles ()) :
     ‖P.π h x‖ ≤ Cπ * ‖x‖ := by
   obtain ⟨y, rfl, hy⟩ := LinearPMap.mem_ker_iff.1 hx
   have h1 : ‖P.π h y‖ ≤ Cπ * (‖(y : PiLp 2 W)‖ + ‖H.totalD y‖) := P.norm_π_le h y y.2
   rwa [show H.totalD y = 0 from hy, norm_zero, add_zero] at h1
 
-/-- `πₕ` is `C_π`-Lipschitz on the cycles. -/
 theorem lipschitzOnWith_π (h : κ) :
     LipschitzOnWith (Real.toNNReal Cπ) (P.π h) (H.total.cycles () : Set (PiLp 2 W)) :=
   LipschitzOnWith.of_dist_le_mul fun x hx y hy => by
     rw [dist_eq_norm, dist_eq_norm, ← _root_.map_sub, Real.coe_toNNReal _ P.nonneg]
     exact P.norm_π_apply_le_of_mem_cycles h (Submodule.sub_mem _ hx hy)
 
-/-- `πₕ` maps `cl 𝔅` into `𝔅ₕ = range 𝐝ₕ` (closed: `Xₕ` is finite-dimensional; `πₕ` is
-continuous on the closed `𝔷 ⊇ cl 𝔅`). -/
 theorem mem_range_of_mem_closure (h : κ) {b : PiLp 2 W}
     (hb : b ∈ (H.total.boundaries ()).topologicalClosure) :
     P.π h b ∈ LinearMap.range (S.D h : S.X h →ₗ[𝕜] S.X h) := by
@@ -238,8 +154,7 @@ theorem mem_range_of_mem_closure (h : κ) {b : PiLp 2 W}
       (Set.mem_preimage.2 ⟨P.π h z, (P.π_totalD h z).symm⟩)
   exact (closure_minimal hsub hA (by rwa [← Submodule.topologicalClosure_coe])).2
 
-/-- **The approximation error of `iₕ πₕ`** at a mixed triple `X = (σ, u, p)`: the sum of
-`‖z - iₕ πₕ z‖` over `z = σ, 𝐝 σ, u, 𝐝 u, p`. -/
+/-- The approximation error of `iₕ πₕ` at `σ`, `𝐝 σ`, `u`, `𝐝 u`, `p`. -/
 def projError (h : κ) (X : H.total.MixedSpace () ()) : ℝ :=
   ‖H.total.mixedI0 () () X - S.incl h (P.π h (H.total.mixedI0 () () X))‖ +
     ‖H.total.mixedD0 () () X - S.incl h (P.π h (H.total.mixedD0 () () X))‖ +
@@ -250,9 +165,7 @@ def projError (h : κ) (X : H.total.MixedSpace () ()) : ℝ :=
 end CochainProj
 
 variable (S) in
-/-- **The constant of the static rate with cochain reading maps**
-(`IsCochain.staticError_le_of_approx`): `R₀ + 240 C c_P² (51 C_π + C R₀ + C (1 + C C_π))`,
-`R₀ = 5 (1 + C²) (1 + C C_π) + C C_π`, `C` the bound of the reading maps. -/
+/-- The constant of the static rate with cochain reading maps. -/
 def cochainRateConst (Cπ cP : ℝ) : ℝ :=
   (5 * (1 + S.boundConst ^ 2) * (1 + S.boundConst * Cπ) + S.boundConst * Cπ) +
     240 * S.boundConst * cP ^ 2 * (51 * Cπ +
@@ -270,18 +183,15 @@ namespace IsCochain
 variable (hi : S.IsCochain)
 include hi
 
-/-- **Cochain reading maps have no cochain defect.** -/
 theorem cochainDefect_eq_zero (h : κ) (y : H.wave.domain) : S.cochainDefect h y = 0 :=
   S.cochainDefect_eq_zero h (hi.incl_mem h) (hi.totalD_incl h) y
 
-/-- `iₕ` maps the discrete cycles into the cycles. -/
 theorem incl_mem_cycles (h : κ) {v : S.X h} (hv : S.D h v = 0) :
     S.incl h v ∈ H.total.cycles () :=
   show S.incl h v ∈ H.totalD.ker from
     LinearPMap.mem_ker_iff.2 ⟨⟨S.incl h v, hi.incl_mem h v⟩, rfl, by
       rw [hi.totalD_incl, hv, _root_.map_zero]⟩
 
-/-- `iₕ` maps `cl 𝔅ₕ` into `cl 𝔅`. -/
 theorem incl_mem_closure (h : κ) {β : S.X h}
     (hβ : β ∈ ((S.cpx h).boundaries ()).topologicalClosure) :
     S.incl h β ∈ (H.total.boundaries ()).topologicalClosure := by
@@ -292,13 +202,8 @@ theorem incl_mem_closure (h : κ) {β : S.X h}
   exact Submodule.topologicalClosure_minimal _ hle
     ((H.total.boundaries ()).isClosed_topologicalClosure.preimage (S.incl h).continuous) hβ
 
-/-- **The uniform discrete Poincaré inequality from cochain projections bounded in the graph
-norm**: if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, then `‖v‖ ≤ (c₀ + 1) C_π C ‖𝐝ₕ v‖`
-on `(ker 𝐝ₕ)ᗮ`, `C` the bound of the reading maps: on `(ker 𝐝)ᗮ ∩ D(𝐝)`,
-`‖πₕ z‖ ≤ C_π (‖z‖ + ‖𝐝 z‖) ≤ C_π (c₀ + 1) ‖𝐝 z‖` (`isPoincare_of_norm_proj_le`).
-[HolstStern2012], Thm 3.5, whose constant `c_P` is the Poincaré constant in the `V`-norm,
-`√(1 + c₀²) ≤ c₀ + 1`. For projections bounded in `W` the constant `c₀ C_π C` is
-`Family.isPoincare_of_proj`. -/
+/-- **The uniform discrete Poincaré inequality**: if `𝐝` has the Poincaré constant `c₀`, then
+`‖v‖ ≤ (c₀ + 1) C_π C ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`, `C` the bound of the reading maps. -/
 theorem isPoincare {Cπ : ℝ} (P : S.CochainProj Cπ) {c₀ : ℝ}
     (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖) :
@@ -310,15 +215,6 @@ theorem isPoincare {Cπ : ℝ} (P : S.CochainProj Cπ) {c₀ : ℝ}
       nlinarith [hc z hz, P.nonneg])
     fun h z hz => by rw [← P.π_totalD, hz, _root_.map_zero]).mono (le_of_eq (by ring))
 
-/-- **The harmonic defect of cochain reading maps, with the harmonic gap `δ`**: if the read
-discrete harmonic forms are within `δ` of `ℌ`, `‖(1 - P_ℌ) iₕ q‖ ≤ δ ‖q‖` on `ℌₕ`, then for
-`u ⊥ ℌ`, `b = P_𝔷 u` and a discrete harmonic form `q`,
-`|⟪iₕ q, u⟫| ≤ (δ ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖) ‖q‖`. Indeed `iₕ q ∈ 𝔷`, so
-`⟪iₕ q, u⟫ = ⟪iₕ q, b⟫`; `b ∈ cl 𝔅`, so `πₕ b ∈ 𝔅ₕ ⊥ q`,
-`⟪iₕ q, iₕ πₕ b⟫ = -⟪(1 - Jₕ) q, πₕ b⟫`, and `b - iₕ πₕ b ∈ cl 𝔅 ⊥ ℌ`, so
-`⟪iₕ q, b - iₕ πₕ b⟫ = ⟪(1 - P_ℌ) iₕ q, b - iₕ πₕ b⟫`. The factor of [HolstStern2012],
-Cor 3.11 is `sup ‖r - iₕ πₕ r‖` over the unit harmonic forms `r`, not a bound of this gap; it
-bounds the gap through `norm_incl_sub_harmonicProj_le`. -/
 theorem norm_inner_incl_harmonic_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {δ : ℝ}
     (hδ : ∀ q ∈ (S.cpx h).harmonic (),
       ‖S.incl h q - (H.total.harmonic ()).starProjection (S.incl h q)‖ ≤ δ * ‖q‖)
@@ -377,9 +273,6 @@ theorem norm_inner_incl_harmonic_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) (
     _ ≤ _ := add_le_add t1 t2
     _ = _ := by ring
 
-/-- **The harmonic defect of cochain reading maps**: for `u ⊥ ℌ`, `b = P_𝔷 u` and a discrete
-harmonic form `q`, `|⟪iₕ q, u⟫| ≤ (C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖) ‖q‖`
-(`norm_inner_incl_harmonic_le_of_gap` with `δ = C`: `‖(1 - P_ℌ) iₕ q‖ ≤ ‖iₕ q‖ ≤ C ‖q‖`). -/
 theorem norm_inner_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {u : PiLp 2 W}
     (hu : u ∈ (H.total.harmonic ())ᗮ) {q : S.X h} (hq : q ∈ (S.cpx h).harmonic ()) :
     ‖⟪S.incl h q, u⟫_𝕜‖ ≤ (S.boundConst * ‖(H.total.cycles ()).starProjection u -
@@ -388,11 +281,6 @@ theorem norm_inner_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ)
   hi.norm_inner_incl_harmonic_le_of_gap P h (fun q _ => (norm_sub_starProjection_le _ _).trans
     (S.norm_incl_apply_le h q)) hu hq
 
-/-- **The gap from the read discrete harmonic forms to the harmonic forms**: for `q ∈ ℌₕ` and
-`r = P_ℌ iₕ q`, `‖iₕ q - r‖ ≤ ‖r - iₕ πₕ r‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖q‖`. With `b = iₕ q - r ∈ cl 𝔅`
-(`iₕ q ∈ 𝔷`): `b - iₕ πₕ b = -(r - iₕ πₕ r)` (`πₕ iₕ = 1`), and `πₕ b ∈ 𝔅ₕ ⊥ q`, `iₕ πₕ b ⊥ r`,
-so `‖b‖² = -⟪b, r - iₕ πₕ r⟫ - ⟪(1 - Jₕ) q, πₕ b⟫`. For subcomplexes (`Jₕ = 1`) cf. [AFW2010],
-Thm 3.5. -/
 theorem norm_incl_sub_harmonicProj_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {q : S.X h}
     (hq : q ∈ (S.cpx h).harmonic ()) :
     ‖S.incl h q - (H.total.harmonic ()).starProjection (S.incl h q)‖ ≤
@@ -446,10 +334,6 @@ theorem norm_incl_sub_harmonicProj_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : �
       (mul_nonneg (mul_nonneg hCπ (S.graphDefect_nonneg h)) (norm_nonneg _))
   · exact le_of_mul_le_mul_left h1 hpos
 
-/-- **The gap from the harmonic forms to the read discrete harmonic forms**: for `p ∈ ℌ`,
-`‖p - iₕ P_ℌₕ πₕ p‖ ≤ (1 + C²) ‖p - iₕ πₕ p‖ + C C_π ‖1 - Jₕ‖_{Vₕ} ‖p‖`. With `β = πₕ p - P_ℌₕ πₕ p`
-(in `cl 𝔅ₕ`, so `iₕ β ⊥ p`): `‖β‖² = ⟪iₕ β, iₕ πₕ p - p⟫ + ⟪(1 - Jₕ) β, πₕ p⟫`. For
-subcomplexes (`Jₕ = 1`) cf. [AFW2010], Thm 3.5. -/
 theorem norm_sub_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {p : PiLp 2 W}
     (hp : p ∈ H.total.harmonic ()) :
     ‖p - S.incl h (((S.cpx h).harmonic ()).starProjection (P.π h p))‖ ≤
@@ -517,9 +401,6 @@ theorem norm_sub_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {
         (S.boundConst * ‖p - S.incl h a‖ + Cπ * S.graphDefect h * ‖p‖) := by gcongr
     _ = _ := by ring
 
-/-- **Quasi-optimality of `iₕ πₕ` in the graph norm**: for `x ∈ D(𝐝)` and every `v`,
-`‖x - iₕ πₕ x‖ ≤ (1 + C C_π) (‖x - iₕ v‖ + ‖𝐝 x - iₕ 𝐝ₕ v‖)`. With `w = x - iₕ v`:
-`x - iₕ πₕ x = w - iₕ πₕ w` (`πₕ iₕ = 1`) and `𝐝 w = 𝐝 x - iₕ 𝐝ₕ v`. -/
 theorem norm_sub_incl_π_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) (x : H.totalD.domain)
     (v : S.X h) :
     ‖(x : PiLp 2 W) - S.incl h (P.π h x)‖ ≤ (1 + S.boundConst * Cπ) *
@@ -540,9 +421,6 @@ theorem norm_sub_incl_π_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) (x : H.
         gcongr; exact h2.trans (by gcongr)
     _ ≤ _ := by nlinarith [norm_nonneg (H.totalD w), norm_nonneg (w : PiLp 2 W)]
 
-/-- **Quasi-optimality of `iₕ πₕ` on the cycles**: for `x ∈ 𝔷` and every `v`,
-`‖x - iₕ πₕ x‖ ≤ (1 + C C_π) (‖x - iₕ v‖ + ‖iₕ 𝐝ₕ v‖)`, the graph-norm distance
-`‖x - iₕ v‖ + ‖𝐝 (x - iₕ v)‖` (`norm_sub_incl_π_le` with `𝐝 x = 0`). -/
 theorem norm_sub_incl_π_le_of_mem_cycles {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {x : PiLp 2 W}
     (hx : x ∈ H.total.cycles ()) (v : S.X h) :
     ‖x - S.incl h (P.π h x)‖ ≤ (1 + S.boundConst * Cπ) *
@@ -551,10 +429,6 @@ theorem norm_sub_incl_π_le_of_mem_cycles {Cπ : ℝ} (P : S.CochainProj Cπ) (h
   have := hi.norm_sub_incl_π_le P h y v
   rwa [show H.totalD y = 0 from hy, zero_sub, norm_neg] at this
 
-/-- **The gap from the read discrete harmonic forms with the factor `μ` of [HolstStern2012],
-Cor 3.11**: if `‖r - iₕ πₕ r‖ ≤ μ ‖r‖` on `ℌ`, then
-`‖(1 - P_ℌ) iₕ q‖ ≤ (C μ + C_π ‖1 - Jₕ‖_{Vₕ}) ‖q‖` on `ℌₕ` (`norm_incl_sub_harmonicProj_le`,
-`‖P_ℌ iₕ q‖ ≤ C ‖q‖`). -/
 theorem norm_incl_sub_harmonicProj_le_of_harmonic {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ)
     {μ : ℝ} (hμ0 : 0 ≤ μ)
     (hμ : ∀ r ∈ H.total.harmonic (), ‖r - S.incl h (P.π h r)‖ ≤ μ * ‖r‖) {q : S.X h}
@@ -569,12 +443,6 @@ theorem norm_incl_sub_harmonicProj_le_of_harmonic {Cπ : ℝ} (P : S.CochainProj
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-/-- **The error estimate with cochain reading maps, with the harmonic gap `δ`**: if
-`‖(1 - P_ℌ) iₕ q‖ ≤ δ ‖q‖` on `ℌₕ`, then for every discrete triple `x̃`,
-`e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E + δ ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖)`,
-`E` the read error of `x̃`, `u = G f` and `b = P_𝔷 u`: no cochain defect, and the harmonic defect
-bounded by `norm_inner_incl_harmonic_le_of_gap` (cf. [HolstStern2012], Cor 3.11, and
-`staticError_le_of_harmonic` for its factor `μ`). -/
 theorem staticError_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
     (hcP : 1 ≤ cP) (h : κ) {δ : ℝ} (hδ0 : 0 ≤ δ)
     (hδ : ∀ q ∈ (S.cpx h).harmonic (),
@@ -599,10 +467,9 @@ theorem staticError_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP
       (H.greenOp_mem_orthogonal_harmonic hcr f) hq)
   simpa only [add_zero] using this
 
-/-- **The error estimate with cochain reading maps**: for every discrete triple `x̃`,
-`e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E + C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖)`,
-`E` the read error of `x̃`, `u = G f` and `b = P_𝔷 u` (`staticError_le_of_gap` with `δ = C`; cf.
-[HolstStern2012], Cor 3.11). -/
+/-- **The error estimate with cochain reading maps**: with a uniform discrete Poincaré inequality,
+`e(f)` is bounded by the read error of any discrete triple, the inner-product defect and
+`‖b - iₕ πₕ b‖`, `b = P_𝔷 G f`. -/
 theorem staticError_le {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
     (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) :
     S.staticError hcr h f ≤ S.readError h (H.totalMixedSolution hcr f) x +
@@ -614,13 +481,6 @@ theorem staticError_le {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.Is
   hi.staticError_le_of_gap hcr P hP hcP h S.boundConst_nonneg
     (fun q _ => (norm_sub_starProjection_le _ _).trans (S.norm_incl_apply_le h q)) f x
 
-/-- **The error estimate with cochain reading maps and the factor `μ` of [HolstStern2012],
-Cor 3.11**: if `‖r - iₕ πₕ r‖ ≤ μ ‖r‖` on `ℌ` (`μ = sup ‖(1 - iₕ πₕ) r‖` over the unit harmonic
-forms), then for every discrete triple `x̃`, `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E +
-(C μ + C_π ‖1 - Jₕ‖_{Vₕ}) ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖)`, `E` the read error of `x̃`,
-`u = G f`, `b = P_𝔷 u` (`staticError_le_of_gap` with the gap bounded by
-`norm_incl_sub_harmonicProj_le`). Cor 3.11 has `μ inf_v ‖P_𝔅 u - iₕ v‖_V` and `‖1 - Jₕ‖ ‖f‖` for
-these terms; the infimum form is `staticError_le_of_harmonic_inf`. -/
 theorem staticError_le_of_harmonic {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
     (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) {μ : ℝ} (hμ0 : 0 ≤ μ)
     (hμ : ∀ r ∈ H.total.harmonic (), ‖r - S.incl h (P.π h r)‖ ≤ μ * ‖r‖)
@@ -636,10 +496,6 @@ theorem staticError_le_of_harmonic {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ
     (add_nonneg (mul_nonneg S.boundConst_nonneg hμ0) (mul_nonneg P.nonneg (S.graphDefect_nonneg h)))
     (fun _ hq => hi.norm_incl_sub_harmonicProj_le_of_harmonic P h hμ0 hμ hq) f x
 
-/-- **The error estimate with cochain reading maps, with the harmonic gap `δ`, in the infimum
-form**: as `staticError_le_of_gap`, with `‖b - iₕ πₕ b‖` replaced by
-`(1 + C C_π) (‖b - iₕ v‖ + ‖iₕ 𝐝ₕ v‖)` for every `v` (`norm_sub_incl_π_le_of_mem_cycles`), hence
-by `(1 + C C_π)` times the graph-norm distance `inf_v ‖b - iₕ v‖_V` of `b = P_𝔷 u`. -/
 theorem staticError_le_of_gap_inf {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
     (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) {δ : ℝ} (hδ0 : 0 ≤ δ)
     (hδ : ∀ q ∈ (S.cpx h).harmonic (),
@@ -657,10 +513,6 @@ theorem staticError_le_of_gap_inf {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
   gcongr
   exact hi.norm_sub_incl_π_le_of_mem_cycles P h ((H.total.cycles ()).starProjection_apply_mem _) v
 
-/-- **The error estimate with cochain reading maps in the infimum form**: for every discrete
-triple `x̃` and every `v`, `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E +
-C (1 + C C_π) (‖b - iₕ v‖ + ‖iₕ 𝐝ₕ v‖) + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖)`, `u = G f`, `b = P_𝔷 u`
-(`staticError_le_of_gap_inf` with `δ = C`). -/
 theorem staticError_le_inf {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
     (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) (v : S.X h) :
     S.staticError hcr h f ≤ S.readError h (H.totalMixedSolution hcr f) x +
@@ -673,13 +525,6 @@ theorem staticError_le_inf {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : 
   hi.staticError_le_of_gap_inf hcr P hP hcP h S.boundConst_nonneg
     (fun q _ => (norm_sub_starProjection_le _ _).trans (S.norm_incl_apply_le h q)) f x v
 
-/-- **The error estimate with cochain reading maps, the factor `μ` and the infimum form of
-[HolstStern2012], Cor 3.11**: if `‖r - iₕ πₕ r‖ ≤ μ ‖r‖` on `ℌ`, then for every discrete triple
-`x̃` and every `v`, `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E +
-(C μ + C_π ‖1 - Jₕ‖_{Vₕ}) (1 + C C_π) (‖b - iₕ v‖ + ‖iₕ 𝐝ₕ v‖) + C_π ‖1 - Jₕ‖_{Vₕ} ‖u‖)`, `u = G f`,
-`b = P_𝔷 u` (`staticError_le_of_gap_inf`, `norm_incl_sub_harmonicProj_le_of_harmonic`):
-Cor 3.11's harmonic term `μ inf_v ‖P_𝔅 u - iₕ v‖_V` (`P_𝔷 u = P_𝔅 u` for `u ⊥ ℌ`), with
-`‖b - iₕ v‖ + ‖𝐝 (b - iₕ v)‖` for the `V`-norm. -/
 theorem staticError_le_of_harmonic_inf {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
     (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) {μ : ℝ} (hμ0 : 0 ≤ μ)
     (hμ : ∀ r ∈ H.total.harmonic (), ‖r - S.incl h (P.π h r)‖ ≤ μ * ‖r‖)
@@ -695,14 +540,6 @@ theorem staticError_le_of_harmonic_inf {Cπ : ℝ} (P : S.CochainProj Cπ) {cP :
     (add_nonneg (mul_nonneg S.boundConst_nonneg hμ0) (mul_nonneg P.nonneg (S.graphDefect_nonneg h)))
     (fun _ hq => hi.norm_incl_sub_harmonicProj_le_of_harmonic P h hμ0 hμ hq) f x v
 
-/-- **The error estimate with cochain reading maps at the projected approximants**: with the
-approximants `(πₕ σ, πₕ u, P_ℌₕ πₕ p)` of the mixed solution `X = (σ, u, p)`,
-`e(f) ≤ R + 240 C c_P² (51 C_π ‖1 - Jₕ‖_{Vₕ} ‖X‖ + C R + C ‖b - iₕ πₕ b‖)`,
-`R = (1 + C²) ε_π + C C_π ‖1 - Jₕ‖_{Vₕ} ‖X‖`, `ε_π` the approximation error of `iₕ πₕ` at
-`σ, 𝐝 σ, u, 𝐝 u, p` (`CochainProj.projError`) and `b = P_𝔷 u`: the read error of the
-approximants is at most `R` (`𝐝ₕ πₕ = πₕ 𝐝`; the harmonic gap `norm_sub_incl_harmonic_le` at
-`p`), their norm at most `10 C_π ‖X‖`, and `staticError_le` applies. Cf. [HolstStern2012],
-Cor 3.11 -/
 theorem staticError_le_projError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
     (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) :
     S.staticError hcr h f ≤ ((1 + S.boundConst ^ 2) * P.projError h (H.totalMixedSolution hcr f) +
@@ -786,14 +623,9 @@ theorem staticError_le_projError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
   have t3 := mul_le_mul_of_nonneg_left hread hC
   linarith
 
-/-- **The static rate with cochain reading maps**: if the components `σ, u, p` of the mixed
-solution `X` and `b = P_𝔷 u` are within `ε` of `iₕ Xₕ` in the graph norm (some `v` with
-`‖z - iₕ v‖ + ‖𝐝 z - iₕ 𝐝ₕ v‖ ≤ ε`, `𝐝 p = 𝐝 b = 0`: Jackson-type data) and
-`‖1 - Jₕ‖_{Vₕ} ‖X‖ ≤ ε`, then `e(f) ≤ K ε` with `K = cochainRateConst C_π c_P`
-(`staticError_le_projError`, with `ε_π ≤ 5 (1 + C C_π) ε` and
-`‖b - iₕ πₕ b‖ ≤ (1 + C C_π) ε` by the quasi-optimality `norm_sub_incl_π_le`). For Jackson data
-`ε = B L mᵅ` this is the rate hypothesis of `HeatFamily.rate_heat_of_static`. Cf.
-[HolstStern2012], Cor 3.11 -/
+/-- **The static rate with cochain reading maps**: with a uniform discrete Poincaré inequality, if
+`σ`, `u`, `p`, `P_𝔷 u` are within `ε` of `iₕ Xₕ` in the graph norm and `‖1 - Jₕ‖_{Vₕ} ‖X‖ ≤ ε`,
+then `e(f) ≤ K ε`, `K = cochainRateConst`. -/
 theorem staticError_le_of_approx {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
     (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) {ε : ℝ}
     (hσ : ∃ v, ‖H.total.mixedI0 () () (H.totalMixedSolution hcr f) - S.incl h v‖ +
@@ -864,9 +696,8 @@ theorem staticError_le_of_approx {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
   simp only [cochainRateConst]
   nlinarith
 
-/-- **Convergence with cochain reading maps**: under the uniform discrete Poincaré inequality, if
-the inner-product defect tends to `0` and `iₕ πₕ x → x` for every `x ∈ D(𝐝)`, the static error
-tends to `0` for every datum (`staticError_le_projError`). Cf. [HolstStern2012], Cor 3.11 -/
+/-- **Convergence with cochain reading maps**: with a uniform discrete Poincaré inequality,
+`‖1 - Jₕ‖_{Vₕ} → 0` and `iₕ πₕ x → x` on `D(𝐝)`, the static error tends to `0` for every datum. -/
 theorem tendsto_staticError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
     (hcP : 1 ≤ cP) {l : Filter κ} (hJ : Tendsto S.graphDefect l (𝓝 0))
     (happ : ∀ x ∈ H.totalD.domain, Tendsto (fun h => ‖x - S.incl h (P.π h x)‖) l (𝓝 0))
@@ -902,8 +733,6 @@ namespace CochainProj
 
 variable {Cπ : ℝ} (P : S.CochainProj Cπ)
 
-/-- `πₕ` is a cochain map `H.total → S.cpx h` (the hypothesis of
-`HilbertComplex.apply_mem_cycles`, `HilbertComplex.apply_mem_boundaries`). -/
 theorem π_cochainMap (h : κ) (j k : Unit) (_ : ComplexShape.loop.Rel j k)
     (x : (H.total.d j k).domain) :
     ∃ hx : (P.π h : PiLp 2 W →ₗ[𝕜] S.X h) x ∈ ((S.cpx h).d j k).domain,
@@ -929,8 +758,6 @@ namespace IsCochain
 variable (hi : S.IsCochain)
 include hi
 
-/-- **The induced map on cohomology is onto**: a discrete cycle `z` is `πₕ` of the cycle
-`iₕ z`. [HolstStern2012], §3.1 -/
 theorem cohomologyMap_surjective {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) :
     Function.Surjective (P.cohomologyMap h) := by
   intro y
@@ -940,10 +767,6 @@ theorem cohomologyMap_surjective {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) :
   rw [CochainProj.cohomologyMap, Submodule.mapQ_apply]
   exact congrArg _ (Subtype.ext (P.π_incl h x))
 
-/-- **The induced map on cohomology is one-to-one** under closed range and the strict gap
-`‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`: write a cycle `z = b + q`, `b ∈ 𝔅`, `q ∈ ℌ`; if
-`πₕ z ∈ 𝔅ₕ` then `πₕ q ∈ 𝔅ₕ`, so `iₕ πₕ q ∈ 𝔅 ⊥ q`, and the gap forces `q = 0`.
-[HolstStern2012], Thm 3.3 (reduced cohomology, no closed range) and Cor 3.4 (closed complexes) -/
 theorem cohomologyMap_injective {Cπ : ℝ} (P : S.CochainProj Cπ) (hcr : ∀ i, H.ClosedRangeAt i)
     (h : κ) (hgap : ∀ q ∈ H.total.harmonic (), q ≠ 0 → ‖q - S.incl h (P.π h q)‖ < ‖q‖) :
     Function.Injective (P.cohomologyMap h) := by
@@ -975,9 +798,7 @@ theorem cohomologyMap_injective {Cπ : ℝ} (P : S.CochainProj Cπ) (hcr : ∀ i
     add_zero]
   exact ⟨w, hw⟩
 
-/-- **Cochain reading maps and projections induce an isomorphism on cohomology**
-`H(𝐝) ≃ H(𝐝ₕ)` under closed range and the strict gap `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`.
-[HolstStern2012], Thm 3.3, Cor 3.4 -/
+/-- The isomorphism `H(𝐝) ≃ H(𝐝ₕ)` under closed range and a strict gap. [HolstStern2012], Cor 3.4 -/
 def cohomologyEquiv {Cπ : ℝ} (P : S.CochainProj Cπ) (hcr : ∀ i, H.ClosedRangeAt i) (h : κ)
     (hgap : ∀ q ∈ H.total.harmonic (), q ≠ 0 → ‖q - S.incl h (P.π h q)‖ < ‖q‖) :
     H.total.cohomology () ≃ₗ[𝕜] (S.cpx h).cohomology () :=
@@ -990,10 +811,6 @@ namespace CochainProj
 
 variable {Cπ : ℝ} (P : S.CochainProj Cπ)
 
-/-- **The strict gap holds eventually** where `ℌ` is finite-dimensional: if `iₕ πₕ q → q` along
-`l` for every `q ∈ ℌ`, then eventually `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`. The maps
-`q ↦ ‖q - iₕ πₕ q‖` are `(1 + C C_π)`-Lipschitz, so the convergence is uniform on the (compact)
-unit ball of `ℌ`. Cf. [AFW2010], Thm 3.5 and §3.4 -/
 theorem eventually_norm_sub_incl_π_lt [FiniteDimensional 𝕜 (H.total.harmonic ())] {l : Filter κ}
     (happ : ∀ q ∈ H.total.harmonic (), Tendsto (fun h => ‖q - S.incl h (P.π h q)‖) l (𝓝 0)) :
     ∀ᶠ h in l, ∀ q ∈ H.total.harmonic (), q ≠ 0 → ‖q - S.incl h (P.π h q)‖ < ‖q‖ := by
@@ -1041,10 +858,8 @@ namespace IsCochain
 variable (hi : S.IsCochain)
 include hi
 
-/-- **Cochain reading maps and projections eventually induce isomorphisms on cohomology**: under
-closed range, with `ℌ` finite-dimensional and `iₕ πₕ q → q` for every `q ∈ ℌ` along `l`, the
-maps `[z] ↦ [πₕ z]` are eventually bijective (`CochainProj.eventually_norm_sub_incl_π_lt`,
-`cohomologyEquiv`). [HolstStern2012], Cor 3.4 -/
+/-- **Eventual isomorphisms on cohomology**: under closed range, with `ℌ` finite-dimensional and
+`iₕ πₕ q → q` on `ℌ`, the maps `[z] ↦ [πₕ z]` are eventually bijective. [HolstStern2012], Cor 3.4 -/
 theorem eventually_bijective_cohomologyMap {Cπ : ℝ} (P : S.CochainProj Cπ)
     (hcr : ∀ i, H.ClosedRangeAt i) [FiniteDimensional 𝕜 (H.total.harmonic ())] {l : Filter κ}
     (happ : ∀ q ∈ H.total.harmonic (), Tendsto (fun h => ‖q - S.incl h (P.π h q)‖) l (𝓝 0)) :
@@ -1058,8 +873,6 @@ end ApproxComplexCrime.Family
 
 /-! ### Instances -/
 
-/-- **Cochain reading maps of graded discrete complexes are cochain maps of the total
-complexes.** -/
 theorem ApproxComplex.Family.isCochain_toCrimeFamily {H : HilbertComplex 𝕜 c W} {κ : Type*}
     (S : ApproxComplex.Family.{u} H κ) : S.toCrimeFamily.IsCochain :=
   ⟨S.inclL_mem, fun h v => (S.inclL_D h v).symm⟩
@@ -1086,8 +899,7 @@ theorem inclL_totalπ (h : κ) (x : PiLp 2 W) :
     F.toFamily.inclL h (F.totalπ hC hb h x) = F.piProj h x :=
   rfl
 
-/-- **The total cochain projections of a subcomplex family bounded in `W`** are cochain
-projections of the family with zero defects `F.toCrime` (`CochainProj.ofNormLe`). -/
+/-- The total cochain projections of a subcomplex family bounded in `W`. -/
 def cochainProj : F.toCrime.toFamily.CochainProj C :=
   .ofNormLe (F.totalπ hC hb) (fun h v => PiLp.ext fun i => Subtype.ext
     ((F.π h).proj i _ ((show PiLp 2 (F.toFamily.V h) from v) i).2)) hC
@@ -1101,9 +913,6 @@ def cochainProj : F.toCrime.toFamily.CochainProj C :=
     rfl
 
 include hC hb in
-/-- **The conforming case satisfies the uniform discrete Poincaré inequality**: under closed range,
-for projections bounded in `W` (`ConstrainedFEEC.cochainProj`,
-`ApproxComplexCrime.Family.IsCochain.isPoincare`). -/
 theorem toCrime_isPoincare (hcr : ∀ i, H.ClosedRangeAt i) :
     ∃ cP, 1 ≤ cP ∧ F.toCrime.toFamily.IsPoincare cP := by
   obtain ⟨c₀, hc₀⟩ := H.exists_poincare_totalD hcr

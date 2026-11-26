@@ -7,65 +7,20 @@ public import Feec.Models.Cube.Sobolev
 /-!
 # Regularity of the mirror TSD wave and the unconditional rate of the mirror scheme (6.5)
 
-`Feec.Models.Cube.MirrorWeakSymmetry.mirrorWave_rate` gives the `O(h)` rate of the mirror
-scheme (6.5) of [QuennevilleBelair2015], §6.3, under the hypothesis that the forms states of the
-solution are `C²` up to `∂Q` (`IsSmoothStateMirror`). This file removes that hypothesis: the
-rate holds for every TSD datum of `D(L³)`, and `O(hˢ)` holds for Sobolev data, `0 ≤ s ≤ 1`.
-
-**The parity model.** The BGG complex on `Q = (0, ½)³` with mirror boundary conditions is the
-compression of the torus complex along the mirror extensions `MirrorBGG.J`, so its wave group is
-the restriction of the torus wave group, a Fourier multiplier (the linearized EB system as a Hodge
-wave equation is [QuennevilleBelair2015], §4.10). For a state `x` on `Q` let
-`e_x(m) = Σᵢ |(J x)ᵢ^(m)|²` be the energy of its mirror extension at the frequency `m`
-(`fibreEnergy`) and `‖x‖²_s = 8⁻¹ Σ_m ⟨ξ_m⟩^{2s} e_x(m)` its Sobolev norm (`sobState`, the
-`Hˢ(𝕋³)` norm of `J x`; the factor `8⁻¹ = 2⁻³` makes `‖x‖_0 = ‖x‖`).
-
-* **Invariance.** Each frequency `{m}` and its complement are reducing for the torus complex
-  (`freqIn_reducing`, `freqOut_reducing`), so `e_{e^{tL}x}(m) = e_x(m)` for every `t ∈ ℝ`
-  (`fibreEnergy_waveGroupQ`): every Sobolev norm of the mirror extension is conserved
-  (`sobState_waveGroupQ`; the torus symbol is skew-Hermitian at each frequency).
-* **Identification on TSD states.** On the constraint `{0} × L²(TSD) × ({0} × L²(TSD))`,
-  `e_{Lx}(m) = |ξ_m|² e_x(m)` (`fibreEnergy_waveQ_of_tsd`): `(L x)₁^(m) = -curl_ξ B̂(m)`,
-  `(L x)₂^(m) = (0, curl_ξ Ê(m))`, and `|curl_ξ A| = |ξ| |A|` on symmetric matrices with `A ξ = 0`
-  (`|ξ × a| = |ξ| |a|` when `ξ · a = 0`, row-wise). Hence
-  `‖x‖²_1 = ‖x‖² + ‖L x‖²` (`sobState_one_of_tsd`). The compatibility conditions of `D(Lᵏ)` at
-  `∂Q` are exactly the mirror parities.
-* **Rows in the parity classes.** For `J x ∈ Hˢ(𝕋³)` the rows `(Re E)_a` (`1`-forms) and
-  `(⋆Re B)_a` (`2`-forms) lie in the parity Sobolev classes `Hˢ_{a}(Q)` of the bottom row of
-  `MirrorClose`, with `‖·‖_{s,{a}} ≤ ‖x‖_s` (`rowRe_sobolevPar`, `rowRe2_sobolevPar`; the
-  coefficients of the parity extension are `½ (Ê(m) + conj Ê(-m))`, `coeff_JfJ_rowRe`).
-* **Closeness.** The parity-smoothed projections approximate `Hˢ_{a}` data at the rate `hˢ`:
-  `‖y − π y‖ ≤ (1 + 2C) dist(y, V_{h,Γ_{a}}) ≤ (1 + 2C) C_s hˢ ‖y‖_{s,{a}}` (`norm_sub_projB_le`,
-  from `infDist_polyPartial_le_sobolevPar`, [AFW2010], §5.4), so the TSD forms states and their
-  time derivatives are `MirrorClose` at level `C hˢ (‖U₀‖_s + ‖LU₀‖_s + ‖L²U₀‖_s)`
-  (`mirrorClose_of_sobolev`, `TSDDatum.mirrorClose_state`, `TSDDatum.mirrorClose_deriv`;
-  `σ ≡ 0`, `φ ≡ 0`, `M ≡ 0` and `S¹u = 0` for TSD states).
+The mirror scheme (6.5) of [QuennevilleBelair2015], §6.3 converges at the rate `O(h)` for every TSD
+datum of `D(L³)` and at the rate `O(hˢ)`, `0 ≤ s ≤ 1`, for Sobolev TSD data, with no smoothness
+hypothesis.
 
 ## Main results
 
-* **`mirror_waveFEM_rate_of_mem_domain`**: for every TSD datum with `L² U₀ ∈ D(L)` (i.e.
-  `U₀ ∈ D(L³)`), the conclusion of `MirrorWeakSymmetry.mirrorWave_rate` with the bound
-  `K (‖U₀‖ + ‖LU₀‖ + ‖L²U₀‖ + ‖L³U₀‖)(1 + t) h_N`, no smoothness hypothesis.
-* **`mirror_waveFEM_rate_sobolev`**: the bound `K (‖U₀‖_s + ‖LU₀‖_s + ‖L²U₀‖_s)(1 + t) h_Nˢ` for
-  TSD data whose mirror extensions `J U₀`, `J LU₀`, `J L²U₀` lie in `Hˢ(𝕋³)`, `0 ≤ s ≤ 1`.
-* **`mirror_waveFEM_rate_sobolev_of_add_two`**: the bound `K ‖U₀‖_{2+s} (1 + t) h_Nˢ` for TSD
-  data with `J U₀ ∈ H^{2+s}(𝕋³)`, a single Sobolev class on the datum
-  (`TSDDatum.memSobState_of_add_two`).
-* `cosDatum_LLU₀_mem`: the cos datum (`cosDatum`) lies in `D(L³)`.
-* `sobState_waveGroupQ`, `sobState_one_of_tsd`, `rowRe_sobolevPar`, `rowRe2_sobolevPar`, `mirrorClose_of_sobolev`.
-
-No hypothesis is assumed. **The data class.** The Strang data of (6.4) contain `d u'`, the rows of
-`⋆Re B''`, so the proof needs `J L² U₀ ∈ Hˢ`: `U₀ ∈ D(L³)` for `O(h)`, and `J L² U₀ ∈ Hˢ` (roughly `H^{2+s}` data) for `O(hˢ)`.
-Not formalized: a TSD datum of `D(L³)` that is not `C²` (expected, since `H³(𝕋³) ⊄ C²(𝕋³)`; the
-embedding `Hˢ ⊆ C²` needs `s > 7/2`), and whether a sharper analysis of (6.5) needs less than
-`D(L³)` for `O(h)`.
+* `mirror_waveFEM_rate_of_mem_domain`: the rate `O(h)`.
+* `mirror_waveFEM_rate_sobolev`, `mirror_waveFEM_rate_sobolev_of_add_two`: the rate `O(hˢ)`,
+  `0 ≤ s ≤ 1`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 6 (§6.3, (6.5); §6.2, (6.4)), §4.10 (the linearized EB system as a Hodge wave equation)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -155,7 +110,6 @@ theorem summable_fibreEnergy (X : PiLp 2 Models.Torus.BGG.Space) :
   unfold fibreEnergy
   exact summable_sum fun i _ => summable_norm_sq_count (X i)
 
-/-- **Parseval on the torus**: `‖X‖² = Σ_m Σᵢ |X̂ᵢ(m)|²`. -/
 theorem norm_sq_eq_tsum_fibreEnergy (X : PiLp 2 Models.Torus.BGG.Space) :
     ‖X‖ ^ 2 = ∑' m, fibreEnergy X m := by
   rw [PiLp.norm_sq_eq_of_L2]
@@ -238,7 +192,6 @@ theorem sub_singleState_mem (m : Fin 3 → ℤ) (X : PiLp 2 Models.Torus.BGG.Spa
     · simp [freqOut, hk]
     · simp [freqOut, hk])
 
-/-- A state concentrated at the frequency `m` has `‖Y‖² = Σᵢ |Ŷᵢ(m)|²`. -/
 theorem norm_sq_eq_fibreEnergy_of_mem {m : Fin 3 → ℤ} {Y : PiLp 2 Models.Torus.BGG.Space}
     (hY : Y ∈ totalSub fun i => Operator.fibreSub Measure.count (freqIn m i)) :
     ‖Y‖ ^ 2 = fibreEnergy Y m := by
@@ -248,8 +201,6 @@ theorem norm_sq_eq_fibreEnergy_of_mem {m : Fin 3 → ℤ} {Y : PiLp 2 Models.Tor
   simp only [freqIn, hk, ite_false, Submodule.mem_bot] at h
   rw [h, norm_zero, zero_pow two_ne_zero]
 
-/-- **The energy at each frequency is conserved by the torus wave group**: the frequency `m`
-and its complement are reducing (`freqIn_reducing`, `freqOut_reducing`). -/
 theorem fibreEnergy_waveGroup_torus (t : ℝ) (X : PiLp 2 Models.Torus.BGG.Space)
     (m : Fin 3 → ℤ) :
     fibreEnergy (Models.Torus.BGG.complex.waveGroup.S t X) m = fibreEnergy X m := by
@@ -299,19 +250,15 @@ theorem norm_J_sq (i : Fin 3) (y : MirrorBGG.SpaceQ i) :
   rw [HilbertComplex.norm_apply_of_inner Mirror.eight_pos MirrorBGG.inner_J i y, mul_pow,
     Real.sq_sqrt (by norm_num)]
 
-/-- `‖J x‖² = 8 ‖x‖²` (the mirror extensions have scale `8 = 2³`). -/
 theorem norm_extState_sq (x : PiLp 2 MirrorBGG.SpaceQ) :
     ‖extState x‖ ^ 2 = 8 * ‖x‖ ^ 2 := by
   rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, Finset.mul_sum]
   exact Finset.sum_congr rfl fun i _ => norm_J_sq i (x i)
 
-/-- **Parseval for states on `Q`**: `‖x‖² = 8⁻¹ Σ_m Σᵢ |(J x)ᵢ^(m)|²`. -/
 theorem norm_sq_eq_tsum_extState (x : PiLp 2 MirrorBGG.SpaceQ) :
     ‖x‖ ^ 2 = 8⁻¹ * ∑' m, fibreEnergy (extState x) m := by
   rw [← norm_sq_eq_tsum_fibreEnergy, norm_extState_sq]; ring
 
-/-- **The energy at each frequency of the mirror extension is conserved by the wave group on
-`Q`** (the wave group on `Q` is the compression of the torus wave group). -/
 theorem fibreEnergy_waveGroupQ (t : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) (m : Fin 3 → ℤ) :
     fibreEnergy (extState (MirrorBGG.complexQ.waveGroup.S t x)) m =
       fibreEnergy (extState x) m := by
@@ -323,8 +270,8 @@ theorem fibreEnergy_waveGroupQ (t : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) (m : Fin 
 
 open Feec.Models.Cube.Sobolev (weight weight_nonneg weight_pos weight_zero weight_one)
 
-/-- **The Sobolev norm of a state on `Q`**: `‖x‖²_s = 8⁻¹ Σ_m ⟨ξ_m⟩^{2s} Σᵢ |(J x)ᵢ^(m)|²`, the
-`Hˢ(𝕋³)` norm of the mirror extension (the factor `8⁻¹` makes it the `L²(Q)` norm for `s = 0`). -/
+/-- **The squared Sobolev norm `‖x‖²_s` of a state on `Q`**: `8⁻¹` times the squared `Hˢ(𝕋³)` norm
+of its mirror extension. -/
 def sobState (s : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) : ℝ :=
   8⁻¹ * ∑' m, weight s m * fibreEnergy (extState x) m
 
@@ -336,8 +283,7 @@ theorem sobState_nonneg (s : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) : 0 ≤ sobState
   mul_nonneg (by norm_num) (tsum_nonneg fun m =>
     mul_nonneg (weight_nonneg s m) (fibreEnergy_nonneg _ m))
 
-/-- **The wave group preserves every Sobolev norm of states**: `‖e^{tL} x‖_s = ‖x‖_s`, for every
-`s` and every `t` (the torus symbol is skew-Hermitian at each frequency). -/
+/-- **The wave group preserves every Sobolev norm of states**: `‖e^{tL} x‖_s = ‖x‖_s`. -/
 theorem sobState_waveGroupQ (s t : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) :
     sobState s (MirrorBGG.complexQ.waveGroup.S t x) = sobState s x := by
   unfold sobState
@@ -355,10 +301,6 @@ open Feec.Fourier.GradCurl (tsd norm_curl_of_mem_tsd)
 theorem norm_sq_VM (w : VM) : ‖w‖ ^ 2 = ‖(WithLp.ofLp w).1‖ ^ 2 + ‖(WithLp.ofLp w).2‖ ^ 2 :=
   WithLp.prod_norm_sq_eq_of_L2 w
 
-/-- **The torus wave operator on a TSD state, at one frequency**: for `X ∈ D(L)` in the
-constraint `{0} × L²(TSD) × ({0} × L²(TSD))`, `Σᵢ |(L X)ᵢ^(m)|² = |ξ_m|² Σᵢ |X̂ᵢ(m)|²`
-(`(L X)₁^(m) = -curl_ξ B̂(m)`, `(L X)₂^(m) = (0, curl_ξ Ê(m))`, and `|curl_ξ A| = |ξ| |A|` on
-`tsd ξ`, since `|ξ × x| = |ξ| |x|` when `ξ · x = 0`). -/
 theorem fibreEnergy_wave_torus (X : Models.Torus.BGG.complex.wave.domain)
     (hX : (X : PiLp 2 Models.Torus.BGG.Space) ∈ totalSub Models.Torus.BGG.constraint)
     (m : Fin 3 → ℤ) :
@@ -435,7 +377,6 @@ theorem fibreEnergy_wave_torus (X : Models.Torus.BGG.complex.wave.domain)
   rw [fibreEnergy_eq, fibreEnergy_eq, c0 _ hL0, c0 _ h0, n1, n2, n3]
   ring
 
-/-- `J` maps the constraint on `Q` into the torus constraint. -/
 theorem extState_mem_constraint {x : PiLp 2 MirrorBGG.SpaceQ}
     (hx : x ∈ totalSub MirrorBGG.tsdQ) :
     extState x ∈ totalSub Models.Torus.BGG.constraint := fun i => hx i
@@ -446,15 +387,12 @@ theorem extState_mem_wave_domain {x : PiLp 2 MirrorBGG.SpaceQ}
   (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos MirrorBGG.inner_J
     MirrorBGG.reducingSubcomplex_range).1 hx
 
-/-- `J L = L J`. -/
 theorem extState_wave (x : MirrorBGG.complexQ.wave.domain) :
     extState (MirrorBGG.complexQ.wave x) =
       Models.Torus.BGG.complex.wave ⟨extState x, extState_mem_wave_domain x.2⟩ :=
   ((HilbertComplex.wave_compress Mirror.eight_pos MirrorBGG.inner_J
     MirrorBGG.reducingSubcomplex_range).comm x).symm
 
-/-- **`L` on TSD states on `Q`, one frequency at a time**:
-`Σᵢ |(J L x)ᵢ^(m)|² = |ξ_m|² Σᵢ |(J x)ᵢ^(m)|²`. -/
 theorem fibreEnergy_waveQ_of_tsd (x : MirrorBGG.complexQ.wave.domain)
     (hx : (x : PiLp 2 MirrorBGG.SpaceQ) ∈ totalSub MirrorBGG.tsdQ) (m : Fin 3 → ℤ) :
     fibreEnergy (extState (MirrorBGG.complexQ.wave x)) m =
@@ -467,7 +405,6 @@ theorem waveQ_mem_tsd (x : MirrorBGG.complexQ.wave.domain)
     MirrorBGG.complexQ.wave x ∈ totalSub MirrorBGG.tsdQ :=
   MirrorBGG.reducingSubcomplexQ.isReducing_wave.mapsTo x hx
 
-/-- **`‖L x‖² = 8⁻¹ Σ_m |ξ_m|² Σᵢ |(J x)ᵢ^(m)|²` on TSD states.** -/
 theorem norm_waveQ_sq_of_tsd (x : MirrorBGG.complexQ.wave.domain)
     (hx : (x : PiLp 2 MirrorBGG.SpaceQ) ∈ totalSub MirrorBGG.tsdQ) :
     ‖MirrorBGG.complexQ.wave x‖ ^ 2 =
@@ -480,8 +417,7 @@ theorem summable_freq_sq_fibreEnergy_of_tsd (x : MirrorBGG.complexQ.wave.domain)
     Summable fun m => ‖Fourier.Torus.freq m‖ ^ 2 * fibreEnergy (extState x) m := by
   exact (summable_fibreEnergy _).congr fun m => fibreEnergy_waveQ_of_tsd x hx m
 
-/-- **On TSD states of `D(L)`, the `H¹` norm is the graph norm**: `x ∈ H¹` and
-`‖x‖²_1 = ‖x‖² + ‖L x‖²`. -/
+/-- **TSD states of `D(L)` lie in `H¹`.** -/
 theorem memSobState_one_of_tsd (x : MirrorBGG.complexQ.wave.domain)
     (hx : (x : PiLp 2 MirrorBGG.SpaceQ) ∈ totalSub MirrorBGG.tsdQ) :
     MemSobState 1 x :=
@@ -507,8 +443,6 @@ open Feec.Models.Cube.MirrorExt (extF)
 theorem weight_neg (s : ℝ) (m : Fin 3 → ℤ) : weight s (-m) = weight s m := by
   simp [weight, Fourier.Torus.freq_neg]
 
-/-- **Sobolev bound from a dominated even energy**: if `|y(m)|² ≤ (F(m) + F(-m))/2` with
-`Σ ⟨ξ_m⟩^{2s} F(m) < ∞`, then `y ∈ Hˢ(𝕋³)` and `Σ ⟨ξ_m⟩^{2s} |y(m)|² ≤ Σ ⟨ξ_m⟩^{2s} F(m)`. -/
 theorem sobSum_le_of_even_bound {k : ℕ} {s : ℝ} (y : Seq 3 k) {F : (Fin 3 → ℤ) → ℝ}
     (hF : Summable fun m => weight s m * F m)
     (hy : ∀ m, ‖cf y m‖ ^ 2 ≤ (F m + F (-m)) / 2) :
@@ -589,9 +523,6 @@ theorem norm_coeff_B_sq_le (x : PiLp 2 MirrorBGG.SpaceQ) (m : Fin 3 → ℤ) :
   nlinarith [sq_nonneg ‖(extF (c := Mirror.cPV) Mirror.cPV_sq (WithLp.ofLp (stW2 x)).1 :
     (Fin 3 → ℤ) → Vec) m‖]
 
-/-- **The rows of `Re E` lie in the parity Sobolev classes of the bottom row**: for a state with
-`J x ∈ Hˢ(𝕋³)`, the row `a` of `Re E` (a `1`-form on `Q`) lies in `Hˢ_{a}(Q; Λ¹)` with
-`‖(Re E)_a‖²_{s,{a}} ≤ ‖x‖²_s`. -/
 theorem rowRe_sobolevPar {s : ℝ} {x : PiLp 2 MirrorBGG.SpaceQ} (hx : MemSobState s x)
     (a : Fin 3) :
     rowRe (stE x) a ∈ sobolevPar {a} 1 s ∧
@@ -610,8 +541,6 @@ theorem rowRe_sobolevPar {s : ℝ} {x : PiLp 2 MirrorBGG.SpaceQ} (hx : MemSobSta
   rw [h8]
   exact mul_le_mul_of_nonneg_left h.2 (by norm_num)
 
-/-- **The rows of `⋆ Re B` lie in the parity Sobolev classes of the bottom `2`-forms**, with
-`‖(⋆ Re B)_a‖²_{s,{a}} ≤ ‖x‖²_s`. -/
 theorem rowRe2_sobolevPar {s : ℝ} {x : PiLp 2 MirrorBGG.SpaceQ} (hx : MemSobState s x)
     (a : Fin 3) :
     rowRe2 (stB x) a ∈ sobolevPar {a} 2 s ∧
@@ -638,7 +567,7 @@ def MemDomainPow : ℕ → PiLp 2 MirrorBGG.SpaceQ → Prop
   | k + 1, x => ∃ h : x ∈ MirrorBGG.complexQ.wave.domain,
       MemDomainPow k (MirrorBGG.complexQ.wave ⟨x, h⟩)
 
-/-! ### `D(Lᵏ)` on TSD states is the Sobolev class `Hᵏ` of the mirror extension -/
+/-! ### Integer weights -/
 
 theorem weight_natCast (k : ℕ) (m : Fin 3 → ℤ) :
     weight (k : ℝ) m = (1 + ‖Fourier.Torus.freq m‖ ^ 2) ^ k := by
@@ -678,8 +607,6 @@ theorem mirrorSobConst_nonneg (hC : 0 ≤ 2 * C) : 0 ≤ mirrorSobConst C := by
   unfold mirrorSobConst; positivity
 
 include hB in
-/-- **The `Hˢ` approximation of the parity-smoothed projections of the bottom row**:
-`‖y − π y‖ ≤ (1 + 2C) dist(y, V_{h,Γ_{a}}) ≤ (1 + 2C) C_s h^s ‖y‖_{s,{a}}`. -/
 theorem norm_sub_projB_le {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ) (a : Fin 3) {k : ℕ}
     (hk : k = 1 ∨ k = 2)
     {r : Feec.Domain.L2F ℝ (Geometry.Q (Fin 3)) (Feec.Domain.formIdx 3 k)}
@@ -710,10 +637,6 @@ theorem norm_sub_projB_le {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ) (a
         exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right hsk hh) hΛ0
     _ = mirrorSobConst C * meshSize N ^ s * Λ := by unfold mirrorSobConst; ring
 
-/-- **TSD-type mirror states with `Hˢ` rows are `O(hˢ)`-close to their projections**: for a forms
-state `(0, 0, u, 0, ρ)` with `u` the real rows of `E` (`bIncl1 u = rowsW1L E`), `d u` the rows of
-`⋆ Re B'`, `ρ` the rows of `⋆ Re B` and `S¹ u = 0`, whose rows lie in the parity classes `Hˢ_{a}`
-with norms `≤ Λ`. -/
 theorem mirrorClose_of_sobolev {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ) {u : BU1}
     {E B B' : MQ} (hu : bIncl1 u = rowsW1L E) (hdu : bD1 u = rowsW2L B') (hSu : mS1 u = 0)
     {Λ : ℝ} (hΛ0 : 0 ≤ Λ)
@@ -767,8 +690,6 @@ namespace TSDDatum
 variable (D : TSDDatum)
 
 include hB in
-/-- **The forms state of the TSD solution is `O(hˢ)`-close to its projections**, uniformly in
-time, when `J U₀`, `J L U₀ ∈ Hˢ(𝕋³)`. -/
 theorem mirrorClose_state {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ)
     (h0 : MemSobState s D.U₀) (h1 : MemSobState s D.LU₀) {Λ : ℝ} (hΛ0 : 0 ≤ Λ)
     (hΛ₀ : √(sobState s D.U₀) ≤ Λ) (hΛ₁ : √(sobState s D.LU₀) ≤ Λ) {T t : ℝ}
@@ -781,8 +702,6 @@ theorem mirrorClose_state {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ)
     (rows_sobolev_waveGroup t h1 hΛ₁).2
 
 include hB in
-/-- **The time derivative of the forms state is `O(hˢ)`-close to its projections**, uniformly in
-time, when `J L U₀`, `J L² U₀ ∈ Hˢ(𝕋³)`. -/
 theorem mirrorClose_deriv {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ)
     (h1 : MemSobState s D.LU₀) (h2 : MemSobState s D.LLU₀) {Λ : ℝ} (hΛ0 : 0 ≤ Λ)
     (hΛ₁ : √(sobState s D.LU₀) ≤ Λ) (hΛ₂ : √(sobState s D.LLU₀) ≤ Λ) {T t : ℝ}
@@ -796,7 +715,7 @@ theorem mirrorClose_deriv {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ)
 
 end TSDDatum
 
-/-! ### Rates of the mirror scheme (6.5) for Sobolev data -/
+/-! ### Rates of the mirror scheme for Sobolev data -/
 
 /-- The Sobolev size `‖U₀‖_s + ‖L U₀‖_s + ‖L² U₀‖_s` of a TSD datum. -/
 def TSDDatum.sobSize (D : TSDDatum) (s : ℝ) : ℝ :=
@@ -860,21 +779,8 @@ theorem strangData_le {s : ℝ} (hs0 : 0 ≤ s) (hs1 : s ≤ 1) (N : ℕ)
 
 end TSDDatum
 
-/-- **`O(hˢ)` rate of the mirror scheme (6.5) for Sobolev TSD data, `0 ≤ s ≤ 1`**, with no
-smoothness hypothesis on the solution: there is `K`, independent of `N`, `T`, `s` and the datum,
-such that for every TSD datum `D` (`U₀ ∈ D(L²)` in the constraint) whose mirror extensions
-`J U₀`, `J L U₀`, `J L² U₀` lie in `Hˢ(𝕋³)` (`MemSobState s`, the torus weights of the mirror
-extension), and every strong solution `U` from `U₀`, the scheme (6.5)
-without source has a solution from the
-elliptic projection of the initial forms state with
-`(‖σₕ‖² + ‖Re E − uₕ‖² + ‖Mₕ‖² + ‖Re B − ρₕ‖²)^{1/2}(t)`
-`≤ K (‖U₀‖_s + ‖LU₀‖_s + ‖L²U₀‖_s) (1 + t) h_Nˢ`
-on `[0,T]`. The rows of `Re E(t)`, `⋆Re B(t)`, `⋆Re B'(t)`, `Re E'(t)`, `⋆Re B''(t)` lie in the
-parity classes `Hˢ_{a}` with the norms of the data (`rowRe_sobolevPar`, `rowRe2_sobolevPar`, the
-wave group preserving the torus weights, `sobState_waveGroupQ`), so they are `O(hˢ)`-close to their
-parity-smoothed projections (`mirrorClose_of_sobolev`, from `infDist_polyPartial_le_sobolevPar`);
-the multipliers `ℓ ≡ 0` and `M ≡ 0` of TSD data make the consistency constants `K₀ = K₁ = 0`.
-See [QuennevilleBelair2015], Ch. 6, §6.3, (6.5), and §4.10; [AFW2010], §5.4. -/
+/-- **`O(hˢ)` rate of the mirror scheme for Sobolev TSD data**, `0 ≤ s ≤ 1`, with no smoothness
+hypothesis on the solution ([QuennevilleBelair2015], §6.3, (6.5); [AFW2010], §5.4). -/
 theorem mirror_waveFEM_rate_sobolev :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) (D : TSDDatum) {s : ℝ}, 0 ≤ s → s ≤ 1 →
       MemSobState s D.U₀ → MemSobState s D.LU₀ → MemSobState s D.LLU₀ →
@@ -924,8 +830,6 @@ theorem mirror_waveFEM_rate_sobolev :
 theorem sqrt_sq_add_sq_le {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) : √(a ^ 2 + b ^ 2) ≤ a + b :=
   Real.sqrt_le_iff.2 ⟨by positivity, by nlinarith⟩
 
-/-- **The data class `D(L³)`**: a TSD datum with `L² U₀ ∈ D(L)` has `J U₀, J L U₀, J L² U₀ ∈ H¹`,
-with `‖U₀‖_1 + ‖LU₀‖_1 + ‖L²U₀‖_1 ≤ 2 (‖U₀‖ + ‖LU₀‖ + ‖L²U₀‖ + ‖L³U₀‖)`. -/
 theorem TSDDatum.memSobState_one (D : TSDDatum)
     (h3 : D.LLU₀ ∈ MirrorBGG.complexQ.wave.domain) :
     MemSobState 1 D.U₀ ∧ MemSobState 1 D.LU₀ ∧ MemSobState 1 D.LLU₀ ∧
@@ -949,7 +853,6 @@ theorem TSDDatum.memSobState_one (D : TSDDatum)
   have := norm_nonneg (MirrorBGG.complexQ.wave ⟨D.LLU₀, h3⟩)
   linarith
 
-/-- `K S (1 + t) h¹ ≤ 2 K Λ (1 + t) h` from `S ≤ 2 Λ`. -/
 theorem rate_bound_aux {K S Λ t h : ℝ} (hK : 0 ≤ K) (hS : S ≤ 2 * Λ) (ht : 0 ≤ t)
     (hh : 0 ≤ h) : K * S * (1 + t) * h ^ (1 : ℝ) ≤ 2 * K * Λ * (1 + t) * h := by
   rw [Real.rpow_one]
@@ -959,20 +862,8 @@ theorem rate_bound_aux {K S Λ t h : ℝ} (hK : 0 ≤ K) (hS : S ≤ 2 * Λ) (ht
         mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right h1 h2) hh
     _ = 2 * K * Λ * (1 + t) * h := by ring
 
-/-- **`O(h)` rate of the mirror scheme (6.5) for every TSD datum of `D(L³)`, with no smoothness
-hypothesis**: there is `K`, independent of `N`, `T` and the datum, such that for every TSD datum
-`D` with `L² U₀ ∈ D(L)` and every strong solution `U` from `U₀`, the scheme (6.5) without source
-has a solution from the elliptic projection (6.4) of the initial forms state with
-`(‖σₕ‖² + ‖Re E − uₕ‖² + ‖Mₕ‖² + ‖Re B − ρₕ‖²)^{1/2}(t)`
-`≤ K (‖U₀‖ + ‖LU₀‖ + ‖L²U₀‖ + ‖L³U₀‖)(1 + t) h_N`
-on `[0,T]`. This is the conclusion of `MirrorWeakSymmetry.mirrorWave_rate` with its hypothesis that the forms
-states of the solution are `C²` up to `∂Q` (`IsSmoothStateMirror`) replaced by the explicit
-condition `U₀ ∈ D(L³)` on the datum. On TSD states of `D(L)` the graph norm of `L` is the `H¹`
-norm of the mirror extension (`sobState_one_of_tsd`: `|L(ξ) v| = |ξ| |v|` on the TSD fibres), so
-`U(t)`, `U'(t)`, `U''(t)` have `H¹` rows in the parity classes of `MirrorClose`, with norms
-conserved in time (`mirror_waveFEM_rate_sobolev`, `s = 1`). `D(L³)` is what the proof uses: the
-Strang data contain `d u'`, the rows of `B''`, which must be `H¹`.
-See [QuennevilleBelair2015], Ch. 6, §6.3, (6.5), and §4.10; [AFW2010], §5.4. -/
+/-- **`O(h)` rate of the mirror scheme for every TSD datum of `D(L³)`**, with no smoothness
+hypothesis on the solution ([QuennevilleBelair2015], §6.3, (6.5); [AFW2010], §5.4). -/
 theorem mirror_waveFEM_rate_of_mem_domain :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) (D : TSDDatum) (h3 : D.LLU₀ ∈ MirrorBGG.complexQ.wave.domain)
       {T : ℝ}, 0 < T → ∀ {U : ℝ → PiLp 2 MirrorBGG.SpaceQ}, U 0 = D.U₀ →
@@ -998,7 +889,6 @@ theorem mirror_waveFEM_rate_of_mem_domain :
   exact ⟨hb.choose, hb.choose_spec.1, fun t ht => (hb.choose_spec.2 t ht).trans
     (rate_bound_aux hK0 hm.2.2.2 ht.1 (meshSize_pos N).le)⟩
 
-/-- One frequency: `⟨ξ⟩^{2s} |ξ|^{2j} e ≤ ⟨ξ⟩^{2(2+s)} e` for `j ≤ 2` and `e ≥ 0`. -/
 theorem weight_mul_freq_pow_le (s : ℝ) {j : ℕ} (hj : j ≤ 2) (m : Fin 3 → ℤ) {e : ℝ}
     (he : 0 ≤ e) :
     weight s m * ((‖Fourier.Torus.freq m‖ ^ 2) ^ j * e) ≤ weight (2 + s) m * e := by
@@ -1015,8 +905,6 @@ theorem weight_mul_freq_pow_le (s : ℝ) {j : ℕ} (hj : j ≤ 2) (m : Fin 3 →
         mul_le_mul_of_nonneg_left h1 (mul_nonneg hw he)
     _ = _ := by ring
 
-/-- If `e_x(m) = |ξ_m|^{2j} e_y(m)` with `j ≤ 2` and `y ∈ H^{2+s}`, then `x ∈ Hˢ` and
-`‖x‖²_s ≤ ‖y‖²_{2+s}`. -/
 theorem sobState_le_of_fibreEnergy_eq {s : ℝ} {j : ℕ} (hj : j ≤ 2)
     {x y : PiLp 2 MirrorBGG.SpaceQ}
     (hxy : ∀ m, fibreEnergy (extState x) m =
@@ -1030,9 +918,6 @@ theorem sobState_le_of_fibreEnergy_eq {s : ℝ} {j : ℕ} (hj : j ≤ 2)
   have hx : MemSobState s x := Summable.of_nonneg_of_le h0 hle hy
   exact ⟨hx, mul_le_mul_of_nonneg_left (Summable.tsum_le_tsum hle hx hy) (by norm_num)⟩
 
-/-- **The data class `H^{2+s}`**: a TSD datum with `J U₀ ∈ H^{2+s}` has `J U₀, J L U₀,
-J L² U₀ ∈ Hˢ`, with `‖U₀‖_s + ‖LU₀‖_s + ‖L²U₀‖_s ≤ 3 ‖U₀‖_{2+s}` (`e_{Lx}(m) = |ξ_m|² e_x(m)` on
-TSD states, `fibreEnergy_waveQ_of_tsd`). -/
 theorem TSDDatum.memSobState_of_add_two (D : TSDDatum) {s : ℝ}
     (h : MemSobState (2 + s) D.U₀) :
     MemSobState s D.U₀ ∧ MemSobState s D.LU₀ ∧ MemSobState s D.LLU₀ ∧
@@ -1056,10 +941,8 @@ theorem TSDDatum.memSobState_of_add_two (D : TSDDatum) {s : ℝ}
   have c2 := Real.sqrt_le_sqrt b2
   linarith
 
-/-- **`O(hˢ)` rate of the mirror scheme (6.5) for TSD data in `H^{2+s}`, `0 ≤ s ≤ 1`**: the
-conclusion of `mirror_waveFEM_rate_sobolev` under the single Sobolev condition `J U₀ ∈ H^{2+s}`
-on the datum, with the bound `K ‖U₀‖_{2+s} (1 + t) h_Nˢ` (`TSDDatum.memSobState_of_add_two`).
-See [QuennevilleBelair2015], Ch. 6, §6.3, (6.5); [AFW2010], §5.4. -/
+/-- **`O(hˢ)` rate of the mirror scheme for TSD data with `J U₀ ∈ H^{2+s}(𝕋³)`**, `0 ≤ s ≤ 1`
+([QuennevilleBelair2015], §6.3, (6.5); [AFW2010], §5.4). -/
 theorem mirror_waveFEM_rate_sobolev_of_add_two :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) (D : TSDDatum) {s : ℝ}, 0 ≤ s → s ≤ 1 →
       MemSobState (2 + s) D.U₀ →
@@ -1092,9 +975,6 @@ theorem mirror_waveFEM_rate_sobolev_of_add_two :
 
 /-! ### Non-vacuity -/
 
-/-- **The cos datum `E₀ = 2 cos(2π x₃) diag(1, -1, 0)` (`cosDatum`) lies in
-`D(L³)`**: its mirror extension has finitely many Fourier modes, which `L` preserves on the
-torus (`torus_wave_finite`). -/
 theorem cosDatum_LLU₀_mem : cosDatum.LLU₀ ∈ MirrorBGG.complexQ.wave.domain := by
   have e : extState cosDatum.LU₀ = Models.Torus.BGG.complex.wave
       ⟨MirrorBGG.cosState, MirrorBGG.cosState_mem_domain⟩ := by

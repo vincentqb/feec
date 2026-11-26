@@ -9,30 +9,9 @@ public import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 /-!
 # A square-root Gronwall inequality
 
-If `Q ≥ 0` is continuous on `[a, b]` and `Q²` has right derivative `q' ≤ F Q` on `[a, b)`, with
-`F ≥ 0` the right derivative of a continuous `G`, then `Q t ≤ Q a + (G t − G a) / 2`.
-
-Only `Q²` is assumed differentiable: this is the form needed for `Q = ‖e‖`, which fails to be
-differentiable where `e` vanishes. The proof compares `√(Q² + ε²)` with
-`√(Q a ² + ε²) + (G − G a)/2` and lets `ε → 0`.
-
-* `le_add_half_sub_of_sq_deriv_le_mul`: the primitive form.
-* `le_add_half_integral_of_sq_deriv_le_mul`: the integral form `Q t ≤ Q a + ½ ∫ₐᵗ F`.
-* `ContinuousOn.intervalIntegral_primitive_Icc`: the primitive of a function continuous on
-  `[a, b]`.
-
-## Energy estimates
-
-For a curve `e : ℝ → E` in an inner product space over `𝕜 = ℝ` or `ℂ` (no completeness), continuous
-on `[a,b]` with right derivative `e'` on `[a,b)`:
-
-* `HasDerivWithinAt.norm_sq_re_inner`: `d/dt ‖e‖² = 2 re ⟪e', e⟫`;
-* `norm_le_add_integral_of_re_inner_deriv_le`: if `re ⟪e', e⟫ ≤ g ‖e‖` with `g ≥ 0` continuous,
-  then `‖e t‖ ≤ ‖e a‖ + ∫ₐᵗ g`;
-* `norm_le_of_re_inner_deriv_le`: the decay-rate form. If `re ⟪e', e⟫ ≤ -λ ‖e‖² + g ‖e‖` then
-  `‖e t‖ ≤ e^{-λ(t-a)} ‖e a‖ + ∫ₐᵗ e^{-λ(t-s)} g s` (any `λ ∈ ℝ`).
-
-They follow from the square-root Gronwall inequality applied to `Q = ‖e‖`.
+If `Q ≥ 0` is continuous on `[a, b]` and `Q²` has right derivative `q' ≤ F Q`, with `F ≥ 0` the
+right derivative of a continuous `G`, then `Q t ≤ Q a + (G t − G a) / 2`; applied to `Q = ‖e‖`, it
+gives energy estimates for curves in inner product spaces over `𝕜 = ℝ` or `ℂ`.
 
 ## References
 
@@ -45,10 +24,8 @@ open Set
 
 @[expose] public noncomputable section
 
-/-- **Square-root Gronwall inequality**, primitive form. If `Q ≥ 0` is continuous on `[a,b]`,
-`Q²` has right derivative `q'` on `[a,b)`, `G` is continuous on `[a,b]` with right derivative
-`F ≥ 0` on `[a,b)`, and `q' ≤ F Q`, then `Q t ≤ Q a + (G t − G a)/2` on `[a,b]`.
-[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
+/-- **Square-root Gronwall inequality**: `Q t ≤ Q a + (G t − G a)/2` when `Q ≥ 0` and `G` are
+continuous, `(Q²)' ≤ F Q` and `0 ≤ F = G'` ([QuennevilleBelair2015], Lemma 4.12 (adapted)). -/
 theorem le_add_half_sub_of_sq_deriv_le_mul {Q q' F G : ℝ → ℝ} {a b : ℝ}
     (hQc : ContinuousOn Q (Icc a b)) (hQ0 : ∀ t ∈ Icc a b, 0 ≤ Q t)
     (hq : ∀ t ∈ Ico a b, HasDerivWithinAt (fun s => Q s ^ 2) (q' t) (Ici t) t)
@@ -94,8 +71,6 @@ theorem le_add_half_sub_of_sq_deriv_le_mul {Q q' F G : ℝ → ℝ} {a b : ℝ}
     · positivity
   linarith
 
-/-- Primitive of a function continuous on `[a,b]`: `t ↦ ∫ₐᵗ F` is continuous on `[a,b]` with
-right derivative `F t` on `[a,b)` (the fundamental theorem of calculus within `[a,b]`). -/
 theorem ContinuousOn.intervalIntegral_primitive_Icc {F : ℝ → ℝ} {a b : ℝ}
     (hFc : ContinuousOn F (Icc a b)) :
     ContinuousOn (fun t => ∫ s in a..t, F s) (Icc a b) ∧
@@ -105,9 +80,6 @@ theorem ContinuousOn.intervalIntegral_primitive_Icc {F : ℝ → ℝ} {a b : ℝ
   exact (hd t (Ico_subset_Icc_self ht)).mono_of_mem_nhdsWithin
     (Filter.mem_of_superset (Icc_mem_nhdsGE ht.2) (Icc_subset_Icc_left ht.1))
 
-/-- **Square-root Gronwall inequality**, integral form: `Q t ≤ Q a + ½ ∫ₐᵗ F` for `F ≥ 0`
-continuous on `[a,b]` and `d/dt Q² ≤ F Q` on `[a,b)`.
-[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem le_add_half_integral_of_sq_deriv_le_mul {Q q' F : ℝ → ℝ} {a b : ℝ}
     (hQc : ContinuousOn Q (Icc a b)) (hQ0 : ∀ t ∈ Icc a b, 0 ≤ Q t)
     (hq : ∀ t ∈ Ico a b, HasDerivWithinAt (fun s => Q s ^ 2) (q' t) (Ici t) t)
@@ -120,9 +92,6 @@ theorem le_add_half_integral_of_sq_deriv_le_mul {Q q' F : ℝ → ℝ} {a b : �
   simp only [intervalIntegral.integral_same, sub_zero] at this
   linarith
 
-/-- **The constant `½` is sharp**: `Q t = t - a` and `F = 2` satisfy the hypotheses of
-`le_add_half_integral_of_sq_deriv_le_mul` (`d/dt Q² = 2 (t - a) = F Q`), and the resulting bound
-`Q t ≤ Q a + ½ ∫ₐᵗ F` is an equality for every `t`. [QuennevilleBelair2015], Lemma 4.12 (the remark after it). -/
 theorem le_add_half_integral_of_sq_deriv_le_mul_sharp {a b : ℝ} :
     (∀ t ∈ Icc a b, t - a ≤ (a - a) + (1 / 2) * ∫ _ in a..t, (2 : ℝ)) ∧
       ∀ t : ℝ, t - a = (a - a) + (1 / 2) * ∫ _ in a..t, (2 : ℝ) := by
@@ -137,8 +106,6 @@ theorem le_add_half_integral_of_sq_deriv_le_mul_sharp {a b : ℝ} :
     continuousOn_const (fun _ _ => zero_le_two) (fun _ _ => le_rfl), fun t => ?_⟩
   simp; ring
 
-/-! ### Energy estimates for curves in inner product spaces -/
-
 section Energy
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
@@ -147,7 +114,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- Right derivative of `‖e‖²` over `𝕜`: `d/dt ‖e‖² = 2 re ⟪e', e⟫`. -/
 theorem HasDerivWithinAt.norm_sq_re_inner {e : ℝ → E} {e' : E} {s : Set ℝ} {t : ℝ}
     (he : HasDerivWithinAt e e' s t) :
     HasDerivWithinAt (fun r => ‖e r‖ ^ 2) (2 * RCLike.re ⟪e', e t⟫) s t := by
@@ -160,9 +126,6 @@ theorem HasDerivWithinAt.norm_sq_re_inner {e : ℝ → E} {e' : E} {s : Set ℝ}
   ring
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- **Energy estimate.** If `e` is continuous on `[a,b]` with right derivative `e'` on `[a,b)`
-and `re ⟪e', e⟫ ≤ g ‖e‖` for some continuous `g ≥ 0`, then `‖e t‖ ≤ ‖e a‖ + ∫ₐᵗ g` on `[a,b]`.
-[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem norm_le_add_integral_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b : ℝ}
     (hec : ContinuousOn e (Icc a b)) (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
     (hgc : ContinuousOn g (Icc a b)) (hg0 : ∀ t ∈ Ico a b, 0 ≤ g t)
@@ -177,11 +140,6 @@ theorem norm_le_add_integral_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ �
   rw [intervalIntegral.integral_const_mul] at this
   linarith
 
-/-- **Energy estimate with decay rate `λ`.** If `e` is continuous on `[a,b]` with right
-derivative `e'` on `[a,b)` and `re ⟪e', e⟫ ≤ -λ ‖e‖² + g ‖e‖` for some continuous `g ≥ 0`, then
-`‖e t‖ ≤ e^{-λ(t-a)} ‖e a‖ + ∫ₐᵗ e^{-λ(t-s)} g s` on `[a,b]`. Any `λ ∈ ℝ` is allowed;
-`λ = 0` is `norm_le_add_integral_of_re_inner_deriv_le`.
-[QuennevilleBelair2015], Lemma 4.12 (corrected). -/
 theorem norm_le_of_re_inner_deriv_le {e e' : ℝ → E} {g : ℝ → ℝ} {a b lam : ℝ}
     (hec : ContinuousOn e (Icc a b)) (he : ∀ t ∈ Ico a b, HasDerivWithinAt e (e' t) (Ici t) t)
     (hgc : ContinuousOn g (Icc a b)) (hg0 : ∀ t ∈ Ico a b, 0 ≤ g t)

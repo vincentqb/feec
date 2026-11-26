@@ -7,50 +7,17 @@ public import Feec.Models.Cube.MaxNormHeat
 /-!
 # The heat equation in the maximum norm: the classical finite difference scheme
 
-The heat equation `uₜ = Δu` on the cube `Q = b + (0, s)ⁿ` with homogeneous Dirichlet data,
-discretized in space by the classical `(2n + 1)`-point finite difference Laplacian on the uniform
-grid of mesh size `h = s / (N + 1)` (`fdLaplacian s N = FiniteDifference.laplacian`, on the
-interior nodes `{1, …, N}ⁿ`, `U = 0` at the boundary nodes),
-`(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²`.
-
-The finite difference Laplacian **is** the lumped-mass `P₁` Laplacian of the Freudenthal mesh
-(`fdLaplacian_eq`, from the stencil theorem `MaxNormHeat.lumpedLaplacian_apply`), so the finite
-difference family `FiniteDifferenceHeat.family` has the same discrete semigroups, resolvents and
-rational schemes as `MaxNormHeat.family` (`family_res`, `family_step`): the two methods produce the
-same iterates, and the maximum-norm estimates of `MaxNormHeat.maxNormHeat` are those of the finite
-difference scheme. The discrete maximum principle is also proved directly on the grid
-(`FiniteDifference.isSubMarkovGenerator_laplacian`).
+The `(2n + 1)`-point finite difference Laplacian on `Q = b + (0, s)ⁿ` is the lumped-mass `P₁`
+Laplacian of the Freudenthal mesh, so the maximum-norm estimates of `MaxNormHeat` hold for it.
 
 ## Main results
 
-**`FiniteDifferenceHeat.finiteDifferenceHeat`** (statement `FiniteDifferenceHeat.Verdict`):
-`Δₕ` is the lumped-mass `P₁` Laplacian; `Δₕ` is a sub-Markov generator; consistency
-`‖Iₕ Δu - Δₕ Iₕ u‖_∞ ≤ n B h² / 12`; and, against every classical solution, the semidiscrete
-(method of lines) error `O(h²)`, backward Euler `O(τ + h²)`, Brenner–Thomée's stability bound
-`1 + C'_r √k` and the error of every A-stable rational scheme, all in the maximum norm at the
-nodes. `finiteDifferenceHeat_nonvacuous`: the first eigenmode
-satisfies the hypotheses.
-
-**`FiniteDifferenceHeat.rational_compatible`**: the rational-scheme error from the interpolated
-initial value is `O(h² + τᵖ)`, `‖Iₕ u(kτ) - r(τΔₕ)ᵏ Iₕ u(0)‖_∞ ≤ kτ (n B h²/12 + C nᵖ⁺¹ B' τᵖ)`,
-when `u(0)` satisfies the compatibility conditions of order `p`: on `Q̄` it is a function `ũ` of
-class `C^{2p+2}` odd under the reflections in the faces of `Q` (`IsFaceOdd`, the odd
-`2s`-periodic extension of `u(0)`) with `|∂²_{i₁} ⋯ ∂²_{i_{p+1}} ũ| ≤ B'`. Odd functions vanish
-on `∂Q`, so `Δₕ Iₕ f = Iₕ Dₕ f` for the difference Laplacian `Dₕ` on `ℝⁿ`
-(`fdLaplacian_interp`, `FiniteDifference.diffLaplacian`); `Dₕ` keeps them odd, so
-`Δₕᵏ Iₕ ũ = Iₕ Dₕᵏ ũ` (`fdLaplacian_pow_interp`), and `|Dₕ^{p+1} ũ| ≤ n^{p+1} B'`
-(`FiniteDifference.abs_iterate_diffLaplacian_le`) bounds the discrete datum of the error of
-`rational` (`norm_fdLaplacian_pow_interp_le`).
-
-**`FiniteDifferenceHeat.sineSolution_compatible`**: the first eigenmode
-`MaxNormHeat.sineSolution` meets these hypotheses for every order `p`: `u(0)` is smooth, odd in
-the faces of `Q` (its own odd `2s`-periodic extension), and
-`∂²_{i₁} ⋯ ∂²_{i_k} u(0) = (-(π/s)²)ᵏ u(0)` (`secondPartials_sineProd`), so `B' = (π/s)^{2p+2}`.
+* `FiniteDifferenceHeat.finiteDifferenceHeat`: the maximum principle, consistency and the errors.
+* `FiniteDifferenceHeat.rational_compatible`: `O(h² + τᵖ)` for compatible initial data.
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (the lumped mass method and the finite difference scheme)
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 
 Bibliography: [references.bib](../../../docs/references.bib)
@@ -69,49 +36,40 @@ namespace Feec.Models.Cube.FiniteDifferenceHeat
 
 variable {n : ℕ} {b : Fin n → ℝ} {s : ℝ}
 
-/-- **The finite difference Laplacian** `Δₕ` on the interior nodes `{1, …, N}ⁿ` of the uniform
-grid of mesh size `h = s / (N + 1)`, homogeneous Dirichlet data:
-`(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²`. -/
+/-- **The finite difference Laplacian** `(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²`. -/
 abbrev fdLaplacian (s : ℝ) (N : ℕ) : Space n N →L[ℝ] Space n N :=
   FiniteDifference.laplacian (interiorNodes n (N + 1)) (meshSize s N)
 
-/-- **The finite difference Laplacian is the lumped-mass `P₁` Laplacian** of the Freudenthal
-mesh. [Thomee2006], Ch. 15 -/
+/-- **The finite difference Laplacian is the lumped-mass `P₁` Laplacian** ([Thomee2006], Ch. 15). -/
 theorem fdLaplacian_eq (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     fdLaplacian s N = lumpedLaplacian b hs N := by
   ext U p
   rw [lumpedLaplacian_apply]
   rfl
 
-/-- **The finite difference family**: the Laplacians `Δₕ` on `ℝ^{interior nodes}` with the maximum
-norm, a uniformly stable family with `M = 1`. -/
+/-- **The finite difference family** with the maximum norm, uniformly stable with `M = 1`. -/
 abbrev family (n : ℕ) (s : ℝ) : StableFamily ℝ ℕ :=
   StableFamily.ofSubMarkov (fun N => Nodes n N) (fdLaplacian s) fun _ =>
     FiniteDifference.isSubMarkovGenerator_laplacian _ _
 
-/-- Backward Euler for the finite difference family is backward Euler for the lumped-mass family. -/
 theorem family_res (b : Fin n → ℝ) (hs : 0 < s) (τ : ℝ) (N : ℕ) :
     (family n s).res τ N = (MaxNormHeat.family b hs).res τ N := by
   simp only [StableFamily.res, StableFamily.discrete, fdLaplacian_eq b hs]; rfl
 
-/-- Every rational scheme for the finite difference family is that of the lumped-mass family. -/
 theorem family_step (b : Fin n → ℝ) (hs : 0 < s) (r : RationalScheme) (τ : ℝ) (N : ℕ) :
     (family n s).step r τ N = (MaxNormHeat.family b hs).step r τ N := by
   simp only [StableFamily.step, family_res b hs]
 
 /-! ### The verdict -/
 
-/-- The conclusions of `finiteDifferenceHeat` for the cube `b + (0, s)ⁿ`: the finite difference
-Laplacian is the lumped-mass `P₁` Laplacian (so every rational scheme has the same iterates for
-both, `family_step`); the discrete maximum principle, consistency, and the semidiscrete, backward
-Euler and rational-scheme errors in the maximum norm against every classical solution;
-Brenner–Thomée's stability bound, and the verdict of the Banach layer for the family. -/
+/-- The conclusions of `finiteDifferenceHeat` for the cube `b + (0, s)ⁿ`. -/
 structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   /-- the finite difference Laplacian is the lumped-mass `P₁` Laplacian of the Freudenthal mesh -/
   eq_lumpedLaplacian (N : ℕ) : fdLaplacian s N = lumpedLaplacian b hs N
   /-- the discrete maximum principle: `e^{tΔₕ}` is positive and contractive in the maximum norm -/
   maximumPrinciple (N : ℕ) : IsSubMarkovGenerator (fdLaplacian (n := n) s N)
-  /-- consistency in the maximum norm, `‖Iₕ Δu - Δₕ Iₕ u‖_∞ ≤ n B h² / 12` -/
+  /-- consistency in the maximum norm, `‖Iₕ Δu - Δₕ Iₕ u‖_∞ ≤ n B h² / 12`, for `u ∈ C⁴` vanishing
+  on `∂Q` with `|∂ᵢ⁴ u| ≤ B` -/
   consistency (N : ℕ) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B)
     (hbd : ∀ x ∈ closedCube b s, x ∉ openCube b s → u x = 0) :
@@ -121,7 +79,7 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   semidiscrete {T : ℝ} (S : HeatSolution b s T) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T)
     (v : Space n N) : ‖interp b s N (S.u t) - exp (t • fdLaplacian s N) v‖ ≤
       ‖interp b s N (S.u 0) - v‖ + t * S.defect N
-  /-- backward Euler, `O(τ + h²)` in the maximum norm -/
+  /-- backward Euler, `O(τ + h²)` in the maximum norm for bounded `uₜₜ` -/
   backwardEuler {T : ℝ} (S : HeatSolution b s T) {u₂ : ℝ → (Fin n → ℝ) → ℝ} {B₂ : ℝ}
     (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
     (hB₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂) (N : ℕ) {τ : ℝ} (hτ : 0 < τ)
@@ -140,10 +98,8 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   /-- the verdict of the Banach layer for the finite difference family (`M = 1`) -/
   banach : (family n s).Verdict
 
-/-- **The heat equation in the maximum norm, finite differences** (the `(2n + 1)`-point scheme on
-the uniform grid of the cube `b + (0, s)ⁿ`, Dirichlet data): see `Verdict`. The estimates are
-those of the lumped-mass `P₁` method (`MaxNormHeat.maxNormHeat`) through `fdLaplacian_eq`.
-[Thomee2006], Ch. 15; [BrennerThomee1979] -/
+/-- **The heat equation in the maximum norm, finite differences**: `Verdict` on the cube
+`b + (0, s)ⁿ` ([Thomee2006], Ch. 15; [BrennerThomee1979]). -/
 theorem finiteDifferenceHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   eq_lumpedLaplacian := fdLaplacian_eq b hs
   maximumPrinciple N := FiniteDifference.isSubMarkovGenerator_laplacian _ _
@@ -160,8 +116,7 @@ theorem finiteDifferenceHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs whe
     exact (maxNormHeat b hs).rational S hr hp N hτ hk v
   banach := stableFamily _
 
-/-- **The verdict is not vacuous**: the first eigenmode `MaxNormHeat.sineSolution` is a nonzero
-classical solution with `|uₜₜ| ≤ λ²`, so all the error clauses apply to it. -/
+/-- **The verdict is not vacuous**: some nonzero classical solution has bounded `uₜₜ`. -/
 theorem finiteDifferenceHeat_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     Verdict b hs ∧ ∃ S : HeatSolution b s T, S.u 0 ≠ 0 ∧
       ∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),
@@ -172,9 +127,7 @@ theorem finiteDifferenceHeat_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : �
 
 /-! ### Compatible initial data -/
 
-/-- `f` is **odd under the reflections in the faces** of the cube `b + (0, s)ⁿ`
-(`xᵢ ↦ 2bᵢ - xᵢ` and `xᵢ ↦ 2(bᵢ + s) - xᵢ`): on `Q̄` it is a function whose odd `2s`-periodic
-extension in every variable is `f`. -/
+/-- `f` is **odd under the reflections in the faces** of the cube `b + (0, s)ⁿ`. -/
 def IsFaceOdd (b : Fin n → ℝ) (s : ℝ) (f : (Fin n → ℝ) → ℝ) : Prop :=
   ∀ i, IsOddAbout i (b i) f ∧ IsOddAbout i (b i + s) f
 
@@ -182,7 +135,6 @@ theorem IsFaceOdd.diffLaplacian {f : (Fin n → ℝ) → ℝ} (hf : IsFaceOdd b 
     IsFaceOdd b s (diffLaplacian h f) :=
   fun i => ⟨(hf i).1.diffLaplacian h, (hf i).2.diffLaplacian h⟩
 
-/-- A function odd in the faces of `Q` vanishes on `∂Q`. -/
 theorem IsFaceOdd.eq_zero {f : (Fin n → ℝ) → ℝ} (hf : IsFaceOdd b s f) {x : Fin n → ℝ}
     (hx : x ∈ closedCube b s) (hx' : x ∉ openCube b s) : f x = 0 := by
   simp only [openCube, closedCube, mem_univ_pi, not_forall] at hx hx'
@@ -193,7 +145,6 @@ theorem IsFaceOdd.eq_zero {f : (Fin n → ℝ) → ℝ} (hf : IsFaceOdd b s f) {
   · exact (hf i).2.eq_zero h'
   · exact absurd ⟨h, h'⟩ hi
 
-/-- **`Δₕ Iₕ f = Iₕ Dₕ f`** for `f` vanishing on `∂Q`, `Dₕ` the difference Laplacian on `ℝⁿ`. -/
 theorem fdLaplacian_interp (hs : 0 < s) (N : ℕ) {f : (Fin n → ℝ) → ℝ}
     (hbd : ∀ x ∈ closedCube b s, x ∉ openCube b s → f x = 0) :
     fdLaplacian s N (interp b s N f) = interp b s N (diffLaplacian (meshSize s N) f) := by
@@ -214,7 +165,6 @@ theorem fdLaplacian_interp (hs : 0 < s) (N : ℕ) {f : (Fin n → ℝ) → ℝ}
     node_add_single_one, node_sub_single_one]
   rfl
 
-/-- **`Δₕᵏ Iₕ f = Iₕ Dₕᵏ f`** for `f` odd in the faces of `Q`. -/
 theorem fdLaplacian_pow_interp (hs : 0 < s) (N : ℕ) {f : (Fin n → ℝ) → ℝ}
     (hf : IsFaceOdd b s f) (k : ℕ) :
     (fdLaplacian s N ^ k) (interp b s N f) =
@@ -226,8 +176,6 @@ theorem fdLaplacian_pow_interp (hs : 0 < s) (N : ℕ) {f : (Fin n → ℝ) → �
       ← fdLaplacian_interp hs N fun x hx hx' => hf.eq_zero hx hx']
     rfl
 
-/-- **The discrete datum of compatible initial data**: for `f ∈ C^{2p+2}` odd in the faces of `Q`
-with `|∂²_{i₁} ⋯ ∂²_{i_{p+1}} f| ≤ B'`, `‖Δₕ^{p+1} Iₕ f‖_∞ ≤ n^{p+1} B'`. -/
 theorem norm_fdLaplacian_pow_interp_le (hs : 0 < s) (N p : ℕ) {f : (Fin n → ℝ) → ℝ} {B' : ℝ}
     (hf : ContDiff ℝ (2 * p + 2) f) (hodd : IsFaceOdd b s f)
     (hB : ∀ (l : Fin (p + 1) → Fin n) x, |secondPartials (List.ofFn l) f x| ≤ B') :
@@ -242,12 +190,8 @@ theorem norm_fdLaplacian_pow_interp_le (hs : 0 < s) (N p : ℕ) {f : (Fin n → 
   exact FiniteDifference.abs_iterate_diffLaplacian_le (MaxNormHeat.meshSize_pos hs N).ne' (p + 1)
     (by exact_mod_cast hf) hB _
 
-/-- **Every A-stable rational scheme from the interpolated initial value is `O(h² + τᵖ)`** in the
-maximum norm, for initial data satisfying the compatibility conditions of order `p`: if `u(0)` is
-on `Q̄` a function `ũ ∈ C^{2p+2}` odd in the faces of `Q` with `|∂²_{i₁} ⋯ ∂²_{i_{p+1}} ũ| ≤ B'`,
-then `‖Iₕ u(kτ) - r(τΔₕ)ᵏ Iₕ u(0)‖_∞ ≤ kτ (n B₄ h²/12 + C_r nᵖ⁺¹ B' τᵖ)`, `C_r` the constant
-of Brenner–Thomée's sharp error estimate (`RationalScheme.sharpConst`). [Thomee2006], Ch. 15;
-[BrennerThomee1979] -/
+/-- **Every A-stable rational scheme from the interpolated initial value is `O(h² + τᵖ)`** for
+initial data compatible to order `p` ([Thomee2006], Ch. 15; [BrennerThomee1979]). -/
 theorem rational_compatible (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {r : RationalScheme}
     (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {ũ : (Fin n → ℝ) → ℝ}
     (hũ : ContDiff ℝ (2 * p + 2) ũ) (hodd : IsFaceOdd b s ũ)
@@ -270,8 +214,6 @@ theorem rational_compatible (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {r :
 
 /-! ### The first eigenmode is compatible to every order -/
 
-/-- **The words of pure second derivatives of a product of sines**:
-`∂²_{i₁} ⋯ ∂²_{i_k} (c ∏ⱼ sin(a (xⱼ - bⱼ))) = (-a²)ᵏ c ∏ⱼ sin(a (xⱼ - bⱼ))`. -/
 theorem secondPartials_sineProd (b : Fin n → ℝ) (a c : ℝ) (w : List (Fin n)) :
     secondPartials w (fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) 0 (x j)) =
       fun x => (-a ^ 2) ^ w.length * c * ∏ j, sineDeriv a (b j) 0 (x j) := by
@@ -284,11 +226,7 @@ theorem secondPartials_sineProd (b : Fin n → ℝ) (a c : ℝ) (w : List (Fin n
     rw [List.length_cons, pow_succ]
     ring
 
-/-- **The first eigenmode is compatible to every order**: `u(0) = ∏ᵢ sin(π (xᵢ - bᵢ)/s)` of
-`MaxNormHeat.sineSolution` is smooth on `ℝⁿ`, odd in the faces of `Q` (it is its own odd
-`2s`-periodic extension), and `∂²_{i₁} ⋯ ∂²_{i_k} u(0) = (-(π/s)²)ᵏ u(0)`, so
-`|∂²_{i₁} ⋯ ∂²_{i_k} u(0)| ≤ (π/s)^{2k}`: the hypotheses of `rational_compatible` hold for every
-order `p`, with `ũ = u(0)` and `B' = (π/s)^{2p+2}`. -/
+/-- **The first eigenmode is compatible to every order.** -/
 theorem sineSolution_compatible (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     ContDiff ℝ ∞ ((sineSolution b hs T).u 0) ∧
       IsFaceOdd b s ((sineSolution b hs T).u 0) ∧

@@ -8,50 +8,13 @@ public import Feec.ForMathlib.Analysis.DiagonalChoice
 /-!
 # The scheme (6.5) converges for every datum in `D(L)`, and to a solution that leaves TSD
 
-[QuennevilleBelair2015], §6.3: the semi-discrete scheme (6.5) on `Q = (0, ½)³` with the elements
-of Table 6.1 and the thesis' boundary conditions (`Feec.Models.Cube.WeakSymmetry.cubeWave`).
-This file removes the hypothesis `IsRateApproximable` of
-`Feec.EinsteinBianchi.BoundedFailure.tendsto_of_isRateApproximable` and
-`Feec.EinsteinBianchi.BoundedFailure.waveFEM_converges_to_non_tsd_of_isRateApproximable`.
-
-**Strong solutions with `U(0) ∈ D(L²)` are classical solutions of (6.2).** If `V` and `L V` are
-strong solutions of the forms-model Hodge wave equation (and `L² V` is continuous), then `V` is a
-`Feec.BGG.ExactWave` of the cube data (`exactOfStrong`): the multiplier functional is
-`ℓ(t)(dτ − S₀ψ) = ⟪σ'(t), τ⟫ − ⟪u(t), dψ⟫`, well defined because this vanishes on `Γ`
-(`inner_sub_inner_eq_zero`), and extended to `H̊Λ¹(Q)` by a linear right inverse of
-`(τ, ψ) ↦ dτ − S₀ψ` (onto by the regular decomposition, `tsA_surjective`); it is represented by the
-`L²` data `(σ', u)` (`IsMultRep`), not `L²`-bounded in general. The observables `dφ = d₀σ`,
-`S¹u`, `du` are bounded functions of `L V` (`projK_comp1_waveOf`: `d₀x₀` is the projection of
-`(L x)₁` on `R(d₁*)ᗮ`).
-
-**Convergence for every datum in `D(L)`.** For `U(0) ∈ D(L²)` the Models theorem
-`Feec.Models.Cube.WeakSymmetry.cubeWave_converges` gives convergence of (6.5) from the elliptic
-projection; `D(L²)` is dense (`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`: the resolvent
-means `J_n` of Stone's theorem map into `D(L²)`), and the energy estimate of (6.1) carries the
-approximation to every strong solution (`eventually_exists_dvec_le`). The solutions of (6.5) keep
-their distance in energy, so by Lax's principle (`tendstoUniformlyOn_iff_tendsto_of_stable`)
-every family of them whose initial states converge converges (`tendsto_of_isStrongSolution`): the
-datum of a family of solutions of (6.5) only has to converge at `t = 0`.
-
-## Main results
-
-* `exactOfStrong`, `exactOfStrong_isMultRep`, `exactOfStrong_isMultRep'`, `exactOfStrong_vec`.
-* `isStrongSolution_of_generator`, `exists_orbit_sq`: the orbits of Stone's group.
-* `eventually_exists_dvec_le`: every strong solution is the uniform limit of solutions of (6.5).
-* **`tendsto_of_isStrongSolution`**, **`tendsto_of_mem_wave_domain`**: convergence of (6.5) without
-  rate for every datum in `D(L)` (no regularity hypothesis).
-* **`waveFEM_converges_to_non_tsd`**: for the TSD datum `(0, 0, (0, β))` of
-  `Feec.Counterexamples.BoundedBGG.bggComplex_verdict`, the continuous solution leaves TSD, every
-  family of solutions of (6.5) whose initial states converge converges to it uniformly on
-  `[0,T]`, and for all large `N` the discrete fields leave TSD: the method converges to the wrong
-  physics. No hypothesis.
+For the semi-discrete scheme (6.5) of [QuennevilleBelair2015], §6.3 on `Q = (0, ½)³`, every family
+of solutions whose initial states converge converges uniformly in time, for every datum in
+`D(L)`; for the TSD datum `(0, 0, (0, β))` the limit and the discrete fields leave TSD.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.1 ((6.1), (6.2)), §6.2 ((6.3), (6.4), Prop 6.2), §6.3 ((6.5), Table 6.1)
-* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
-  Cor. 2.4.9 (Stone's theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -66,8 +29,6 @@ namespace Feec.EinsteinBianchi.BoundedConvergence
 open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry Feec.Models.BoundedDomain Feec.EinsteinBianchi.WaveFEM
   Feec.EinsteinBianchi.MatrixModel Feec.EinsteinBianchi.BoundedFailure
-
-/-! ### Calculus through isometric embeddings -/
 
 theorem continuousOn_of_isometry {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     [NormedAddCommGroup F] [NormedSpace ℝ F] (g : E →ₗ[ℝ] F) (hg : ∀ x, ‖g x‖ = ‖x‖)
@@ -93,8 +54,6 @@ def tsA : (U0 × Wv U0) →ₗ[ℝ] U1 :=
 
 theorem tsA_apply (x : U0 × Wv U0) : tsA x = bggSegment.d0 x.1 - bggSegment.S0 x.2 := rfl
 
-/-- **`(τ, ψ) ↦ dτ − S₀ψ` is onto `H̊Λ¹(Q)`** (the regular decomposition,
-`Feec.BGG.Stability.exists_decomp` with `curlPotential`). -/
 theorem tsA_surjective : Function.Surjective tsA := fun μ => by
   obtain ⟨τ, ψ, h, -⟩ := bggStability_curlPotentialConst.exists_decomp μ
   exact ⟨(τ, ψ), h⟩
@@ -108,8 +67,7 @@ theorem tsA_tsR (μ : U1) : tsA (tsR μ) = μ :=
   LinearMap.congr_fun (LinearMap.exists_rightInverse_of_surjective tsA
     (LinearMap.range_eq_top.2 tsA_surjective)).choose_spec μ
 
-/-- The multiplier functional of the data `(a, b)`: `μ ↦ ⟪a, τ⟫ − ⟪b, dψ⟫` for the preimage
-`(τ, ψ) = tsR μ` of `μ`. -/
+/-- The multiplier functional `μ ↦ ⟪a, τ⟫ − ⟪b, dψ⟫` of the data `(a, b)`, `(τ, ψ) = tsR μ`. -/
 def multOf (a : W0) (b : Wv W1) : U1 →ₗ[ℝ] ℝ :=
   ((innerSL ℝ a).toLinearMap ∘ₗ D0.domain.subtype ∘ₗ LinearMap.fst ℝ U0 (Wv U0) -
     (innerSL ℝ b).toLinearMap ∘ₗ incl1 ∘ₗ bggSegment.dt0 ∘ₗ LinearMap.snd ℝ U0 (Wv U0)) ∘ₗ tsR
@@ -117,8 +75,6 @@ def multOf (a : W0) (b : Wv W1) : U1 →ₗ[ℝ] ℝ :=
 theorem multOf_apply (a : W0) (b : Wv W1) (μ : U1) :
     multOf a b μ = ⟪a, ((tsR μ).1 : W0)⟫ - ⟪b, incl1 (bggSegment.dt0 (tsR μ).2)⟫ := rfl
 
-/-- **The multiplier of data vanishing on `Γ` is represented by them**: if
-`⟪a, τ⟫ = ⟪b, dψ⟫` whenever `dτ = S₀ψ`, then `multOf a b (dτ − S₀ψ) = ⟪a, τ⟫ − ⟪b, dψ⟫`. -/
 theorem isMultRep_multOf {a : W0} {b : Wv W1}
     (hvan : ∀ τ ψ, bggSegment.d0 τ = bggSegment.S0 ψ →
       ⟪a, (τ : W0)⟫ - ⟪b, incl1 (bggSegment.dt0 ψ)⟫ = 0) : IsMultRep (multOf a b) a b := by
@@ -133,8 +89,6 @@ theorem isMultRep_multOf {a : W0} {b : Wv W1}
   rw [multOf_apply]
   simp only [Submodule.coe_sub, map_sub, inner_sub_right] at h
   linarith
-
-/-! ### The orthogonal projection onto `R(d₁*)ᗮ` -/
 
 section Proj
 
@@ -155,8 +109,6 @@ instance : rangeAdjPerp.HasOrthogonalProjection := by
 def projK : Wv W1 →L[ℝ] Wv W1 := rangeAdjPerp.starProjection
 
 set_option maxHeartbeats 1000000 in
-/-- **`d₀x₀` is a bounded function of `L x`**: `P_{R(d₁*)ᗮ} (L x)₁ = d₀ x₀` on `D(L)` (the two
-terms of `(L x)₁ = d₀x₀ − d₁*x₂` are orthogonal). -/
 theorem projK_comp1_waveOf {x : WS} (hx : x ∈ formsShort.wave.domain) :
     projK (comp1 (waveOf x)) = bggHilb.D0Γ ⟨comp0 x, dom0 hx⟩ := by
   rw [comp1_waveOf hx, map_sub]
@@ -177,8 +129,6 @@ theorem projK_comp1_waveOf {x : WS} (hx : x ∈ formsShort.wave.domain) :
     (Submodule.starProjection_apply_eq_zero_iff _).2 h2, sub_zero]
 
 end Proj
-
-/-! ### Points of `D(L)` in the domain model -/
 
 section PointDomain
 
@@ -217,8 +167,6 @@ theorem dt1_uOf : bggSegment.dt1 (uOf x) = compρL (waveOf x) :=
   ((compρL_apply _).trans (ed_point hx)).symm
 
 set_option maxHeartbeats 1000000 in
-/-- **(6.2a) tested on `Γ` vanishes** at a point of `D(L)`: `⟪σ', τ⟫ = ⟪u, dψ⟫` when
-`dτ = S₀ψ`. -/
 theorem inner_sub_inner_eq_zero (τ : U0) (ψ : Wv U0)
     (h : bggSegment.d0 τ = bggSegment.S0 ψ) :
     ⟪aOf x, (τ : W0)⟫ - ⟪bOf x, incl1 (bggSegment.dt0 ψ)⟫ = 0 := by
@@ -259,10 +207,7 @@ include hV hW
 
 include hX in
 set_option maxHeartbeats 8000000 in
-/-- **A strong solution with `L V` strong and `L² V` continuous is a classical solution of (6.2)**
-of the cube data (`Feec.BGG.ExactWave bggSegment`, source `0`): the states are the components of
-`V` (with `(σ, φ) ↦ (−σ, −φ)` as in `solutionOfStrong`), the time derivatives those of `L V`, and
-the multiplier `multOf σ' u` (`IsMultRep` by `inner_sub_inner_eq_zero`). -/
+/-- A strong solution with `L V` strong and `L² V` continuous, as a classical solution of (6.2). -/
 def exactOfStrong : Feec.BGG.ExactWave bggSegment T (srcFun 0) where
   σ t := D0.graphDom (σOf (V t))
   φ t := rp (φOf (V t))
@@ -387,7 +332,6 @@ theorem exactOfStrong_isMultRep' : ∀ t ∈ Icc 0 T,
 
 include hX in
 set_option maxHeartbeats 4000000 in
-/-- The energy vector of `exactOfStrong` is that of `solutionOfStrong`. -/
 theorem exactOfStrong_vec {t : ℝ} (ht : t ∈ Icc 0 T) :
     (exactWave_toSolution (exactOfStrong hV hW hX)).vec t = (solutionOfStrong hV).vec t := by
   rw [exactWave_toSolution_vec, solutionOfStrong_vec hV ht]
@@ -407,7 +351,6 @@ section Group
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
   {A : E →ₗ.[ℝ] E}
 
-/-- Orbits of domain points are strong solutions of `U' = A U`. -/
 theorem isStrongSolution_of_generator {G : Feec.C0Group ℝ E} (hgen : G.generator = A)
     {x : E} (hx : x ∈ A.domain) (I : Set ℝ) :
     Evolution.IsStrongSolution A I 0 fun t => G.S t x := by
@@ -426,9 +369,6 @@ theorem generator_apply_S_of_eq {G : Feec.C0Group ℝ E} (hgen : G.generator = A
     A ⟨G.S t x, h⟩ = G.S t (A ⟨x, hx⟩) := by
   subst hgen; exact G.generator_apply_S ⟨x, hx⟩ t
 
-/-- **Orbits of `D(A²)`**: for `y ∈ D(A²)` there is a strong solution `V` of `U' = A U` with
-`V(0) = y` such that `A V` is a strong solution and `A² V` is continuous (the orbit of Stone's
-group). -/
 theorem exists_orbit_sq (hA : A.IsSkewAdjoint) {y : E} (hy : y ∈ A.domain)
     (hAy : A ⟨y, hy⟩ ∈ A.domain) (I : Set ℝ) :
     ∃ (V : ℝ → E) (h : ∀ t, V t ∈ A.domain) (h' : ∀ t, A ⟨V t, h t⟩ ∈ A.domain),
@@ -476,15 +416,6 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 8000000 in
-/-- **Every strong solution is the uniform limit of solutions of (6.5)** of the forms-model Hodge
-wave equation on the cube ([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, thesis' boundary
-conditions; no hypothesis): for every `ε > 0` and all large `N`, some solution of (6.5) (source
-`0`) is within `ε` of the solution `solutionOfStrong hV` of (6.1) on `[0,T]` in the energy norm.
-Approximate `V(0)` by `y ∈ D(L²)` (`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`); the orbit
-of `y` is a classical solution of (6.2) (`exactOfStrong`) to which (6.5) converges from its
-elliptic projection (`Feec.Models.Cube.WeakSymmetry.cubeWave_converges`), and it stays within
-`‖V(0) - y‖` of `V` by the energy estimate of (6.1) (`Feec.BGG.WaveData.Solution.norm_vec_sub_le`).
--/
 theorem eventually_exists_dvec_le {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
     (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
@@ -545,13 +476,6 @@ theorem eventually_exists_dvec_le {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
     _ = ε := by rw [hηdef]; ring
 
 set_option maxHeartbeats 8000000 in
-/-- **Convergence of (6.5) without rate for every strong solution** of the forms-model Hodge
-wave equation on the cube ([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, thesis' boundary
-conditions; no hypothesis): every family of solutions of (6.5) (source `0`) whose initial
-states converge to `V(0)` in the energy norm converges to the solution `solutionOfStrong hV` of
-(6.1) uniformly on `[0,T]`. Lax's principle (`tendstoUniformlyOn_iff_tendsto_of_stable`): the
-solutions of (6.5) keep their distance in energy (`norm_dvec_sub_le`) and approximate the solution
-uniformly (`eventually_exists_dvec_le`). -/
 theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
     (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V)
     (sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0))
@@ -595,13 +519,8 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 4000000 in
-/-- **Convergence of (6.5) for every datum in `D(L)`** ([QuennevilleBelair2015], §6.3, (6.5),
-Table 6.1, thesis' boundary conditions; no hypothesis): for every `U₀` in the domain of the
-forms-model Hodge wave operator, the Hodge wave equation has a classical solution `V` on `[0,T]`
-(Stone, `Feec.EinsteinBianchi.WaveFEM.bgg_wave_existsUnique` with `curlPotential`), which solves
-(6.1) (`solutionOfStrong`) with initial energy vector `(−σ₀, u₀, M₀, ρ₀)`, and every family of
-solutions of (6.5) (source `0`) whose initial states converge to it converges to it uniformly on
-`[0,T]` (`tendsto_of_isStrongSolution`). -/
+/-- For every `U₀ ∈ D(L)`, the Hodge wave equation has a strong solution from `U₀`, and every
+family of solutions of (6.5) whose initial states converge to it converges to it uniformly. -/
 theorem tendsto_of_mem_wave_domain {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
     (hU₀ : U₀ ∈ formsShort.wave.domain) :
     ∃ (V : ℝ → WS) (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V), V 0 = U₀ ∧
@@ -619,23 +538,8 @@ theorem tendsto_of_mem_wave_domain {T : ℝ} (hT0 : 0 < T) {U₀ : WS}
   rw [solutionOfStrong_vec hVs ⟨le_rfl, hT0.le⟩, hV0]
 
 set_option maxHeartbeats 4000000 in
-/-- **The method converges to the wrong physics** ([QuennevilleBelair2015], §6.3, (6.5) with
-Table 6.1 and the thesis' boundary conditions; no hypothesis: the regularity hypothesis is
-discharged by `curlPotential` and convergence is `tendsto_of_isStrongSolution`). For the TSD
-datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of
-`Feec.Counterexamples.BoundedBGG.bggComplex_verdict` on `Q`:
-1. the matrix-model Hodge wave equation has a unique strong solution `U = betaU` on `[0,T]`, with
-   `σ ≡ 0`, and `U` **leaves TSD**: `E(t) ∉ L²(TSD)` for some `t` and `B(t)` is not symmetric for
-   some `t`;
-2. read in the forms model (`Feec.EinsteinBianchi.MatrixModel`), `U` is a solution `w = betaW` of
-   (6.1) with initial energy vector `(0, 0, 0, ρ(0))`, `ρ(0) = ⋆β` row by row;
-3. the scheme (6.5) has solutions from the projected data `(0, 0, 0, P ρ(0))`, and their initial
-   states converge to `w(0)`;
-4. every family of solutions of (6.5) whose initial states converge to `w(0)` converges to `w`
-   uniformly on `[0,T]` (in energy, hence `E_h(t) → E(t)` and `B_h(t) → B(t)` uniformly for the
-   matrix proxies `E_h = rowsEquiv uₕ`, `B_h = rows2Equiv ρₕ`), and the discrete fields
-   themselves leave TSD: at the times of item 1, for all large `N`, `E_h(t) ∉ L²(TSD)` and
-   `B_h(t)` is not symmetric. -/
+/-- For the TSD datum `(0, 0, (0, β))`, the unique solution leaves TSD; solutions of (6.5) whose
+initial states converge to it converge uniformly, and their fields leave TSD for large `N`. -/
 theorem waveFEM_converges_to_non_tsd {T : ℝ} (hT0 : 0 < T) :
     (betaU hT0 0 = betaDatum ∧
       Evolution.IsStrongSolution matrixComplex.wave (Icc 0 T) 0 (betaU hT0) ∧

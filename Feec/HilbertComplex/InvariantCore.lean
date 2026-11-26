@@ -5,43 +5,13 @@ public import Feec.HilbertComplex.Reducing
 /-!
 # The largest propagating constraint space of the Hodge wave equation
 
-Thesis Props 4.17/4.19 assume that a product constraint `K = {0} × S₁ × S₂` reduces the wave
-operator `L` (the projection hypothesis `P_K D(L) ⊆ D(L)`). When it does not (on bounded domains
-it fails, `Feec.Counterexamples.BoundedDomainTSD`), the thesis' argument still runs on the
-**invariant core** `K* = {x | e^{tL} x ∈ K for all t}` (`Feec.C0Group.invariantCore`), the
-largest closed subspace of `K` reducing `L`. This file shows that `K*` is again a product
-constraint of the same shape and characterizes it.
-
-## Graded complexes
-
-For a Hilbert complex graded by a parity `p` (flipping along every arrow), the grading operator
-`R` reverses time, `R e^{tL} = e^{-tL} R` (`Feec.HilbertComplex.reversal_waveGroup`). Hence:
-
-* `R` preserves the invariant core of every `R`-invariant `K` (`reversal_mem_invariantCore`),
-  in particular of every product `totalSub S` (`reversal_mem_totalSub`).
-
-## Short complexes
-
-For a short complex and `K = {0} × S₁ × S₂` (`Feec.ShortHilbertComplex.coreSub`):
-
-* `K* = {0} × S₁* × S₂*` (`coreSub_eq`), where `S₁* = {E | (0, E, 0) ∈ K*}` and
-  `S₂* = {B | (0, 0, B) ∈ K*}` (`invariantCore₁`, `invariantCore₂`): the even and odd parts
-  `(x ± R x)/2` of `x ∈ K*` lie in `K*`;
-* `{0} × S₁* × S₂*` reduces `L` (`isReducing_wave_coreSub`), so strong solutions with data in it
-  exist, are unique and stay in it (`existsUnique_mem_coreSub`, the corrected Prop 4.17); when
-  `S₁ ⊆ N(d₀†)` it is even a reducing subcomplex (`reducingSubcomplex_coreSub`):
-  `d₁ (D(d₁) ∩ S₁*) ⊆ S₂*`, `d₁† (D(d₁†) ∩ S₂*) ⊆ S₁*`;
-* **maximality** (`le_invariantCore_of_isReducing`): every closed `S₁' ⊆ S₁`, `S₂' ⊆ S₂` whose
-  product reduces `L` lies in `(S₁*, S₂*)`;
-* stationary data of degree `2` lie in `K*` (`mem_invariantCore₂_of_eq_zero`).
+For a closed constraint `K = {0} × S₁ × S₂` of a short Hilbert complex, the invariant core `K*` of
+`K` under the wave group is a product `{0} × S₁* × S₂*`, the largest product of closed subspaces
+inside `K` reducing the wave operator, and classical solutions with data in `D(L) ∩ K*` stay in it.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (Thm 4.4), §4.10 (Props 4.16–4.18), §4.11 (Prop 4.19)
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reducing subspaces)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.10 (groups of isometries)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -60,7 +30,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [Fintype ι] {p : ι → Bool}
 
 omit [∀ i, CompleteSpace (W i)] in
-/-- The grading operator preserves every product subspace. -/
 theorem reversal_mem_totalSub {S : ∀ i, Submodule 𝕜 (W i)} {x : PiLp 2 W}
     (hx : x ∈ totalSub S) : reversal 𝕜 p x ∈ totalSub S := fun i => by
   rw [reversal_apply]; exact (S i).smul_mem _ (hx i)
@@ -69,8 +38,6 @@ variable (H : HilbertComplex 𝕜 c W) [∀ i, NormedSpace ℝ (W i)] [∀ i, Is
   (hp : ∀ i j, c.Rel i j → p j ≠ p i)
 include hp
 
-/-- **The grading preserves invariant cores**: if `R K ⊆ K`, then `R K* ⊆ K*`, since
-`e^{tL} R x = R e^{-tL} x`. -/
 theorem reversal_mem_invariantCore {K : Submodule 𝕜 (PiLp 2 W)}
     (hRK : ∀ x ∈ K, reversal 𝕜 p x ∈ K) {x : PiLp 2 W} (hx : x ∈ H.waveGroup.invariantCore K) :
     reversal 𝕜 p x ∈ H.waveGroup.invariantCore K :=
@@ -81,7 +48,6 @@ theorem reversal_mem_invariantCore {K : Submodule 𝕜 (PiLp 2 W)}
     exact hRK _ (C0Group.mem_invariantCore.1 hx _)
 
 omit hp in
-/-- Strong solutions of `U' = L U` from `x ∈ D(L)` are the orbit `t ↦ e^{tL} x`. -/
 theorem eq_waveGroup_of_isStrongSolution {x : PiLp 2 W} (hx : x ∈ H.wave.domain) {T : ℝ}
     {U : ℝ → PiLp 2 W} (h0 : U 0 = x) (hU : Evolution.IsStrongSolution H.wave (Icc 0 T) 0 U)
     {t : ℝ} (ht : t ∈ Icc 0 T) : U t = H.waveGroup.S t x := by
@@ -93,7 +59,6 @@ theorem eq_waveGroup_of_isStrongSolution {x : PiLp 2 W} (hx : x ∈ H.wave.domai
   simpa using this
 
 omit hp in
-/-- The orbit `t ↦ e^{tL} x` of `x ∈ D(L)` is a strong solution of `U' = L U` on `[0, T]`. -/
 theorem isStrongSolution_waveGroup {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (T : ℝ) :
     Evolution.IsStrongSolution H.wave (Icc 0 T) 0 fun t => H.waveGroup.S t x := by
   have hg : H.waveGroup.toC0Semigroup.generator = H.wave := H.generator_waveGroup
@@ -145,7 +110,6 @@ theorem totalSub_family3_mono {K₀ K₀' : Submodule 𝕜 W₀} {K₁ K₁' : S
   HilbertComplex.totalSub_mono fun i => by fin_cases i; exacts [h₀, h₁, h₂]
 
 omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-/-- A single nonzero component in the constraint family. -/
 theorem single_two_mem_totalSub_family3 (K₀ : Submodule 𝕜 W₀) (K₁ : Submodule 𝕜 W₁)
     (K₂ : Submodule 𝕜 W₂) {v : W₂} (hv : v ∈ K₂) :
     WithLp.toLp 2 (Pi.single (M := W3 W₀ W₁ W₂) 2 v) ∈
@@ -224,8 +188,7 @@ variable (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
   [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)]
   (S₁ : Submodule 𝕜 W₁) (S₂ : Submodule 𝕜 W₂)
 
-/-- `K* = {x | e^{tL} x ∈ {0} × S₁ × S₂ for all t}`: the invariant core of the product constraint
-under the wave group. -/
+/-- The invariant core `K*` of `{0} × S₁ × S₂` under the wave group. -/
 def coreSub : Submodule 𝕜 (PiLp 2 (W3 W₀ W₁ W₂)) :=
   S.toHilbertComplex.waveGroup.invariantCore
     (HilbertComplex.totalSub (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂))
@@ -251,8 +214,7 @@ theorem invariantCore₁_le : S.invariantCore₁ S₁ S₂ ≤ S₁ := fun _ hv 
 theorem invariantCore₂_le : S.invariantCore₂ S₁ S₂ ≤ S₂ := fun _ hv =>
   (mem_totalSub_family3.1 (coreSub_le hv)).2.2
 
-/-- **`K*` is a product**: `K* = {0} × S₁* × S₂*`. The even and odd parts `(x ± R x)/2` of
-`x ∈ K*` for the time reversal `R` lie in `K*`. -/
+/-- **`K*` is a product**: `K* = {0} × S₁* × S₂*`. -/
 theorem coreSub_eq : S.coreSub S₁ S₂ = HilbertComplex.totalSub
     (family3 (⊥ : Submodule 𝕜 W₀) (S.invariantCore₁ S₁ S₂) (S.invariantCore₂ S₁ S₂)) := by
   ext x
@@ -338,8 +300,6 @@ instance : (S.invariantCore₂ S₁ S₂).HasOrthogonalProjection := by
 instance : (S.coreSub S₁ S₂).HasOrthogonalProjection := by
   unfold coreSub; infer_instance
 
-/-- **`{0} × S₁* × S₂*` reduces the wave operator** (the projection hypothesis of Prop 4.17 holds
-for `K*`). -/
 theorem isReducing_wave_coreSub : S.wave.IsReducing (HilbertComplex.totalSub
     (family3 (⊥ : Submodule 𝕜 W₀) (S.invariantCore₁ S₁ S₂) (S.invariantCore₂ S₁ S₂))) := by
   have h := S.toHilbertComplex.isReducing_invariantCore_waveGroup
@@ -349,7 +309,6 @@ theorem isReducing_wave_coreSub : S.wave.IsReducing (HilbertComplex.totalSub
   convert h using 1
   exact e.symm
 
-/-- `D(L) ∩ K*` is dense in `K*`. -/
 theorem mem_closure_wave_domain_inter_coreSub {k : PiLp 2 (W3 W₀ W₁ W₂)}
     (hk : k ∈ S.coreSub S₁ S₂) :
     k ∈ closure ((S.wave.domain : Set (PiLp 2 (W3 W₀ W₁ W₂))) ∩ S.coreSub S₁ S₂) := by
@@ -357,9 +316,8 @@ theorem mem_closure_wave_domain_inter_coreSub {k : PiLp 2 (W3 W₀ W₁ W₂)}
   rwa [HilbertComplex.generator_waveGroup] at this
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
-/-- **Corrected Prop 4.17 with existence**: for `U₀ ∈ D(L) ∩ K*` and every `[a, b]`,
-`U' = L U`, `U a = U₀` has a classical solution, unique among strong solutions, and it stays in
-`K* ⊆ {0} × S₁ × S₂`. -/
+/-- **Propagation in `K*`**: for `U₀ ∈ D(L) ∩ K*`, `U' = L U`, `U a = U₀` has a classical solution,
+unique among strong solutions, staying in `K*`. [QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem existsUnique_mem_coreSub {U₀ : PiLp 2 (W3 W₀ W₁ W₂)} (hU₀ : U₀ ∈ S.wave.domain)
     (hU₀K : U₀ ∈ S.coreSub S₁ S₂) (a b : ℝ) :
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution S.wave (Icc a b) 0 U ∧
@@ -404,7 +362,6 @@ theorem inj₂_mem_wave_domain {v : W₂} (h2 : v ∈ (S.d₁†).domain) :
   S.mem_wave_domain.2 ⟨S.d₀.domain.zero_mem, S.d₁.domain.zero_mem, (S.d₀†).domain.zero_mem, h2⟩
 
 omit [CompleteSpace W₀] [CompleteSpace W₁] [CompleteSpace W₂] in
-/-- A partial map vanishes at a point of its domain whose underlying vector is `0`. -/
 theorem _root_.LinearPMap.apply_eq_zero_of_coe_eq_zero {E F : Type*} [AddCommGroup E]
     [Module 𝕜 E] [AddCommGroup F] [Module 𝕜 F] {T : E →ₗ.[𝕜] F} (x : T.domain)
     (h : (x : E) = 0) : T x = 0 := by
@@ -412,7 +369,6 @@ theorem _root_.LinearPMap.apply_eq_zero_of_coe_eq_zero {E F : Type*} [AddCommGro
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
   [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)] in
-/-- `L (0, 0, B) = (0, -d₁† B, 0)`. -/
 theorem wave_inj₂ (ρ : S.d₁†.domain) :
     S.wave ⟨_, inj₂_mem_wave_domain (S := S) ρ.2⟩ = inj₁ (𝕜 := 𝕜) W₀ W₁ W₂ (-(S.d₁† ρ)) := by
   refine PiLp.ext fun i => ?_
@@ -431,7 +387,6 @@ theorem wave_inj₂ (ρ : S.d₁†.domain) :
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection]
   [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)] in
-/-- `L (0, E, 0) = (-d₀† E, 0, d₁ E)`: its components. -/
 theorem wave_inj₁_zero (u : S.d₁.domain) (hu : (u : W₁) ∈ (S.d₀†).domain) :
     ((S.wave ⟨_, inj₁_mem_wave_domain (S := S) u.2 hu⟩ : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀) =
       -(S.d₀† ⟨u, hu⟩) := by
@@ -452,7 +407,6 @@ theorem wave_inj₁_two (u : S.d₁.domain) (hu : (u : W₁) ∈ (S.d₀†).dom
       S.d₁ u := by
   rw [S.wave_apply_two]; rfl
 
-/-- `d₁† (D(d₁†) ∩ S₂*) ⊆ S₁*`. -/
 theorem adjoint_mem_invariantCore₁ (ρ : S.d₁†.domain) (hρ : (ρ : W₂) ∈ S.invariantCore₂ S₁ S₂) :
     S.d₁† ρ ∈ S.invariantCore₁ S₁ S₂ := by
   have hm := (isReducing_wave_coreSub (S := S) (S₁ := S₁) (S₂ := S₂)).mapsTo
@@ -461,9 +415,6 @@ theorem adjoint_mem_invariantCore₁ (ρ : S.d₁†.domain) (hρ : (ρ : W₂) 
   have h1 : -(S.d₁† ρ) ∈ S.invariantCore₁ S₁ S₂ := (mem_totalSub_family3.1 hm).2.1
   exact (Submodule.neg_mem_iff _).1 h1
 
-/-- **`{0} × S₁* × S₂*` is a reducing subcomplex** when `S₁ ⊆ N(d₀†)`: `(⊥, S₁*)` reduces `d₀`
-because `R(d₀) ⊥ N(d₀†) ⊇ S₁*`, and `(S₁*, S₂*)` reduces `d₁` since `L` is reduced by `K*` on
-the fields `(0, P_{N(d₀†)} u, 0) ∈ D(L)`. -/
 theorem reducingSubcomplex_coreSub (hS₁ : S₁ ≤ (S.d₀†).ker) :
     S.toHilbertComplex.ReducingSubcomplex
       (family3 (⊥ : Submodule 𝕜 W₀) (S.invariantCore₁ S₁ S₂) (S.invariantCore₂ S₁ S₂)) := by
@@ -523,7 +474,6 @@ theorem reducingSubcomplex_coreSub (hS₁ : S₁ ≤ (S.d₀†).ker) :
 /-! ### Stationary data and propagation -/
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
-/-- A zero of the wave operator in `{0} × S₁ × S₂` lies in `K*`. -/
 theorem mem_coreSub_of_wave_eq_zero (x : S.wave.domain)
     (hx : (x : PiLp 2 (W3 W₀ W₁ W₂)) ∈
       HilbertComplex.totalSub (family3 (⊥ : Submodule 𝕜 W₀) S₁ S₂))
@@ -535,8 +485,6 @@ theorem mem_coreSub_of_wave_eq_zero (x : S.wave.domain)
   exact C0Group.mem_invariantCore_of_generator_eq_zero ⟨_, hx'⟩ hx e
 
 omit [S₁.HasOrthogonalProjection] [S₂.HasOrthogonalProjection] in
-/-- **Stationary magnetic data lie in `K*`**: if `B ∈ D(d₁†) ∩ S₂` and `d₁† B = 0`, then
-`(0, 0, B)` is a stationary point of `U' = L U` in `K`, so `B ∈ S₂*`. -/
 theorem mem_invariantCore₂_of_eq_zero (ρ : S.d₁†.domain) (hρ : (ρ : W₂) ∈ S₂)
     (h0 : S.d₁† ρ = 0) : (ρ : W₂) ∈ S.invariantCore₂ S₁ S₂ :=
   mem_coreSub_of_wave_eq_zero ⟨_, inj₂_mem_wave_domain (S := S) ρ.2⟩

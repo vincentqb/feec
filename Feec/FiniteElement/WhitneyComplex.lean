@@ -6,57 +6,18 @@ public import Feec.Mesh.Freudenthal
 /-!
 # The Whitney complex on simplicial meshes
 
-The Whitney forms `P₁⁻Λᵏ(T)` (`Feec.FiniteElement.whitneySpace`) with the face integrals
-`ω ↦ ∫_g ω` as degrees of freedom form an element family `Feec.FiniteElement.whitneyElement n`
-(`Feec.FiniteElement.LocalElement`). On any conforming simplicial mesh of an open `Ω ⊆ ℝⁿ` the
-assembled global spaces are the **lowest-order Whitney complex**
-`P₁⁻Λ⁰ → P₁⁻Λ¹ → ⋯ → P₁⁻Λⁿ` (in `ℝ³`: Lagrange `P₁`, Nédélec, Raviart–Thomas, piecewise constants),
-a subcomplex of the `L²` de Rham complex `HΛ(Ω)` (`whitneySubcomplex`) whose `k`-th space has
-dimension the number of `k`-faces of the mesh (`finrank_whitney_globalSpace`); with vanishing
-boundary DOFs it is a subcomplex of `H̊Λ(Ω)` for strictly star-shaped (e.g. convex) `Ω`
-(`whitneySubcomplexMin`), in particular for the Freudenthal meshes of a cube.
-
-The key algebraic facts are that every Whitney form is a trimmed linear form
-`x ↦ α + ι_x β` (`whitneySpace_le_p1MinusForms`), that affine pullbacks preserve these
-(`affinePullback_mem_p1MinusForms`, from `B^* (ι_{B v} β) = ι_v (B^* β)`,
-`Feec.ExteriorFibre.pullback_interior`), and
-that on the reference simplex they are exactly the Whitney forms
-(`p1MinusForms_le_whitneySpace_refVertex`). The tangential trace of a Whitney form on a facet is
-therefore a Whitney form of the facet, determined by the DOFs of the faces of the facet
-(`tangentialTraceEq_of_whitneyFaceDof_eq`).
-
-## Main definitions
-
-* `Feec.FiniteElement.p1MinusForms n k`: the trimmed linear `k`-forms `x ↦ α + ι_x β` on `ℝⁿ`.
-* `Feec.FiniteElement.whitneyFaceDof g k`: the face integral over the face `g`, enumerated by
-  `faceEnum g`.
-* `Feec.FiniteElement.whitneyElement n`: the Whitney element family.
-* `Feec.FiniteElement.whitneySubcomplex M hΩ`, `whitneySubcomplexMin M hΩ x₀ hstar`: the Whitney
-  subcomplexes.
+The Whitney element family `whitneyElement n` assembles, on simplicial meshes, subcomplexes of
+`HΛ(Ω)` and, with vanishing boundary DOFs, of `H̊Λ(Ω)` for strictly star-shaped `Ω`.
 
 ## Main results
 
-* `whitneySpace_le_p1MinusForms`, `affinePullback_mem_p1MinusForms`,
-  `p1MinusForms_le_whitneySpace_refVertex`: Whitney forms are trimmed linear forms, stable
-  under affine pullback; `whitneySpace_eq_p1MinusForms`: **`P₁⁻Λᵏ(T)` is the space of trimmed
-  linear forms** for every simplex (by a dimension count).
-* `isUnisolvent_whitneyFaceDof`, `tangentialTraceEq_of_whitneyFaceDof_eq`,
-  `whitneyFaceDof_congr`, `whitneyFaceDof_comp_extDerivC1_mem_span`: the axioms of an element
-  family.
-* `finrank_whitney_globalSpace`: **`dim = #{k-faces}`**.
-
-The Whitney element is the trimmed element `P₁⁻Λ` of `Feec.FiniteElement.PolySeq.trimmed 1`, with
-the same subcomplexes on every mesh (`whitneySubcomplex_eq_trimmed` in
-`Feec.FiniteElement.PolyComplex`).
+* `whitneySpace_eq_p1MinusForms`: `P₁⁻Λᵏ(T)` is the space of trimmed linear forms.
+* `tangentialTraceEq_of_whitneyFaceDof_eq`: trace determination for Whitney forms on facets.
+* `finrank_whitney_globalSpace`: `dim Λ_hᵏ(M) = #{k-faces of M}`.
 
 ## References
 
-* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV, §27
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3–5 (Whitney forms, `P₁⁻Λᵏ = P₀Λᵏ + κ H₀Λ^{k+1}`, the global spaces)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -81,10 +42,7 @@ open ExteriorFibre
 
 variable {n m : ℕ}
 
-/-! ### Trimmed linear forms `P₁⁻Λᵏ = P₀Λᵏ + κ H₀Λ^{k+1}` -/
-
-/-- The **trimmed linear `k`-forms** `x ↦ α + ι_x β` on `ℝⁿ` (`α`, `β` constant of degrees `k`,
-`k + 1`), as a space of form fields. -/
+/-- The trimmed linear `k`-forms `x ↦ α + ι_x β` on `ℝⁿ`, with `α`, `β` constant. -/
 def p1MinusForms (n k : ℕ) : Submodule ℝ (FormField n) :=
   Submodule.span ℝ ({w | ∃ α, IsDeg k α ∧ w = fun _ => α} ∪
     {w | ∃ β, IsDeg (k + 1) β ∧ w = fun x => interior x β})
@@ -97,8 +55,6 @@ theorem interior_mem_p1MinusForms {k : ℕ} {β : Finset (Fin n) → ℝ} (hβ :
     (fun x => interior x β) ∈ p1MinusForms n k :=
   Submodule.subset_span (Or.inr ⟨β, hβ, rfl⟩)
 
-/-- Every Whitney form is a trimmed linear form:
-`φ_f(x) = k! (W_f(λ(0)) + ι_x dλ_f^∧)`. -/
 theorem whitneyForm_mem_p1MinusForms (p : Fin (n + 1) → Fin n → ℝ) {k : ℕ} (f : Faces n k) :
     whitneyForm p f.1 ∈ p1MinusForms n k := by
   have hc : ∀ x, baryCoord p x = baryCoord p 0 + fun i => ∑ l, baryGrad p i l * x l := by
@@ -125,7 +81,6 @@ theorem whitneySpace_le_p1MinusForms (p : Fin (n + 1) → Fin n → ℝ) (k : �
     whitneySpace p k ≤ p1MinusForms n k :=
   Submodule.span_le.2 (Set.range_subset_iff.2 fun f => whitneyForm_mem_p1MinusForms p f)
 
-/-- On the reference simplex the trimmed linear forms are the Whitney forms. -/
 theorem p1MinusForms_le_whitneySpace_refVertex (k : ℕ) :
     p1MinusForms n k ≤ whitneySpace (refVertex n) k := by
   refine Submodule.span_le.2 ?_
@@ -133,7 +88,6 @@ theorem p1MinusForms_le_whitneySpace_refVertex (k : ℕ) :
   · exact const_mem_whitneySpace hα
   · exact interior_mem_whitneySpace hβ
 
-/-- **Affine pullbacks preserve trimmed linear forms**. -/
 theorem affinePullback_mem_p1MinusForms (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) {k : ℕ}
     {w : FormField n} (hw : w ∈ p1MinusForms n k) :
     affinePullback B b w ∈ p1MinusForms m k := by
@@ -161,8 +115,7 @@ theorem affinePullback_mem_p1MinusForms (B : Fin n → Fin m → ℝ) (b : Fin n
   | smul c w _ hw =>
     rw [affinePullback_smul]; exact Submodule.smul_mem _ _ hw
 
-/-- **`P₁⁻Λᵏ(T)` is the space of trimmed linear forms** for every `n`-simplex `T` (dimension
-count: `P₁⁻Λᵏ(T) ⊆ P₁⁻Λᵏ ⊆ P₁⁻Λᵏ(T̂)`, and both ends have dimension `(n+1 choose k+1)`).
+/-- **`P₁⁻Λᵏ(T)` is the space of trimmed linear forms** for every `n`-simplex `T`.
 [AFW2006], §3–4 -/
 theorem whitneySpace_eq_p1MinusForms (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     whitneySpace T.points k = p1MinusForms n k := by
@@ -182,9 +135,6 @@ open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
 
-/-! ### Face integrals with the fixed enumerations -/
-
-/-- Two injective enumerations of the same face give the same integral up to a sign. -/
 theorem exists_sign_simplexIntegral_eq {k : ℕ} {q q' : Fin (k + 1) → Fin n → ℝ}
     (hq : Function.Injective q) (hq' : Function.Injective q') (h : Set.range q = Set.range q') :
     ∃ ε : ℝ, (ε = 1 ∨ ε = -1) ∧ ∀ w, simplexIntegral q w = ε * simplexIntegral q' w := by
@@ -222,8 +172,6 @@ theorem card_sigma_whitneyDofIdx (s : Finset (Fin n → ℝ)) (k : ℕ) :
     ← Finset.powersetCard_eq_filter, Finset.card_powersetCard]
   simp
 
-/-- The face integrals over the faces of `T` (with the fixed enumerations) are unisolvent on
-`P₁⁻Λᵏ(T)`. -/
 theorem isUnisolvent_whitneyFaceDof (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     IsUnisolvent fun p : Σ g : (vertexSet T).powerset, WhitneyDofIdx (g : Finset (Fin n → ℝ)) k =>
       whitneyFaceDof (p.1 : Finset (Fin n → ℝ)) k ∘ₗ
@@ -260,9 +208,6 @@ open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
 
-/-! ### Traces of Whitney forms on facets -/
-
-/-- Points of the convex hull of a vertex family are values of its parametrization. -/
 theorem exists_simplexMap_eq_of_mem_convexHull {k : ℕ} (q : Fin (k + 1) → Fin n → ℝ)
     {x : Fin n → ℝ} (hx : x ∈ convexHull ℝ (Set.range q)) :
     ∃ y ∈ refSimplex k, simplexMap q y = x := by
@@ -289,9 +234,6 @@ theorem exists_simplexMap_eq_of_mem_convexHull {k : ℕ} (q : Fin (k + 1) → Fi
   rw [← Finset.sum_subset (Finset.subset_univ s) fun i _ hi => by simp [w', hi]]
   exact Finset.sum_congr rfl fun i hi => by simp [w', hi]
 
-/-- Tangential traces through a parametrization of a face of any dimension: if the pullbacks
-along the edge matrix `B_q` of `q : Fin (j + 1) → ℝᵈ` agree, the tangential traces on the face
-`range q` agree. -/
 theorem tangentialTraceEq_of_pullback_eq {d j : ℕ} {F : Finset (Fin d → ℝ)} {k : ℕ}
     (q : Fin (j + 1) → Fin d → ℝ) (hq : Set.range q = F) {α β : Finset (Fin d) → ℝ}
     (h : pullback (simplexMatrix q) α = pullback (simplexMatrix q) β) :
@@ -381,7 +323,6 @@ open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
 
-/-- The face integral over `g` only sees the tangential trace on `g`. -/
 theorem whitneyFaceDof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : WhitneyDofIdx g k)
     {w η : contForms n}
     (h : ∀ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)),
@@ -400,7 +341,6 @@ theorem whitneyFaceDof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : Whitney
     rw [this]
     exact vsub_mem_vectorSpan ℝ (Finset.mem_coe.2 (hqg _)) (Finset.mem_coe.2 (hqg 0))
 
-/-- **Stokes compatibility of the face integrals**: `∫_g dw = Σᵢ ± ∫_{g ∖ gᵢ} w`. -/
 theorem whitneyFaceDof_comp_extDerivC1_mem_span (g : Finset (Fin n → ℝ)) (k : ℕ) (i : WhitneyDofIdx g (k + 1)) :
     whitneyFaceDof g (k + 1) ∘ₗ extDerivC1 ∈
       Submodule.span ℝ (Set.range fun p : Σ g' : g.powerset,
@@ -465,8 +405,6 @@ open Feec.Domain Feec.Mesh
 
 variable {n : ℕ}
 
-/-! ### The global Whitney spaces and the Whitney complex -/
-
 theorem coe_filter_meshFaces (M : SimplicialMesh n) (k : ℕ) :
     (((LocalElement.meshFaces M).filter fun g => g.card = k + 1 : Finset _) :
       Set (Finset (Fin n → ℝ))) = M.faces k := by
@@ -493,9 +431,7 @@ theorem finrank_whitney_globalSpace (M : SimplicialMesh n) (k : ℕ) :
 instance (k : ℕ) : IsEmpty (WhitneyDofIdx (∅ : Finset (Fin n → ℝ)) k) :=
   ⟨fun i => by have := i.2; simp at this⟩
 
-/-- **The lowest-order Whitney complex** `P₁⁻Λ⁰(M) → P₁⁻Λ¹(M) → ⋯ → P₁⁻Λⁿ(M)` on a conforming mesh
-of an open `Ω ⊆ ℝⁿ`, as a subcomplex of the maximal `L²` de Rham complex `HΛ(Ω)` (in `ℝ³`:
-Lagrange `P₁`, Nédélec edge elements, Raviart–Thomas face elements, piecewise constants). -/
+/-- The Whitney complex `P₁⁻Λ⁰(M) → ⋯ → P₁⁻Λⁿ(M)` as a subcomplex of `HΛ(Ω)`. -/
 def whitneySubcomplex [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) :
     ((deRham ℝ n).maximalComplex hΩ).Subcomplex :=
   (whitneyElement n).subcomplex M hΩ
@@ -504,8 +440,7 @@ instance [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℤ) :
     FiniteDimensional ℝ ((whitneySubcomplex M hΩ).V k) :=
   inferInstanceAs (FiniteDimensional ℝ ((whitneyElement n).V M k))
 
-/-- **The Whitney complex with vanishing boundary DOFs** as a subcomplex of the minimal `L²` de
-Rham complex `H̊Λ(Ω)`, for `Ω` strictly star-shaped with respect to `x₀`. -/
+/-- The Whitney complex with vanishing boundary DOFs as a subcomplex of `H̊Λ(Ω)`. -/
 def whitneySubcomplexMin [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain)
     (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain) :
@@ -517,7 +452,6 @@ instance [NeZero n] (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (x₀ : Fin n
     (k : ℤ) : FiniteDimensional ℝ ((whitneySubcomplexMin M hΩ x₀ hstar).V k) :=
   inferInstanceAs (FiniteDimensional ℝ ((whitneyElement n).V₀ M k))
 
-/-- A convex open set is strictly star-shaped with respect to each of its points. -/
 theorem add_smul_sub_mem_of_convex {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (hconv : Convex ℝ Ω) {x₀ : Fin n → ℝ}
     (hx₀ : x₀ ∈ Ω) : ∀ x ∈ closure Ω, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ Ω := by
   intro x hx t ht0 ht1
@@ -526,8 +460,6 @@ theorem add_smul_sub_mem_of_convex {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) 
   rw [hΩ.interior_eq] at h
   convert h using 1
   rw [smul_sub, sub_smul, one_smul]; abel
-
-/-! ### Freudenthal meshes of cubes -/
 
 theorem isOpen_freudenthalMesh_domain (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ) [NeZero N] :
     IsOpen (freudenthalMesh b s hs N).domain := by

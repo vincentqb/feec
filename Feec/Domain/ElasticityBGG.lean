@@ -7,42 +7,18 @@ public import Feec.Domain.HessianComplex
 /-!
 # The elasticity complex as a BGG complex
 
-The de Rham complex of `ℝ³` with values in `𝕜³` (`deRhamVec 3`) stacked over itself, linked by
-`S⁰ = -mskw` (`(S⁰ψ)_{i,i+1} = -ψ_{i+2}`), `S¹ u = uᵀ - tr u · I` and `S² = 2 vskw`
-(`(S² u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}`), is BGG data of constant-coefficient operators
-(`elasticityBGG`): `S⁰` is one-to-one, `S¹` is bijective and `S²` is onto, so the
-injectivity/surjectivity condition holds at `J = 1` with the explicit right inverses `elasticityT`
-(**`injSurjWith_elasticityBGG`**, `injSurj_elasticityBGG`). Its BGG complex
-`bgg 1` eliminates `V²`, `V³` against `S¹`, `S²` and `Ṽ⁰` against `S⁰`, and **is the elasticity
-complex** `𝕜³ --sym grad--> Sym --inc--> Sym --div--> 𝕜³` of `Feec.Domain.Elasticity` on smooth
-fields (**`elasticityBGGIso`**): in degree `0` the quotient `V⁰ = (V⁰ × Ṽ⁰) / (0 × Ṽ⁰)`, in degree
-`1` the quotient `V¹ / R(S⁰) = 𝕜^{3×3} / skew ≅ Sym`, `[σ] ↦ sym σ` (the pairs `(σ, (S¹)⁻¹ curl σ)`
-modulo `(-S⁰ψ, grad ψ)`), with differentials `u ↦ sym grad u` and
-`σ ↦ curl (S¹)⁻¹ curl σ = inc (sym σ)` (`curlOp_elN1_curlOp`), and after `1` the fields
-`0 × N(Sᵏ)`, symmetric in degree `2`, with the divergence. Hence the smooth elasticity complex has
-the cohomology of the twisted de Rham complex (`elasticitySmoothComplexHomologyIso`).
-
-## Main definitions
-
-* `Feec.Domain.elasticityBGG`: the BGG diagram of the elasticity complex.
-* `Feec.Domain.elasticitySmoothComplex`: the smooth elasticity complex (`elasticityOp`,
-  `elasticityMat`).
+The de Rham complex of `ℝ³` with values in `𝕜³` over itself, linked by `-mskw`, `T - tr` and
+`2 vskw`, is BGG data satisfying the injectivity/surjectivity condition at `J = 1`, whose BGG
+complex `bgg 1` is the smooth elasticity complex.
 
 ## Main results
 
-* **`injSurjWith_elasticityBGG`**, `injSurj_elasticityBGG`, `elasticityBGGHomologyIso`.
-* **`elasticityBGGIso`**, `elasticitySmoothComplexHomologyIso`.
+* `injSurjWith_elasticityBGG`: the injectivity/surjectivity condition at `J = 1`.
+* `elasticityBGGIso`: `bgg 1` is isomorphic to the smooth elasticity complex.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1, (32) (the elasticity
-  complex, `J = 1`)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §11 (the elasticity complex from two de Rham complexes)
-* [M. Eastwood, *A complex from linear elasticity*][Eastwood2000] (the elasticity complex from the
-  BGG resolution)
-* [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
-  (BGG sequences)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -102,7 +78,6 @@ theorem ofMatrix_elS2_apply (f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (i
   simp only [ofMatrix_apply, elS2, Fintype.sum_prod_type, Fin.sum_univ_three, Pi.sub_apply]
   fin_cases i <;> simp <;> ring
 
-/-- `curl S⁰ = -S¹ grad`. -/
 theorem curlOp_elS0 (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (curlOp 3).apply ((ofMatrix elS0).apply f) =
       -(ofMatrix elS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply ((gradOp 3 3).apply f) := by
@@ -111,7 +86,6 @@ theorem curlOp_elS0 (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     ofMatrix_elS0_apply]
   fin_cases i <;> fin_cases k <;> simp [gradOp_apply, fderiv_neg] <;> ring
 
-/-- `div S¹ = -S² curl`. -/
 theorem divOp_elS1 {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (divOp 3 3).apply ((ofMatrix elS1).apply f) =
       -(ofMatrix elS2 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply ((curlOp 3).apply f) := by
@@ -146,8 +120,7 @@ theorem elasticityS_anticomm (k : ℤ) (f : vecIdx 3 k → (Fin 3 → ℝ) → �
     exact funext fun j => isEmptyElim j
 
 variable (𝕜) in
-/-- **The BGG diagram of the elasticity complex**: the de Rham complex with values in `𝕜³` over
-itself, linked by `-mskw`, `T - tr`, `2 vskw`. [ArnoldHu2021], §4.1, (32) -/
+/-- **The BGG diagram of the elasticity complex** ([ArnoldHu2021], §4.1, (32)). -/
 abbrev elasticityBGG : ConstCoeffBGG (Fin 3 → ℝ) 𝕜 where
   top := deRhamVec 𝕜 3
   bot := deRhamVec 𝕜 3
@@ -192,9 +165,7 @@ def elasticityT : ∀ k : ℤ, smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 (k + 
   | .ofNat 2 => (ofMatrix elN2).smoothMap
   | _ => 0
 
-/-- **The elasticity diagram satisfies the injectivity/surjectivity condition at `J = 1` with the
-right inverses `elasticityT`**: `-mskw` and `T - tr` are one-to-one, `T - tr` and `2 vskw` are
-onto. [ArnoldHu2021], (23), §4.1 -/
+/-- **Injectivity/surjectivity at `J = 1`** for the elasticity diagram ([ArnoldHu2021], (23)). -/
 theorem injSurjWith_elasticityBGG :
     (elasticityBGG 𝕜).smoothData.InjSurjWith 1 ((elasticityBGG 𝕜).predMap (elasticityT 𝕜)) := by
   refine ConstCoeffBGG.injSurjWith_predMap _ (fun k hk => ?_) fun k hk v => ?_
@@ -222,13 +193,10 @@ theorem injSurjWith_elasticityBGG :
     | .ofNat 0, hk => exact absurd hk (by decide)
     | .negSucc n, hk => exact absurd hk (by simp only [not_le]; omega)
 
-/-- **The elasticity diagram satisfies the injectivity/surjectivity condition at `J = 1`**
-(`injSurjWith_elasticityBGG`). [ArnoldHu2021], (23), §4.1 -/
 theorem injSurj_elasticityBGG : (elasticityBGG 𝕜).smoothData.InjSurj 1 :=
   injSurjWith_elasticityBGG.injSurj
 
-/-- **The elasticity BGG complex has the cohomology of the twisted de Rham complex.**
-[ArnoldHu2021], §5.2 -/
+/-- The cohomology of `bgg 1` is that of the twisted de Rham complex ([ArnoldHu2021], §5.2). -/
 def elasticityBGGHomologyIso (i : ℤ) :
     ((elasticityBGG 𝕜).smoothData.bgg 1).homology i ≅
       (elasticityBGG 𝕜).smoothData.twistComplex.homology i :=
@@ -249,14 +217,12 @@ theorem ofMatrix_elN0_apply (f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (l
   simp only [ofMatrix_apply, elN0, Fintype.sum_prod_type, Fin.sum_univ_three]
   fin_cases l <;> simp
 
-/-- `sym S⁰ = 0`: `S⁰ψ` is skew. -/
 theorem matMulField_symMat_elS0 (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     matMulField (symMat 3) ((ofMatrix elS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply f) = 0 := by
   funext ⟨i, j⟩ x
   rw [matMulField_symMat, ofMatrix_elS0_apply, ofMatrix_elS0_apply]
   fin_cases i <;> fin_cases j <;> simp
 
-/-- A skew field is `S⁰` of its axial vector: `S⁰ (N⁰ σ) = σ` when `sym σ = 0`. -/
 theorem elS0_elN0_of_skew {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (h : matMulField (symMat 3) σ = 0) :
     (ofMatrix elS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply ((ofMatrix elN0).apply σ) = σ := by
@@ -279,8 +245,6 @@ theorem elS0_elN0_of_skew {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     | linear_combination -h' 0 2 x | linear_combination -h' 2 0 x
     | linear_combination -h' 1 2 x
 
-/-- **`curl (S¹)⁻¹ curl σ = inc (sym σ)`**: the differential in degree `1` of the elasticity BGG
-complex is the incompatibility operator on the symmetric part. -/
 theorem curlOp_elN1_curlOp {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hσ : ∀ i, ContDiff ℝ ∞ (σ i)) :
     (curlOp 3).apply ((ofMatrix elN1).apply ((curlOp 3).apply σ)) =
       (incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply (matMulField (symMat 3) σ) := by
@@ -329,8 +293,7 @@ theorem curlOp_elN1_curlOp {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (h
 /-! ### The BGG complex is the smooth elasticity complex -/
 
 variable (𝕜) in
-/-- The smooth elasticity complex `𝕜³ --sym grad--> Sym --inc--> Sym --div--> 𝕜³` of
-`Feec.Domain.Elasticity`. -/
+/-- The smooth elasticity complex `𝕜³ --sym grad--> Sym --inc--> Sym --div--> 𝕜³`. -/
 abbrev elasticitySmoothComplex : CochainComplex (ModuleCat 𝕜) ℤ :=
   (elasticityConstCoeffComplex 𝕜).smoothComplex (elasticityMat 𝕜) elasticityOp_matMapsTo
 
@@ -368,8 +331,6 @@ def symSmoothMap : smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) →ₗ[�
 theorem symSmoothMap_surjective : Function.Surjective (symSmoothMap (𝕜 := 𝕜)) := fun s =>
   ⟨⟨s, s.2.1⟩, Subtype.ext s.2.2⟩
 
-/-- The kernel of `sym` is the range of `-mskw` (`S⁰` of the elasticity diagram, `S¹` of the
-div-div diagram). -/
 theorem ker_symSmoothMap :
     LinearMap.ker (symSmoothMap (𝕜 := 𝕜)) =
       LinearMap.range (ofMatrix elS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).smoothMap := by
@@ -552,17 +513,14 @@ theorem elasticityBGGEquiv_comm (i : ℤ) :
       subsingleton_elasticitySmoothComplex_X (Or.inr (by omega))
     exact ModuleCat.hom_ext (LinearMap.ext fun _ => Subsingleton.elim _ _)
 
-/-- **The BGG complex of the elasticity diagram is the elasticity complex**: `bgg 1` of
-`elasticityBGG` is isomorphic to the smooth elasticity complex `sym grad → inc → div` on symmetric
-fields of `Feec.Domain.Elasticity` (`elasticityOp`, `elasticityMat`). [ArnoldHu2021], §4.1, (32) -/
+/-- **`bgg 1` of `elasticityBGG` is the smooth elasticity complex** ([ArnoldHu2021], §4.1). -/
 def elasticityBGGIso : (elasticityBGG 𝕜).smoothData.bgg 1 ≅ elasticitySmoothComplex 𝕜 :=
   HomologicalComplex.Hom.isoOfComponents (fun k => (elasticityBGGEquiv k).toModuleIso)
     fun i j hij => by
       obtain rfl : i + 1 = j := hij
       exact elasticityBGGEquiv_comm i
 
-/-- **The cohomology of the smooth elasticity complex is that of the twisted de Rham complex**
-of the elasticity diagram. [ArnoldHu2021], §5.2 -/
+/-- The smooth elasticity complex has the twisted complex's cohomology ([ArnoldHu2021], §5.2). -/
 def elasticitySmoothComplexHomologyIso (i : ℤ) :
     (elasticitySmoothComplex 𝕜).homology i ≅
       (elasticityBGG 𝕜).smoothData.twistComplex.homology i :=

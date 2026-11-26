@@ -6,17 +6,12 @@ public import Feec.Physics.LinearizedGravity.PlaneWave
 /-!
 # The linearized Einstein–Bianchi system for fields; gravitational plane waves
 
-Genuine fields: Lemma 3.5 for `C²` matrix fields on `ℝ³` (`div_curl_field`, `curl_TSD_field`),
-the field version of Prop 3.4 (`linBianchi_field_iff`), and §3.5: the linearized Weyl field of a
-TT plane wave is `[[E, B], [B, -E]]` with explicit symmetric trace-free `E, B` solving the EB
-system (`planeWave_weyl`, `planeWave_EB`).
+Lemma 3.5 and Prop 3.4 of [QuennevilleBelair2015] for matrix fields, and the TT plane waves of
+[QuennevilleBelair2015], §3.5, whose Weyl fields solve the linearized system.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Prop 3.4, Lemma 3.5), §3.5; §2.8 (TT plane waves)
-* [R. M. Wald, *General Relativity*][Wald1984], §4.4
-* [J. Frauendiener, *Discretisation of the spin-2 equation?*][Frauendiener2007]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -54,11 +49,6 @@ def jet3 (A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (x : Fin 3 → ℝ
 def curlF (A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (x : Fin 3 → ℝ) :
     Matrix (Fin 3) (Fin 3) ℝ := curl (jet3 A x)
 
-/-- **Thesis Lemma 3.5 (1)** for fields: `div curl A = 0` for a `C²` matrix field on `ℝ³`.
-
-Thesis gap: the thesis uses symmetry of second derivatives without stating any regularity;
-here `A ∈ C²` (distributional version for `A ∈ H(curl)` not formalized).
-See [QuennevilleBelair2015], Lemma 3.5. -/
 theorem div_curl_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hA : ∀ a b, ContDiff ℝ 2 fun y => A y a b) (x : Fin 3 → ℝ) :
     div (jet3 (curlF A) x) = 0 := by
@@ -77,9 +67,8 @@ theorem div_curl_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
       partialDeriv b (partialDeriv c fun y => A y a d) x) from funext e]
   exact div_curl _ fun b c => by ext a d; simp [partialDeriv_comm (hA a d)]
 
-/-- **Thesis Lemma 3.5, conclusion** for fields: if a `C²` matrix field `A` on `ℝ³` is TSD
-(symmetric, trace-free and divergence-free everywhere), then so is `curl A`.
-See [QuennevilleBelair2015], Lemma 3.5 and proof of Prop 3.6. -/
+/-- If a `C²` matrix field `A` on `ℝ³` is symmetric, trace-free and divergence-free everywhere, so
+is `curl A`. [QuennevilleBelair2015], Lemma 3.5 (adapted) -/
 theorem curl_TSD_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hA : ∀ a b, ContDiff ℝ 2 fun y => A y a b) (hsym : ∀ y, (A y)ᵀ = A y)
     (htr : ∀ y, (A y).trace = 0) (hdiv : ∀ y, div (jet3 A y) = 0) (x : Fin 3 → ℝ) :
@@ -104,7 +93,6 @@ theorem curl_TSD_field {A : (Fin 3 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
 def jet4 (M : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (p : (Fin 4 → ℝ)) : Jet4 :=
   fun μ => Matrix.of fun i j => partialDeriv μ (fun y => M y i j) p
 
-/-- Jets of symmetric fields are symmetric. -/
 theorem jet4_symm {M : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} (hM : ∀ y, (M y)ᵀ = M y) (p : (Fin 4 → ℝ))
     (μ : Fin 4) : (jet4 M p μ)ᵀ = jet4 M p μ := by
   ext i j
@@ -112,7 +100,6 @@ theorem jet4_symm {M : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} (hM : ∀
   congr 1; funext y
   simpa [Matrix.transpose_apply] using congrFun (congrFun (hM y) i) j
 
-/-- The jet of the Weyl field `[[E, B], [B, -E]]` is `dWeyl` of the jets of `E` and `B`. -/
 theorem pd_weyl {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} {p : (Fin 4 → ℝ)}
     (hE : ∀ i j, DifferentiableAt ℝ (fun y => E y i j) p)
     (hB : ∀ i j, DifferentiableAt ℝ (fun y => B y i j) p) (α β γ δ θ : Fin 4) :
@@ -130,15 +117,8 @@ theorem pd_weyl {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} {p : (Fin
   · simp only [mul_neg]
     rw [partialDeriv_neg, partialDeriv_const_mul (hE i j)]
 
-/-- **Thesis Prop 3.4** (field version): let `E, B : ℝ⁴ → Sym(3)` be differentiable and
-`C = [[E, B], [B, -E]]`. At each point, the linearized second Bianchi identity
-`∂_α C_{βγδθ} + ∂_β C_{γαδθ} + ∂_γ C_{αβδθ} = 0` holds iff `div E = div B = 0`,
-`Ė + curl B = 0` and `Ḃ - curl E = 0` there.
-
-Thesis gap: the equivalence is pointwise and only needs `C ∈ C¹` (differentiability at the
-point suffices); see `linBianchi_iff` for the remaining corrections.
-
-See [QuennevilleBelair2015], Prop 3.4, a derivation as presented in [Frauendiener2007]. -/
+/-- For symmetric `E`, `B` differentiable at `p`, the linearized Bianchi identity for
+`[[E, B], [B, -E]]` holds at `p` iff `EBJet` does. [QuennevilleBelair2015], Prop 3.4 (adapted) -/
 theorem linBianchi_field_iff {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} (p : (Fin 4 → ℝ))
     (hEs : ∀ y, (E y)ᵀ = E y) (hBs : ∀ y, (B y)ᵀ = B y)
     (hE : ∀ i j, DifferentiableAt ℝ (fun y => E y i j) p)
@@ -152,21 +132,14 @@ theorem linBianchi_field_iff {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) �
 
 /-! ### §3.5: plane waves -/
 
-/-- Electric amplitude of the §3.5 plane wave (same matrix as Ch 7). -/
+/-- Electric amplitude of the §3.5 plane wave. -/
 def ampE (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ap, -Ax, 0; -Ax, Ap, 0; 0, 0, 0]
 
 /-- Magnetic amplitude of the §3.5 plane wave. -/
 def ampB (Ap Ax : ℝ) : Matrix (Fin 3) (Fin 3) ℝ := !![-Ax, Ap, 0; Ap, Ax, 0; 0, 0, 0]
 
-/-- **Thesis §3.5** (symbol level): the linearized Riemann tensor of the TT 2-jet
-`∂_i∂_j h_ab = k_i k_j A_ab s` (`k = κ(-1, 0, 0, 1)`, `A = ttAmp A₊ Aₓ`, `s = f''`) is the Weyl
-tensor `[[E, B], [B, -E]]` with `E = (κ²/2) s · ampE`, `B = (κ²/2) s · ampB`.
-
-Correction: the thesis writes the amplitudes `A₊` and `A₋`; the second is `Aₓ`. Its list of
-"non-zero components" is complete only up to the Riemann symmetries; here the full tensor is
-identified.
-
-See [QuennevilleBelair2015], §3.5 (TT plane waves: §2.8); cf. [Wald1984], §4.4. -/
+/-- The linearized Riemann tensor of the TT 2-jet `k_i k_j A_ab s` is `[[E, B], [B, -E]]`, with
+`E = (κ²/2) s · ampE`, `B = (κ²/2) s · ampB`. [QuennevilleBelair2015], §3.5 (adapted) -/
 theorem planeWave_weyl (κ Ap Ax s : ℝ) :
     Rjet (fun i j a b => kTT κ i * kTT κ j * ttAmp Ap Ax a b * s) =
       ofBlocks ((κ ^ 2 / 2 * s) • ampE Ap Ax) ((κ ^ 2 / 2 * s) • ampB Ap Ax)
@@ -186,7 +159,6 @@ def waveE (κ Ap Ax : ℝ) (f : ℝ → ℝ) (y : (Fin 4 → ℝ)) : Matrix (Fin
 def waveB (κ Ap Ax : ℝ) (f : ℝ → ℝ) (y : (Fin 4 → ℝ)) : Matrix (Fin 3) (Fin 3) ℝ :=
   (κ ^ 2 / 2 * deriv (deriv f) (phaseL (kTT κ) y)) • ampB Ap Ax
 
-/-- The spacetime jet of `(κ²/2) f''(k·x) P` (Thesis §3.5). -/
 private theorem jet4_wave {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (κ : ℝ)
     (P : Matrix (Fin 3) (Fin 3) ℝ) (p : (Fin 4 → ℝ)) :
     jet4 (fun y => (κ ^ 2 / 2 * deriv (deriv f) (phaseL (kTT κ) y)) • P) p =
@@ -202,15 +174,8 @@ private theorem jet4_wave {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (κ : ℝ)
   rw [e, LinearizedGravity.partialDeriv_wave h3]
   ring
 
-/-- **Thesis §3.5**: for `f ∈ C³`, the plane wave `h_ab = ttAmp_ab f(κ(x³ - x⁰))` produces the
-linearized Weyl field `[[E, B], [B, -E]] = Rjet(∂∂h)` with `E = waveE`, `B = waveB`, and these
-are symmetric, trace-free and solve the linearized EB system (3.3)–(3.4) at every point
-(`div E = div B = 0`, `Ė + curl B = 0`, `Ḃ - curl E = 0`).
-
-Remark: the thesis assumes `f ∈ C²` so that `h` solves the wave equation, and then `f ∈ C³`
-for the EB equations (which involve `f'''`); we assume `f ∈ C³`, as the thesis does here.
-
-See [QuennevilleBelair2015], §3.5 (TT plane waves: §2.8); cf. [Wald1984], §4.4. -/
+/-- For `f ∈ C³`, the TT plane wave `ttAmp f(κ(x³ - x⁰))` has Weyl field `[[E, B], [B, -E]]`,
+`E`, `B` symmetric, trace-free and solving `EBJet`. [QuennevilleBelair2015], §3.5 -/
 theorem planeWave_EB {f : ℝ → ℝ} (hf : ContDiff ℝ 3 f) (κ Ap Ax : ℝ) (p : (Fin 4 → ℝ)) :
     Rjet (jet2 (fun y => Matrix.of fun a b => ttAmp Ap Ax a b * f (phaseL (kTT κ) y)) p) =
       ofBlocks (waveE κ Ap Ax f p) (waveB κ Ap Ax f p) (waveB κ Ap Ax f p) (-waveE κ Ap Ax f p) ∧

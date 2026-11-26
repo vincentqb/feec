@@ -7,74 +7,21 @@ public import Feec.FiniteElement.PolyElement
 /-!
 # Interpolation error of the canonical interpolants of `P_rΛᵏ` and `P_r⁻Λᵏ`
 
-The canonical interpolants `Π_T = polyInterp`, `polyMinusInterp` of `Feec.FiniteElement.LocalDof`
-(defined by the moment DOFs `∫_f tr_f ω ∧ η`) are estimated on homothetic simplices
-`T = t + h K` in the classical `C^{s+1}` form of [Arnold2018], Ch. 7 and [Ciarlet2002],
-Thm 3.1.4, by transport from the reference simplex `T̂` with `Feec.FiniteElement.transportInterp`.
-This generalizes `Feec.FiniteElement.WhitneyInterpolation` (`P₁⁻Λᵏ`) to all orders.
+On homothetic simplices `T = t + h K`, the canonical interpolants `Π_T` of `P_rΛᵏ` and `P_r⁻Λᵏ`
+satisfy `sup_T ‖w - Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} w‖` for `s ≤ r`, resp. `s ≤ r - 1`, with
+`C` independent of `h`, `t` and `w` ([Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7).
 
-* **Naturality** (`affinePullback_polyInterp`, `affinePullback_polyMinusInterp`): for
-  nondegenerate simplices `q = G ∘ p`, `G y = A y + a`, `G^* Π_q ω = Π_p G^* ω`: the moments of
-  `ω` on the faces of `q` are the moments of `G^* ω` on the faces of `p`
-  (`Feec.FiniteElement.faceMoment_affine`), and the DOFs are unisolvent. This is the naturality
-  that `Feec.FiniteElement.norm_sub_transportInterp_le` needs.
-* **Reference interpolants** in all form degrees at once (`momentRefInterp`, `polyRefInterp`,
-  `polyMinusRefInterp`): `I g = Σ_k Π_{T̂}(g)_k`, with the moments computed for any field `g`
-  (`(g)_k` its degree-`k` part, `degPartField`). They are additive on fields continuous on `T̂`
-  (`momentRefInterp_sub`, via `faceMoment_sub_of_continuousOn`), stable in `C⁰(T̂)` since the
-  moments only need values (`exists_abs_faceMoment_le`, `exists_norm_momentRefInterp_le`), agree
-  with `Π_{T̂}` on continuous `k`-forms (`polyRefInterp_eq_polyInterp`), and reproduce `P_s(ℝⁿ; Λ)`
-  for `s ≤ r` (`P_rΛ`, `polyRefInterp_apply_eq`) and for `s ≤ r - 1` (`P_r⁻Λ`,
-  `polyMinusRefInterp_apply_eq`). Hence they satisfy `Feec.FiniteElement.IsRefInterpolant n s 0`
-  (`exists_isRefInterpolant_polyRefInterp`, `exists_isRefInterpolant_polyMinusRefInterp`).
-* **Transport** (`transportInterp_polyRefInterp_eq`): on `T = t + h K`, with the `h`-independent
-  fibre map `Φ_K = B_K^*` (`fibrePullbackEquiv`), `Φ_K⁻¹ ∘ I (Φ_K ∘ w ∘ F_T) ∘ F_T⁻¹ = Π_T w` for
-  continuous `k`-forms (`F_T^* w = hᵏ Φ_K ∘ w ∘ F_T`, `affinePullback_points_mapEquiv_boxMap`), and
-  `‖B_T‖ = h ‖B_K‖` (`norm_linearEquiv_mapEquiv_boxMap`).
-* **Local error estimates**, constants depending only on `K`, `n`, `r`, `s`:
-  `sup_T ‖w - Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} w‖` for `s ≤ r` (`P_rΛᵏ`,
-  `exists_norm_sub_polyInterp_le`) and `s ≤ r - 1` (`P_r⁻Λᵏ`,
-  `exists_norm_sub_polyMinusInterp_le`), so the full orders `h^{r+1}` and `h^r`, and `O(h)` for
-  `C¹` data (`s = 0`). The `L²(T)` and graph-norm versions (through the commuting property
-  `d Π_T = Π_T d`, `Feec.FiniteElement.polyInterp_extDeriv`, `polyMinusInterp_extDeriv`) are
-  proved on shape-regular simplices in `Feec.Models.StarShaped.PolySmoothing`.
-* **Kernel lemma for `Π_T`** (`exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`): for
-  `u ∈ P_rΛᵏ` and `Π_T` onto `P_{r'}⁻Λᵏ(T)`, `r' ≤ r`, `‖u - Π_T u‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}`,
-  from `Feec.FiniteElement.exists_local_kernel_bound` and naturality: the first estimate of
-  [QuennevilleBelair2015], Prop 5.9 (case `P_2Λ¹ ≅ P_2Λ⁰ ⊗ ℝ³ → P_1⁻Λ¹`), with the scaling in `h`
-  made explicit. The second estimate of Prop 5.9, `(I - Π²_T) vskw v` bounded by `h` times the
-  `H(curl)` seminorm, cannot hold if the seminorm is `‖curl v‖` (as in its proof): for `v = grad (0, 0, x₁x₂)` (rows
-  `∂_jφ_i`), `curl v = 0` row-wise while `vskw v = (x₁/2, -x₂/2, 0)` is linear and not of the
-  form `a + b x`, so it is not in `P_1⁻Λ²` and `(I - Π²_T) vskw v ≠ 0`. Only the version with
-  the full seminorm `‖Dv‖` follows from the kernel lemma.
-* **Degrees of freedom of the global families** (`Feec.FiniteElement.PolySeq`, faces with
-  lexicographically ordered vertices): a homothety `H y = t + h y` with `h > 0` preserves the
-  lexicographic order (`strictMono_toLex_affine_scalarMat`), so the DOF `ℓ_{H(g),i}` on
-  `T = t + h K` is `ℓ_{g,i} ∘ H^*` (`PolySeq.sum_dof_mapEquiv_boxMap`) and the estimates of
-  `Feec.FiniteElement.PolyInverseEstimate` apply with the unisolvence `PolySeq.isUnisolvent_dof`
-  on `K`: `hᵏ sup_T ‖u‖ ≤ B Σ |ℓ_{g,i}(u)|` (`PolySeq.exists_local_dof_bound`) and
-  `‖u‖²_{L²(T)} ≍ h^{n-2k} Σ ℓ_{g,i}(u)²` (`PolySeq.exists_local_formL2Sq_equiv`).
-* **Finitely many reference simplices** (`PolySeq.exists_local_dof_bound_uniform`): the
-  constants can be taken uniform over a finite family `K_σ` (the Kuhn simplices of a Freudenthal
-  mesh).
+## Main results
 
-The estimates are local (one simplex); the mesh-level statements are assembled from them on the
-Freudenthal–Kuhn meshes, whose simplices are homothetic copies `t + h K_σ` of finitely many
-reference simplices. As in `Feec.FiniteElement.InterpolationError`, all seminorms are suprema of
-iterated Fréchet derivatives (no Sobolev spaces).
+* `exists_norm_sub_polyInterp_le`, `exists_norm_sub_polyMinusInterp_le`: the local errors.
+* `exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq`: the kernel lemma on `P_rΛᵏ`.
+* `PolySeq.exists_local_formL2Sq_equiv`: the `ℓ²`-scaling of the degrees of freedom.
 
 ## References
 
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
-  (interpolation error for affine-equivalent families)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §4.5–4.9 (degrees of freedom, canonical interpolants, commuting property)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.2
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 5.9
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -88,8 +35,6 @@ namespace Feec.FiniteElement
 open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
-
-/-! ### Naturality of the canonical interpolants under affine maps -/
 
 section Naturality
 
@@ -110,10 +55,6 @@ theorem mem_polyMinusSpace_of_mem_localPolyMinusSpace {p : Fin (n + 1) → Fin n
     ω ∈ polyMinusSpace n r k := by
   rwa [localPolyMinusSpace_eq hp] at h
 
-/-- **Naturality of the canonical interpolant of `P_rΛᵏ` under affine maps**: if
-`q = G ∘ p` (`G y = A y + a`) for two nondegenerate simplices, then
-`G^* (Π_q ω) = Π_p (G^* ω)`. The DOFs of `ω` on `q` are those of `G^* ω` on `p`
-(`faceMoment_affine`), and unisolvence on `p` concludes. -/
 theorem affinePullback_polyInterp {p q : Fin (n + 1) → Fin n → ℝ}
     (hp : IsUnit (edgeMatrix p).det) (hq : IsUnit (edgeMatrix q).det) (A : Fin n → Fin n → ℝ)
     (a : Fin n → ℝ) (hpq : q = fun i => affine A a (p i)) (hr : 1 ≤ r) (hk : k ≤ n)
@@ -137,7 +78,6 @@ theorem affinePullback_polyInterp {p q : Fin (n + 1) → Fin n → ℝ}
       exact e1
   exact congrArg Subtype.val h
 
-/-- **Naturality of the canonical interpolant of `P_r⁻Λᵏ` under affine maps**. -/
 theorem affinePullback_polyMinusInterp {p q : Fin (n + 1) → Fin n → ℝ}
     (hp : IsUnit (edgeMatrix p).det) (hq : IsUnit (edgeMatrix q).det) (A : Fin n → Fin n → ℝ)
     (a : Fin n → ℝ) (hpq : q = fun i => affine A a (p i)) (hr : 1 ≤ r) (hk : k ≤ n)
@@ -166,8 +106,6 @@ theorem affinePullback_polyMinusInterp {p q : Fin (n + 1) → Fin n → ℝ}
 
 end Naturality
 
-/-! ### Moments of fields that are only continuous on the reference simplex -/
-
 section Moments
 
 theorem continuousOn_faceTrace_apply {m : ℕ} (p : Fin (n + 1) → Fin n → ℝ)
@@ -189,7 +127,6 @@ theorem continuousOn_wedgeField_faceTrace {m : ℕ} (p : Fin (n + 1) → Fin n �
     (continuousOn_const.mul (continuousOn_faceTrace_apply p e hF s)).mul
       ((continuous_apply _).comp hη).continuousOn
 
-/-- Additivity of a moment on fields continuous on the face. -/
 theorem faceMoment_sub_of_continuousOn {m : ℕ} (p : Fin (n + 1) → Fin n → ℝ)
     (e : Fin (m + 1) → Fin (n + 1)) {η : FormField m} (hη : Continuous η) {F G : FormField n}
     (hF : ContinuousOn F (simplexMap (p ∘ e) '' refSimplex m))
@@ -212,8 +149,6 @@ theorem wedgeForm_pullback_apply {m : ℕ} (B : Fin n → Fin m → ℝ) (α : F
   rw [Finset.sum_comm]
   exact Finset.sum_congr rfl fun t _ => Finset.sum_congr rfl fun s _ => by ring
 
-/-- **Stability of a moment in the sup norm**: `|∫_f tr F ∧ η| ≤ c sup_f ‖F‖`, with `c`
-depending only on the face and on `η`; `F` need not be continuous. -/
 theorem exists_abs_faceMoment_le {m : ℕ} (p : Fin (n + 1) → Fin n → ℝ)
     (e : Fin (m + 1) → Fin (n + 1)) {η : FormField m} (hη : Continuous η) :
     ∃ c, 0 ≤ c ∧ ∀ (F : FormField n) (B₀ : ℝ),
@@ -253,8 +188,6 @@ theorem exists_abs_faceMoment_le {m : ℕ} (p : Fin (n + 1) → Fin n → ℝ)
   rw [mul_right_comm]
 
 end Moments
-
-/-! ### Reference interpolants in all form degrees -/
 
 section RefInterp
 
@@ -300,10 +233,7 @@ theorem sum_degPart (α : Finset (Fin n) → ℝ) :
       simp [degPart, this]) (by simp)]
   exact degPart_of_card _ rfl
 
-/-- The **reference interpolant assembled from moment DOFs** in all form degrees on `T̂`: for
-each degree `k`, DOFs `g ↦ ∫_{f_{k,i}} tr (g)_k ∧ η_{k,i}` on faces `f_{k,i}` of `T̂` with test
-forms `η_{k,i}`, and shape functions `φ_{k,i}`:
-`I g = Σ_k Σ_i (∫_{f_{k,i}} tr (g)_k ∧ η_{k,i}) φ_{k,i}`. -/
+/-- The reference interpolant on `T̂` assembled from moment DOFs, in all form degrees. -/
 def momentRefInterp {ι : Fin (n + 1) → Type*} [∀ k, Fintype (ι k)] (face : ∀ k, ι k → Face n)
     (η : ∀ k (i : ι k), FormField (face k i).dim) (φ : ∀ k, ι k → FormField n)
     (g : (Fin n → ℝ) → Finset (Fin n) → ℝ) (x : Fin n → ℝ) : Finset (Fin n) → ℝ :=
@@ -346,8 +276,6 @@ theorem momentRefInterp_sub (hη : ∀ k i, Continuous (η k i))
     · exact continuousOn_const
   rw [degPartField_sub, faceMoment_sub_of_continuousOn _ _ (hη k i) (hcont hf) (hcont hg)]
 
-/-- **Stability of a moment reference interpolant in `C⁰(T̂)`**: `sup_{T̂} ‖I g‖ ≤ C sup_{T̂} ‖g‖`
-for continuous test forms and shape functions. -/
 theorem exists_norm_momentRefInterp_le (hη : ∀ k i, Continuous (η k i))
     (hφ : ∀ k i, Continuous (φ k i)) :
     ∃ C, 0 ≤ C ∧ ∀ (g : (Fin n → ℝ) → Finset (Fin n) → ℝ) (B₀ : ℝ),
@@ -375,9 +303,6 @@ theorem exists_norm_momentRefInterp_le (hη : ∀ k i, Continuous (η k i))
           (mul_nonneg (hc0 k i) hB₀)
     _ = c k i * max (S k i) 0 * B₀ := by ring
 
-/-- A moment reference interpolant with continuous test forms and shape functions that reproduces
-`P_s(ℝⁿ; Λ)` (all form degrees) is a reference interpolant of order `s` with stability order
-`m = 0` (`Feec.FiniteElement.IsRefInterpolant`). -/
 theorem exists_isRefInterpolant_momentRefInterp {s : ℕ} (hη : ∀ k i, Continuous (η k i))
     (hφ : ∀ k i, Continuous (φ k i))
     (hrep : ∀ p ∈ polyFunctions n s (Finset (Fin n) → ℝ), ∀ x,
@@ -393,16 +318,12 @@ theorem exists_isRefInterpolant_momentRefInterp {s : ℕ} (hη : ∀ k i, Contin
 
 end RefInterp
 
-/-! ### The reference interpolants of `P_rΛ` and `P_r⁻Λ` -/
-
 section PolyRef
 
 variable {r : ℕ}
 
 theorem val_le_of_fin_succ (k : Fin (n + 1)) : (k : ℕ) ≤ n := Nat.lt_succ_iff.mp k.2
 
-/-- The canonical interpolant as a combination of a dual basis: `Π y = Σᵢ mᵢ(y) φᵢ`,
-`φᵢ = (ℓ-coordinates)⁻¹(eᵢ)`. -/
 theorem interp_eq_sum_smul {P Y ι : Type*} [AddCommGroup P] [Module ℝ P] [AddCommGroup Y]
     [Module ℝ Y] [Fintype ι] [DecidableEq ι] {ℓ : ι → P →ₗ[ℝ] ℝ} (hℓ : IsUnisolvent ℓ)
     (m : ι → Y →ₗ[ℝ] ℝ) (y : Y) :
@@ -451,8 +372,7 @@ theorem polyMinusInterp_refVertex_eq_sum (hr : 1 ≤ r) {k : ℕ} (hk : k ≤ n)
   rw [polyMinusInterp, interp_eq_sum_smul, Submodule.coe_sum]
   rfl
 
-/-- **The reference interpolant of the `P_rΛ` family on `T̂`**, in all form degrees:
-`I g = Σ_k Π_{T̂}^{P_rΛᵏ} (g)_k`, with the moment DOFs of `Feec.FiniteElement.localDof`. -/
+/-- The reference interpolant `I g = Σ_k Π_{T̂}^{P_rΛᵏ} (g)_k` of the `P_rΛ` family on `T̂`. -/
 def polyRefInterp (hr : 1 ≤ r) :
     ((Fin n → ℝ) → Finset (Fin n) → ℝ) → (Fin n → ℝ) → Finset (Fin n) → ℝ :=
   momentRefInterp (ι := fun k => Σ f : Face n, DofIndex r k f) (fun _ i => i.1)
@@ -471,8 +391,6 @@ theorem faceMoment_zero {m : ℕ} (p : Fin (n + 1) → Fin n → ℝ) (e : Fin (
   have h := faceMoment_smul_left p e η 0 0
   simpa using h
 
-/-- On continuous `k`-forms the reference interpolant is the canonical interpolant `Π_{T̂}` of
-`P_rΛᵏ(T̂)`. -/
 theorem polyRefInterp_eq_polyInterp (hr : 1 ≤ r) {k : ℕ} (hk : k ≤ n) (ω : contDegForms n k) :
     polyRefInterp hr ω =
       (polyInterp (isUnit_det_edgeMatrix_refVertex (n := n)) hr hk ω : FormField n) := by
@@ -510,8 +428,6 @@ theorem polySpace_mono {s r k : ℕ} (h : s ≤ r) : polySpace n s k ≤ polySpa
   rintro _ ⟨Ω, hΩ, rfl⟩
   exact ⟨Ω, ⟨hΩ.1, fun t => (hΩ.2 t).trans h⟩, rfl⟩
 
-/-- The degree-`k` part of a polynomial of degree `≤ s` with values in `Λ(ℝⁿ)` is in
-`P_sΛᵏ`. -/
 theorem degPartField_mem_polySpace {s : ℕ} {p : (Fin n → ℝ) → Finset (Fin n) → ℝ}
     (hp : p ∈ polyFunctions n s (Finset (Fin n) → ℝ)) (k : ℕ) :
     degPartField k p ∈ polySpace n s k := by
@@ -535,7 +451,6 @@ theorem degPartField_mem_polySpace {s : ℕ} {p : (Fin n → ℝ) → Finset (Fi
   | add f g _ _ hf hg => rw [degPartField_add]; exact Submodule.add_mem _ hf hg
   | smul c f _ hf => rw [degPartField_smul]; exact Submodule.smul_mem _ c hf
 
-/-- **`I` reproduces `P_s(ℝⁿ; Λ)` for `s ≤ r`** (the `P_rΛ` family). -/
 theorem polyRefInterp_apply_eq (hr : 1 ≤ r) {s : ℕ} (hs : s ≤ r)
     {p : (Fin n → ℝ) → Finset (Fin n) → ℝ} (hp : p ∈ polyFunctions n s (Finset (Fin n) → ℝ))
     (x : Fin n → ℝ) : polyRefInterp hr p x = p x := by
@@ -555,7 +470,6 @@ theorem polyRefInterp_apply_eq (hr : 1 ≤ r) {s : ℕ} (hs : s ≤ r)
   rw [polyRefInterp, momentRefInterp, Finset.sum_congr rfl fun k _ => h k]
   exact sum_degPart (p x)
 
-/-- **`I` reproduces `P_s(ℝⁿ; Λ)` for `s + 1 ≤ r`** (the `P_r⁻Λ` family). -/
 theorem polyMinusRefInterp_apply_eq (hr : 1 ≤ r) {s : ℕ} (hs : s + 1 ≤ r)
     {p : (Fin n → ℝ) → Finset (Fin n) → ℝ} (hp : p ∈ polyFunctions n s (Finset (Fin n) → ℝ))
     (x : Fin n → ℝ) : polyMinusRefInterp hr p x = p x := by
@@ -577,9 +491,6 @@ theorem polyMinusRefInterp_apply_eq (hr : 1 ≤ r) {s : ℕ} (hs : s + 1 ≤ r)
   rw [polyMinusRefInterp, momentRefInterp, Finset.sum_congr rfl fun k _ => h k]
   exact sum_degPart (p x)
 
-/-- **The canonical interpolant of `P_rΛ` is a reference interpolant** of every order `s ≤ r`
-(`IsRefInterpolant n s 0`): it reproduces `P_s`, and it is stable in `C⁰(T̂)` since its moment
-DOFs only need values ([Ciarlet2002], Thm 3.1.4; [AFW2010], §5.2). -/
 theorem exists_isRefInterpolant_polyRefInterp (hr : 1 ≤ r) {s : ℕ} (hs : s ≤ r) :
     ∃ C, 0 ≤ C ∧ IsRefInterpolant n s 0 (Finset (Fin n) → ℝ) (polyRefInterp hr) C :=
   exists_isRefInterpolant_momentRefInterp
@@ -587,8 +498,6 @@ theorem exists_isRefInterpolant_polyRefInterp (hr : 1 ≤ r) {s : ℕ} (hs : s �
     (fun _ i => continuous_polyDualBasis hr _ i)
     fun _ hp x => polyRefInterp_apply_eq hr hs hp x
 
-/-- **The canonical interpolant of `P_r⁻Λ` is a reference interpolant** of every order
-`s ≤ r - 1`. -/
 theorem exists_isRefInterpolant_polyMinusRefInterp (hr : 1 ≤ r) {s : ℕ} (hs : s + 1 ≤ r) :
     ∃ C, 0 ≤ C ∧ IsRefInterpolant n s 0 (Finset (Fin n) → ℝ) (polyMinusRefInterp hr) C :=
   exists_isRefInterpolant_momentRefInterp
@@ -606,14 +515,11 @@ theorem polyMinusRefInterp_smul (hr : 1 ≤ r) (c : ℝ) (g : (Fin n → ℝ) �
 
 end PolyRef
 
-/-! ### Transport to homothetic simplices -/
-
 section Transport
 
 variable {r k : ℕ}
 
-/-- The fibre pullback `α ↦ B_p^* α` by the edge matrix of a nondegenerate simplex, as a
-continuous linear equivalence of `Λ(ℝⁿ)` (all degrees). -/
+/-- The fibre pullback `α ↦ B_p^* α` of `Λ(ℝⁿ)`, as a continuous linear equivalence. -/
 def fibrePullbackEquiv (p : Fin (n + 1) → Fin n → ℝ) (hp : IsUnit (edgeMatrix p).det) :
     (Finset (Fin n) → ℝ) ≃L[ℝ] (Finset (Fin n) → ℝ) :=
   LinearEquiv.toContinuousLinearEquiv
@@ -651,8 +557,6 @@ theorem pullback_smul_matrix_of_isDeg {B : Fin n → Fin n → ℝ} (h : ℝ)
   · rw [hs, mul_comm]
   · rw [hα s hs]; simp
 
-/-- For `T = t + h K` and a `k`-form `w`, `F_T^* w = hᵏ (Φ_K ∘ w ∘ F_T)` with the fixed fibre map
-`Φ_K = B_K^*` (`Feec.FiniteElement.refPullback`). -/
 theorem affinePullback_points_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n)
     (t : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) {w : FormField n} (hw : ∀ x, IsDeg k (w x)) :
     affinePullback (simplexMatrix (mapEquiv (boxMap t h hh) K).points)
@@ -686,10 +590,6 @@ theorem norm_linearEquiv_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ)
 theorem mem_contDegForms {w : FormField n} (hwc : Continuous w) (hwk : ∀ x, IsDeg k (w x)) :
     w ∈ contDegForms n k := ⟨hwc, hwk⟩
 
-/-- **The transported reference interpolant is the canonical interpolant** of `P_rΛᵏ(T)` on
-`T = t + h K`: `Π_T w = Φ_K⁻¹ ∘ I (Φ_K ∘ w ∘ F_T) ∘ F_T⁻¹` (`Feec.FiniteElement.transportInterp`)
-with the `h`-independent fibre map `Φ_K = B_K^*`. This is the naturality needed by
-`Feec.FiniteElement.norm_sub_transportInterp_le`. -/
 theorem transportInterp_polyRefInterp_eq (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r)
     (hk : k ≤ n) {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)
     (hwk : ∀ x, IsDeg k (w x)) (x : Fin n → ℝ) :
@@ -726,7 +626,6 @@ theorem transportInterp_polyRefInterp_eq (K : Affine.Simplex ℝ (Fin n → ℝ)
     rw [hrefw, polyRefInterp_smul, hid, ← hnat, hrefP]
   rw [transportInterp, hI, refPullback, refMap_refMapInv, ContinuousLinearEquiv.symm_apply_apply]
 
-/-- The analogue of `transportInterp_polyRefInterp_eq` for `P_r⁻Λᵏ`. -/
 theorem transportInterp_polyMinusRefInterp_eq (K : Affine.Simplex ℝ (Fin n → ℝ) n)
     (hr : 1 ≤ r) (hk : k ≤ n) {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n}
     (hwc : Continuous w) (hwk : ∀ x, IsDeg k (w x)) (x : Fin n → ℝ) :
@@ -766,17 +665,12 @@ theorem transportInterp_polyMinusRefInterp_eq (K : Affine.Simplex ℝ (Fin n →
 
 end Transport
 
-/-! ### Interpolation error on homothetic simplices -/
-
 section Error
 
 variable {r k : ℕ}
 
-/-- **Local interpolation error of the canonical interpolant of `P_rΛᵏ`** on `T = t + h K`
-([Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7; the classical `C^{s+1}` form): for every
-admissible order `s ≤ r` and every continuous `k`-form `w` of class `C^{s+1}` near `T`,
-`sup_T ‖w - Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} w‖`, with `C` depending only on `K`, `n`, `r`, `s`.
-For `s = r` this is the full order `h^{r+1}`; `s = 0` is the `O(h)` estimate for `C¹` data. -/
+/-- **Local interpolation error on `P_rΛᵏ`**: for `s ≤ r` and `w` of class `C^{s+1}` near
+`T = t + h K`, `sup_T ‖w - Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} w‖`. [Ciarlet2002], Thm 3.1.4 -/
 theorem exists_norm_sub_polyInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r)
     (hk : k ≤ n) {s : ℕ} (hs : s ≤ r) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)
@@ -804,10 +698,8 @@ theorem exists_norm_sub_polyInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n)
   rw [mul_pow]
   ring
 
-/-- **Local interpolation error of the canonical interpolant of `P_r⁻Λᵏ`** on `T = t + h K`:
-for every admissible order `s ≤ r - 1`,
-`sup_T ‖w - Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} w‖`; the full order is `h^r` (`s = r - 1`), and
-`s = 0` gives the `O(h)` estimate of the Whitney forms (`r = 1`). -/
+/-- **Local interpolation error on `P_r⁻Λᵏ`**: for `s ≤ r - 1` and `w` of class `C^{s+1}` near
+`T = t + h K`, `sup_T ‖w - Π_T w‖ ≤ C h^{s+1} sup_T ‖D^{s+1} w‖`. -/
 theorem exists_norm_sub_polyMinusInterp_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 1 ≤ r)
     (hk : k ≤ n) {s : ℕ} (hs : s + 1 ≤ r) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {w : FormField n} (hwc : Continuous w)
@@ -835,7 +727,6 @@ theorem exists_norm_sub_polyMinusInterp_le (K : Affine.Simplex ℝ (Fin n → �
   rw [mul_pow]
   ring
 
-/-- `‖u‖²_{L²(S)} ≤ #Λ |S| B²` if `‖u‖ ≤ B` on `S` (no measurability needed). -/
 theorem formL2Sq_le_of_norm_le {S : Set (Fin n → ℝ)} (hS : volume S < ⊤) {u : FormField n}
     {B : ℝ} (hu : ∀ x ∈ S, ‖u x‖ ≤ B) :
     formL2Sq S u ≤ Fintype.card (Finset (Fin n)) * volume.real S * B ^ 2 := by
@@ -858,8 +749,6 @@ theorem measureReal_closedInterior_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin 
 
 end Error
 
-/-! ### The kernel lemma for the canonical interpolants -/
-
 section KernelInterp
 
 variable {r k : ℕ}
@@ -867,7 +756,6 @@ variable {r k : ℕ}
 theorem polySpace_le_contDegForms (r k : ℕ) : polySpace n r k ≤ contDegForms n k :=
   fun _ hu => ⟨polySpace_le_contForms r k hu, isDeg_of_mem_polySpace hu⟩
 
-/-- A constant `k`-form field lies in `P_sΛᵏ` for every `s`. -/
 theorem mem_polySpace_of_eq_const {s : ℕ} {v : FormField n} (hv : ∀ x, v x = v 0)
     (hvk : ∀ x, IsDeg k (v x)) : v ∈ polySpace n s k := by
   refine ⟨fun t => MvPolynomial.C (v 0 t), ⟨fun t ht => by simp [hvk 0 t ht], fun t => by
@@ -883,10 +771,8 @@ def polyMinusInterpOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) {r' : ℕ} (hr'
     polyMinusInterp (isUnit_det_edgeMatrix K) hr' hk ∘ₗ
       Submodule.inclusion (polySpace_le_contDegForms r k)
 
-/-- **The scaling argument of [QuennevilleBelair2015], Prop 5.9(1)**, for the canonical
-interpolant of `P_{r'}⁻Λᵏ` on `T = t + h K` acting on `P_rΛᵏ` (`r' ≤ r`; the thesis case is
-`P_2Λ¹ ≅ P_2Λ⁰ ⊗ ℝ³ → P_1⁻Λ¹`): `‖u - Π_T u‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}` with `C` depending only
-on `K`, `n`, `r`, `r'`, `k`. -/
+/-- **The kernel lemma**: for `u ∈ P_rΛᵏ` and `Π_T` of `P_{r'}⁻Λᵏ` on `T = t + h K`, `r' ≤ r`,
+`‖u - Π_T u‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}`. [QuennevilleBelair2015], Prop 5.9(1) (adapted) -/
 theorem exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq (K : Affine.Simplex ℝ (Fin n → ℝ) n)
     {r' : ℕ} (hr' : 1 ≤ r') (hk : k ≤ n) (hrr : r' ≤ r) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n}
@@ -931,17 +817,13 @@ theorem exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq (K : Affine.Simplex 
 
 end KernelInterp
 
-/-! ### Degrees of freedom of the global families on homothetic simplices -/
-
 section GlobalDof
 
-/-- Moments along vertex families under affine maps. -/
 theorem vertexMoment_affine {m : ℕ} (A : Fin n → Fin n → ℝ) (a : Fin n → ℝ)
     (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m) (ω : FormField n) :
     vertexMoment (fun i => affine A a (q i)) η ω = vertexMoment q η (affinePullback A a ω) := by
   rw [vertexMoment, vertexMoment, affinePullback_affinePullback, simplexMatrix_comp_affine]
 
-/-- A homothety with positive ratio preserves the lexicographic order. -/
 theorem strictMono_toLex_affine_scalarMat {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) :
     StrictMono fun x : Lex (Fin n → ℝ) => toLex (affine (scalarMat n h) t (ofLex x)) := by
   intro x y hxy
@@ -997,8 +879,6 @@ theorem affinePullback_mem_space_scalarMat (k : ℕ) (h : ℝ) (t : Fin n → �
   · exact affinePullback_mem_polySpace_scalarMat h t hu
   · exact affinePullback_mem_polyMinusSpace_scalarMat h t hu
 
-/-- The degrees of freedom of a face `g` of `K` and of its homothetic image `t + h g`
-(`h > 0`) correspond: `ℓ_{t + h g, i}(u) = ℓ_{g, i}(H^* u)`. -/
 theorem sum_dofIdx_image_affine_scalarMat {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) (k : ℕ)
     (g : Finset (Fin n → ℝ)) (f : ℝ → ℝ) {u : FormField n} (hu : u ∈ S.space n k) :
     ∑ i : S.DofIdx (g.image (affine (scalarMat n h) t)) k,
@@ -1046,9 +926,6 @@ def powersetHomothety (K : Affine.Simplex ℝ (Fin n → ℝ) n) {h : ℝ} (hh :
     obtain ⟨s, hs, hse⟩ := Finset.subset_image_iff.1 h1
     exact ⟨⟨s, Finset.mem_powerset.2 hs⟩, Subtype.ext hse⟩
 
-/-- **The degrees of freedom of the global families on `T = t + h K`** are those of `K` applied to
-`H^* u`: for every `f`, `Σ_{g ⊆ T, i} f(ℓ_{g,i}(u)) = Σ_{g ⊆ K, i} f(ℓ_{g,i}(H^* u))`. The
-lexicographic vertex order is preserved by `H` (`h > 0`). -/
 theorem sum_dof_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n) {h : ℝ} (hh : 0 < h)
     (t : Fin n → ℝ) (k : ℕ) (f : ℝ → ℝ) {u : FormField n} (hu : u ∈ S.space n k) :
     ∑ p : Σ g : (vertexSet (mapEquiv (boxMap t h hh.ne') K)).powerset,
@@ -1071,10 +948,6 @@ theorem injective_pi_dofOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) 
     Function.Injective (LinearMap.pi (S.dofOn K k)) := fun _ _ huv =>
   (S.isUnisolvent_dof K k).ext fun p => congrFun huv p
 
-/-- **DOF estimate for the global families on `T = t + h K`**: for `u ∈ P_{r_k}Λᵏ` (resp.
-`P_{r_k}⁻Λᵏ`), `hᵏ sup_T ‖u‖ ≤ B Σ_{g ⊆ T, i} |ℓ_{g,i}(u)|` with the degrees of freedom
-`ℓ_{g,i}` of `Feec.FiniteElement.PolySeq.dof` (lexicographically ordered faces of `T`) and `B`
-depending only on `K`, `S` and `k`. -/
 theorem exists_local_dof_bound (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     ∃ B, 0 ≤ B ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n}
       (hu : u ∈ S.space n k), ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior,
@@ -1088,8 +961,8 @@ theorem exists_local_dof_bound (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : �
   rw [S.sum_dof_mapEquiv_boxMap K hh t k (fun a => |a|) hu]
   rfl
 
-/-- **`ℓ²`-scaling of the DOFs of the global families on `T = t + h K`** (the corrected form of
-[QuennevilleBelair2015], Prop 5.8): `‖u‖²_{L²(T)} ≍ h^{n - 2k} Σ_{g ⊆ T, i} ℓ_{g,i}(u)²`. -/
+/-- **`ℓ²`-scaling of the DOFs of the global families on `T = t + h K`**:
+`‖u‖²_{L²(T)} ≍ h^{n - 2k} Σ_{g ⊆ T, i} ℓ_{g,i}(u)²`. [QuennevilleBelair2015], Prop 5.8 (adapted) -/
 theorem exists_local_formL2Sq_equiv (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n}
       (hu : u ∈ S.space n k),
@@ -1112,8 +985,6 @@ end PolySeq
 
 end GlobalDof
 
-/-! ### Uniform constants for finitely many reference simplices -/
-
 section Uniform
 
 variable {r k : ℕ}
@@ -1122,8 +993,6 @@ namespace PolySeq
 
 variable (S : PolySeq)
 
-/-- `PolySeq.exists_local_dof_bound` with one constant for a finite family of reference
-simplices. -/
 theorem exists_local_dof_bound_uniform {ι : Type*} [Finite ι]
     (K : ι → Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     ∃ B, 0 ≤ B ∧ ∀ i, ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n}

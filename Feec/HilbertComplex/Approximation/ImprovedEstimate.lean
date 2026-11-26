@@ -5,71 +5,17 @@ public import Feec.HilbertComplex.Approximation.QuasiOptimal
 /-!
 # Improved error estimates for the mixed Hodge Laplacian
 
-With a cochain projection `π` onto a finite-dimensional subcomplex `Vₕ` that is bounded in `W`
-(`‖π x‖ ≤ C_W ‖x‖`), the error of the mixed method is estimated in terms of the `W`-best
-approximation errors `E(w) = dist(w, Vₕ)` of the components of the solution and of the three
-quantities ([AFW2010], §3.5)
-
-* `η = max (‖(I - π) d K‖, ‖(I - π) d† K‖)` over the two neighbouring degrees (`improvedEta`),
-* `δ = ‖(I - π) K‖` (`improvedDelta`),
-* `μ = ‖(I - π) P_ℌ‖` (`harmonicGap`),
-
-where `K` is the solution operator of the Hodge Laplacian (`Feec.HilbertComplex.solutionOp`).
-The result is [AFW2010], Thm 3.11 ([Arnold2018], Thm 5.6), with explicit constants
-(`A = 1 + C_W`):
-
-* `‖d(σ - σₕ)‖ ≤ A E(dσ)`,
-* `‖σ - σₕ‖ ≤ A² (E(σ) + η E(dσ))`,
-* `‖p - pₕ‖ ≤ A (E(p) + μ E(dσ))`,
-* `‖d(u - uₕ)‖ ≤ 2A (E(du) + η [E(dσ) + E(p)])`,
-* `‖u - uₕ‖ ≤ 4A² (E(u) + η [E(du) + E(σ)] + (η² + δ) [E(dσ) + E(p)] + μ E(P_𝔅 u))`.
-
-These are unconditional abstract theorems. They are proved first for any numbers `η`, `δ`, `μ`
-dominating the corresponding operators (hypotheses `hη₁ … hη₄`, `hδ`, `hμ`), then for the defined
-quantities, which are finite (`improvedEta_le`: `η ≤ (1 + C_W) c_P`; similarly
-`δ ≤ (1 + C_W) c_P²`) as soon as `π` is `W`-bounded and Poincaré constants exist. Regularity
-enters only when `η`, `δ`, `μ` are shown to be small for concrete spaces (e.g. `η = O(h)`,
-`δ = O(h²)` on convex domains, by elliptic regularity); the compactness property assumed in
-[AFW2010] serves only to make `η, δ, μ → 0` and is not needed here.
-
-The norm of `(I - π) d K` on `W^{j-1}` is taken in the form `(I - π) K d` on `D(d)` relative to
-the `W` norm (`etaDK`; `K d = d K`, `Feec.HilbertComplex.d_solutionOp`), and that of
-`(I - π) d† K` on `W^{j+1}` in the form `(I - π) P_{𝔷ᗮ}` on `D(d)` relative to `‖d ·‖`
-(`etaCycles`; `d† K d = P_{𝔷ᗮ}`). These agree with the operator norms of [AFW2010] (by density
-of `D(d)` and boundedness of `K d`, resp. because `d† K g` depends only on `P_𝔅 g`; this
-identification is not formalized here), and they avoid solution operators at other indices.
-
-## Main definitions
-
-* `ContinuousSolution`, `Subcomplex.DiscreteSolution`: the solutions of the continuous and
-  discrete mixed problems, in terms of their components in `W`.
-* `Subcomplex.bestApprox`: `E(w) = dist(w, Vₕ)`.
-* `relNorm T L = sup_{‖L x‖ ≤ 1} ‖T x‖`, the norm of `T` relative to `L`.
-* `CochainProjection.etaDK`, `etaSigma`, `etaD`, `etaCycles`, `improvedEta` (`η`) and
-  `improvedDelta` (`δ`).
+For a cochain projection bounded in `W`, the errors of the mixed method are bounded by the best
+approximation errors and the quantities `η`, `δ`, `μ` ([AFW2010], Thm 3.11).
 
 ## Main results
 
-* `IsMixedSolution.toContinuousSolution`: the solutions of
-  `Feec.HilbertComplex.existsUnique_mixed` as such.
-* `CochainProjection.norm_d_sub_le`, `norm_sub_sigma_le`, `norm_sub_harmonic_le`,
-  `norm_d_sub_u_le`, `norm_sub_u_le`: the five estimates (35)–(39) of [AFW2010], Thm 3.11;
-  `norm_starProjection_boundariesW_le'`: (40).
-* `CochainProjection.norm_sub_sigma_le_improvedEta`, `norm_sub_harmonic_le_harmonicGap`,
-  `norm_d_sub_u_le_improvedEta`, **`norm_sub_u_le_improved`**: (36)–(39) with the defined `η`,
-  `δ`, `μ`; `improvedEta_le`: the finiteness of `η`.
-* The intermediate lemmas of [AFW2010], Lemmas 3.12–3.16: `norm_sub_starProjection_cycles_le`
-  (3.12), `norm_starProjection_boundariesW_le` (3.13), `norm_starProjection_harmonicW_le` (3.14,
-  (34)), `norm_d_vh_le` (3.15), `norm_vh_le` (3.16), and the decomposition
-  `norm_sub_u_le_decomp`.
+* `Subcomplex.CochainProjection.norm_sub_u_le_improved`: the estimate (39) of `‖u - uₕ‖`.
+* `Subcomplex.CochainProjection.improvedEta_le`: `η ≤ (1 + C_W) c_P`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.5, Thm 3.11 and Lemmas 3.12–3.16
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 5.6
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (improved estimates by duality)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -93,9 +39,7 @@ section RelNorm
 variable {E F G : Type*} [AddCommGroup E] [Module 𝕜 E] [NormedAddCommGroup F] [NormedSpace 𝕜 F]
   [NormedAddCommGroup G] [NormedSpace 𝕜 G] (T : E →ₗ[𝕜] F) (L : E →ₗ[𝕜] G)
 
-/-- **The norm of `T` relative to `L`**, `sup_{‖L x‖ ≤ 1} ‖T x‖`: the smallest `η` with
-`‖T x‖ ≤ η ‖L x‖` for all `x`, when some such `η` exists (`norm_le_relNorm_mul`, `relNorm_le`).
-For `L = id` it is the operator norm of `T`. -/
+/-- **The norm of `T` relative to `L`**, `sup_{‖L x‖ ≤ 1} ‖T x‖`. -/
 def relNorm : ℝ := ⨆ x : {x : E // ‖L x‖ ≤ 1}, ‖T x‖
 
 theorem relNorm_nonneg : 0 ≤ relNorm T L := Real.iSup_nonneg fun _ => norm_nonneg _
@@ -111,7 +55,6 @@ private theorem bddAbove_relNorm {η : ℝ} (h : ∀ x, ‖T x‖ ≤ η * ‖L 
   · exact (mul_le_of_le_one_right hη x.2).trans (le_max_left _ _)
   · exact (mul_nonpos_of_nonpos_of_nonneg hη (norm_nonneg _)).trans (le_max_right _ _)
 
-/-- `‖T x‖ ≤ relNorm T L * ‖L x‖`, provided some bound of this form holds. -/
 theorem norm_le_relNorm_mul {η : ℝ} (h : ∀ x, ‖T x‖ ≤ η * ‖L x‖) (x : E) :
     ‖T x‖ ≤ relNorm T L * ‖L x‖ := by
   rcases (norm_nonneg (L x)).eq_or_lt with h0 | h0
@@ -135,9 +78,7 @@ end RelNorm
 
 variable (H : HilbertComplex 𝕜 c W)
 
-/-- **A solution of the continuous mixed problem** at `i → j → k`, by its components in `W`:
-`σ ∈ D(d)`, `u ∈ D(d)`, `p ∈ ℌʲ`, `⟪τ, σ⟫ = ⟪d τ, u⟫`,
-`⟪v, d σ⟫ + ⟪d v, d u⟫ + ⟪v, p⟫ = ⟪v, f⟫` and `u ⊥ ℌʲ`. -/
+/-- A solution `(σ, u, p)` of the continuous mixed problem, by its components in `W`. -/
 structure ContinuousSolution (i j k : ι) (f : W j) where
   /-- `σ` -/
   σ : (H.d i j).domain
@@ -175,8 +116,7 @@ namespace Subcomplex
 
 variable (S : H.Subcomplex)
 
-/-- **A solution of the discrete mixed problem** at `i → j → k` with data `f` (tested against
-`Vₕʲ`, i.e. with data `P_{Vₕ} f`), by its components in `W`. -/
+/-- A solution `(σₕ, uₕ, pₕ)` of the discrete mixed problem, by its components in `W`. -/
 structure DiscreteSolution (i j k : ι) (f : W j) where
   /-- `σₕ` -/
   σ : W i
@@ -205,7 +145,6 @@ namespace CochainProjection
 variable (P : S.CochainProjection)
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- **`‖(I - π) w‖ ≤ (1 + C_W) E(w)`** for a `W`-bounded cochain projection. -/
 theorem norm_sub_π_le_bestApprox {i : ι} {Cw : ℝ} (hCw : 0 ≤ Cw)
     (hπ : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖) (w : W i) :
     ‖w - P.π i w‖ ≤ (1 + Cw) * S.bestApprox w := by
@@ -232,13 +171,11 @@ end Subcomplex
 
 /-! ### Elementary facts -/
 
-/-- If `⟪a, b⟫ = 0` then `‖a‖ ≤ ‖a + b‖`. -/
 theorem norm_le_norm_add_of_inner_eq_zero {E : Type*} [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] {a b : E} (h : ⟪a, b⟫ = 0) : ‖a‖ ≤ ‖a + b‖ := by
   have := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero (𝕜 := 𝕜) a b h
   nlinarith [norm_nonneg a, norm_nonneg b, norm_nonneg (a + b)]
 
-/-- `⟪x, P x⟫ = ‖P x‖²`. -/
 theorem inner_starProjection_self {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] (x : E) :
     ⟪x, K.starProjection x⟫ = ((‖K.starProjection x‖ : ℝ) : 𝕜) ^ 2 := by
@@ -291,7 +228,6 @@ abbrev du : W k := H.d j k X.u
 theorem dσ_mem_boundaries (hij : c.Rel i j) : X.dσ ∈ H.boundaries j := by
   rw [H.boundaries_eq hij]; exact ⟨_, rfl⟩
 
-/-- **`d σ = P_𝔅 f`.** -/
 theorem dσ_eq (hij : c.Rel i j) (hj : H.ClosedRangeAt j) :
     X.dσ = (H.boundaries j).topologicalClosure.starProjection f := by
   have hBc : (H.boundaries j).topologicalClosure = H.boundaries j :=
@@ -310,7 +246,6 @@ theorem dσ_eq (hij : c.Rel i j) (hj : H.ClosedRangeAt j) :
   change starRingEnd 𝕜 ⟪H.d i j τ, f - X.dσ⟫ = 0
   rw [inner_sub_right, ← e, sub_self, _root_.map_zero]
 
-/-- **`p = P_ℌ f`.** -/
 theorem p_eq (hij : c.Rel i j) : X.p = (H.harmonic j).starProjection f := by
   symm
   refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero X.mem_p fun q hq => ?_
@@ -323,7 +258,6 @@ theorem p_eq (hij : c.Rel i j) : X.p = (H.harmonic j).starProjection f := by
   change starRingEnd 𝕜 (⟪q, f⟫ - ⟪q, X.p⟫) = 0
   rw [← e, sub_self, _root_.map_zero]
 
-/-- `σ ⊥ 𝔷ⁱ`. -/
 theorem σ_mem_orthogonal : (X.σ : W i) ∈ (H.cycles i)ᗮ :=
   (Submodule.mem_orthogonal _ _).2 fun z hz => by
     have hzd : z ∈ (H.d i j).domain := H.domain_next_le i j (H.cycles_le_domain i hz)
@@ -348,7 +282,6 @@ abbrev du : W k := H.d j k ⟨Y.u, S.le_domain j k Y.mem_u⟩
 
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
-/-- **`d σₕ = P_{𝔅ₕ} f`.** -/
 theorem dσ_eq (hij : c.Rel i j) : Y.dσ = (S.boundariesW j).starProjection f := by
   symm
   refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero
@@ -360,7 +293,6 @@ theorem dσ_eq (hij : c.Rel i j) : Y.dσ = (S.boundariesW j).starProjection f :=
     (S.mem_harmonicW_iff.1 Y.mem_p).2.2 _ (S.d_mem_boundariesW hij hτ), add_zero] at e
   rw [← inner_conj_symm, inner_sub_right, ← e, sub_self, _root_.map_zero]
 
-/-- **`pₕ = P_{ℌₕ} f`.** -/
 theorem p_eq (hij : c.Rel i j) : Y.p = (S.harmonicW j).starProjection f := by
   symm
   refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero Y.mem_p fun q hq => ?_
@@ -381,13 +313,11 @@ namespace Subcomplex
 
 variable {S : H.Subcomplex} {i j k : ι} {f : W j}
 
-/-- First error equation: `⟪τ, σ - σₕ⟫ = ⟪d τ, u - uₕ⟫` on `Vₕⁱ`. -/
 theorem error_fst (X : H.ContinuousSolution i j k f) (Y : S.DiscreteSolution i j k f) {τ : W i}
     (hτ : τ ∈ S.V i) :
     ⟪τ, (X.σ : W i) - Y.σ⟫ = ⟪H.d i j ⟨τ, S.le_domain i j hτ⟩, (X.u : W j) - Y.u⟫ := by
   rw [inner_sub_right, inner_sub_right, X.fst ⟨τ, S.le_domain i j hτ⟩, Y.fst τ hτ]
 
-/-- Second error equation: `⟪v, d(σ - σₕ)⟫ + ⟪d v, d(u - uₕ)⟫ + ⟪v, p - pₕ⟫ = 0` on `Vₕʲ`. -/
 theorem error_snd (X : H.ContinuousSolution i j k f) (Y : S.DiscreteSolution i j k f) {v : W j}
     (hv : v ∈ S.V j) :
     ⟪v, X.dσ - Y.dσ⟫ + ⟪H.d j k ⟨v, S.le_domain j k hv⟩, X.du - Y.du⟫ + ⟪v, X.p - Y.p⟫ = 0 := by
@@ -403,7 +333,6 @@ namespace CochainProjection
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)] (P : S.CochainProjection)
   (X : H.ContinuousSolution i j k f) (Y : S.DiscreteSolution i j k f)
 
-/-- `d σₕ = P_{𝔅ₕ} d σ`. -/
 theorem dσ_eq_starProjection (hij : c.Rel i j) (hj : H.ClosedRangeAt j) :
     Y.dσ = (S.boundariesW j).starProjection X.dσ := by
   have ho : f - X.dσ ∈ (S.boundariesW j)ᗮ := by
@@ -414,7 +343,7 @@ theorem dσ_eq_starProjection (hij : c.Rel i j) (hj : H.ClosedRangeAt j) :
   rw [_root_.map_sub, sub_eq_zero] at h0
   rw [Y.dσ_eq hij, h0]
 
-/-- **[AFW2010], (35)**: `‖d(σ - σₕ)‖ ≤ (1 + C_W) E(d σ)`. -/
+/-- **[AFW2010], (35)**: with closed range at `j`, `‖d(σ - σₕ)‖ ≤ (1 + C_W) E(d σ)`. -/
 theorem norm_d_sub_le (hij : c.Rel i j) (hj : H.ClosedRangeAt j) {Cw : ℝ} (hCw : 0 ≤ Cw)
     (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) :
     ‖X.dσ - Y.dσ‖ ≤ (1 + Cw) * S.bestApprox X.dσ := by
@@ -422,8 +351,6 @@ theorem norm_d_sub_le (hij : c.Rel i j) (hj : H.ClosedRangeAt j) {Cw : ℝ} (hCw
   exact (Submodule.norm_sub_starProjection_le_of_mem _
     (P.mem_boundariesW (X.dσ_mem_boundaries hij))).trans (P.norm_sub_π_le_bestApprox hCw hπj _)
 
-/-- **The discrete harmonic part of `x ⊥ ℌ`**: `‖P_{ℌₕ} x‖ ≤ μ (1 + C_W) E(P_𝔅 x)`
-([AFW2010], (34)). -/
 theorem norm_starProjection_harmonicW_le (hj : H.ClosedRangeAt j) {Cw μ : ℝ} (hCw : 0 ≤ Cw)
     (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hμ0 : 0 ≤ μ)
     (hμ : ∀ q ∈ H.harmonic j, ‖q - P.π j q‖ ≤ μ * ‖q‖) {x : W j} (hx : x ∈ (H.harmonic j)ᗮ) :
@@ -450,7 +377,6 @@ theorem norm_starProjection_harmonicW_le (hj : H.ClosedRangeAt j) {Cw μ : ℝ} 
       _ = _ := by ring
   nlinarith [mul_nonneg hμ0 (mul_nonneg (by linarith : (0:ℝ) ≤ 1 + Cw) hE)]
 
-/-- **[AFW2010], (37)**: `‖p - pₕ‖ ≤ (1 + C_W) (E(p) + μ E(d σ))`. -/
 theorem norm_sub_harmonic_le (hij : c.Rel i j) (hj : H.ClosedRangeAt j) {Cw μ : ℝ}
     (hCw : 0 ≤ Cw) (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hμ0 : 0 ≤ μ)
     (hμ : ∀ q ∈ H.harmonic j, ‖q - P.π j q‖ ≤ μ * ‖q‖) :
@@ -498,13 +424,11 @@ theorem norm_sub_harmonic_le (hij : c.Rel i j) (hj : H.ClosedRangeAt j) {Cw μ :
 
 /-! ### The estimates for `σ` and `P_{𝔅ₕ} u` -/
 
-/-- `d(σ - σₕ) ⊥ 𝔅ₕ`. -/
 theorem inner_boundariesW_d_sub (hij : c.Rel i j) (hj : H.ClosedRangeAt j) {b : W j}
     (hb : b ∈ S.boundariesW j) : ⟪b, X.dσ - Y.dσ⟫ = 0 := by
   rw [dσ_eq_starProjection X Y hij hj, ← inner_conj_symm,
     Submodule.starProjection_inner_eq_zero _ _ hb, _root_.map_zero]
 
-/-- For `y ∈ 𝔅ʲ`: `|⟪y, d(σ - σₕ)⟫| ≤ ‖(I - π) y‖ ‖d(σ - σₕ)‖`. -/
 theorem norm_inner_d_sub_le (hij : c.Rel i j) (hj : H.ClosedRangeAt j) {y : W j}
     (hy : y ∈ H.boundaries j) :
     ‖⟪y, X.dσ - Y.dσ⟫‖ ≤ ‖y - P.π j y‖ * ‖X.dσ - Y.dσ‖ := by
@@ -515,8 +439,6 @@ theorem norm_inner_d_sub_le (hij : c.Rel i j) (hj : H.ClosedRangeAt j) {y : W j}
   exact (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right
     (Submodule.norm_sub_starProjection_le_of_mem _ (P.mem_boundariesW hy)) (norm_nonneg _))
 
-/-- **[AFW2010], (36)**: `‖σ - σₕ‖ ≤ (1 + C_W)² (E(σ) + η E(d σ))`, with `η` bounding
-`(I - π) d K = (I - π) K d` on `Wⁱ`. -/
 theorem norm_sub_sigma_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
     (hk : H.ClosedRangeAt k) {Cw η : ℝ} (hCw : 0 ≤ Cw) (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖)
     (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hη0 : 0 ≤ η)
@@ -583,8 +505,6 @@ theorem norm_sub_sigma_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRang
     _ ≤ _ := by nlinarith [mul_nonneg hη0 hE0', mul_nonneg hCw hE0, mul_nonneg hCw (mul_nonneg hη0 hE0'),
         mul_nonneg (mul_nonneg hCw hCw) hE0]
 
-/-- **[AFW2010], (40)** (first form): `‖P_{𝔅ₕ}(u - uₕ)‖ ≤ η ‖σ - σₕ‖ + (1 + C_W) δ E(d σ)`,
-with `η` bounding `(I - π) d† K` and `δ` bounding `(I - π) K` on `Wʲ`. -/
 theorem norm_starProjection_boundariesW_le (hij : c.Rel i j) (hjk : c.Rel j k)
     (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k) {Cw η δ : ℝ} (hCw : 0 ≤ Cw)
     (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hη0 : 0 ≤ η) (hδ0 : 0 ≤ δ)
@@ -668,8 +588,6 @@ theorem norm_starProjection_boundariesW_le (hij : c.Rel i j) (hjk : c.Rel j k)
 /-! ### The estimates for `d u` and `u` -/
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- **[AFW2010], Lemma 3.12**: for `vₕ ∈ Vₕʲ ⊥ 𝔷ₕʲ` and `v = P_{𝔷ᗮ} vₕ`,
-`‖vₕ - v‖ ≤ ‖(I - π) v‖`. -/
 theorem norm_sub_starProjection_cycles_le {j k : ι} (hjk : c.Rel j k) {vh : W j}
     (hvh : vh ∈ S.V j) (hvo : ∀ z ∈ S.cyclesW j, ⟪z, vh⟫ = 0) :
     ‖vh - (vh - (H.cycles j).starProjection vh)‖ ≤
@@ -698,8 +616,6 @@ theorem norm_sub_starProjection_cycles_le {j k : ι} (hjk : c.Rel j k) {vh : W j
   refine (norm_le_norm_add_of_inner_eq_zero hperp).trans ?_
   rw [show vh - v + (P.π j v - vh) = -(v - P.π j v) by abel, norm_neg]
 
-/-- **The tested second error equation**: for `y ∈ Vₕʲ ⊥ 𝔷ₕʲ` and `w ⊥ 𝔷ʲ`,
-`|⟪d y, d(u - uₕ)⟫| ≤ ‖y - w‖ (‖d(σ - σₕ)‖ + ‖p - P_{ℌₕ} p‖)`. -/
 theorem norm_inner_d_sub_u_le (hij : c.Rel i j) {y w : W j} (hy : y ∈ S.V j)
     (hyo : ∀ z ∈ S.cyclesW j, ⟪z, y⟫ = 0) (hw : w ∈ (H.cycles j)ᗮ) :
     ‖⟪H.d j k ⟨y, S.le_domain j k hy⟩, X.du - Y.du⟫‖ ≤
@@ -749,7 +665,6 @@ theorem d_vh : H.d j k ⟨P.vh X Y, S.le_domain j k (P.vh_mem X Y)⟩ = P.π k X
   congr 1
   exact P.comm j k X.u
 
-/-- `‖d(π u - uₕ)‖ ≤ (1 + C_W) (E(d u) + η [E(d σ) + E(p)])` (proof of [AFW2010], Lemma 3.15). -/
 theorem norm_d_vh_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j) {Cw η : ℝ}
     (hCw : 0 ≤ Cw) (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖)
     (hη0 : 0 ≤ η)
@@ -788,7 +703,6 @@ theorem norm_d_vh_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j
       _ = _ := by ring
   nlinarith [t1, t2]
 
-/-- **[AFW2010], (38)**: `‖d(u - uₕ)‖ ≤ 2 (1 + C_W) (E(d u) + η [E(d σ) + E(p)])`. -/
 theorem norm_d_sub_u_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j) {Cw η : ℝ}
     (hCw : 0 ≤ Cw) (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖)
     (hη0 : 0 ≤ η)
@@ -805,9 +719,6 @@ theorem norm_d_sub_u_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeA
   have := mul_nonneg hη0 (add_nonneg (S.bestApprox_nonneg X.dσ) (S.bestApprox_nonneg X.p))
   nlinarith
 
-/-- **[AFW2010], Lemma 3.16** (the bound on `vₕ`):
-`‖vₕ‖ ≤ η ‖d(π u - uₕ)‖ + (1 + C_W) E(u) + η ‖d(u - uₕ)‖ + δ (1 + C_W) [E(d σ) + E(p)]`, with `η`
-bounding `(I - π) d K` on `Wʲ` and `(I - π) d† K` on `Wᵏ`, and `δ` bounding `(I - π) K`. -/
 theorem norm_vh_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
     (hk : H.ClosedRangeAt k) {Cw η δ : ℝ} (hCw : 0 ≤ Cw) (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖)
     (hη0 : 0 ≤ η) (hδ0 : 0 ≤ δ)
@@ -902,7 +813,6 @@ theorem norm_vh_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
   refine (norm_add_le _ _).trans ((add_le_add (norm_add_le _ _) le_rfl).trans ?_)
   nlinarith [t1, t2, t3]
 
-/-- `P_{𝔷ₕ} = P_{𝔅ₕ} + P_{ℌₕ}`. -/
 theorem starProjection_cyclesW_eq (x : W j) :
     (S.cyclesW j).starProjection x =
       (S.boundariesW j).starProjection x + (S.harmonicW j).starProjection x := by
@@ -928,7 +838,6 @@ theorem starProjection_cyclesW_eq (x : W j) :
         hBH _ (Submodule.starProjection_apply_mem _ _) q hq, _root_.map_zero, sub_zero]
     rw [inner_add_right, h1, h2, add_zero]
 
-/-- The decomposition `u - uₕ = (u - π u) + P_{𝔅ₕ}(π u - uₕ) + P_{ℌₕ}(π u - uₕ) + vₕ`. -/
 theorem norm_sub_u_le_decomp :
     ‖(X.u : W j) - Y.u‖ ≤ 3 * ‖(X.u : W j) - P.π j X.u‖ +
       ‖(S.boundariesW j).starProjection ((X.u : W j) - Y.u)‖ +
@@ -968,7 +877,6 @@ theorem norm_sub_u_le_decomp :
     ((S.harmonicW j).starProjection a)
   linarith
 
-/-- **[AFW2010], (40)**: `‖P_{𝔅ₕ}(u - uₕ)‖ ≤ (1 + C_W)² (η E(σ) + (η² + δ) E(d σ))`. -/
 theorem norm_starProjection_boundariesW_le' (hij : c.Rel i j) (hjk : c.Rel j k)
     (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k) {Cw η δ : ℝ} (hCw : 0 ≤ Cw)
     (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖) (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hη0 : 0 ≤ η)
@@ -1016,11 +924,6 @@ private theorem improved_arith {A η δ μ Eu Edu Eσ Edσ Ep Eb Err e Pu vh D1 
     mul_nonneg hA0 m2, mul_nonneg q m3, mul_nonneg q m4, mul_nonneg hA0 m4, mul_nonneg q m5,
     mul_nonneg hA0 m5, mul_nonneg q m6, mul_nonneg hA0 m6, mul_nonneg q m7, mul_nonneg hA0 m7]
 
-/-- **[AFW2010], (39)**: the improved estimate for `u`,
-`‖u - uₕ‖ ≤ 4 (1 + C_W)² (E(u) + η [E(d u) + E(σ)] + (η² + δ) [E(d σ) + E(p)] + μ E(P_𝔅 u))`.
-Here `η` bounds `(I - π) d K` on `Wⁱ` (as `(I - π) K d`, `hη₁`) and on `Wʲ` (`hη₃`), and
-`(I - π) d† K` on `Wʲ` (`hη₂`) and on `Wᵏ` (as `(I - π) P_{𝔅*}` relative to `‖d ·‖`, `hη₄`);
-`δ` bounds `(I - π) K` and `μ` bounds `(I - π)` on `ℌʲ`. -/
 theorem norm_sub_u_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
     (hk : H.ClosedRangeAt k) {Cw η δ μ : ℝ} (hCw : 0 ≤ Cw) (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖)
     (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖) (hη0 : 0 ≤ η)
@@ -1058,7 +961,6 @@ theorem norm_sub_u_le (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt 
 section Quantities
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- `‖(I - π) y‖ ≤ (1 + C_W) ‖y‖`. -/
 theorem norm_sub_π_le {l : ι} {Cw : ℝ} (hπ : ∀ x, ‖P.π l x‖ ≤ Cw * ‖x‖) (y : W l) :
     ‖y - P.π l y‖ ≤ (1 + Cw) * ‖y‖ := by
   have := hπ y
@@ -1066,7 +968,6 @@ theorem norm_sub_π_le {l : ι} {Cw : ℝ} (hπ : ∀ x, ‖P.π l x‖ ≤ Cw *
     _ ≤ _ := by linarith
 
 omit [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- With `π` bounded in `W`, `‖q - π q‖ ≤ μ ‖q‖` on `ℌʲ` for `μ = harmonicGap`. -/
 theorem norm_sub_π_harmonic_le_harmonicGap {Cw : ℝ} (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) {q : W j}
     (hq : q ∈ H.harmonic j) : ‖q - P.π j q‖ ≤ P.harmonicGap j * ‖q‖ :=
   P.norm_sub_le_harmonicGap_mul (fun q _ => P.norm_sub_π_le hπj q) hq
@@ -1077,8 +978,7 @@ def etaCyclesOp (j k : ι) : (H.d j k).domain →ₗ[𝕜] W j :=
     ((LinearMap.id - (((H.cycles j).starProjection : W j →L[𝕜] W j) : W j →ₗ[𝕜] W j)) ∘ₗ
       (H.d j k).domain.subtype)
 
-/-- `(I - π) P_{𝔷ᗮ}` on `D(d j k)` relative to `‖d ·‖`, i.e. the norm of `(I - π) d† K` on `Wᵏ`
-(`d† K d = P_{𝔷ᗮ}`). -/
+/-- The norm of `(I - π) P_{𝔷ᗮ}` on `D(d j k)` relative to `‖d ·‖`. -/
 def etaCycles (j k : ι) : ℝ := relNorm (P.etaCyclesOp j k) (H.d j k).toFun
 
 variable (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k)
@@ -1088,8 +988,7 @@ def etaDKOp : (H.d i j).domain →ₗ[𝕜] W j :=
   (LinearMap.id - P.π j) ∘ₗ
     ((H.solutionOp hij hjk hj hk : W j →L[𝕜] W j) : W j →ₗ[𝕜] W j) ∘ₗ (H.d i j).toFun
 
-/-- `(I - π) K d` on `D(d i j)` relative to `‖·‖_W`, i.e. the norm of `(I - π) d K` on `Wⁱ`
-(`K d = d K`). -/
+/-- The norm of `(I - π) K d` on `D(d i j)` relative to `‖·‖_W`. -/
 def etaDK : ℝ := relNorm (P.etaDKOp hij hjk hj hk) (H.d i j).domain.subtype
 
 /-- `(I - π) d† K` on `Wʲ`. -/
@@ -1108,8 +1007,7 @@ def etaDOp : W j →ₗ[𝕜] W k :=
 /-- `‖(I - π) d K‖` on `Wʲ`. -/
 def etaD : ℝ := relNorm (P.etaDOp hij hjk hj hk) LinearMap.id
 
-/-- **`η`** of [AFW2010], §3.5: the maximum of the four norms `etaDK`, `etaSigma`, `etaD`,
-`etaCycles` of `(I - π) d K` and `(I - π) d† K` at the two neighbouring degrees. -/
+/-- The quantity `η`: the maximum of `etaDK`, `etaSigma`, `etaD` and `etaCycles`. -/
 def improvedEta : ℝ :=
   max (max (P.etaDK hij hjk hj hk) (P.etaSigma hij hjk hj hk))
     (max (P.etaD hij hjk hj hk) (P.etaCycles j k))
@@ -1264,8 +1162,7 @@ theorem norm_d_sub_u_le_improvedEta (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x�
     (P.norm_sub_π_sub_starProjection_cycles_le hij hjk hj hk hCw hPj hπj)
 
 include hCw hcP hPi hPj in
-/-- **[AFW2010], Thm 3.11, (39)** with `η = improvedEta`, `δ = improvedDelta` and
-`μ = harmonicGap`: all three quantities are defined (and finite, e.g. `improvedEta_le`), and the estimate needs only the `W`-bound of `π` and Poincaré constants. -/
+/-- **[AFW2010], Thm 3.11, (39)** with `η = improvedEta`, `δ = improvedDelta`, `μ = harmonicGap`. -/
 theorem norm_sub_u_le_improved (hπi : ∀ x, ‖P.π i x‖ ≤ Cw * ‖x‖)
     (hπj : ∀ x, ‖P.π j x‖ ≤ Cw * ‖x‖) (hπk : ∀ x, ‖P.π k x‖ ≤ Cw * ‖x‖)
     (X : H.ContinuousSolution i j k f) (Y : S.DiscreteSolution i j k f) :

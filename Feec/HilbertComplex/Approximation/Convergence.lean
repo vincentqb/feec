@@ -7,47 +7,21 @@ public import Feec.HilbertComplex.HodgeWave
 /-!
 # Convergence of the semi-discrete Hodge wave equation
 
-Let `T : E →ₗ.[𝕜] E` be closed and densely defined with `T T = 0` (the total differential `𝐝`
-of a finite Hilbert complex, any length) and `L = T - T†` its Hodge wave operator. The weak
-Hodge wave equation is posed on the graph space `V = Γ(T)`; a semi-discretization takes a
-finite-dimensional `K ⊆ Γ(T)` (e.g. the total space of a finite element subcomplex) and seeks
-`ξₕ(t) ∈ K` with `⟪ψ, ξₕ'⟫ + a(ξₕ, ψ) = 0` for `ψ ∈ K` (`IsSemidiscreteSolution`).
+The semi-discrete Hodge wave equation on finite-dimensional subspaces of the graph space of a
+closed `T` with `T T = 0` is stable, and its solutions converge for data in `D(L²)` and in `E`,
+at the rate `(1 + t)² η` on subcomplexes.
 
 ## Main results
 
-* `exists_isSemidiscreteSolution`, `IsSemidiscreteSolution.norm_sub_le`,
-  `IsSemidiscreteSolution.eqOn`: the semi-discrete problem (4.10) is well posed and `E`-stable.
-* `norm_ellipticProjection_le`: for a subcomplex (`d K ⊆ K`) the elliptic projection (4.11)
-  is bounded by `√12 ‖A‖`, uniformly in `K` (the inf-sup constant `1/√12` of Prop 4.13, via
-  the test map `ξ ↦ ξ - d ξ`).
-* `exists_isGraphSolution`: for `ξ₀ ∈ D(L²)` the exact solution lies in `C¹([a,b]; Γ(T))`
-  (the hypothesis of Thm 4.14), as the orbit `e^{tL} ξ₀` read in `Γ(T)`.
-* `tendstoUniformlyOn_of_isGraphSolution`, `tendstoUniformlyOn_semidiscrete`: convergence in
-  `L∞(a,b; E)` for `D(L²)` data under the density hypothesis.
-* `tendstoUniformlyOn_of_tendsto` (data in `E`, limit `e^{tL} ξ₀`),
-  `tendstoUniformlyOn_ellipticProjection` (data in `D(L)` with `ξₕ(a) = Pₕ ξ₀`) and
-  `tendstoUniformlyOn_of_isWeakSolution` (the thesis' weak solution): convergence without a
-  rate, by stability plus density; `norm_sub_le_of_comparison`: the comparison-datum bound.
-* `HilbertComplex.Subcomplex.graphSub`: the total space of a subcomplex in `Γ(𝐝)`, finite
-  dimensional and `d`-invariant.
-* `HilbertComplex.Subcomplex.norm_sub_le_of_approx`: the rate of Thm 4.14 on a subcomplex,
-  `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² η` when `ξ`, `ξ'` are within `η` of it in `Γ(𝐝)`.
+* `IsSemidiscreteSolution.norm_sub_le`: `E`-stability of the semi-discrete solutions.
+* `norm_ellipticProjection_le`: on a subcomplex the elliptic projection is bounded by `√12 ‖A‖`.
+* `tendstoUniformlyOn_semidiscrete`: convergence for `D(L²)` data.
+* `tendstoUniformlyOn_of_tendsto`: convergence for data in `E`.
+* `HilbertComplex.Subcomplex.norm_sub_le_of_approx`: the rate `A (1 + (t - t₀))² η`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 ((4.10), (4.11), Prop 4.13, Thm 4.14 and the convergence remark after it), §4.4 (Thm 4.6,
-  (4.7)–(4.8))
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2 (Thm 2.4, density of `D(A²)`), §1.10
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (FEEC convergence of the discrete Hodge Laplacian)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thms 3.8–3.9 (stability and quasi-optimality)
-* [T. Dupont, *L²-estimates for Galerkin methods for second order hyperbolic equations*][Dupont1973]
-* [G. A. Baker, *Error estimates for finite element methods for second order hyperbolic equations*][Baker1976]
-* [T. Geveci, *On the application of mixed finite element methods to the wave equations*][Geveci1988]
-* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -111,8 +85,7 @@ def massFormEquiv : K ≃L[𝕜] (K →L⋆[𝕜] 𝕜) :=
     (LinearMap.ker_eq_bot.2 (injective_restrict_massForm K))
     (LinearMap.range_eq_top.2 (surjective_restrict_massForm K))
 
-/-- The **semi-discrete operator** `Mₕ : K → K`, `⟪ψ, Mₕ ξ⟫ = -a(ξ, ψ)` for `ψ ∈ K`, so that the
-semi-discrete Hodge wave equation (4.10) is the ODE `ξₕ' = Mₕ ξₕ`. -/
+/-- The **semi-discrete operator** `Mₕ : K → K`, `⟪ψ, Mₕ ξ⟫ = -a(ξ, ψ)` for `ψ ∈ K`. -/
 def semidiscreteOp : K →L[𝕜] K :=
   ((massFormEquiv K).symm : (K →L⋆[𝕜] 𝕜) →L[𝕜] K).comp (-Variational.restrict (waveForm T) K K)
 
@@ -133,10 +106,7 @@ section Semidiscrete
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- `ξₕ` is a **solution of the semi-discrete Hodge wave equation** (4.10) in `K` on the time
-set `I`: `ξₕ(t) ∈ K`, `ξₕ' = ξₕ'` within `I`, and `⟪ψ, ξₕ'⟫ + a(ξₕ, ψ) = 0` for `ψ ∈ K`.
-See [QuennevilleBelair2015], (4.10) (§4.6); the FEEC semi-discretization of evolution problems is
-[GilletteHolstZhu2017] (the thesis cites its 2012 preprint). -/
+/-- A **solution of the semi-discrete Hodge wave equation** ([QuennevilleBelair2015], (4.10)). -/
 structure IsSemidiscreteSolution (K : Submodule 𝕜 T.GraphSpace) (I : Set ℝ)
     (ξh ξh' : ℝ → T.GraphSpace) : Prop where
   mem : ∀ t ∈ I, ξh t ∈ K
@@ -154,9 +124,8 @@ theorem IsSemidiscreteSolution.mono {I J : Set ℝ} {ξh ξh' : ℝ → T.GraphS
   ⟨fun t ht => h.mem t (hJ ht), fun t ht => (h.deriv t (hJ ht)).mono hJ,
     fun t ht => h.eq t (hJ ht)⟩
 
-/-- **`E`-stability of the semi-discrete Hodge wave equation** (energy method,
-`re a(ψ, ψ) = 0`): `‖ξ₁(t) - ξ₂(t)‖_E ≤ ‖ξ₁(a) - ξ₂(a)‖_E` on `[a, b]`, uniformly in `K`.
-See [QuennevilleBelair2015], §4.6. -/
+/-- **`E`-stability**: `‖ξ₁(t) - ξ₂(t)‖ ≤ ‖ξ₁(a) - ξ₂(a)‖` on `[a, b]` for semi-discrete solutions
+([QuennevilleBelair2015], §4.6). -/
 theorem IsSemidiscreteSolution.norm_sub_le {a b : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → T.GraphSpace}
     (h₁ : IsSemidiscreteSolution K (Icc a b) ξ₁ ξ₁')
     (h₂ : IsSemidiscreteSolution K (Icc a b) ξ₂ ξ₂') :
@@ -183,7 +152,6 @@ theorem IsSemidiscreteSolution.norm_sub_le {a b : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂
     linear_combination E1 - E2
   rw [← inner_conj_symm, RCLike.conj_re, key, _root_.map_neg, re_waveForm_self, neg_zero]
 
-/-- **Uniqueness** of semi-discrete solutions. -/
 theorem IsSemidiscreteSolution.eqOn {a b : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → T.GraphSpace}
     (h₁ : IsSemidiscreteSolution K (Icc a b) ξ₁ ξ₁')
     (h₂ : IsSemidiscreteSolution K (Icc a b) ξ₂ ξ₂') (h0 : ξ₁ a = ξ₂ a) :
@@ -195,9 +163,6 @@ theorem IsSemidiscreteSolution.eqOn {a b : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ
 
 variable (K) [FiniteDimensional 𝕜 K]
 
-/-- **Existence for the semi-discrete Hodge wave equation** (4.10): for every `ξ₀ ∈ K` the
-solution `ξₕ(t) = e^{(t-a) Mₕ} ξ₀` exists for all times, with continuous derivative.
-See [QuennevilleBelair2015], (4.10) (§4.6). -/
 theorem exists_isSemidiscreteSolution {ξ₀ : T.GraphSpace} (h₀ : ξ₀ ∈ K) (a : ℝ) :
     ∃ ξh ξh' : ℝ → T.GraphSpace, ξh a = ξ₀ ∧ Continuous ξh' ∧
       (∀ t, HasDerivAt ξh (ξh' t) t) ∧ IsSemidiscreteSolution K univ ξh ξh' := by
@@ -227,7 +192,7 @@ theorem exists_isSemidiscreteSolution {ξ₀ : T.GraphSpace} (h₀ : ξ₀ ∈ K
 
 end Semidiscrete
 
-/-! ### Uniform stability of the elliptic projection on subcomplexes (Prop 4.13) -/
+/-! ### Uniform stability of the elliptic projection on subcomplexes -/
 
 section Stability
 
@@ -241,7 +206,7 @@ theorem graphSnd_mem_graphL2 (v : T.GraphSpace) :
   rw [mem_graphL2, WithLp.ofLp_toLp, LinearPMap.mem_graph_iff]
   exact ⟨⟨T x, hmaps x⟩, rfl, hcomp x⟩
 
-/-- The differential on the graph space, `d (x, T x) = (T x, 0)` (`T T = 0`). -/
+/-- The differential `d (x, T x) = (T x, 0)` on the graph space. -/
 def graphD : T.GraphSpace →L[𝕜] T.GraphSpace :=
   LinearMap.mkContinuous
     { toFun := fun v => ⟨WithLp.toLp 2 (T.graphSnd v, (0 : E)), graphSnd_mem_graphL2 hmaps hcomp v⟩
@@ -262,12 +227,6 @@ def graphD : T.GraphSpace →L[𝕜] T.GraphSpace :=
 
 @[simp] theorem graphSnd_graphD (v : T.GraphSpace) : T.graphSnd (graphD hmaps hcomp v) = 0 := rfl
 
-/-- **Inf-sup by the test map `ξ ↦ ξ - d ξ`** (thesis Prop 4.13, for every operator with
-`T T = 0`, i.e. every finite Hilbert complex of any length): on every `d`-invariant `K ⊆ Γ(T)`
-the shifted form `A = ⟪·,·⟫ + a` satisfies the inf-sup condition with constant `1/√12`.
-See [QuennevilleBelair2015], Prop. 4.13. Without the lower-order term the corresponding discrete
-stability is the FEEC result [AFW2006], [AFW2010], Thm 3.8, recalled by the thesis after Prop 4.13;
-here the test map gives the shifted form directly on every `d`-invariant `K`. -/
 theorem infSup_shiftedForm (K : Submodule 𝕜 T.GraphSpace)
     (hK : ∀ ξ ∈ K, graphD hmaps hcomp ξ ∈ K) :
     InfSup (Variational.restrict (shiftedForm T) K K) ((1 / 2) / √3) := by
@@ -296,21 +255,14 @@ theorem infSup_shiftedForm (K : Submodule 𝕜 T.GraphSpace)
       (norm_inner_le_norm (𝕜 := 𝕜) (T.graphFst ξ) (T.graphSnd ξ))
     nlinarith [sq_nonneg (‖T.graphFst ξ‖ - ‖T.graphSnd ξ‖)]
 
-/-- **Uniform bound on the elliptic projection** of a subcomplex: `‖P_K ζ‖ ≤ √12 ‖A‖ ‖ζ‖` for
-every finite-dimensional `d`-invariant `K` (thesis: `‖Πₕ‖ ≤ 2√12`). See
-[QuennevilleBelair2015], Prop. 4.13 and (4.11). -/
+/-- **Uniform bound on the elliptic projection**: `‖P_K ζ‖ ≤ √12 ‖A‖ ‖ζ‖` on every
+finite-dimensional `d`-invariant `K` ([QuennevilleBelair2015], Prop 4.13 (adapted)). -/
 theorem norm_ellipticProjection_le (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K]
     (hK : ∀ ξ ∈ K, graphD hmaps hcomp ξ ∈ K) (ζ : T.GraphSpace) :
     ‖ellipticProjection K ζ‖ ≤ ‖shiftedForm T‖ / ((1 / 2) / √3) * ‖ζ‖ :=
   (infSup_shiftedForm hmaps hcomp K hK).norm_le_of_restrict_eq (ellipticProjection_mem K ζ)
     fun _ hψ => shiftedForm_ellipticProjection K ζ hψ
 
-/-- **Quasi-optimality of the elliptic projection** on a subcomplex:
-`‖ζ - P_K ζ‖ ≤ (1 + √12 ‖A‖) ‖ζ - w‖` for every `w ∈ K`. [QuennevilleBelair2015], §4.6 reduces
-Thm 4.14 to this estimate; it plays the role of the quasi-optimality [AFW2010], Thm 3.9 (cf.
-[AFW2006]) for `dd* + d*d + I`. The thesis notes that the known FEEC convergence [AFW2006],
-[AFW2010] needs the compactness property and defers the lower-order term to a result of Arnold and
-Li; neither is needed here: the bound follows from `infSup_shiftedForm` on every subcomplex. -/
 theorem norm_sub_ellipticProjection_le (K : Submodule 𝕜 T.GraphSpace) [FiniteDimensional 𝕜 K]
     (hK : ∀ ξ ∈ K, graphD hmaps hcomp ξ ∈ K) (ζ : T.GraphSpace) {w : T.GraphSpace}
     (hw : w ∈ K) :
@@ -329,9 +281,7 @@ section Convergence
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- `ξ` is a **weak solution of the Hodge wave equation in `C¹(I; Γ(T))`**: `ξ`, `ξ'` continuous
-into the graph space, `ξ' = ξ'` within `I`, and `⟪ψ, ξ'⟫ + a(ξ, ψ) = 0` for all `ψ ∈ Γ(T)` (the
-class assumed by thesis Thm 4.14). See [QuennevilleBelair2015], (4.8), Thm 4.14. -/
+/-- `ξ` is a **weak solution of the Hodge wave equation in `C¹(I; Γ(T))`**. -/
 structure IsGraphSolution (I : Set ℝ) (ξ ξ' : ℝ → T.GraphSpace) : Prop where
   continuousOn_deriv : ContinuousOn ξ' I
   deriv : ∀ t ∈ I, HasDerivWithinAt ξ (ξ' t) I t
@@ -341,19 +291,15 @@ theorem IsGraphSolution.continuousOn {I : Set ℝ} {ξ ξ' : ℝ → T.GraphSpac
     (h : IsGraphSolution I ξ ξ') : ContinuousOn ξ I :=
   fun t ht => (h.deriv t ht).continuousWithinAt
 
-/-- A graph solution is a semi-discrete solution for `K = Γ(T)`. -/
 theorem IsGraphSolution.isSemidiscreteSolution_top {I : Set ℝ} {ξ ξ' : ℝ → T.GraphSpace}
     (h : IsGraphSolution I ξ ξ') : IsSemidiscreteSolution ⊤ I ξ ξ' :=
   ⟨fun _ _ => Submodule.mem_top, h.deriv, fun t ht ψ _ => h.eq t ht ψ⟩
 
-/-- **Uniqueness of weak solutions in `C¹(Γ(T))`** (energy method; thesis l. 2120). -/
 theorem IsGraphSolution.eqOn {a b : ℝ} {ξ₁ ξ₁' ξ₂ ξ₂' : ℝ → T.GraphSpace}
     (h₁ : IsGraphSolution (Icc a b) ξ₁ ξ₁') (h₂ : IsGraphSolution (Icc a b) ξ₂ ξ₂')
     (h0 : ξ₁ a = ξ₂ a) : EqOn ξ₁ ξ₂ (Icc a b) :=
   h₁.isSemidiscreteSolution_top.eqOn h₂.isSemidiscreteSolution_top h0
 
-/-- **The error estimate of Thm 4.14** for a graph solution: `norm_sub_le_of_semidiscrete`
-with the right derivatives of the solutions. See [QuennevilleBelair2015], Thm 4.14. -/
 theorem IsGraphSolution.norm_sub_le {K : Submodule 𝕜 T.GraphSpace} [FiniteDimensional 𝕜 K]
     {a b : ℝ} {ξ ξ' ξh ξh' : ℝ → T.GraphSpace} (hξ : IsGraphSolution (Icc a b) ξ ξ')
     (hξh : IsSemidiscreteSolution K (Icc a b) ξh ξh') :
@@ -372,10 +318,7 @@ theorem IsGraphSolution.norm_sub_le {K : Submodule 𝕜 T.GraphSpace} [FiniteDim
 
 variable {ι : Type*}
 
-/-- A family of finite-dimensional discrete spaces `Kₕ ⊆ Γ(T)` is **approximating** along `l`:
-the elliptic projections are uniformly bounded (automatic for subcomplexes,
-`norm_ellipticProjection_le`) and every `ζ ∈ Γ(T)` is eventually approximated by `Kₕ` (the
-density hypothesis of thesis §4.6). See [QuennevilleBelair2015], §4.6. -/
+/-- `Kₕ` is **approximating**: bounded elliptic projections, and every `ζ ∈ Γ(T)` approximated. -/
 structure IsApproximating (l : Filter ι) (K : ι → Submodule 𝕜 T.GraphSpace)
     [∀ h, FiniteDimensional 𝕜 (K h)] : Prop where
   bound : ∃ C, ∀ h ζ, ‖ellipticProjection (K h) ζ‖ ≤ C * ‖ζ‖
@@ -384,7 +327,6 @@ structure IsApproximating (l : Filter ι) (K : ι → Submodule 𝕜 T.GraphSpac
 variable {l : Filter ι} {K : ι → Submodule 𝕜 T.GraphSpace} [∀ h, FiniteDimensional 𝕜 (K h)]
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **The elliptic projections converge to the identity, uniformly on compact sets.** -/
 theorem IsApproximating.tendstoUniformlyOn_ellipticProjection (hK : IsApproximating l K)
     {S : Set T.GraphSpace} (hS : IsCompact S) :
     TendstoUniformlyOn (fun h ζ => ellipticProjection (K h) ζ) id l S := by
@@ -425,10 +367,6 @@ theorem IsApproximating.tendsto_ellipticProjection (hK : IsApproximating l K) (�
     (mem_singleton ζ)
   simpa using this
 
-/-- **Convergence of the semi-discrete method for solutions in `C¹(Γ(T))`**: under the density
-hypothesis, `ξₕ → ξ` in `E`, uniformly on `[a, b]`, as soon as the initial errors
-`‖Pₕ ξ(a) - ξₕ(a)‖_E` tend to `0`. See [QuennevilleBelair2015], Thm 4.14 and the convergence
-remark after it. -/
 theorem tendstoUniformlyOn_of_isGraphSolution (hK : IsApproximating l K) {a b : ℝ}
     {ξ ξ' : ℝ → T.GraphSpace} (hξ : IsGraphSolution (Icc a b) ξ ξ')
     {ξh ξh' : ι → ℝ → T.GraphSpace}
@@ -508,8 +446,7 @@ variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
   (hT : Dense (T.domain : Set E)) (hc : T.IsClosed)
   (hmaps : ∀ x : T.domain, (T x : E) ∈ T.domain) (hcomp : ∀ x : T.domain, T ⟨T x, hmaps x⟩ = 0)
 
-/-- The **Hodge wave group** `e^{tL}`, `L = T - T†` (Stone): the solution operator of the Hodge
-wave equation. See [QuennevilleBelair2015], (4.4), Thm 4.6. -/
+/-- The **Hodge wave group** `e^{tL}`, `L = T - T†` ([QuennevilleBelair2015], (4.4), Thm 4.6). -/
 def waveGroup : C0Group 𝕜 E := (isSkewAdjoint_sub_adjoint hT hc hmaps hcomp).group
 
 theorem generator_waveGroup : (waveGroup hT hc hmaps hcomp).generator = T - T† :=
@@ -525,7 +462,6 @@ private theorem apply_of_eq {F : Type*} [AddCommGroup F] [Module 𝕜 F]
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 include hT hcomp in
-/-- `‖T x‖ ≤ ‖L x‖` on `D(L) = D(T) ∩ D(T†)` (`R(T) ⊥ R(T†)`). -/
 theorem norm_apply_le_norm_sub_adjoint_apply (x : (T - T†).domain) :
     ‖T ⟨x, x.2.1⟩‖ ≤ ‖(T - T†) x‖ := by
   have h0 : ⟪T ⟨x, x.2.1⟩, T† ⟨x, x.2.2⟩⟫ = 0 :=
@@ -563,13 +499,6 @@ theorem norm_liftGraph_le (x : (waveGroup hT hc hmaps hcomp).generator.domain) :
   have hl := norm_nonneg (liftGraph hT hc hmaps hcomp x)
   nlinarith [norm_nonneg (x : E), norm_nonneg (T ⟨x, hx.1⟩), norm_nonneg ((T - T†) ⟨x, hx⟩)]
 
-/-- **The exact solution required by Thm 4.14 exists for `D(L²)` data**: for `ξ₀ ∈ D(L)` with
-`L ξ₀ ∈ D(L)`, the orbit `t ↦ e^{(t-a)L} ξ₀`, read in `Γ(T)`, is a weak solution in
-`C¹(Γ(T))`; it is the unique one with this initial value (`IsGraphSolution.eqOn`).
-
-Correction: Thm 4.14 assumes `ξ ∈ C¹([0,T]; V)` without saying for which data this holds;
-`D(L²)` suffices, while `D(L)` does not (`Feec.Counterexamples.ClassicalRegularity`).
-See [QuennevilleBelair2015], Thm 4.14; cf. [Pazy1983], §1.2, Thm 2.4. -/
 theorem exists_isGraphSolution {ξ₀ : E} (h₀ : ξ₀ ∈ (T - T†).domain)
     (hL₀ : (T - T†) ⟨ξ₀, h₀⟩ ∈ (T - T†).domain) (a b : ℝ) :
     ∃ ξ ξ' : ℝ → T.GraphSpace, IsGraphSolution (Icc a b) ξ ξ' ∧
@@ -614,10 +543,8 @@ variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
   (hmaps : ∀ x : T.domain, (T x : E) ∈ T.domain) (hcomp : ∀ x : T.domain, T ⟨T x, hmaps x⟩ = 0)
   {ι : Type*} {l : Filter ι} {K : ι → Submodule 𝕜 T.GraphSpace} [∀ h, FiniteDimensional 𝕜 (K h)]
 
-/-- **Convergence of the semi-discrete method for `D(L²)` data**: for `ξ₀ ∈ D(L)` with
-`L ξ₀ ∈ D(L)`, the exact weak solution `ξ ∈ C¹([a,b]; Γ(T))` exists and is unique, the
-semi-discrete solutions with `ξₕ(a) = Pₕ ξ(a)` exist, and `ξₕ → ξ` in `E`, uniformly on
-`[a, b]`. See [QuennevilleBelair2015], Thm 4.14 and the convergence remark after it. -/
+/-- **Convergence for `D(L²)` data**: the semi-discrete solutions from `Pₕ ξ(a)` converge to the
+weak solution uniformly on `[a, b]` ([QuennevilleBelair2015], Thm 4.14). -/
 theorem tendstoUniformlyOn_semidiscrete (hK : IsApproximating l K) {ξ₀ : E}
     (h₀ : ξ₀ ∈ (T - T†).domain) (hL₀ : (T - T†) ⟨ξ₀, h₀⟩ ∈ (T - T†).domain) (a b : ℝ) :
     ∃ ξ ξ' : ℝ → T.GraphSpace, IsGraphSolution (Icc a b) ξ ξ' ∧
@@ -638,11 +565,6 @@ theorem tendstoUniformlyOn_semidiscrete (hK : IsApproximating l K) {ξ₀ : E}
     tendstoUniformlyOn_of_isGraphSolution hK hξ hξh' ?_⟩
   simp only [hξh0, sub_self, _root_.map_zero, norm_zero, tendsto_const_nhds]
 
-/-- **The comparison-datum bound**: for every `ζ₀ ∈ D(L²)`, with `ζ` its exact solution, every
-semi-discrete solution `ξₕ` and every `ξ₀ ∈ E`,
-`‖e^{(t-a)L} ξ₀ - ξₕ(t)‖ ≤ ‖ξ₀ - ζ₀‖ + ‖Pζ(a) - ξₕ(a)‖ + ‖e(t)‖ + (t-a) ‖e(a)‖ +
-(1 + (t-a)) ∫ ‖e'‖`, `e = Pζ - ζ` (all in `E`). A K-functional-type bound; no rate.
-See [QuennevilleBelair2015], Thm 4.14. -/
 theorem norm_sub_le_of_comparison {ζ₀ : E} (h₀ : ζ₀ ∈ (T - T†).domain)
     (hL₀ : (T - T†) ⟨ζ₀, h₀⟩ ∈ (T - T†).domain) (a b : ℝ) :
     ∃ ζ ζ' : ℝ → T.GraphSpace, IsGraphSolution (Icc a b) ζ ζ' ∧
@@ -666,10 +588,8 @@ theorem norm_sub_le_of_comparison {ζ₀ : E} (h₀ : ζ₀ ∈ (T - T†).domai
           + ‖T.graphFst (ζ t - ξh t)‖ := norm_add_le _ _
     _ ≤ _ := by rw [hiso]; linarith
 
-/-- **Convergence of the semi-discrete method for data in `E`** (thesis' convergence remark,
-extended): under the density hypothesis, if `ξₕ(a) → ξ₀` in `E` then `ξₕ(t) → e^{(t-a)L} ξ₀`
-(the mild solution), uniformly on `[a, b]`. Stability of the semi-discrete flow plus density of
-`D(L²)`; no rate. See [QuennevilleBelair2015], Thm 4.14 and the convergence remark after it. -/
+/-- **Convergence for data in `E`**: if `ξₕ(a) → ξ₀`, then `ξₕ(t) → e^{(t-a)L} ξ₀` uniformly on
+`[a, b]` ([QuennevilleBelair2015], the remark after Thm 4.14 (adapted)). -/
 theorem tendstoUniformlyOn_of_tendsto (hK : IsApproximating l K) {a b : ℝ} (ξ₀ : E)
     {ξh ξh' : ι → ℝ → T.GraphSpace}
     (hξh : ∀ h, IsSemidiscreteSolution (K h) (Icc a b) (ξh h) (ξh' h))
@@ -724,10 +644,6 @@ theorem tendstoUniformlyOn_of_tendsto (hK : IsApproximating l K) {a b : ℝ} (ξ
   rw [hiso] at hn2
   linarith
 
-/-- **The thesis' convergence remark for `D(L)` data**: for `ξ₀ ∈ D(L)` and `ξₕ(a) = Pₕ ξ₀`,
-`ξₕ(t) → e^{(t-a)L} ξ₀` in `E`, uniformly on `[a, b]` (Thm 4.14 itself does not apply: the
-solution need not be `C¹` into `Γ(T)`). See [QuennevilleBelair2015], Thm 4.14 and the
-convergence remark after it. -/
 theorem tendstoUniformlyOn_ellipticProjection (hK : IsApproximating l K) {a b : ℝ}
     (x : (T - T†).domain) {ξh ξh' : ι → ℝ → T.GraphSpace}
     (hξh : ∀ h, IsSemidiscreteSolution (K h) (Icc a b) (ξh h) (ξh' h))
@@ -738,7 +654,6 @@ theorem tendstoUniformlyOn_ellipticProjection (hK : IsApproximating l K) {a b : 
   simp only [hinit]
   exact (T.graphFst.continuous.tendsto _).comp (hK.tendsto_ellipticProjection _)
 
-/-- The orbit `t ↦ e^{(t-a)L} ξ₀` of `ξ₀ ∈ D(L)` is a classical solution of `U' = L U`. -/
 theorem isClassicalSolution_waveGroup (a b : ℝ) (x : (T - T†).domain) :
     Evolution.IsClassicalSolution (T - T†) (Icc a b) 0
       (fun t => (waveGroup hT hc hmaps hcomp).S (t - a) x) := by
@@ -750,8 +665,6 @@ theorem isClassicalSolution_waveGroup (a b : ℝ) (x : (T - T†).domain) :
   change Evolution.IsClassicalSolution (waveGroup hT hc hmaps hcomp).generator _ _ _ at horb
   rwa [hgen] at horb
 
-/-- `D(L)` data: the semi-discrete solutions with `ξₕ(a) = Pₕ ξ₀` exist and converge to the
-classical solution. See [QuennevilleBelair2015], Thm 4.14 and the remark after it. -/
 theorem exists_tendstoUniformlyOn_ellipticProjection (hK : IsApproximating l K) (a b : ℝ)
     (x : (T - T†).domain) :
     Evolution.IsClassicalSolution (T - T†) (Icc a b) 0
@@ -771,8 +684,6 @@ theorem exists_tendstoUniformlyOn_ellipticProjection (hK : IsApproximating l K) 
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 include hT in
-/-- Initial data for `E`-data convergence: the `E`-orthogonal projections of `ξ₀` onto the
-discrete spaces converge to `ξ₀` (`D(T)` is dense and the `Kₕ` approximate `Γ(T)`). -/
 theorem exists_tendsto_init (hK : IsApproximating l K) (ξ₀ : E) :
     ∃ v : ι → T.GraphSpace, (∀ h, v h ∈ K h) ∧ Tendsto (fun h => T.graphFst (v h)) l (𝓝 ξ₀) := by
   set K' : ι → Submodule 𝕜 E := fun h => (K h).map (T.graphFst : T.GraphSpace →ₗ[𝕜] E)
@@ -798,9 +709,6 @@ theorem exists_tendsto_init (hK : IsApproximating l K) (ξ₀ : E) :
     _ < ε / 2 + ε / 2 := add_lt_add hwξ hu'
     _ = ε := add_halves ε
 
-/-- **`E`-data convergence with existence of the discrete solutions**: for every `ξ₀ ∈ E` there
-are semi-discrete solutions with `ξₕ(a) → ξ₀`, and they converge to `e^{(t-a)L} ξ₀` uniformly
-on `[a, b]`. See [QuennevilleBelair2015], the convergence remark after Thm 4.14. -/
 theorem exists_tendstoUniformlyOn_of_tendsto (hK : IsApproximating l K) (a b : ℝ) (ξ₀ : E) :
     ∃ ξh ξh' : ι → ℝ → T.GraphSpace,
       (∀ h, IsSemidiscreteSolution (K h) (Icc a b) (ξh h) (ξh' h)) ∧
@@ -814,9 +722,6 @@ theorem exists_tendstoUniformlyOn_of_tendsto (hK : IsApproximating l K) (a b : �
   have h0 : Tendsto (fun h => T.graphFst (ξh h a)) l (𝓝 ξ₀) := by simpa only [hξh0] using hv
   exact ⟨ξh, ξh', hξh', h0, tendstoUniformlyOn_of_tendsto hT hc hmaps hcomp hK ξ₀ hξh' h0⟩
 
-/-- **Weak solutions are the group orbit**: every weak solution of the Hodge wave equation
-(4.7)/(4.8) on `[a, b]` with initial value `ξ₀ ∈ D(L)` is `e^{(t-a)L} ξ₀`.
-See [QuennevilleBelair2015], Thm 4.6, Thm 4.7. -/
 theorem eqOn_waveGroup_of_isWeakSolution (x : (T - T†).domain) {a b : ℝ} {U : ℝ → E}
     (hU : IsWeakSolution T (Icc a b) 0 U) (hU0 : U a = x) :
     EqOn U (fun t => (waveGroup hT hc hmaps hcomp).S (t - a) x) (Icc a b) := by
@@ -827,9 +732,6 @@ theorem eqOn_waveGroup_of_isWeakSolution (x : (T - T†).domain) {a b : ℝ} {U 
   rw [hVw U hU0 hU ht, hVs _ (by simp) horb.toIsStrongSolution ht]
 
 include hT hc hcomp in
-/-- **The thesis' convergence remark, literally**: for the weak solution `ξ` of (4.7)/(4.8) with
-`ξ(a) = ξ₀ ∈ D(L)` and `ξₕ(a) = Pₕ ξ₀`, `ξₕ → ξ` in `E`, uniformly on `[a, b]`.
-See [QuennevilleBelair2015], the convergence remark after Thm 4.14. -/
 theorem tendstoUniformlyOn_of_isWeakSolution (hK : IsApproximating l K) {a b : ℝ}
     (x : (T - T†).domain) {U : ℝ → E} (hU : IsWeakSolution T (Icc a b) 0 U) (hU0 : U a = x)
     {ξh ξh' : ι → ℝ → T.GraphSpace}
@@ -840,9 +742,6 @@ theorem tendstoUniformlyOn_of_isWeakSolution (hK : IsApproximating l K) {a b : �
     fun _ ht => (eqOn_waveGroup_of_isWeakSolution hT hc hmaps hcomp x hU hU0 ht).symm
 
 include hT hc hcomp in
-/-- `D(L)` data, with existence: the weak solution in `C⁰([a,b]; Γ(T)) ∩ C¹([a,b]; E)` exists and
-is unique, and the semi-discrete solutions with `ξₕ(a) = Pₕ ξ₀` converge to it.
-See [QuennevilleBelair2015], Thm 4.6, Thm 4.7 and the convergence remark after Thm 4.14. -/
 theorem exists_isClassicalWeakSolution_tendstoUniformlyOn (hK : IsApproximating l K) (a b : ℝ)
     (x : (T - T†).domain) :
     ∃ U : ℝ → E, U a = x ∧ IsClassicalWeakSolution T (Icc a b) 0 U ∧
@@ -875,8 +774,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   {H : HilbertComplex 𝕜 c W} (S : H.Subcomplex)
 
-/-- The **total space of a subcomplex** in the graph space `Γ(𝐝)` of the total differential:
-`(x, 𝐝 x)` with `x i ∈ Vₕⁱ` for every `i`. See [QuennevilleBelair2015], §4.6. -/
+/-- The **total space of a subcomplex** in `Γ(𝐝)` ([QuennevilleBelair2015], §4.6). -/
 def graphSub : Submodule 𝕜 H.totalD.GraphSpace :=
   (totalSub S.V).comap (H.totalD.graphFst : H.totalD.GraphSpace →ₗ[𝕜] PiLp 2 W)
 
@@ -889,7 +787,6 @@ instance [∀ i, FiniteDimensional 𝕜 (S.V i)] : FiniteDimensional 𝕜 S.grap
     (PiLp.ext fun i => ?_))
   exact congrArg Subtype.val (congrFun hvw i)
 
-/-- A subcomplex is invariant under the differential of the graph space. -/
 theorem graphD_mem_graphSub {v : H.totalD.GraphSpace} (hv : v ∈ S.graphSub) :
     graphD H.totalD_mapsTo H.totalD_comp_totalD v ∈ S.graphSub := fun j => by
   change H.totalD.graphFst (graphD H.totalD_mapsTo H.totalD_comp_totalD v) j ∈ S.V j
@@ -900,15 +797,11 @@ theorem graphD_mem_graphSub {v : H.totalD.GraphSpace} (hv : v ∈ S.graphSub) :
   have hxi : (x : PiLp 2 W) i ∈ S.V i := hv i
   exact S.mapsTo i j _ hxi
 
-/-- **The elliptic projections of subcomplexes are uniformly bounded** (thesis Prop 4.13 and
-(4.11), for every finite Hilbert complex). -/
 theorem norm_ellipticProjection_le [∀ i, FiniteDimensional 𝕜 (S.V i)] (ζ : H.totalD.GraphSpace) :
     ‖ellipticProjection S.graphSub ζ‖ ≤ ‖shiftedForm H.totalD‖ / ((1 / 2) / √3) * ‖ζ‖ :=
   HodgeWave.norm_ellipticProjection_le H.totalD_mapsTo H.totalD_comp_totalD S.graphSub
     (fun _ hξ => S.graphD_mem_graphSub hξ) ζ
 
-/-- **A dense family of finite-dimensional subcomplexes is approximating**: the density
-hypothesis of thesis §4.6 alone suffices (the uniform bound comes from Prop 4.13). -/
 theorem isApproximating {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
     [∀ h i, FiniteDimensional 𝕜 ((S h).V i)]
     (hd : ∀ ζ : H.totalD.GraphSpace, ∀ δ > 0, ∀ᶠ h in l, ∃ w ∈ (S h).graphSub, ‖ζ - w‖ < δ) :
@@ -927,15 +820,10 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] (H : HilbertComplex 𝕜 c W)
 
-/-- The Hodge wave group of `T = 𝐝` is the wave group of the complex. -/
 theorem waveGroup_totalD : Feec.HodgeWave.waveGroup H.dense_totalDomain H.isClosed_totalD
     H.totalD_mapsTo H.totalD_comp_totalD = H.waveGroup :=
   H.isSkewAdjoint_wave.eq_group ((Feec.HodgeWave.generator_waveGroup _ _ _ _).trans H.wave_eq.symm)
 
-/-- **Convergence of the semi-discrete method for `D(L)` data on a finite Hilbert complex** (any
-length): for `x ∈ D(L)` and an approximating family `Kₕ ⊆ Γ(𝐝)`, the semi-discrete solutions
-with `ξₕ(a) = Pₕ x` exist and converge to `e^{(t-a)L} x` in `L∞(a,b; W)`.
-See [QuennevilleBelair2015], Thm 4.14 and the convergence remark after it. -/
 theorem exists_tendstoUniformlyOn_ellipticProjection {κ : Type*} {l : Filter κ}
     {K : κ → Submodule 𝕜 H.totalD.GraphSpace} [∀ h, FiniteDimensional 𝕜 (K h)]
     (hK : IsApproximating l K) (a b : ℝ) (x : H.wave.domain) :
@@ -965,12 +853,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   {H : HilbertComplex 𝕜 c W}
 
-/-- **Rate of the semi-discrete Hodge wave equation on a finite-dimensional subcomplex**
-([QuennevilleBelair2015], Thm 4.14): if `ξ` is a weak solution in `C¹([t₀, t₁]; Γ(𝐝))`, `ξₕ` the
-semi-discrete solution in `S` started at the elliptic projection `Pₕ ξ(t₀)`, and `ξ(s)`, `ξ'(s)`
-are within `η` of `S` in the graph norm on `[t₀, t₁]`, then
-`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² η` with `A = 1 + √12 ‖a + m‖` independent of `S`
-(`Feec.HodgeWave.norm_sub_ellipticProjection_le`, `Feec.HodgeWave.IsGraphSolution.norm_sub_le`). -/
+/-- **Rate on a subcomplex**: if `ξ`, `ξ'` stay within `η` of `S` in `Γ(𝐝)` and `ξₕ(t₀) = Pₕ ξ(t₀)`,
+then `‖ξ(t) - ξₕ(t)‖ ≤ (1 + √12 ‖a + m‖) (1 + (t - t₀))² η` ([QuennevilleBelair2015], Thm 4.14). -/
 theorem norm_sub_le_of_approx (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
     {t₀ t₁ : ℝ} {ξ ξ' ξh ξh' : ℝ → H.totalD.GraphSpace}
     (hξ : IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')

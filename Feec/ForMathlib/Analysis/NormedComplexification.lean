@@ -6,19 +6,8 @@ public import Mathlib.Analysis.Complex.Circle
 /-!
 # The complexification of a normed space with the Taylor norm
 
-For a normed space `E` over `𝕜 = ℝ` or `ℂ`, the complexification `E_ℂ = E × E`
-(`NormedComplexification 𝕜 E`, the `Complexification` of tag `taylor`) carries the norm
-
-  `‖x + i y‖ = sup_{|w| = 1} ‖re (w (x + i y))‖ = sup_θ ‖cos θ x - sin θ y‖`,
-
-the Taylor complexification norm ([MunozSarantopoulosTonge1999]). It is a
-`Complexification.NormCore`: `‖x + i 0‖ = ‖x‖`, `‖x‖ ≤ ‖x + i y‖`, and a bounded operator `T`
-satisfies `‖T x + i T y‖ ≤ ‖T‖ ‖x + i y‖`, since `re (w (T x + i T y)) = T (re (w (x + i y)))`.
-So `E_ℂ` is a complex normed space, complete when `E` is, with `‖T_ℂ‖ = ‖T‖`, and `T` is
-invertible when `T_ℂ` is (`Feec.ForMathlib.Analysis.Complexification`). This is how statements
-about complex Banach spaces (complex points of the spectrum) reach real ones; on inner product
-spaces, the tag `hilbert` carries instead the Hilbert norm `(‖x‖² + ‖y‖²)^{1/2}`
-(`Feec.ForMathlib.InnerProductSpace.Complexification`).
+The complexification `E × E` of a normed space `E` over `𝕜 = ℝ` or `ℂ` with the Taylor norm
+`‖x + i y‖ = sup_θ ‖cos θ x - sin θ y‖` ([MunozSarantopoulosTonge1999]).
 
 ## References
 
@@ -29,8 +18,7 @@ Bibliography: [references.bib](../../../docs/references.bib)
 
 @[expose] public noncomputable section
 
-/-- The **complexification** `E × E` of a normed space `E` over `𝕜 = ℝ` or `ℂ`, with the Taylor
-norm: the pair `(x, y)` is `x + i y`, and `ℂ` acts through the real scalars of `𝕜`. -/
+/-- The complexification `E × E` of `E` with the Taylor norm, `(x, y)` read as `x + i y`. -/
 abbrev NormedComplexification (𝕜 E : Type*) : Type _ := Complexification .taylor 𝕜 E
 
 namespace NormedComplexification

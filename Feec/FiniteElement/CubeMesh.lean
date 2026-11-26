@@ -5,56 +5,22 @@ public import Feec.FiniteElement.CubeDof
 /-!
 # `Q_r⁻Λᵏ` on uniform cubical meshes: global spaces, degrees of freedom, dimension
 
-The uniform cubical mesh of the unit cube with `N_j ≥ 1` cells in the direction `j` has the cells
-`m ∈ ∏ⱼ Fin N_j`, `∏ⱼ [m_j, m_j + 1] / N_j`. A piecewise polynomial form is a family `(ω_m)_m` of
-polynomial forms, `ω_m` written in the local coordinates `y ∈ [0, 1]^d` of the cell `m`
-(`x_j = (m_j + y_j) / N_j`). Neighbouring cells `m`, `m'` share the face `commonFace N m m'`
-(in the coordinates of `m`; `y_j = 1` if `m'_j = m_j + 1`, `y_j = 0` if `m'_j = m_j - 1`), and
-**tangential continuity** is the equality of the traces of `ω_m` and `ω_{m'}` on it
-(`cubeCompatible`). The global space is `Q_b⁻Λᵏ(𝒯_h) = cubeGlobalSpace N b k`: the tangentially
-continuous piecewise forms of `Q_b⁻Λᵏ` ([ArnoldBoffiBonizzoni2015], §5; [ArnoldAwanou2014], §2;
-the assembly is that of [AFW2006], §5).
-
-The local degrees of freedom (`Feec.FiniteElement.Cube.cubeDof`) are numbered globally by tensor
-products of one-dimensional numberings (`GlobalEdge`): in a direction with `dx`, `b` moments per
-cell; without, the `N + 1` vertices and `b - 1` moments per cell.
-
-## Main definitions
-
-* `Feec.FiniteElement.Cube.CubeCell N`, `CubeCell.Adj`, `commonFace`: cells, neighbours, common
-  faces;
-* `Feec.FiniteElement.Cube.cubeCompatible N`, `cubeGlobalSpace N b k`;
-* `Feec.FiniteElement.Cube.GlobalEdge`, `CubeGlobalIdx N b k`, `toGlobal`, `globalDof`: the global
-  degrees of freedom;
-* `Feec.FiniteElement.Cube.globalDofEquiv`, `cubeGlobalInterp`.
+The global spaces `Q_b⁻Λᵏ(𝒯_h)` of tangentially continuous piecewise forms on uniform cubical
+meshes form a complex and are assembled from global degrees of freedom
+([ArnoldBoffiBonizzoni2015], §5; [ArnoldAwanou2014], §2; [AFW2006], §5).
 
 ## Main results
 
-* `extDeriv_mem_cubeGlobalSpace`: **`d Q_b⁻Λᵏ(𝒯_h) ⊆ Q_b⁻Λ^{k+1}(𝒯_h)`**;
-* `cubeDof_eq_of_toGlobal_eq`: consistency of the global degrees of freedom on tangentially
-  continuous forms; `momentDof_liftIdx`: the degrees of freedom of a face are degrees of freedom
-  of the cube;
-* `ofGlobalDof_mem`: **prescribed global degrees of freedom glue** (trace determination on the
-  common faces), hence `globalDofEquiv`: `Q_b⁻Λᵏ(𝒯_h) ≃ ℝ^{global DOFs}`;
-* `finrank_cubeGlobalSpace`: **`dim Q_b⁻Λᵏ(𝒯_h) = Σ_{#s = k} Πⱼ (N_j b_j + 1 - [j ∈ s])`**, and
-  `finrank_cubeGlobalSpace_const`: `dim Q_r⁻Λᵏ(𝒯_h) = (n choose k) (M r)ᵏ (M r + 1)ⁿ⁻ᵏ`;
-* `cubeGlobalInterp_apply`, `cubeGlobalInterp_of_mem`, `cubeGlobalInterp_extDeriv`: **the global
-  canonical interpolant** is the local one cell by cell, a projection, and commutes with `d`.
-
-## Implementation notes
-
-Everything is algebraic: the forms are polynomial forms in local coordinates and tangential
-continuity is the equality of the polynomial traces (`Feec.Koszul.cubeTrace`). The cells are
-indexed by `∀ j, Fin (N j)` over any finite linearly ordered set of directions `d`.
+* `Cube.extDeriv_mem_cubeGlobalSpace`: `d Q_b⁻Λᵏ(𝒯_h) ⊆ Q_b⁻Λ^{k+1}(𝒯_h)`.
+* `Cube.finrank_cubeGlobalSpace`: `dim Q_b⁻Λᵏ(𝒯_h) = Σ_{#s = k} Πⱼ (N_j b_j + 1 - [j ∈ s])` for
+  `N, b ≥ 1`.
+* `Cube.cubeGlobalInterp_extDeriv`: the global canonical interpolant commutes with `d`.
 
 ## References
 
-* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §5 (the spaces `Q_r⁻Λᵏ(𝒯_h)` and their degrees of freedom)
-* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
-  §2
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (assembly from degrees of freedom, commuting projections)
+* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015]
+* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -69,9 +35,7 @@ open Koszul ExteriorFibre
 
 /-! ### The one-dimensional numbering of the degrees of freedom -/
 
-/-- The global degrees of freedom in one direction, on `N` cells of degree `b`: with `dx`
-(`e = true`), `b` moments in each cell; without, the `N + 1` vertices and `b - 1` moments in
-each cell. -/
+/-- The global degrees of freedom in one direction, on `N` cells of degree `b`. -/
 def GlobalEdge (N b : ℕ) : Bool → Type
   | true => Fin N × Fin b
   | false => Fin (N + 1) ⊕ Fin N × Fin (b - 1)
@@ -92,9 +56,7 @@ theorem card_globalEdge (N : ℕ) {b : ℕ} (hb : 1 ≤ b) :
       ↓reduceIte, tsub_zero, add_tsub_cancel_right]
     ring
 
-/-- The global number of the local degree of freedom `a` (`a + [e] ≤ b`) of the cell `c`: with
-`dx`, `(c, a)`; without, the vertices `c`, `c + 1` for `a = 0, 1`, and `(c, a - 2)` for
-`a ≥ 2`. -/
+/-- The global number of the local degree of freedom `a` of the cell `c`. -/
 def toGlobalEdge {N b : ℕ} (c : Fin N) :
     ∀ (e : Bool) (a : ℕ), a + (if e then 1 else 0) ≤ b → GlobalEdge N b e
   | true, a, h => (c, ⟨a, by simp at h; omega⟩)
@@ -102,8 +64,7 @@ def toGlobalEdge {N b : ℕ} (c : Fin N) :
   | false, 1, _ => Sum.inl c.succ
   | false, a + 2, h => Sum.inr (c, ⟨a, by simp at h; omega⟩)
 
-/-- The canonical cell of a vertex `v` and its local index there (`0`; `1` for the last vertex,
-which belongs to the last cell). -/
+/-- The canonical cell of a vertex `v` and its local index there. -/
 def vertexCell {N : ℕ} (hN : 1 ≤ N) (v : Fin (N + 1)) : Fin N × ℕ :=
   if h : (v : ℕ) < N then (⟨v, h⟩, 0) else (⟨N - 1, by omega⟩, 1)
 
@@ -140,8 +101,6 @@ theorem toGlobalEdge_ofGlobalEdge {N b : ℕ} (hN : 1 ≤ N) (hb : 1 ≤ b) :
     · exact congrArg Sum.inl (Fin.ext (by simp; omega))
   | false, Sum.inr (c, a) => rfl
 
-/-- Two local degrees of freedom with the same global number: the same cell and index, or the
-vertex shared by two consecutive cells. -/
 theorem toGlobalEdge_eq {N b : ℕ} {c c' : Fin N} {e : Bool} {a a' : ℕ}
     {h : a + (if e then 1 else 0) ≤ b} {h' : a' + (if e then 1 else 0) ≤ b}
     (heq : toGlobalEdge c e a h = toGlobalEdge c' e a' h') :
@@ -169,7 +128,6 @@ theorem toGlobalEdge_congr {N b : ℕ} {c c' : Fin N} {e : Bool} {a a' : ℕ}
     (ha : a = a') : toGlobalEdge c e a h = toGlobalEdge c' e a' h' := by
   subst hc ha; rfl
 
-/-- The vertex shared by the cells `c` and `c + 1`. -/
 theorem toGlobalEdge_vertex {N b : ℕ} {c c' : Fin N} {e : Bool} {a a' : ℕ}
     {h : a + (if e then 1 else 0) ≤ b} {h' : a' + (if e then 1 else 0) ≤ b} (he : e = false)
     (hc : (c' : ℕ) = c + 1) (ha : a = 1) (ha' : a' = 0) :
@@ -181,21 +139,18 @@ theorem toGlobalEdge_vertex {N b : ℕ} {c c' : Fin N} {e : Bool} {a a' : ℕ}
 
 variable {d : Type*} [LinearOrder d] [Fintype d] (N : d → ℕ)
 
-/-- The cells of the uniform cubical mesh with `N_j` cells in the direction `j`: the cell `m` is
-`∏ⱼ [m_j, m_j + 1] / N_j`, with local coordinates `y ∈ [0, 1]^d`, `x_j = (m_j + y_j) / N_j`. -/
+/-- The cells `∏ⱼ [m_j, m_j + 1] / N_j` of the uniform cubical mesh of the unit cube. -/
 abbrev CubeCell := ∀ j, Fin (N j)
 
 /-- The closures of the cells `m`, `m'` meet: `|m_j - m'_j| ≤ 1` in every direction. -/
 def CubeCell.Adj (m m' : CubeCell N) : Prop := ∀ j, (m j : ℕ) ≤ m' j + 1 ∧ (m' j : ℕ) ≤ m j + 1
 
-/-- The common face of the cells `m`, `m'`, in the local coordinates of `m`: `y_j = 1` if
-`m'_j = m_j + 1`, `y_j = 0` if `m_j = m'_j + 1`, free if `m'_j = m_j`. -/
+/-- The common face of the cells `m`, `m'`, in the local coordinates of `m`. -/
 def commonFace (m m' : CubeCell N) : d → Option ℝ := fun j =>
   if (m' j : ℕ) = m j + 1 then some 1 else if (m j : ℕ) = m' j + 1 then some 0 else none
 
 omit [LinearOrder d] [Fintype d] in
 variable {N} in
-/-- The common faces of neighbouring cells, direction by direction. -/
 theorem commonFace_cases {m m' : CubeCell N} (hadj : CubeCell.Adj N m m') (j : d) :
     (commonFace N m m' j = some 1 ∧ commonFace N m' m j = some 0 ∧ (m' j : ℕ) = m j + 1) ∨
       (commonFace N m m' j = some 0 ∧ commonFace N m' m j = some 1 ∧ (m j : ℕ) = m' j + 1) ∨
@@ -214,8 +169,7 @@ theorem commonFace_cases {m m' : CubeCell N} (hadj : CubeCell.Adj N m m') (j : d
     exact Or.inr (Or.inl ⟨by rw [commonFace, ite_eq_right c1, ite_eq_left c2],
       ite_eq_left c2, c2⟩)
 
-/-- The piecewise polynomial forms (one for each cell, in its local coordinates) whose traces
-agree on the common faces of neighbouring cells: tangential continuity. -/
+/-- The piecewise polynomial forms whose traces agree on the common faces of neighbouring cells. -/
 def cubeCompatible : Submodule ℝ (CubeCell N → PolyForm ℝ d) where
   carrier := {ω | ∀ m m', CubeCell.Adj N m m' →
     cubeTrace (commonFace N m m') (ω m) = cubeTrace (commonFace N m' m) (ω m')}
@@ -223,8 +177,7 @@ def cubeCompatible : Submodule ℝ (CubeCell N → PolyForm ℝ d) where
   add_mem' hω hη m m' h := by simp only [Pi.add_apply, cubeTrace_add, hω m m' h, hη m m' h]
   smul_mem' c ω hω m m' h := by simp only [Pi.smul_apply, cubeTrace_smul, hω m m' h]
 
-/-- **The global space `Q_b⁻Λᵏ(𝒯_h)`** on the cubical mesh: tangentially continuous piecewise
-forms of `Q_b⁻Λᵏ`. -/
+/-- The global space `Q_b⁻Λᵏ(𝒯_h)`: the tangentially continuous piecewise forms of `Q_b⁻Λᵏ`. -/
 def cubeGlobalSpace (b : d → ℕ) (k : ℕ) : Submodule ℝ (CubeCell N → PolyForm ℝ d) :=
   cubeCompatible N ⊓ Submodule.pi Set.univ fun _ => cubeFormMinus ℝ b k
 
@@ -241,12 +194,11 @@ theorem mem_cubeGlobalSpace {b : d → ℕ} {k : ℕ} {ω : CubeCell N → PolyF
     ω ∈ cubeGlobalSpace N b k ↔ ω ∈ cubeCompatible N ∧ ∀ m, ω m ∈ cubeFormMinus ℝ b k := by
   simp [cubeGlobalSpace, Submodule.mem_pi]
 
-/-- `d` preserves tangential continuity. -/
 theorem extDeriv_mem_cubeCompatible {ω : CubeCell N → PolyForm ℝ d}
     (hω : ω ∈ cubeCompatible N) : (fun m => extDeriv (ω m)) ∈ cubeCompatible N :=
   fun m m' h => by simp only [← extDeriv_cubeTrace, hω m m' h]
 
-/-- **`d Q_b⁻Λᵏ(𝒯_h) ⊆ Q_b⁻Λ^{k+1}(𝒯_h)`**: the global spaces form a complex. -/
+/-- `d Q_b⁻Λᵏ(𝒯_h) ⊆ Q_b⁻Λ^{k+1}(𝒯_h)`. -/
 theorem extDeriv_mem_cubeGlobalSpace {b : d → ℕ} {k : ℕ} {ω : CubeCell N → PolyForm ℝ d}
     (hω : ω ∈ cubeGlobalSpace N b k) : (fun m => extDeriv (ω m)) ∈ cubeGlobalSpace N b (k + 1) :=
   mem_cubeGlobalSpace.2 ⟨extDeriv_mem_cubeCompatible (mem_cubeGlobalSpace.1 hω).1,
@@ -254,7 +206,6 @@ theorem extDeriv_mem_cubeGlobalSpace {b : d → ℕ} {k : ℕ} {ω : CubeCell N 
 
 /-! ### Moments on common faces -/
 
-/-- A moment on a face contained in the plane `g` only sees the trace on `g`. -/
 theorem momentDof_cubeTrace_of_le {f g : d → Option ℝ} {s : Finset d} {α : d →₀ ℕ}
     (h : ∀ j c, g j = some c → dofFace f s α j = some c) (ω : PolyForm ℝ d) :
     momentDof f s α (cubeTrace g ω) = momentDof f s α ω := by
@@ -265,8 +216,6 @@ theorem momentDof_cubeTrace_of_le {f g : d → Option ℝ} {s : Finset d} {α : 
   | none => rfl
   | some c => rw [h j c hg]; rfl
 
-/-- On a trace on the plane `g`, the moments of the cube do not see which endpoints are chosen
-in the directions fixed by `g`. -/
 theorem momentDof_cubeTrace_congr {g : d → Option ℝ} {b : d → ℕ} {s : Finset d}
     {α α' : d →₀ ℕ} (hα : α ∈ cubeSupport b s) (hα' : α' ∈ cubeSupport b s)
     (heq : ∀ j, g j = none → α j = α' j) (hfix : ∀ j, g j ≠ none → j ∉ s ∧ α j ≤ 1 ∧ α' j ≤ 1)
@@ -303,8 +252,7 @@ theorem momentDof_cubeTrace_congr {g : d → Option ℝ} {b : d → ℕ} {s : Fi
   · exact LinearMap.congr_fun key _
   · simp
 
-/-- Lift of a local index on a face `g` of the cube (fixed values in `{0, 1}`) to the cube: the
-endpoint index in the fixed directions. -/
+/-- The lift to the cube of a local index on a face `g` of the cube. -/
 def liftIdx (g : d → Option ℝ) (α : d →₀ ℕ) : d →₀ ℕ :=
   Finsupp.equivFunOnFinite.symm fun j => if g j = some 1 then 1 else α j
 
@@ -326,8 +274,6 @@ theorem dofFace_liftIdx {g : d → Option ℝ} {b : d → ℕ} {s : Finset d} {�
       obtain ⟨hjs, h0⟩ := fixed_of_mem_cubeSupport hf hα (j := j) (by simp [hgj])
       rcases hg j c hgj with rfl | rfl <;> simp [dofFace, liftIdx, hgj, hjs, h0]
 
-/-- **The degrees of freedom of a face are degrees of freedom of the cube**: on a face `g` of the
-cube, the moment `(s, α)` is the moment `(s, liftIdx g α)` of the cube. -/
 theorem momentDof_liftIdx {g : d → Option ℝ} {b : d → ℕ} {s : Finset d} {α : d →₀ ℕ}
     (hg : ∀ j c, g j = some c → c = 0 ∨ c = 1) (hf : ∀ j, g j ≠ none → b j = 0)
     (hα : α ∈ cubeSupport b s) :
@@ -358,8 +304,7 @@ theorem liftIdx_mem {g : d → Option ℝ} {b : d → ℕ} (hb : ∀ j, 1 ≤ b 
 /-! ### Global degrees of freedom -/
 
 variable (N) in
-/-- The global degrees of freedom of `Q_b⁻Λᵏ(𝒯_h)`: for each `k`-subset `s`, the tensor products
-of the one-dimensional global degrees of freedom. -/
+/-- The global degrees of freedom of `Q_b⁻Λᵏ(𝒯_h)`. -/
 abbrev CubeGlobalIdx (b : d → ℕ) (k : ℕ) :=
   Σ s : {s : Finset d // #s = k}, ∀ j, GlobalEdge (N j) (b j) (decide (j ∈ s.1))
 
@@ -370,8 +315,6 @@ def toGlobal (m : CubeCell N) {b : d → ℕ} {k : ℕ} (i : CubeDofIdx b k) : C
 variable {b : d → ℕ} {k : ℕ}
 
 omit [Fintype d] in
-/-- The local degrees of freedom of two cells with the same global number: in each direction,
-the same cell coordinate and index, or a vertex shared by consecutive cells. -/
 theorem toGlobal_eq_iff {m m' : CubeCell N} {s : {s : Finset d // #s = k}}
     {α α' : cubeSupport b s.1} (h : toGlobal m ⟨s, α⟩ = toGlobal m' ⟨s, α'⟩) (j : d) :
     (m j = m' j ∧ α.1 j = α'.1 j) ∨ (j ∉ s.1 ∧ (m' j : ℕ) = m j + 1 ∧ α.1 j = 1 ∧ α'.1 j = 0) ∨
@@ -382,8 +325,6 @@ theorem toGlobal_eq_iff {m m' : CubeCell N} {s : {s : Finset d // #s = k}}
   · exact Or.inr (Or.inl ⟨by simpa using he, h2⟩)
   · exact Or.inr (Or.inr ⟨by simpa using he, h3⟩)
 
-/-- **Consistency of the global degrees of freedom**: on a tangentially continuous piecewise
-form, local degrees of freedom with the same global number take the same value. -/
 theorem cubeDof_eq_of_toGlobal_eq {ω : CubeCell N → PolyForm ℝ d} (hω : ω ∈ cubeCompatible N)
     {m m' : CubeCell N} {i i' : CubeDofIdx b k} (h : toGlobal m i = toGlobal m' i') :
     cubeDof (fun _ => none) i (ω m) = cubeDof (fun _ => none) i' (ω m') := by
@@ -450,8 +391,6 @@ theorem toGlobal_globalLocal (A : CubeGlobalIdx N b k) :
 def globalDof (A : CubeGlobalIdx N b k) : (CubeCell N → PolyForm ℝ d) →ₗ[ℝ] ℝ :=
   cubeDof (fun _ => none) (globalLocal hN hb A) ∘ₗ LinearMap.proj (globalCell hN A)
 
-/-- On a tangentially continuous piecewise form, the global degree of freedom of number
-`toGlobal m i` is the local degree of freedom `i` of the cell `m`. -/
 theorem globalDof_toGlobal {ω : CubeCell N → PolyForm ℝ d} (hω : ω ∈ cubeCompatible N)
     (m : CubeCell N) (i : CubeDofIdx b k) :
     globalDof hN hb (toGlobal m i) ω = cubeDof (fun _ => none) i (ω m) :=
@@ -488,8 +427,6 @@ theorem faceDeg_commonFace (b : d → ℕ) (m m' : CubeCell N) (hadj : CubeCell.
   simp only [faceDeg]
   rcases commonFace_cases hadj j with ⟨h1, h2, -⟩ | ⟨h1, h2, -⟩ | ⟨h1, h2, -⟩ <;> simp [h1, h2]
 
-/-- **The prescribed global degrees of freedom glue**: the piecewise form is tangentially
-continuous (trace determination on the common faces). -/
 theorem ofGlobalDof_mem (v : CubeGlobalIdx N b k → ℝ) :
     ofGlobalDof hb v ∈ cubeGlobalSpace N b k := by
   refine mem_cubeGlobalSpace.2 ⟨fun m m' hadj => ?_, fun m => (Subtype.prop _)⟩
@@ -545,7 +482,7 @@ theorem ofGlobalDof_mem (v : CubeGlobalIdx N b k → ℝ) :
       (by simp [liftIdx, g, h1, h0])).symm
   · exact toGlobalEdge_congr h3 (by rw [hlift g j h1, hlift g' j h2])
 
-/-- **The global degrees of freedom are a linear isomorphism** `Q_b⁻Λᵏ(𝒯_h) ≃ ℝ^{global DOFs}`. -/
+/-- The global degrees of freedom as a linear isomorphism `Q_b⁻Λᵏ(𝒯_h) ≃ ℝ^{global DOFs}`. -/
 def globalDofEquiv : cubeGlobalSpace N b k ≃ₗ[ℝ] (CubeGlobalIdx N b k → ℝ) where
   toFun ω A := globalDof hN hb A ω.1
   map_add' ω η := funext fun A => map_add _ _ _
@@ -566,9 +503,7 @@ def globalDofEquiv : cubeGlobalSpace N b k ≃ₗ[ℝ] (CubeGlobalIdx N b k → 
     rw [cubeDof_ofGlobalDof, toGlobal_globalLocal]
 
 include hN hb in
-/-- **The dimension of the global space**: `dim Q_b⁻Λᵏ(𝒯_h) = Σ_{#s = k} Πⱼ (N_j b_j + 1 - [j ∈ s])`
-on the mesh with `N_j` cells in the direction `j` (`N, b ≥ 1`): the dimension of `Q_{N b}⁻Λᵏ`
-of a single cube. -/
+/-- `dim Q_b⁻Λᵏ(𝒯_h) = Σ_{#s = k} Πⱼ (N_j b_j + 1 - [j ∈ s])` for `N, b ≥ 1`. -/
 theorem finrank_cubeGlobalSpace :
     Module.finrank ℝ (cubeGlobalSpace N b k) =
       ∑ s ∈ powersetCard k univ, ∏ j, (N j * b j + 1 - if j ∈ s then 1 else 0) := by
@@ -578,8 +513,6 @@ theorem finrank_cubeGlobalSpace :
     (fun s => by simp [mem_powersetCard])
     (fun s => ∏ j, (N j * b j + 1 - if j ∈ s then 1 else 0))).symm
 
-/-- `dim Q_r⁻Λᵏ(𝒯_h) = (n choose k) (M r)ᵏ (M r + 1)ⁿ⁻ᵏ` on the uniform mesh with `M` cells per
-direction. -/
 theorem finrank_cubeGlobalSpace_const {M r : ℕ} (hM : 1 ≤ M) (hr : 1 ≤ r) :
     Module.finrank ℝ (cubeGlobalSpace (fun _ : d => M) (fun _ => r) k) =
       (Fintype.card d).choose k * ((M * r) ^ k * (M * r + 1) ^ (Fintype.card d - k)) := by
@@ -588,14 +521,11 @@ theorem finrank_cubeGlobalSpace_const {M r : ℕ} (hM : 1 ≤ M) (hr : 1 ≤ r) 
 
 /-! ### The global canonical interpolant -/
 
-/-- **The global canonical interpolant** `Π_h : (tangentially continuous piecewise polynomial
-forms) → Q_b⁻Λᵏ(𝒯_h)`: the global degrees of freedom are read and the global form reconstructed
-(cell by cell, it is the local interpolant, `cubeGlobalInterp_apply`). -/
+/-- The global canonical interpolant `Π_h` onto `Q_b⁻Λᵏ(𝒯_h)`. -/
 def cubeGlobalInterp : cubeCompatible N →ₗ[ℝ] cubeGlobalSpace N b k :=
   (globalDofEquiv hN hb).symm.toLinearMap ∘ₗ LinearMap.pi fun A => globalDof hN hb A ∘ₗ
     (cubeCompatible N).subtype
 
-/-- Cell by cell, the global interpolant is the local canonical interpolant. -/
 theorem cubeGlobalInterp_apply (ω : cubeCompatible N) (m : CubeCell N) :
     (cubeGlobalInterp (k := k) hN hb ω : CubeCell N → PolyForm ℝ d) m =
       cubeInterp (fun _ => none) b k (isFaceDeg_none hb) (ω.1 m) := by
@@ -608,13 +538,12 @@ theorem cubeGlobalInterp_apply (ω : cubeCompatible N) (m : CubeCell N) :
       exact cubeDof_ofGlobalDof hb _ m i |>.trans (globalDof_toGlobal hN hb ω.2 m i)
   exact congrArg Subtype.val this
 
-/-- `Π_h` is a projection onto `Q_b⁻Λᵏ(𝒯_h)`. -/
 theorem cubeGlobalInterp_of_mem (ω : cubeCompatible N) (hω : ω.1 ∈ cubeGlobalSpace N b k) :
     (cubeGlobalInterp (k := k) hN hb ω : CubeCell N → PolyForm ℝ d) = ω.1 :=
   funext fun m => by
     rw [cubeGlobalInterp_apply, cubeInterp_of_mem _ ((mem_cubeGlobalSpace.1 hω).2 m)]
 
-/-- **The global interpolant commutes with `d`**: `Π_h d = d Π_h`. [ArnoldBoffiBonizzoni2015], §5 -/
+/-- The global interpolant commutes with `d`: `Π_h d = d Π_h` ([ArnoldBoffiBonizzoni2015], §5). -/
 theorem cubeGlobalInterp_extDeriv (ω : cubeCompatible N) :
     (cubeGlobalInterp (k := k + 1) hN hb ⟨_, extDeriv_mem_cubeCompatible ω.2⟩ :
         CubeCell N → PolyForm ℝ d) =

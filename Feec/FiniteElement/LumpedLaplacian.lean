@@ -6,30 +6,12 @@ public import Feec.ForMathlib.Analysis.SubMarkov
 /-!
 # The lumped-mass `P₁` Laplacian on a set of nodes
 
-On a simplicial mesh `M` with nodes `x : ι → ℝⁿ` (injective, `ι` finite), the discrete values
-`U : ι → ℝ` define the nodal function `nodalFun x U` (`U` at the nodes, `0` elsewhere), and the
-**lumped-mass `P₁` Laplacian** `(Lₕ U)(p) = -a(φ_{x p}, U) / m(x p)` (`lumpedLaplacianOn M x`),
-with the stiffness form and the lumped mass of `Feec.FiniteElement.LumpedMass`. Mesh vertices that
-are not nodes carry the value `0` (homogeneous Dirichlet data there); when every vertex is a node
-the boundary condition is the natural one. A node that is not a vertex of the mesh has
-`a(φ, ·) = 0` and `m = 0`, hence a zero row.
-
-## Main results
-
-* `lumpedLaplacianOn_apply_eq_sum`: the matrix form
-  `(Lₕ U)(p) = Σ_q (-a(φ_{x p}, φ_{x q}) / m(x p)) U(q)`;
-* **`isSubMarkovGenerator_lumpedLaplacianOn`** (the discrete maximum principle, Ciarlet–Raviart):
-  on a non-obtuse mesh `Lₕ` is a sub-Markov generator: nonnegative off-diagonal entries, and
-  `Lₕ 𝟙 ≤ 0` because `a(φₚ, 1) = 0` and the vertices outside the nodes couple nonpositively;
-* `lumpedLaplacianOn_apply_one`: `Lₕ 𝟙 = 0` when every vertex of the mesh is a node;
-* `p1Grad_eq_vecMul`, `p1Grad_nodalIndicator`: the `P₁` gradient by the edge matrix,
-  `∇Πₜu = E⁻ᵀ δ`, and the `P₁` interpolant of the hat function at a vertex is its barycentric
-  coordinate (the entries `a(φ_{x p}, φ_{x q})` in terms of `∇λⱼ`).
+On a non-obtuse mesh, the lumped-mass `P₁` Laplacian on any set of nodes is a sub-Markov generator
+(`isSubMarkovGenerator_lumpedLaplacianOn`), conservative when every vertex is a node.
 
 ## References
 
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -46,9 +28,6 @@ variable {n : ℕ} {ι : Type*} [Fintype ι]
 
 /-! ### `P₁` gradients -/
 
-/-- **The `P₁` gradient by the edge matrix**: `∇Πₜu = E⁻ᵀ δ` with `δₗ = u(pₗ₊₁) - u(p₀)`, the
-vector `g` with `g · (pₗ₊₁ - p₀) = δₗ` for every edge `pₗ₊₁ - p₀` (the columns of `E`) when `E`
-is invertible. -/
 theorem p1Grad_eq_vecMul (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) :
     p1Grad p u = Matrix.vecMul (fun l => u (p l.succ) - u (p 0)) (edgeMatrix p)⁻¹ := by
   funext i
@@ -57,8 +36,6 @@ theorem p1Grad_eq_vecMul (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ
     mul_neg, mul_sum]
   ring
 
-/-- **The `P₁` interpolant of the hat function at the vertex `pⱼ` is the barycentric coordinate
-`λⱼ`**: its gradient is `∇λⱼ` (the vertices distinct). -/
 theorem p1Grad_nodalIndicator {p : Fin (n + 1) → Fin n → ℝ} (hp : Function.Injective p)
     (j : Fin (n + 1)) : p1Grad p (nodalIndicator (p j)) = baryGrad p j := by
   rw [p1Grad_apply, Finset.sum_eq_single j (fun i _ hij => by simp [nodalIndicator, hp.ne hij])
@@ -73,15 +50,13 @@ variable (M : SimplicialMesh n) (x : ι → Fin n → ℝ)
 def lumpedEntry (p q : ι) : ℝ :=
   -p1Stiffness M (nodalIndicator (x p)) (nodalIndicator (x q)) / lumpedMass M (x p)
 
-/-- **The lumped-mass `P₁` Laplacian** `(Lₕ U)(p) = -a(φ_{x p}, U_h) / m(x p)` on the nodes `x`
-of the mesh `M` (`lumpedLaplacianOn_apply`), in matrix form. -/
+/-- The lumped-mass `P₁` Laplacian `(Lₕ U)(p) = -a(φ_{x p}, U_h) / m(x p)` on the nodes `x`. -/
 def lumpedLaplacianOn : (ι → ℝ) →L[ℝ] (ι → ℝ) :=
   (Matrix.of (lumpedEntry M x)).mulVecLin.toContinuousLinearMap
 
 theorem lumpedLaplacianOn_apply_eq_sum (U : ι → ℝ) (p : ι) :
     lumpedLaplacianOn M x U p = ∑ q, lumpedEntry M x p q * U q := rfl
 
-/-- `(Lₕ U)(p) = -a(φ_{x p}, U_h) / m(x p)`. -/
 theorem lumpedLaplacianOn_apply (U : ι → ℝ) (p : ι) :
     lumpedLaplacianOn M x U p =
       -p1Stiffness M (nodalIndicator (x p)) (nodalFun x U) / lumpedMass M (x p) := by
@@ -97,8 +72,6 @@ theorem lumpedEntry_nonneg (hM : IsNonobtuse M) (hx : Function.Injective x) {p q
   div_nonneg (neg_nonneg.2 (p1Stiffness_indicator_nonpos M hM fun h => hpq (hx h)))
     (lumpedMass_nonneg _ _)
 
-/-- `a(φ_y, 1) = 0`, so `a(φ_{x p}, U_h)` for `U = 𝟙` is minus the coupling to the vertices
-that are not nodes. -/
 theorem p1Stiffness_nodalFun_one (hx : Function.Injective x) (y : Fin n → ℝ) :
     p1Stiffness M (nodalIndicator y) (nodalFun x fun _ => 1) =
       -∑ z ∈ (M.simplices.biUnion vertexSet).filter (fun z => z ∉ Set.range x),
@@ -126,8 +99,8 @@ theorem p1Stiffness_nodalFun_one (hx : Function.Injective x) (y : Fin n → ℝ)
   simp only [one_mul] at h1
   linarith
 
-/-- **The discrete maximum principle on a non-obtuse mesh** (Ciarlet–Raviart): the lumped-mass
-`P₁` Laplacian on any set of nodes is a sub-Markov generator. [CiarletRaviart1973] -/
+/-- The discrete maximum principle on a non-obtuse mesh: the lumped-mass `P₁` Laplacian on any set
+of nodes is a sub-Markov generator ([CiarletRaviart1973]). -/
 theorem isSubMarkovGenerator_lumpedLaplacianOn (hM : IsNonobtuse M) (hx : Function.Injective x) :
     IsSubMarkovGenerator (lumpedLaplacianOn M x) where
   exists_shift := by
@@ -148,7 +121,7 @@ theorem isSubMarkovGenerator_lumpedLaplacianOn (hM : IsNonobtuse M) (hx : Functi
     refine div_nonpos_of_nonpos_of_nonneg (sum_nonpos fun z hz => ?_) (lumpedMass_nonneg _ _)
     exact p1Stiffness_indicator_nonpos M hM fun h => (mem_filter.1 hz).2 ⟨p, h⟩
 
-/-- **Conservation**: `Lₕ 𝟙 = 0` when every vertex of the mesh is a node. -/
+/-- `Lₕ 𝟙 = 0` when every vertex of the mesh is a node. -/
 theorem lumpedLaplacianOn_apply_one (hx : Function.Injective x)
     (hV : ∀ T ∈ M.simplices, ∀ j, T.points j ∈ Set.range x) :
     lumpedLaplacianOn M x (fun _ => 1) = 0 := by

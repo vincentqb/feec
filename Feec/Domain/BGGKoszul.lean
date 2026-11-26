@@ -6,68 +6,18 @@ public import Feec.Domain.HessianBGG
 /-!
 # Koszul null-homotopies and the explicit cochain map (30) for the Hessian, elasticity and div-div complexes
 
-Let the de Rham complexes of `ℝ³` with values in `𝕜ᵐ'` (bottom row) and `𝕜ᵐ` (top row), in vector
-proxies (`deRhamVec`), be linked by constant matrices. A tensor `c_{abl}` gives connecting matrices
-(`koszulSMat c`) and the **Koszul operators** `Kᵏ = k(x) ⊗ id`, multiplication of the value index
-by `k(x)_{ab} = Σₗ c_{abl} xₗ` (`koszulK c`). When the connecting operators are the matrices of
-`c`, they are **null-homotopic on smooth fields**, `Sᵏ = d Kᵏ - Kᵏ⁺¹ d̃` (`koszul_isNullHomotopy`,
-(28) of [ArnoldHu2021]): the product rule `∂ⱼ (k(x) u) = k(eⱼ) u + k(x) ∂ⱼ u` leaves the algebraic
-part. The Hessian, elasticity and div-div diagrams are of this kind, with `k(x) u = x · u`,
-`k(x) ψ = ψ × x` and `k(x) ψ = ψ x` (`hessianS_apply_eq_koszul`, `elasticityS_apply_eq_koszul`,
-`divDivS_apply_eq_koszul`), and they satisfy the injectivity/surjectivity condition with explicit
-right inverses on smooth fields (`injSurjWith_hessianBGG`, `injSurjWith_elasticityBGG`,
-`injSurjWith_divDivBGG`). So **Theorem 7 and Corollary 1 of [ArnoldHu2021] apply to the smooth
-Hessian, elasticity and div-div complexes without hypotheses**: the explicit cochain map (30) from
-the sum complex of the two de Rham complexes is a quasi-isomorphism
-(`quasiIso_hessianSumMap`, …) carrying cohomology representatives of the rows to cohomology
-representatives (`hessianBGG_represents`, …). In degree `0` the cohomology of the rows is the
-constant fields (`ker_gradOp_smoothMap`, `deRhamVecBGG_rowTop_represents_zero`,
-`deRhamVecBGG_rowBot_represents_zero`), so **the image of the pairs of constant fields under (30)
-represents the kernel of the first differential** (`hessianBGG_represents_zero`,
-`elasticityBGG_represents_zero`, `divDivBGG_represents_zero`; collected in `smoothBGGVerdict`).
-Through `Feec.BGG.Data.bggXEquivOfBijective_bggSumMap` and `Feec.BGG.Data.bggXEquivOfLt_bggSumMap`
-this image is `[c + K⁰ c̃]`, `c`, `c̃` constant, and `K⁰ c̃` is `x · c̃`, `c̃ × x`, `c̃ x`
-(`koszulK_hessC_zero_apply`, `koszulK_elC_zero_apply`, `koszulK_ddC_zero_apply`): informally the
-affine functions, the infinitesimal rigid motions and the lowest-order Raviart–Thomas fields. That
-composition, and the transport through `hessianBGGIso`, `elasticityBGGIso`, `divDivBGGIso` to the
-concrete operators, are not formalized.
-
-Compare the Koszul operator on polynomial forms, `Feec.Koszul.koszul`, the contraction with `x` in
-the form index; here `x` acts on the value index.
-
-**Scope.** The explicit-map fields of `Feec.BGG.HilbertData.BGGVerdict` assume the condition
-`Feec.BGG.Data.InjSurjWith` between the domain complexes of the `L²` realizations
-(`Feec.Domain.hessianMaximalData`, …), and it fails there: `Sᴶ` is not onto between the domains
-(for the Hessian, `S⁰ = I` maps `H¹(Ω; 𝕜³)` into `H(curl; Ω)`, a proper subspace for every
-nonempty open `Ω`, `Feec.Domain.hessianMaximalData_not_injSurjWith` and its elasticity and
-div-div analogues). Pointwise surjectivity gives right inverses on smooth
-fields, not on the graph spaces, so the explicit map is stated here on smooth fields, as in the
-smooth and Sobolev settings of [ArnoldHu2021], §4. The cohomology of the smooth de Rham complexes
-in positive degrees (the Poincaré lemma on `ℝ³`) is not formalized: Corollary 1 is stated for any
-representatives of the rows.
-
-## Main definitions
-
-* `Feec.Domain.smoothMatMul`: multiplication by a smooth matrix field.
-* `Feec.Domain.koszulMat`, `koszulK`, `koszulSMat`: the Koszul operators and connecting matrices
-  of a tensor; `hessC`, `elC`, `ddC`: the tensors of the three diagrams.
-* `Feec.Domain.constSmoothFields`; `SmoothBGGVerdict`.
+For de Rham complexes of `ℝ³` linked by the connecting matrices of a tensor `c`, the connecting maps
+are null-homotopic on smooth fields, and for the smooth Hessian, elasticity and div-div complexes
+the explicit cochain map (30) is a quasi-isomorphism ([ArnoldHu2021], (28), Theorem 7).
 
 ## Main results
 
-* `fderiv_koszulCoeff_mul`, **`koszul_isNullHomotopy`**.
-* `isNullHomotopy_hessianBGG`, `isNullHomotopy_elasticityBGG`, `isNullHomotopy_divDivBGG`.
-* **`quasiIso_hessianSumMap`**, **`quasiIso_elasticitySumMap`**,
-  **`quasiIso_divDivSumMap`** ([ArnoldHu2021], Theorem 7); `hessianBGG_represents`,
-  `elasticityBGG_represents`, `divDivBGG_represents` (Corollary 1).
-* `ker_gradOp_smoothMap`, `deRhamVecBGG_rowTop_represents_zero`,
-  `deRhamVecBGG_rowBot_represents_zero`; **`hessianBGG_represents_zero`**,
-  **`elasticityBGG_represents_zero`**, **`divDivBGG_represents_zero`**; **`smoothBGGVerdict`**.
+* `koszul_isNullHomotopy`: `Sᵏ = d Kᵏ - Kᵏ⁺¹ d̃` for the Koszul operators `K = koszulK c`.
+* `quasiIso_hessianSumMap` and its analogues: the maps (30) are quasi-isomorphisms.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((28)–(31), Theorem 7,
-  Corollary 1), §4.1 ((32), the Hessian, elasticity and div-div complexes)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -122,8 +72,6 @@ theorem contDiff_koszulCoeff (c : Fin 3 → 𝕜) : ContDiff ℝ ∞ (koszulCoef
   rw [this]
   exact (koszulCoeffCLM c).contDiff
 
-/-- **The product rule for a linear coefficient**: `∂ⱼ (ℓ g) = cⱼ g + ℓ ∂ⱼ g` with
-`ℓ = Σₗ cₗ xₗ`. -/
 theorem fderiv_koszulCoeff_mul (c : Fin 3 → 𝕜) {g : (Fin 3 → ℝ) → 𝕜} (hg : ContDiff ℝ ∞ g)
     (x : Fin 3 → ℝ) (j : Fin 3) :
     fderiv ℝ (fun y => koszulCoeff c y * g y) x (coordDir j) =
@@ -138,8 +86,7 @@ theorem fderiv_koszulCoeff_mul (c : Fin 3 → 𝕜) {g : (Fin 3 → ℝ) → �
 
 variable (c : Fin m → Fin m' → Fin 3 → 𝕜)
 
-/-- **The Koszul matrix field** of a tensor `c`: `k(x) ⊗ id` in degree `k`, with
-`k(x)_{ab} = Σₗ c_{abl} xₗ` acting on the value index and the identity on the form index. -/
+/-- **The Koszul matrix field** `k(x) ⊗ id` of `c`, `k(x)_{ab} = Σₗ c_{abl} xₗ`. -/
 def koszulMat : ∀ k : ℤ, (Fin 3 → ℝ) → Matrix (vecIdx m k) (vecIdx m' k) 𝕜
   | .ofNat 0, x => fun a b => koszulCoeff (c a b) x
   | .ofNat 1, x => fun a b => if a.2 = b.2 then koszulCoeff (c a.1 b.1) x else 0
@@ -187,11 +134,7 @@ theorem koszulK_three_apply (f : smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx m' 3)
     (x : Fin 3 → ℝ) :
     (koszulK c 3 f : vecIdx m 3 → _ → 𝕜) a x = ∑ b, koszulCoeff (c a b) x * f.1 b x := rfl
 
-/-- **The connecting matrices of a Koszul tensor** `c`, `Sᵏ = d Kᵏ - Kᵏ⁺¹ d̃`
-(`koszul_isNullHomotopy`):
-`(S⁰ u)_{a,j} = Σ_b c_{abj} u_b`,
-`(S¹ u)_{a,k} = Σ_b (c_{a,b,k+1} u_{b,k+2} - c_{a,b,k+2} u_{b,k+1})`,
-`(S² u)_a = Σ_{b,k} c_{abk} u_{b,k}`. -/
+/-- **The connecting matrices** `Sᵏ` of a Koszul tensor `c`. -/
 def koszulSMat : ∀ k : ℤ, Matrix (vecIdx m (k + 1)) (vecIdx m' k) 𝕜
   | .ofNat 0 => fun a b => c a.1 b a.2
   | .ofNat 1 => fun a b =>
@@ -225,7 +168,6 @@ theorem ofMatrix_koszulSMat_two_apply (f : vecIdx m' 2 → (Fin 3 → ℝ) → �
   rw [ofMatrix_apply]
   exact Fintype.sum_prod_type _
 
-/-- `∂ⱼ Σ_b ℓ_b g_b = Σ_b (c_{b,j} g_b + ℓ_b ∂ⱼ g_b)`. -/
 theorem fderiv_sum_koszulCoeff_mul {β : Type*} [Fintype β] (c : β → Fin 3 → 𝕜)
     {g : β → (Fin 3 → ℝ) → 𝕜} (hg : ∀ b, ContDiff ℝ ∞ (g b)) (x : Fin 3 → ℝ) (j : Fin 3) :
     fderiv ℝ (fun y => ∑ b, koszulCoeff (c b) y * g b y) x (coordDir j) =
@@ -235,10 +177,7 @@ theorem fderiv_sum_koszulCoeff_mul {β : Type*} [Fintype β] (c : β → Fin 3 �
   rw [fderiv_fun_sum fun b _ => hd b, sum_apply]
   exact Finset.sum_congr rfl fun b _ => fderiv_koszulCoeff_mul (c b) (hg b) x j
 
-/-- **Koszul null-homotopy**: for BGG data of the de Rham complexes with values in `𝕜ᵐ`, `𝕜ᵐ'`
-whose connecting operators are the matrices of a tensor `c` (`koszulSMat c`), the connecting maps
-are null-homotopic on smooth fields, `Sᵏ = d Kᵏ - Kᵏ⁺¹ d̃` with `K = koszulK c`, multiplication by
-`k(x) ⊗ id`, `k(x)_{ab} = Σₗ c_{abl} xₗ` ([ArnoldHu2021], (28)). -/
+/-- **Koszul null-homotopy** `Sᵏ = d Kᵏ - Kᵏ⁺¹ d̃` on smooth fields ([ArnoldHu2021], (28)). -/
 theorem koszul_isNullHomotopy
     {S : ∀ k : ℤ, ConstCoeffOp (Fin 3 → ℝ) 𝕜 (vecIdx m' k) (vecIdx m (k + 1))}
     (hS : ∀ k f, (S k).apply f = (ofMatrix (koszulSMat c k)).apply f)
@@ -329,7 +268,6 @@ theorem ofMatrix_koszulSMat_apply_of_not {m m' : ℕ} (c : Fin m → Fin m' → 
   rw [ofMatrix_apply]
   simp [ConstCoeffOp.apply, zeroOp]
 
-/-- The connecting operators of the Hessian diagram are those of its Koszul tensor. -/
 theorem hessianS_apply_eq_koszul (k : ℤ) (f : vecIdx 3 k → (Fin 3 → ℝ) → 𝕜) :
     (hessianS 𝕜 k).apply f = (ofMatrix (koszulSMat (hessC 𝕜) k)).apply f := by
   match k with
@@ -349,13 +287,10 @@ theorem hessianS_apply_eq_koszul (k : ℤ) (f : vecIdx 3 k → (Fin 3 → ℝ) �
       (Or.inr (by simp only [Int.ofNat_eq_natCast]; omega)) f).symm
   | .negSucc n => exact (ofMatrix_koszulSMat_apply_of_not _ (Or.inl (Int.negSucc_lt_zero n)) f).symm
 
-/-- **The connecting maps of the Hessian diagram are null-homotopic** on smooth fields, with the
-Koszul operators of `k(x) u = x · u` ([ArnoldHu2021], (28)). -/
 theorem isNullHomotopy_hessianBGG :
     (hessianBGG 𝕜).smoothData.IsNullHomotopy (koszulK (hessC 𝕜)) :=
   koszul_isNullHomotopy _ hessianS_apply_eq_koszul hessianS_anticomm
 
-/-- The connecting operators of the elasticity diagram are those of its Koszul tensor. -/
 theorem elasticityS_apply_eq_koszul (k : ℤ) (f : vecIdx 3 k → (Fin 3 → ℝ) → 𝕜) :
     (elasticityS 𝕜 k).apply f = (ofMatrix (koszulSMat (elC 𝕜) k)).apply f := by
   match k with
@@ -376,13 +311,10 @@ theorem elasticityS_apply_eq_koszul (k : ℤ) (f : vecIdx 3 k → (Fin 3 → ℝ
       (Or.inr (by simp only [Int.ofNat_eq_natCast]; omega)) f).symm
   | .negSucc n => exact (ofMatrix_koszulSMat_apply_of_not _ (Or.inl (Int.negSucc_lt_zero n)) f).symm
 
-/-- **The connecting maps of the elasticity diagram are null-homotopic** on smooth fields, with the
-Koszul operators of `k(x) ψ = ψ × x` ([ArnoldHu2021], (28)). -/
 theorem isNullHomotopy_elasticityBGG :
     (elasticityBGG 𝕜).smoothData.IsNullHomotopy (koszulK (elC 𝕜)) :=
   koszul_isNullHomotopy _ elasticityS_apply_eq_koszul elasticityS_anticomm
 
-/-- The connecting operators of the div-div diagram are those of its Koszul tensor. -/
 theorem divDivS_apply_eq_koszul (k : ℤ) (f : vecIdx 1 k → (Fin 3 → ℝ) → 𝕜) :
     (divDivS 𝕜 k).apply f = (ofMatrix (koszulSMat (ddC 𝕜) k)).apply f := by
   match k with
@@ -403,22 +335,18 @@ theorem divDivS_apply_eq_koszul (k : ℤ) (f : vecIdx 1 k → (Fin 3 → ℝ) �
       (Or.inr (by simp only [Int.ofNat_eq_natCast]; omega)) f).symm
   | .negSucc n => exact (ofMatrix_koszulSMat_apply_of_not _ (Or.inl (Int.negSucc_lt_zero n)) f).symm
 
-/-- **The connecting maps of the div-div diagram are null-homotopic** on smooth fields, with the
-Koszul operators of `k(x) ψ = ψ x` ([ArnoldHu2021], (28)). -/
 theorem isNullHomotopy_divDivBGG :
     (divDivBGG 𝕜).smoothData.IsNullHomotopy (koszulK (ddC 𝕜)) :=
   koszul_isNullHomotopy _ divDivS_apply_eq_koszul divDivS_anticomm
 
 /-! ### The Koszul operators in degree `0` -/
 
-/-- `K⁰ u = x · u` for the Hessian diagram. -/
 theorem koszulK_hessC_zero_apply (f : smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 0)) (x : Fin 3 → ℝ) :
     (koszulK (hessC 𝕜) 0 f : vecIdx 1 0 → _ → 𝕜) 0 x = ∑ l, (x l : 𝕜) * f.1 l x := by
   rw [koszulK_zero_apply]
   refine Finset.sum_congr rfl fun b _ => ?_
   simp [koszulCoeff, hessC]
 
-/-- `K⁰ ψ = ψ × x` for the elasticity diagram. -/
 theorem koszulK_elC_zero_apply (f : smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 0)) (a : Fin 3)
     (x : Fin 3 → ℝ) :
     (koszulK (elC 𝕜) 0 f : vecIdx 3 0 → _ → 𝕜) a x =
@@ -427,7 +355,6 @@ theorem koszulK_elC_zero_apply (f : smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 
   simp only [koszulCoeff, elC, Fin.sum_univ_three]
   fin_cases a <;> simp <;> ring
 
-/-- `K⁰ ψ = ψ x` for the div-div diagram. -/
 theorem koszulK_ddC_zero_apply (f : smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 1 0)) (a : Fin 3)
     (x : Fin 3 → ℝ) :
     (koszulK (ddC 𝕜) 0 f : vecIdx 3 0 → _ → 𝕜) a x = (x a : 𝕜) * f.1 0 x := by
@@ -444,7 +371,6 @@ def constSmoothFields (E : Type*) [NormedAddCommGroup E] [NormedSpace ℝ E] (�
   zero_mem' _ _ _ := rfl
   smul_mem' c f hf i x y := by simp [hf i x y]
 
-/-- **The smooth fields with vanishing gradient are the constants.** -/
 theorem ker_gradOp_smoothMap :
     LinearMap.ker (gradOp 3 m : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).smoothMap =
       constSmoothFields (Fin 3 → ℝ) 𝕜 (Fin m) := by
@@ -465,8 +391,6 @@ theorem ker_gradOp_smoothMap :
     rw [this]
     simp
 
-/-- **The degree-`0` cohomology of the smooth de Rham complexes is the constants**: in the top row
-of the smooth BGG data of `deRhamVec m` over `deRhamVec m'`. -/
 theorem deRhamVecBGG_rowTop_represents_zero
     {S : ∀ k : ℤ, ConstCoeffOp (Fin 3 → ℝ) 𝕜 (vecIdx m' k) (vecIdx m (k + 1))} {hanti} :
     (ConstCoeffBGG.mk (deRhamVec 𝕜 m) (deRhamVec 𝕜 m') S hanti).smoothData.rowTop.Represents 0
@@ -480,7 +404,6 @@ theorem deRhamVecBGG_rowTop_represents_zero
     hanti).smoothData.rowTop.d 0 1).hom)) = constSmoothFields (Fin 3 → ℝ) 𝕜 (Fin m) from
       (congrArg LinearMap.ker (ConstCoeffBGG.smoothData_d _ 0)).trans ker_gradOp_smoothMap] at h
 
-/-- The degree-`0` cohomology of the bottom row is the constants. -/
 theorem deRhamVecBGG_rowBot_represents_zero
     {S : ∀ k : ℤ, ConstCoeffOp (Fin 3 → ℝ) 𝕜 (vecIdx m' k) (vecIdx m (k + 1))} {hanti} :
     (ConstCoeffBGG.mk (deRhamVec 𝕜 m) (deRhamVec 𝕜 m') S hanti).smoothData.rowBot.Represents 0
@@ -495,22 +418,16 @@ theorem deRhamVecBGG_rowBot_represents_zero
       (congrArg LinearMap.ker (ConstCoeffBGG.smoothData_dt _ 0)).trans ker_gradOp_smoothMap] at h
 
 variable (𝕜) in
-/-- **The explicit cochain map (30) of the Hessian complex** on smooth fields, from the sum complex
-of the two de Rham complexes to the Hessian BGG complex `bgg 0`, with the right inverses `hessianT`
-and the Koszul null-homotopy of `k(x) u = x · u`. [ArnoldHu2021], (30) -/
+/-- **The explicit cochain map** of the Hessian complex on smooth fields ([ArnoldHu2021], (30)). -/
 abbrev hessianSumMap :
     (hessianBGG 𝕜).smoothData.sumComplex ⟶ (hessianBGG 𝕜).smoothData.bgg 0 :=
   (hessianBGG 𝕜).smoothData.bggSumMap ((hessianBGG 𝕜).predMap (hessianT 𝕜))
     isNullHomotopy_hessianBGG injSurjWith_hessianBGG
 
-/-- **Theorem 7 for the Hessian complex**: the explicit cochain map (30) induces an isomorphism on
-cohomology. [ArnoldHu2021], Theorem 7 -/
+/-- **(30) is a quasi-isomorphism** for the Hessian complex ([ArnoldHu2021], Theorem 7). -/
 theorem quasiIso_hessianSumMap : QuasiIso (hessianSumMap 𝕜) :=
   BGG.Data.quasiIso_bggSumMap _ _
 
-/-- **Corollary 1 for the Hessian complex**: (30) carries cohomology representatives `H × H̃` of the
-two smooth de Rham complexes to cohomology representatives of the Hessian BGG complex.
-[ArnoldHu2021], Corollary 1, (31) -/
 theorem hessianBGG_represents {i : ℤ} {H : Submodule 𝕜 (smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 1 i))}
     {Ht : Submodule 𝕜 (smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 i))}
     (hH : (hessianBGG 𝕜).smoothData.rowTop.Represents i H)
@@ -519,11 +436,6 @@ theorem hessianBGG_represents {i : ℤ} {H : Submodule 𝕜 (smoothFields (Fin 3
       ((H.prod Ht).map ((hessianSumMap 𝕜).f i).hom) :=
   BGG.Data.bgg_represents _ _ hH hHt
 
-/-- **The degree-`0` cohomology of the Hessian complex**: the image of the pairs of constant
-fields under (30) represents the kernel of the first differential of the Hessian BGG complex.
-Through `Feec.BGG.Data.bggXEquivOfBijective_bggSumMap` or `bggXEquivOfLt_bggSumMap` the image
-is `[c + K⁰ c̃]`, with `K⁰` from `koszulK_hessC_zero_apply`: informally the affine functions
-`c + x · c̃` (that composition is not formalized). [ArnoldHu2021], Corollary 1 -/
 theorem hessianBGG_represents_zero :
     ((hessianBGG 𝕜).smoothData.bgg 0).Represents 0
       (((constSmoothFields (Fin 3 → ℝ) 𝕜 (Fin 1)).prod
@@ -531,22 +443,16 @@ theorem hessianBGG_represents_zero :
   hessianBGG_represents deRhamVecBGG_rowTop_represents_zero deRhamVecBGG_rowBot_represents_zero
 
 variable (𝕜) in
-/-- **The explicit cochain map (30) of the elasticity complex** on smooth fields, from the sum
-complex of the two de Rham complexes to the elasticity BGG complex `bgg 1`, with the right inverses
-`elasticityT` and the Koszul null-homotopy of `k(x) ψ = ψ × x`. [ArnoldHu2021], (30) -/
+/-- **The explicit cochain map** of the elasticity complex ([ArnoldHu2021], (30)). -/
 abbrev elasticitySumMap :
     (elasticityBGG 𝕜).smoothData.sumComplex ⟶ (elasticityBGG 𝕜).smoothData.bgg 1 :=
   (elasticityBGG 𝕜).smoothData.bggSumMap ((elasticityBGG 𝕜).predMap (elasticityT 𝕜))
     isNullHomotopy_elasticityBGG injSurjWith_elasticityBGG
 
-/-- **Theorem 7 for the elasticity complex**: the explicit cochain map (30) induces an isomorphism
-on cohomology. [ArnoldHu2021], Theorem 7 -/
+/-- **(30) is a quasi-isomorphism** for the elasticity complex ([ArnoldHu2021], Theorem 7). -/
 theorem quasiIso_elasticitySumMap : QuasiIso (elasticitySumMap 𝕜) :=
   BGG.Data.quasiIso_bggSumMap _ _
 
-/-- **Corollary 1 for the elasticity complex**: (30) carries cohomology representatives `H × H̃` of
-the two smooth de Rham complexes to cohomology representatives of the elasticity BGG complex.
-[ArnoldHu2021], Corollary 1, (31) -/
 theorem elasticityBGG_represents {i : ℤ} {H : Submodule 𝕜 (smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 i))}
     {Ht : Submodule 𝕜 (smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 i))}
     (hH : (elasticityBGG 𝕜).smoothData.rowTop.Represents i H)
@@ -555,11 +461,6 @@ theorem elasticityBGG_represents {i : ℤ} {H : Submodule 𝕜 (smoothFields (Fi
       ((H.prod Ht).map ((elasticitySumMap 𝕜).f i).hom) :=
   BGG.Data.bgg_represents _ _ hH hHt
 
-/-- **The degree-`0` cohomology of the elasticity complex**: the image of the pairs of constant
-fields under (30) represents the kernel of the first differential of the elasticity BGG complex.
-Through `Feec.BGG.Data.bggXEquivOfBijective_bggSumMap` or `bggXEquivOfLt_bggSumMap` the image
-is `[c + K⁰ c̃]`, with `K⁰` from `koszulK_elC_zero_apply`: informally the infinitesimal rigid
-motions `c + c̃ × x` (that composition is not formalized). [ArnoldHu2021], Corollary 1 -/
 theorem elasticityBGG_represents_zero :
     ((elasticityBGG 𝕜).smoothData.bgg 1).Represents 0
       (((constSmoothFields (Fin 3 → ℝ) 𝕜 (Fin 3)).prod
@@ -567,22 +468,16 @@ theorem elasticityBGG_represents_zero :
   elasticityBGG_represents deRhamVecBGG_rowTop_represents_zero deRhamVecBGG_rowBot_represents_zero
 
 variable (𝕜) in
-/-- **The explicit cochain map (30) of the div-div complex** on smooth fields, from the sum complex
-of the two de Rham complexes to the div-div BGG complex `bgg 2`, with the right inverses `divDivT`
-and the Koszul null-homotopy of `k(x) ψ = ψ x`. [ArnoldHu2021], (30) -/
+/-- **The explicit cochain map** of the div-div complex ([ArnoldHu2021], (30)). -/
 abbrev divDivSumMap :
     (divDivBGG 𝕜).smoothData.sumComplex ⟶ (divDivBGG 𝕜).smoothData.bgg 2 :=
   (divDivBGG 𝕜).smoothData.bggSumMap ((divDivBGG 𝕜).predMap (divDivT 𝕜))
     isNullHomotopy_divDivBGG injSurjWith_divDivBGG
 
-/-- **Theorem 7 for the div-div complex**: the explicit cochain map (30) induces an isomorphism on
-cohomology. [ArnoldHu2021], Theorem 7 -/
+/-- **(30) is a quasi-isomorphism** for the div-div complex ([ArnoldHu2021], Theorem 7). -/
 theorem quasiIso_divDivSumMap : QuasiIso (divDivSumMap 𝕜) :=
   BGG.Data.quasiIso_bggSumMap _ _
 
-/-- **Corollary 1 for the div-div complex**: (30) carries cohomology representatives `H × H̃` of the
-two smooth de Rham complexes to cohomology representatives of the div-div BGG complex.
-[ArnoldHu2021], Corollary 1, (31) -/
 theorem divDivBGG_represents {i : ℤ} {H : Submodule 𝕜 (smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 i))}
     {Ht : Submodule 𝕜 (smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 1 i))}
     (hH : (divDivBGG 𝕜).smoothData.rowTop.Represents i H)
@@ -591,12 +486,6 @@ theorem divDivBGG_represents {i : ℤ} {H : Submodule 𝕜 (smoothFields (Fin 3 
       ((H.prod Ht).map ((divDivSumMap 𝕜).f i).hom) :=
   BGG.Data.bgg_represents _ _ hH hHt
 
-/-- **The degree-`0` cohomology of the div-div complex**: the image of the pairs of constant
-fields under (30) represents the kernel of the first differential of the div-div BGG complex.
-Through `Feec.BGG.Data.bggXEquivOfBijective_bggSumMap` or `bggXEquivOfLt_bggSumMap` the image
-is `[c + K⁰ c̃]`, with `K⁰` from `koszulK_ddC_zero_apply`: informally the lowest-order
-Raviart–Thomas fields `c + c̃ x` (that composition is not formalized).
-[ArnoldHu2021], Corollary 1 -/
 theorem divDivBGG_represents_zero :
     ((divDivBGG 𝕜).smoothData.bgg 2).Represents 0
       (((constSmoothFields (Fin 3 → ℝ) 𝕜 (Fin 3)).prod
@@ -605,26 +494,15 @@ theorem divDivBGG_represents_zero :
 
 universe u
 
-/-- **The explicit cochain map (30) on the smooth Hessian, elasticity and div-div complexes**: for
-each, Theorem 7 (the map is a quasi-isomorphism) and Corollary 1 in degree `0` (the kernel of the
-first differential is represented by the image of the constant fields). Each field is the
-statement of the named theorem. [ArnoldHu2021], Theorem 7, Corollary 1 -/
+/-- [ArnoldHu2021], Theorem 7 and Corollary 1 in degree `0`, for the three smooth complexes. -/
 structure SmoothBGGVerdict : Prop where
-  /-- `quasiIso_hessianSumMap` -/
   hessian : type_of% @quasiIso_hessianSumMap.{u}
-  /-- `hessianBGG_represents_zero` (informally the affine functions) -/
   hessian_zero : type_of% @hessianBGG_represents_zero.{u}
-  /-- `quasiIso_elasticitySumMap` -/
   elasticity : type_of% @quasiIso_elasticitySumMap.{u}
-  /-- `elasticityBGG_represents_zero` (informally the infinitesimal rigid motions) -/
   elasticity_zero : type_of% @elasticityBGG_represents_zero.{u}
-  /-- `quasiIso_divDivSumMap` -/
   divDiv : type_of% @quasiIso_divDivSumMap.{u}
-  /-- `divDivBGG_represents_zero` (informally the lowest-order Raviart–Thomas fields) -/
   divDiv_zero : type_of% @divDivBGG_represents_zero.{u}
 
-/-- **The explicit map (30) applies unconditionally to the smooth Hessian, elasticity and div-div
-complexes** (`SmoothBGGVerdict`). -/
 theorem smoothBGGVerdict : SmoothBGGVerdict.{u} :=
   ⟨quasiIso_hessianSumMap, hessianBGG_represents_zero, quasiIso_elasticitySumMap,
     elasticityBGG_represents_zero, quasiIso_divDivSumMap, divDivBGG_represents_zero⟩

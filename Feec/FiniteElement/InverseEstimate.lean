@@ -6,44 +6,20 @@ public import Mathlib.LinearAlgebra.Matrix.AbsoluteValue
 /-!
 # Inverse estimates for Whitney forms on homothetic simplices
 
-The lowest-order Whitney forms of every nondegenerate `n`-simplex are the **trimmed linear forms**
-`P₁⁻Λᵏ = {x ↦ α + ι_x β}` (`whitneySpace_eq_p1MinusForms_of_isUnit`), a fixed
-finite-dimensional space of **affine** form fields, `u(y) = u(0) + Σⱼ yⱼ (u(eⱼ) - u(0))`
-(`isAffineField_of_mem_p1MinusForms`), whose traces on `k`-faces are constant (`affinePullback_univ_eq_of_mem_p1MinusForms`: the
-pulled-back integrand of `∫_g u` is `k! ∫_g u`). The size of such a field is measured by its
-**affine size** `affSize u = Σₛ (|u(0)ₛ| + Σⱼ |u(eⱼ)ₛ - u(0)ₛ|)`, which bounds it pointwise and
-its Lipschitz constant (`IsAffineField.abs_le`, `IsAffineField.abs_sub_le`).
+The Whitney forms are the trimmed linear forms `P₁⁻Λᵏ`; on the homothetic copies `t + h K` of a
+simplex they satisfy the inverse estimates behind the smoothed projections of [AFW2010], §5.5 and
+[ChristiansenWinther2008].
 
-On a fixed reference simplex `K`, finite dimensionality makes the affine size comparable to
-the `L²(K)` norm and to the face integrals (`exists_affSize_le_sqrt_integral`,
-`exists_affSize_le_sum_dof`, from the norm comparison `exists_abs_le_mul_norm`). Transporting by
-the homothety `y ↦ t + h y` (`affinePullback_scalarMat`: the pullback of a `k`-form is
-`hᵏ u(t + h y)`; `abs_simplexIntegral_faceEnum_image`: face integrals are preserved up to
-orientation; `integral_closedInterior_mapEquiv_boxMap`: `∫_T f = hⁿ ∫_K f(t + h ·)`) gives, for
-`T = t + h K`, with constants depending only on `K` and `k`:
+## Main results
 
-* **the local DOF estimate** `hᵏ sup_T |u| ≲ Σ_g |∫_g u|` over the faces of `T`
-  (`exists_local_dof_bound`);
-* **the local inverse estimates** `h^{n/2} sup_T |u| ≲ ‖u‖_{L²(T)}` and
-  `h^{n/2} h Lip(u) ≲ ‖u‖_{L²(T)}` (`exists_local_inverse_bound`).
-
-These are the inverse estimates behind the smoothed projections of [AFW2010], §5.5 and
-[ChristiansenWinther2008]; on meshes whose simplices are homothetic to finitely many reference
-simplices (Freudenthal meshes) they hold uniformly without a shape-regularity argument. The
-module also records the minor bound `Σₛ |minorₛ| ≤ 2ⁿ k! aᵏ` for faces with edges bounded by `a`
-(`sum_abs_wedgeProd_simplexMatrix_le`), the vertex criterion for faces of face-to-face meshes
-(`SimplicialMesh.subset_vertexSet_of_mem`) and the bound of a glued field by its local `L²`
-norms (`norm_sq_pieceL2_le`).
+* `whitneySpace_eq_p1MinusForms_of_isUnit`: the Whitney forms are the trimmed linear forms.
+* `exists_local_dof_bound`: `hᵏ sup_T |u| ≲ Σ_g |∫_g u|` on `T = t + h K`.
+* `exists_local_inverse_bound`: `h^{n/2} sup_T |u| ≲ ‖u‖_{L²(T)}`, `h^{n/2} h Lip(u) ≲ ‖u‖_{L²(T)}`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (inverse estimates for the smoothed projection)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.5
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3–5 (trimmed linear forms, Whitney forms and their degrees of freedom)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.2 (inverse
-  inequalities)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -60,7 +36,7 @@ variable {n : ℕ}
 
 /-! ### Trimmed linear forms are affine -/
 
-/-- A form field is **affine** if `u(y) = u(0) + Σⱼ yⱼ (u(eⱼ) - u(0))`. -/
+/-- A form field is affine if `u(y) = u(0) + Σⱼ yⱼ (u(eⱼ) - u(0))`. -/
 def IsAffineField (u : FormField n) : Prop :=
   ∀ y, u y = u 0 + ∑ j, y j • (u (Pi.single j 1) - u 0)
 
@@ -105,7 +81,7 @@ theorem IsAffineField.sub_eq {u : FormField n} (hu : IsAffineField u) (y y' : Fi
   simp only [sub_smul, Finset.sum_sub_distrib]
   abel
 
-/-- The **affine size** `Σₛ (|u(0)ₛ| + Σⱼ |u(eⱼ)ₛ - u(0)ₛ|)` of a form field. -/
+/-- The affine size `Σₛ (|u(0)ₛ| + Σⱼ |u(eⱼ)ₛ - u(0)ₛ|)` of a form field. -/
 def affSize (u : FormField n) : ℝ :=
   ∑ s, (|u 0 s| + ∑ j, |u (Pi.single j 1) s - u 0 s|)
 
@@ -118,7 +94,6 @@ theorem le_affSize (u : FormField n) (s : Finset (Fin n)) :
     (fun _ _ => add_nonneg (abs_nonneg _) (Finset.sum_nonneg fun _ _ => abs_nonneg _))
     (Finset.mem_univ s)
 
-/-- Lipschitz bound of an affine field in the sup norm. -/
 theorem IsAffineField.abs_sub_le {u : FormField n} (hu : IsAffineField u) (y y' : Fin n → ℝ)
     (s : Finset (Fin n)) : |u y s - u y' s| ≤ ‖y - y'‖ * affSize u := by
   have h := congrFun (hu.sub_eq y y') s
@@ -137,7 +112,6 @@ theorem IsAffineField.abs_sub_le {u : FormField n} (hu : IsAffineField u) (y y' 
         refine mul_le_mul_of_nonneg_left ?_ (norm_nonneg _)
         exact (le_add_of_nonneg_left (abs_nonneg _)).trans (le_affSize u s)
 
-/-- Sup bound of an affine field. -/
 theorem IsAffineField.abs_le {u : FormField n} (hu : IsAffineField u) (y : Fin n → ℝ)
     (s : Finset (Fin n)) : |u y s| ≤ (‖y‖ + 1) * affSize u := by
   have h := hu.abs_sub_le y 0 s
@@ -149,7 +123,6 @@ theorem IsAffineField.abs_le {u : FormField n} (hu : IsAffineField u) (y : Fin n
     _ ≤ ‖y‖ * affSize u + affSize u := add_le_add h h0
     _ = (‖y‖ + 1) * affSize u := by ring
 
-/-- **Trimmed linear top forms are constant**: `P₁⁻Λᵏ(ℝᵏ) = P₀Λᵏ(ℝᵏ)`. -/
 theorem eq_const_of_mem_p1MinusForms_self {k : ℕ} {w : FormField k}
     (hw : w ∈ p1MinusForms k k) (x : Fin k → ℝ) : w x = w 0 := by
   induction hw using Submodule.span_induction with
@@ -166,10 +139,8 @@ theorem eq_const_of_mem_p1MinusForms_self {k : ℕ} {w : FormField k}
   | smul c w _ hw => simp [hw]
 
 
-/-- **The Whitney forms of a nondegenerate simplex are the trimmed linear forms**:
-`P₁⁻Λᵏ(T) = P₀Λᵏ + κ H₀Λ^{k+1}`, independently of `T`. Stated for vertex families `p` with
-invertible edge matrix; for an `Affine.Simplex` see
-`Feec.FiniteElement.whitneySpace_eq_p1MinusForms`. -/
+/-- The Whitney forms of a nondegenerate simplex are the trimmed linear forms:
+`P₁⁻Λᵏ(T) = P₀Λᵏ + κ H₀Λ^{k+1}`, for vertex families `p` with invertible edge matrix. -/
 theorem whitneySpace_eq_p1MinusForms_of_isUnit {p : Fin (n + 1) → Fin n → ℝ}
     (hp : IsUnit (edgeMatrix p).det) (k : ℕ) : whitneySpace p k = p1MinusForms n k := by
   have hle := whitneySpace_le_p1MinusForms p k
@@ -185,8 +156,6 @@ theorem whitneySpace_eq_p1MinusForms_of_isUnit {p : Fin (n + 1) → Fin n → �
 
 /-! ### Finite-dimensional norm comparison -/
 
-/-- **Norm comparison in finite dimension**: a linear functional on a finite-dimensional space
-is bounded by any injective linear map into a normed space. -/
 theorem exists_abs_le_mul_norm {V E : Type*} [AddCommGroup V] [Module ℝ V] [FiniteDimensional ℝ V]
     [NormedAddCommGroup E] [NormedSpace ℝ E] (ι : V →ₗ[ℝ] E) (hι : Function.Injective ι)
     (ℓ : V →ₗ[ℝ] ℝ) : ∃ A, 0 ≤ A ∧ ∀ v, |ℓ v| ≤ A * ‖ι v‖ := by
@@ -202,7 +171,6 @@ theorem exists_abs_le_mul_norm {V E : Type*} [AddCommGroup V] [Module ℝ V] [Fi
   rw [h1, ← Real.norm_eq_abs, ← h2]
   exact L.le_opNorm _
 
-/-- Finitely many functionals at once. -/
 theorem exists_abs_le_mul_norm_of_finite {V E ι' : Type*} [AddCommGroup V] [Module ℝ V]
     [FiniteDimensional ℝ V] [NormedAddCommGroup E] [NormedSpace ℝ E] [Fintype ι']
     (ι : V →ₗ[ℝ] E) (hι : Function.Injective ι) (ℓ : ι' → V →ₗ[ℝ] ℝ) :
@@ -244,7 +212,6 @@ theorem pullback_scalarMat {k : ℕ} (h : ℝ) {α : Finset (Fin n) → ℝ} (h�
   · rw [hs, mul_comm]
   · rw [hα s hs]; simp
 
-/-- The pullback by `h I` scales the component `dx_s` by `h^{#s}`. -/
 theorem pullback_scalarMat_apply (h : ℝ) (α : Finset (Fin n) → ℝ) (s : Finset (Fin n)) :
     pullback (scalarMat n h) α s = h ^ #s * α s := by
   have hα : IsDeg #s (fun t => if #t = #s then α t else 0) := fun t ht => ite_eq_right ht
@@ -258,7 +225,6 @@ theorem pullback_scalarMat_apply (h : ℝ) (α : Finset (Fin n) → ℝ) (s : Fi
   rw [e, pullback_scalarMat h hα]
   simp
 
-/-- **Pullback of a `k`-form by the homothety `y ↦ h y + t`**: `(F^* ω)(y) = hᵏ ω(h y + t)`. -/
 theorem affinePullback_scalarMat {k : ℕ} (h : ℝ) (t : Fin n → ℝ) {ω : FormField n}
     (hω : ∀ x, IsDeg k (ω x)) (y : Fin n → ℝ) :
     affinePullback (scalarMat n h) t ω y = h ^ k • ω (h • y + t) := by
@@ -267,8 +233,6 @@ theorem affinePullback_scalarMat {k : ℕ} (h : ℝ) (t : Fin n → ℝ) {ω : F
 
 /-! ### Face integrals under homotheties; traces on faces -/
 
-/-- **Face integrals under a homothety** `H y = h y + t`, `h ≠ 0`: up to the orientation sign,
-`∫_{H g} ω = ∫_g H^* ω`. -/
 theorem abs_simplexIntegral_faceEnum_image {k : ℕ} {h : ℝ} (hh : h ≠ 0) (t : Fin n → ℝ)
     {g : Finset (Fin n → ℝ)} (hg : g.card = k + 1) (ω : FormField n) :
     |simplexIntegral (faceEnum (g.image fun y => t + h • y) (k + 1)) ω| =
@@ -295,8 +259,6 @@ theorem abs_simplexIntegral_faceEnum_image {k : ℕ} {h : ℝ} (hh : h ≠ 0) (t
   rw [← h2, h1, abs_mul]
   rcases hε with rfl | rfl <;> simp
 
-/-- **The trace of a trimmed linear `k`-form on a `k`-simplex is constant**: the pulled-back
-integrand of `∫_q u` is `k! ∫_q u` everywhere. -/
 theorem affinePullback_univ_eq_of_mem_p1MinusForms {k : ℕ} {u : FormField n}
     (hu : u ∈ p1MinusForms n k) (q : Fin (k + 1) → Fin n → ℝ) (x : Fin k → ℝ) :
     affinePullback (simplexMatrix q) (q 0) u x univ = k.factorial * simplexIntegral q u := by
@@ -330,8 +292,6 @@ theorem affSize_eq_sum_affFun (V : Submodule ℝ (FormField n)) (v : V) :
   rw [Fintype.sum_option]
   rfl
 
-/-- **The affine size is dominated by any injective linear map** on a finite-dimensional space
-of form fields. -/
 theorem exists_affSize_le {V : Submodule ℝ (FormField n)} [FiniteDimensional ℝ V] {E : Type*}
     [NormedAddCommGroup E] [NormedSpace ℝ E] (ι : V →ₗ[ℝ] E) (hι : Function.Injective ι) :
     ∃ A, 0 ≤ A ∧ ∀ v : V, affSize (v : FormField n) ≤ A * ‖ι v‖ := by
@@ -342,7 +302,6 @@ theorem exists_affSize_le {V : Submodule ℝ (FormField n)} [FiniteDimensional �
         Finset.sum_le_sum fun p _ => hA v p
     _ = _ := by rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ, mul_assoc]
 
-/-- An affine field vanishing on a nonempty open set vanishes. -/
 theorem IsAffineField.eq_zero_of_eqOn {u : FormField n} (hu : IsAffineField u)
     {U : Set (Fin n → ℝ)} (hU : IsOpen U) {y₀ : Fin n → ℝ} (hy₀ : y₀ ∈ U)
     (h0 : ∀ y ∈ U, u y = 0) : u = 0 := by
@@ -445,8 +404,6 @@ theorem l2Embed_injective {S : Set (Fin n → ℝ)} (hS : IsCompact S) (hSi : (i
 instance finiteDimensional_p1MinusForms (k : ℕ) : FiniteDimensional ℝ (p1MinusForms n k) :=
   Submodule.finiteDimensional_of_le (p1MinusForms_le_whitneySpace_refVertex k)
 
-/-- **Reference inverse estimate**: on a compact `S` with nonempty interior, the affine size of a
-trimmed linear form is bounded by its `L²(S)` norm. -/
 theorem exists_affSize_le_sqrt_integral {S : Set (Fin n → ℝ)} (hS : IsCompact S)
     (hSi : (interior S).Nonempty) (k : ℕ) :
     ∃ A, 0 ≤ A ∧ ∀ v ∈ p1MinusForms n k,
@@ -456,8 +413,6 @@ theorem exists_affSize_le_sqrt_integral {S : Set (Fin n → ℝ)} (hS : IsCompac
   have h := hA ⟨v, hv⟩
   rwa [← norm_sq_l2Embed hS ⟨v, hv⟩, Real.sqrt_sq (norm_nonneg _)]
 
-/-- **Reference DOF estimate**: on a simplex `K`, the affine size of a trimmed linear form is
-bounded by its face integrals. -/
 theorem exists_affSize_le_sum_dof (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     ∃ B, 0 ≤ B ∧ ∀ v ∈ p1MinusForms n k, affSize v ≤ B *
       ∑ p : Σ g : (vertexSet K).powerset, WhitneyDofIdx (g : Finset (Fin n → ℝ)) k,
@@ -495,8 +450,6 @@ theorem closedInterior_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n
     (mapEquiv (boxMap t h hh) K).closedInterior = (fun y => t + h • y) '' K.closedInterior := by
   rw [closedInterior_mapEquiv, coe_boxMap]
 
-/-- **Change of variables under a homothety** `H y = t + h y`, `h > 0`, on a measurable set:
-`∫_{H S} f = hⁿ ∫_S f ∘ H`. -/
 theorem setIntegral_image_add_smul {S : Set (Fin n → ℝ)} (hS : MeasurableSet S)
     (t : Fin n → ℝ) {h : ℝ} (hh : 0 < h) (f : (Fin n → ℝ) → ℝ) :
     ∫ x in (fun y => t + h • y) '' S, f x = h ^ n * ∫ y in S, f (t + h • y) := by
@@ -514,7 +467,6 @@ theorem setIntegral_image_add_smul {S : Set (Fin n → ℝ)} (hS : MeasurableSet
   simp_rw [hdet, smul_eq_mul]
   rw [integral_const_mul]
 
-/-- **Change of variables** for the homothety `y ↦ t + h y`, `h > 0`, on a simplex. -/
 theorem integral_closedInterior_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n)
     (t : Fin n → ℝ) {h : ℝ} (hh : 0 < h) (f : (Fin n → ℝ) → ℝ) :
     ∫ x in (mapEquiv (boxMap t h hh.ne') K).closedInterior, f x =
@@ -533,9 +485,8 @@ theorem affinePullback_scalarMat_apply_add {k : ℕ} {h : ℝ} {t : Fin n → �
     affinePullback (scalarMat n h) t z y s = h ^ k * z (t + h • y) s := by
   rw [affinePullback_scalarMat h t (isDeg_of_mem_p1MinusForms hz) y, add_comm]; rfl
 
-/-- **Local DOF estimate on homothetic simplices**: for `T = t + h K`, a trimmed linear form is
-bounded on `T` by `h⁻ᵏ` times its face integrals over the faces of `T`, with a constant
-depending only on `K` and `k`. -/
+/-- On `T = t + h K`, a trimmed linear form satisfies `hᵏ sup_T |z| ≤ B Σ_g |∫_g z|` over the faces
+`g` of `T`, with `B` depending only on `K` and `k`. -/
 theorem exists_local_dof_bound (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     ∃ B, 0 ≤ B ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {z : FormField n},
       z ∈ p1MinusForms n k → ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior, ∀ s,
@@ -570,9 +521,8 @@ theorem sqrt_pow_eq {h : ℝ} (hh : 0 ≤ h) (m : ℕ) : √(h ^ m) = √h ^ m :
   rw [← Real.sqrt_sq (pow_nonneg (Real.sqrt_nonneg h) m), ← pow_mul, mul_comm, pow_mul,
     Real.sq_sqrt hh]
 
-/-- **Local inverse estimates on homothetic simplices**: for `T = t + h K` and a trimmed linear
-form `z`, `h^{n/2} sup_T |z| ≲ ‖z‖_{L²(T)}` and `h^{n/2} h Lip(z) ≲ ‖z‖_{L²(T)}`, with a constant
-depending only on `K` and `k`. -/
+/-- On `T = t + h K`, a trimmed linear form `z` satisfies `h^{n/2} sup_T |z| ≲ ‖z‖_{L²(T)}` and
+`h^{n/2} h Lip(z) ≲ ‖z‖_{L²(T)}`, with a constant depending only on `K` and `k`. -/
 theorem exists_local_inverse_bound (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
     ∃ A, 0 ≤ A ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {z : FormField n},
       z ∈ p1MinusForms n k →
@@ -654,8 +604,6 @@ theorem exists_local_inverse_bound (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k
 
 /-! ### Minors of the edge matrix of a face -/
 
-/-- If the edge vectors of `q` have entries bounded by `a`, the `k × k` minors of its edge
-matrix are bounded by `k! aᵏ`, so `Σₛ |minorₛ| ≤ 2ⁿ k! aᵏ`. -/
 theorem sum_abs_wedgeProd_simplexMatrix_le {k : ℕ} {q : Fin (k + 1) → Fin n → ℝ} {a : ℝ}
     (ha0 : 0 ≤ a) (ha : ∀ i l, |simplexMatrix q i l| ≤ a) :
     ∑ s, |wedgeProd (simplexMatrix q) s univ| ≤ 2 ^ n * (k.factorial * a ^ k) := by
@@ -678,8 +626,6 @@ theorem sum_abs_wedgeProd_simplexMatrix_le {k : ℕ} {q : Fin (k + 1) → Fin n 
 
 /-! ### Face-to-face meshes: faces through a point of a common simplex -/
 
-/-- If a point `x = Σₐ λₐ qₐ` of a simplex `T` of a mesh, with positive weights on the distinct
-vertices `qₐ` of `T`, lies in another simplex `T'`, then all `qₐ` are vertices of `T'`. -/
 theorem SimplicialMesh.subset_vertexSet_of_mem {M : SimplicialMesh n} {T T' : Affine.Simplex ℝ
     (Fin n → ℝ) n} (hT : T ∈ M.simplices) (hT' : T' ∈ M.simplices) {k : ℕ}
     {q : Fin (k + 1) → Fin n → ℝ} (hq : Function.Injective q) (hqT : ∀ a, q a ∈ vertexSet T)
@@ -738,7 +684,6 @@ theorem pieceFun_sq (M : SimplicialMesh n) (v : Affine.Simplex ℝ (Fin n → �
       Finset.sum_eq_zero fun T hT => indicator_of_notMem (hx T hT) _]
     simp
 
-/-- **The squared norm of a glued field is at most the sum of the local squared norms.** -/
 theorem norm_sq_pieceL2_le (M : SimplicialMesh n) (S : Set (Fin n → ℝ)) {ι : Type*} [Fintype ι]
     (v : Affine.Simplex ℝ (Fin n → ℝ) n → ι → (Fin n → ℝ) → ℝ)
     (hv : ∀ T ∈ M.simplices, ∀ i, Continuous (v T i)) :

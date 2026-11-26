@@ -6,50 +6,14 @@ public import Mathlib.LinearAlgebra.Matrix.AbsoluteValue
 /-!
 # Shape regularity
 
-Every `n`-simplex `T` of `ℝⁿ` is the image `T = F_T(T̂)` of the reference simplex
-`T̂ = conv {0, e₀, …, e_{n-1}}` under `F_T x̂ = B_T x̂ + p₀` (`Affine.Simplex.refMap`,
-`Affine.Simplex.map_refSimplex`), where `B_T` has columns `pᵢ₊₁ - p₀`. A family of simplices is
-*shape regular* with constants `C, c > 0` if
-`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T` and `|det B_T| ≥ c h_Tⁿ` for all its members
-([Ciarlet2002], §3.1; [Arnold2018], Ch. 7). Here `ℝⁿ` carries Mathlib's
-sup norm, `h_T` is the sup-norm diameter and `‖·‖` the induced operator norm; changing the norm
-changes only the constants. This is equivalent to the classical formulation by a bound on
-`h_T / ρ_T`, `ρ_T` the inradius: if `T` contains a ball of radius `ρ` with `h_T ≤ σ ρ`, then
-`‖B_T‖ ≤ n h_T` (the edges have length at most `h_T`), `‖B_T⁻¹‖ ≤ 1 / ρ` (`B_T⁻¹` maps
-differences of points of `T` to differences of points of `T̂ ⊆ [0, 1]ⁿ`) and
-`|det B_T| ≥ ρⁿ / n!` (`|det B_T⁻¹| ≤ n! ‖B_T⁻¹‖ⁿ`); conversely `T` contains the ball of radius
-`h_T / (2 n C)` around the image of `(1/(2n), …, 1/(2n)) ∈ T̂`.
-
-The level-`N` Freudenthal simplex `T = b + (s/N)(m + K_σ)` has `B_T = (s/N) B_σ`, where `B_σ` is
-the triangular `0/1` matrix of `Feec.Mesh.kuhnMap`; `‖B_σ‖ ≤ n`, `‖B_σ⁻¹‖ ≤ 2` (the rows of
-`B_σ⁻¹` are differences `y_{σ i} - y_{σ(i+1)}`) and `|det B_σ| = 1`. Since `h_T = s/N`, the
-Freudenthal meshes of a box are shape regular with constants `C = max n 2`, `c = 1`, uniformly in
-the level `N`.
-
-## Main definitions
-
-* `Feec.Mesh.IsShapeRegular S C c`: the set of simplices `S` is shape regular with constants
-  `C, c`.
-
-## Main results
-
-* `isShapeRegular_of_ball`, `exists_ball_of_isShapeRegular`: shape regularity is a uniform bound
-  on `h_T / ρ_T` (inscribed balls of radius `ρ ≥ h_T / σ`).
-* `abs_det_kuhnMap`: `|det B_σ| = 1`;
-  `norm_kuhnMap_apply_le`, `norm_le_two_mul_norm_kuhnMap`.
-* `linearPart_freudenthalMesh_simplex`: `B_T = (s/N) B_σ` for the Freudenthal simplices.
-* `norm_linearEquiv_le_freudenthal`, `norm_linearEquiv_symm_le_freudenthal`,
-  `abs_det_linearPart_freudenthal`: `‖B_T‖ ≤ n h`, `‖B_T⁻¹‖ ≤ 2 / h`, `|det B_T| = hⁿ`, `h = s/N`.
-* `isShapeRegular_freudenthalMesh`: the Freudenthal meshes of a box are shape regular with
-  constants `max n 2` and `1`, for every level `N ≥ 1`.
+A family of `n`-simplices `T = F_T(T̂)`, `F_T x̂ = B_T x̂ + p₀`, is shape regular with constants
+`C, c` if `‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T` and `|det B_T| ≥ c h_Tⁿ` ([Ciarlet2002], §3.1;
+[Arnold2018], Ch. 7); the Freudenthal meshes of a box are shape regular uniformly in the level.
 
 ## References
 
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-  (affine families, regular families of triangulations)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (shape regular meshes)
-* [J. Bey, *Simplicial grid refinement: on Freudenthal's algorithm and the optimal number of congruence classes*][Bey2000]
-  (Freudenthal refinement produces finitely many congruence classes)
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -64,16 +28,12 @@ namespace Feec.Mesh
 
 variable {n : ℕ}
 
-/-! ### Shape regularity -/
-
-/-- A set `S` of `n`-simplices of `ℝⁿ` is shape regular with constants `C, c`:
-`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T` and `c h_Tⁿ ≤ |det B_T|` for every `T ∈ S`. -/
+/-- Shape regularity: `‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T` and `c h_Tⁿ ≤ |det B_T|` on `S`. -/
 def IsShapeRegular (S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) (C c : ℝ) : Prop :=
   ∀ T ∈ S, ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ C * diam T ∧
     ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ C / diam T ∧
     c * diam T ^ n ≤ |LinearMap.det T.linearPart|
 
-/-- `0 < h_T` for an `n`-simplex of `ℝⁿ`, `n ≥ 1`. -/
 theorem diam_pos [NeZero n] (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 < diam T := by
   have h01 : (0 : Fin (n + 1)) ≠ 1 := by
     intro h
@@ -85,9 +45,6 @@ theorem diam_pos [NeZero n] (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 < dia
     _ ≤ diam T := Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded
         (T.point_mem_closedInterior 0) (T.point_mem_closedInterior 1)
 
-/-! ### Inscribed balls -/
-
-/-- `‖B_T‖ ≤ n h_T`: the edges `pᵢ₊₁ - p₀` have length at most `h_T`. -/
 theorem norm_linearEquiv_le_mul_diam (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ n * diam T := by
   refine ContinuousLinearMap.opNorm_le_bound _ (mul_nonneg n.cast_nonneg (diam_nonneg T))
@@ -104,8 +61,6 @@ theorem norm_linearEquiv_le_mul_diam (T : Affine.Simplex ℝ (Fin n → ℝ) n) 
           dist_nonneg (norm_nonneg _)
     _ = n * diam T * ‖x‖ := by simp; ring
 
-/-- `‖B_T⁻¹‖ ≤ 1 / ρ` if `T` contains a ball of radius `ρ`: `B_T⁻¹` maps differences of points of
-`T` to differences of points of `T̂ ⊆ [0, 1]ⁿ`. -/
 theorem norm_linearEquiv_symm_le_of_ball_subset {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {x : Fin n → ℝ} {ρ : ℝ} (hρ : 0 < ρ) (hB : Metric.ball x ρ ⊆ T.closedInterior) :
     ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ 1 / ρ := by
@@ -145,8 +100,6 @@ theorem norm_linearEquiv_symm_le_of_ball_subset {T : Affine.Simplex ℝ (Fin n �
     _ ≤ 1 * (‖y‖ / ρ) := by gcongr
     _ = 1 / ρ * ‖y‖ := by ring
 
-/-- `|det B_T| ≥ 1 / (n! Cⁿ)` if `‖B_T⁻¹‖ ≤ C`: the entries of `B_T⁻¹` are bounded by `C`, so
-`|det B_T⁻¹| ≤ n! Cⁿ`. -/
 theorem one_div_le_abs_det_of_norm_symm_le {T : Affine.Simplex ℝ (Fin n → ℝ) n} {C : ℝ}
     (h : ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ C) :
     1 / ((n.factorial : ℝ) * C ^ n) ≤ |LinearMap.det T.linearPart| := by
@@ -179,9 +132,7 @@ theorem one_div_le_abs_det_of_norm_symm_le {T : Affine.Simplex ℝ (Fin n → �
           (mul_inv_cancel₀ hpos.ne').symm
       _ ≤ |LinearMap.det T.linearPart| * (n.factorial * C ^ n) := by gcongr
 
-/-- **Shape regularity from inscribed balls** ([Ciarlet2002], §3.1): if every `T ∈ S` contains a
-ball of radius `ρ` with `h_T ≤ σ ρ` (`h_T / ρ_T ≤ σ`), then `S` is shape regular with constants
-`max n σ` and `1 / (n! σⁿ)`. -/
+/-- Shape regularity from inscribed balls of radius `ρ ≥ h_T / σ` ([Ciarlet2002], §3.1). -/
 theorem isShapeRegular_of_ball [NeZero n] {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {σ : ℝ}
     (hS : ∀ T ∈ S, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ) :
     IsShapeRegular S (max n σ) (1 / ((n.factorial : ℝ) * σ ^ n)) := by
@@ -199,8 +150,6 @@ theorem isShapeRegular_of_ball [NeZero n] {S : Set (Affine.Simplex ℝ (Fin n �
         = 1 / ((n.factorial : ℝ) * (σ / diam T) ^ n) := by rw [div_pow]; field_simp
     _ ≤ _ := hdet
 
-/-- **Inscribed balls from shape regularity**: a shape-regular `T` contains the ball of radius
-`h_T / (2 n C)` around the image of `(1/(2n), …, 1/(2n)) ∈ T̂`, so `h_T / ρ_T ≤ 2 n C`. -/
 theorem exists_ball_of_isShapeRegular [NeZero n] {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}
     {C c : ℝ} (hS : IsShapeRegular S C c) :
     ∀ T ∈ S, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ 2 * n * C * ρ := by
@@ -246,8 +195,6 @@ theorem exists_ball_of_isShapeRegular [NeZero n] {S : Set (Affine.Simplex ℝ (F
     rw [Affine.Simplex.refMap_apply, map_add, hBw, Affine.Simplex.refMap_apply]
     abel
 
-/-! ### The matrix `B_σ` -/
-
 theorem norm_kuhnMap_apply_le (σ : Equiv.Perm (Fin n)) (x : Fin n → ℝ) :
     ‖kuhnMap σ x‖ ≤ n * ‖x‖ := by
   refine (pi_norm_le_iff_of_nonneg (by positivity)).2 fun k => ?_
@@ -291,13 +238,10 @@ theorem kuhnMatrix_eq_submatrix (σ : Equiv.Perm (Fin n)) :
   simp only [kuhnMatrix, upperOnes, Matrix.of_apply, Matrix.submatrix_apply, id]
   exact if_congr Fin.le_def.symm rfl rfl
 
-/-- `|det B_σ| = 1`. -/
 theorem abs_det_kuhnMap (σ : Equiv.Perm (Fin n)) : |LinearMap.det (kuhnMap σ)| = 1 := by
   rw [kuhnMap, LinearMap.det_toLin', kuhnMatrix_eq_submatrix, Matrix.det_permute, det_upperOnes,
     mul_one]
   rcases Int.units_eq_one_or (Equiv.Perm.sign σ.symm) with h | h <;> simp [h]
-
-/-! ### The Freudenthal simplices -/
 
 theorem linearPart_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0)
     (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) :
@@ -313,7 +257,6 @@ section Bounds
 
 variable (b : Fin n → ℝ) {h : ℝ} (hh : 0 < h) (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n))
 
-/-- `‖B_T‖ ≤ n h` for `T = b + h (m + K_σ)`. -/
 theorem norm_linearEquiv_le_freudenthal :
     ‖((mapEquiv (boxMap b h hh.ne') (freudenthalSimplex m σ)).linearEquiv :
       (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ n * h := by
@@ -323,7 +266,6 @@ theorem norm_linearEquiv_le_freudenthal :
   calc h * ‖kuhnMap σ x‖ ≤ h * (n * ‖x‖) := by gcongr; exact norm_kuhnMap_apply_le σ x
     _ = n * h * ‖x‖ := by ring
 
-/-- `‖B_T⁻¹‖ ≤ 2 / h` for `T = b + h (m + K_σ)`. -/
 theorem norm_linearEquiv_symm_le_freudenthal :
     ‖((mapEquiv (boxMap b h hh.ne') (freudenthalSimplex m σ)).linearEquiv.symm :
       (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ 2 / h := by
@@ -338,7 +280,6 @@ theorem norm_linearEquiv_symm_le_freudenthal :
   calc ‖x‖ ≤ 2 * ‖kuhnMap σ x‖ := norm_le_two_mul_norm_kuhnMap σ x
     _ = 2 / h * (h * ‖kuhnMap σ x‖) := by field_simp
 
-/-- `|det B_T| = hⁿ` for `T = b + h (m + K_σ)`. -/
 theorem abs_det_linearPart_freudenthal :
     |LinearMap.det (mapEquiv (boxMap b h hh.ne') (freudenthalSimplex m σ)).linearPart| = h ^ n := by
   rw [linearPart_freudenthalMesh_simplex, LinearMap.det_smul, Module.finrank_fin_fun, abs_mul,
@@ -352,8 +293,7 @@ theorem diam_freudenthalMesh_simplex_of_isEmpty (hn : n = 0) (b : Fin n → ℝ)
   subst hn
   exact Metric.diam_subsingleton (Set.subsingleton_of_subsingleton)
 
-/-- **The Freudenthal meshes of a box are shape regular**, with the constants `C = max n 2`,
-`c = 1`, uniformly in the level `N ≥ 1`. -/
+/-- The Freudenthal meshes of a box are shape regular with the constants `max n 2` and `1`. -/
 theorem isShapeRegular_freudenthalMesh (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) :
     IsShapeRegular {T | ∃ N : ℕ, T ∈ (freudenthalMesh b s hs (N + 1)).simplices}
       (max n 2) 1 := by

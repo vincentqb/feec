@@ -7,30 +7,9 @@ public import Feec.Fourier.FibreReducing
 /-!
 # Symbol complexes on the whole space `ℝᵈ`
 
-A constant-coefficient complex on `ℝᵈ` is, after the `L²` Fourier transform (Plancherel), a symbol
-complex over `ℝᵈ` with Lebesgue measure, with symbols `S.m i j (2πx)` (the convention
-`𝓕 f (x) = ∫ e^{-2πi ⟪y, x⟫} f y dy`, under which `∂_c ↦ 2πi x_c`). This file sets up that model
-for any finite index type `d`, `𝕜 = ℝ, ℂ`, and any complex shape, and proves:
-
-* **homogeneous symbols do not have closed range** (`not_closedRangeAt`): unlike the torus
-  (`Feec.Fourier.Torus.closedRangeAt_of_gap`), there is no Poincaré inequality at low
-  frequencies, for every nonzero operator of positive order.
-
-## Main definitions and results
-
-* `Euclidean.scale x = 2πx`, `Euclidean.symbolComplex S`, `Euclidean.complex S`.
-* `Euclidean.fibreReducing`.
-* `Euclidean.not_closedRangeAt`, `Euclidean.not_dual_closedRangeAt`.
-* `Euclidean.fourier F : L²(ℝᵈ; F) ≃ₗᵢ L²(ℝᵈ; F)`: Mathlib's Plancherel isometry, which identifies
-  the model with fields on `ℝᵈ`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10–4.11 (Props 4.17, 4.19 on `ℝ³`)
-* Mathlib, `Mathlib.Analysis.Fourier.LpSpace` (the `L²` Fourier transform, Plancherel)
-
-Bibliography: [references.bib](../../docs/references.bib)
+The whole-space model of a constant-coefficient complex on `ℝᵈ`: after the `L²` Fourier transform,
+a symbol complex on `L²(ℝᵈ)` with symbols `S.m i j (2πx)`; homogeneous nonzero symbols of positive
+degree do not have closed range.
 -/
 
 @[expose] public noncomputable section
@@ -52,14 +31,11 @@ theorem measurable_scale : Measurable (scale (d := d)) := continuous_scale.measu
 omit [Fintype d] in
 @[simp] theorem scale_neg (x : EuclideanSpace ℝ d) : scale (-x) = -scale x := smul_neg _ _
 
-/-! ### The whole-space model of a fibre complex -/
-
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {E : ι → Type*}
   [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace 𝕜 (E i)]
   [∀ i, FiniteDimensional 𝕜 (E i)]
 
-/-- The whole-space symbol complex of a continuous family of fibre complexes: symbols
-`S.m i j (2πx)` on `L²(ℝᵈ)`. -/
+/-- The whole-space symbol complex, with symbols `S.m i j (2πx)` on `L²(ℝᵈ)`. -/
 def symbolComplex (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E) :
     SymbolComplex 𝕜 (volume : Measure (EuclideanSpace ℝ d)) c E :=
   S.toSymbolComplex _ scale measurable_scale.aemeasurable
@@ -69,12 +45,11 @@ def symbolComplex (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E) :
 
 variable [∀ i, CompleteSpace (E i)]
 
-/-- **The Hilbert complex of a constant-coefficient complex on `ℝᵈ`** (Fourier side). -/
+/-- The Hilbert complex of a constant-coefficient complex on `ℝᵈ`, on the Fourier side. -/
 def complex (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E) :
     HilbertComplex 𝕜 c fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d)) :=
   (symbolComplex S).toHilbertComplex
 
-/-- Fibre reducing subspaces with measurable fibre projections. -/
 theorem fibreReducing {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E}
     {K : ∀ i, EuclideanSpace ℝ d → Submodule 𝕜 (E i)} [∀ i ξ, (K i ξ).HasOrthogonalProjection]
     (h : S.IsFibreReducing K) (meas : ∀ i, Measurable fun ξ => (K i ξ).starProjection) :
@@ -84,9 +59,8 @@ theorem fibreReducing {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E}
     have : SecondCountableTopology (E i →L[𝕜] E i) := secondCountable_of_proper
     exact ((meas i).comp measurable_scale).aestronglyMeasurable
 
-/-- **No closed range on `ℝᵈ`**: if the incoming symbol is homogeneous of positive degree and not
-identically zero, the boundaries are not closed (no Poincaré inequality, by scaling to low
-frequencies). -/
+/-- A homogeneous incoming symbol of positive degree, not identically zero, has non-closed
+boundaries. -/
 theorem not_closedRangeAt {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} {i : ι} {r : ℕ}
     (hr : 0 < r) (hS : S.IsHomogeneous (c.prev i) i r) (hne : S.m (c.prev i) i ≠ 0) :
     ¬ (complex S).ClosedRangeAt i := by
@@ -138,11 +112,8 @@ theorem not_closedRangeAt {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} {i 
   · rw [norm_smul, RCLike.norm_ofReal, abs_of_nonneg (by positivity)]
     exact (mul_le_mul_of_nonneg_left hζM (by positivity)).trans htM
 
-/-! ### Plancherel -/
-
 variable (d) in
-/-- **Plancherel**: the `L²` Fourier transform `L²(ℝᵈ; F) ≃ₗᵢ L²(ℝᵈ; F)` (Mathlib's
-`MeasureTheory.Lp.fourierTransformₗᵢ`), which identifies the Fourier model with fields on `ℝᵈ`. -/
+/-- Plancherel: the `L²` Fourier transform `L²(ℝᵈ; F) ≃ₗᵢ L²(ℝᵈ; F)`. -/
 def fourier (F : Type*) [NormedAddCommGroup F] [InnerProductSpace ℂ F] [CompleteSpace F] :
     Lp F 2 (volume : Measure (EuclideanSpace ℝ d)) ≃ₗᵢ[ℂ]
       Lp F 2 (volume : Measure (EuclideanSpace ℝ d)) :=

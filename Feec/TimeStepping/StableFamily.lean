@@ -8,39 +8,16 @@ public import Feec.ForMathlib.Analysis.SubMarkov
 /-!
 # Uniformly stable families of bounded generators
 
-A **uniformly stable family** (`Feec.TimeStepping.StableFamily 𝕜 κ`) is the discrete half of a
-Banach FEEC discretization (`Feec.TimeStepping.BanachFEEC`): Banach spaces `Xₕ` over `𝕜 = ℝ`
-or `ℂ` with bounded generators `Lₕ` whose flows are bounded by one constant,
-`‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`, uniformly in `h`. No exact semigroup, inner product or reading map
-is involved: the exact solution enters through a **trajectory** `U : [0, T] → Xₕ` (for a finite
-element or difference method, the interpolant of a given smooth solution), whose **defect**
-`‖U' - Lₕ U‖` measures the consistency of the space discretization. The family is the setting of
-estimates in norms in which the discretization is not Hilbert-contractive, e.g. the maximum norm
-at the nodes of the lumped-mass heat discretization (`Feec.Models.Cube.MaxNormHeat`; its
-generators are also `ℓ²`-dissipative; the direct Hilbert route reaches the maximum norm with a
-factor `h^{-n/2}`).
+Families of bounded generators with flows bounded uniformly in `h`: semidiscrete and temporal errors
+of time schemes, backward Euler and A-stable rational schemes, with constants independent of `h`.
 
 ## Main results
 
-**`stableFamily`** (statement `StableFamily.Verdict`): for every uniformly stable family,
-
-1. (**semidiscrete error along trajectories**, Duhamel) for a differentiable trajectory `U` with
-   defect `‖U' - Lₕ U‖ ≤ D` on `[0, t]`, `‖U(t) - e^{tLₕ} v‖ ≤ M ‖U(0) - v‖ + M t D`
-   (`norm_sub_exp_apply_le_of_defect`);
-2. (**every time scheme**, `Feec.TimeStepping.TimeScheme`) the temporal error
-   `‖e^{tₙ Lₕ} v - Pₕⁿ v‖ ≤ M(T) K M tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, and the **Lax–Richtmyer error along
-   comparison sequences** `‖Wₙ - Pₕⁿ v‖ ≤ M(T) (‖W₀ - v‖ + Σₖ ‖Wₖ₊₁ - Pₕ Wₖ‖)`;
-3. (**backward Euler**) `‖(1 - τLₕ)⁻ⁿ‖ ≤ M` for every `τ > 0` (Hille–Yosida), and along a
-   `C²` trajectory with `‖U''‖ ≤ B` and defect `D`,
-   `‖U(nτ) - (1 - τLₕ)⁻ⁿ v‖ ≤ M ‖U(0) - v‖ + M² nτ (3/2 τ B + D)`
-   (`StableFamily.norm_sub_res_pow_le_of_traj`): first order in `τ`, with no power of `Lₕ`;
-4. (**every A-stable rational scheme** `r`, through the resolvent) Brenner–Thomée's stability
-   bound `‖r(τLₕ)ⁿ‖ ≤ M (1 + C'_r √n)`, for `r` of order `p` the sharp temporal error
-   `‖r(τLₕ)ⁿ v - e^{nτLₕ} v‖ ≤ C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`, and along a trajectory with defect `D`
-   the error `M ‖U(0) - v‖ + M nτ D + C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`; more generally, every
-   semidiscrete error bound gives one for `r(τLₕ)ⁿ` (`norm_sub_step_pow_le_norm_sub_exp_add`).
-
-All constants depend on `M`, `r`, `p`, `B`, `D` only, so they are independent of `h`.
+* `StableFamily.norm_sub_res_pow_le_of_traj`: backward Euler along a `C²` trajectory.
+* `StableFamily.norm_step_pow_le`: the stability bound `‖r(τLₕ)ⁿ‖ ≤ M (1 + C'_r √n)` for A-stable
+  `r` and `τ > 0`.
+* `StableFamily.norm_step_pow_sub_exp_le`: the temporal error of A-stable rational schemes.
+* `stableFamily`: the fully discrete theorem for uniformly stable families.
 
 ## References
 
@@ -48,9 +25,8 @@ All constants depend on `M`, `r`, `p`, `B`, `D` only, so they are independent of
 * [A. Gomilko, Y. Tomilov, *Rational Approximation of Operator Semigroups via the B-Calculus*][GomilkoTomilov2024],
   Thm 1.1
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
-  (stability and consistency of single step methods)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.5 (the Hille–Yosida estimates)
+  §1.5
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -74,9 +50,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {X : Type*} [NormedAddCommGroup X] [Normed
 local instance instNormedAlgebraRatStableFamily : NormedAlgebra ℚ (X →L[𝕜] X) :=
   NormedAlgebra.restrictScalars ℚ 𝕜 _
 
-/-- **Duhamel's estimate along a trajectory**: for a bounded `L` with `‖e^{sL}‖ ≤ M` (`s ≥ 0`)
-and a curve `U` with derivatives `U'` on `[0, t]` and defect `‖U' - L U‖ ≤ D`,
-`‖U(t) - e^{tL} v‖ ≤ M ‖U(0) - v‖ + M t D`. -/
 theorem norm_sub_exp_apply_le_of_defect {L : X →L[𝕜] X} {M : ℝ}
     (hL : ∀ s : ℝ, 0 ≤ s → ‖exp ((s : 𝕜) • L)‖ ≤ M) {U U' : ℝ → X} {t D : ℝ} (ht : 0 ≤ t)
     (hU : ∀ s ∈ Icc 0 t, HasDerivAt U (U' s) s) (hD : ∀ s ∈ Icc 0 t, ‖U' s - L (U s)‖ ≤ D)
@@ -105,9 +78,7 @@ end Duhamel
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-- A **uniformly stable family** of bounded generators over `𝕜`: Banach spaces `Xₕ`
-(`h : κ`) with bounded generators `Lₕ` and one constant `M` with `‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`,
-uniformly in `h`. -/
+/-- A uniformly stable family: Banach spaces `Xₕ`, bounded `Lₕ`, `‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`. -/
 structure StableFamily (𝕜 : Type*) [RCLike 𝕜] (κ : Type*) where
   /-- the discrete spaces -/
   X : κ → Type u
@@ -128,8 +99,7 @@ attribute [instance] StableFamily.normedAddCommGroup StableFamily.normedSpace
 
 namespace StableFamily
 
-/-- **The family of sub-Markov generators** on `ℝ^{ι h}` with the maximum norm: `M = 1`
-(`IsSubMarkovGenerator.norm_exp_smul_le_one`). -/
+/-- **The family of sub-Markov generators** on `ℝ^{ι h}` with the maximum norm, with `M = 1`. -/
 abbrev ofSubMarkov {κ : Type*} (ι : κ → Type) [∀ h, Fintype (ι h)]
     (L : ∀ h, (ι h → ℝ) →L[ℝ] (ι h → ℝ)) (hL : ∀ h, IsSubMarkovGenerator (L h)) :
     StableFamily ℝ κ where
@@ -141,8 +111,7 @@ abbrev ofSubMarkov {κ : Type*} (ι : κ → Type) [∀ h, Fintype (ι h)]
 
 variable {κ : Type*} (F : StableFamily.{u} 𝕜 κ)
 
-/-- A **time scheme** of `F`: a time scheme (`Feec.TimeStepping.TimeScheme`) of its generators,
-power bounded and consistent uniformly in `h`. -/
+/-- A time scheme of `F`: a time scheme of its generators. -/
 abbrev TimeScheme := TimeStepping.TimeScheme F.L
 
 /-- The discrete semigroups `e^{tLₕ}`. -/
@@ -157,17 +126,11 @@ theorem norm_discrete_S_le_exp (h : κ) (t : ℝ) (ht : 0 ≤ t) :
 
 /-! ### Trajectories -/
 
-/-- **The semidiscrete error along a trajectory** (Duhamel): for a curve `U` in `Xₕ` with
-derivatives `U'` on `[0, t]` and defect `‖U' - Lₕ U‖ ≤ D`,
-`‖U(t) - e^{tLₕ} v‖ ≤ M ‖U(0) - v‖ + M t D`. -/
 theorem norm_sub_exp_le_of_defect (h : κ) {U U' : ℝ → F.X h} {t D : ℝ} (ht : 0 ≤ t)
     (hU : ∀ s ∈ Icc 0 t, HasDerivAt U (U' s) s) (hD : ∀ s ∈ Icc 0 t, ‖U' s - F.L h (U s)‖ ≤ D)
     (v : F.X h) : ‖U t - exp ((t : 𝕜) • F.L h) v‖ ≤ F.M * ‖U 0 - v‖ + F.M * t * D :=
   norm_sub_exp_apply_le_of_defect (F.norm_exp_le h) ht hU hD v
 
-/-- **The Lax–Richtmyer error along a comparison sequence**: for every time scheme and every
-sequence `Wₖ` in `Xₕ` (the exact solution at the time levels),
-`‖Wₙ - Pₕⁿ v‖ ≤ M(T) (‖W₀ - v‖ + Σ_{k<n} ‖Wₖ₊₁ - Pₕ Wₖ‖)` for `nτₕ ≤ T`. [Thomee2006], Ch. 7 -/
 theorem TimeScheme.norm_sub_pow_le {F : StableFamily.{u} 𝕜 κ} (Θ : F.TimeScheme) {T : ℝ}
     (h : κ) (v : F.X h) (W : ℕ → F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖W n - (Θ.P h ^ n) v‖ ≤
@@ -184,7 +147,6 @@ theorem TimeScheme.norm_sub_pow_le {F : StableFamily.{u} 𝕜 κ} (Θ : F.TimeSc
 def res (τ : ℝ) (h : κ) : F.X h →L[𝕜] F.X h :=
   (τ : 𝕜)⁻¹ • Operator.resolvent (F.discrete h).generator (τ : 𝕜)⁻¹
 
-/-- `Rₕ (x - τ Lₕ x) = x`, for `τ > 0` (`τ⁻¹` is in the resolvent set, Hille–Yosida). -/
 theorem res_apply_sub {τ : ℝ} (hτ : 0 < τ) (h : κ) :
     ∀ x y, (x, y) ∈ (F.discrete h).generator.graph → F.res τ h (x - (τ : 𝕜) • y) = x := by
   intro x y hxy
@@ -193,12 +155,10 @@ theorem res_apply_sub {τ : ℝ} (hτ : 0 < τ) (h : κ) :
   rw [RCLike.ofReal_inv] at hR
   exact hR.inv_smul_apply_sub hτ.ne' hxy
 
-/-- `Rₕ (x - τ Lₕ x) = x`. -/
 theorem res_apply_sub_apply {τ : ℝ} (hτ : 0 < τ) (h : κ) (x : F.X h) :
     F.res τ h (x - (τ : 𝕜) • F.L h x) = x :=
   F.res_apply_sub hτ h x _ (C0Group.mem_graph_generator_ofBounded (F.L h) x)
 
-/-- `(1 - τLₕ) Rₕ x = x`, for `τ > 0`. -/
 theorem res_sub_smul_apply_res {τ : ℝ} (hτ : 0 < τ) (h : κ) (x : F.X h) :
     F.res τ h x - (τ : 𝕜) • F.L h (F.res τ h x) = x := by
   have hR := (F.discrete h).isResolvent_resolvent_ofReal (F.norm_discrete_S_le_exp h)
@@ -212,14 +172,10 @@ theorem res_sub_smul_apply_res {τ : ℝ} (hτ : 0 < τ) (h : κ) (x : F.X h) :
   rw [res, _root_.smul_apply, map_smul, smul_smul, mul_inv_cancel₀ hτ', one_smul]
   exact e
 
-/-- **Backward Euler is stable**: `‖Rₕⁿ‖ ≤ M`, by the Hille–Yosida estimates. [Pazy1983], §1.5 -/
 theorem norm_res_pow_le {τ : ℝ} (hτ : 0 < τ) (h : κ) (n : ℕ) : ‖F.res τ h ^ n‖ ≤ F.M := by
   simpa using TimeStepping.norm_pow_le_of_generator (F.discrete h) (F.norm_discrete_S_le_exp h)
     hτ (by simp) (F.res_apply_sub hτ h) n
 
-/-- **The local error of backward Euler along a trajectory**: for `U` with derivatives `U₁`,
-`U₂` on `[a, a + τ]`, `‖U₂‖ ≤ B` and defect `‖U₁ - Lₕ U‖ ≤ D`,
-`‖U(a + τ) - Rₕ U(a)‖ ≤ M (3/2 τ² B + τ D)`. -/
 theorem norm_sub_res_apply_le {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U₁ U₂ : ℝ → F.X h} {a B D : ℝ}
     (hU : ∀ s ∈ Icc a (a + τ), HasDerivAt U (U₁ s) s)
     (hU₁ : ∀ s ∈ Icc a (a + τ), HasDerivAt U₁ (U₂ s) s) (hB : ∀ s ∈ Icc a (a + τ), ‖U₂ s‖ ≤ B)
@@ -241,10 +197,8 @@ theorem norm_sub_res_apply_le {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U₁ U₂ : 
   rw [norm_smul, Real.norm_of_nonneg hτ.le]
   gcongr
 
-/-- **Backward Euler along a trajectory**: for a `C²` curve `U` on `[0, nτ]` with
-`‖U''‖ ≤ B` and defect `‖U' - Lₕ U‖ ≤ D`,
-`‖U(nτ) - Rₕⁿ v‖ ≤ M ‖U(0) - v‖ + M² nτ (3/2 τ B + D)`: first order in `τ`, with the constants
-of the trajectory and no power of `Lₕ`. [Thomee2006], Ch. 1, Ch. 7 -/
+/-- **Backward Euler along a `C²` trajectory** (`τ > 0`, `‖U''‖ ≤ B`, defect `D`;
+[Thomee2006], Ch. 1): `‖U(nτ) - Rₕⁿ v‖ ≤ M ‖U(0) - v‖ + M² nτ (3/2 τ B + D)`. -/
 theorem norm_sub_res_pow_le_of_traj {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U₁ U₂ : ℝ → F.X h}
     {n : ℕ} {B D : ℝ} (hU : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U₁ s) s)
     (hU₁ : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U₁ (U₂ s) s) (hB : ∀ s ∈ Icc 0 (n * τ), ‖U₂ s‖ ≤ B)
@@ -279,21 +233,19 @@ theorem norm_sub_res_pow_le_of_traj {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U₁ U
 def step (r : RationalScheme) (τ : ℝ) (h : κ) : F.X h →L[𝕜] F.X h :=
   r.resolventStep (F.res τ h)
 
-/-- Backward Euler `r = 1/(1 - z)` is the discrete resolvent. -/
 theorem step_theta_one (τ : ℝ) (h : κ) : F.step (RationalScheme.theta 1 one_pos) τ h = F.res τ h :=
   RationalScheme.resolventStep_theta_one _
 
-/-- **Brenner–Thomée's stability bound**: for every A-stable `r`, `|r(∞)| = 1` included,
+/-- **Brenner–Thomée's stability bound**: for every A-stable `r` and `τ > 0`,
 `‖r(τLₕ)ⁿ‖ ≤ M (1 + C'_r √n)`, `C'_r = sqrtConst r`, uniformly in `h`. [BrennerThomee1979] -/
 theorem norm_step_pow_le {r : RationalScheme} (hr : r.IsAStable) {τ : ℝ} (hτ : 0 < τ) (h : κ)
     (n : ℕ) : ‖F.step r τ h ^ n‖ ≤ F.M * (1 + r.sqrtConst * √n) :=
   RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable (F.discrete h)
     (F.norm_discrete_S_le h) hr hτ (F.res_apply_sub hτ h) n
 
-/-- **The sharp temporal error**: for every A-stable `r` of order `p`,
-`‖r(τLₕ)ⁿ v - e^{nτLₕ} v‖ ≤ C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`, `C_r = sharpConst r p` independent of
-`h`, without the `√n` of the stability bound (Brenner–Thomée's smooth-data estimate).
-[BrennerThomee1979]; [GomilkoTomilov2024], Thm 1.1(ii) -/
+/-- **The smooth-data temporal error**: for every A-stable `r` of order `p` and `τ > 0`,
+`‖r(τLₕ)ⁿ v - e^{nτLₕ} v‖ ≤ C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`. [BrennerThomee1979];
+[GomilkoTomilov2024], Thm 1.1(ii) -/
 theorem norm_step_pow_sub_exp_le {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (h : κ) (n : ℕ) (v : F.X h) :
     ‖(F.step r τ h ^ n) v - exp (((n * τ : ℝ) : 𝕜) • F.L h) v‖ ≤
@@ -303,8 +255,6 @@ theorem norm_step_pow_sub_exp_le {r : RationalScheme} (hr : r.IsAStable) {p : �
     (F.norm_discrete_S_le h) hr hp hτ (F.res_apply_sub hτ h) n (u := fun j => (F.L h ^ j) v)
     fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded (F.L h) v j
 
-/-- **Every A-stable rational scheme from the semidiscrete error**: for `r` of order `p` and
-every `W ∈ Xₕ`, `‖W - r(τLₕ)ⁿ v‖ ≤ ‖W - e^{nτLₕ} v‖ + C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`. -/
 theorem norm_sub_step_pow_le_norm_sub_exp_add {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (h : κ) (W : F.X h) (n : ℕ) (v : F.X h) :
     ‖W - (F.step r τ h ^ n) v‖ ≤ ‖W - exp (((n * τ : ℝ) : 𝕜) • F.L h) v‖ +
@@ -312,9 +262,6 @@ theorem norm_sub_step_pow_le_norm_sub_exp_add {r : RationalScheme} (hr : r.IsASt
   (norm_sub_le_norm_sub_add_norm_sub _ _ _).trans
     (add_le_add_right (by rw [norm_sub_rev]; exact F.norm_step_pow_sub_exp_le hr hp hτ h n v) _)
 
-/-- **Every A-stable rational scheme along a trajectory**: for `r` of order `p` and a curve `U`
-on `[0, nτ]` with defect `‖U' - Lₕ U‖ ≤ D`, `‖U(nτ) - r(τLₕ)ⁿ v‖ ≤ M ‖U(0) - v‖ + M nτ D`
-`+ C_r M nτ τᵖ ‖Lₕ^{p+1} v‖` (Duhamel plus the sharp temporal error). -/
 theorem norm_sub_step_pow_le_of_traj {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U' : ℝ → F.X h} {n : ℕ} {D : ℝ}
     (hU : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U' s) s)
@@ -324,9 +271,7 @@ theorem norm_sub_step_pow_le_of_traj {r : RationalScheme} (hr : r.IsAStable) {p 
   have := F.norm_sub_exp_le_of_defect h (by positivity) hU hD v
   linarith [F.norm_sub_step_pow_le_norm_sub_exp_add hr hp hτ h (U (n * τ)) n v]
 
-/-- **A rational scheme with uniformly bounded powers is a time scheme**: for an A-stable `r` of
-order `p ≥ 1`, time steps `τₕ > 0` and `‖r(τₕLₕ)ⁿ‖ ≤ Mₛ(T)` for `nτₕ ≤ T`, the scheme
-`Pₕ = r(τₕLₕ)`, consistent of order `p` with constant `C_r M` (the sharp estimate at `n = 1`). -/
+/-- An A-stable rational scheme with uniformly bounded powers, as a time scheme of order `p`. -/
 def rationalScheme (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
     (hp0 : 0 < p) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (Ms : ℝ → ℝ)
     (hMs : ∀ (T : ℝ) (h : κ) (n : ℕ), (n : ℝ) * τ h ≤ T → ‖F.step r (τ h) h ^ n‖ ≤ Ms T) :
@@ -346,8 +291,7 @@ def rationalScheme (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.Has
     calc _ ≤ _ := this
       _ = _ := by ring
 
-/-- **Backward Euler as a time scheme**: `Pₕ = (1 - τₕLₕ)⁻¹`, stable with `M(T) = M`
-(Hille–Yosida), order `1`. -/
+/-- **Backward Euler as a time scheme**: `Pₕ = (1 - τₕLₕ)⁻¹`, stable with `M(T) = M`, order `1`. -/
 def backwardEuler (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme :=
   F.rationalScheme (RationalScheme.theta 1 one_pos)
     (RationalScheme.isAStable_theta (by norm_num)) (RationalScheme.hasOrder_theta one_pos)
@@ -356,43 +300,31 @@ def backwardEuler (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme :=
 
 /-! ### The verdict -/
 
-/-- The conclusions of `stableFamily`: Duhamel's estimate along trajectories; for every time
-scheme, the temporal error and the Lax–Richtmyer error along comparison sequences; the
-Hille–Yosida stability of backward Euler and its first-order error along `C²` trajectories; for
-every A-stable rational scheme, Brenner–Thomée's stability bound, the sharp temporal error and
-the error along trajectories; all with constants independent of `h`. -/
+/-- The conclusions of `stableFamily`. -/
 structure Verdict : Prop where
-  /-- the semidiscrete error along a trajectory with defect `D` (Duhamel) -/
   semidiscrete_traj (h : κ) {U U' : ℝ → F.X h} {t D : ℝ} (ht : 0 ≤ t)
     (hU : ∀ s ∈ Icc 0 t, HasDerivAt U (U' s) s) (hD : ∀ s ∈ Icc 0 t, ‖U' s - F.L h (U s)‖ ≤ D)
     (v : F.X h) : ‖U t - exp ((t : 𝕜) • F.L h) v‖ ≤ F.M * ‖U 0 - v‖ + F.M * t * D
-  /-- the temporal error of every time scheme -/
   temporal_iterates (Θ : F.TimeScheme) {T : ℝ} (h : κ) (v : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) v - (Θ.P h ^ n) v‖ ≤
       Θ.M T * Θ.K * F.M * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) v‖
-  /-- the error of every time scheme along a comparison sequence (Lax–Richtmyer) -/
   traj_iterates (Θ : F.TimeScheme) {T : ℝ} (h : κ) (v : F.X h) (W : ℕ → F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖W n - (Θ.P h ^ n) v‖ ≤ Θ.M T * (‖W 0 - v‖ + ∑ k ∈ range n, ‖W (k + 1) - Θ.P h (W k)‖)
-  /-- backward Euler is stable, `‖(1 - τLₕ)⁻ⁿ‖ ≤ M` (Hille–Yosida) -/
   stable_backwardEuler {τ : ℝ} (hτ : 0 < τ) (h : κ) (n : ℕ) : ‖F.res τ h ^ n‖ ≤ F.M
-  /-- backward Euler along a `C²` trajectory: first order in `τ`, no power of `Lₕ` -/
   traj_backwardEuler {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U₁ U₂ : ℝ → F.X h} {n : ℕ} {B D : ℝ}
     (hU : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U₁ s) s)
     (hU₁ : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U₁ (U₂ s) s) (hB : ∀ s ∈ Icc 0 (n * τ), ‖U₂ s‖ ≤ B)
     (hD : ∀ s ∈ Icc 0 (n * τ), ‖U₁ s - F.L h (U s)‖ ≤ D) (v : F.X h) :
     ‖U (n * τ) - (F.res τ h ^ n) v‖ ≤
       F.M * ‖U 0 - v‖ + F.M ^ 2 * (n * τ) * (3 / 2 * τ * B + D)
-  /-- Brenner–Thomée's stability bound for every A-stable rational scheme -/
   stable_rational (r : RationalScheme) (hr : r.IsAStable) {τ : ℝ} (hτ : 0 < τ) (h : κ) (n : ℕ) :
     ‖F.step r τ h ^ n‖ ≤ F.M * (1 + r.sqrtConst * √n)
-  /-- the sharp temporal error of every A-stable rational scheme of order `p` -/
   temporal_rational (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ}
     (hτ : 0 < τ) (h : κ) (n : ℕ) (v : F.X h) :
     ‖(F.step r τ h ^ n) v - exp (((n * τ : ℝ) : 𝕜) • F.L h) v‖ ≤
       r.sharpConst p * F.M * (n * τ) * τ ^ p * ‖(F.L h ^ (p + 1)) v‖
-  /-- every A-stable rational scheme of order `p` along a trajectory with defect `D` -/
   traj_rational (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ}
     (hτ : 0 < τ) (h : κ) {U U' : ℝ → F.X h} {n : ℕ} {D : ℝ}
     (hU : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U' s) s)
@@ -402,13 +334,8 @@ structure Verdict : Prop where
 
 end StableFamily
 
-/-- **The fully discrete theorem for uniformly stable families.** For Banach spaces `Xₕ` with
-bounded generators whose flows are bounded by `M` uniformly in `h`: Duhamel's estimate along
-trajectories; the temporal and Lax–Richtmyer errors of every time scheme; backward Euler stable
-by Hille–Yosida and of first order along `C²` trajectories; Brenner–Thomée's stability bound
-`M (1 + C'_r √n)` and the sharp temporal error `C_r M nτ τᵖ ‖Lₕ^{p+1} v‖` for every A-stable
-rational scheme, and its error along trajectories; constants independent of `h`.
-[BrennerThomee1979]; [Thomee2006], Ch. 7; [Pazy1983], §1.5 -/
+/-- **The fully discrete theorem for uniformly stable families**: all the conclusions of
+`StableFamily.Verdict` hold. [BrennerThomee1979]; [Thomee2006], Ch. 7; [Pazy1983], §1.5 -/
 theorem stableFamily {κ : Type*} (F : StableFamily.{u} 𝕜 κ) : F.Verdict where
   semidiscrete_traj h _ _ _ _ ht hU hD v := F.norm_sub_exp_le_of_defect h ht hU hD v
   temporal_iterates Θ _ h v _ hn := by

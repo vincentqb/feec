@@ -6,79 +6,16 @@ public import Feec.Physics.EinsteinBianchi.Fields
 /-!
 # The nonlinear Einstein–Bianchi system
 
-Thesis §3.4 states, after [Friedrich1996] (cf. [ACBY1997]), that in the nonlinear case the second
-Bianchi identity also decomposes into constraints `div E − B ×· K = 0`, … and evolution equations
-`Ė + sym curl B + L¹ = 0`, … with lower-order terms `L¹, L²` built from the extrinsic curvature
-`K` and the acceleration `a`. Here this is derived, in components, for every vacuum metric.
-
-**Setting.** A metric `g` on `ℝ⁴` with Levi-Civita connection `Γ` (`IsLeviCivita`, e.g. the
-Christoffel symbols of a `C³` metric) and a differentiable orthonormal frame `e` (columns `e_μ`,
-`eᵀ g e = η = diag(-1,1,1,1)`, coframe `θ`); `n = e_0` is the unit timelike normal of the `3 + 1`
-split and `(e_1, e_2, e_3)` a spatial triad. The frame components `W_μνρσ` of the Riemann tensor are
-an algebraic Weyl tensor in vacuum, `W = [[E, B], [B, -E]]` in the bivector blocks of
-`Feec.Geometry.WeylDecomposition` (`E` electric, `B` magnetic part relative to `n`). Frame
-derivatives are `e_κ = e^h_κ ∂_h`; `γ^λ_{κν}` are the frame connection coefficients.
-
-## What is an identity and what uses fields
-
-* Jet level (pointwise algebra): `frameBianchi_eq` (the frame Bianchi expression is the
-  linearized one `bianchi2` of `Feec.Physics.EinsteinBianchi.System` plus `lowerOrder`, bilinear
-  in `(γ, W)`); `frameBianchi_iff` (the identity ⇔ `NonlinearEB`); the linearization results; the
-  comparison with the thesis' form `nonlinearEB_iff_extrinsicEB`.
-* Fields: `vacuum_nonlinearEB`, `vacuum_extrinsicEB` (every vacuum metric satisfies the system), via
-  `Feec.CurvatureTensor.frameRiemField_cyclic` (tensoriality of `∇` and the coordinate second
-  Bianchi identity) and `frameRiemField_isWeyl` (vacuum and orthonormality).
-
-## Main results
-
-* `frameBianchi_iff`: **nonlinear Prop 3.4** — for symmetric jets, the frame second Bianchi
-  identity for `W = [[E, B], [B, -E]]` ⇔ `NonlinearEB`: `div E + conE = 0`, `div B + conB = 0`,
-  `e_0(E) + curl B + lotE = 0`, `e_0(B) - curl E + lotB = 0`, with explicit lower-order terms.
-* `vacuum_nonlinearEB`: **every vacuum metric** satisfies `NonlinearEB` in every orthonormal frame.
-* `linearization_nonlinearEB`:
-  **the linearization at Minkowski space is exactly the linearized EB system** `EBJet` of
-  `Feec.Physics.EinsteinBianchi.System` (equivalently, by `linBianchi_iff`, the linearized Bianchi
-  identity of Prop 3.4); `ebJet_of_nonlinearEB`: the first variation of every family of solutions
-  through Minkowski space (of vacuum metrics, by `vacuum_nonlinearEB`) solves it.
-* `nonlinearEB_iff_extrinsicEB`, `vacuum_extrinsicEB`: for a hypersurface-orthogonal normal (symmetric
-  `K`) the system is the thesis' one, with spatial covariant derivatives `D`, the Lie derivative
-  `L_n`, `K_ij = g(∇_{e_i} n, e_j)` and `a = ∇_n n`:
-  `div E − B ×· K = 0`, `div B + E ×· K = 0`, `L_n E + sym curl B + L¹ = 0`,
-  `L_n B − sym curl E + L² = 0`, with `L¹` exactly as printed and
-  `L² = −3 sym(K·B) + B tr K − B ×× K − 2 sym(a × E)`.
-* `extrinsic_symm_iff_bracket`: `K` is symmetric iff the brackets `[e_i, e_j]` of the spatial
-  triad have no `e_0` component (involutivity of `n^⊥`, the frame form of
-  hypersurface-orthogonality; the Frobenius theorem itself is not formalized).
-* `isLeviCivita_minkowski`, `isOrthonormalFrame_minkowski`, `ricField_minkowski`,
-  `minkowski_extrinsicEB`: Minkowski space in its Cartesian frame satisfies every hypothesis of
-  `vacuum_extrinsicEB` (a non-vacuity check; it has `E = B = 0`).
-
-**Corrections to the thesis display** (in the conventions of its Props 3.3–3.4, reading `Ē, B̄`
-as `E, B` and the time derivative as `L_n`): the `B`-constraint has `+ E ×· K`, the
-`B`-evolution equation has `− sym curl E` and `− 2 sym(a × E)`. The printed `B`-equation
-`Ḃ + sym curl E + L² = 0` is inconsistent with Prop 3.4 already at `K = a = 0` (no relabelling
-`E ↦ ±E`, `B ↦ ±B` makes both printed evolution equations agree with `Ė + curl B = 0`,
-`Ḃ − curl E = 0`). The thesis does not define `a × B`; here `(v × A)_ij = ε_jkl v_k A_il`.
-
-## Not formalized
-
-* Existence of solutions, or of orthonormal frames, lapse/shift coordinates and the time function
-  of the `3 + 1` split: the frame and its connection coefficients are given data.
-* The non-vacuum system of [ACBY1997].
-* Local versions (metric, frame and vacuum on an open set only): every field theorem assumes its
-  hypotheses on all of `ℝ⁴`, so charts that do not cover `ℝ⁴` (e.g. Schwarzschild) are not
-  covered as stated.
-* The linearization is taken in the unknowns `(γ, E, B, e_κ E, e_κ B)` of the system, not along a
-  family of metrics `g_ε → η`.
-* A worked vacuum example with `E, B ≠ 0` (e.g. a pp-wave).
+The second Bianchi identity for the Weyl tensor `W = [[E, B], [B, -E]]` in an orthonormal frame
+of a metric on `ℝ⁴` is a system of constraints and evolution equations for `E`, `B`, satisfied by
+every vacuum metric; for a normal with symmetric extrinsic curvature it is the system of
+[QuennevilleBelair2015], §3.4 (adapted), which follows [Friedrich1996].
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Prop 3.4 and the nonlinear system), §3.2–3.3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 * [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
-* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
-* [R. M. Wald, *General Relativity*][Wald1984], §3.4, §10.2
+* [R. M. Wald, *General Relativity*][Wald1984]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -91,29 +28,24 @@ namespace Feec.EinsteinBianchi
 
 variable (dE dB : Jet4)
 
-/-- Lower-triangle normal form of a jet of symmetric matrices. -/
 theorem jet4_nrm {dX : Jet4} (hX : ∀ μ, (dX μ)ᵀ = dX μ) (μ : Fin 4) :
     dX μ 0 1 = dX μ 1 0 ∧ dX μ 0 2 = dX μ 2 0 ∧ dX μ 1 2 = dX μ 2 1 := by
   have s : ∀ i j, dX μ i j = dX μ j i := fun i j => by
     simpa [Matrix.transpose_apply] using congrFun (congrFun (hX μ) j) i
   exact ⟨s 0 1, s 0 2, s 1 2⟩
 
-/-- The component `(1,2,3; t∧x_j)` of the linearized Bianchi expression is `(div B)_j`. -/
 theorem bianchi2_divB (hB : ∀ μ, (dB μ)ᵀ = dB μ) (j : Fin 3) :
     bianchi2 dE dB 1 2 3 (p (.inl j)) (q (.inl j)) = div (sp dB) j := by
   have sB := jet4_nrm hB
   fin_cases j <;>
     simp [bianchi2_eq, sgn, pidx, p, q, div, sp, Fin.sum_univ_three, sB]
 
-/-- The component `(1,2,3; ⋆(t∧x_j))` of the linearized Bianchi expression is `-(div E)_j`. -/
 theorem bianchi2_divE (hE : ∀ μ, (dE μ)ᵀ = dE μ) (j : Fin 3) :
     bianchi2 dE dB 1 2 3 (p (.inr j)) (q (.inr j)) = -div (sp dE) j := by
   have sE := jet4_nrm hE
   fin_cases j <;>
     simp [bianchi2_eq, sgn, pidx, p, q, div, sp, Fin.sum_univ_three, sE] <;> ring
 
-/-- The component `(0, ⋆(t∧x_m); t∧x_j)` of the linearized Bianchi expression is
-`(Ḃ - curl E)_jm`. -/
 theorem bianchi2_evolB (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) (j m : Fin 3) :
     bianchi2 dE dB 0 (p (.inr m)) (q (.inr m)) (p (.inl j)) (q (.inl j)) =
       (dB 0 - curl (sp dE)) j m := by
@@ -123,8 +55,6 @@ theorem bianchi2_evolB (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)�
     simp [bianchi2_eq, sgn, pidx, p, q, curl, sp, Fin.sum_univ_three, sE, sB,
       leviCivita3_apply] <;> ring
 
-/-- The component `(0, ⋆(t∧x_m); ⋆(t∧x_j))` of the linearized Bianchi expression is
-`-(Ė + curl B)_jm`. -/
 theorem bianchi2_evolE (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) (j m : Fin 3) :
     bianchi2 dE dB 0 (p (.inr m)) (q (.inr m)) (p (.inr j)) (q (.inr j)) =
       -(dE 0 + curl (sp dB)) j m := by
@@ -146,19 +76,16 @@ def weylOf (E B : Matrix (Fin 3) (Fin 3) ℝ) : Tensor4 := ofBlocks E B B (-E)
 def connPart (γ : FrameConn) (W : Tensor4) (κ μ ν ρ σ : Fin 4) : ℝ :=
   ∑ l, (γ l κ μ * W l ν ρ σ + γ l κ ν * W μ l ρ σ + γ l κ ρ * W μ ν l σ + γ l κ σ * W μ ν ρ l)
 
-/-- The lower-order (nonlinear) part of the frame Bianchi identity: minus the cyclic sum of
-`connPart`. It is bilinear in `(γ, W)`. -/
+/-- The lower-order part of the frame Bianchi identity: minus the cyclic sum of `connPart`. -/
 def lowerOrder (γ : FrameConn) (W : Tensor4) (α β γ' δ θ : Fin 4) : ℝ :=
   -(connPart γ W α β γ' δ θ + connPart γ W β γ' α δ θ + connPart γ W γ' α β δ θ)
 
-/-- The frame second Bianchi expression `∇_[α W_βγ']δθ` (times 3) for the Weyl field
-`W = [[E, B], [B, -E]]` with frame-derivative jets `dE κ = e_κ(E)`, `dB κ = e_κ(B)`. -/
+/-- The frame second Bianchi expression `∇_[α W_βγ']δθ` (times 3) for `W = [[E, B], [B, -E]]`. -/
 def frameBianchi (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (α β γ' δ θ : Fin 4) : ℝ :=
   cov4 γ (weylOf E B) (dWeyl dE dB) α β γ' δ θ + cov4 γ (weylOf E B) (dWeyl dE dB) β γ' α δ θ
     + cov4 γ (weylOf E B) (dWeyl dE dB) γ' α β δ θ
 
-/-- The frame Bianchi expression is the linearized one plus lower-order terms. -/
 theorem frameBianchi_eq (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (α β γ' δ θ : Fin 4) :
     frameBianchi γ E B dE dB α β γ' δ θ =
@@ -182,16 +109,11 @@ def conE (γ : FrameConn) (W : Tensor4) : Fin 3 → ℝ :=
 def conB (γ : FrameConn) (W : Tensor4) : Fin 3 → ℝ :=
   fun j => lowerOrder γ W 1 2 3 (p (.inl j)) (q (.inl j))
 
-/-- **The nonlinear Einstein–Bianchi system** in an orthonormal frame `(e_0 = n, e_1, e_2, e_3)`:
-`div E + conE = 0`, `div B + conB = 0`, `e_0(E) + curl B + lotE = 0`, `e_0(B) - curl E + lotB = 0`,
-with frame derivatives in `div`, `curl` and lower-order terms bilinear in the frame connection
-coefficients and `(E, B)`. -/
+/-- The nonlinear Einstein–Bianchi system in an orthonormal frame `(e_0 = n, e_1, e_2, e_3)`. -/
 def NonlinearEB (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4) : Prop :=
   div (sp dE) + conE γ (weylOf E B) = 0 ∧ div (sp dB) + conB γ (weylOf E B) = 0 ∧
     dE 0 + curl (sp dB) + lotE γ (weylOf E B) = 0 ∧ dB 0 - curl (sp dE) + lotB γ (weylOf E B) = 0
 
-/-- A function of three indices in `Fin 4` that is antisymmetric vanishes as soon as it vanishes
-on `(1,2,3)`, `(0,2,3)`, `(0,3,1)`, `(0,1,2)`. -/
 theorem eq_zero_of_alt3 (G : Fin 4 → Fin 4 → Fin 4 → ℝ) (h12 : ∀ a b c, G a b c = -G b a c)
     (h23 : ∀ a b c, G a b c = -G a c b) (r0 : G 1 2 3 = 0) (r1 : G 0 2 3 = 0) (r2 : G 0 3 1 = 0)
     (r3 : G 0 1 2 = 0) (a b c : Fin 4) : G a b c = 0 := by
@@ -200,11 +122,9 @@ theorem eq_zero_of_alt3 (G : Fin 4 → Fin 4 → Fin 4 → ℝ) (h12 : ∀ a b c
   have := h23 b a c; have := h23 b c a; have := h23 c a b; have := h23 c b a
   fin_cases a <;> fin_cases b <;> fin_cases c <;> simp at * <;> linarith
 
-/-- The jet `dWeyl` is skew in each pair. -/
 theorem pairSkew_dWeyl (dE dB : Jet4) (κ : Fin 4) : PairSkew (dWeyl dE dB κ) :=
   pairSkew_ofMat _
 
-/-- The frame Bianchi expression is skew in its first two indices. -/
 theorem frameBianchi_swap12 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (α β γ' δ θ : Fin 4) :
     frameBianchi γ E B dE dB α β γ' δ θ = -frameBianchi γ E B dE dB β α γ' δ θ := by
@@ -214,7 +134,6 @@ theorem frameBianchi_swap12 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) 
   rw [(hS α β γ' δ θ).1, (hS β γ' α δ θ).1, (hS γ' α β δ θ).1]
   ring
 
-/-- The frame Bianchi expression is skew in its second and third indices. -/
 theorem frameBianchi_swap23 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (α β γ' δ θ : Fin 4) :
     frameBianchi γ E B dE dB α β γ' δ θ = -frameBianchi γ E B dE dB α γ' β δ θ := by
@@ -224,7 +143,6 @@ theorem frameBianchi_swap23 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) 
   rw [(hS α β γ' δ θ).1, (hS β γ' α δ θ).1, (hS γ' α β δ θ).1]
   ring
 
-/-- The frame Bianchi expression is skew in its last two indices. -/
 theorem frameBianchi_swap45 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (α β γ' δ θ : Fin 4) :
     frameBianchi γ E B dE dB α β γ' δ θ = -frameBianchi γ E B dE dB α β γ' θ δ := by
@@ -234,8 +152,8 @@ theorem frameBianchi_swap45 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) 
   rw [(hS α β γ' δ θ).2, (hS β γ' α δ θ).2, (hS γ' α β δ θ).2]
   ring
 
-/-- **Nonlinear Prop 3.4** (frame form, jet level): for jets of symmetric `E, B`, the frame
-second Bianchi identity for `W = [[E, B], [B, -E]]` holds iff the nonlinear EB system holds. -/
+/-- For jets of symmetric `E`, `B`, the frame second Bianchi identity for `W = [[E, B], [B, -E]]`
+holds iff the nonlinear Einstein–Bianchi system `NonlinearEB` holds. -/
 theorem frameBianchi_iff (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4)
     (hE : ∀ μ, (dE μ)ᵀ = dE μ) (hB : ∀ μ, (dB μ)ᵀ = dB μ) :
     (∀ α β γ' δ θ, frameBianchi γ E B dE dB α β γ' δ θ = 0) ↔ NonlinearEB γ E B dE dB := by
@@ -296,7 +214,6 @@ theorem frameBianchi_iff (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE
 
 /-! ### Linearization at Minkowski space -/
 
-/-- `weylOf` is linear: `weylOf (ε E) (ε B) = ε weylOf E B`. -/
 theorem weylOf_smul (ε : ℝ) (E B : Matrix (Fin 3) (Fin 3) ℝ) :
     weylOf (ε • E) (ε • B) = ε • weylOf E B := by
   funext a b c d
@@ -305,7 +222,6 @@ theorem weylOf_smul (ε : ℝ) (E B : Matrix (Fin 3) (Fin 3) ℝ) :
   generalize pidx c d = J
   rcases I with i | i <;> rcases J with j | j <;> simp <;> ring
 
-/-- Derivative of a component of `weylOf` along a family. -/
 theorem hasDerivAt_weylOf {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ} {E' B' : Matrix (Fin 3) (Fin 3) ℝ}
     {t : ℝ} (hE : ∀ i j, HasDerivAt (fun ε => E ε i j) (E' i j) t)
     (hB : ∀ i j, HasDerivAt (fun ε => B ε i j) (B' i j) t) (a b c d : Fin 4) :
@@ -321,7 +237,6 @@ theorem hasDerivAt_weylOf {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ} {E' B' : Ma
   · exact (hB i j).const_mul _
   · exact (hE i j).neg.const_mul _
 
-/-- The lower-order terms have vanishing derivative at a background with `γ = 0` and `W = 0`. -/
 theorem hasDerivAt_lowerOrder {γ : ℝ → FrameConn} {W : ℝ → Tensor4} {γ' : FrameConn}
     {W' : Tensor4} (hγ : ∀ l κ ν, HasDerivAt (fun ε => γ ε l κ ν) (γ' l κ ν) 0)
     (hW : ∀ a b c d, HasDerivAt (fun ε => W ε a b c d) (W' a b c d) 0) (hγ0 : γ 0 = 0)
@@ -342,24 +257,20 @@ theorem hasDerivAt_lowerOrder {γ : ℝ → FrameConn} {W : ℝ → Tensor4} {γ
   simpa [lowerOrder] using
     (((hc α β γ'' δ θ).fun_add (hc β γ'' α δ θ)).fun_add (hc γ'' α β δ θ)).fun_neg
 
-/-- Derivative of `div` along a family of jets. -/
 theorem hasDerivAt_div {dX : ℝ → Jet4} {dX' : Jet4} {t : ℝ}
     (h : ∀ μ i j, HasDerivAt (fun ε => dX ε μ i j) (dX' μ i j) t) (a : Fin 3) :
     HasDerivAt (fun ε => div (sp (dX ε)) a) (div (sp dX') a) t := by
   simp only [div, sp]
   exact HasDerivAt.fun_sum fun b _ => h _ _ _
 
-/-- Derivative of `curl` along a family of jets. -/
 theorem hasDerivAt_curl {dX : ℝ → Jet4} {dX' : Jet4} {t : ℝ}
     (h : ∀ μ i j, HasDerivAt (fun ε => dX ε μ i j) (dX' μ i j) t) (a b : Fin 3) :
     HasDerivAt (fun ε => curl (sp (dX ε)) a b) (curl (sp dX') a b) t := by
   simp only [curl, sp, Matrix.of_apply]
   exact HasDerivAt.fun_sum fun c _ => HasDerivAt.fun_sum fun d _ => (h _ _ _).const_mul _
 
-/-- **The linearization at Minkowski space of the nonlinear EB system is the linearized EB
-system** (thesis (3.3)–(3.4) and the constraints): along any differentiable family starting at
-`γ = 0`, `E = B = 0`, the derivatives at `ε = 0` of the residuals of `NonlinearEB` are the
-residuals of `EBJet` for the derivative jets. -/
+/-- Along a family differentiable at `ε = 0` through `γ = 0`, `E = B = 0`, the derivatives at
+`ε = 0` of the residuals of `NonlinearEB` are the residuals of `EBJet` of the derivative jets. -/
 theorem linearization_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ}
     {dE dB : ℝ → Jet4} {γ' : FrameConn} {E' B' : Matrix (Fin 3) (Fin 3) ℝ} {dE' dB' : Jet4}
     (hγ : ∀ l κ ν, HasDerivAt (fun ε => γ ε l κ ν) (γ' l κ ν) 0)
@@ -388,12 +299,6 @@ theorem linearization_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix
       ((hdE 0 a b).fun_add (hasDerivAt_curl hdB a b)).fun_add (hL 0 _ _ _ _).fun_neg
   · simpa [lotB] using ((hdB 0 a b).fun_sub (hasDerivAt_curl hdE a b)).fun_add (hL 0 _ _ _ _)
 
-/-- **The first variation of a family of solutions of the nonlinear EB system through Minkowski
-space solves the linearized EB system**: if `NonlinearEB` holds for every `ε` along a family that
-is differentiable at `ε = 0` with `γ 0 = 0`, `E 0 = B 0 = 0` (the frame data of vacuum metrics
-satisfy `NonlinearEB`, `vacuum_nonlinearEB`; Minkowski space in its Cartesian frame is `ε = 0`), the
-derivative jets satisfy `EBJet` (`linearization_nonlinearEB`: the derivatives of the residuals,
-which vanish identically, are the residuals of `EBJet`). -/
 theorem ebJet_of_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix (Fin 3) (Fin 3) ℝ}
     {dE dB : ℝ → Jet4} {γ' : FrameConn} {E' B' : Matrix (Fin 3) (Fin 3) ℝ} {dE' dB' : Jet4}
     (hγ : ∀ l κ ν, HasDerivAt (fun ε => γ ε l κ ν) (γ' l κ ν) 0)
@@ -418,20 +323,16 @@ theorem ebJet_of_nonlinearEB {γ : ℝ → FrameConn} {E B : ℝ → Matrix (Fin
 /-- The Minkowski matrix `η = diag(-1, 1, 1, 1)`. -/
 def ηM : Matrix (Fin 4) (Fin 4) ℝ := Matrix.diagonal (Metric.minkowski4 ℝ)
 
-/-- A differentiable orthonormal frame field `e` (columns `e_μ`, `e y a μ = e^a_μ`) of a metric
-`g`, with coframe `θ`: `e θ = 1` and `eᵀ g e = η`. Its first vector `e_0` is the unit timelike
-normal `n` of the `3 + 1` split. -/
+/-- A differentiable orthonormal frame `e` of a metric `g`, with coframe `θ`: `eᵀ g e = η`. -/
 structure IsOrthonormalFrame (g e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ) : Prop where
   differentiable : ∀ a μ, Differentiable ℝ fun y => e y a μ
   coframe : ∀ y, e y * θ y = 1
   orthonormal : ∀ y, (e y)ᵀ * g y * e y = ηM
 
-/-- `η² = 1`. -/
 theorem ηM_mul_self : ηM * ηM = 1 := by
   rw [ηM, Matrix.diagonal_mul_diagonal, ← Matrix.diagonal_one]
   congr 1; funext i; exact Metric.minkowski4_mul_self i
 
-/-- The inverse metric in terms of an orthonormal frame: `g⁻¹ = e η eᵀ`. -/
 theorem frame_inv_metric {g e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     (hF : IsOrthonormalFrame g e θ) (y : Fin 4 → ℝ) : (e y * ηM * (e y)ᵀ) * g y = 1 := by
   have h1 : (e y)ᵀ * g y = ηM * θ y := by
@@ -440,8 +341,6 @@ theorem frame_inv_metric {g e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) �
   rw [Matrix.mul_assoc, h1, ← Matrix.mul_assoc, Matrix.mul_assoc (e y), ηM_mul_self,
     Matrix.mul_one, hF.coframe y]
 
-/-- In vacuum, the frame components of the Riemann tensor in an orthonormal frame form an
-algebraic Weyl tensor. -/
 theorem frameRiemField_isWeyl {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ} (h : IsLeviCivita g Γ)
     {e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ} (hF : IsOrthonormalFrame g e θ)
@@ -478,7 +377,6 @@ def frameDeriv (e : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ)
     (A : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ) (x : Fin 4 → ℝ) : Jet4 :=
   fun κ => ∑ h, e x h κ • jet4 A x h
 
-/-- In vacuum, `W = [[E, B], [B, -E]]` with `E, B` symmetric and trace-free. -/
 theorem frameRiemField_eq_weylOf {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ} (h : IsLeviCivita g Γ)
     {e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ} (hF : IsOrthonormalFrame g e θ)
@@ -493,7 +391,6 @@ theorem frameRiemField_eq_weylOf {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4)
   rw [e1, e2]
   exact ⟨hW, hE, htrE, hB, htrB⟩
 
-/-- `dWeyl` is linear in the jets: `∑_h w_h dWeyl_h = weylOf (∑ w_h dE_h) (∑ w_h dB_h)`. -/
 theorem sum_mul_dWeyl (w : Fin 4 → ℝ) (dE dB : Jet4) (a b c d : Fin 4) :
     ∑ h, w h * dWeyl dE dB h a b c d = weylOf (∑ h, w h • dE h) (∑ h, w h • dB h) a b c d := by
   simp only [dWeyl, weylOf, ofBlocks, ofMat_apply]
@@ -505,12 +402,8 @@ theorem sum_mul_dWeyl (w : Fin 4 → ℝ) (dE dB : Jet4) (a b c d : Fin 4) :
       ← sum_neg_distrib] <;>
     exact sum_congr rfl fun _ _ => by ring
 
-/-- **Every vacuum metric satisfies the nonlinear Einstein–Bianchi system.** Let `g` be a metric
-on `ℝ⁴` with Levi-Civita connection `Γ` (`C²`), `R_ab = 0`, and let `e` be a differentiable
-orthonormal frame (`e_0 = n` unit timelike) with coframe `θ`. Then at every point the electric
-and magnetic parts `E, B` of the Weyl (= Riemann) tensor in the frame are symmetric trace-free
-and satisfy `NonlinearEB` with the frame connection coefficients `γ` of `e` and the frame
-derivatives `e_κ(E)`, `e_κ(B)`. -/
+/-- Every vacuum metric satisfies the nonlinear Einstein–Bianchi system: in every orthonormal
+frame, the electric and magnetic parts of its curvature satisfy `NonlinearEB` at every point. -/
 theorem vacuum_nonlinearEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ} (h : IsLeviCivita g Γ)
     {e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ} (hF : IsOrthonormalFrame g e θ)
@@ -551,12 +444,10 @@ theorem vacuum_nonlinearEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
   rw [hjet, (hWE x).1] at this
   exact this
 
-/-- Metric compatibility of frame connection coefficients in an orthonormal frame:
-`η_λ γ^λ_{κν} = -η_ν γ^ν_{κλ}`. -/
+/-- Metric compatibility of frame connection coefficients: `η_λ γ^λ_{κν} = -η_ν γ^ν_{κλ}`. -/
 def IsMetricConn (γ : FrameConn) : Prop :=
   ∀ l κ ν, Metric.minkowski4 ℝ l * γ l κ ν = -(Metric.minkowski4 ℝ ν * γ ν κ l)
 
-/-- The frame connection coefficients of an orthonormal frame are metric compatible. -/
 theorem isMetricConn_frameConnField {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ} (h : IsLeviCivita g Γ)
     {e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ} (hF : IsOrthonormalFrame g e θ)
@@ -630,12 +521,12 @@ theorem isMetricConn_frameConnField {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin
   have := hd h' ν l
   linear_combination e x h' κ * this
 
-/-! ### The thesis' form of the nonlinear system -/
+/-! ### The nonlinear system with extrinsic curvature -/
 
 /-- The acceleration `a = ∇_n n` of the normal `n = e_0`: `a_i = γ^i_{00}`. -/
 def accel (γ : FrameConn) : Fin 3 → ℝ := fun i => γ i.succ 0 0
 
-/-- The extrinsic curvature `K_ij = g(∇_{e_i} n, e_j) = γ^0_{ij}` (sign of [Wald1984]). -/
+/-- The extrinsic curvature `K_ij = g(∇_{e_i} n, e_j) = γ^0_{ij}`, with the sign of [Wald1984]. -/
 def extrinsic (γ : FrameConn) : Matrix (Fin 3) (Fin 3) ℝ := Matrix.of fun i j => γ 0 i.succ j.succ
 
 /-- The spatial covariant-derivative jet `D_c A_ad` of a spatial tensor in the frame. -/
@@ -665,20 +556,16 @@ def crossCross (G H : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :
 def crossVec (v : Fin 3 → ℝ) (A : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
   Matrix.of fun i j => ∑ k, ∑ l, leviCivita3 ℝ j k l * v k * A i l
 
-/-- Lower-order term of the `E` equation, as in the thesis:
-`L¹ = -3 sym(K E) + E tr K - E ×× K + 2 sym(a × B)`. -/
+/-- The lower-order term `L¹ = -3 sym(K E) + E tr K - E ×× K + 2 sym(a × B)` for `E`. -/
 def thesisL1 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
   (-3 : ℝ) • symPart (extrinsic γ * E) + (extrinsic γ).trace • E - crossCross E (extrinsic γ)
     + (2 : ℝ) • symPart (crossVec (accel γ) B)
 
-/-- Lower-order term of the `B` equation (corrected sign of the acceleration term):
-`L² = -3 sym(K B) + B tr K - B ×× K - 2 sym(a × E)`. -/
+/-- The lower-order term `L² = -3 sym(K B) + B tr K - B ×× K - 2 sym(a × E)` for `B`. -/
 def thesisL2 (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) : Matrix (Fin 3) (Fin 3) ℝ :=
   (-3 : ℝ) • symPart (extrinsic γ * B) + (extrinsic γ).trace • B - crossCross B (extrinsic γ)
     - (2 : ℝ) • symPart (crossVec (accel γ) E)
 
-/-- Normal form of metric-compatible frame connection coefficients
-(`γ^0_{κ i} = γ^i_{κ0}`, `γ^j_{κ i} = -γ^i_{κ j}`). -/
 theorem conn_nf {γ : FrameConn} (hγ : IsMetricConn γ) (κ : Fin 4) :
     γ 0 κ 0 = 0 ∧ γ 1 κ 1 = 0 ∧ γ 2 κ 2 = 0 ∧ γ 3 κ 3 = 0 ∧ γ 1 κ 0 = γ 0 κ 1 ∧
       γ 2 κ 0 = γ 0 κ 2 ∧ γ 3 κ 0 = γ 0 κ 3 ∧ γ 2 κ 1 = -γ 1 κ 2 ∧ γ 3 κ 1 = -γ 1 κ 3 ∧
@@ -689,18 +576,15 @@ theorem conn_nf {γ : FrameConn} (hγ : IsMetricConn γ) (κ : Fin 4) :
   simp [Metric.minkowski4] at h00 h11 h22 h33 h10 h20 h30 h21 h31 h32
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> linarith
 
-/-- Normal form of a symmetric trace-free `3 × 3` matrix. -/
 theorem mat_nf {A : Matrix (Fin 3) (Fin 3) ℝ} (hA : Aᵀ = A) (htA : A.trace = 0) :
     A 1 0 = A 0 1 ∧ A 2 0 = A 0 2 ∧ A 2 1 = A 1 2 ∧ A 2 2 = -A 0 0 - A 1 1 := by
   refine ⟨congrFun (congrFun hA 0) 1, congrFun (congrFun hA 0) 2, congrFun (congrFun hA 1) 2, ?_⟩
   rw [Matrix.trace_fin_three] at htA; linarith
 
-/-- Normal form of a symmetric extrinsic curvature. -/
 theorem extrinsic_nf {γ : FrameConn} (hK : (extrinsic γ)ᵀ = extrinsic γ) :
     γ 0 2 1 = γ 0 1 2 ∧ γ 0 3 1 = γ 0 1 3 ∧ γ 0 3 2 = γ 0 2 3 :=
   ⟨congrFun (congrFun hK 0) 1, congrFun (congrFun hK 0) 2, congrFun (congrFun hK 1) 2⟩
 
-/-- The constraint for `E` in the thesis' form: `div E + conE = div_D E - B ×· K`. -/
 theorem conE_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)ᵀ = extrinsic γ)
     {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htE : E.trace = 0) (hB : Bᵀ = B)
     (htB : B.trace = 0) (dE : Jet4) (j : Fin 3) :
@@ -718,8 +602,6 @@ theorem conE_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)ᵀ
       Fin.sum_univ_four, Fin.sum_univ_three, div, sp, covSp, crossDot, extrinsic,
       leviCivita3_apply, *] <;> ring
 
-/-- The constraint for `B` in the thesis' form, with corrected sign:
-`div B + conB = div_D B + E ×· K`. -/
 theorem conB_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)ᵀ = extrinsic γ)
     {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htE : E.trace = 0) (hB : Bᵀ = B)
     (htB : B.trace = 0) (dB : Jet4) (j : Fin 3) :
@@ -738,8 +620,6 @@ theorem conB_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)ᵀ
       leviCivita3_apply, *] <;> ring
 
 set_option maxHeartbeats 4000000 in
-/-- The evolution equation for `E` in the thesis' form:
-`e_0(E) + curl B + lotE = L_n E + sym curl_D B + L¹ - ½ ε (div_D B + E ×· K)`. -/
 theorem evolE_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)ᵀ = extrinsic γ)
     {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htE : E.trace = 0) (hB : Bᵀ = B)
     (htB : B.trace = 0) (dE dB : Jet4) (hdB : IsSymTF dB) (i j : Fin 3) :
@@ -765,8 +645,6 @@ theorem evolE_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)�
       Matrix.trace_fin_three, leviCivita3_apply, *] <;> ring
 
 set_option maxHeartbeats 4000000 in
-/-- The evolution equation for `B` in the thesis' form (corrected signs):
-`e_0(B) - curl E + lotB = L_n B - sym curl_D E + L² + ½ ε (div_D E - B ×· K)`. -/
 theorem evolB_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)ᵀ = extrinsic γ)
     {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E) (htE : E.trace = 0) (hB : Bᵀ = B)
     (htB : B.trace = 0) (dE dB : Jet4) (hdE : IsSymTF dE) (i j : Fin 3) :
@@ -791,20 +669,15 @@ theorem evolB_eq {γ : FrameConn} (hγ : IsMetricConn γ) (hK : (extrinsic γ)�
       lieN, covTime, symPart, thesisL2, crossCross, crossVec, accel, Matrix.mul_apply,
       Matrix.trace_fin_three, leviCivita3_apply, *] <;> ring
 
-/-- **The nonlinear EB system in the form of the thesis** (§3.4, after [Friedrich1996]), with
-spatial covariant derivatives `D`, the Lie derivative `L_n` along the unit normal, the extrinsic
-curvature `K` and the acceleration `a`, and with the signs of the `B`-constraint and of the
-`B`-evolution equation corrected. -/
+/-- The nonlinear system with spatial covariant derivatives, `L_n`, the extrinsic curvature, `a`. -/
 def ExtrinsicEB (γ : FrameConn) (E B : Matrix (Fin 3) (Fin 3) ℝ) (dE dB : Jet4) : Prop :=
   div (covSp γ E dE) - crossDot B (extrinsic γ) = 0 ∧
     div (covSp γ B dB) + crossDot E (extrinsic γ) = 0 ∧
     lieN γ E dE + symPart (curl (covSp γ B dB)) + thesisL1 γ E B = 0 ∧
     lieN γ B dB - symPart (curl (covSp γ E dE)) + thesisL2 γ E B = 0
 
-/-- **The frame EB system is the thesis' system**: for metric-compatible frame connection
-coefficients with symmetric extrinsic curvature (by `extrinsic_symm_iff_bracket`, `n^⊥` is
-involutive, i.e. `n = e_0` is hypersurface orthogonal) and symmetric trace-free `E, B` and jets, `NonlinearEB ↔ ExtrinsicEB`. The
-antisymmetric parts of the evolution equations are the constraints. -/
+/-- For metric-compatible frame connection coefficients with symmetric extrinsic curvature, and
+symmetric trace-free `E`, `B` and jets, `NonlinearEB ↔ ExtrinsicEB`. -/
 theorem nonlinearEB_iff_extrinsicEB {γ : FrameConn} (hγ : IsMetricConn γ)
     (hK : (extrinsic γ)ᵀ = extrinsic γ) {E B : Matrix (Fin 3) (Fin 3) ℝ} (hE : Eᵀ = E)
     (htE : E.trace = 0) (hB : Bᵀ = B) (htB : B.trace = 0) {dE dB : Jet4} (hdE : IsSymTF dE)
@@ -832,8 +705,6 @@ theorem nonlinearEB_iff_extrinsicEB {γ : FrameConn} (hγ : IsMetricConn γ)
     · rw [r3, h3, c2]; simp
     · rw [r4, h4, c1]; simp
 
-/-- Frame-derivative jets of symmetric trace-free differentiable fields are symmetric and
-trace-free. -/
 theorem frameDeriv_isSymTF {e : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     {A : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} (hs : ∀ y, (A y)ᵀ = A y)
     (ht : ∀ y, (A y).trace = 0) {x : Fin 4 → ℝ}
@@ -850,8 +721,8 @@ theorem frameDeriv_isSymTF {e : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     rw [h1, h2]; simp
   simp only [frameDeriv, Matrix.trace_sum, Matrix.trace_smul, h0, smul_zero, sum_const_zero]
 
-/-- **Every vacuum metric satisfies the thesis' nonlinear EB system** (corrected signs), in an
-orthonormal frame whose normal `e_0` has symmetric extrinsic curvature. -/
+/-- Every vacuum metric satisfies `ExtrinsicEB` in an orthonormal frame whose normal `e_0` has
+symmetric extrinsic curvature. [QuennevilleBelair2015], §3.4 (adapted) -/
 theorem vacuum_extrinsicEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
     {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ} (h : IsLeviCivita g Γ)
     {e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ} (hF : IsOrthonormalFrame g e θ)
@@ -878,11 +749,8 @@ theorem vacuum_extrinsicEB {g : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ}
 
 /-! ### Symmetry of `K` and hypersurface-orthogonality -/
 
-/-- **Symmetric extrinsic curvature in frame form.** For a torsion-free connection, the extrinsic
-curvature `K_ij = γ^0_{ij}` of `n = e_0` is symmetric iff the brackets `[e_i, e_j]` of the
-spatial triad have no `e_0` component, i.e. the spatial distribution `n^⊥` is involutive (by
-the Frobenius theorem, which is not formalized here, this means `n` is hypersurface-orthogonal).
-[Wald1984], §B.3 -/
+/-- For a torsion-free connection, `K_ij = γ^0_{ij}` is symmetric iff the brackets `[e_i, e_j]` of
+the spatial triad have no `e_0` component. [Wald1984], §B.3 -/
 theorem extrinsic_symm_iff_bracket {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 → Fin 4 → ℝ}
     (hΓ : ∀ x a b c, Γ x a b c = Γ x a c b) (e θ : (Fin 4 → ℝ) → Matrix (Fin 4) (Fin 4) ℝ)
     (x : Fin 4 → ℝ) :
@@ -902,7 +770,6 @@ theorem extrinsic_symm_iff_bracket {Γ : (Fin 4 → ℝ) → Fin 4 → Fin 4 →
 
 /-! ### A model: Minkowski space in a Cartesian frame -/
 
-/-- Minkowski space with the Cartesian connection `Γ = 0` is a Levi-Civita pair. -/
 theorem isLeviCivita_minkowski :
     IsLeviCivita (fun _ => ηM) (fun _ _ _ _ => (0 : ℝ)) where
   symm _ := by
@@ -912,27 +779,22 @@ theorem isLeviCivita_minkowski :
   torsionFree _ _ _ _ := rfl
   compat _ _ _ _ := by simp
 
-/-- The Cartesian frame `e = θ = 1` is an orthonormal frame of Minkowski space. -/
 theorem isOrthonormalFrame_minkowski :
     IsOrthonormalFrame (fun _ => ηM) (fun _ => 1) (fun _ => 1) where
   differentiable _ _ := differentiable_const _
   coframe _ := Matrix.mul_one 1
   orthonormal _ := by simp
 
-/-- Minkowski space is a vacuum solution. -/
 theorem ricField_minkowski (y : Fin 4 → ℝ) : ricField (fun _ _ _ _ => (0 : ℝ)) y = 0 := by
   funext b d
   simp [ricField, riemField, riemComp]
 
-/-- The Cartesian frame of Minkowski space has vanishing connection coefficients. -/
 theorem frameConnField_minkowski (x : Fin 4 → ℝ) :
     frameConnField (fun _ _ _ _ => (0 : ℝ)) (fun _ => (1 : Matrix (Fin 4) (Fin 4) ℝ))
       (fun _ => 1) x = 0 := by
   funext l κ ν
   simp [frameConnField, frameConn, mixedConnField]
 
-/-- **The hypotheses of `vacuum_extrinsicEB` are jointly satisfiable**: Minkowski space in its
-Cartesian frame satisfies them (with `γ = 0`, `E = B = 0`). -/
 theorem minkowski_extrinsicEB (x : Fin 4 → ℝ) :
     ExtrinsicEB (frameConnField (fun _ _ _ _ => 0) (fun _ => 1) (fun _ => 1) x)
       (elecField (fun _ => ηM) (fun _ _ _ _ => 0) (fun _ => 1) x)

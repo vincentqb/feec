@@ -7,34 +7,20 @@ public import Mathlib.Data.Nat.Choose.Sum
 /-!
 # The two families `P_rΛᵏ`, `P_r⁻Λᵏ` of the periodic table, over a field
 
-The algebraic layer of the element families of `Feec.FiniteElement.PolyElement`: the kinds
-`Feec.FiniteElement.PolyKind` (`full`: `P_rΛᵏ`, `trimmed`: `P_r⁻Λᵏ`), the admissible transitions
-`PolyKind.Transition` between consecutive form degrees ([AFW2006], §5; [AFW2010], §5.2), and the
-shape spaces and test forms of the degrees of freedom as spaces of polynomial forms
-(`Feec.Koszul.PolyForm`) over a commutative ring `K` (`PolyKind.form`, `PolyKind.testForm`). Only
-`Feec.Algebra` is imported: the form fields over `ℝ` are their evaluations
-(`PolyKind.space_eq_map_form` in `Feec.FiniteElement.PolyElement`).
+The kinds `PolyKind` of polynomial forms, the admissible transitions between consecutive form
+degrees ([AFW2006], §5; [AFW2010], §5.2), and the shape spaces and test forms as polynomial forms
+over a commutative ring.
 
 ## Main results
 
-* `PolyKind.extDeriv_mem_form`: `d` maps the source space into the target space of an admissible
-  transition, over every commutative ring;
-* `PolyKind.exists_extDeriv_eq`, `PolyKind.mem_polyForm_zero_of_extDeriv_eq_zero`: exactness along
-  a transition and constant closed `0`-forms, over every field of characteristic `0`;
-* `PolyKind.finrank_testForm`, `PolyKind.finrank_form_eq_sum`: **`dim = #DOF`**,
-  `dim P_rΛᵏ(Kⁿ) = Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` and likewise for `P_r⁻Λᵏ`
-  ([AFW2006], Thms 4.9, 4.13), via the Vandermonde identity `sum_choose_mul_choose_eq`;
-* `PolyKind.IsAdmissible`: the admissible sequences of [AFW2006], §3.5, (5.13), including those
-  whose degree reaches `0` (a full space `P_0Λᵏ`, then `P_0⁻Λ = 0`), their polynomial complexes
-  (`IsAdmissible.extDeriv_mem`) and exactness (`IsAdmissible.exists_extDeriv_eq`; in degree `0`,
-  `PolyKind.mem_polyForm_zero_of_extDeriv_eq_zero` for every family and degree).
+* `PolyKind.exists_extDeriv_eq`: exactness along an admissible transition.
+* `PolyKind.finrank_form_eq_sum`: the dimension of the shape spaces is the number of DOFs, `r ≥ 1`.
+* `PolyKind.IsAdmissible.exists_extDeriv_eq`: exactness of admissible sequences in positive degree.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (§3.5), §4 (Thms 4.9, 4.13), §5 (§5.5, (5.13))
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.1.4, §5.2
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -47,8 +33,6 @@ namespace Feec.FiniteElement
 
 variable {n : ℕ}
 
-/-- The binomial identity behind the dimension count of the degrees of freedom ([AFW2006],
-Thm 4.9): `Σ_{m=k}^{n} (n+1 choose m+1) (r-1 choose m-k) = (n + r choose n - k)`. -/
 theorem sum_choose_mul_choose_eq {n r k : ℕ} (hk : k ≤ n) (hr : 1 ≤ r) :
     ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) *
       (if k ≤ m ∧ m < r + k then (r - 1).choose (m - k) else 0) = (n + r).choose (n - k) := by
@@ -71,10 +55,7 @@ theorem sum_choose_mul_choose_eq {n r k : ℕ} (hk : k ≤ n) (hr : 1 ≤ r) :
   congr 1
   exact Nat.choose_symm_of_eq_add (by omega)
 
-/-! ### The two polynomial families -/
-
-/-- The two families of polynomial differential forms of finite element exterior calculus: the
-full spaces `P_rΛᵏ` and the trimmed spaces `P_r⁻Λᵏ` ([AFW2006], §3). -/
+/-- The two families of polynomial forms: the full spaces `P_rΛᵏ` and the trimmed `P_r⁻Λᵏ`. -/
 inductive PolyKind
   /-- `P_rΛᵏ` -/
   | full
@@ -84,18 +65,14 @@ inductive PolyKind
 
 namespace PolyKind
 
-/-- The dimension of the test space: `C(r+k, r) C(r-1, m-k)` for `P_rΛᵏ`, `C(r+k-1, r-1)
-C(r-1, m-k)` for `P_r⁻Λᵏ`, when `k ≤ m < r + k`, and `0` otherwise. -/
+/-- The dimension of the test space of the family on `m`-faces. -/
 def testDim (κ : PolyKind) (r k m : ℕ) : ℕ :=
   (match κ with
     | full => (r + k).choose r
     | trimmed => (r + k - 1).choose (r - 1)) *
   if k ≤ m ∧ m < r + k then (r - 1).choose (m - k) else 0
 
-/-- **The admissible transitions** `Xᵏ → Yᵏ⁺¹` of the two families ([AFW2006], §5; [AFW2010],
-§5.2): from `P_rΛᵏ` or `P_r⁻Λᵏ` the exterior derivative maps into `P_r⁻Λᵏ⁺¹` and into
-`P_{r-1}Λᵏ⁺¹`. The condition on the target `(κ', r')` does not depend on the kind of the
-source. -/
+/-- The admissible transitions from `P_rΛᵏ` or `P_r⁻Λᵏ` to `P_r⁻Λᵏ⁺¹` or `P_{r-1}Λᵏ⁺¹`. -/
 def Transition (r : ℕ) (κ' : PolyKind) (r' : ℕ) : Prop :=
   (κ' = trimmed ∧ r' = r) ∨ (κ' = full ∧ r' + 1 = r)
 
@@ -103,15 +80,12 @@ section CommRing
 
 variable (K : Type*) [CommRing K]
 
-/-- The polynomial forms of the family over `K`, `P_rΛᵏ(Kⁿ)` or `P_r⁻Λᵏ(Kⁿ)`, in
-`Koszul.PolyForm`. -/
+/-- The polynomial forms `P_rΛᵏ(Kⁿ)` or `P_r⁻Λᵏ(Kⁿ)` of the family over `K`. -/
 def form : PolyKind → ℕ → ℕ → Submodule K (Koszul.PolyForm K (Fin n))
   | full, r, k => Koszul.polyForm K (Fin n) r k
   | trimmed, r, k => Koszul.polyFormMinus K (Fin n) r k
 
-/-- The test forms over `K` of the degrees of freedom of the family on `m`-faces:
-`P⁻_{r+k-m}Λ^{m-k}(Kᵐ)` for `P_rΛᵏ` and `P_{r+k-m-1}Λ^{m-k}(Kᵐ)` for `P_r⁻Λᵏ`, when
-`k ≤ m < r + k`, and `0` otherwise ([AFW2006], Thms 4.9, 4.13). -/
+/-- The test forms over `K` of the degrees of freedom of the family on `m`-faces. -/
 def testForm : PolyKind → ℕ → ℕ → (m : ℕ) → Submodule K (Koszul.PolyForm K (Fin m))
   | full, r, k, m =>
     if k ≤ m ∧ m < r + k then Koszul.polyFormMinus K (Fin m) (r + k - m) (m - k) else ⊥
@@ -139,30 +113,24 @@ theorem testForm_eq_bot (κ : PolyKind) {r k m : ℕ} (h : ¬(k ≤ m ∧ m < r 
     κ.testForm K r k m = ⊥ := by
   cases κ <;> simp only [testForm, h, ↓reduceIte]
 
-/-- `P_r⁻Λᵏ ⊆ P_rΛᵏ`: both families lie in `P_rΛᵏ`. -/
 theorem form_le_polyForm (κ : PolyKind) (r k : ℕ) :
     κ.form K r k ≤ Koszul.polyForm K (Fin n) r k := by
   cases κ
   · exact le_rfl
   · exact Koszul.polyFormMinus_le_polyForm r k
 
-/-- Both families contain `P_r⁻Λᵏ`. -/
 theorem polyFormMinus_le_form (κ : PolyKind) (r k : ℕ) :
     Koszul.polyFormMinus K (Fin n) r k ≤ κ.form K r k := by
   cases κ
   · exact Koszul.polyFormMinus_le_polyForm r k
   · exact le_rfl
 
-/-- The target `P_r⁻Λᵏ` or `P_{r-1}Λᵏ` of an admissible transition from degree `r` lies in
-`P_r⁻Λᵏ`. -/
 theorem form_le_polyFormMinus {r : ℕ} {κ' : PolyKind} {r' : ℕ} (ht : Transition r κ' r')
     (k : ℕ) : κ'.form K r' k ≤ Koszul.polyFormMinus K (Fin n) r k := by
   rcases ht with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
   · exact le_rfl
   · simpa using Koszul.polyForm_le_polyFormMinus (R := K) (d := Fin n) (r := r' + 1) (by omega) k
 
-/-- **`d` along an admissible transition**, over every commutative ring: `d P_rΛᵏ` and
-`d P_r⁻Λᵏ` lie in `P_r⁻Λᵏ⁺¹` and in `P_{r-1}Λᵏ⁺¹`. [AFW2006], §5; [AFW2010], §5.2 -/
 theorem extDeriv_mem_form (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ κ.form K r k) :
     Koszul.extDeriv ω ∈ κ'.form K r' (k + 1) := by
@@ -183,8 +151,7 @@ section Field
 variable {K : Type*} [Field K] [CharZero K]
 
 /-- **Exactness along an admissible transition** (`K` of characteristic `0`): a closed form of the
-target space is `d η` with `η` in the source space (in `P_r⁻Λᵏ`; from `r = 0` the target is
-`P_0⁻Λᵏ⁺¹ = 0`). [AFW2010], §5.1.4, (72) -/
+target space is `d η` with `η` in the source space. [AFW2010], §5.1.4, (72) -/
 theorem exists_extDeriv_eq (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
     (hω : ω ∈ κ'.form K r' (k + 1)) (hd : Koszul.extDeriv ω = 0) :
@@ -193,13 +160,11 @@ theorem exists_extDeriv_eq (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     Koszul.exists_extDeriv_eq_of_mem_polyFormMinus (form_le_polyFormMinus ht _ hω) hd
   exact ⟨η, κ.polyFormMinus_le_form r k hη, he⟩
 
-/-- **The closed `0`-forms are the constants** (`K` of characteristic `0`). -/
 theorem mem_polyForm_zero_of_extDeriv_eq_zero (κ : PolyKind) {r : ℕ}
     {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ κ.form K r 0) (hd : Koszul.extDeriv ω = 0) :
     ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
   Koszul.mem_polyForm_zero_of_extDeriv_eq_zero (κ.form_le_polyForm r 0 hω).1 hd
 
-/-- `dim` of the test forms, over every field of characteristic `0`. -/
 theorem finrank_testForm (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k m : ℕ) :
     Module.finrank K (κ.testForm K r k m) = κ.testDim r k m := by
   by_cases h : k ≤ m ∧ m < r + k
@@ -214,8 +179,7 @@ theorem finrank_testForm (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k m : ℕ) :
     cases κ <;> simp [testDim, h]
 
 /-- **`dim P_rΛᵏ(Kⁿ)` (resp. `P_r⁻Λᵏ(Kⁿ)`) is the number of degrees of freedom** of a simplex,
-`Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`, over every field of characteristic `0`
-([AFW2006], Thms 4.9, 4.13). -/
+for `r ≥ 1`, over every field of characteristic `0`. [AFW2006], Thms 4.9, 4.13 -/
 theorem finrank_form_eq_sum (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     Module.finrank K (κ.form K (n := n) r k) =
       ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) * Module.finrank K (κ.testForm K r k m) := by
@@ -243,17 +207,7 @@ theorem finrank_form_eq_sum (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
 
 end Field
 
-/-! ### Admissible sequences of polynomial form spaces
-
-An admissible sequence of [AFW2006], §3.5, (5.13) chooses in every form degree a full or a trimmed
-space along admissible transitions. Its degree may reach `0` before the top form degree, at a full
-space `P_0Λᵏ`; every later space is then `P_0⁻Λ = 0` (`IsAdmissible`). The sequences of the element
-families keep `r_k ≥ 1` (`Feec.FiniteElement.PolySeq`, `PolySeq.isAdmissible`). -/
-
-/-- **An admissible sequence** of spaces of polynomial forms ([AFW2006], §3.5, (5.13)): in every
-form degree `k` the space `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` of the family `κ k` (`form`), `r_0 ≥ 1`,
-consecutive degrees related by admissible transitions. The degree reaches `0` only at a full space
-`P_0Λᵏ`, after which every space is `P_0⁻Λ = 0`. -/
+/-- An admissible sequence of spaces of polynomial forms. [AFW2006], §3.5, (5.13) -/
 structure IsAdmissible (κ : ℕ → PolyKind) (r : ℕ → ℕ) : Prop where
   one_le : 1 ≤ r 0
   transition (k : ℕ) : Transition (r k) (κ (k + 1)) (r (k + 1))
@@ -263,8 +217,6 @@ namespace IsAdmissible
 variable {κ : ℕ → PolyKind} {r : ℕ → ℕ} (h : IsAdmissible κ r)
 include h
 
-/-- **The polynomial complex of an admissible sequence**: `d` maps each space into the next, over
-every commutative ring. -/
 theorem extDeriv_mem {K : Type*} [CommRing K] {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
     (hω : ω ∈ (κ k).form K (r k) k) : Koszul.extDeriv ω ∈ (κ (k + 1)).form K (r (k + 1)) (k + 1) :=
   (κ k).extDeriv_mem_form (h.transition k) hω
@@ -280,8 +232,7 @@ theorem exists_extDeriv_eq {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
 
 end IsAdmissible
 
-/-- The degree `r'` of the `d`-part `dP_{r'+1}Λ^{k-1}` of the family: `r` for `P_rΛᵏ`, `r - 1`
-for `P_r⁻Λᵏ`. -/
+/-- The degree `r'` of the `d`-part `dP_{r'+1}Λ^{k-1}`: `r` for `P_rΛᵏ`, `r - 1` for `P_r⁻Λᵏ`. -/
 def dDeg : PolyKind → ℕ → ℕ
   | full, r => r
   | trimmed, r => r - 1

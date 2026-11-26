@@ -5,34 +5,12 @@ public import Feec.HilbertComplex.Window
 /-!
 # The Dirac operator `d + d†` and the wave operator `d − d†`
 
-For a closed densely defined `T` on a Hilbert space with `T T = 0` (`R(T) ⊆ D(T)`), the operators
-`T + T†` and `T − T†` on `D(T) ∩ D(T†)` are self-adjoint, resp. skew-adjoint. No closed range is
-needed: the domain is dense and maximal because `N(T)ᗮ ⊆ N(T†)` and `N(T†)ᗮ ⊆ N(T)`.
-
-Applied to the total differential `𝐝` of a Hilbert complex on a finite index type (a window
-`HilbertComplex.window`, a short complex, any finite shape), this gives the Dirac operator
-`H.dirac = 𝐝 + 𝐝*` and the wave operator `H.wave = 𝐝 − 𝐝*` on `PiLp 2 W`, where
-`𝐝* = 𝐝†` is the total differential of the dual complex (`HilbertComplex.adjoint_totalD`).
-
-## Main results
-
-* `LinearPMap.dense_domain_inf_adjoint`: `D(T) ∩ D(T†)` is dense.
-* `LinearPMap.isSkewAdjoint_sub_adjoint`.
-* `HilbertComplex.isSkewAdjoint_wave`: for every finite Hilbert complex, in particular for every
-  window of a complex on `ℤ`.
-* `HilbertComplex.wave_apply`: the coordinates `(L x) j = ∑ i, d i j (x i) - ∑ k, (d j k)† (x k)`;
-  `HilbertComplex.mem_wave_domain`.
-* `HilbertComplex.wave_apply_fin3_zero`, `_one`, `_two`, `mem_wave_domain_fin3`: on a window
-  `W₀ → W₁ → W₂`, `L (σ, E, B) = (-d₀†E, d₀σ - d₁†B, d₁E)`.
+For a closed densely defined `T` with `T T = 0`, `T − T†` on `D(T) ∩ D(T†)` is skew-adjoint; for the
+total differential of a finite Hilbert complex this is the wave operator `L = 𝐝 − 𝐝*`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.4, (4.5) and Thm 4.6 (the Hodge wave operator is skew-adjoint; there with closed range, here
-  without)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], Lemma 2.1 and §2 (`d + d*` of a
-  Hilbert complex is self-adjoint)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.2
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -46,7 +24,6 @@ namespace Submodule
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
-/-- If `v - P_K v ∈ M` for all `v` in a dense set `D`, then `Kᗮ ⊆ cl M`. -/
 theorem orthogonal_le_topologicalClosure_of_dense (K : Submodule 𝕜 E) [K.HasOrthogonalProjection]
     {D : Set E} (hD : Dense D) (M : Submodule 𝕜 E)
     (hM : ∀ v ∈ D, v - K.starProjection v ∈ M) : Kᗮ ≤ M.topologicalClosure := by
@@ -76,8 +53,6 @@ variable (hT : Dense (T.domain : Set E)) (hc : T.IsClosed)
   (hmaps : ∀ x : T.domain, (T x : E) ∈ T.domain) (hcomp : ∀ x : T.domain, T ⟨T x, hmaps x⟩ = 0)
 include hT hc hcomp
 
-/-- For a closed densely defined `T` with `T T = 0`, `D(T) ∩ D(T†)` is dense
-(no closed range needed). -/
 theorem dense_domain_inf_adjoint : Dense ((T.domain ⊓ T†.domain : Submodule 𝕜 E) : Set E) := by
   have ha : T.kerᗮ ≤ T†.ker := Feec.Operator.orthogonal_ker_le_ker_adjoint hT hmaps hcomp
   have hb : T†.kerᗮ ≤ T.ker := Feec.Operator.orthogonal_ker_adjoint_le_ker hT hc hmaps hcomp
@@ -108,8 +83,6 @@ theorem dense_domain_inf_adjoint : Dense ((T.domain ⊓ T†.domain : Submodule 
   calc (⊤ : Submodule 𝕜 E) = K ⊔ Kᗮ := Submodule.sup_orthogonal_of_hasOrthogonalProjection.symm
     _ ≤ M.topologicalClosure := sup_le (hb.trans h2) (hK ▸ h1)
 
-/-- Maximality of `D(T) ∩ D(T†)`: if `⟪z, v⟫ = ⟪x, T v⟫ + s ⟪x, T† v⟫` on `D(T) ∩ D(T†)` for
-some `s ≠ 0`, then `x ∈ D(T) ∩ D(T†)`. -/
 theorem mem_domain_inf_adjoint_of_inner {s : 𝕜} (hs : s ≠ 0) {x z : E}
     (h : ∀ v : (T.domain ⊓ T†.domain : Submodule 𝕜 E),
       ⟪z, (v : E)⟫_𝕜 = ⟪x, T ⟨v, v.2.1⟩⟫_𝕜 + s * ⟪x, T† ⟨v, v.2.2⟩⟫_𝕜) :
@@ -185,8 +158,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
 /-- The Dirac operator `D = 𝐝 + 𝐝*` of a finite Hilbert complex, on `PiLp 2 W`. -/
 def dirac : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := H.totalD + H.dual.totalD
 
-/-- The wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex, on `PiLp 2 W`: the generator of
-the abstract Hodge wave equation `x' = L x`. [QuennevilleBelair2015], (4.5) -/
+/-- The wave operator `L = 𝐝 − 𝐝*` of a finite Hilbert complex. [QuennevilleBelair2015], (4.5) -/
 def wave : PiLp 2 W →ₗ.[𝕜] PiLp 2 W := H.totalD - H.dual.totalD
 
 theorem wave_eq : H.wave = H.totalD - H.totalD† := by rw [adjoint_totalD]; rfl
@@ -195,7 +167,6 @@ theorem mem_wave_domain {x : PiLp 2 W} : x ∈ H.wave.domain ↔
     (∀ i j, x i ∈ (H.d i j).domain) ∧ ∀ i j, x j ∈ ((H.d i j)†).domain :=
   ⟨fun h => ⟨h.1, fun i j => h.2 j i⟩, fun h => ⟨h.1, fun j i => h.2 i j⟩⟩
 
-/-- `(L x) j = ∑ i, d i j (x i) − ∑ k, (d j k)† (x k)`. -/
 theorem wave_apply (x : H.wave.domain) (j : ι) :
     (H.wave x) j = ∑ i, H.d i j ⟨(x : PiLp 2 W) i, x.2.1 i j⟩ -
       ∑ k, (H.d j k)† ⟨(x : PiLp 2 W) k, x.2.2 k j⟩ := by
@@ -207,9 +178,8 @@ theorem dense_wave_domain : Dense (H.wave.domain : Set (PiLp 2 W)) := by
   exact dense_domain_inf_adjoint H.dense_totalDomain H.isClosed_totalD H.totalD_mapsTo
     H.totalD_comp_totalD
 
-/-- **The wave operator of every finite Hilbert complex is skew-adjoint**, `L† = -L`, with no
-closed-range hypothesis. For a window of a longer complex this is the wave operator of the
-truncated complex. [QuennevilleBelair2015], Thm 4.6 -/
+/-- **The wave operator of every finite Hilbert complex is skew-adjoint**, `L† = -L`.
+[QuennevilleBelair2015], Thm 4.6 (adapted) -/
 theorem isSkewAdjoint_wave : H.wave.IsSkewAdjoint := by
   rw [wave_eq]
   exact isSkewAdjoint_sub_adjoint H.dense_totalDomain H.isClosed_totalD H.totalD_mapsTo
@@ -222,7 +192,6 @@ section Fin3
 variable {W : Fin 3 → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
   [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 ComplexShape.fin3 W)
 
-/-- `(L x)₀ = -d₀† x₁`. -/
 theorem wave_apply_fin3_zero (x : H.wave.domain) :
     (H.wave x) 0 = -(H.d 0 1)† ⟨(x : PiLp 2 W) 1, x.2.2 1 0⟩ := by
   rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
@@ -233,7 +202,6 @@ theorem wave_apply_fin3_zero (x : H.wave.domain) :
     adjoint_apply_eq_zero_of_eq_zero (H.shape 0 2 (by simp))]
   simp
 
-/-- `(L x)₁ = d₀ x₀ - d₁† x₂`. -/
 theorem wave_apply_fin3_one (x : H.wave.domain) :
     (H.wave x) 1 = H.d 0 1 ⟨(x : PiLp 2 W) 0, x.2.1 0 1⟩ -
       (H.d 1 2)† ⟨(x : PiLp 2 W) 2, x.2.2 2 1⟩ := by
@@ -244,7 +212,6 @@ theorem wave_apply_fin3_one (x : H.wave.domain) :
     adjoint_apply_eq_zero_of_eq_zero (H.shape 1 1 (by simp))]
   simp
 
-/-- `(L x)₂ = d₁ x₁`. -/
 theorem wave_apply_fin3_two (x : H.wave.domain) :
     (H.wave x) 2 = H.d 1 2 ⟨(x : PiLp 2 W) 1, x.2.1 1 2⟩ := by
   rw [wave_apply, Fin.sum_univ_three, Fin.sum_univ_three,
@@ -255,8 +222,6 @@ theorem wave_apply_fin3_two (x : H.wave.domain) :
     adjoint_apply_eq_zero_of_eq_zero (H.shape 2 2 (by simp))]
   simp
 
-/-- **Membership in the wave domain of a window complex**: `x₀ ∈ D(d₀)`, `x₁ ∈ D(d₁) ∩ D(d₀†)`,
-`x₂ ∈ D(d₁†)`. -/
 theorem mem_wave_domain_fin3 {x : PiLp 2 W} (h0 : x 0 ∈ (H.d 0 1).domain)
     (h1 : x 1 ∈ (H.d 1 2).domain) (h1' : x 1 ∈ ((H.d 0 1)†).domain)
     (h2 : x 2 ∈ ((H.d 1 2)†).domain) : x ∈ H.wave.domain := by

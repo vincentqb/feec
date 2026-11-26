@@ -14,33 +14,9 @@ public import Mathlib.Tactic.Ring
 /-!
 # The exterior algebra in coordinates, over any commutative ring
 
-Alternating forms on `R^d` (`d` a finite linearly ordered index type, `R` any commutative ring)
-in the basis `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (`s₁ < ⋯ < s_k`): a form is its coefficient function
-`ω : Finset d → R`, and `k`-forms are those supported on `k`-subsets. With the sign
-`ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` into place:
-
-* exterior multiplication by a covector `ξ`: `(ξ ∧ ω)_s = Σ_{j ∈ s} ε(j, s) ξ_j ω_{s ∖ j}`;
-* interior multiplication (contraction) by a vector `ζ`:
-  `(ι_ζ ω)_s = Σ_{j ∉ s} ε(j, s) ζ_j ω_{s ∪ j}`.
-
-This is the algebraic layer under the de Rham and Koszul complexes of polynomial forms
-(`Feec.Algebra.Koszul`) in any dimension; the analytic symbol version over `RCLike` is
-`Feec.Fourier.Exterior`.
-
-## Main results
-
-* `wedge_wedge_add_wedge_wedge`, `wedge_wedge_self`: `ξ ∧ η ∧ ω = -η ∧ ξ ∧ ω`, `ξ ∧ ξ ∧ ω = 0`;
-* `interior_interior_self`: `ι_ζ ι_ζ ω = 0`;
-* **Cartan** `wedge_interior_add_interior_wedge`: `ξ ∧ ι_ζ ω + ι_ζ (ξ ∧ ω) = ⟨ξ, ζ⟩ ω`;
-* degrees: `wedge_of_card_ne`, `interior_of_card_ne` (`∧` raises, `ι` lowers the form degree).
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (the Koszul complex)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
-
-Bibliography: [references.bib](../../docs/references.bib)
+Alternating forms on `R^d` as coefficient functions `ω : Finset d → R` in the basis `dx_s`, with
+exterior multiplication `ξ ∧ ω` by a covector, interior multiplication `ι_ζ ω` by a vector, and the
+Cartan identity `ξ ∧ ι_ζ ω + ι_ζ (ξ ∧ ω) = ⟨ξ, ζ⟩ ω`.
 -/
 
 open Finset
@@ -50,8 +26,6 @@ open Finset
 namespace Feec.ExteriorFibre
 
 variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d]
-
-/-! ### Signs -/
 
 /-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
 def sgn (j : d) (s : Finset d) : R := (-1) ^ #({l ∈ s | l < j})
@@ -91,8 +65,6 @@ theorem ite_lt_add_ite_lt {j l : d} (hjl : j ≠ l) :
   · simp only [h, not_lt.2 h.le, ↓reduceIte]; ring
   · simp only [h, not_lt.2 h.le, ↓reduceIte]; ring
 
-/-- A sum over ordered pairs of distinct elements of `s` of an antisymmetric function vanishes
-(no division by `2`: the pairs `(j, l)` and `(l, j)` cancel). -/
 theorem sum_sum_erase_eq_zero (s : Finset d) (F : d → d → R)
     (hF : ∀ j ∈ s, ∀ l ∈ s, j ≠ l → F l j = -F j l) :
     ∑ j ∈ s, ∑ l ∈ s.erase j, F j l = 0 := by
@@ -106,8 +78,6 @@ theorem sum_sum_erase_eq_zero (s : Finset d) (F : d → d → R)
     exact (ne_of_mem_erase hl) (by simpa using congrArg Sigma.fst h)
   · obtain ⟨hj, hl⟩ := Finset.mem_sigma.1 hx
     exact Finset.mem_sigma.2 ⟨mem_of_mem_erase hl, mem_erase.2 ⟨(ne_of_mem_erase hl).symm, hj⟩⟩
-
-/-! ### Exterior and interior multiplication -/
 
 /-- Exterior multiplication by a covector, `(ξ ∧ ω)_s = Σ_{j ∈ s} ε(j, s) ξ_j ω_{s ∖ j}`. -/
 def wedge (ξ : d → R) (ω : Finset d → R) (s : Finset d) : R :=
@@ -143,7 +113,6 @@ theorem interior_smul (ζ : d → R) (c : R) (ω : Finset d → R) :
   funext s; simp [interior, mul_sum]; exact sum_congr rfl fun _ _ => by ring
 
 omit [Fintype d] in
-/-- `ξ ∧ ·` is `R`-linear in `ξ`. -/
 theorem wedge_add_left (ξ η : d → R) (ω : Finset d → R) :
     wedge (ξ + η) ω = wedge ξ ω + wedge η ω := by
   funext s; simp [wedge, mul_add, add_mul, sum_add_distrib]
@@ -159,7 +128,6 @@ theorem wedge_smul_left (c : R) (ξ : d → R) (ω : Finset d → R) :
   exact sum_congr rfl fun _ _ => by ring
 
 omit [Fintype d] in
-/-- `dx_j ∧ dx_s = ε(j, s) dx_{s ∪ j}` for `j ∉ s`. -/
 theorem wedge_single_single {j : d} {s : Finset d} (hj : j ∉ s) :
     wedge (Pi.single j (1 : R)) (Pi.single s (1 : R)) =
       (sgn j s : R) • (Pi.single (insert j s) 1 : Finset d → R) := by
@@ -179,7 +147,6 @@ theorem wedge_single_single {j : d} {s : Finset d} (hj : j ∉ s) :
     simp [hts]
 
 omit [Fintype d] in
-/-- **Anticommutation** `ξ ∧ η ∧ ω + η ∧ ξ ∧ ω = 0`. -/
 theorem wedge_wedge_add_wedge_wedge (ξ η : d → R) (ω : Finset d → R) :
     wedge ξ (wedge η ω) + wedge η (wedge ξ ω) = 0 := by
   funext s
@@ -201,7 +168,6 @@ theorem wedge_wedge_self (ξ : d → R) (ω : Finset d → R) : wedge ξ (wedge 
   have := ite_lt_add_ite_lt (R := R) hjl
   linear_combination (sgn j s * sgn l s * ξ j * ξ l * ω ((s.erase j).erase l)) * this
 
-/-- **Cartan identity** `ξ ∧ ι_ζ ω + ι_ζ (ξ ∧ ω) = ⟨ξ, ζ⟩ ω`. -/
 theorem wedge_interior_add_interior_wedge (ξ ζ : d → R) (ω : Finset d → R) :
     wedge ξ (interior ζ ω) + interior ζ (wedge ξ ω) = (∑ j, ξ j * ζ j) • ω := by
   funext s
@@ -254,20 +220,16 @@ theorem interior_interior_self (ζ : d → R) (ω : Finset d → R) :
   have := ite_lt_add_ite_lt (R := R) hjl
   linear_combination (sgn j s * sgn l s * ζ j * ζ l * ω (insert l (insert j s))) * this
 
-/-! ### Form degree -/
-
 /-- `ω` is a `k`-form: it vanishes off `k`-subsets. -/
 def IsDeg (k : ℕ) (ω : Finset d → R) : Prop := ∀ s, #s ≠ k → ω s = 0
 
 omit [Fintype d] in
-/-- Exterior multiplication raises the form degree by one. -/
 theorem IsDeg.wedge {k : ℕ} {ω : Finset d → R} (hω : IsDeg k ω) (ξ : d → R) :
     IsDeg (k + 1) (wedge ξ ω) := fun s hs => by
   refine sum_eq_zero fun j hj => ?_
   have := card_pos.2 ⟨j, hj⟩
   rw [hω (s.erase j) (by rw [card_erase_of_mem hj]; omega), mul_zero]
 
-/-- Interior multiplication lowers the form degree by one. -/
 theorem IsDeg.interior {k : ℕ} {ω : Finset d → R} (hω : IsDeg (k + 1) ω) (ζ : d → R) :
     IsDeg k (interior ζ ω) := fun s hs => by
   refine sum_eq_zero fun j hj => ?_

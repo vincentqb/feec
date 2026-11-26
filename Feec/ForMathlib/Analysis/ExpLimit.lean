@@ -9,24 +9,9 @@ public import Mathlib.Topology.UniformSpace.UniformApproximation
 /-!
 # Strong limits of exponentials of bounded operators
 
-The limit argument of the generation theorems (Stone, Lumer–Phillips): bounded approximants
-`B_n` with contractive exponentials, `B_n x → A x` on a dense domain. For `𝕜 = ℝ` or `ℂ`,
-
-* `ContinuousLinearMap.cauchySeq_exp_apply`: `(e^{tB_n} x)_n` is Cauchy when
-  `‖e^{tB_n} y - e^{tB_m} y‖ ≤ |t| ‖B_n y - B_m y‖` and `(B_n y)_n` is Cauchy on a dense set;
-* `ContinuousLinearMap.continuous_apply_of_lipschitz`: contractions `S t`, Lipschitz in `t` on a
-  dense domain, are strongly continuous;
-* `ContinuousLinearMap.sub_eq_integral_of_tendsto_exp`: `e^{tB_n} → S t` strongly gives
-  `S t x - x = ∫₀ᵗ S s v ds` when `B_n x → v` boundedly;
-* `ContinuousLinearMap.hasDerivWithinAt_of_sub_eq_integral`: then `t ↦ S t x` has derivative `v`
-  at `0`.
-
-## References
-
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.3 (the Hille–Yosida limit) and §1.10 (Stone's theorem)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+If `e^{sB_n} → S s` strongly with `‖e^{sB_n}‖ ≤ 1` and `B_n x → v` boundedly, then
+`S t x - x = ∫₀ᵗ S s v ds`, so `t ↦ S t x` has derivative `v` at `0` when `s ↦ S s v` is
+continuous.
 -/
 
 open Set Filter Topology NormedSpace
@@ -41,8 +26,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜
 local instance instNormedAlgebraRatExpLimit : NormedAlgebra ℚ (E →L[𝕜] E) :=
   NormedAlgebra.restrictScalars ℚ 𝕜 _
 
-/-- `(e^{tB_n} x)_n` is Cauchy when `‖e^{tB_n} y‖ ≤ ‖y‖`,
-`‖e^{tB_n} y - e^{tB_m} y‖ ≤ |t| ‖B_n y - B_m y‖` and `(B_n y)_n` is Cauchy on a dense set. -/
 theorem cauchySeq_exp_apply {B : ℕ → E →L[𝕜] E} {t : ℝ}
     (hS : ∀ n y, ‖exp ((t : 𝕜) • B n) y‖ ≤ ‖y‖)
     (hsub : ∀ n m y, ‖exp ((t : 𝕜) • B n) y - exp ((t : 𝕜) • B m) y‖ ≤ |t| * ‖B n y - B m y‖)
@@ -57,8 +40,6 @@ theorem cauchySeq_exp_apply {B : ℕ → E →L[𝕜] E} {t : ℝ}
     _ ≤ |t| * (ε / (|t| + 1)) := mul_le_mul_of_nonneg_left h.le (abs_nonneg t)
     _ < ε := by rw [mul_div_assoc', div_lt_iff₀ (by positivity)]; nlinarith [abs_nonneg t]
 
-/-- Contractions `S t`, Lipschitz in `t` on a dense `D(A)` (`‖S t x - S s x‖ ≤ |t - s| ‖A x‖`), are
-strongly continuous. -/
 theorem continuous_apply_of_lipschitz {A : E →ₗ.[𝕜] E} {S : ℝ → E →L[𝕜] E}
     (hD : Dense (A.domain : Set E)) (hS : ∀ t x, ‖S t x‖ ≤ ‖x‖)
     (hL : ∀ (x : A.domain) t s, ‖S t x - S s x‖ ≤ |t - s| * ‖A x‖) (x : E) :
@@ -76,9 +57,6 @@ theorem continuous_apply_of_lipschitz {A : E →ₗ.[𝕜] E} {S : ℝ → E →
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E]
 
-/-- **The integral identity in the limit**: if `e^{sB_n} → S s` strongly with `‖e^{sB_n}‖ ≤ 1` on
-`[0, t]` and `B_n x → v` boundedly, then `S t x - x = ∫₀ᵗ S s v ds`, the limit of
-`e^{tB_n} x - x = ∫₀ᵗ e^{sB_n} B_n x ds`. -/
 theorem sub_eq_integral_of_tendsto_exp {B : ℕ → E →L[𝕜] E}
     {S : ℝ → E →L[𝕜] E} {t C : ℝ} {x v : E} (hS : ∀ s ∈ uIcc 0 t, ∀ n, ‖exp ((s : 𝕜) • B n)‖ ≤ 1)
     (hlim : ∀ s ∈ uIcc 0 t, ∀ y, Tendsto (fun n => exp ((s : 𝕜) • B n) y) atTop (𝓝 (S s y)))
@@ -108,8 +86,6 @@ theorem sub_eq_integral_of_tendsto_exp {B : ℕ → E →L[𝕜] E}
   simp_rw [hftc]; exact hlim'
 
 omit [IsScalarTower ℝ 𝕜 E] in
-/-- `t ↦ S t x` has derivative `v` at `0` within `T ∋ 0` when `S 0 = 1`, `s ↦ S s v` is continuous
-and `S t x - x = ∫₀ᵗ S s v ds` on `T`. -/
 theorem hasDerivWithinAt_of_sub_eq_integral {S : ℝ → E →L[𝕜] E} {x v : E}
     {T : Set ℝ} (hc : Continuous fun s => S s v) (h0 : S 0 = 1)
     (h : ∀ t ∈ T, S t x - x = ∫ s in (0 : ℝ)..t, S s v) (hT : (0 : ℝ) ∈ T) :

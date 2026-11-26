@@ -8,87 +8,15 @@ public import Feec.HilbertComplex.BGG.DomainData
 /-!
 # `L²` realizations of BGG data of constant-coefficient operators
 
-BGG data of constant-coefficient operators whose connecting operators are constant matrices
-(`ConstCoeffBGG` with `S k = M k` pointwise) are analytic BGG data (`Feec.BGG.HilbertData`) on
-the maximal (weak) realizations of the two complexes on every open `Ω`
-(**`ConstCoeffBGG.maximalData`**): a constant matrix maps `D(B_max)` into `D(A_max)` when
-`A M = -M' B` on smooth fields, with `A_max (M u) = -M' (B_max u)`
-(`ConstCoeffOp.maximal_ofMatrixCLM`; the identity passes to the formal adjoints by Green's
-formula against test fields). A matrix with a left inverse is bounded below on `L²` fields
-(`L2F.antilipschitz_ofMatrixCLM`), so the analytic BGG theorem for the BGG complex
-(`Feec.BGG.HilbertData.bggVerdict`) applies once the matrices up to `J` have left inverses
-(`ConstCoeffBGG.maximalData_bggVerdict`): the exact part is closed and the injectivity
-hypotheses hold, and **the only hypotheses left are the regular decompositions after `J`**
-(`Feec.BGG.HilbertData.RegularDecomposition`) and finite-dimensional cohomology of the rows.
-
-This is the case of the Hessian, elasticity and div-div diagrams on every open `Ω ⊆ ℝ³`
-(`hessianMaximalData_derivedVerdict`, `elasticityMaximalData_derivedVerdict`,
-`divDivMaximalData_derivedVerdict`): **wherever the two `L²` de Rham complexes of `Ω` have
-finite-dimensional cohomology and the regular decompositions `R(d) + R(S) = D(d)` hold after `J`,
-the BGG complex has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`**. The regular
-decompositions of `H(curl)`, `H(div)` hold on bounded Lipschitz domains ([ArnoldHu2021], §2,
-Theorem 3; [CapHu2024]); they follow from the `H¹`-regular decompositions of the rows
-(`Feec.Domain.ConstCoeffBGG.maximalData_regularDecomposition`), which are formalized on the cube
-`Q = (0, ½)³` over `ℝ` (`Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`) and, through
-the real and imaginary parts, over every `RCLike 𝕜` (for these diagrams
-`Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q`, …), and not on other domains. The
-finite-dimensionality of the cohomology of `deRhamVec ℝ m` passes from that of `deRham ℝ 3` row by
-row through the vector proxies, on every open `Ω ⊆ ℝ³`
-(`Feec.Domain.deRhamVec_finiteDimensional_cohomology`), and from `ℝ` to `𝕜`
-(`Feec.Domain.ConstCoeffComplex.finiteDimensional_cohomology_ofReal`); it holds on `Q`
-(`Feec.Models.Cube.finiteDimensional_cohomology_deRhamVec_Q`, from the harmonic forms of
-`HΛ(Q)`); the instances here are over a general `𝕜`.
-
-The explicit cochain map (30) of Theorem 7 in `HilbertData.BGGVerdict` assumes right inverses of
-the connecting maps between the domain complexes (`Feec.BGG.Data.InjSurjWith` for
-`HilbertData.domainData`). For these three diagrams there are none: **`Sᴶ` is not onto between
-the domains, on every nonempty open `Ω ⊆ ℝ³`** (`hessianMaximalData_not_surjective`,
-`elasticityMaximalData_not_surjective`, `divDivMaximalData_not_surjective`): `S⁰ = I` maps
-`H¹(Ω; 𝕜³)` onto a proper subspace of `H(curl; Ω)`, `S¹ = T - tr` maps `H(curl; Ω; 𝕄)` onto a
-proper subspace of `H(div; Ω; 𝕄)`, and `S² = I` maps `H(div; Ω)` onto a proper subspace of
-`L²(Ω; 𝕜³)`. The general form (`ConstCoeffBGG.not_surjective_maximalData_domainS`): if `Sᵏ` has
-a left inverse, `Aᵏ` and `Aᵏ⁺¹` are homogeneous, `Aᵏ` of positive order, and a smooth compactly
-supported `ψ` has `Aᵏ⁺¹ Sᵏ ψ = 0 ≠ Aᵏ ψ` (`ψ = ∇χ`, `-mskw ∇χ`, `χ e₀`), then `Sᵏ` onto would
-give `‖Aᵏ φ‖ ≤ C (‖φ‖ + ‖Aᵏ⁺¹ Sᵏ φ‖)` on test fields (open mapping), which the rescalings of `ψ`
-violate (`Feec.Domain.ConstCoeffOp.exists_lt_norm_testField_comp_aff`). In differential forms
-the same holds on every nonempty open `Ω ⊆ ℝⁿ`, `n ≥ 1` (`ℝ³` for the elasticity diagram)
-(`Feec.FiniteElement.hessianFormData_exists_forall_S_ne`,
-`Feec.FiniteElement.elasticityFormData_exists_forall_S_ne`,
-`Feec.FiniteElement.divDivFormData_exists_forall_S_ne`). Hence `InjSurjWith`
-fails from every `J ≤ 0`, `1`, `2` (`hessianMaximalData_not_injSurjWith`,
-`elasticityMaximalData_not_injSurjWith`, `divDivMaximalData_not_injSurjWith`), and the
-explicit-map fields of the verdicts below hold vacuously. The explicit map applies
-unconditionally on smooth fields, where the matrices are onto pointwise
-(`Feec.Domain.smoothBGGVerdict` in `Feec.Domain.BGGKoszul`).
-
-## Main definitions
-
-* `Feec.Domain.L2F.ofMatrixCLM M`: a constant matrix acting on `L²(Ω; 𝕜^ι)`;
-  `L2F.antilipschitz_ofMatrixCLM`: bounded below when `M` has a left inverse.
-* `Feec.Domain.ConstCoeffBGG.maximalData`: the analytic BGG data of the maximal realizations.
-* `hessianMaximalData`, `elasticityMaximalData`, `divDivMaximalData`.
+BGG data of constant-coefficient operators linked by constant matrices give analytic BGG data on the
+maximal realizations on every open `Ω`; for the Hessian, elasticity and div-div diagrams on a
+nonempty open `Ω ⊆ ℝ³`, `Sᴶ` is not onto between the domains.
 
 ## Main results
 
-* `ConstCoeffOp.maximal_ofMatrixCLM`.
-* `ConstCoeffBGG.maximalData_bggVerdict`.
-* `hessianMaximalData_derivedVerdict`, `elasticityMaximalData_derivedVerdict`,
-  `divDivMaximalData_derivedVerdict`.
-* **`ConstCoeffBGG.not_surjective_maximalData_domainS`**,
-  `ConstCoeffBGG.not_injSurjWith_maximalData`;
-  **`hessianMaximalData_not_surjective`**, `elasticityMaximalData_not_surjective`,
-  `divDivMaximalData_not_surjective`; `hessianMaximalData_not_injSurjWith`,
-  `elasticityMaximalData_not_injSurjWith`, `divDivMaximalData_not_injSurjWith`.
-
-## References
-
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
-  and linking maps, Theorem 6), §2 (regular decompositions, Theorem 3)
-* [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024] (BGG
-  sequences of Sobolev spaces)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (the maximal realizations)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffBGG.maximalData_bggVerdict`: the analytic BGG theorem for the maximal realizations.
+* `hessianMaximalData_derivedVerdict` and its analogues: the Hessian, elasticity and div-div cases.
+* `hessianMaximalData_not_surjective` and its analogues: `Sᴶ` is not onto between the domains.
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate
@@ -118,7 +46,6 @@ theorem ofMatrixCLM_apply (M : Matrix κ ι 𝕜) (u : L2F 𝕜 Ω ι) (j : κ) 
   simp [ofMatrixCLM]
 
 omit [FiniteDimensional ℝ E] [Fintype κ] in
-/-- `ofMatrixCLM` acts pointwise on test fields. -/
 theorem ofMatrixCLM_testField (M : Matrix κ ι 𝕜) {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
     ofMatrixCLM M (testField hφ) =
       testField ((ConstCoeffOp.ofMatrix M : ConstCoeffOp E 𝕜 ι κ).isTestField_apply hφ) := by
@@ -136,7 +63,6 @@ theorem ofMatrixCLM_testField (M : Matrix κ ι 𝕜) {φ : ι → E → 𝕜} (
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- `⟪M u, v⟫ = ⟪u, Mᴴ v⟫`. -/
 theorem inner_ofMatrixCLM (M : Matrix κ ι 𝕜) (u : L2F 𝕜 Ω ι) (v : L2F 𝕜 Ω κ) :
     ⟪ofMatrixCLM M u, v⟫_𝕜 = ⟪u, ofMatrixCLM M.conjTranspose v⟫_𝕜 := by
   rw [L2F.inner_def, L2F.inner_def]
@@ -163,8 +89,6 @@ theorem ofMatrixCLM_one [DecidableEq ι] (u : L2F 𝕜 Ω ι) : ofMatrixCLM (1 :
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- **A matrix with a left inverse is bounded below on `L²` fields**: `‖u‖ ≤ ‖N‖ ‖M u‖` when
-`N M = 1`. -/
 theorem antilipschitz_ofMatrixCLM [DecidableEq ι] {M : Matrix κ ι 𝕜} {N : Matrix ι κ 𝕜}
     (h : N * M = 1) :
     AntilipschitzWith ‖(ofMatrixCLM N : L2F 𝕜 Ω κ →L[𝕜] L2F 𝕜 Ω ι)‖₊
@@ -178,7 +102,6 @@ end L2F
 
 /-! ## Constant matrices map maximal domains to maximal domains -/
 
-/-- The formal adjoint of `A M = -M' B` on test fields: `Mᴴ Aᵗ φ = -Bᵗ M'ᴴ φ`. -/
 theorem ConstCoeffOp.testField_ofMatrix_formalAdj (hΩ : IsOpen Ω) {ι' κ' : Type*} [Fintype ι']
     [Fintype κ'] {A : ConstCoeffOp E 𝕜 ι' κ'} {B : ConstCoeffOp E 𝕜 ι κ} {M : Matrix ι' ι 𝕜}
     {M' : Matrix κ' κ 𝕜}
@@ -203,8 +126,6 @@ theorem ConstCoeffOp.testField_ofMatrix_formalAdj (hΩ : IsOpen Ω) {ι' κ' : T
   rw [e1, e2, inner_neg_left, L2F.inner_ofMatrixCLM, L2F.ofMatrixCLM_testField,
     B.inner_testField_apply_testField hg, map_neg, inner_conj_symm, inner_neg_left]
 
-/-- **A constant matrix maps `D(B_max)` into `D(A_max)`** when `A M = -M' B` on smooth fields,
-with `A_max (M u) = -M' (B_max u)`. -/
 theorem ConstCoeffOp.maximal_ofMatrixCLM (hΩ : IsOpen Ω) {ι' κ' : Type*} [Fintype ι']
     [Fintype κ'] {A : ConstCoeffOp E 𝕜 ι' κ'} {B : ConstCoeffOp E 𝕜 ι κ} {M : Matrix ι' ι 𝕜}
     {M' : Matrix κ' κ 𝕜}
@@ -225,7 +146,6 @@ theorem ConstCoeffOp.maximal_ofMatrixCLM (hΩ : IsOpen Ω) {ι' κ' : Type*} [Fi
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasureSpace E] [BorelSpace E]
   [FiniteDimensional ℝ E] [(volume : Measure E).IsAddHaarMeasure] [Fintype ι] [Fintype κ] in
-/-- A constant matrix is homogeneous of order `0`. -/
 theorem ConstCoeffOp.isHomogeneous_ofMatrix (M : Matrix κ ι 𝕜) :
     (ConstCoeffOp.ofMatrix M : ConstCoeffOp E 𝕜 ι κ).IsHomogeneous 0 := fun j i t ht => by
   rw [show t = ([], M j i) from List.mem_singleton.1 ht]; rfl
@@ -246,8 +166,7 @@ theorem anticomm_ofMatrix (k : ℤ) (f : B.bot.ι k → E → 𝕜) (hf : ∀ i,
   rw [← hM, ← hM]
   exact B.anticomm k f hf
 
-/-- **The analytic BGG data of the maximal realizations** on an open `Ω`: the maximal complexes
-of the two rows, linked by the constant matrices `M k` acting on `L²` fields. -/
+/-- **The analytic BGG data of the maximal realizations** on an open `Ω`. -/
 def maximalData (hΩ : IsOpen Ω) :
     BGG.HilbertData 𝕜 (ComplexShape.up ℤ) (fun k => L2F 𝕜 Ω (B.top.ι k))
       (fun k => L2F 𝕜 Ω (B.bot.ι k)) :=
@@ -268,13 +187,7 @@ theorem maximalData_S (hΩ : IsOpen Ω) (k : ℤ) :
   BGG.HilbertData.succCLM_succ (X := fun k => L2F 𝕜 Ω (B.bot.ι k))
     (Y := fun k => L2F 𝕜 Ω (B.top.ι k)) (fun k => L2F.ofMatrixCLM (M k)) k
 
-/-- **Analytic BGG for the maximal realizations**: if the matrices `M k`, `k ≤ J`, have left
-inverses, then wherever the maximal complexes of the two rows have finite-dimensional cohomology
-and the regular decompositions after `J` hold, the BGG complex `bgg J` of their domain complexes
-has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, and the explicit map (30) of
-[ArnoldHu2021], Theorem 7 is a quasi-isomorphism (`HilbertData.BGGVerdict`) for every choice of
-right inverses of `S` from `J` on between the domains (none exist when `Sᴶ` is not onto between
-them, `not_injSurjWith_maximalData`, as for the Hessian, elasticity and div-div diagrams). -/
+/-- **Analytic BGG for the maximal realizations**: `HilbertData.BGGVerdict J i`. -/
 theorem maximalData_bggVerdict [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen Ω) {J : ℤ}
     (hN : ∀ k ≤ J, ∃ N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜, N * M k = 1)
     (htop : (B.maximalData M hM hΩ).RegularDecomposition J)
@@ -290,12 +203,6 @@ theorem maximalData_bggVerdict [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen �
     rw [maximalData_S]
     exact ⟨_, L2F.antilipschitz_ofMatrixCLM hN⟩) htop i
 
-/-- **`Sᵏ` is not onto between the domains** of the maximal realizations, on every nonempty open
-`Ω`, when `Sᵏ = M k` has a left inverse, `Aᵏ` (bottom row) and `Aᵏ⁺¹` (top row) are homogeneous,
-`Aᵏ` of positive order, and some smooth compactly supported field `ψ` has `Aᵏ⁺¹ Sᵏ ψ = 0` but
-`Aᵏ ψ ≠ 0`: the rescalings `φ` of `ψ` have `Aᵏ⁺¹ Sᵏ φ = 0` and unbounded `‖Aᵏ φ‖ / ‖φ‖`
-(`ConstCoeffOp.exists_lt_norm_testField_comp_aff`), which an onto `Sᵏ` forbids
-(`Feec.BGG.HilbertData.not_surjective_domainS`, the open mapping theorem). -/
 theorem not_surjective_maximalData_domainS (hΩ : IsOpen Ω) (hne : Ω.Nonempty) {k : ℤ}
     [DecidableEq (B.bot.ι k)] {N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜} (hN : N * M k = 1)
     {a r : ℕ} (htop : (B.top.A (k + 1)).IsHomogeneous a) (hbot : (B.bot.A k).IsHomogeneous r)
@@ -337,10 +244,6 @@ theorem not_surjective_maximalData_domainS (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
       (B.bot.A k).minimal_testField hΩ hφ]
     exact hlt
 
-/-- **The explicit-map hypothesis fails between the `L²` domains**: under the hypotheses of
-`not_surjective_maximalData_domainS`, no right inverses `t` of the connecting maps from any
-`J ≤ k` on exist (`Feec.BGG.Data.InjSurjWith`), so the explicit-map fields of
-`maximalData_bggVerdict` hold vacuously from `J ≤ k`. -/
 theorem not_injSurjWith_maximalData (hΩ : IsOpen Ω) (hne : Ω.Nonempty) {k : ℤ}
     [DecidableEq (B.bot.ι k)] {N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜} (hN : N * M k = 1)
     {a r : ℕ} (htop : (B.top.A (k + 1)).IsHomogeneous a) (hbot : (B.bot.A k).IsHomogeneous r)
@@ -412,24 +315,20 @@ theorem divDivS_apply_eq (k : ℤ) (f : vecIdx 1 k → (Fin 3 → ℝ) → 𝕜)
   | .ofNat (_ + 3) | .negSucc _ => exact (ofMatrix_zero_apply f).symm
 
 variable (𝕜) in
-/-- **The Hessian diagram on `L²(Ω)`**: the maximal de Rham complexes of `Ω` with values in `𝕜`
-and `𝕜³`, linked by `I`, `2 vskw`, `tr`. -/
+/-- **The Hessian diagram on `L²(Ω)`**, linked by `I`, `2 vskw`, `tr`. -/
 abbrev hessianMaximalData (hΩ : IsOpen Ω) :=
   (hessianBGG 𝕜).maximalData hessianSMat hessianS_apply_eq hΩ
 
 variable (𝕜) in
-/-- **The elasticity diagram on `L²(Ω)`**: two copies of the maximal de Rham complex of `Ω` with
-values in `𝕜³`, linked by `-mskw`, `T - tr`, `2 vskw`. -/
+/-- **The elasticity diagram on `L²(Ω)`**, linked by `-mskw`, `T - tr`, `2 vskw`. -/
 abbrev elasticityMaximalData (hΩ : IsOpen Ω) :=
   (elasticityBGG 𝕜).maximalData elasticitySMat elasticityS_apply_eq hΩ
 
 variable (𝕜) in
-/-- **The div-div diagram on `L²(Ω)`**: the maximal de Rham complexes of `Ω` with values in `𝕜³`
-and `𝕜`, linked by `· I`, `-mskw`, `I`. -/
+/-- **The div-div diagram on `L²(Ω)`**, linked by `· I`, `-mskw`, `I`. -/
 abbrev divDivMaximalData (hΩ : IsOpen Ω) :=
   (divDivBGG 𝕜).maximalData divDivSMat divDivS_apply_eq hΩ
 
-/-- `I` has a left inverse (and the connecting matrices before it act on zero spaces). -/
 theorem hessianSMat_leftInv :
     ∀ k : ℤ, k ≤ 0 → ∃ N : Matrix (vecIdx 3 k) (vecIdx 1 (k + 1)) 𝕜,
       N * (hessianSMat k : Matrix _ _ 𝕜) = 1
@@ -437,7 +336,6 @@ theorem hessianSMat_leftInv :
   | .ofNat (_ + 1), h => absurd h (by simp only [Int.ofNat_eq_natCast] at h ⊢; omega)
   | .negSucc _, _ => ⟨0, Matrix.ext fun i => isEmptyElim (α := Empty) i⟩
 
-/-- `-mskw` and `T - tr` have left inverses. -/
 theorem elasticitySMat_leftInv :
     ∀ k : ℤ, k ≤ 1 → ∃ N : Matrix (vecIdx 3 k) (vecIdx 3 (k + 1)) 𝕜,
       N * (elasticitySMat k : Matrix _ _ 𝕜) = 1
@@ -446,7 +344,6 @@ theorem elasticitySMat_leftInv :
   | .ofNat (_ + 2), h => absurd h (by simp only [Int.ofNat_eq_natCast] at h ⊢; omega)
   | .negSucc _, _ => ⟨0, Matrix.ext fun i => isEmptyElim (α := Empty) i⟩
 
-/-- `· I`, `-mskw` and `I` have left inverses. -/
 theorem divDivSMat_leftInv :
     ∀ k : ℤ, k ≤ 2 → ∃ N : Matrix (vecIdx 1 k) (vecIdx 3 (k + 1)) 𝕜,
       N * (divDivSMat k : Matrix _ _ 𝕜) = 1
@@ -456,10 +353,7 @@ theorem divDivSMat_leftInv :
   | .ofNat (_ + 3), h => absurd h (by simp only [Int.ofNat_eq_natCast] at h ⊢; omega)
   | .negSucc _, _ => ⟨0, Matrix.ext fun i => isEmptyElim (α := Empty) i⟩
 
-/-- **The analytic BGG theorem for the Hessian diagram on `Ω`**: wherever the scalar and
-`𝕜³`-valued `L²` de Rham complexes of `Ω` have finite-dimensional cohomology and the regular
-decompositions of `H(curl)`, `H(div)`, `L²` after `0` hold, the Hessian BGG complex has closed
-range at `i`, its cohomology of dimension at most the sum of those of the two rows. -/
+/-- **The analytic BGG theorem for the Hessian diagram on `Ω`.** -/
 theorem hessianMaximalData_derivedVerdict (hΩ : IsOpen Ω)
     (htop : (hessianMaximalData 𝕜 hΩ).RegularDecomposition 0) (i : ℤ)
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 1).maximalComplex hΩ).cohomology i)]
@@ -468,8 +362,6 @@ theorem hessianMaximalData_derivedVerdict (hΩ : IsOpen Ω)
   ((hessianBGG 𝕜).maximalData_bggVerdict hessianSMat hessianS_apply_eq hΩ hessianSMat_leftInv
     htop i).toDerivedVerdict
 
-/-- **The analytic BGG theorem for the elasticity diagram on `Ω`**, under the regular
-decompositions after `1`. -/
 theorem elasticityMaximalData_derivedVerdict (hΩ : IsOpen Ω)
     (htop : (elasticityMaximalData 𝕜 hΩ).RegularDecomposition 1) (i : ℤ)
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)] :
@@ -477,8 +369,6 @@ theorem elasticityMaximalData_derivedVerdict (hΩ : IsOpen Ω)
   ((elasticityBGG 𝕜).maximalData_bggVerdict elasticitySMat elasticityS_apply_eq hΩ
     elasticitySMat_leftInv htop i).toDerivedVerdict
 
-/-- **The analytic BGG theorem for the div-div diagram on `Ω`**, under the regular decompositions
-after `2`. -/
 theorem divDivMaximalData_derivedVerdict (hΩ : IsOpen Ω)
     (htop : (divDivMaximalData 𝕜 hΩ).RegularDecomposition 2) (i : ℤ)
     [FiniteDimensional 𝕜 (((deRhamVec 𝕜 3).maximalComplex hΩ).cohomology i)]
@@ -489,7 +379,6 @@ theorem divDivMaximalData_derivedVerdict (hΩ : IsOpen Ω)
 
 /-! ### `Sᴶ` is not onto between the `L²` domains -/
 
-/-- The operators of the de Rham complex with values in `𝕜ᵐ` are homogeneous of order `1`. -/
 theorem isHomogeneous_vecOp (m : ℕ) : ∀ k : ℤ, (vecOp 𝕜 m k).IsHomogeneous 1
   | .ofNat 0 => fun ij i t ht => by
     simp only [vecOp, gradOp] at ht
@@ -503,13 +392,11 @@ theorem isHomogeneous_vecOp (m : ℕ) : ∀ k : ℤ, (vecOp 𝕜 m k).IsHomogene
   | .ofNat (_ + 3) => fun _ _ t ht => by simp [vecOp, zeroOp] at ht
   | .negSucc _ => fun _ _ t ht => by simp [vecOp, zeroOp] at ht
 
-/-- The second derivatives `∂ⱼ ∂ₗ χ` of a nonzero test function do not all vanish. -/
 theorem IsTest.fderiv_fderiv_ne_zero {χ : (Fin 3 → ℝ) → 𝕜} (hχ : IsTest Set.univ χ)
     (hχ0 : χ ≠ 0) (l j : Fin 3) :
     (fun x => fderiv ℝ (fun y => fderiv ℝ χ y (coordDir l)) x (coordDir j)) ≠ 0 :=
   (hχ.fderiv_apply _).fderiv_apply_ne_zero (hχ.fderiv_apply_ne_zero hχ0 (by simp)) (by simp)
 
-/-- The gradient `∇χ` of a test function is a test field with symmetric gradient. -/
 theorem gradOp_grad_swap {χ : (Fin 3 → ℝ) → 𝕜} (hχ : IsTest Set.univ χ) (l j : Fin 3) :
     (gradOp 3 3).apply (fun l x => fderiv ℝ χ x (coordDir l)) (l, j) =
       (gradOp 3 3).apply (fun l x => fderiv ℝ χ x (coordDir l)) (j, l) := by
@@ -517,8 +404,7 @@ theorem gradOp_grad_swap {χ : (Fin 3 → ℝ) → 𝕜} (hχ : IsTest Set.univ 
   rw [gradOp_apply, gradOp_apply]
   exact fderiv_fderiv_comm (hχ.contDiff.of_le (by simp)) _ _ x
 
-/-- **`S⁰ = I : H¹(Ω; 𝕜³) → H(curl; Ω)` is not onto** for every nonempty open `Ω ⊆ ℝ³`: the
-rescaled gradients `∇χ (a (· - x₀))` of a bump `χ` are curl-free, with `‖∇∇χₐ‖ / ‖∇χₐ‖ → ∞`. -/
+/-- **`S⁰ = I : H¹(Ω; 𝕜³) → H(curl; Ω)` is not onto** for every nonempty open `Ω ⊆ ℝ³`. -/
 theorem hessianMaximalData_not_surjective (hΩ : IsOpen Ω) (hne : Ω.Nonempty) :
     ¬ Function.Surjective ((hessianMaximalData 𝕜 hΩ).domainData.S 0 1) := by
   obtain ⟨χ, hχ, hχ0⟩ := exists_isTest_univ_ne_zero (Fin 3 → ℝ) 𝕜
@@ -536,8 +422,6 @@ theorem hessianMaximalData_not_surjective (hΩ : IsOpen Ω) (hne : Ω.Nonempty) 
     exact hχ.fderiv_fderiv_ne_zero hχ0 0 0 (funext fun x => by
       simpa [gradOp_apply] using congrFun (congrFun h ((0, 0) : Fin 3 × Fin 3)) x)
 
-/-- **`S¹ = T - tr : H(curl; Ω; 𝕄) → H(div; Ω; 𝕄)` is not onto** for every nonempty open
-`Ω ⊆ ℝ³`: the rescalings of `ψ = -mskw ∇χ`, with `div S¹ψ = 0` and `curl ψ = Δχ I - ∇∇χ`. -/
 theorem elasticityMaximalData_not_surjective (hΩ : IsOpen Ω) (hne : Ω.Nonempty) :
     ¬ Function.Surjective ((elasticityMaximalData 𝕜 hΩ).domainData.S 1 2) := by
   obtain ⟨χ, hχ, hχ0⟩ := exists_isTest_univ_ne_zero (Fin 3 → ℝ) 𝕜
@@ -561,8 +445,6 @@ theorem elasticityMaximalData_not_surjective (hΩ : IsOpen Ω) (hne : Ω.Nonempt
     have h01 := congrFun (congrFun h ((0, 1) : Fin 3 × Fin 3)) x
     simpa [ofMatrix_elS1_apply, gradOp_apply] using h01
 
-/-- **`S² = I : H(div; Ω) → L²(Ω; 𝕜³)` is not onto** for every nonempty open `Ω ⊆ ℝ³`: the
-rescalings of `χ e₀` have `‖div‖ / ‖·‖ → ∞`. -/
 theorem divDivMaximalData_not_surjective (hΩ : IsOpen Ω) (hne : Ω.Nonempty) :
     ¬ Function.Surjective ((divDivMaximalData 𝕜 hΩ).domainData.S 2 3) := by
   obtain ⟨χ, hχ, hχ0⟩ := exists_isTest_univ_ne_zero (Fin 3 → ℝ) 𝕜
@@ -578,27 +460,18 @@ theorem divDivMaximalData_not_surjective (hΩ : IsOpen Ω) (hne : Ω.Nonempty) :
   change (divOp 3 1).apply _ 0 x = 0 at h0
   simpa [divOp_apply, Fin.sum_univ_three] using h0
 
-/-- **The explicit-map hypothesis fails for the `L²` Hessian diagram**: no right inverses of the
-connecting maps from any `J ≤ 0` on between the domains (`S⁰` is not onto,
-`hessianMaximalData_not_surjective`), so the explicit-map fields of
-`hessianMaximalData_derivedVerdict`'s verdict at `J = 0` (`ConstCoeffBGG.maximalData_bggVerdict`)
-are vacuous. -/
 theorem hessianMaximalData_not_injSurjWith (hΩ : IsOpen Ω) (hne : Ω.Nonempty) {J : ℤ}
     (hJ : J ≤ 0) (t : ∀ i j, (hessianMaximalData 𝕜 hΩ).H.domainSpace j →ₗ[𝕜]
       (hessianMaximalData 𝕜 hΩ).Ht.domainSpace i) :
     ¬ (hessianMaximalData 𝕜 hΩ).domainData.InjSurjWith J t := fun h =>
   hessianMaximalData_not_surjective hΩ hne fun w => ⟨t 0 (0 + 1) w, h.S_t' hJ w⟩
 
-/-- **The explicit-map hypothesis fails for the `L²` elasticity diagram** from any `J ≤ 1`
-(`elasticityMaximalData_not_surjective`). -/
 theorem elasticityMaximalData_not_injSurjWith (hΩ : IsOpen Ω) (hne : Ω.Nonempty) {J : ℤ}
     (hJ : J ≤ 1) (t : ∀ i j, (elasticityMaximalData 𝕜 hΩ).H.domainSpace j →ₗ[𝕜]
       (elasticityMaximalData 𝕜 hΩ).Ht.domainSpace i) :
     ¬ (elasticityMaximalData 𝕜 hΩ).domainData.InjSurjWith J t := fun h =>
   elasticityMaximalData_not_surjective hΩ hne fun w => ⟨t 1 (1 + 1) w, h.S_t' hJ w⟩
 
-/-- **The explicit-map hypothesis fails for the `L²` div-div diagram** from any `J ≤ 2`
-(`divDivMaximalData_not_surjective`). -/
 theorem divDivMaximalData_not_injSurjWith (hΩ : IsOpen Ω) (hne : Ω.Nonempty) {J : ℤ}
     (hJ : J ≤ 2) (t : ∀ i j, (divDivMaximalData 𝕜 hΩ).H.domainSpace j →ₗ[𝕜]
       (divDivMaximalData 𝕜 hΩ).Ht.domainSpace i) :

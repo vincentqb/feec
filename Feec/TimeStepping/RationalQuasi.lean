@@ -7,39 +7,13 @@ public import Feec.Semigroup.Spectral
 /-!
 # Rational approximations of quasi-contractive semigroups
 
-Let `A` be an operator of a Hilbert space over `𝕜 = ℝ` or `ℂ` with `A - ω` m-dissipative,
-`ω ≥ 0`: `A` generates a semigroup with `‖S(t)‖ ≤ e^{ωt}` (for instance `L + B` for an
-m-dissipative `L` and every bounded `B`, with `ω = ‖B‖`). For an A-stable rational scheme `r`
-of order `p` there are `c₀ > 0`, `K` and `κ`, depending only on `r`, such that **Brenner–Thomée's
-error bound holds with exponential growth** ([BrennerThomee1979]; [Thomee2006], Ch. 9):
-
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K e^{κωnτ} nτ τᵖ ‖A^{p+1} x‖`  for `ωτ ≤ c₀`, `x ∈ D(A^{p+1})`
-
-(`RationalScheme.exists_norm_step_pow_sub_le`), with `r(τA)` the operator
-`Feec.TimeStepping.RationalScheme.step` (`P(R) Q(R)⁻¹` at the resolvent `R = (1 - τA)⁻¹`).
-
-## The shift argument
-
-With `B = A - ω` and `c = ωτ`, `τA = τB + c`, so `r(τA) = r_c(τB)` for the **shifted scheme**
-`r_c(z) = r(z + c)` (`RationalScheme.shift`, a rational scheme as long as `r` has no pole with
-`re z ≤ c`). In the resolvent form this is an identity between `X = (1 - τA)⁻¹` and
-`Y = (1 - τB)⁻¹`: `X = Y (1 - cY)⁻¹` by the resolvent identity, and
-`sᴺ f(1 - 1/s)` at `s = Y (1 - cY)⁻¹` is `(1 - cY)^{-N}` times `sᴺ f(1 - 1/s + c)` at `Y`
-(`resolventEval_mul_eq_pow_mul`). Von Neumann's inequality for the m-dissipative `B` then bounds
-`‖r(τA)‖ ≤ sup_y |r(iy + c)| ≤ 1 + K₁ c` (`r` is Lipschitz on the half-plane `re z ≤ c₀`, its
-derivative being bounded there, `exists_norm_div_le_of_isClosed`) and the remainder
-`‖ρ(τA)‖ ≤ sup_{re z ≤ c₀} |ρ(z)|`; these are the stability and remainder hypotheses of
-Brenner–Thomée on Banach spaces (`RationalScheme.norm_resolventStep_pow_sub_S_le`), and
-`‖r(τA)ᵏ‖ ≤ e^{K₁ ωτ k}`; the invertibility of `Q(X)` holds for every semigroup with
-`‖S(t)‖ ≤ e^{ωt}` and `r` without poles in `re z ≤ ωτ`, by the Hille–Yosida estimates
-(`RationalScheme.isUnit_resolventEval_den_of_generator`).
+For `A - ω` m-dissipative with `ω ≥ 0` and A-stable `r` of order `p`, Brenner–Thomée's bound with
+exponential growth: `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K e^{κωnτ} nτ τᵖ ‖A^{p+1} x‖` for `τ > 0`, `ωτ ≤ c₀`.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 9
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.5, §3.1 (quasi-contractive semigroups, bounded perturbations)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -59,9 +33,6 @@ theorem eval_eq (z : ℂ) :
     r.eval z = (r.num.map (algebraMap ℝ ℂ)).eval z / (r.den.map (algebraMap ℝ ℂ)).eval z := by
   rw [eval, eval_map_algebraMap, eval_map_algebraMap]
 
-/-- **`r` is Lipschitz to the right of the imaginary axis**: if `r` has no pole on `re z ≤ c₀`,
-then `|r(iy + c)| ≤ |r(iy)| + K c` for `0 ≤ c ≤ c₀` (the derivative
-`r' = (n' d - n d')/d²` is bounded on the closed half-plane). -/
 theorem exists_norm_eval_add_le {c₀ : ℝ} (hc₀ : ∀ z : ℂ, z.re ≤ c₀ → aeval z r.den ≠ 0) :
     ∃ K : ℝ, 0 ≤ K ∧ ∀ (y : ℝ) {c : ℝ}, 0 ≤ c → c ≤ c₀ →
       ‖r.eval (y * Complex.I + c)‖ ≤ ‖r.eval (y * Complex.I)‖ + K * c := by
@@ -129,7 +100,6 @@ section ShiftEval
 
 variable {𝕜 A : Type*} [Field 𝕜] [Infinite 𝕜] [Ring A] [Algebra 𝕜 A]
 
-/-- `Σₖ fₖ (s - 1 + c s)ᵏ s^{N-k}` is `sᴺ f(1 - 1/s + c)`, the resolvent form of `f(z + c)`. -/
 theorem sum_coeff_smul_shift_eq {N : ℕ} {f : 𝕜[X]} (hf : f.natDegree ≤ N) (c : 𝕜) (Y : A) :
     ∑ k ∈ range (N + 1), f.coeff k • ((Y - 1 + c • Y) ^ k * Y ^ (N - k)) =
       resolventEval N (f.comp (X + C c)) Y := by
@@ -152,9 +122,6 @@ theorem sum_coeff_smul_shift_eq {N : ℕ} {f : 𝕜[X]} (hf : f.natDegree ≤ N)
   simpa only [map_sum, _root_.map_smul, map_mul, map_pow, _root_.map_sub, _root_.map_add, map_one,
     aeval_X, map_resolventEval] using this
 
-/-- **The resolvent form under a shift**: if `(1 - cY) U = 1` and `Y U = U Y`, then
-`sᴺ f(1 - 1/s)` at `s = Y U` is `Uᴺ` times `sᴺ f(1 - 1/s + c)` at `Y` (`deg f ≤ N`): at
-`Y = (1 - τB)⁻¹`, `Y U = (1 - τ(B + c/τ))⁻¹`. -/
 theorem resolventEval_mul_eq_pow_mul {Y U : A} {c : 𝕜} (hU : (1 - c • Y) * U = 1)
     (hYU : Commute Y U) {N : ℕ} {f : 𝕜[X]} (hf : f.natDegree ≤ N) :
     resolventEval N f (Y * U) = U ^ N * resolventEval N (f.comp (X + C c)) Y := by
@@ -185,8 +152,6 @@ variable (r : RationalScheme)
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
-/-- **`r(τA) = r_c(τB)` in the resolvent form**: if `(1 - cY) U = 1`, `U` invertible and
-commuting with `Y`, then `r` at `Y U` is the shifted scheme `r_c` at `Y`. -/
 theorem resolventStep_mul_eq_shift {Y U : E →L[𝕜] E} {c : ℝ}
     (hc : ∀ z : ℂ, z.re ≤ c → aeval z r.den ≠ 0) (hU : (1 - (c : 𝕜) • Y) * U = 1)
     (hUu : IsUnit U) (hYU : Commute Y U) :
@@ -217,11 +182,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **Brenner–Thomée for quasi-contractive semigroups, with explicit constants**: let `r` be
-A-stable of order `p`, without poles on `re z ≤ c₀ ≤ 1/2`, `|r(iy + c)| ≤ |r(iy)| + K₁ c` and
-`|ρ(z)| ≤ Kρ` on `re z ≤ c₀` (`ρ` the remainder). For `A` with `A - ω` m-dissipative (`ω ≥ 0`),
-every semigroup `G` generated by `A` (so `‖S(t)‖ ≤ e^{ωt}`), `τ > 0` with `ωτ ≤ c₀`, `n` and
-`x ∈ D(A^{p+1})`: `‖r(τA)ⁿ x - S(nτ) x‖ ≤ (Kρ + 1/(p+1)!) e^{(K₁+2)ωnτ} nτ τᵖ ‖A^{p+1} x‖`. -/
 theorem norm_step_pow_sub_le_of_shift (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {c₀ K₁ Kρ : ℝ} (hc₀ : ∀ z : ℂ, z.re ≤ c₀ → aeval z r.den ≠ 0)
     (hc₀2 : c₀ ≤ 1 / 2) (hK₁ : 0 ≤ K₁)
@@ -348,12 +308,10 @@ theorem norm_step_pow_sub_le_of_shift (hr : r.IsAStable) {p : ℕ}
         ((n * τ) * τ ^ p * ‖u (p + 1)‖) := mul_le_mul_of_nonneg_right hk hnn
     _ = _ := by ring
 
-/-- **Brenner–Thomée for quasi-contractive semigroups**: for an A-stable rational scheme `r` of
-order `p` there are `c₀ > 0`, `K ≥ 0` and `κ ≥ 0`, depending only on `r`, such that for every
-Hilbert space over `𝕜`, every `A` with `A - ω` m-dissipative (`ω ≥ 0`), every semigroup `G`
-generated by `A`, every `τ > 0` with `ωτ ≤ c₀`, every `n` and every
-`x ∈ D(A^{p+1})` (a chain `u` in the graph of `A`),
-`‖r(τA)ⁿ x - S(nτ) x‖ ≤ K e^{κωnτ} nτ τᵖ ‖A^{p+1} x‖`. [BrennerThomee1979]; [Thomee2006], Ch. 9 -/
+/-- **Brenner–Thomée for quasi-contractive semigroups** ([BrennerThomee1979]; [Thomee2006], Ch. 9):
+for A-stable `r` of order `p`, `A - ω` m-dissipative with `ω ≥ 0`, `τ > 0` and `ωτ ≤ c₀`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ K e^{κωnτ} nτ τᵖ ‖A^{p+1} x‖`, with `c₀ > 0`, `K`, `κ` depending only on
+`r` and `p`. -/
 theorem exists_norm_step_pow_sub_le (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
     ∃ c₀ : ℝ, 0 < c₀ ∧ ∃ K κ : ℝ, 0 ≤ K ∧ 0 ≤ κ ∧
       ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]

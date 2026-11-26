@@ -6,45 +6,16 @@ public import Feec.HilbertComplex.Transport
 /-!
 # Pullback of `L²` differential forms along invertible affine maps
 
-Let `T x = A x + b` be an affine map of `ℝⁿ` with `A` invertible, `Ω' ⊆ ℝⁿ` open and
-`Ω = T⁻¹(Ω')`. The composition `f ↦ f ∘ T` is a bounded isomorphism `L²(Ω') ≃ L²(Ω)`:
-`T` is measure preserving from `|det A| · volume` to `volume` (`measurePreserving_affMap`), so
-`‖f ∘ T‖ = |det A|^{-1/2} ‖f‖` (`norm_affPull`). A field pullback with a constant fibre matrix
-`C`, `(T^* u)_s = Σ_t C_{st} u_t ∘ T` (`fieldPull`), is then a bounded operator
-`L²(Ω'; ℝ^ι) → L²(Ω; ℝ^κ)` with `‖T^* u‖ ≤ |det A|^{-1/2} (Σ_{s,t} |C_{st}|) ‖u‖`
-(`norm_fieldPull_le`), invertible with inverse the field pullback along `T⁻¹` when the fibre
-matrices are inverse to each other (`fieldPullEquiv`).
+For `T x = A x + b` with `A` invertible, the field pullback `(T^* u)_s = Σ_t C_{st} u_t ∘ T` with a
+constant fibre matrix is bounded on `L²`, intertwines the realizations of classically intertwined
+operators, and, for invertible fibre matrices intertwining `d`, transports `HΛ(Ω')` and `H̊Λ(Ω')`
+to `HΛ(T⁻¹ Ω')` and `H̊Λ(T⁻¹ Ω')`.
 
-For `k`-forms the fibre matrix of the pullback is the matrix of `k × k` minors of `A`
-(`Feec.ExteriorFibre.pullback` in `Feec.FiniteElement.SmoothForm`); that it intertwines the
-exterior derivative of smooth forms, `d (T^* φ) = T^* (d φ)`, is a classical computation done
-there (`Feec.FiniteElement.extDeriv_affinePullback_apply`). This module takes the fibre matrices
-as data, together with the classical intertwining (`IsDIntertwining`), and proves the `L²`
-statements, for every constant-coefficient operator `P` with a classical intertwining
-`P (T^* φ) = T^* (P' φ)` (`IsPullIntertwining`; `d`, and the gradient in
-`Feec.Domain.RegularDecomposition`):
+## Main results
 
-* `T^*` maps test forms to test forms (`fieldPull_testField`), and its `L²` adjoint on test forms
-  is the pushforward `(T^♯ ψ)_t = |det A|⁻¹ Σ_s C_{st} ψ_s ∘ T⁻¹` (`inner_fieldPull_testField`);
-* **`T^*` maps `D(P'_min)` into `D(P_min)` and `D(P'_max)` into `D(P_max)` and intertwines the
-  realizations** (`fieldPull_mem_minimal_domain`, `minimal_fieldPull`,
-  `fieldPull_mem_maximal_domain`): `P_min` is the closure of `P` on test fields, and `P_max` is
-  tested against test fields, on which the pushforward intertwines the formal adjoints by duality
-  (`testField_push_formalAdj`); for `d` this is `IsDIntertwining.isPullIntertwining`;
-* with an inverse pullback, **the de Rham complexes `HΛ(Ω)` and `H̊Λ(Ω)` are the transports of
-  `HΛ(Ω')` and `H̊Λ(Ω')` along `T^*`** (`maximalComplex_eq_transport`,
-  `minimalComplex_eq_transport`): `d_Ω = T^* d_{Ω'} (T^*)⁻¹` with the same domains.
-
-## References
-
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-  (affine-equivalent families, change of variables)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4 (pullback of `L²` forms, the de Rham complex under bi-Lipschitz maps)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (change of variables in Sobolev spaces)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `fieldPull_mem_minimal_domain`, `fieldPull_mem_maximal_domain`: `T^*` maps the domains.
+* `FormPullData.maximalComplex_eq_transport`: `HΛ(Ω)` is the transport of `HΛ(Ω')` along `T^*`.
+* `FormPullData.minimalComplex_eq_transport`: the same for `H̊Λ`.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal
@@ -130,7 +101,6 @@ theorem preimage_preimage_inv (hA : IsUnit A.det) (Ω : Set (Fin n → ℝ)) :
 theorem isUnit_det_inv (hA : IsUnit A.det) : IsUnit (A⁻¹).det := by
   rw [Matrix.det_nonsing_inv]; exact hA.ringInverse
 
-/-- **`x ↦ A x + b` is measure preserving from `|det A| · volume` to `volume`.** -/
 theorem measurePreserving_affMap (hA : IsUnit A.det) :
     MeasurePreserving (affMap A b) (ENNReal.ofReal |A.det| • volume) volume := by
   refine ⟨(continuous_affMap A b).measurable, ?_⟩
@@ -211,7 +181,6 @@ theorem coeFn_affPullₗ (f : L2 ℝ Ω') :
       fun x => (f : (Fin n → ℝ) → ℝ) (affMap A b x) :=
   (memLp_comp_affMap hA b hΩ' hT f).coeFn_toLp
 
-/-- **Change of variables**: `∫_Ω g(T x) dx = |det A|⁻¹ ∫_{Ω'} g(y) dy` for `Ω = T⁻¹ Ω'`. -/
 theorem setIntegral_comp_affMap (g : (Fin n → ℝ) → ℝ) :
     ∫ x in Ω, g (affMap A b x) = |A.det|⁻¹ * ∫ y in Ω', g y := by
   subst hT
@@ -221,7 +190,6 @@ theorem setIntegral_comp_affMap (g : (Fin n → ℝ) → ℝ) :
   rw [← e2, smul_eq_mul, ← mul_assoc, inv_mul_cancel₀ (abs_det_pos hA).ne', one_mul]
   rfl
 
-/-- **The pullback scales inner products by `|det A|⁻¹`.** -/
 theorem inner_affPullₗ (f g : L2 ℝ Ω') :
     ⟪affPullₗ hA b hΩ' hT f, affPullₗ hA b hΩ' hT g⟫_ℝ = |A.det|⁻¹ * ⟪f, g⟫_ℝ := by
   rw [L2.inner_def, L2.inner_def]
@@ -256,7 +224,6 @@ theorem coeFn_affPull (f : L2 ℝ Ω') :
 theorem norm_affPull (f : L2 ℝ Ω') : ‖affPull hA b hΩ' hT f‖ = Real.sqrt |A.det|⁻¹ * ‖f‖ :=
   norm_affPullₗ hA b hΩ' hT f
 
-/-- **Change of variables in pairings**: `∫_Ω (f ∘ T) (h ∘ T) = |det A|⁻¹ ∫_{Ω'} f h`. -/
 theorem setIntegral_affPull_mul (f : L2 ℝ Ω') (h : (Fin n → ℝ) → ℝ) :
     ∫ x in Ω, (affPull hA b hΩ' hT f : (Fin n → ℝ) → ℝ) x * h (affMap A b x) =
       |A.det|⁻¹ * ∫ y in Ω', (f : (Fin n → ℝ) → ℝ) y * h y := by
@@ -278,7 +245,6 @@ theorem preimage_inv_of_affMap {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.d
     (b : Fin n → ℝ) {Ω Ω' : Set (Fin n → ℝ)} (hT : affMap A b ⁻¹' Ω' = Ω) :
     affMap A⁻¹ (affInvShift A b) ⁻¹' Ω = Ω' := hT ▸ preimage_inv_preimage b hA Ω'
 
-/-- Pulling back along `T` and then along `T⁻¹` is the identity. -/
 theorem affPull_affPull_inv {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) (b : Fin n → ℝ)
     {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : MeasurableSet Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
     (f : L2 ℝ Ω) :
@@ -290,7 +256,6 @@ theorem affPull_affPull_inv {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det)
       (measurableSet_of_affMap b hΩ' hT) (preimage_inv_of_affMap hA b hT) f)] with x h1 h2
   rw [h1, h2, affMap_inv_affMap b hA]
 
-/-- Pulling back along `T⁻¹` and then along `T` is the identity. -/
 theorem affPull_inv_affPull {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) (b : Fin n → ℝ)
     {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : MeasurableSet Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
     (f : L2 ℝ Ω') :
@@ -311,9 +276,7 @@ variable {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) (b : Fin n → ℝ
   {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : MeasurableSet Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
   {ι κ : Type*} [Fintype ι] [Fintype κ]
 
-/-- **The field pullback** `(T^* u)_s = Σ_t C_{st} u_t ∘ T`, `L²(Ω'; ℝ^ι) → L²(Ω; ℝ^κ)`, for a
-constant fibre matrix `C`. For `k`-forms with `C` the matrix of `k × k` minors of `A` it is the
-pullback of forms (`Feec.FiniteElement.affinePullback` pointwise). -/
+/-- **The field pullback** `(T^* u)_s = Σ_t C_{st} u_t ∘ T` for a constant fibre matrix `C`. -/
 def fieldPull (C : κ → ι → ℝ) : L2F ℝ Ω' ι →L[ℝ] L2F ℝ Ω κ :=
   (PiLp.continuousLinearEquiv 2 ℝ (fun _ : κ => L2 ℝ Ω)).symm.toContinuousLinearMap.comp
     (ContinuousLinearMap.pi fun s => ∑ t, C s t • (affPull hA b hΩ' hT).comp
@@ -325,7 +288,6 @@ theorem fieldPull_apply (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι) (s : κ) :
   simp [fieldPull]
 
 omit [Fintype κ] in
-/-- The components of `T^* u` are `Σ_t C_{st} u_t ∘ T` almost everywhere. -/
 theorem coeFn_fieldPull (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι) (s : κ) :
     (fieldPull hA b hΩ' hT C u s : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω]
       fun x => ∑ t, C s t * (u t : (Fin n → ℝ) → ℝ) (affMap A b x) := by
@@ -341,14 +303,12 @@ theorem coeFn_fieldPull (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι) (s : κ) :
   exact Finset.sum_congr rfl fun t _ => h2 t
 
 omit [Fintype κ] in
-/-- `‖v‖ ≤ Σᵢ ‖vᵢ‖` in `L²(Ω; ℝ^κ)`. -/
 theorem L2F.norm_le_sum_norm' [Fintype κ] (v : L2F ℝ Ω κ) : ‖v‖ ≤ ∑ s, ‖v s‖ := by
   rw [PiLp.norm_eq_of_L2]
   calc √(∑ s, ‖v s‖ ^ 2) ≤ √((∑ s, ‖v s‖) ^ 2) :=
         Real.sqrt_le_sqrt (Finset.sum_sq_le_sq_sum_of_nonneg fun _ _ => norm_nonneg _)
     _ = ∑ s, ‖v s‖ := Real.sqrt_sq (Finset.sum_nonneg fun _ _ => norm_nonneg _)
 
-/-- **The field pullback is bounded**: `‖T^* u‖ ≤ |det A|^{-1/2} (Σ_{s,t} |C_{st}|) ‖u‖`. -/
 theorem norm_fieldPull_le (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι) :
     ‖fieldPull hA b hΩ' hT C u‖ ≤
       (Real.sqrt |A.det|⁻¹ * ∑ s, ∑ t, |C s t|) * ‖u‖ := by
@@ -392,8 +352,7 @@ theorem fieldPull_fieldPullInv [DecidableEq ι] {C : ι → κ → ℝ} {C' : κ
   simp_rw [← Finset.sum_smul, h, ite_smul, one_smul, zero_smul, Finset.sum_ite_eq,
     Finset.mem_univ, ite_true]
 
-/-- **The field pullback as an isomorphism** `L²(Ω'; ℝ^ι) ≃ L²(Ω; ℝ^ι)`, for mutually inverse
-fibre matrices `C`, `C'`; the inverse is the field pullback along `T⁻¹` with `C'`. -/
+/-- **The field pullback as an isomorphism**, for mutually inverse fibre matrices `C`, `C'`. -/
 def fieldPullEquiv [DecidableEq ι] (C C' : ι → ι → ℝ) (h₁ : ∀ s r, ∑ t, C s t * C' t r = if s = r then 1 else 0)
     (h₂ : ∀ s r, ∑ t, C' s t * C t r = if s = r then 1 else 0) :
     L2F ℝ Ω' ι ≃L[ℝ] L2F ℝ Ω ι :=
@@ -419,8 +378,7 @@ def pullFun (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) (C : κ → ι 
     (φ : ι → (Fin n → ℝ) → ℝ) : κ → (Fin n → ℝ) → ℝ :=
   fun s x => ∑ t, C s t * φ t (affMap A b x)
 
-/-- The pointwise pushforward `(T^♯ ψ)_t (y) = |det A|⁻¹ Σ_s C_{st} ψ_s (T⁻¹ y)`, the adjoint of
-the pullback (`inner_fieldPull_testField`). -/
+/-- The pointwise pushforward `(T^♯ ψ)_t (y) = |det A|⁻¹ Σ_s C_{st} ψ_s (T⁻¹ y)`. -/
 def pushFun (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) (C : κ → ι → ℝ)
     (ψ : κ → (Fin n → ℝ) → ℝ) : ι → (Fin n → ℝ) → ℝ :=
   fun t y => |A.det|⁻¹ * ∑ s, C s t * ψ s (affMap A⁻¹ (affInvShift A b) y)
@@ -456,7 +414,6 @@ variable (hA : IsUnit A.det) {Ω Ω' : Set (Fin n → ℝ)} (hΩ' : MeasurableSe
   (hT : affMap A b ⁻¹' Ω' = Ω)
 
 omit [Fintype κ] in
-/-- **The pullback of a test field is the test field of the pointwise pullback.** -/
 theorem fieldPull_testField (C : κ → ι → ℝ) {φ : ι → (Fin n → ℝ) → ℝ}
     (hφ : IsTestField Ω' φ) :
     fieldPull hA b hΩ' hT C (testField hφ) = testField (hφ.pullFun b hA hT C) := by
@@ -473,8 +430,6 @@ theorem fieldPull_testField (C : κ → ι → ℝ) {φ : ι → (Fin n → ℝ)
   rw [h1, Finset.sum_apply]
   exact Finset.sum_congr rfl fun t _ => h2 t
 
-/-- **The adjoint of the pullback on test fields is the pushforward**:
-`⟪T^* u, ψ⟫_{L²(Ω)} = ⟪u, T^♯ ψ⟫_{L²(Ω')}` for every test field `ψ` on `Ω` (change of variables). -/
 theorem inner_fieldPull_testField (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι)
     {ψ : κ → (Fin n → ℝ) → ℝ} (hψ : IsTestField Ω ψ) :
     ⟪fieldPull hA b hΩ' hT C u, testField hψ⟫_ℝ =
@@ -524,18 +479,13 @@ section Intertwining
 variable (A : Matrix (Fin n) (Fin n) ℝ) {ι κ ι' κ' : Type*} [Fintype ι] [Fintype κ]
   [Fintype ι'] [Fintype κ']
 
-/-- **Classical intertwining** of constant-coefficient operators by fibre matrices: for every
-translation `b` and every smooth field `φ`, `P (T^* φ) = T^* (P' φ)` pointwise, `T x = A x + b`,
-with fibre matrix `C` on the fields and `C'` on the values (`pullFun`). `P'` acts on the target
-of `T`, `P` on its source. -/
+/-- **Classical intertwining** `P (T^* φ) = T^* (P' φ)` of operators by fibre matrices `C`, `C'`. -/
 def IsPullIntertwining (P : ConstCoeffOp (Fin n → ℝ) ℝ ι κ)
     (P' : ConstCoeffOp (Fin n → ℝ) ℝ ι' κ') (C : ι → ι' → ℝ) (C' : κ → κ' → ℝ) : Prop :=
   ∀ (b : Fin n → ℝ) (φ : ι' → (Fin n → ℝ) → ℝ), (∀ t, ContDiff ℝ ∞ (φ t)) →
     P.apply (pullFun A b C φ) = pullFun A b C' (P'.apply φ)
 
-/-- **Classical intertwining of `d`** by fibre matrices `C k` on `k`-forms: for every translation
-`b` and every smooth `k`-form `φ`, `d (T^* φ) = T^* (d φ)` pointwise, `T x = A x + b`. For the
-matrices of minors of `A` this is `Feec.FiniteElement.extDeriv_affinePullback_apply`. -/
+/-- **Classical intertwining of `d`** by fibre matrices `C k` on `k`-forms. -/
 def IsDIntertwining (C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ) : Prop :=
   ∀ (b : Fin n → ℝ) (k : ℤ) (φ : formIdx n k → (Fin n → ℝ) → ℝ), (∀ t, ContDiff ℝ ∞ (φ t)) →
     (extDerivOp ℝ n k).apply (pullFun A b (C k) φ) =
@@ -543,8 +493,6 @@ def IsDIntertwining (C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ) : Pro
 
 variable {A}
 
-/-- In each degree `k`, `IsDIntertwining A C` is the classical intertwining of `d` on `k`-forms
-with the fibre matrices `C k` on the forms and `C (k + 1)` on the values. -/
 theorem IsDIntertwining.isPullIntertwining {C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ}
     (hC : IsDIntertwining A C) (k : ℤ) :
     IsPullIntertwining A (extDerivOp ℝ n k) (extDerivOp ℝ n k) (C k) (C (k + 1)) :=
@@ -557,7 +505,6 @@ variable {P : ConstCoeffOp (Fin n → ℝ) ℝ ι κ} {P' : ConstCoeffOp (Fin n 
 include hP
 
 omit [Fintype κ] in
-/-- The pullback maps the test graph of `P'` on `Ω'` into the test graph of `P` on `Ω`. -/
 theorem fieldPull_mem_testGraph {p : L2F ℝ Ω' ι' × L2F ℝ Ω' κ'} (hp : p ∈ P'.testGraph Ω') :
     (fieldPull hA b hΩo'.measurableSet hT C p.1, fieldPull hA b hΩo'.measurableSet hT C' p.2) ∈
       P.testGraph Ω := by
@@ -568,7 +515,6 @@ theorem fieldPull_mem_testGraph {p : L2F ℝ Ω' ι' × L2F ℝ Ω' κ'} (hp : p
   exact (hP b φ fun t => (hφ t).contDiff).symm
 
 include hΩo in
-/-- **The pullback maps the graph of `P'_min` into the graph of `P_min`.** -/
 theorem fieldPull_mem_graph_minimal {p : L2F ℝ Ω' ι' × L2F ℝ Ω' κ'}
     (hp : p ∈ (P'.minimal Ω').graph) :
     (fieldPull hA b hΩo'.measurableSet hT C p.1, fieldPull hA b hΩo'.measurableSet hT C' p.2) ∈
@@ -586,14 +532,13 @@ theorem fieldPull_mem_graph_minimal {p : L2F ℝ Ω' ι' × L2F ℝ Ω' κ'}
   exact closure_minimal hsub hcl hp'
 
 include hΩo in
-/-- **`T^*` maps `D(P'_min)` into `D(P_min)`.** -/
+/-- **`T^*` maps `D(P'_min)` into `D(P_min)`**, for classically intertwined `P`, `P'`. -/
 theorem fieldPull_mem_minimal_domain (u : (P'.minimal Ω').domain) :
     fieldPull hA b hΩo'.measurableSet hT C u ∈ (P.minimal Ω).domain :=
   LinearPMap.mem_domain_of_mem_graph
     (fieldPull_mem_graph_minimal hP hA b hΩo hΩo' hT ((P'.minimal Ω').mem_graph u))
 
 include hΩo in
-/-- **`T^*` intertwines the minimal realizations**: `P_min (T^* u) = T^* (P'_min u)`. -/
 theorem minimal_fieldPull (u : (P'.minimal Ω').domain) :
     P.minimal Ω ⟨_, fieldPull_mem_minimal_domain hP hA b hΩo hΩo' hT u⟩ =
       fieldPull hA b hΩo'.measurableSet hT C' (P'.minimal Ω' u) :=
@@ -601,8 +546,6 @@ theorem minimal_fieldPull (u : (P'.minimal Ω').domain) :
     ((P'.minimal Ω').mem_graph u))).symm
 
 include hΩo' in
-/-- **The pushforward intertwines the formal adjoints on test fields** (by duality from the
-classical intertwining): `P'ᵗ (T^♯ ψ) = T^♯ (Pᵗ ψ)`. -/
 theorem testField_push_formalAdj {ψ : κ → (Fin n → ℝ) → ℝ} (hψ : IsTestField Ω ψ) :
     testField (P'.formalAdj.isTestField_apply (hψ.pushFun b hA hT C')) =
       testField ((P.formalAdj.isTestField_apply hψ).pushFun b hA hT C) := by
@@ -631,8 +574,8 @@ theorem testField_push_formalAdj {ψ : κ → (Fin n → ℝ) → ℝ} (hψ : Is
     _ = _ := inner_fieldPull_testField b hA hΩo'.measurableSet hT C _ _
 
 include hΩo in
-/-- **`T^*` maps `D(P'_max)` into `D(P_max)` and intertwines the maximal realizations**:
-`P_max (T^* u) = T^* (P'_max u)`. -/
+/-- **`T^*` maps `D(P'_max)` into `D(P_max)` and intertwines the maximal realizations**, for
+classically intertwined `P`, `P'`. -/
 theorem fieldPull_mem_maximal_domain (u : (P'.maximal Ω').domain) :
     ∃ h : fieldPull hA b hΩo'.measurableSet hT C u ∈ (P.maximal Ω).domain,
       P.maximal Ω ⟨_, h⟩ = fieldPull hA b hΩo'.measurableSet hT C' (P'.maximal Ω' u) := by
@@ -651,10 +594,7 @@ end Intertwining
 
 /-! ### The pullback of `k`-forms and the transport of the de Rham complexes -/
 
-/-- **Fibre data of the pullback of forms along `x ↦ A x + b`**: in every degree `k` the fibre
-matrix `C k` of `T^*` and the fibre matrix `Cinv k` of `(T⁻¹)^*`, inverse to each other, both
-intertwining `d` classically. For the matrices of `k × k` minors of `A` and of `A⁻¹` this is
-built in `Feec.Models.Parallelepiped.FiniteElement`. -/
+/-- **Fibre data of the pullback of forms** along `x ↦ A x + b` and of its inverse. -/
 structure FormPullData (A : Matrix (Fin n) (Fin n) ℝ) where
   /-- the fibre matrices of `T^*` -/
   C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ
@@ -681,20 +621,17 @@ def equiv (k : ℤ) : L2F ℝ Ω' (formIdx n k) ≃L[ℝ] L2F ℝ Ω (formIdx n 
 @[simp] theorem coe_equiv_symm (k : ℤ) :
     ⇑(D.equiv hA b hΩo' hT k).symm = fieldPullInv hA b hΩo'.measurableSet hT (D.Cinv k) := rfl
 
-/-- `‖T^* u‖ ≤ |det A|^{-1/2} (Σ_{s,t} |C_{st}|) ‖u‖`. -/
 theorem norm_equiv_le (k : ℤ) (u : L2F ℝ Ω' (formIdx n k)) :
     ‖D.equiv hA b hΩo' hT k u‖ ≤
       (Real.sqrt |A.det|⁻¹ * ∑ s, ∑ t, |D.C k s t|) * ‖u‖ :=
   norm_fieldPull_le hA b _ hT _ u
 
-/-- `‖(T^*)⁻¹ v‖ ≤ |det A|^{1/2} (Σ_{s,t} |Cinv_{st}|) ‖v‖`. -/
 theorem norm_equiv_symm_le (k : ℤ) (v : L2F ℝ Ω (formIdx n k)) :
     ‖(D.equiv hA b hΩo' hT k).symm v‖ ≤
       (Real.sqrt |(A⁻¹).det|⁻¹ * ∑ s, ∑ t, |D.Cinv k s t|) * ‖v‖ :=
   norm_fieldPull_le (isUnit_det_inv hA) _ _ _ _ v
 
 include hΩo in
-/-- **`T^*` maps `HΛᵏ(Ω')` onto `HΛᵏ(Ω)`**: `u ∈ D(d_max)` iff `T^* u ∈ D(d_max)`. -/
 theorem mem_maximal_domain_iff (k : ℤ) {u : L2F ℝ Ω' (formIdx n k)} :
     D.equiv hA b hΩo' hT k u ∈ ((extDerivOp ℝ n k).maximal Ω).domain ↔
       u ∈ ((extDerivOp ℝ n k).maximal Ω').domain := by
@@ -711,7 +648,6 @@ theorem mem_maximal_domain_iff (k : ℤ) {u : L2F ℝ Ω' (formIdx n k)} :
       ⟨u, h⟩).1
 
 include hΩo in
-/-- **`T^*` maps `H̊Λᵏ(Ω')` onto `H̊Λᵏ(Ω)`**. -/
 theorem mem_minimal_domain_iff (k : ℤ) {u : L2F ℝ Ω' (formIdx n k)} :
     D.equiv hA b hΩo' hT k u ∈ ((extDerivOp ℝ n k).minimal Ω).domain ↔
       u ∈ ((extDerivOp ℝ n k).minimal Ω').domain := by
@@ -729,8 +665,6 @@ theorem mem_minimal_domain_iff (k : ℤ) {u : L2F ℝ Ω' (formIdx n k)} :
 
 end FormPullData
 
-/-- A partial map whose domain and values are the conjugates of those of `H.d i j` by `e` is the
-transported differential. -/
 theorem eq_transportD_of_conj {ι : Type*} {c : ComplexShape ι} {W W' : ι → Type*}
     [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
     [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℝ (W' i)]
@@ -751,8 +685,7 @@ variable {A : Matrix (Fin n) (Fin n) ℝ} (D : FormPullData A) (hA : IsUnit A.de
   (b : Fin n → ℝ) {Ω Ω' : Set (Fin n → ℝ)} (hΩo : IsOpen Ω) (hΩo' : IsOpen Ω')
   (hT : affMap A b ⁻¹' Ω' = Ω)
 
-/-- **`HΛ(Ω)` is the transport of `HΛ(Ω')` along the pullback `T^*`**: `d_Ω = T^* d_{Ω'} (T^*)⁻¹`
-in every degree, with `D(d_Ω) = T^* D(d_{Ω'})`. -/
+/-- **`HΛ(Ω)` is the transport of `HΛ(Ω')` along the pullback `T^*`.** -/
 theorem maximalComplex_eq_transport :
     (deRham ℝ n).maximalComplex hΩo = ((deRham ℝ n).maximalComplex hΩo').transport
       (fun k => D.equiv hA b hΩo' hT k) (fun _ _ => 1) (fun _ _ => one_ne_zero) := by

@@ -6,72 +6,20 @@ public import Feec.HilbertComplex.Total
 /-!
 # The static FEEC theorem with variational crimes
 
-The mixed Hodge Laplacian of the total complex (`Feec.HilbertComplex.Total`), discretized on an
-approximating family of discrete differential spaces (`ApproxComplexCrime.Family`: `Xₕ` with its
-own inner product, a differential `𝐝ₕ` independent of `𝐝`, reading maps `iₕ` that need not be
-cochain maps nor isometric), with the load `iₕ* f`. This is the elliptic theory of
-[HolstStern2012], §3 (Thm 3.9, Thm 3.10, Cor 3.11, there for cochain reading maps) for the
-families of `Feec.HilbertComplex.Approximation.ApproxComplexCrime`, where the failure of `iₕ` to
-commute with the differentials enters as a cochain defect. The cochain case of Holst–Stern, where
-the cochain defects vanish and the harmonic defect and the discrete Poincaré inequality are
-derived from bounded cochain projections, is `Feec.HilbertComplex.Approximation.StaticCochain`.
-
-## Setting
-
-* `diffComplex D hDD`: a differential `D` (`D D = 0`) on a Hilbert space `X` as a Hilbert complex
-  on the one-point shape `ComplexShape.loop`; its mixed problem is the mixed Hodge Laplacian of
-  `(X, D)`: find `(σ, u, p)` with `σ = D* u`, `D σ + D* D u + p = f`, `p ∈ ker D ∩ ker D*`,
-  `u ⊥ ker D ∩ ker D*`. Its cycles are `ker D` (`diffComplex_cycles`), its harmonic forms
-  `ker D ∩ ker D*` (`mem_diffComplex_harmonic`).
-* `ApproxComplexCrime.Family.cpx h`: the discrete differential space `(Xₕ, 𝐝ₕ)` as such a
-  complex; `mixedSol h f`: **the discrete mixed solution** `(σₕ, uₕ, pₕ)` with the load `iₕ* f`
-  (well posed for every `h`: `Xₕ` is finite-dimensional, `wellPosed_mixedSol`).
-* `IsPoincare cP`: the **uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on
-  `(ker 𝐝ₕ)ᗮ`, for every `h`.
-* `readError h X x`: `‖σ - iₕ σ̃‖ + ‖𝐝 σ - iₕ 𝐝ₕ σ̃‖ + ‖u - iₕ ũ‖ + ‖𝐝 u - iₕ 𝐝ₕ ũ‖ + ‖p - iₕ p̃‖`
-  for a continuous triple `X = (σ, u, p)` and a discrete one `x = (σ̃, ũ, p̃)`; `staticError h f`
-  is the read error of the discrete mixed solution against the mixed solution with data `f`.
-  The read differential `iₕ 𝐝ₕ` is compared with `𝐝`: `iₕ Xₕ` need not lie in `D(𝐝)`.
-* `staticResidual h f x`: the residual `B x̃ - F` of a discrete triple in the discrete mixed form,
-  an antilinear functional on the discrete mixed space (dual graph norm).
+The mixed Hodge Laplacian of the total complex on discrete differential spaces with their own inner
+products, differentials and reading maps `iₕ`, with the load `iₕ* f` ([HolstStern2012], §3).
 
 ## Main results
 
-* `ApproxComplexCrime.Family.norm_mixedSol_le`: **uniform stability**,
-  `‖(σₕ, uₕ, pₕ)‖ ≤ 16 c_P² C ‖f‖` (graph norms; [AFW2010], Thm 3.8 for `(Xₕ, 𝐝ₕ)`;
-  [HolstStern2012], Thm 3.9).
-* `ApproxComplexCrime.Family.staticError_le`: **the Strang lemma**, for every discrete triple
-  `x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖`.
-* `ApproxComplexCrime.Family.inner_staticResidual_eq`, `norm_staticResidual_le`: **the residual
-  splits** into the inner-product defect in the graph norm `‖1 - Jₕ‖_{Vₕ}`
-  (`ApproxComplexCrime.Family.graphDefect`, at most `‖1 - Jₕ‖`: `1 - Jₕ` is applied only to
-  `σ̃`, `ũ`, `𝐝ₕ σ̃`, `𝐝ₕ ũ` and `p̃`), the read error of `x̃`, the cochain defects `κₕ(u)`,
-  `κₕ(𝐝 u)` (`ApproxComplexCrime.Family.cochainDefect`) in the dual discrete graph norm, and the
-  **harmonic defect** `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms `q`;
-  `staticError_le_of_split`: the error estimate
-  `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`,
-  `δ₁`, `δ₂` bounds of the cochain defects and `η` of the harmonic defect (the crime analogue of
-  [HolstStern2012], Thm 3.10 and Cor 3.11; for cochain reading maps `δ₁ = δ₂ = 0` and `η` is
-  bounded by the approximation of `P_𝔷 u` and `‖1 - Jₕ‖_{Vₕ}`,
-  `ApproxComplexCrime.Family.IsCochain.staticError_le`).
-* `ApproxComplexCrime.Family.staticConsistent_iff_tendsto`: consistent approximation at `f`
-  (approximants with read error and residual tending to `0`) is equivalent to `e(f) → 0`;
-  `staticConsistent_of_split` derives it from vanishing defects; `tendsto_staticError_of_dense`:
-  on a dense set of data it gives `e(f) → 0` for every `f`.
-* `ApproxComplexCrime.Family.isPoincare_of_proj`: **the discrete Poincaré inequality from
-  projections** ([HolstStern2012], Thm 3.5, there for cochain maps): if `iₕ Xₕ ⊆ D(𝐝)` with
-  `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` for cochain maps) and bounded linear left inverses `pₕ` of
-  `iₕ` (`‖pₕ‖ ≤ C_π`) map `ker 𝐝` into `ker 𝐝ₕ`, then `c_P = c₀ C_π C'`, `c₀` a Poincaré constant
-  of `𝐝`.
-* `ApproxComplexCrime.Family.StaticVerdict`, **`ApproxComplexCrime.Family.staticFEEC`**: the
-  conclusions together.
+* `ApproxComplexCrime.Family.staticFEEC`: the static FEEC theorem with variational crimes.
+* `ApproxComplexCrime.Family.staticError_le`: the Strang lemma.
+* `ApproxComplexCrime.Family.staticError_le_of_split`: the error estimate in terms of the crimes.
+* `ApproxComplexCrime.Family.isPoincare_of_proj`: the uniform discrete Poincaré inequality.
 
 ## References
 
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (Thm 3.9, Thm 3.10)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2, §3.4 (Thm 3.8)
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -94,8 +42,7 @@ section DiffComplex
 variable {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X]
   (D : X →L[𝕜] X) (hDD : ∀ v, D (D v) = 0)
 
-/-- **The Hilbert complex of a differential** `D` (`D D = 0`): `X →D X` on the one-point shape
-`ComplexShape.loop`, with full domains (`ofBounded`). -/
+/-- The Hilbert complex `X →D X` of a differential `D`, `D D = 0`, on `ComplexShape.loop`. -/
 def diffComplex : HilbertComplex 𝕜 ComplexShape.loop (fun _ : Unit => X) :=
   ofBounded (fun _ _ => D) (fun _ _ h => absurd trivial h) fun _ _ _ x => hDD x
 
@@ -106,7 +53,6 @@ theorem diffComplex_d_apply (i j : Unit) (x : ((diffComplex D hDD).d i j).domain
 theorem diffComplex_domain (i j : Unit) : ((diffComplex D hDD).d i j).domain = ⊤ :=
   rfl
 
-/-- The adjoint of the differential of `diffComplex D` is `D*`. -/
 theorem adjoint_diffComplex_d_apply (i j : Unit) (y : (((diffComplex D hDD).d i j)†).domain) :
     ((diffComplex D hDD).d i j)† y = D.adjoint y :=
   LinearPMap.apply_eq_of_eq (ContinuousLinearMap.adjoint_toPMap_top D) y ⟨y, Submodule.mem_top⟩
@@ -117,7 +63,6 @@ theorem mem_adjoint_diffComplex_d_domain (i j : Unit) (y : X) :
   change y ∈ (((D : X →ₗ[𝕜] X).toPMap ⊤)†).domain
   rw [ContinuousLinearMap.adjoint_toPMap_top]; trivial
 
-/-- The cycles of `diffComplex D` are `ker D`. -/
 theorem diffComplex_cycles (i : Unit) :
     (diffComplex D hDD).cycles i = LinearMap.ker (D : X →ₗ[𝕜] X) := by
   ext v
@@ -125,7 +70,6 @@ theorem diffComplex_cycles (i : Unit) :
   rw [LinearPMap.mem_ker_iff, LinearMap.mem_ker]
   exact ⟨fun ⟨y, hy, h0⟩ => hy ▸ h0, fun h0 => ⟨⟨v, Submodule.mem_top⟩, rfl, h0⟩⟩
 
-/-- The harmonic forms of `diffComplex D` are `ker D ∩ ker D*`. -/
 theorem mem_diffComplex_harmonic {i : Unit} {q : X} :
     q ∈ (diffComplex D hDD).harmonic i ↔ D q = 0 ∧ D.adjoint q = 0 := by
   rw [harmonic_eq_cycles_inf_dual, Submodule.mem_inf, cycles_dual, diffComplex_cycles,
@@ -174,7 +118,6 @@ def greenWave (f : PiLp 2 W) : H.wave.domain := ⟨H.greenOp hcr f, H.greenOp_me
 
 theorem coe_greenWave (f : PiLp 2 W) : (H.greenWave hcr f : PiLp 2 W) = H.greenOp hcr f := rfl
 
-/-- `𝐝* u = σ` for the mixed solution `(σ, u, p)` with data `f`. -/
 theorem dual_totalD_greenWave (f : PiLp 2 W) :
     H.dual.totalD ⟨H.greenWave hcr f, (H.greenWave hcr f).2.2⟩ =
       H.total.mixedI0 () () (H.totalMixedSolution hcr f) := by
@@ -195,17 +138,14 @@ theorem totalD_greenOp_mem_wave_domain (f : PiLp 2 W) :
 def dGreenWave (f : PiLp 2 W) : H.wave.domain :=
   ⟨H.totalD ⟨H.greenOp hcr f, (H.greenWave hcr f).2.1⟩, H.totalD_greenOp_mem_wave_domain hcr f⟩
 
-/-- `u` is the `u` component of the mixed solution. -/
 theorem coe_greenWave_eq_mixedI1 (f : PiLp 2 W) :
     (H.greenWave hcr f : PiLp 2 W) = H.total.mixedI1 () () (H.totalMixedSolution hcr f) :=
   rfl
 
-/-- `𝐝 u` is the `𝐝 u` component of the mixed solution. -/
 theorem coe_dGreenWave (f : PiLp 2 W) :
     (H.dGreenWave hcr f : PiLp 2 W) = H.total.mixedD1 () () () (H.totalMixedSolution hcr f) :=
   rfl
 
-/-- `𝐝* 𝐝 u = f - p - 𝐝 σ` for the mixed solution `(σ, u, p)` with data `f`. -/
 theorem dual_totalD_dGreenWave (f : PiLp 2 W) :
     H.dual.totalD ⟨H.dGreenWave hcr f, (H.dGreenWave hcr f).2.2⟩ =
       f - H.total.mixedI2 () () (H.totalMixedSolution hcr f) -
@@ -215,12 +155,10 @@ theorem dual_totalD_dGreenWave (f : PiLp 2 W) :
   rw [mixedI2_apply, mixedD0_apply, ← e]
   exact (LinearPMap.apply_eq_of_eq H.adjoint_totalD ⟨_, h⟩ _ rfl).symm
 
-/-- `u ⊥ ℌ`. -/
 theorem inner_harmonic_greenOp (f : PiLp 2 W) {q : PiLp 2 W} (hq : q ∈ H.total.harmonic ()) :
     ⟪q, H.greenOp hcr f⟫_𝕜 = 0 :=
   (H.isMixedSolution_totalMixedSolution hcr f).harm q hq
 
-/-- `u ∈ ℌᗮ`. -/
 theorem greenOp_mem_orthogonal_harmonic (f : PiLp 2 W) :
     H.greenOp hcr f ∈ (H.total.harmonic ())ᗮ :=
   (Submodule.mem_orthogonal _ _).2 fun _ hq => H.inner_harmonic_greenOp hcr f hq
@@ -247,8 +185,6 @@ theorem norm_sum₁₅_le {E : Type*} [SeminormedAddCommGroup E]
     | refine (norm_add_le _ _).trans (add_le_add ?_ le_rfl)
     | refine (norm_sub_le _ _).trans (add_le_add ?_ le_rfl))
 
-/-- The arithmetic of the residual bound: fifteen terms, each bounded by a component of the test
-triple times a defect, sum to at most `3 (5 j ‖x‖ + C E + δ₁ + δ₂ + η) ‖y‖`. -/
 theorem residual_arith {t₁ t₂ t₃ t₄ t₅ t₆ t₇ t₈ t₉ t₁₀ t₁₁ t₁₂ t₁₃ t₁₄ t₁₅ a₀ a₁ a₂ a₃ a₄ n₀ n₁ n₂
       n₃ n₄ e₀ e₁ e₂ e₃ e₄ j C δ₁ δ₂ η nx ny : ℝ}
     (hj : 0 ≤ j) (hC : 0 ≤ C) (hδ₁ : 0 ≤ δ₁) (hδ₂ : 0 ≤ δ₂) (hη : 0 ≤ η) (hnx : 0 ≤ nx)
@@ -306,15 +242,11 @@ theorem cpx_mixedD1 (h : κ) (y : (S.cpx h).MixedSpace () ()) :
     (S.cpx h).mixedD1 () () () y = S.D h ((S.cpx h).mixedI1 () () y) :=
   rfl
 
-/-- **The uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`, for every
-`h`: the hypothesis of the uniform stability of the discrete mixed problem ([AFW2010], Thm 3.8).
-It follows from bounded projections (`isPoincare_of_proj`; for cochain reading maps and cochain
-projections, `IsCochain.isPoincare`, [HolstStern2012], Thm 3.5). -/
+/-- The uniform discrete Poincaré inequality `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`, for every `h`. -/
 def IsPoincare (cP : ℝ) : Prop :=
   ∀ h (v : S.X h), v ∈ (LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h))ᗮ → ‖v‖ ≤ cP * ‖S.D h v‖
 
-/-- **The discrete mixed solution** `(σₕ, uₕ, pₕ)` with the load `iₕ* f`: the solution of the mixed
-Hodge Laplacian of `(Xₕ, 𝐝ₕ)` with data `iₕ* f`. -/
+/-- The discrete mixed solution `(σₕ, uₕ, pₕ)` with the load `iₕ* f`. -/
 def mixedSol (h : κ) : PiLp 2 W →L[𝕜] (S.cpx h).MixedSpace () () :=
   (S.cpx h).mixedSolution (loop_rel () ()) (loop_rel () ()) (closedRangeAt_diffComplex _ _ ())
     (closedRangeAt_diffComplex _ _ ()) ∘L (S.incl h).adjoint
@@ -331,7 +263,6 @@ theorem isMixedSolution_mixedSol (h : κ) (f : PiLp 2 W) :
   (S.cpx h).isMixedSolution_mixedSolution (loop_rel () ()) (loop_rel () ())
     (closedRangeAt_diffComplex _ _ ()) (closedRangeAt_diffComplex _ _ ()) _
 
-/-- **The discrete mixed problem is well posed** for every `h` (`Xₕ` is finite-dimensional). -/
 theorem wellPosed_mixedSol (h : κ) (f : PiLp 2 W) :
     ∃! x : (S.cpx h).MixedSpace () (), (S.cpx h).IsMixedSolution () () ()
       ((S.incl h).adjoint f) x.fst x.snd.fst x.snd.snd :=
@@ -351,14 +282,10 @@ theorem IsPoincare.mono {cP cP' : ℝ} (hP : S.IsPoincare cP) (hc : cP ≤ cP') 
   fun h v hv => (hP h v hv).trans (mul_le_mul_of_nonneg_right hc (norm_nonneg _))
 
 variable {S} in
-/-- **The uniform discrete inf-sup condition** of the discrete mixed form, with the constant
-`1 / (16 c_P²)` ([AFW2010], Thm 3.8; [HolstStern2012], Thm 3.9). -/
 theorem IsPoincare.infSup {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) :
     Variational.InfSup ((S.cpx h).mixedForm () () ()) (1 / (16 * cP ^ 2)) :=
   (S.cpx h).infSup_mixedForm (loop_rel () ()) (loop_rel () ()) hcP (hP.cycles h) (hP.cycles h)
 
-/-- **Uniform stability of the discrete mixed problem**: `‖(σₕ, uₕ, pₕ)‖ ≤ 16 c_P² C ‖f‖` (graph
-norms), `C` the bound of the reading maps. -/
 theorem norm_mixedSol_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) :
     ‖S.mixedSol h f‖ ≤ 16 * cP ^ 2 * S.boundConst * ‖f‖ := by
   have h1 := (S.cpx h).norm_le_of_mixed (loop_rel () ()) (loop_rel () ()) hcP (hP.cycles h)
@@ -371,8 +298,7 @@ theorem norm_mixedSol_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h :
 
 /-! #### The read error and the Strang lemma -/
 
-/-- **The read error** of a discrete triple `x = (σ̃, ũ, p̃)` against a continuous one
-`X = (σ, u, p)`: `‖σ - iₕ σ̃‖ + ‖𝐝 σ - iₕ 𝐝ₕ σ̃‖ + ‖u - iₕ ũ‖ + ‖𝐝 u - iₕ 𝐝ₕ ũ‖ + ‖p - iₕ p̃‖`. -/
+/-- The read error of a discrete triple `x̃` against a continuous one `X`, in the graph norms. -/
 def readError (h : κ) (X : H.total.MixedSpace () ()) (x : (S.cpx h).MixedSpace () ()) : ℝ :=
   ‖H.total.mixedI0 () () X - S.incl h ((S.cpx h).mixedI0 () () x)‖ +
     ‖H.total.mixedD0 () () X - S.incl h ((S.cpx h).mixedD0 () () x)‖ +
@@ -384,13 +310,10 @@ theorem readError_nonneg (h : κ) (X : H.total.MixedSpace () ()) (x : (S.cpx h).
     0 ≤ S.readError h X x := by
   unfold readError; positivity
 
-/-- **The static error** of the mixed method with variational crimes: the read error of the
-discrete mixed solution `(σₕ, uₕ, pₕ)` (load `iₕ* f`) against the mixed solution `(σ, u, p)` of
-the total complex with data `f`. -/
+/-- The static error: the read error of the discrete mixed solution against the mixed solution. -/
 def staticError (hcr : ∀ i, H.ClosedRangeAt i) (h : κ) (f : PiLp 2 W) : ℝ :=
   S.readError h (H.totalMixedSolution hcr f) (S.mixedSol h f)
 
-/-- The components of a mixed triple are bounded by its norm. -/
 theorem norm_mixedComponents_le {V : Type*} [NormedAddCommGroup V] [InnerProductSpace 𝕜 V]
     [CompleteSpace V] (E : HilbertComplex 𝕜 ComplexShape.loop (fun _ : Unit => V))
     (x : E.MixedSpace () ()) :
@@ -404,8 +327,6 @@ theorem norm_mixedComponents_le {V : Type*} [NormedAddCommGroup V] [InnerProduct
   exact ⟨(E.norm_domainIncl_le () _).trans hσ, (E.norm_d_domainCoord_le () () _).trans hσ,
     (E.norm_domainIncl_le () _).trans hu, (E.norm_d_domainCoord_le () () _).trans hu, hp⟩
 
-/-- The read error is Lipschitz in the discrete triple:
-`readError(y) ≤ readError(x) + 5 C ‖x - y‖`. -/
 theorem readError_le (h : κ) (X : H.total.MixedSpace () ()) (x y : (S.cpx h).MixedSpace () ()) :
     S.readError h X y ≤ S.readError h X x + 5 * S.boundConst * ‖x - y‖ := by
   obtain ⟨h0, h1, h2, h3, h4⟩ := norm_mixedComponents_le (S.cpx h) (x - y)
@@ -422,8 +343,7 @@ theorem readError_le (h : κ) (X : H.total.MixedSpace () ()) (x y : (S.cpx h).Mi
     key (H.total.mixedI1 () () X) _ _ h2, key (H.total.mixedD1 () () () X) _ _ h3,
     key (H.total.mixedI2 () () X) _ _ h4]
 
-/-- The **residual** `B x - F` of a discrete triple `x` in the discrete mixed form with the load
-`iₕ* f`: an antilinear functional on the discrete mixed space, measured in the dual graph norm. -/
+/-- The residual `B x - F` of a discrete triple in the discrete mixed form with the load `iₕ* f`. -/
 def staticResidual (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) :
     (S.cpx h).MixedSpace () () →L⋆[𝕜] 𝕜 :=
   (S.cpx h).mixedForm () () () x - (S.cpx h).mixedRHS () () ((S.incl h).adjoint f)
@@ -432,7 +352,6 @@ theorem staticResidual_mixedSol (h : κ) (f : PiLp 2 W) :
     S.staticResidual h f (S.mixedSol h f) = 0 := by
   rw [staticResidual, mixedForm_mixedSol, sub_self]
 
-/-- **Stability against the residual**: `‖x - (σₕ, uₕ, pₕ)‖ ≤ 16 c_P² ‖B x - F‖`. -/
 theorem norm_sub_mixedSol_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ)
     (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) :
     ‖x - S.mixedSol h f‖ ≤ 16 * cP ^ 2 * ‖S.staticResidual h f x‖ := by
@@ -443,9 +362,7 @@ theorem norm_sub_mixedSol_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) 
   rwa [one_div, inv_inv] at this
 
 /-- **The Strang lemma for the mixed method with variational crimes**: for every discrete triple
-`x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖` (best approximation plus consistency: the
-uniform inf-sup condition applied to `x̃ - (σₕ, uₕ, pₕ)`, as in the proof of [HolstStern2012],
-Thm 3.10). -/
+`x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖`. -/
 theorem staticError_le (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hP : S.IsPoincare cP)
     (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) :
     S.staticError hcr h f ≤
@@ -459,7 +376,6 @@ theorem staticError_le (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hP : S.IsPoi
 
 /-! #### The splitting of the residual -/
 
-/-- The cochain defect paired on the right: `⟪v, κₕ(y)⟫ = ⟪iₕ 𝐝ₕ v, y⟫ - ⟪iₕ v, 𝐝* y⟫`. -/
 theorem inner_cochainDefect_right (h : κ) (y : H.wave.domain) (v : S.X h) :
     ⟪v, S.cochainDefect h y⟫_𝕜 =
       ⟪S.incl h (S.D h v), (y : PiLp 2 W)⟫_𝕜 - ⟪S.incl h v, H.dual.totalD ⟨y, y.2.2⟩⟫_𝕜 := by
@@ -473,13 +389,6 @@ theorem inner_one_sub_J_right (h : κ) (a b : S.X h) :
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-/-- **The residual splits** into the inner-product defect, the read error, the cochain defects
-of `u` and `𝐝 u` and the harmonic defect: for the mixed solution `(σ, u, p)` with data `f`, a
-discrete triple `x = (σ̃, ũ, p̃)` and a test triple `y = (τ, v, q)`,
-`(B x - F) y = ⟪τ, (1 - Jₕ) σ̃⟫ + ⟪iₕ τ, iₕ σ̃ - σ⟫ - ⟪𝐝ₕ τ, (1 - Jₕ) ũ⟫ - ⟪iₕ 𝐝ₕ τ, iₕ ũ - u⟫
-- ⟪τ, κₕ(u)⟫ + ⟪v, (1 - Jₕ) 𝐝ₕ σ̃⟫ + ⟪iₕ v, iₕ 𝐝ₕ σ̃ - 𝐝 σ⟫ + ⟪𝐝ₕ v, (1 - Jₕ) 𝐝ₕ ũ⟫
-+ ⟪iₕ 𝐝ₕ v, iₕ 𝐝ₕ ũ - 𝐝 u⟫ + ⟪v, κₕ(𝐝 u)⟫ + ⟪v, (1 - Jₕ) p̃⟫ + ⟪iₕ v, iₕ p̃ - p⟫
-- ⟪q, (1 - Jₕ) ũ⟫ - ⟪iₕ q, iₕ ũ - u⟫ - ⟪iₕ q, u⟫`. -/
 theorem inner_staticResidual_eq (h : κ) (f : PiLp 2 W) (x y : (S.cpx h).MixedSpace () ()) :
     S.staticResidual h f x y =
       ⟪(S.cpx h).mixedI0 () () y, (1 - S.J h) ((S.cpx h).mixedI0 () () x)⟫_𝕜 +
@@ -511,8 +420,6 @@ theorem inner_staticResidual_eq (h : κ) (f : PiLp 2 W) (x y : (S.cpx h).MixedSp
     inner_one_sub_J_right, inner_sub_right]
   ring
 
-/-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖` on the domain space `Vₕ` of `(Xₕ, 𝐝ₕ)`, its graph space
-(`graphDefect`). -/
 theorem norm_one_sub_J_domainIncl_le (h : κ) (v : (S.cpx h).domainSpace ()) :
     ‖(1 - S.J h) ((S.cpx h).domainIncl () v)‖ ≤ S.graphDefect h * ‖v‖ :=
   S.norm_one_sub_J_graphFst_le h v
@@ -535,7 +442,6 @@ theorem norm_inner_incl_sub_le (h : κ) (a b : S.X h) (z : PiLp 2 W) :
         exact mul_le_mul_of_nonneg_right (S.norm_incl_apply_le h a) (norm_nonneg _)
     _ = _ := by ring
 
-/-- The norm of a test triple `y = (τ, v, q)` controls `‖τ‖ + ‖𝐝ₕ τ‖ + ‖v‖ + ‖𝐝ₕ v‖ + ‖q‖`. -/
 theorem sum_norm_mixedComponents_le (h : κ) (y : (S.cpx h).MixedSpace () ()) :
     ‖(S.cpx h).mixedI0 () () y‖ + ‖(S.cpx h).mixedD0 () () y‖ + ‖(S.cpx h).mixedI1 () () y‖ +
       ‖(S.cpx h).mixedD1 () () () y‖ + ‖(S.cpx h).mixedI2 () () y‖ ≤ 3 * ‖y‖ := by
@@ -550,11 +456,6 @@ theorem sum_norm_mixedComponents_le (h : κ) (y : (S.cpx h).MixedSpace () ()) :
   exact sum_le_three_mul_of_sq (norm_nonneg _) (norm_nonneg _) (norm_nonneg _) (norm_nonneg _)
     (norm_nonneg _) (norm_nonneg _) e
 
-/-- **The residual bound**: if the cochain defects `κₕ(u)`, `κₕ(𝐝 u)` are at most `δ₁`, `δ₂` in the
-dual discrete graph norm and the harmonic defect is at most `η`, `|⟪iₕ q, u⟫| ≤ η ‖q‖` on the
-discrete harmonic forms, then `‖B x - F‖ ≤ 3 (5 ‖1 - Jₕ‖_{Vₕ} ‖x‖ + C E + δ₁ + δ₂ + η)`, `E` the
-read error of `x`: `1 - Jₕ` is applied to `σ̃` and `ũ` (graph norm at most `‖x‖`) and to `𝐝ₕ σ̃`,
-`𝐝ₕ ũ`, `p̃`, which `𝐝ₕ` maps to `0`. -/
 theorem norm_staticResidual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ())
     {δ₁ δ₂ η : ℝ} (hδ₁0 : 0 ≤ δ₁) (hδ₂0 : 0 ≤ δ₂) (hη0 : 0 ≤ η)
     (hδ₁ : ∀ v, ‖⟪S.cochainDefect h (H.greenWave hcr f), v⟫_𝕜‖ ≤ δ₁ * (‖v‖ + ‖S.D h v‖))
@@ -598,12 +499,9 @@ theorem norm_staticResidual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace
     (S.norm_inner_one_sub_J_le_of_D_eq_zero h _ hD2) (S.norm_inner_incl_sub_le h _ _ _)
     (S.norm_inner_one_sub_J_le h _ x.snd.fst) (S.norm_inner_incl_sub_le h _ _ _) b15
 
-/-- **The error estimate of the mixed method with variational crimes**: for every discrete triple
-`x̃` with cochain defects at most `δ₁`, `δ₂` and harmonic defect at most `η`,
-`e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`:
-best approximation, inner-product defect and the defects of the reading map. Cf. [HolstStern2012],
-Thm 3.10 and Cor 3.11 (cochain reading maps: `δ₁ = δ₂ = 0`, and `η` is derived in
-`ApproxComplexCrime.Family.IsCochain.staticError_le`) -/
+/-- **The error estimate with variational crimes**: with a uniform discrete Poincaré inequality,
+`e(f)` is bounded by the read error of any discrete triple, the inner-product defect and bounds of
+the cochain and harmonic defects. -/
 theorem staticError_le_of_split {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ)
     (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) {δ₁ δ₂ η : ℝ}
     (hδ₁0 : 0 ≤ δ₁) (hδ₂0 : 0 ≤ δ₂) (hη0 : 0 ≤ η)
@@ -625,8 +523,7 @@ theorem staticError_le_of_split {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ c
 
 /-! #### Consistency and convergence -/
 
-/-- **Consistent approximation** of the mixed solution with data `f` along `l`: discrete triples
-whose read error and residual (dual graph norm) tend to `0`. -/
+/-- Consistent approximation at `f`: discrete triples whose read error and residual tend to `0`. -/
 def StaticConsistent (l : Filter κ) (f : PiLp 2 W) : Prop :=
   ∀ ε > 0, ∀ᶠ h in l, ∃ x : (S.cpx h).MixedSpace () (),
     S.readError h (H.totalMixedSolution hcr f) x ≤ ε ∧ ‖S.staticResidual h f x‖ ≤ ε
@@ -634,9 +531,6 @@ def StaticConsistent (l : Filter κ) (f : PiLp 2 W) : Prop :=
 theorem staticError_nonneg (h : κ) (f : PiLp 2 W) : 0 ≤ S.staticError hcr h f :=
   S.readError_nonneg h _ _
 
-/-- **Consistent approximation is convergence**: under the uniform discrete Poincaré inequality,
-`f` is consistently approximated iff `e(f) → 0`. Forward: the Strang lemma. Backward: the
-discrete mixed solution has residual `0`. -/
 theorem staticConsistent_iff_tendsto {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP)
     (l : Filter κ) (f : PiLp 2 W) :
     S.StaticConsistent hcr l f ↔ Tendsto (fun h => S.staticError hcr h f) l (𝓝 0) := by
@@ -660,9 +554,6 @@ theorem staticConsistent_iff_tendsto {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 
     rw [Real.dist_eq, sub_zero, abs_of_nonneg (S.staticError_nonneg hcr h f)] at hh
     exact ⟨S.mixedSol h f, hh.le, by rw [S.staticResidual_mixedSol, norm_zero]; exact hε.le⟩
 
-/-- **Consistent approximation from vanishing defects**: if the inner-product defect in the graph
-norm tends to `0` and `f` has bounded discrete approximants whose read error, cochain defects and
-harmonic defect tend to `0`, then `f` is consistently approximated (`norm_staticResidual_le`). -/
 theorem staticConsistent_of_split {l : Filter κ} (hJ : Tendsto S.graphDefect l (𝓝 0))
     {B : ℝ} (f : PiLp 2 W)
     (happ : ∀ ε > 0, ∀ᶠ h in l, ∃ x : (S.cpx h).MixedSpace () (), ‖x‖ ≤ B ∧
@@ -700,7 +591,6 @@ theorem staticConsistent_of_split {l : Filter κ} (hJ : Tendsto S.graphDefect l 
     simp only [ε']; field_simp; ring
   nlinarith
 
-/-- The read error is subadditive in the pair of triples. -/
 theorem readError_add_le (h : κ) (X X' : H.total.MixedSpace () ())
     (x x' : (S.cpx h).MixedSpace () ()) :
     S.readError h (X + X') (x + x') ≤ S.readError h X x + S.readError h X' x' := by
@@ -720,7 +610,6 @@ theorem readError_add_le (h : κ) (X X' : H.total.MixedSpace () ())
     key (H.total.mixedI2 () () X) (H.total.mixedI2 () () X') ((S.cpx h).mixedI2 () () x)
       ((S.cpx h).mixedI2 () () x')]
 
-/-- The read error is at most `5 ‖X‖ + 5 C ‖x‖`. -/
 theorem readError_le_norm (h : κ) (X : H.total.MixedSpace () ()) (x : (S.cpx h).MixedSpace () ()) :
     S.readError h X x ≤ 5 * ‖X‖ + 5 * S.boundConst * ‖x‖ := by
   obtain ⟨a0, a1, a2, a3, a4⟩ := norm_mixedComponents_le H.total X
@@ -733,12 +622,10 @@ theorem readError_le_norm (h : κ) (X : H.total.MixedSpace () ()) (x : (S.cpx h)
   unfold readError
   linarith [key _ _ a0 b0, key _ _ a1 b1, key _ _ a2 b2, key _ _ a3 b3, key _ _ a4 b4]
 
-/-- The constant `5 ‖f ↦ (σ, u, p)‖ + 80 c_P² C²` of `staticError_le_add`. -/
+/-- The Lipschitz constant `5 ‖f ↦ (σ, u, p)‖ + 80 c_P² C²` of the static error. -/
 def staticLipConst (cP : ℝ) : ℝ :=
   5 * ‖H.totalMixedSolution hcr‖ + 80 * cP ^ 2 * S.boundConst ^ 2
 
-/-- **The static error is Lipschitz in the data**, uniformly in `h`:
-`e(f) ≤ e(g) + K ‖f - g‖`. -/
 theorem staticError_le_add {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ)
     (f g : PiLp 2 W) :
     S.staticError hcr h f ≤ S.staticError hcr h g + S.staticLipConst hcr cP * ‖f - g‖ := by
@@ -758,8 +645,6 @@ theorem staticError_le_add {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h
   unfold staticLipConst
   nlinarith
 
-/-- **Convergence from a dense set of data**: under the uniform discrete Poincaré inequality, if
-`e(g) → 0` on a dense set of data `g`, then `e(f) → 0` for every `f` (`staticError_le_add`). -/
 theorem tendsto_staticError_of_dense {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP)
     {l : Filter κ} {D : Set (PiLp 2 W)} (hD : Dense D)
     (hconv : ∀ g ∈ D, Tendsto (fun h => S.staticError hcr h g) l (𝓝 0)) (f : PiLp 2 W) :
@@ -782,13 +667,6 @@ theorem tendsto_staticError_of_dense {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 
 
 /-! #### The discrete Poincaré inequality from the projections -/
 
-/-- **The uniform discrete Poincaré inequality from projections bounded by `𝐝`**: if
-`iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` when `iₕ` is a cochain map), and linear left
-inverses `pₕ` of `iₕ` map `ker 𝐝` into `ker 𝐝ₕ` and satisfy `‖pₕ z‖ ≤ M ‖𝐝 z‖` on
-`(ker 𝐝)ᗮ ∩ D(𝐝)`, then `‖v‖ ≤ M C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part
-and the rest, and project back with `pₕ`. The bound `M` combines a Poincaré constant of `𝐝` with
-the bound of `pₕ`, in `W` (`isPoincare_of_proj`) or in the graph norm
-(`IsCochain.isPoincare`). [HolstStern2012], Thm 3.5 -/
 theorem isPoincare_of_norm_proj_le {M C' : ℝ}
     (hmem : ∀ h v, S.incl h v ∈ H.totalD.domain)
     (hd : ∀ h v, ‖H.totalD ⟨S.incl h v, hmem h v⟩‖ ≤ C' * ‖S.D h v‖)
@@ -826,12 +704,8 @@ theorem isPoincare_of_norm_proj_le {M C' : ℝ}
     _ ≤ M * (C' * ‖S.D h v‖) := mul_le_mul_of_nonneg_left (hd h v) hM.le
     _ = _ := by ring
 
-/-- **The uniform discrete Poincaré inequality from projections bounded in `W`**
-([HolstStern2012], Thm 3.5, there for cochain maps and the `V`-norm of the projections): if `𝐝`
-has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖`, and
-linear left inverses `pₕ` of `iₕ` with `‖pₕ‖ ≤ C_π` map `ker 𝐝` into `ker 𝐝ₕ` (e.g. cochain
-projections), then `‖v‖ ≤ c₀ C_π C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ` (`isPoincare_of_norm_proj_le` with
-`M = C_π c₀`). -/
+/-- **The discrete Poincaré inequality from projections**: left inverses `pₕ` of `iₕ` keeping the
+kernels, `‖pₕ‖ ≤ C_π`, give `‖v‖ ≤ c₀ C_π C' ‖𝐝ₕ v‖`, `c₀` for `𝐝`, `C'` bounding `𝐝 iₕ` by `𝐝ₕ`. -/
 theorem isPoincare_of_proj {c₀ C' : ℝ}
     (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖)
@@ -849,12 +723,7 @@ theorem isPoincare_of_proj {c₀ C' : ℝ}
 
 variable (cP : ℝ) (l : Filter κ)
 
-/-- **The conclusions of the static FEEC theorem with variational crimes**
-(`ApproxComplexCrime.Family.staticFEEC`) for the mixed Hodge Laplacian of the total complex,
-under closed range of `H` and the uniform discrete Poincaré inequality with constant `c_P`:
-well-posedness, uniform stability, the Strang lemma, the splitting of the residual into the
-crimes, the resulting error estimate, consistency as convergence, and convergence for every
-datum from consistency on a dense set. [HolstStern2012], §3 -/
+/-- The conclusions of the static FEEC theorem with variational crimes. [HolstStern2012], §3 -/
 structure StaticVerdict : Prop where
   /-- the discrete mixed problem with the load `iₕ* f` is well posed -/
   wellPosed (h : κ) (f : PiLp 2 W) : ∃! x : (S.cpx h).MixedSpace () (),
@@ -866,8 +735,7 @@ structure StaticVerdict : Prop where
     S.staticError hcr h f ≤
       S.readError h (H.totalMixedSolution hcr f) x + 80 * S.boundConst * cP ^ 2 *
         ‖S.staticResidual h f x‖
-  /-- the residual splits into the inner-product defect in the graph norm, the read error, the
-  cochain defects and the harmonic defect -/
+  /-- the splitting of the residual into the crimes -/
   residual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) {δ₁ δ₂ η : ℝ}
     (hδ₁0 : 0 ≤ δ₁) (hδ₂0 : 0 ≤ δ₂) (hη0 : 0 ≤ η)
     (hδ₁ : ∀ v, ‖⟪S.cochainDefect h (H.greenWave hcr f), v⟫_𝕜‖ ≤ δ₁ * (‖v‖ + ‖S.D h v‖))
@@ -895,13 +763,8 @@ structure StaticVerdict : Prop where
 
 variable {cP}
 
-/-- **The static FEEC theorem with variational crimes**: for an approximating family of
-discrete differential spaces of a Hilbert complex with closed range, under the uniform discrete
-Poincaré inequality, the mixed Hodge Laplacian of the total complex with the load `iₕ* f` is
-uniformly well posed, its error is best approximation plus the residual, the residual splits into
-the inner-product defect, the cochain defects and the harmonic defect, and the method converges
-for every datum once it is consistent on a dense set. The crime analogue of [HolstStern2012],
-Thms 3.9, 3.10 (there for cochain reading maps); [AFW2010], Thm 3.8 -/
+/-- **The static FEEC theorem with variational crimes**: with closed range and a uniform discrete
+Poincaré inequality, `StaticVerdict`. [HolstStern2012], §3; [AFW2010], Thm 3.8 -/
 theorem staticFEEC (hcP : 1 ≤ cP) (hP : S.IsPoincare cP) : S.StaticVerdict hcr cP l :=
   ⟨S.wellPosed_mixedSol, S.norm_mixedSol_le hP hcP, S.staticError_le hcr hP hcP,
     fun h f x _ _ _ hδ₁0 hδ₂0 hη0 hδ₁ hδ₂ hη =>

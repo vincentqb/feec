@@ -6,27 +6,13 @@ public import Feec.Models.Cube.WeakSymmetryWave
 /-!
 # Non-vacuity of the rates on the cube beyond flat data
 
-The rates of Thm 5.5 (`cubeFEM_rate_tr`, `Feec.Models.Cube.WeakSymmetryFEM`) and of the
-semi-discrete scheme (6.5) (`cubeWave_rate_tr`, `Feec.Models.Cube.WeakSymmetryWave`) are stated
-on the class `FEM.IsCsFormTr 0` (`Feec.Models.Cube.TangentialRate`): `C²` fields up to `∂Q` whose
-tangential components vanish on `∂Q`, with no condition on the normal components. This module
-shows that the class reaches beyond flat data (`FEM.IsCsFormMin`).
+A classical solution `waveTangential T` of (6.2) whose field `u` has a nonzero normal component on
+`∂Q` meets the hypotheses of the rate `cubeWave_rate_tr` of (6.5), while `u` is not flat.
 
-* The field `u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)` (with `σ = φ = λ = 0`, divergence free with
-  `S¹u = 0`) has a normal component that does not vanish on `∂Q` (`normalWitness_ne_zero`, the
-  first row being `normalWitness`) and is not flat (`not_isCsFormMin_tangentialU0`).
-* `waveTangential T` is a classical solution of (6.2) built on it (`u(t) = ū`,
-  `ρ(t) = t curl ū`, `M = 0`), meeting the hypotheses of `cubeWave_rate_tr`
-  (`waveTangential_hyps`).
+## Main results
 
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, Table 5.1, Thm 5.5; §6.2 (6.4), §6.3 (6.5), Table 6.1
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (vanishing tangential
-  traces), Ch. 7 (approximation estimates)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `not_isCsFormMin_tangentialU0`: `u` lies in no flat class `IsCsFormMin`.
+* `waveTangential_hyps`: `waveTangential T` meets the hypotheses of `cubeWave_rate_tr`.
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace ContDiff
@@ -38,11 +24,10 @@ namespace Feec.Models.Cube.WeakSymmetry
 
 open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex Feec.Models.Cube.FEM
 
-/-! ### A smooth solution of (5.3) with nonzero normal component on `∂Q` -/
+/-! ### A smooth field with nonzero normal component on `∂Q` -/
 
 section TangentialManufactured
 
-/-- A derivative along `eᵢ` of a function independent of `yᵢ` vanishes. -/
 theorem fderiv_coordDir_eq_zero_of_indep {g : (Fin 3 → ℝ) → ℝ} (hg : Differentiable ℝ g)
     {i : Fin 3} (hind : ∀ (y : Fin 3 → ℝ) (t : ℝ), g (y + t • coordDir i) = g y)
     (y : Fin 3 → ℝ) : fderiv ℝ g y (coordDir i) = 0 := by
@@ -62,7 +47,6 @@ abbrev tangentialψ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ := formComp (norma
 theorem contDiff_tangentialψ (r : formIdx 3 1) : ContDiff ℝ ∞ (tangentialψ r) :=
   contDiff_pi.1 contDiff_normalWitness r.1
 
-/-- **`w` is divergence free**: `dᵗw = -∂₀ w₀ = 0` (`w₀` does not depend on `y₀`). -/
 theorem formalAdj_tangentialψ : (extDerivOp ℝ 3 0).formalAdj.apply tangentialψ = 0 := by
   funext r y
   rw [formalAdj_extDerivOp_apply, extDAdj, Pi.zero_apply, Pi.zero_apply, neg_eq_zero]
@@ -94,7 +78,6 @@ def tangentialX : W1 :=
 theorem exists_isCsFormTr_tangentialX : ∃ L, 0 ≤ L ∧ IsCsFormTr 0 1 L tangentialX :=
   isCsFormTr_normalWitness 0
 
-/-- **`w ∈ H̊Λ¹(Q)`** with `d_min w = (dw)|_Q`. -/
 theorem tangentialX_mem : ∃ h : tangentialX ∈ D1.domain, D1 ⟨_, h⟩ =
     formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 2
       ⟨FiniteElement.extDeriv normalWitness,
@@ -114,8 +97,7 @@ theorem tangentialX_mem : ∃ h : tangentialX ∈ D1.domain, D1 ⟨_, h⟩ =
 /-- The witness as a point of `H̊Λ¹(Q)`. -/
 def tangentialU0 : U1 := ⟨tangentialX, tangentialX_mem.1⟩
 
-/-- **The manufactured `u`** with nonzero normal component on `∂Q`: first row
-`(sin 2πy₁ sin 2πy₂) dx₀`, other rows zero. -/
+/-- The field `u` with first row `w = (sin 2πy₁ sin 2πy₂) dx₀` and the other rows zero. -/
 def tangentialU : Wv U1 := WithLp.toLp 2 (Pi.single 0 tangentialU0)
 
 theorem tangentialU_apply_of_ne {a : Fin 3} (ha : a ≠ 0) : tangentialU a = 0 := by
@@ -126,7 +108,6 @@ theorem tangentialU_apply_zero : tangentialU 0 = tangentialU0 := by
   change (Pi.single (0 : Fin 3) tangentialU0 : Fin 3 → U1) 0 = _
   exact Pi.single_eq_same _ _
 
-/-- `⟪w, d ψ⟫ = 0` for `ψ ∈ H̊Λ⁰(Q)` (`dᵗw = 0`, Green's formula on `D(d_min)`). -/
 theorem inner_tangentialX_D0 (x : U0) : ⟪tangentialX, D0 x⟫ = 0 := by
   have hψs : ∀ r, ContDiff ℝ 1 (tangentialψ r) := fun r =>
     (contDiff_tangentialψ r).of_le (by simp)
@@ -156,7 +137,6 @@ theorem inner_tangentialU_dt0 (ψ : Wv U0) : ⟪tangentialU, bggSegment.dt0 ψ�
     add_zero, add_zero, tangentialU_apply_zero]
   exact inner_tangentialX_D0 (ψ 0)
 
-/-- **`S¹u = 0`** (`S¹u = Σₐ dxₐ ∧ uₐ = dx₀ ∧ w₀ dx₀ = 0`). -/
 theorem segS1_tangentialU : bggSegment.S1 tangentialU = 0 := by
   change wsL2 (Ω := cubeDomain 3) 1 (incl1 tangentialU) = 0
   refine PiLp.ext fun t => ?_
@@ -184,8 +164,7 @@ theorem segS1_tangentialU : bggSegment.S1 tangentialU = 0 := by
       rw [hp, PiLp.zero_apply, smul_zero]
   · rw [zero_smul]
 
-/-- **The manufactured `u` is not flat**: its first row has a nonzero normal component at the
-boundary point `(0, ⅛, ⅛)` (`normalWitness_ne_zero`) and is in no class `IsCsFormMin`. -/
+/-- **`u` is not flat**: its first row lies in no class `IsCsFormMin`. -/
 theorem not_isCsFormMin_tangentialU0 (s : ℕ) (L : ℝ) :
     ¬ IsCsFormMin s 1 L ((tangentialU 0 : U1) : W1) := by
   rw [tangentialU_apply_zero]
@@ -205,7 +184,7 @@ end TangentialManufactured
 
 section WaveTangential
 
-/-- The components of `dw` (`w` the witness). -/
+/-- The components of `dw`. -/
 abbrev tangentialDψ : formIdx 3 2 → (Fin 3 → ℝ) → ℝ :=
   formComp (FiniteElement.extDeriv (normalWitness (n := 3)))
 
@@ -224,8 +203,7 @@ theorem memLp_formalAdj_tangentialDψ (r : formIdx 3 1) :
   memLp_of_continuous (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3)
     (ConstCoeffOp.continuous_apply _ (formalAdj_extDerivOp_isOrderLE 1) contDiff_tangentialDψ r)
 
-/-- The source `f̄ = (curl* curl w, 0, 0) ∈ (L²Λ¹)³` (`dᵗ dw`, an `L²` field: `w` is smooth up to
-the boundary). -/
+/-- The source `f̄ = (curl* curl w, 0, 0) ∈ (L²Λ¹)³`. -/
 def waveTangentialSrc : Wv W1 :=
   WithLp.toLp 2 (Pi.single 0 (toL2F memLp_formalAdj_tangentialDψ))
 
@@ -239,7 +217,6 @@ theorem waveTangentialSrc_apply_zero :
 theorem D1_tangentialU0 : D1 tangentialU0 = toL2F memLp_tangentialDψ :=
   tangentialX_mem.2
 
-/-- `⟪curl u, curl v⟫ = ⟪f̄, v⟫` (Green's formula on `D(d_min)`; no condition on `dw` at `∂Q`). -/
 theorem inner_dt1_tangentialU (v : Wv U1) :
     ⟪bggSegment.dt1 tangentialU, bggSegment.dt1 v⟫ = ⟪waveTangentialSrc, incl1 v⟫ := by
   rw [inner_Vt, inner_Vt, Fin.sum_univ_three, Fin.sum_univ_three]
@@ -272,9 +249,7 @@ theorem inner_dt1_tangentialU (v : Wv U1) :
   simp only [e2, e3]
   rw [real_inner_comm, key, real_inner_comm]
 
-/-- **A classical solution of (6.2) on the cube whose fields are not flat at `∂Q`**: `σ = φ = 0`,
-`u(t) = ū = tangentialU` (normal component nonzero on `{y₀ = 0}`), `M ≡ 0` (`S¹ū = 0`),
-`ρ(t) = t curl ū`, `ℓ = 0`, source `f(t) = t f̄`, `f̄ = (curl* curl w, 0, 0)`. -/
+/-- **A solution of (6.2)**: `u = tangentialU`, `ρ(t) = t curl u`, source `t f̄`, the rest `0`. -/
 def waveTangential (T : ℝ) :
     Feec.BGG.ExactWave bggSegment T (srcFun fun t => t • waveTangentialSrc) where
   σ _ := 0
@@ -326,9 +301,7 @@ def waveTangential (T : ℝ) :
   ee _ _ := by rw [map_zero, map_zero]
   ee' _ _ := by rw [map_zero, map_zero]
 
-/-- **Non-vacuity of `cubeWave_rate_tr` beyond the flat class**: `waveTangential T` meets the
-hypotheses of `cubeWave_rate_tr` with one bound `L` on `[0,T]`, has `u(t) ≠ 0`, and its `u(t)` is
-not flat (`not_isCsFormMin_tangentialU0`). -/
+/-- **`waveTangential T` meets the hypotheses of `cubeWave_rate_tr`**, with `u(t) ≠ 0`. -/
 theorem waveTangential_hyps {T : ℝ} (hT : 0 < T) : ∃ L, 0 ≤ L ∧
     (∀ t ∈ Icc 0 T, IsSmoothStateTr L ((waveTangential T).σ t) ((waveTangential T).φ t)
         ((waveTangential T).u t) ((waveTangential T).M t) ((waveTangential T).ρ t) ∧

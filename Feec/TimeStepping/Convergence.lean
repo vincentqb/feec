@@ -6,65 +6,23 @@ public import Feec.ForMathlib.LinearPMap.Bounded
 /-!
 # Convergence of one-step schemes: stability and consistency
 
-A one-step scheme `uₙ₊₁ = P uₙ + gₙ` for `u' = L u + f` converges when it is **stable**
-(`‖Pᵏ‖ ≤ M`) and **consistent** with the exact flow: the classical "stability plus consistency
-implies convergence" ([Thomee2006], Ch. 7; [BrennerThomee1979]). This file proves it in two
-layers.
+Stability plus consistency gives convergence of one-step schemes: on normed spaces, for strongly
+continuous semigroups (Lax–Richtmyer), and for bounded generators, with smoothing by time averages.
 
-* **Any normed space, any comparison sequence** (`sub_eq_sum_of_step`, the discrete Duhamel
-  formula, and `norm_sub_le_of_step`): for `Uₖ₊₁ = P Uₖ + gₖ` and any `wₖ`,
-  `‖Uₙ - wₙ‖ ≤ M (‖U₀ - w₀‖ + Σₖ<ₙ ‖wₖ₊₁ - P wₖ - gₖ‖)`: the error is at most the initial error
-  plus the accumulated consistency defects. This is the discrete counterpart of
-  `Feec.HilbertComplex.norm_sub_le_of_defect_of_dissipative` ("best approximation plus
-  consistency"), and the operator form of `TimeStepping.norm_sub_le_sum_of_isDirichletCNStep`.
-* **Strongly continuous semigroups on Banach spaces** (`C0Semigroup.norm_S_sub_taylor_le`,
-  Taylor's formula `‖S(t) x - Σ_{j<p} tʲ/j! Aʲ x‖ ≤ M tᵖ/p! ‖Aᵖ x‖` on `D(Aᵖ)` for `‖S‖ ≤ M`,
-  and **`C0Semigroup.norm_pow_apply_sub_S_le`**, Lax–Richtmyer: `‖Pᵏ‖ ≤ Mₛ` and consistency of
-  order `p` on `D(A^{p+1})` give `‖Pⁿ x - S(nτ) x‖ ≤ Mₛ K M nτ τᵖ ‖A^{p+1} x‖`). The bounded
-  case is `S(t) = e^{tL}`: a scheme `P` is **consistent of order `p` with constant `K`**
-  (`IsConsistent`) if `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖`, and for `‖e^{tL}‖ ≤ M`,
-  `‖Pⁿ y - e^{nτL} y‖ ≤ Mₛ K M (n τ) τᵖ ‖L^{p+1} y‖`
-  (`norm_pow_apply_sub_exp_le_of_norm_exp_le`), on every Banach space.
-* **Bounded dissipative generators** (`re ⟪L x, x⟫ ≤ 0`, so `e^{tL}` is a contraction for `t ≥ 0`,
-  `norm_exp_le_one`, and conversely, `re_inner_le_zero_of_norm_exp_le_one`): the Taylor
-  remainder `‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`
-  (`norm_exp_sub_taylor_le`); consistency of order `p` follows from an expansion
-  `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀` (`isConsistent_of_eq`,
-  `K = K₀ + 1/(p+1)!`);
-  and **`norm_pow_apply_sub_exp_le`**: stability and consistency of order `p` give the global error
-  `‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖` (the Banach-space bound at `‖e^{tL}‖ ≤ 1`).
-  All constants are independent of `L`: on finite element spaces they are uniform in the mesh.
+## Main results
 
-## θ-schemes for bounded generators
-
-`ContinuousLinearMap.isMDissipative_toPMap_top`: a bounded dissipative operator on a Hilbert space
-is m-dissipative, so `Feec.TimeStepping.thetaStep` applies to it, and is power bounded for
-`re θ ≥ 1/2` (`norm_thetaStep_pow_le`). `thetaStep_mem_of_mapsTo`: a closed subspace `K` with
-`L K ⊆ K` is kept by the θ-scheme (discrete constraint propagation, for instance for a discrete
-Gauss law). The θ-schemes are rational schemes (`RationalScheme.apply_theta`); their consistency
-and global errors (`isConsistent_thetaStep`, `norm_thetaStep_pow_sub_exp_le`,
-`norm_cayley_pow_sub_exp_le`) are in `Feec.TimeStepping.Rational`.
-
-**Smoothing** (`timeAvg`, `norm_pow_timeAvg_iterate_le_of_norm_exp_le`,
-`norm_timeAvg_iterate_sub_le_of_norm_exp_le`): on a Banach space with `‖e^{sL}‖ ≤ M`, the time
-average `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds` satisfies `‖Lᵏ A_δᵏ y‖ ≤ ((M + 1)/δ)ᵏ ‖y‖` and
-`‖A_δᵏ y - y‖ ≤ (Σ_{j<k} Mʲ) sup_{s ≤ δ} ‖e^{sL} y - y‖`, uniformly in `L`; it turns the rate
-for smooth data into convergence for all data (downstream:
-`Feec.TimeStepping.BanachFEEC.TimeScheme.converges`, and through it
-`Feec.HilbertComplex.DissipFEEC.TimeScheme.converges`).
+* `norm_sub_le_of_step`: stability plus consistency gives convergence.
+* `C0Semigroup.norm_pow_apply_sub_S_le`: the Lax–Richtmyer theorem for semigroups.
+* `norm_pow_apply_sub_exp_le_of_norm_exp_le`: the rate `Mₛ K M t τᵖ` for bounded generators.
+* `thetaStep_mem_of_mapsTo`: for dissipative `L`, `re θ > 0` and `τ > 0`, `r_θ(τ L)` keeps closed
+  `L`-invariant subspaces.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-  (order `p` rational schemes: `O(t τᵖ ‖A^{p+1} x‖)`)
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
-  (single step methods: stability and consistency), Ch. 8–9
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2 (the orbit calculus behind Taylor's formula)
-* [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
-  (stability and accuracy of rational approximations of semigroups)
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, Ch. 9
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 4.18 (constraint propagation, here at the discrete level)
+  Prop 4.18
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -83,8 +41,6 @@ section Duhamel
 variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
   {P : X →L[𝕜] X} {U g w : ℕ → X}
 
-/-- **The discrete Duhamel formula**: for `Uₖ₊₁ = P Uₖ + gₖ` and any comparison sequence `wₖ`,
-`Uₙ - wₙ = Pⁿ (U₀ - w₀) + Σ_{j<n} Pʲ dₙ₋₁₋ⱼ` with the defects `dₖ = P wₖ + gₖ - wₖ₊₁`. -/
 theorem sub_eq_sum_of_step (hU : ∀ k, U (k + 1) = P (U k) + g k) (n : ℕ) :
     U n - w n = (P ^ n) (U 0 - w 0) +
       ∑ j ∈ range n, (P ^ j) (P (w (n - 1 - j)) + g (n - 1 - j) - w (n - j)) := by
@@ -104,9 +60,9 @@ theorem sub_eq_sum_of_step (hU : ∀ k, U (k + 1) = P (U k) + g k) (n : ℕ) :
     rw [← add_assoc, ← _root_.map_add, ← ih, _root_.map_sub]
     abel
 
-/-- **Stability plus consistency gives convergence**: if `‖Pᵏ‖ ≤ M` for `k ≤ n` and
-`Uₖ₊₁ = P Uₖ + gₖ`, then for every comparison sequence `wₖ`,
-`‖Uₙ - wₙ‖ ≤ M (‖U₀ - w₀‖ + Σ_{k<n} ‖wₖ₊₁ - P wₖ - gₖ‖)`. [Thomee2006], Ch. 7 -/
+/-- **Stability plus consistency gives convergence**: if `Uₖ₊₁ = P Uₖ + gₖ` and `‖Pᵏ‖ ≤ M` for
+`k ≤ n`, then for all `wₖ`, `‖Uₙ - wₙ‖ ≤ M (‖U₀ - w₀‖ + Σ_{k<n} ‖wₖ₊₁ - P wₖ - gₖ‖)`.
+[Thomee2006], Ch. 7 -/
 theorem norm_sub_le_of_step {M : ℝ} {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ M)
     (hU : ∀ k, U (k + 1) = P (U k) + g k) :
     ‖U n - w n‖ ≤ M * (‖U 0 - w 0‖ + ∑ k ∈ range n, ‖w (k + 1) - P (w k) - g k‖) := by
@@ -124,7 +80,6 @@ theorem norm_sub_le_of_step {M : ℝ} {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ �
   rw [e]
   exact (P ^ j).le_of_opNorm_le (hP j hj'.le) _
 
-/-- `‖Pᵏ‖ ≤ aᵏ` for `‖P‖ ≤ a`. -/
 theorem norm_pow_le_pow {P : X →L[𝕜] X} {a : ℝ} (hP : ‖P‖ ≤ a) (k : ℕ) : ‖P ^ k‖ ≤ a ^ k := by
   induction k with
   | zero => exact ContinuousLinearMap.norm_id_le
@@ -132,7 +87,6 @@ theorem norm_pow_le_pow {P : X →L[𝕜] X} {a : ℝ} (hP : ‖P‖ ≤ a) (k :
     rw [pow_succ, pow_succ]
     exact (norm_mul_le _ _).trans (mul_le_mul ih hP (norm_nonneg _) ((norm_nonneg _).trans ih))
 
-/-- Powers of a contraction are contractions. -/
 theorem norm_pow_le_one {P : X →L[𝕜] X} (hP : ‖P‖ ≤ 1) (n : ℕ) : ‖P ^ n‖ ≤ 1 := by
   simpa using norm_pow_le_pow hP n
 
@@ -149,9 +103,6 @@ open Set (Icc Ico Ici)
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedSpace ℝ E]
   [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
 
-/-- **Taylor's formula for a semigroup**: for a chain `u₀, …, u_p` in the graph of the generator
-(`u₀ ∈ D(Aᵖ)`, `uⱼ = Aʲ u₀`) and `‖S(s)‖ ≤ M` on `[0, T]`,
-`‖S(t) u₀ - Σ_{j<p} tʲ/j! uⱼ‖ ≤ M tᵖ/p! ‖u_p‖` for `t ∈ [0, T]`. [Pazy1983], §1.2 -/
 theorem norm_S_sub_taylor_le {T M : ℝ} (hM : ∀ t ∈ Icc 0 T, ‖G.S t‖ ≤ M) (p : ℕ) :
     ∀ {u : ℕ → E}, (∀ j < p, (u j, u (j + 1)) ∈ G.generator.graph) → ∀ {t : ℝ}, t ∈ Icc 0 T →
       ‖G.S t (u 0) - ∑ j ∈ range p, (t ^ j / j.factorial) • u j‖ ≤
@@ -206,11 +157,9 @@ theorem norm_S_sub_taylor_le {T M : ℝ} (hM : ∀ t ∈ Icc 0 T, ‖G.S t‖ �
     exact ih (u := fun j => u (j + 1)) (fun j hj => hu (j + 1) (by omega))
       ⟨hs.1, hs.2.le.trans ht.2⟩
 
-/-- **Lax–Richtmyer for semigroups**: if `‖Pᵏ‖ ≤ Mₛ` for `k ≤ n`, `‖S(t)‖ ≤ M` on `[0, nτ]`, and
-`P` is consistent of order `p` on `D(A^{p+1})`, `‖P v₀ - S(τ) v₀‖ ≤ K τ^{p+1} ‖v_{p+1}‖` for every
-chain `v` in the graph of the generator, then
-`‖Pⁿ u₀ - S(nτ) u₀‖ ≤ Mₛ K M nτ τᵖ ‖u_{p+1}‖` for every chain `u`. [Thomee2006], Ch. 9;
-[BrennerThomee1979] -/
+/-- **Lax–Richtmyer for semigroups** ([Thomee2006], Ch. 9; [BrennerThomee1979]): stability `Mₛ`,
+`‖S(t)‖ ≤ M` on `[0, nτ]` and consistency of order `p` with constant `K` give
+`‖Pⁿ u₀ - S(nτ) u₀‖ ≤ Mₛ K M nτ τᵖ ‖u_{p+1}‖`. -/
 theorem norm_pow_apply_sub_S_le {P : E →L[𝕜] E} {n : ℕ} {τ : ℝ} (hτ : 0 ≤ τ) {Ms M K : ℝ}
     {p : ℕ} (hK : 0 ≤ K) (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ Ms) (hS : ∀ t ∈ Icc 0 (n * τ), ‖G.S t‖ ≤ M)
     (hc : ∀ v : ℕ → E, (∀ j < p + 1, (v j, v (j + 1)) ∈ G.generator.graph) →
@@ -254,17 +203,15 @@ section Normed
 
 variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X] {L : X →L[𝕜] X}
 
-/-- A scheme `P` is **consistent of order `p` with constant `K`** with the flow `e^{τL}`:
-`‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖` for every `y`. [Thomee2006], Ch. 7 -/
+/-- `P` is consistent of order `p` with constant `K`: `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖`. -/
 def IsConsistent (L P : X →L[𝕜] X) (τ : ℝ) (p : ℕ) (K : ℝ) : Prop :=
   ∀ y, ‖P y - exp ((τ : 𝕜) • L) y‖ ≤ K * τ ^ (p + 1) * ‖(L ^ (p + 1)) y‖
 
 variable [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X]
 
-/-- **Stability and consistency of order `p` give the rate `Mₛ K M t τᵖ` on a Banach space**:
-if `‖e^{tL}‖ ≤ M` for `t ≥ 0`, `‖Pᵏ‖ ≤ Mₛ` for `k ≤ n` and `P` is consistent of order `p` with
-constant `K`, then `‖Pⁿ y - e^{nτL} y‖ ≤ Mₛ K M (n τ) τᵖ ‖L^{p+1} y‖`: the semigroup `e^{tL}`
-case of `C0Semigroup.norm_pow_apply_sub_S_le`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
+/-- **The rate on a Banach space** ([BrennerThomee1979]; [Thomee2006], Ch. 7): for `‖e^{tL}‖ ≤ M`
+and `τ ≥ 0`, stability `Mₛ` and consistency `(p, K)` give
+`‖Pⁿ y - e^{nτL} y‖ ≤ Mₛ K M (n τ) τᵖ ‖L^{p+1} y‖`. -/
 theorem norm_pow_apply_sub_exp_le_of_norm_exp_le {M : ℝ}
     (hL : ∀ t : ℝ, 0 ≤ t → ‖exp ((t : 𝕜) • L)‖ ≤ M) {P : X →L[𝕜] X} {Ms : ℝ} {n : ℕ}
     (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ Ms) {τ : ℝ} (hτ : 0 ≤ τ) {p : ℕ} {K : ℝ} (hK : 0 ≤ K)
@@ -280,9 +227,7 @@ theorem norm_pow_apply_sub_exp_le_of_norm_exp_le {M : ℝ}
 
 /-! #### Smoothing by time averages -/
 
-/-- The **time average** `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds`, with `L A_δ = δ⁻¹ (e^{δL} - 1)`
-(`apply_timeAvg_eq`): for `‖e^{sL}‖ ≤ M` on `[0, δ]`, `‖A_δ‖ ≤ M` and `‖L A_δ‖ ≤ (M + 1)/δ`
-(`norm_apply_timeAvg_le_of_norm_exp_le`), so `A_δ` smooths discrete data uniformly in `L`. -/
+/-- The **time average** `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds`. -/
 def timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) : X :=
   δ⁻¹ • ∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y
 
@@ -299,7 +244,6 @@ theorem timeAvg_sub (L : X →L[𝕜] X) (δ : ℝ) (y z : X) :
   rw [intervalIntegral.integral_sub ((continuous_exp_apply L y).intervalIntegrable _ _)
     ((continuous_exp_apply L z).intervalIntegrable _ _), smul_sub]
 
-/-- `L A_δ y = A_δ (L y)`. -/
 theorem apply_timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
     L (timeAvg L δ y) = timeAvg L δ (L y) := by
   unfold timeAvg
@@ -309,7 +253,6 @@ theorem apply_timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
   refine intervalIntegral.integral_congr fun s _ => ?_
   exact congrArg (fun C : X →L[𝕜] X => C y) (ContinuousLinearMap.commute_exp_ofReal_smul L s).eq
 
-/-- `L A_δ y = δ⁻¹ (e^{δL} y - y)` (the fundamental theorem of calculus). -/
 theorem apply_timeAvg_eq (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
     L (timeAvg L δ y) = δ⁻¹ • (exp ((δ : 𝕜) • L) y - y) := by
   unfold timeAvg
@@ -321,7 +264,6 @@ theorem apply_timeAvg_eq (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
   simp
 
 omit [IsScalarTower ℝ 𝕜 X] in
-/-- `‖A_δ y - y‖ ≤ η` when `‖e^{sL} y - y‖ ≤ η` on `[0, δ]`. -/
 theorem norm_timeAvg_sub_le {δ η : ℝ} (hδ : 0 < δ) {y : X}
     (h : ∀ s ∈ Set.Icc 0 δ, ‖exp ((s : 𝕜) • L) y - y‖ ≤ η) : ‖timeAvg L δ y - y‖ ≤ η := by
   have e : timeAvg L δ y - y = δ⁻¹ • ∫ s in (0 : ℝ)..δ, (exp ((s : 𝕜) • L) y - y) := by
@@ -339,7 +281,6 @@ theorem norm_timeAvg_sub_le {δ η : ℝ} (hδ : 0 < δ) {y : X}
     _ = η := by field_simp
 
 omit [CompleteSpace X] [IsScalarTower ℝ 𝕜 X] in
-/-- `‖A_δ y‖ ≤ M ‖y‖` when `‖e^{sL}‖ ≤ M` on `[0, δ]`, `δ > 0`. -/
 theorem norm_timeAvg_le_of_norm_exp_le {M δ : ℝ}
     (hL : ∀ s ∈ Set.Icc 0 δ, ‖exp ((s : 𝕜) • L)‖ ≤ M) (hδ : 0 < δ) (y : X) :
     ‖timeAvg L δ y‖ ≤ M * ‖y‖ := by
@@ -353,7 +294,6 @@ theorem norm_timeAvg_le_of_norm_exp_le {M δ : ℝ}
   calc δ⁻¹ * ‖∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y‖ ≤ δ⁻¹ * (M * ‖y‖ * δ) := by gcongr
     _ = M * ‖y‖ := by field_simp
 
-/-- `‖L A_δ y‖ ≤ (M + 1)/δ ‖y‖` when `‖e^{δL}‖ ≤ M`, `δ > 0` (`L A_δ = δ⁻¹ (e^{δL} - 1)`). -/
 theorem norm_apply_timeAvg_le_of_norm_exp_le {M δ : ℝ} (hL : ‖exp ((δ : 𝕜) • L)‖ ≤ M)
     (hδ : 0 < δ) (y : X) : ‖L (timeAvg L δ y)‖ ≤ (M + 1) / δ * ‖y‖ := by
   rw [apply_timeAvg_eq, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
@@ -362,8 +302,6 @@ theorem norm_apply_timeAvg_le_of_norm_exp_le {M δ : ℝ} (hL : ‖exp ((δ : �
   calc δ⁻¹ * ‖exp ((δ : 𝕜) • L) y - y‖ ≤ δ⁻¹ * ((M + 1) * ‖y‖) := by gcongr; linarith
     _ = _ := by ring
 
-/-- **Smoothing on a Banach space**: `‖Lᵏ A_δᵏ y‖ ≤ ((M + 1)/δ)ᵏ ‖y‖` when `‖e^{δL}‖ ≤ M`,
-uniformly in the bounded `L`. -/
 theorem norm_pow_timeAvg_iterate_le_of_norm_exp_le {M δ : ℝ} (hL : ‖exp ((δ : 𝕜) • L)‖ ≤ M)
     (hδ : 0 < δ) (k : ℕ) (y : X) :
     ‖(L ^ k) ((timeAvg L δ)^[k] y)‖ ≤ ((M + 1) / δ) ^ k * ‖y‖ := by
@@ -388,8 +326,6 @@ theorem norm_pow_timeAvg_iterate_le_of_norm_exp_le {M δ : ℝ} (hL : ‖exp ((�
       _ = _ := by ring
 
 omit [IsScalarTower ℝ 𝕜 X] in
-/-- `‖A_δᵏ y - y‖ ≤ (Σ_{j<k} Mʲ) ‖A_δ y - y‖` when `‖e^{sL}‖ ≤ M` on `[0, δ]` (`‖A_δ‖ ≤ M` and
-linearity). -/
 theorem norm_timeAvg_iterate_sub_le_of_norm_exp_le {M δ : ℝ}
     (hL : ∀ s ∈ Set.Icc 0 δ, ‖exp ((s : 𝕜) • L)‖ ≤ M) (hδ : 0 < δ) (k : ℕ) (y : X) :
     ‖(timeAvg L δ)^[k] y - y‖ ≤ (∑ j ∈ range k, M ^ j) * ‖timeAvg L δ y - y‖ := by
@@ -435,15 +371,11 @@ variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [InnerProductSpac
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- `‖e^{tL}‖ ≤ 1` for bounded dissipative `L` and `t ≥ 0`. -/
 theorem norm_exp_le_one (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {t : ℝ} (ht : 0 ≤ t) :
     ‖(C0Group.ofBounded L).S t‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
     simpa using LumerPhillips.norm_exp_smul_apply_le hL ht x
 
-/-- **A bounded generator of contractions is dissipative**, the converse of `norm_exp_le_one`
-(Lumer–Phillips for bounded `L`): if `‖e^{tL}‖ ≤ 1` for `t ≥ 0`, then `re ⟪L x, x⟫ ≤ 0`
-(`C0Semigroup.IsContraction.isDissipative_generator`). -/
 theorem re_inner_le_zero_of_norm_exp_le_one
     (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ 1) (x : X) :
     RCLike.re ⟪L x, x⟫ ≤ 0 := by
@@ -455,9 +387,6 @@ theorem re_inner_le_zero_of_norm_exp_le_one
     C0Group.generator_ofBounded_apply L ⟨x, C0Group.mem_domain_generator_ofBounded L x⟩
   rwa [e] at h
 
-/-- **The Taylor remainder of a contraction semigroup**: for bounded dissipative `L`, `t ≥ 0`,
-`‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`, Taylor's formula for the semigroup
-`e^{tL}` (`C0Semigroup.norm_S_sub_taylor_le`). -/
 theorem norm_exp_sub_taylor_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) (p : ℕ) {t : ℝ} (ht : 0 ≤ t)
     (y : X) :
     ‖exp ((t : 𝕜) • L) y - ∑ j ∈ range p, (t ^ j / j.factorial) • (L ^ j) y‖ ≤
@@ -467,8 +396,6 @@ theorem norm_exp_sub_taylor_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) (p : �
     (fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded L y j) ⟨ht, le_rfl⟩
   simpa using h
 
-/-- **Consistency from an expansion**: `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀`
-is consistent of order `p` with constant `K₀ + 1/(p+1)!`. [Thomee2006], Ch. 7 -/
 theorem isConsistent_of_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P ρ : X →L[𝕜] X} {τ : ℝ}
     (hτ : 0 ≤ τ) {p : ℕ} {K₀ : ℝ} (hρ : ‖ρ‖ ≤ K₀)
     (hP : ∀ y, P y = ∑ j ∈ range (p + 1), (τ ^ j / j.factorial) • (L ^ j) y +
@@ -491,10 +418,6 @@ theorem isConsistent_of_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P ρ : X 
           rwa [norm_sub_rev] at h1)
     _ = _ := by ring
 
-/-- **Stability and consistency of order `p` give the rate `M K t τᵖ`**: if `‖Pᵏ‖ ≤ M` for
-`k ≤ n` and `P` is consistent of order `p` with constant `K`, then
-`‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖`: the contraction case `‖e^{tL}‖ ≤ 1` of
-`norm_pow_apply_sub_exp_le_of_norm_exp_le`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem norm_pow_apply_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P : X →L[𝕜] X} {M : ℝ}
     {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ M) {τ : ℝ} (hτ : 0 ≤ τ) {p : ℕ} {K : ℝ} (hK : 0 ≤ K)
     (hc : IsConsistent L P τ p K) (y : X) :
@@ -505,8 +428,6 @@ theorem norm_pow_apply_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P 
 /-! ### θ-schemes of bounded dissipative operators -/
 
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
-/-- **A bounded dissipative operator on a Hilbert space is m-dissipative** (closed, everywhere
-defined, with dissipative adjoint), so the θ-schemes of `Feec.TimeStepping.Theta` apply to it. -/
 theorem _root_.ContinuousLinearMap.isMDissipative_toPMap_top (L : X →L[𝕜] X)
     (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) : ((L : X →ₗ[𝕜] X).toPMap ⊤).IsMDissipative := by
   refine IsDissipative.isMDissipative_of_adjoint (fun x => hL x) ?_ L.isClosed_toPMap_top ?_
@@ -518,8 +439,6 @@ theorem _root_.ContinuousLinearMap.isMDissipative_toPMap_top (L : X →L[𝕜] X
     exact hL x
 
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
-/-- The θ-scheme of a bounded dissipative operator is power bounded by `1` (`re θ ≥ 1/2`,
-`τ > 0`). -/
 theorem norm_thetaStep_pow_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ : 𝕜}
     (hθ : 1 / 2 ≤ RCLike.re θ) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) :
     ‖thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) θ τ ^ n‖ ≤ 1 :=
@@ -527,9 +446,8 @@ theorem norm_thetaStep_pow_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ : �
 
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
 /-- **Discrete constraint propagation for closed invariant subspaces**: if `L K ⊆ K` for a closed
-`K` (for instance a subspace of a finite element space), then `r_θ(τ L) K ⊆ K` (`re θ > 0`,
-`τ > 0`): the part of `L` in `K` is bounded and dissipative, so the resolvent equation is solvable
-within `K`. [QuennevilleBelair2015], Prop 4.18 -/
+`K` and dissipative `L`, then `r_θ(τ L) K ⊆ K` (`re θ > 0`, `τ > 0`).
+[QuennevilleBelair2015], Prop 4.18 (adapted) -/
 theorem thetaStep_mem_of_mapsTo (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {K : Submodule 𝕜 X}
     (hKc : IsClosed (K : Set X)) (hLK : ∀ x ∈ K, L x ∈ K) {θ : 𝕜} (hθ : 0 < RCLike.re θ)
     {τ : ℝ} (hτ : 0 < τ) {u : X} (hu : u ∈ K) :

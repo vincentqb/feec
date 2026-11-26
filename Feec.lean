@@ -504,12 +504,8 @@ public import Feec.Variational.SaddlePoint
 /-!
 # Feec
 
-A formalization of finite element exterior calculus for constrained wave equations. It adapts the
-abstract framework of V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of
-General Relativity*, PhD thesis, University of Minnesota, 2015; its modules are organized by
-mathematical subject.
-
-This root module publicly imports every module of the library.
+A formalization of finite element exterior calculus for constrained wave equations, adapting the
+abstract framework of [QuennevilleBelair2015]. This root module imports every module of the library.
 
 ## References
 

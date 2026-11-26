@@ -9,32 +9,13 @@ public import Mathlib.Topology.Algebra.Polynomial
 /-!
 # Von Neumann's inequality
 
-**Von Neumann's inequality** ([VonNeumann1951]): for a contraction `T` (`‖T‖ ≤ 1`) of a complex
-inner product space and a polynomial `p`, `‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|`
-(`ContinuousLinearMap.norm_aeval_le_of_norm_le_one`). The proof is the Poisson-kernel proof with
-the circle replaced by the `M`-th roots of unity `ωᵐ` (`M` odd): for a strict contraction `S`,
-`Yₘ = ∑_{k<N} ω^{-mk} Sᵏ` and the positive semidefinite form `B(u, v) = ⟪u, v⟫ - ⟪S u, S v⟫`,
-the average `M⁻¹ ∑ₘ ωᵐⁿ B(Yₘ x, Yₘ y)` telescopes to `⟪x, Sⁿ y⟫ - ⟪S^{N-n} x, S^N y⟫`
-(`sum_pow_mul_formB`, exact once `M > N + deg p`), and `|B(u, v)| ≤ (B(u, u) + B(v, v))/2`
-(`norm_formB_le`) gives `|⟪x, p(S) y⟫| ≤ C (‖x‖² + ‖y‖²)/2 + O(‖S‖^{N - deg p})`; let `N → ∞`,
-then `S = ρ T`, `ρ → 1`. No completeness is used. The odd `M` keeps `-1` out of the sample points,
-so the bound on the circle may omit `-1` (`norm_aeval_le_of_forall_ne_neg_one`).
-
-**Rational functions** (`norm_aeval_mul_inverse_le`, `E` complete): if `q` has no zero in the
-closed unit disc, `q(T)` is invertible and `‖p(T) q(T)⁻¹‖ ≤ sup_{|ζ| = 1, ζ ≠ -1} |p(ζ)/q(ζ)|`.
-Factor `q = c ∏ (X - b)`, `|b| > 1`; the polynomials `sₙ = c⁻¹ ∏ (-b⁻¹) ∑_{k<n} (X/b)ᵏ` satisfy
-`q sₙ = ∏ (1 - (X/b)ⁿ) → 1` uniformly on the closed disc and in operator norm at `T`, so
-`p sₙ → p/q` and von Neumann's inequality for `p sₙ` passes to the limit. Hence `‖q(T)⁻¹‖` is
-bounded uniformly over the contractions `T` (`exists_norm_inverse_aeval_le`).
-
-**Real coefficients over `𝕜 = ℝ` or `ℂ`** (`norm_aeval_map_mul_inverse_le`): for real polynomials
-`p`, `q` and a contraction of a Hilbert space over `𝕜`, the same bound, through the
-complexification (`Complexification`); the uniform bound `exists_norm_inverse_aeval_map_le`.
+For a contraction `T` of a complex inner product space and a polynomial `p`,
+`‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|` ([VonNeumann1951]); on Hilbert spaces the same holds for rational
+functions `p/q` with `q` free of zeros in the closed unit disc, and for real `p`, `q` over `𝕜`.
 
 ## References
 
 * [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
-* [P. R. Halmos, *Finite-Dimensional Vector Spaces*][Halmos1974], §77 (complexification)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -55,7 +36,6 @@ local notation "⟪" x ", " y "⟫" => inner ℂ x y
 /-- The form `B(u, v) = ⟪u, v⟫ - ⟪S u, S v⟫` of a contraction `S`. -/
 private def formB (S : E →L[ℂ] E) (u v : E) : ℂ := ⟪u, v⟫ - ⟪S u, S v⟫
 
-/-- `‖Sᵏ u‖ ≤ ‖S‖ᵏ ‖u‖` (`norm_pow_le` needs `E` nontrivial at `k = 0`). -/
 private theorem norm_pow_apply_le (S : E →L[ℂ] E) (k : ℕ) (u : E) :
     ‖(S ^ k) u‖ ≤ ‖S‖ ^ k * ‖u‖ := by
   induction k with
@@ -66,13 +46,10 @@ private theorem norm_pow_apply_le (S : E →L[ℂ] E) (k : ℕ) (u : E) :
         (S.le_opNorm _).trans (mul_le_mul_of_nonneg_left ih (norm_nonneg _))
       _ = ‖S‖ ^ (k + 1) * ‖u‖ := by ring
 
-/-- `B(u, u) = ‖u‖² - ‖S u‖²`. -/
 private theorem formB_self (S : E →L[ℂ] E) (u : E) :
     formB S u u = ((‖u‖ ^ 2 - ‖S u‖ ^ 2 : ℝ) : ℂ) := by
   simp only [formB, inner_self_eq_norm_sq_to_K]; push_cast; rfl
 
-/-- **The form of a contraction is positive semidefinite**:
-`|B(u, v)| ≤ (B(u, u) + B(v, v))/2`. -/
 private theorem norm_formB_le {S : E →L[ℂ] E} (hS : ‖S‖ ≤ 1) (u v : E) :
     ‖formB S u v‖ ≤ ((‖u‖ ^ 2 - ‖S u‖ ^ 2) + (‖v‖ ^ 2 - ‖S v‖ ^ 2)) / 2 := by
   have hsq : ∀ w, ‖S w‖ ^ 2 ≤ ‖w‖ ^ 2 := fun w =>
@@ -97,8 +74,6 @@ private theorem norm_formB_le {S : E →L[ℂ] E} (hS : ‖S‖ ≤ 1) (u v : E)
     rw [← map_sub, ← mul_sub]; exact hcβ
   nlinarith
 
-/-- **Orthogonality of the roots of unity**: for a primitive `M`-th root `ω` and `a, b < M`,
-`∑_{m<M} ωᵐᵃ conj(ωᵐᵇ) = M` if `a = b` and `0` otherwise. -/
 private theorem sum_pow_mul_conj_pow {ω : ℂ} {M : ℕ} (hω : IsPrimitiveRoot ω M) {a b : ℕ}
     (ha : a < M) (hb : b < M) :
     ∑ m ∈ range M, (ω ^ m) ^ a * conj ((ω ^ m) ^ b) = if a = b then (M : ℂ) else 0 := by
@@ -142,8 +117,6 @@ private theorem formB_avgOp (S : E →L[ℂ] E) (ζ : ℂ) (N : ℕ) (x y : E) :
   refine sum_congr rfl fun j _ => ?_
   ring
 
-/-- **The averaged form telescopes**: for a primitive `M`-th root `ω`, `n ≤ N` and `n + N ≤ M`,
-`∑_{m<M} ωᵐⁿ B(Yₘ x, Yₘ y) = M (⟪x, Sⁿ y⟫ - ⟪S^{N-n} x, S^N y⟫)`. -/
 private theorem sum_pow_mul_formB {ω : ℂ} {M N n : ℕ} (hω : IsPrimitiveRoot ω M) (hn : n ≤ N)
     (hNM : n + N ≤ M) (S : E →L[ℂ] E) (x y : E) :
     ∑ m ∈ range M, (ω ^ m) ^ n * formB S (avgOp S (ω ^ m) N x) (avgOp S (ω ^ m) N y) =
@@ -175,7 +148,6 @@ private theorem sum_pow_mul_formB {ω : ℂ} {M N n : ℕ} (hω : IsPrimitiveRoo
     Nat.add_sub_cancel' hn]
   rfl
 
-/-- The sample points `ωᵐ` (`M` odd) are on the circle and avoid `-1`. -/
 private theorem norm_root_pow {ω : ℂ} {M : ℕ} (hω : IsPrimitiveRoot ω M) (hM : Odd M) (m : ℕ) :
     ‖ω ^ m‖ = 1 ∧ ω ^ m ≠ -1 := by
   have hM0 : M ≠ 0 := by rintro rfl; simp at hM
@@ -184,8 +156,6 @@ private theorem norm_root_pow {ω : ℂ} {M : ℕ} (hω : IsPrimitiveRoot ω M) 
   rw [h, hM.neg_one_pow] at h1
   norm_num at h1
 
-/-- **The averaged estimate**: for a contraction `S`, `deg p ≤ N` and `|p| ≤ C` on the circle
-(without `-1`), `|⟪x, p(S) y⟫ - ∑ₙ pₙ ⟪S^{N-n} x, S^N y⟫| ≤ C (‖x‖² + ‖y‖²)/2`. -/
 private theorem norm_inner_aeval_sub_le {S : E →L[ℂ] E} (hS : ‖S‖ ≤ 1) {p : ℂ[X]} {C : ℝ}
     (hp : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 → ‖p.eval ζ‖ ≤ C) {N : ℕ} (hN : p.natDegree ≤ N) (x y : E) :
     ‖⟪x, aeval S p y⟫ - ∑ n ∈ range (p.natDegree + 1),
@@ -237,7 +207,6 @@ private theorem norm_inner_aeval_sub_le {S : E →L[ℂ] E} (hS : ‖S‖ ≤ 1)
   refine le_of_mul_le_mul_left ?_ hM
   nlinarith
 
-/-- Von Neumann's inequality for **strict contractions**. -/
 private theorem norm_aeval_le_of_norm_lt_one {S : E →L[ℂ] E} (hS : ‖S‖ < 1) {p : ℂ[X]} {C : ℝ}
     (hp : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 → ‖p.eval ζ‖ ≤ C) : ‖aeval S p‖ ≤ C := by
   have hC : 0 ≤ C := (norm_nonneg _).trans (hp 1 (by simp) (by norm_num))
@@ -285,8 +254,6 @@ private theorem norm_aeval_le_of_norm_lt_one {S : E →L[ℂ] E} (hS : ‖S‖ <
     nlinarith
   exact le_of_mul_le_mul_left this hy'
 
-/-- **Von Neumann's inequality, with the circle punctured at `-1`**: for a contraction `T` of a
-complex inner product space, `‖p(T)‖ ≤ C` when `|p(ζ)| ≤ C` for `|ζ| = 1`, `ζ ≠ -1`. -/
 theorem norm_aeval_le_of_forall_ne_neg_one {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) {p : ℂ[X]} {C : ℝ}
     (hp : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 → ‖p.eval ζ‖ ≤ C) : ‖aeval T p‖ ≤ C := by
   have hcont : Continuous fun ρ : ℝ => aeval ((ρ : ℂ) • T) p :=
@@ -300,8 +267,7 @@ theorem norm_aeval_le_of_forall_ne_neg_one {T : E →L[ℂ] E} (hT : ‖T‖ ≤
   calc ρ * ‖T‖ ≤ ρ * 1 := mul_le_mul_of_nonneg_left hT hρ.1.le
     _ < 1 := by linarith [hρ.2]
 
-/-- **Von Neumann's inequality** ([VonNeumann1951]): for a contraction `T` of a complex inner
-product space and a polynomial `p`, `‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|`. -/
+/-- **Von Neumann's inequality**: `‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|` for a contraction `T`. -/
 theorem norm_aeval_le_of_norm_le_one {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) {p : ℂ[X]} {C : ℝ}
     (hp : ∀ ζ : ℂ, ‖ζ‖ = 1 → ‖p.eval ζ‖ ≤ C) : ‖aeval T p‖ ≤ C :=
   norm_aeval_le_of_forall_ne_neg_one hT fun ζ hζ _ => hp ζ hζ
@@ -310,8 +276,6 @@ end Polynomial
 
 section Rational
 
-/-- `‖∏ (1 - uᵢ) - 1‖ ≤ (1 + ε)ᵏ - 1` for `k` factors with `‖uᵢ‖ ≤ ε`, in a seminormed ring with
-`‖1‖ ≤ 1`. -/
 private theorem norm_prod_one_sub_sub_one_le {R : Type*} [SeminormedRing R] (h1 : ‖(1 : R)‖ ≤ 1)
     {ε : ℝ} (hε : 0 ≤ ε) :
     ∀ l : List R, (∀ u ∈ l, ‖u‖ ≤ ε) → ‖(l.map (1 - ·)).prod - 1‖ ≤ (1 + ε) ^ l.length - 1
@@ -341,10 +305,6 @@ private theorem norm_pow_le_of_norm_one_le {R : Type*} [SeminormedRing R] (h1 : 
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
 
-/-- **Von Neumann's inequality for rational functions**: for a contraction `T` of a complex
-Hilbert space and polynomials `p`, `q` with `q` free of zeros in the closed unit disc, `q(T)` is
-invertible and `‖p(T) q(T)⁻¹‖ ≤ C` whenever `|p(ζ)/q(ζ)| ≤ C` on the unit circle (`-1` may be
-omitted). [VonNeumann1951] -/
 theorem norm_aeval_mul_inverse_le {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) {p q : ℂ[X]}
     (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → q.eval w ≠ 0) {K : ℝ}
     (hK : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 → ‖p.eval ζ / q.eval ζ‖ ≤ K) :
@@ -466,7 +426,6 @@ theorem norm_aeval_mul_inverse_le {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) {p q 
     simpa using ((hδ.const_add 1).const_mul K).add (hδ.const_mul ‖F‖)
   exact ⟨hunit, ge_of_tendsto' hlim hbound⟩
 
-/-- `1/q` is bounded on the unit circle when `q` has no zero in the closed unit disc. -/
 private theorem exists_norm_one_div_eval_le {q : ℂ[X]} (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → q.eval w ≠ 0) :
     ∃ M : ℝ, ∀ ζ : ℂ, ‖ζ‖ = 1 → ‖(1 : ℂ[X]).eval ζ / q.eval ζ‖ ≤ M := by
   obtain ⟨M, hM⟩ := (isCompact_sphere (0 : ℂ) 1).exists_bound_of_continuousOn
@@ -475,8 +434,6 @@ private theorem exists_norm_one_div_eval_le {q : ℂ[X]} (hq : ∀ w : ℂ, ‖w
       fun w hw => hq w (mem_sphere_zero_iff_norm.1 hw).le)
   exact ⟨M, fun ζ hζ => hM ζ (mem_sphere_zero_iff_norm.2 hζ)⟩
 
-/-- **The inverses `q(T)⁻¹` are bounded uniformly over the contractions `T`** of a complex Hilbert
-space, when `q` has no zero in the closed unit disc (von Neumann's inequality for `1/q`). -/
 theorem exists_norm_inverse_aeval_le {q : ℂ[X]} (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → q.eval w ≠ 0) :
     ∃ M : ℝ, ∀ T : E →L[ℂ] E, ‖T‖ ≤ 1 →
       IsUnit (aeval T q) ∧ ‖Ring.inverse (aeval T q)‖ ≤ M := by
@@ -491,11 +448,6 @@ section RealCoefficients
 
 variable {𝕜 V : Type*} [RCLike 𝕜] [NormedAddCommGroup V] [InnerProductSpace 𝕜 V] [CompleteSpace V]
 
-/-- **Von Neumann's inequality for real rational functions over `𝕜 = ℝ` or `ℂ`**: for a
-contraction `T` of a Hilbert space over `𝕜` and real polynomials `p`, `q` with `q` free of zeros
-in the closed unit disc, `q(T)` is invertible and `‖p(T) q(T)⁻¹‖ ≤ C` whenever `|p(ζ)/q(ζ)| ≤ C`
-on the unit circle (`-1` may be omitted); through the complexification. [VonNeumann1951];
-[Halmos1974], §77 -/
 theorem norm_aeval_map_mul_inverse_le {T : V →L[𝕜] V} (hT : ‖T‖ ≤ 1) {p q : ℝ[X]}
     (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → aeval w q ≠ 0) {C : ℝ}
     (hC : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 → ‖aeval ζ p / aeval ζ q‖ ≤ C) :
@@ -510,8 +462,6 @@ theorem norm_aeval_map_mul_inverse_le {T : V →L[𝕜] V} (hT : ‖T‖ ≤ 1) 
   rw [← Complexification.map_ringInverse hu] at h
   exact ⟨hu, (Complexification.norm_map (n := .hilbert) _).symm.trans_le h.2⟩
 
-/-- **The inverses `q(T)⁻¹` are bounded uniformly over the contractions `T`** of a Hilbert space
-over `𝕜`, for a real `q` without zero in the closed unit disc. -/
 theorem exists_norm_inverse_aeval_map_le {q : ℝ[X]} (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → aeval w q ≠ 0) :
     ∃ M : ℝ, ∀ T : V →L[𝕜] V, ‖T‖ ≤ 1 →
       IsUnit (aeval T (q.map (algebraMap ℝ 𝕜))) ∧

@@ -6,49 +6,21 @@ public import Feec.Models.Cube.PolyFiniteElementConvergence
 /-!
 # Convergence of the scheme (6.5) on the cube without rate
 
-The scheme (6.5) of [QuennevilleBelair2015], §6.3, on `Q = (0, ½)³` with the elements of
-Table 6.1 and the thesis' boundary conditions (`Feec.Models.Cube.WeakSymmetry.cubeWave`)
-converges to every classical solution of the multiplier problem (6.2) in the energy class of
-`Feec.BGG.ExactWave` whose multiplier is represented on `dV⁰ − S₀Ṽ⁰` by `L²` data: no smoothness,
-no boundary flatness and no `L²` bound on the multiplier itself.
-
-**The multiplier.** For a classical solution, (6.2a) fixes the multiplier functional on
-`{dτ − S₀ψ}`: `ℓ(dτ − S₀ψ) = ⟪σ', τ⟫ − ⟪u, dψ⟫`. The regular decomposition
-(`Feec.BGG.Stability.exists_decomp`, from `CurlPotential` and the Poincaré inequalities) bounds
-such a functional in the graph norm of `H̊(curl)` (`Feec.BGG.abs_le_of_rep`); it is in general not
-`L²`-bounded (`ℓ(S₀ψ) = ⟪u, dψ⟫` with `u` only in the domain of `div div`). The Riesz
-representation in the graph space and the density of `D(d¹*)` approximate it by `L²` functionals
-up to `δ ‖d μ‖` (`exists_inner_approx`), and the consistency constant `K₀` of the Strang bound
-tends to `0` uniformly on compact families of data (`Feec.BGG.abs_K0_le_of_approx`,
-`eventually_cubeFEM_K0`).
-
-**The other constants.** `K₁ → 0` by density of `D(d¹*)` and the regular potentials of
-`cubeFEMReg` (`eventually_cubeFEM_K1`), and the smoothed projections converge strongly, hence
-uniformly on compact trajectories (`PolySmoothingEstimatesMin.tendsto_norm_sub_proj`,
-`eventually_cubeClose`). With the end-to-end theorem
-`Feec.BGG.ExactWave.exists_discreteSolution_rate` this gives `cubeWave_converges`.
+The scheme (6.5) of [QuennevilleBelair2015], §6.3, on `Q = (0, ½)³` converges to every classical
+solution of (6.2) whose multiplier and its derivative are represented on `dV⁰ − S₀Ṽ⁰` by continuous
+`L²` data, with no smoothness, no flatness at `∂Q` and no `L²` bound on the multiplier.
 
 ## Main results
 
-* `Feec.BGG.Stability.exists_decomp`, `Feec.BGG.abs_le_of_rep`, `Feec.BGG.abs_K0_le_of_approx`.
-* `exists_inner_approx`, `exists_adjoint_approx_D1`.
-* `Feec.Models.Cube.FEM.PolySmoothingEstimatesMin.tendsto_norm_sub_proj`,
-  `PolySmoothingEstimatesMin.eventually_norm_sub_proj_le`.
-* `cubeFEM_strangData_le_of_close`, `eventually_cubeFEM_K0`, `eventually_cubeFEM_K1`,
-  `eventually_cubeClose`.
-* **`cubeWave_converges`**: for every `ε > 0` and all large `N`, the solution of (6.5) from the
-  elliptic projection (6.4) of the exact initial state stays within `ε` of the exact solution on
-  `[0,T]`.
+* `Feec.BGG.Stability.exists_decomp`: the regular decomposition `μ = dτ − S₀ψ` with bounds.
+* `PolySmoothingEstimatesMin.tendsto_norm_sub_proj`: the smoothed projections converge strongly.
+* `eventually_cubeFEM_K0`, `eventually_cubeFEM_K1`: the consistency constants tend to `0`.
+* `cubeWave_converges`: the convergence of (6.5) from the elliptic projection (6.4).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), (6.4), Prop 6.2), §6.3 ((6.5), Table 6.1), Prop 5.9
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002] (Strang's lemma)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -78,9 +50,8 @@ theorem decompConst_nonneg (H : Stability D Cp CR CS) : 0 ≤ decompConst Cp CR 
   have := H.Cp_nonneg; have := H.CR_nonneg; have := H.CS_nonneg
   unfold decompConst; positivity
 
-/-- **Regular decomposition with bounds**: every `μ ∈ V¹` is `dτ − S₀ψ` with
-`‖τ‖, ‖dψ‖ ≤ C (‖μ‖ + ‖dμ‖)` (`reg` gives `ψ`, `exact1` and `poinc0` give `τ`). See
-[Hiptmair2002], Lemma 2.4. -/
+/-- **Regular decomposition with bounds**: under `Stability`, every `μ ∈ V¹` is `dτ − S₀ψ` with
+`‖τ‖, ‖dψ‖ ≤ C (‖μ‖ + ‖dμ‖)` ([Hiptmair2002], Lemma 2.4). -/
 theorem Stability.exists_decomp (H : Stability D Cp CR CS) (μ : V1) :
     ∃ τ ψ, D.d0 τ - D.S0 ψ = μ ∧ ‖τ‖ ≤ decompConst Cp CR CS * (‖μ‖ + ‖D.d1 μ‖) ∧
       ‖D.dt0 ψ‖ ≤ decompConst Cp CR CS * (‖μ‖ + ‖D.d1 μ‖) := by
@@ -125,9 +96,6 @@ theorem Stability.exists_decomp (H : Stability D Cp CR CS) (μ : V1) :
     nlinarith [mul_nonneg (mul_nonneg hp (by positivity : (0 : ℝ) ≤ 1 + CS * (Cp + 1) * CR))
       (add_nonneg hmn hd1n)]
 
-/-- **A functional represented on `dV⁰ − S₀Ṽ⁰` is bounded in the graph norm**: if
-`ℓ(dτ − S₀ψ) = α τ − β (dψ)` with `|α τ| ≤ A ‖τ‖`, `|β v| ≤ B ‖v‖`, then
-`|ℓ μ| ≤ (A + B) C (‖μ‖ + ‖dμ‖)` (`Stability.exists_decomp`). -/
 theorem abs_le_of_rep (H : Stability D Cp CR CS) (ℓ : V1 → ℝ) (α : V0 → ℝ) (β : Vt1 → ℝ)
     (hrep : ∀ τ ψ, ℓ (D.d0 τ - D.S0 ψ) = α τ - β (D.dt0 ψ)) {A B : ℝ} (hA0 : 0 ≤ A)
     (hB0 : 0 ≤ B) (hA : ∀ τ, |α τ| ≤ A * ‖τ‖) (hB : ∀ v, |β v| ≤ B * ‖v‖) (μ : V1) :
@@ -139,10 +107,6 @@ theorem abs_le_of_rep (H : Stability D Cp CR CS) (ℓ : V1 → ℝ) (α : V0 →
   calc |α τ - β (D.dt0 ψ)| ≤ |α τ| + |β (D.dt0 ψ)| := abs_sub _ _
     _ ≤ _ := by nlinarith
 
-/-- **`K₀` for a functional close to an `L²`-bounded one in the graph-dual norm**: if
-`|ℓ μ − g μ| ≤ δ (‖μ‖ + ‖dμ‖)` and `|g μ| ≤ Λ ‖μ‖`, then, with the consistency of `S₀,ₕ`
-(Prop 5.9(1), `happ0`) and the uniform bound of `Π²`,
-`|ℓ((S₀ − S₀,ₕ)ψ)| ≤ (δ (C_app h + (1 + C_P) C_S) + Λ C_app h) ‖ψ‖_V` on `Ṽₕ⁰`. -/
 theorem abs_K0_le_of_approx (H : Stability D Cp CR CS) {Q : Discrete D} {CP : ℝ}
     (B : Q.Bounded CP) {Capp h : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
     (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
@@ -196,8 +160,7 @@ variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hE : PolySmoothingEstimatesMin 3 S p C)
 include hE
 
-/-- **The smoothed projections converge strongly**: `‖x − π̊_N x‖ → 0` for every `x ∈ L²Λᵏ(Q)`
-(`‖x − π̊_N x‖ ≤ (1 + 2C) dist(x, V̊ₕᵏ)` and the spaces `V̊ₕᵏ` are dense). -/
+/-- **The smoothed projections converge strongly**: `‖x − π̊_N x‖ → 0` for every `x ∈ L²Λᵏ(Q)`. -/
 theorem tendsto_norm_sub_proj (k : ℤ) (x : L2F ℝ (cubeDomain 3) (formIdx 3 k)) :
     Tendsto (fun N => ‖x - (hE.proj N).π k x‖) atTop (𝓝 0) := by
   have hC := hE.two_mul_nonneg
@@ -206,7 +169,6 @@ theorem tendsto_norm_sub_proj (k : ℤ) (x : L2F ℝ (cubeDomain 3) (formIdx 3 k
   refine squeeze_zero (fun _ => norm_nonneg _) (fun N => ?_) hlim
   exact (hE.proj N).norm_sub_π_le_infDist hC (hE.norm_proj_le N k) x
 
-/-- **Uniform convergence of the projections along a continuous trajectory** on `[0,T]`. -/
 theorem eventually_norm_sub_proj_le (k : ℤ) {T : ℝ}
     {g : ℝ → L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε :=
@@ -230,10 +192,6 @@ theorem dense_D1_domain : Dense (D1.domain : Set W1) := by
 theorem dense_D1_adjoint_domain : Dense ((D1†).domain : Set W2) :=
   LinearPMap.dense_adjoint_domain D1 dense_D1_domain D1_isClosed
 
-/-- **Graph-bounded functionals on `H̊Λ¹(Q)` are `L²` functionals up to `δ ‖dμ‖`**: if
-`|f μ| ≤ Λ (‖μ‖ + ‖dμ‖)`, then for every `δ > 0` there is `λ ∈ L²Λ¹(Q)` with
-`|f μ − ⟪λ, μ⟫| ≤ δ ‖dμ‖` (Riesz in the graph space `f μ = ⟪a, μ⟫ + ⟪b, dμ⟫`, and `b` is
-approximated by `b' ∈ D(d¹*)`: `⟪b', dμ⟫ = ⟪d¹*b', μ⟫`). -/
 theorem exists_inner_approx (f : U1 → ℝ) (hf : IsLinearMap ℝ f) {Λ : ℝ} (hΛ : 0 ≤ Λ)
     (hfb : ∀ μ, |f μ| ≤ Λ * (‖μ‖ + ‖segD1 μ‖)) {δ : ℝ} (hδ : 0 < δ) :
     ∃ lam : W1, ∀ μ : U1, |f μ - ⟪lam, (μ : W1)⟫| ≤ δ * ‖segD1 μ‖ := by
@@ -277,8 +235,6 @@ theorem exists_inner_approx (f : U1 → ℝ) (hf : IsLinearMap ℝ f) {Λ : ℝ}
   rw [← dist_eq_norm]
   exact mul_le_mul_of_nonneg_right hzd.le (norm_nonneg _)
 
-/-- **Dense multipliers in degree `2`**: on a compact set of `L²Λ²(Q)`, every point is `δ`-close
-to a point of `D(d¹*)` (here `|⟪z, d w⟫| ≤ c ‖w‖` on `H̊Λ¹(Q)`), with a common bound `c`. -/
 theorem exists_adjoint_approx_D1 {K : Set W2} (hK : IsCompact K) {δ : ℝ} (hδ : 0 < δ) :
     ∃ c : ℝ, 0 ≤ c ∧ ∀ y ∈ K, ∃ z : W2, ‖y - z‖ < δ ∧ ‖z‖ ≤ c ∧
       ∀ w : U1, |⟪z, segD1 w⟫| ≤ c * ‖w‖ := by
@@ -312,9 +268,7 @@ theorem exists_adjoint_approx_D1 {K : Set W2} (hK : IsCompact K) {δ : ℝ} (hδ
 
 /-! ### Multipliers represented by `L²` data -/
 
-/-- **A multiplier functional represented by `L²` data** `(a, b) ∈ L²Λ⁰ × (L²Λ¹)³` on
-`dH̊Λ⁰ − S₀H̊Λ⁰(Q)³`: `ℓ(dτ − S₀ψ) = ⟪a, τ⟫ − ⟪b, dψ⟫` (for a classical solution of (6.2):
-`a = σ'`, `b = u`). -/
+/-- **`ℓ` is represented by the `L²` data `(a, b)`**: `ℓ(dτ − S₀ψ) = ⟪a, τ⟫ − ⟪b, dψ⟫`. -/
 def IsMultRep (ℓ : U1 →ₗ[ℝ] ℝ) (a : W0) (b : Wv W1) : Prop :=
   ∀ τ ψ, ℓ (bggSegment.d0 τ - bggSegment.S0 ψ) = ⟪a, (τ : W0)⟫ - ⟪b, incl1 (bggSegment.dt0 ψ)⟫
 
@@ -328,8 +282,6 @@ theorem IsMultRep.sub {ℓ ℓ' : U1 →ₗ[ℝ] ℝ} {a a' : W0} {b b' : Wv W1}
     (h' : IsMultRep ℓ' a' b') : IsMultRep (ℓ - ℓ') (a - a') (b - b') := fun τ ψ => by
   rw [LinearMap.sub_apply, h, h', inner_sub_left, inner_sub_left]; ring
 
-/-- **A represented multiplier is bounded in the graph norm of `H̊(curl)`**:
-`|ℓ μ| ≤ (‖a‖ + ‖b‖) C (‖μ‖ + ‖dμ‖)` (`Feec.BGG.abs_le_of_rep` with `curlPotential`). -/
 theorem IsMultRep.abs_le {ℓ : U1 →ₗ[ℝ] ℝ} {a : W0} {b : Wv W1} (h : IsMultRep ℓ a b) (μ : U1) :
     |ℓ μ| ≤ (‖a‖ + ‖b‖) * multConst * (‖μ‖ + ‖segD1 μ‖) :=
   Feec.BGG.abs_le_of_rep bggStability_curlPotentialConst ℓ (fun τ => ⟪a, (τ : W0)⟫)
@@ -342,10 +294,7 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 1000000 in
-/-- **`K₀ → 0` uniformly on a continuous family of represented multipliers** (no `L²` bound on the
-multipliers): cover the compact set of data by finitely many `δ`-balls, approximate the multiplier
-of each centre by an `L²` functional (`exists_inner_approx`) and apply
-`Feec.BGG.abs_K0_le_of_approx`. -/
+/-- **`K₀ → 0` uniformly on a continuous family of represented multipliers.** -/
 theorem eventually_cubeFEM_K0 {T : ℝ} {ℓ : ℝ → U1 →ₗ[ℝ] ℝ} {a : ℝ → W0} {b : ℝ → Wv W1}
     (ha : ContinuousOn a (Icc 0 T)) (hb : ContinuousOn b (Icc 0 T))
     (hrep : ∀ t ∈ Icc 0 T, IsMultRep (ℓ t) (a t) (b t)) {θ : ℝ} (hθ : 0 < θ) :
@@ -427,8 +376,6 @@ theorem eventually_cubeFEM_K0 {T : ℝ} {ℓ : ℝ → U1 →ₗ[ℝ] ℝ} {a : 
 /-! ### `K₁ → 0` -/
 
 set_option maxHeartbeats 1000000 in
-/-- `K₁` of the Strang bound for a multiplier `z ∈ D(d¹*)`: `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ K h_N c ‖v‖`
-when `‖z‖ ≤ c` and `|⟪z, dw⟫| ≤ c ‖w‖` (regular potentials `cubeFEMReg`). -/
 theorem exists_cubeFEM_K1 : ∃ K : ℝ, 0 ≤ K ∧ ∀ (N : ℕ) (z : W2) (c : ℝ), 0 ≤ c → ‖z‖ ≤ c →
     (∀ w : U1, |⟪z, segD1 w⟫| ≤ c * ‖w‖) → ∀ v ∈ (cubeFEM hT hB N).Vt1h,
       |⟪z, (bggSegment.S1 - (cubeFEM hT hB N).S1h) v⟫| ≤
@@ -484,7 +431,6 @@ theorem exists_cubeFEM_K1 : ∃ K : ℝ, 0 ≤ K ∧ ∀ (N : ℕ) (z : W2) (c :
   refine (h1.trans h2).trans (le_of_eq ?_)
   ring
 
-/-- The `L²` part of `K₁`: `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ ‖z‖ (1 + 2C) √2 ‖v‖_{Γₕ}` for every `z`. -/
 theorem cubeFEM_K1_rest (N : ℕ) (z : W2) (v : Wv U1) :
     |⟪z, (bggSegment.S1 - (cubeFEM hT hB N).S1h) v⟫| ≤
       ‖z‖ * ((1 + 2 * C) * √2) * √((cubeFEM hT hB N).gnSq v) := by
@@ -518,8 +464,7 @@ theorem cubeFEM_K1_rest (N : ℕ) (z : W2) (v : Wv U1) :
         mul_le_mul_of_nonneg_left h4 (norm_nonneg _)
     _ = _ := by ring
 
-/-- **`K₁ → 0` uniformly on a compact set of multipliers** (no regularity): split
-`z = z' + (z − z')` with `z' ∈ D(d¹*)` close to `z` (`exists_adjoint_approx_D1`). -/
+/-- **`K₁ → 0` uniformly on a compact set of multipliers.** -/
 theorem eventually_cubeFEM_K1 {K : Set W2} (hK : IsCompact K) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∀ z ∈ K, ∀ v ∈ (cubeFEM hT hB N).Vt1h,
       |⟪z, (bggSegment.S1 - (cubeFEM hT hB N).S1h) v⟫| ≤
@@ -564,8 +509,7 @@ theorem eventually_cubeFEM_K1 {K : Set W2} (hK : IsCompact K) {ε : ℝ} (hε : 
 
 /-! ### Closeness to the projections and the Strang data -/
 
-/-- **Closeness of a state to its projections** at level `δ`: the `L²` projection errors of
-`σ`, `dφ`, `u`, `du`, `M`, `ρ` and `S¹u` that make up the Strang data of (6.4). -/
+/-- The projection errors of `σ`, `dφ`, `u`, `du`, `M`, `ρ` and `S¹u` are at most `δ`. -/
 def CubeClose (N : ℕ) (δ : ℝ) (σ : U0) (φ : Wv U0) (u : Wv U1) (M : W2) (ρ : Wv W2) : Prop :=
   ‖(σ : W0) - (hT.proj N).π 0 (σ : W0)‖ ≤ δ ∧
     (∀ a, ‖D0 (φ a) - (hB.proj N).π 1 (D0 (φ a))‖ ≤ δ) ∧
@@ -582,8 +526,6 @@ theorem cubeCloseConst_nonneg (C : ℝ) : 0 ≤ cubeCloseConst C := by
   unfold cubeCloseConst; positivity
 
 set_option maxHeartbeats 1000000 in
-/-- **The Strang data of (6.4) from the projection errors**: `≤ cubeCloseConst C · δ² + K₀² + K₁²`
-for a state `δ`-close to its projections (no regularity). -/
 theorem cubeFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1}
     {M : W2} {ρ : Wv W2} (hc : CubeClose hT hB N δ σ φ u M ρ) (K0 K1 : ℝ) :
     (cubeFEM hT hB N).strangData σ φ u M ρ K0 K1 ≤
@@ -649,7 +591,6 @@ theorem cubeFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : U0} {φ : Wv U
   unfold cubeCloseConst
   nlinarith
 
-/-- **A continuous trajectory is uniformly close to its projections** for `N` large. -/
 theorem eventually_cubeClose {T : ℝ} {σ : ℝ → U0} {φ : ℝ → Wv U0} {u : ℝ → Wv U1}
     {M : ℝ → W2} {ρ : ℝ → Wv W2} (hσ : ContinuousOn σ (Icc 0 T))
     (hφ : ContinuousOn (fun t => bggSegment.dt0 (φ t)) (Icc 0 T))
@@ -685,20 +626,8 @@ theorem eventually_cubeClose {T : ℝ} {σ : ℝ → U0} {φ : ℝ → Wv U0} {u
 /-! ### Convergence of (6.5) -/
 
 set_option maxHeartbeats 4000000 in
-/-- **Convergence of the scheme (6.5) on the cube without rate** ([QuennevilleBelair2015], §6.3,
-(6.5), Table 6.1, thesis' boundary conditions; new: the thesis states no convergence result for
-(6.5)). For every `T > 0`, every `L²` source `f` continuous on `[0,T]`, every classical solution
-`s` of (6.2) (`Feec.BGG.ExactWave`, whose regularity is the continuity in `L²` of
-`σ, u, M, ρ, dφ, du, S¹u` and of their time derivatives) whose multiplier functionals `ℓ`, `ℓ'`
-are represented on `dH̊Λ⁰ − S₀H̊Λ⁰(Q)³` by `L²` data continuous on `[0,T]` (`IsMultRep`; no `L²`
-bound on the multiplier, no smoothness, no flatness at `∂Q`), and every `ε > 0`: for all `N`
-large, the scheme with source `P_{Ṽₕ¹} f` has a solution starting from the dynamic part of the
-elliptic projection (6.4) of the exact initial state, with
-`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ ε` on `[0,T]`.
-Proof: the end-to-end theorem `Feec.BGG.ExactWave.exists_discreteSolution_rate` with `h = 1`,
-`c = η`: the projection errors tend to `0` uniformly on the compact trajectories
-(`eventually_cubeClose`), `K₀ → 0` (`eventually_cubeFEM_K0`) and `K₁ → 0`
-(`eventually_cubeFEM_K1`). -/
+/-- **Convergence of (6.5) on the cube** ([QuennevilleBelair2015], §6.3), from the elliptic
+projection (6.4), to classical solutions of (6.2) with continuous `L²` multiplier data. -/
 theorem cubeWave_converges {T : ℝ} (hT0 : 0 < T) {f : ℝ → Wv W1}
     (hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f))
     {a a' : ℝ → W0} {b b' : ℝ → Wv W1} (ha : ContinuousOn a (Icc 0 T))

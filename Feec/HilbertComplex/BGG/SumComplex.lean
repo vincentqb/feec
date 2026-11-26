@@ -3,62 +3,22 @@ module
 public import Feec.HilbertComplex.BGG.Connecting
 
 /-!
-# The sum complex, the explicit cochain map and cohomology representatives of the BGG complex
+# The sum complex and the explicit cochain map of the BGG complex
 
-The **sum complex** of BGG data is `V × Ṽ` with the differential `d × d̃` (`Data.sumComplex`, the
-twisted complex without connecting maps). If the connecting maps are null-homotopic,
-`S = dK - Kd̃` ([ArnoldHu2021], (28), `Data.IsNullHomotopy`), then `S` induces zero on cohomology
-(Proposition 1, `Data.IsNullHomotopy.inducesZero`) and `(ω, μ) ↦ (ω + Kμ, μ)` is an isomorphism
-of complexes from the sum complex onto the twisted complex (`Data.sumIso`).
-
-Every cochain map `r : T → Γ E / Δ F` from the twisted complex to the derived complex that
-extends the projection, `r ∘ ι = π` on `Γ E`, is a quasi-isomorphism under the elimination
-hypotheses (`Data.quasiIso_of_Γι_comp`), and so is `r` composed with `Data.sumIso`
-(`Data.quasiIso_sumIso_comp`); a quasi-isomorphism carries cohomology representatives to
-cohomology representatives (`HomologicalComplex.Represents.map`).
-
-For the BGG complex `bgg J` of [ArnoldHu2021], with `Sⁱ` injective for `i ≤ J` and right
-inverses `tⁱ⁺¹` of `Sⁱ` for `i ≥ J` (`Data.InjSurjWith`: the condition (23) with a choice of
-the inverses of (29), e.g. the Moore–Penrose inverses), the explicit **cochain retraction**
-`Π : T → Γ` of the inclusion (`Data.bggProj`, the cochain projection (67) of [ArnoldHu2021], §5.2,
-read in the subquotient model) is
-
-  `(ω, μ)` (`i < J`), `(ω, tᴶ⁺¹ dω)` (`i = J`), `(0, P(μ + d̃ tⁱ ω))` (`i > J`),
-
-with `P = 1 - tⁱ⁺¹ Sⁱ` the projection onto `N(Sⁱ)` along `R(tⁱ⁺¹)` (`Data.kerProj`; the orthogonal
-projection `P_N` when `t` is the Moore–Penrose inverse, (29)). Composed with `Data.sumIso` and the
-projection onto `Γ / Δ` it is **the cochain map (30) of Theorem 7** (`Data.bggSumMap`): in the
-identifications of the output complex (`Data.bggXEquivOfLt`, `Data.bggXEquivOfBijective`,
-`Data.bggΓEquivKer`) it is `(ω, μ) ↦ [ω + Kμ]` up to `J` and
-`(ω, μ) ↦ P(d̃ tω + (I + d̃ tK)μ)` after `J` (`Data.bggXEquivOfLt_bggSumMap`,
-`Data.bggXEquivOfBijective_bggSumMap`, `Data.bggSumMap_of_gt`). **It induces an isomorphism on
-cohomology** (`Data.quasiIso_bggSumMap`, Theorem 7), so it carries cohomology representatives
-`H × H̃` of the rows to cohomology representatives of the BGG complex
-(`Data.bgg_represents`, Corollary 1, (31)).
-
-## Main definitions
-
-* `Feec.BGG.Data.sumData`, `Data.sumComplex`, `Data.IsNullHomotopy`, `Data.sumIso`.
-* `Data.InjSurjWith`, `Data.kerProj`, `Data.bggProjMap`, `Data.bggProj`, `Data.bggSumMap`.
-* `Data.altShift`: `R` with `dⁱ = id` for even `i`, `0` for odd `i`, its shift `d̃ⁱ = -dⁱ⁺¹`, and
-  `Sⁱ = id`.
+If the connecting maps are null-homotopic, `S = dK - Kd̃`, the sum complex is isomorphic to the
+twisted complex, and the explicit cochain map (30) from the sum complex to the BGG complex is a
+quasi-isomorphism ([ArnoldHu2021], Theorem 7) carrying cohomology representatives of the rows to
+those of the BGG complex ([ArnoldHu2021], Corollary 1).
 
 ## Main results
 
-* `Data.IsNullHomotopy.inducesZero` ([ArnoldHu2021], Proposition 1).
-* `Data.quasiIso_of_Γι_comp`, `Data.quasiIso_sumIso_comp`, `Data.derived_represents`.
-* `Data.Γι_bggProj`: `Π` is a retraction of `Γ → T`; `Data.quasiIso_bggProj`.
-* `Data.quasiIso_bggSumMap` ([ArnoldHu2021], Theorem 7) and its formulas (30).
-* `Data.represents_sumComplex`, `Data.bgg_represents` ([ArnoldHu2021], Corollary 1, (31)).
-* `Data.idShift_injSurjWith`: non-vacuity of `InjSurjWith`; `Data.altShift_quasiIso_bggSumMap`,
-  `Data.altShift_bgg_represents`: non-vacuity of Theorem 7 and Corollary 1, with nonzero `d`, `d̃`
-  and `S` (`Data.altShift`).
+* `Data.IsNullHomotopy.inducesZero`: null-homotopic connecting maps induce zero on cohomology.
+* `Data.quasiIso_bggSumMap`: (30) is a quasi-isomorphism.
+* `Data.bgg_represents`: cohomology representatives of the BGG complex.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((28)–(31), Proposition 1,
-  Theorem 7, Corollary 1) and §5 (§5.1 the sum complex, (67) the cochain projection, the proof
-  of Theorem 7)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3, §5
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -89,22 +49,20 @@ def sumData : Data R c V Vt where
   dt_comp_dt := D.dt_comp_dt
   anticomm _ _ _ _ := by simp
 
-/-- **The sum complex** `V × Ṽ` with the differential `d × d̃`: the twisted complex of the rows
-without connecting maps. [ArnoldHu2021], §5.1 -/
+/-- The sum complex `V × Ṽ` with the differential `d × d̃`. [ArnoldHu2021], §5.1 -/
 abbrev sumComplex : HomologicalComplex (ModuleCat.{v} R) c := D.sumData.twistComplex
 
 @[simp] theorem sumData_twist_apply (i j : ι) (x : V i × Vt i) :
     D.sumData.twist i j x = (D.d i j x.1, D.dt i j x.2) := by
   simp [sumData]
 
-/-- **The connecting maps are null-homotopic**, `S = dK - Kd̃` ([ArnoldHu2021], (28)). -/
+/-- The connecting maps are null-homotopic, `S = dK - Kd̃`. [ArnoldHu2021], (28) -/
 def IsNullHomotopy (K : ∀ i, Vt i →ₗ[R] V i) : Prop :=
   ∀ i j, c.Rel i j → ∀ μ, D.S i j μ = D.d i j (K i μ) - K j (D.dt i j μ)
 
 variable {D}
 
-/-- **Null-homotopic connecting maps induce zero on cohomology**, `S N(d̃) ⊆ R(d)`.
-[ArnoldHu2021], Proposition 1 -/
+/-- Null-homotopic connecting maps induce zero on cohomology. [ArnoldHu2021], Proposition 1 -/
 theorem IsNullHomotopy.inducesZero {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K) {i j : ι}
     (hij : c.Rel i j) : D.InducesZero i j :=
   fun φ hφ => ⟨K i φ, by rw [hK i j hij, hφ, map_zero, sub_zero]⟩
@@ -119,8 +77,7 @@ def shear {M N : Type*} [AddCommGroup M] [Module R M] [AddCommGroup N] [Module R
   left_inv x := by simp
   right_inv x := by simp
 
-/-- **The sum complex is isomorphic to the twisted complex**, `(ω, μ) ↦ (ω + Kμ, μ)`, when
-`S = dK - Kd̃`. [ArnoldHu2021], §5 (proof of Theorem 7) -/
+/-- If `S = dK - Kd̃`, the shear is an isomorphism from the sum complex onto the twisted complex. -/
 def sumIso {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K) : D.sumComplex ≅ D.twistComplex :=
   HomologicalComplex.Hom.isoOfComponents (fun i => (shear (K i)).toModuleIso) fun i j hij =>
     ModuleCat.hom_ext (LinearMap.ext fun (x : V i × Vt i) => Prod.ext (by
@@ -137,16 +94,12 @@ theorem sumIso_hom_apply {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy 
 
 variable {E F : ι → Prop}
 
-/-- **A cochain map from the twisted complex to the derived complex extending the projection
-`Γ → Γ / Δ` is a quasi-isomorphism**, under the elimination hypotheses. -/
 theorem quasiIso_of_Γι_comp (h : D.Eliminates E F) {r : D.twistComplex ⟶ D.derived E F}
     (hr : D.Γι E ≫ r = D.derivedπ E F) : QuasiIso r := by
   have := quasiIso_Γ (D := D) h.top
   have : QuasiIso (D.Γι E ≫ r) := hr ▸ quasiIso_derived h
   exact quasiIso_of_comp_left (D.Γι E) r
 
-/-- **Theorem 7, in general**: such a cochain map composed with `(ω, μ) ↦ (ω + Kμ, μ)` is a
-quasi-isomorphism from the sum complex to the derived complex. [ArnoldHu2021], Theorem 7 -/
 theorem quasiIso_sumIso_comp {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K)
     (h : D.Eliminates E F) {r : D.twistComplex ⟶ D.derived E F}
     (hr : D.Γι E ≫ r = D.derivedπ E F) : QuasiIso ((D.sumIso hK).hom ≫ r) :=
@@ -167,8 +120,6 @@ theorem ker_sumData_twist (i j : ι) :
   ext x
   simp [sumData, Prod.ext_iff]
 
-/-- **Cohomology representatives of the sum complex**: `H × H̃` when `H`, `H̃` represent the
-cohomology of the rows. -/
 theorem represents_sumComplex {i : ι} {H : Submodule R (V i)} {Ht : Submodule R (Vt i)}
     (hH : D.rowTop.Represents i H) (hHt : D.rowBot.Represents i Ht) :
     D.sumComplex.Represents i (H.prod Ht) where
@@ -185,9 +136,6 @@ theorem represents_sumComplex {i : ι} {H : Submodule R (V i)} {Ht : Submodule R
     change Disjoint (LinearMap.range (D.sumData.twist _ i)) _
     rw [range_sumData_twist, disjoint_iff, Submodule.prod_inf_prod, h1, h2, Submodule.prod_bot]
 
-/-- **Corollary 1, in general**: such a cochain map composed with `(ω, μ) ↦ (ω + Kμ, μ)` carries
-cohomology representatives `H × H̃` of the rows to cohomology representatives of the derived
-complex. [ArnoldHu2021], Corollary 1 -/
 theorem derived_represents {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K)
     (h : D.Eliminates E F) {r : D.twistComplex ⟶ D.derived E F}
     (hr : D.Γι E ≫ r = D.derivedπ E F) {i : ι} {H : Submodule R (V i)} {Ht : Submodule R (Vt i)}
@@ -204,19 +152,15 @@ variable {V Vt : ℤ → Type v} [∀ i, AddCommGroup (V i)] [∀ i, Module R (V
   [∀ i, AddCommGroup (Vt i)] [∀ i, Module R (Vt i)] (D : Data R (ComplexShape.up ℤ) V Vt)
   (J : ℤ) (t : ∀ i j, V j →ₗ[R] Vt i)
 
-/-- **`Sⁱ` is injective for `i ≤ J` and `tⁱ⁺¹` is a right inverse of `Sⁱ` for `i ≥ J`**: the
-injectivity/surjectivity condition (23) of [ArnoldHu2021] (`InjSurj`, `InjSurjWith.injSurj`) with a
-choice of right inverses, e.g. the Moore–Penrose inverses of (29). -/
+/-- `Sⁱ` injective for `i ≤ J`, with right inverses `tⁱ⁺¹` for `i ≥ J`. [ArnoldHu2021], (23) -/
 structure InjSurjWith : Prop where
   injective : ∀ i ≤ J, Function.Injective (D.S i (i + 1))
   S_t : ∀ i j, i + 1 = j → J ≤ i → ∀ v, D.S i j (t i j v) = v
 
-/-- `P = 1 - tⁱ⁺¹ Sⁱ`. For `J ≤ i`, under `InjSurjWith` (`Sⁱ tⁱ⁺¹ = 1`), it is the projection of
-`Ṽⁱ` onto `N(Sⁱ)` along `R(tⁱ⁺¹)` (`InjSurjWith.S_kerProj`, `kerProj_of_S`). -/
+/-- `P = 1 - tⁱ⁺¹ Sⁱ`, the projection onto `N(Sⁱ)` along `R(tⁱ⁺¹)` when `Sⁱ tⁱ⁺¹ = 1`. -/
 def kerProj (i : ℤ) : Vt i →ₗ[R] Vt i := LinearMap.id - t i (i + 1) ∘ₗ D.S i (i + 1)
 
-/-- **The underlying map of the cochain retraction `Π : T → Γ`** (`bggProj`) in degree `i`: `(ω, μ)` before `J`, `(ω, tᴶ⁺¹ dω)` at `J`,
-`(0, P(μ + d̃ tⁱ ω))` after `J` ([ArnoldHu2021], (67)). -/
+/-- The cochain retraction `Π : T → Γ` in degree `i`. [ArnoldHu2021], (67) -/
 def bggProjMap (i : ℤ) : V i × Vt i →ₗ[R] V i × Vt i :=
   if i < J then LinearMap.id
   else if i = J then
@@ -240,7 +184,6 @@ theorem bggProjMap_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
 theorem kerProj_apply (i : ℤ) (φ : Vt i) :
     D.kerProj t i φ = φ - t i (i + 1) (D.S i (i + 1) φ) := rfl
 
-/-- `t` read at `a → a + 1` from `k - 1 → k`. -/
 theorem dt_t_prev {a k : ℤ} (h : a + 1 = k) (v : V k) :
     D.dt (k - 1) k (t (k - 1) k v) = D.dt a k (t a k v) := by
   subst h; rw [add_sub_cancel_right]
@@ -262,7 +205,6 @@ theorem InjSurjWith.S_kerProj {i : ℤ} (hi : J ≤ i) (φ : Vt i) :
     D.S i (i + 1) (D.kerProj t i φ) = 0 := by
   rw [kerProj_apply, map_sub, h.S_t' hi, sub_self]
 
-/-- The retraction lands in `Γ`. -/
 theorem bggProjMap_mem_Γ (i : ℤ) (x : V i × Vt i) : D.bggProjMap J t i x ∈ D.Γ (J < ·) i := by
   rcases lt_trichotomy i J with hi | rfl | hi
   · rw [D.bgg_Γ_of_lt hi]; trivial
@@ -270,7 +212,6 @@ theorem bggProjMap_mem_Γ (i : ℤ) (x : V i × Vt i) : D.bggProjMap J t i x ∈
   · rw [bggProjMap_of_gt hi, D.mem_bgg_Γ_of_gt hi]
     exact ⟨rfl, h.S_kerProj hi.le _⟩
 
-/-- **The retraction is a cochain map**, `T Π = Π T`. -/
 theorem twist_bggProjMap (i : ℤ) (x : V i × Vt i) :
     D.twist i (i + 1) (D.bggProjMap J t i x) = D.bggProjMap J t (i + 1) (D.twist i (i + 1) x) := by
   obtain ⟨ω, μ⟩ := x
@@ -305,7 +246,6 @@ theorem twist_bggProjMap (i : ℤ) (x : V i × Vt i) :
         (D.dt i (i + 1) μ + D.dt i (i + 1) (t i (i + 1) (D.d i (i + 1) ω - D.S i (i + 1) μ)))
       rw [← key, kerProj_of_S hk]
 
-/-- The retraction is the identity on `Γ`. -/
 theorem bggProjMap_of_mem {i : ℤ} {x : V i × Vt i} (hx : x ∈ D.Γ (J < ·) i) :
     D.bggProjMap J t i x = x := by
   obtain ⟨σ, φ⟩ := x
@@ -317,8 +257,7 @@ theorem bggProjMap_of_mem {i : ℤ} {x : V i × Vt i} (hx : x ∈ D.Γ (J < ·) 
     rw [bggProjMap_of_gt hi, h1, map_zero, map_zero, add_zero, kerProj_of_S h2]
 
 variable (D t) in
-/-- **The cochain retraction `Π : T → Γ` of the inclusion** ([ArnoldHu2021], (67) and Lemma 9, in
-the subquotient model). -/
+/-- The cochain retraction `Π : T → Γ` of the inclusion. [ArnoldHu2021], (67), Lemma 9 -/
 def bggProj : D.twistComplex ⟶ D.ΓComplex (J < ·) where
   f i := ModuleCat.ofHom (X := D.twistComplex.X i) (Y := (D.ΓComplex (J < ·)).X i)
     ((D.bggProjMap J t i).codRestrict (D.Γ (J < ·) i) (D.bggProjMap_mem_Γ h i))
@@ -326,7 +265,6 @@ def bggProj : D.twistComplex ⟶ D.ΓComplex (J < ·) where
     obtain rfl : i + 1 = j := hij
     exact ModuleCat.hom_ext (LinearMap.ext fun x => Subtype.ext (D.twist_bggProjMap h i x))
 
-/-- **`Π` is a retraction of `Γ → T`**. -/
 theorem Γι_bggProj : D.Γι (J < ·) ≫ D.bggProj t h = 𝟙 _ := by
   ext i x : 3
   exact Subtype.ext (D.bggProjMap_of_mem h x.2)
@@ -337,7 +275,6 @@ theorem InjSurjWith.injSurj : D.InjSurj J :=
 theorem InjSurjWith.bijective : Function.Bijective (D.S J (J + 1)) :=
   ⟨h.injective J le_rfl, h.injSurj.2 J le_rfl⟩
 
-/-- **The retraction `Π` is a quasi-isomorphism.** -/
 theorem quasiIso_bggProj : QuasiIso (D.bggProj t h) := by
   have := quasiIso_Γ (D := D) h.injSurj.eliminates.top
   have : QuasiIso (D.Γι (J < ·) ≫ D.bggProj t h) := by rw [Γι_bggProj]; infer_instance
@@ -345,8 +282,7 @@ theorem quasiIso_bggProj : QuasiIso (D.bggProj t h) := by
 
 omit h in
 variable (D t) in
-/-- **The cochain map (30) of Theorem 7** from the sum complex to the BGG complex:
-`(ω, μ) ↦ [Π(ω + Kμ, μ)]`. [ArnoldHu2021], (30) -/
+/-- The cochain map (30) from the sum complex to the BGG complex. [ArnoldHu2021], (30) -/
 def bggSumMap {K : ∀ i, Vt i →ₗ[R] V i} (hK : D.IsNullHomotopy K) (h : D.InjSurjWith J t) :
     D.sumComplex ⟶ D.bgg J :=
   (D.sumIso hK).hom ≫ D.bggProj t h ≫ D.derivedπ _ _
@@ -359,14 +295,12 @@ theorem bggSumMap_apply (i : ℤ) (x : V i × Vt i) :
   simp only [bggSumMap, HomologicalComplex.comp_f, ModuleCat.hom_comp]
   rfl
 
-/-- **(30) before `J`**: `(ω, μ) ↦ [ω + Kμ] ∈ Vⁱ / R(Sⁱ⁻¹)`. -/
 theorem bggXEquivOfLt_bggSumMap {i : ℤ} (hi : i < J) (x : V i × Vt i) :
     D.bggXEquivOfLt hi (((D.bggSumMap t hK h).f i).hom x) =
       Submodule.Quotient.mk (x.1 + K i x.2) := by
   rw [bggSumMap_apply]
   exact (D.bggXEquivOfLt_mk hi _).trans (congrArg _ (congrArg Prod.fst (bggProjMap_of_lt hi _)))
 
-/-- **(30) at `J`**: `(ω, μ) ↦ [ω + Kμ] ∈ Vᴶ / R(Sᴶ⁻¹)` (`Sᴶ` is bijective). -/
 theorem bggXEquivOfBijective_bggSumMap (x : V J × Vt J) :
     D.bggXEquivOfBijective h.bijective (((D.bggSumMap t hK h).f J).hom x) =
       Submodule.Quotient.mk (x.1 + K J x.2) := by
@@ -374,7 +308,6 @@ theorem bggXEquivOfBijective_bggSumMap (x : V J × Vt J) :
   exact (D.bggXEquivOfBijective_mk h.bijective _).trans
     (congrArg _ (congrArg Prod.fst (bggProjMap_of_eq rfl _)))
 
-/-- **(30) after `J`**: `(ω, μ) ↦ P(d̃ tω + (I + d̃ tK)μ) ∈ N(Sⁱ)`. -/
 theorem bggSumMap_of_gt {i : ℤ} (hi : J < i) (x : V i × Vt i) :
     ((D.derivedXEquiv _ _ (D.bgg_Δ_of_gt hi) (((D.bggSumMap t hK h).f i).hom x) :
         D.Γ (J < ·) i) : V i × Vt i) =
@@ -392,13 +325,12 @@ theorem Γι_bggProj_derivedπ :
     D.Γι (J < ·) ≫ D.bggProj t h ≫ D.derivedπ (J < ·) (· < J) = D.derivedπ _ _ := by
   rw [← Category.assoc, Γι_bggProj, Category.id_comp]
 
-/-- **The cochain map (30) induces an isomorphism on cohomology.** [ArnoldHu2021], Theorem 7 -/
+/-- The cochain map (30) induces an isomorphism on cohomology. [ArnoldHu2021], Theorem 7 -/
 theorem quasiIso_bggSumMap : QuasiIso (D.bggSumMap t hK h) :=
   quasiIso_sumIso_comp hK h.injSurj.eliminates (D.Γι_bggProj_derivedπ h)
 
-/-- **Cohomology representatives of the BGG complex**: if `H`, `H̃` represent the cohomology of
-the rows at `i`, then `(30)(H × H̃)` represents the cohomology of the BGG complex,
-`N(Dⁱ) = R(Dⁱ⁻¹) ⊕ (30)(H × H̃)`. [ArnoldHu2021], Corollary 1, (31) -/
+/-- If `H`, `H̃` represent the cohomology of the rows at `i`, then `(30)(H × H̃)` represents the
+cohomology of the BGG complex. [ArnoldHu2021], Corollary 1, (31) -/
 theorem bgg_represents {i : ℤ} {H : Submodule R (V i)} {Ht : Submodule R (Vt i)}
     (hH : D.rowTop.Represents i H) (hHt : D.rowBot.Represents i Ht) :
     (D.bgg J).Represents i ((H.prod Ht).map ((D.bggSumMap t hK h).f i).hom) :=
@@ -409,9 +341,6 @@ end Up
 /-! ### Non-vacuity -/
 
 variable (R) in
-/-- **`idShift` (`Sⁱ = id`) with `tⁱ⁺¹ = id` satisfies `InjSurjWith` at every `J`**, so its
-cochain retraction `bggProj` is a quasi-isomorphism (`quasiIso_bggProj`). Its connecting maps are
-null-homotopic only for `R` trivial (`d = d̃ = 0`); see `altShift` for Theorem 7. -/
 theorem idShift_injSurjWith (J : ℤ) :
     (idShift R).InjSurjWith J fun i j => if i + 1 = j then LinearMap.id else 0 where
   injective i _ := by
@@ -420,10 +349,7 @@ theorem idShift_injSurjWith (J : ℤ) :
   S_t i j hij _ v := by simp [idShift, hij]
 
 variable (R) in
-/-- **`R` with `dⁱ = id` for even `i` and `0` for odd `i`, its shift `d̃ⁱ = -dⁱ⁺¹`, connected by
-`Sⁱ = id`**: BGG data with nonzero differentials and connecting maps, null-homotopic
-(`altShift_isNullHomotopy`, `K = id`) and satisfying `InjSurjWith` with `t = id` at every `J`
-(`altShift_injSurjWith`). -/
+/-- `R` with `dⁱ = id` for even `i`, `0` for odd `i`, its shift `d̃ⁱ = -dⁱ⁺¹`, and `Sⁱ = id`. -/
 def altShift : Data R (ComplexShape.up ℤ) (fun _ => R) (fun _ => R) where
   d i j := if i + 1 = j ∧ Even i then LinearMap.id else 0
   dt i j := if i + 1 = j ∧ Odd i then -LinearMap.id else 0
@@ -454,7 +380,6 @@ def altShift : Data R (ComplexShape.up ℤ) (fun _ => R) (fun _ => R) where
     · simp [hij]
 
 variable (R) in
-/-- `altShift` has null-homotopic connecting maps, `S = d - d̃` (`K = id`). -/
 theorem altShift_isNullHomotopy : (altShift R).IsNullHomotopy fun _ => LinearMap.id := by
   rintro i _ rfl μ
   rcases Int.even_or_odd i with hi | hi
@@ -462,7 +387,6 @@ theorem altShift_isNullHomotopy : (altShift R).IsNullHomotopy fun _ => LinearMap
   · simp [altShift, hi, Int.not_even_iff_odd.2 hi]
 
 variable (R) in
-/-- `altShift` with `tⁱ⁺¹ = id` satisfies `InjSurjWith` at every `J`. -/
 theorem altShift_injSurjWith (J : ℤ) :
     (altShift R).InjSurjWith J fun i j => if i + 1 = j then LinearMap.id else 0 where
   injective i _ := by
@@ -471,15 +395,12 @@ theorem altShift_injSurjWith (J : ℤ) :
   S_t i j hij _ v := by simp [altShift, hij]
 
 variable (R) in
-/-- **Non-vacuity of Theorem 7**: the cochain map (30) of `altShift` is a quasi-isomorphism at
-every `J`. -/
+/-- The cochain map (30) of `altShift` is a quasi-isomorphism at every `J`. -/
 theorem altShift_quasiIso_bggSumMap (J : ℤ) :
     QuasiIso ((altShift R).bggSumMap _ (altShift_isNullHomotopy R) (altShift_injSurjWith R J)) :=
   quasiIso_bggSumMap _ _
 
 variable (R) in
-/-- **Non-vacuity of Corollary 1**: the cochain map (30) of `altShift` carries cohomology
-representatives of the rows to cohomology representatives of `bgg J`. -/
 theorem altShift_bgg_represents (J : ℤ) {i : ℤ} {H Ht : Submodule R R}
     (hH : (altShift R).rowTop.Represents i H) (hHt : (altShift R).rowBot.Represents i Ht) :
     ((altShift R).bgg J).Represents i ((H.prod Ht).map

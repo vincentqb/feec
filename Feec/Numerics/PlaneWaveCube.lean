@@ -9,63 +9,20 @@ public import Feec.TimeStepping.Cayley
 /-!
 # The Ch. 7 plane-wave run on the unit cube, as implemented
 
-The experiment of [QuennevilleBelair2015], Ch. 7, in its `fem4gr` implementation
-(<https://github.com/vincentqb/fem4gr>, example `'z-direction plane wave'`): the Einstein–Bianchi
-system (4.14) (up to `σ ↦ −σ`, as assembled in `fem4gr`) on the unit cube `(0, 1)³`, Crank–Nicolson in time, with the essential boundary data
-`σ = 0`, `E × n = E_ex × n`, `B · n = B_ex · n` and the initial value of the exact solution
-
-`E_ex = [[-A₊, -Aₓ, 0], [-Aₓ, A₊, 0], [0, 0, 0]] sin ω(z − t)`,
-`B_ex = [[-Aₓ, A₊, 0], [A₊, Aₓ, 0], [0, 0, 0]] sin ω(z − t)`, `σ_ex = 0`
-
-(`Feec.Numerics.CrankNicolson.amplitudeE`, `amplitudeB`, `planeWave`). The thesis states
-`ω = 20`, `A₊ = 2`, `Aₓ = ½`; the script runs `ω = 10` with the same amplitudes. Every statement
-below holds for all `A₊, Aₓ, ω`.
+The plane-wave experiment of [QuennevilleBelair2015], Ch. 7: the plane wave as a whole-space TSD
+solution, TSD propagation failing on bounded domains, and the Crank–Nicolson run on the torus.
 
 ## Main results
 
-* `planeWaveTSD`: the plane wave is a classical TSD solution of `E' = −curl B`, `B' = curl E` on
-  `ℝ³` (`Feec.Models.Cube.Inhomogeneous.WholeSpaceTSD`).
-* On every bounded open `Ω`, in particular the unit cube, the restriction of the plane wave is
-  the unique solution of `U' = L_max U` with its own boundary data and initial value, and it is
-  TSD at every time (`Feec.Models.Cube.Inhomogeneous.WholeSpaceTSD.restrict_unique` for
-  `planeWaveTSD`): TSD propagates for the datum actually run.
-* **`exists_not_propagates`**: for **every** whole-space TSD solution `R` and every nonempty bounded
-  open `Ω`, there is a TSD perturbation `W₀ ∈ D(L) ∩ K` of the initial value such that the
-  solution with the boundary data of `R` from the TSD datum `R(0) + W₀` exists and leaves `K` on
-  every `[0, T]`, `T > 0` — the homogeneous refutation
-  (`Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`) transported by the lifting. By
-  `Feec.Models.Cube.Inhomogeneous.WholeSpaceTSD.mem_iff` propagation for such data holds exactly
-  when it holds for the homogeneous problem from `U(0) − R(0)`.
-
-The spatial discretization of this run (the Crank–Nicolson Whitney scheme with Dirichlet DOFs)
-converges at rate `O(h + Δt²)`, with the same rate for the five constraint monitors, on `(0, ½)³`
-and on the unit cube of `fem4gr` (`planeWave_cn_error_le`, `unit_planeWave_cn_error_le` in
-`Feec/Numerics/PlaneWaveCubeError.lean`).
-
-## The periodic run on `𝕋³`
-
-`fem4gr`'s example `'periodic z-direction plane wave'` runs `ω = 6π`, `A₊ = 1`, `Aₓ = 0` on the
-flat torus. On the Fourier side of `Feec.Models.Torus.GradCurl` (coefficients in `ℓ²(ℤ³)`):
-
-* `wave_modeVec`: for every fibre complex, single-frequency fields `δ_k v` lie in `D(L)` and
-  `L (δ_k v) = δ_k (L_{2πk} v)`; `fibreWave_pwVec`: `(0, E₀, B₀)` is an eigenvector of the fibre
-  wave operator at `2πn e_z` with eigenvalue `−2πi n`.
-* `torusPlaneWave`: `U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)`, `ω = 2πn`, the Fourier
-  coefficients of `(0, E₀, B₀) sin ω(z − t)`; `modeVec_kz_mem`: `u±` are TSD.
-* **`cnTorusPlaneWave_props`**: the Crank–Nicolson iterates (time-discrete, space-continuous) from
-  `U(0)` are `(2i)⁻¹ (λ₊ᵏ u₊ − λ₋ᵏ u₋)` with `|λ±| = 1`: exact energy conservation
-  `‖Uₖ‖ = ‖U₀‖`, TSD at every step, and a pure phase error.
-
-Only `ω ∈ 2πℤ` is periodic on the unit torus. Two observations on the `fem4gr` source (read, not
-formalized): its periodicity check `near(omega/pi, int(omega/pi + .5))` accepts odd multiples of `π`,
-which are not `1`-periodic; and its periodic initial datum has `E0[1][1] = −A₊ sin ωz` instead of
-`+A₊ sin ωz`, so `E0` is neither `E_ex(0)` nor trace-free (`tr E0 = −2A₊ sin ωz`). The spatial
-discretization of the periodic run (periodic Whitney spaces) is not formalized.
+* `exists_not_propagates`: on bounded domains, TSD propagation fails for some perturbed TSD data.
+* `fibreWave_pwVec`: `(0, E₀, B₀)` is an eigenvector of the fibre wave operator at `2πn e_z`.
+* `cnTorusPlaneWave_props`: the Crank–Nicolson iterates of the periodic run keep energy and TSD.
+* `amp_eq_exp_phase`: the Crank–Nicolson amplification factor is `e^{-iθ}`, `θ = 2 arctan(s ω)`.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (the plane-wave test), §4.10 (Prop 4.17)
+  Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -86,7 +43,6 @@ theorem planeWave_apply (P : Matrix (Fin 3) (Fin 3) ℝ) (w t : ℝ) (x : R3) (a
     planeWave P w t x a b = Real.sin (w * (x 2 - t)) * P a b := by
   simp [planeWave]
 
-/-- `∂ₖ (P_{ab} sin ω(z − t)) = δ_{k2} ω cos ω(z − t) P_{ab}`. -/
 theorem pd_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (w t : ℝ) (a b k : Fin 3) (x : R3) :
     partialDeriv k (fun y => planeWave P w t y a b) x =
       if k = 2 then w * Real.cos (w * (x 2 - t)) * P a b else 0 := by
@@ -95,7 +51,6 @@ theorem pd_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (w t : ℝ) (a b k : Fin 3
     smul_eq_mul]
   split_ifs with h1 h2 h2 <;> simp_all [eq_comm]
 
-/-- `curl (P sin ω(z − t)) = ω cos ω(z − t) curl_z P`. -/
 theorem curlM_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (w t : ℝ) (ik : Ix) (x : R3) :
     curlM (fun ij y => planeWave P w t y ij.1 ij.2) ik x =
       w * Real.cos (w * (x 2 - t)) * curlZ P ik.1 ik.2 := by
@@ -114,9 +69,7 @@ theorem continuous_curlM_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (w : ℝ) (i
   simp only [curlM_planeWave]
   fun_prop
 
-/-- **The plane-wave test solution of Ch. 7 is a whole-space TSD solution** (`σ = 0`): `E_ex`,
-`B_ex` are `C^∞`, solve `E' = −curl B`, `B' = curl E` on `ℝ × ℝ³`, and are symmetric, trace-free
-and divergence-free everywhere (`Feec.Numerics.CrankNicolson.planeWave_solves`). -/
+/-- The plane-wave test solution of Ch. 7 as a whole-space TSD solution (`σ = 0`). -/
 def planeWaveTSD (Ap Ax w : ℝ) : WholeSpaceTSD where
   E t ij y := planeWave (amplitudeE Ap Ax) w t y ij.1 ij.2
   B t ij y := planeWave (amplitudeB Ap Ax) w t y ij.1 ij.2
@@ -164,12 +117,9 @@ theorem isBounded_unitCube : Bornology.IsBounded unitCube :=
 
 /-! ## The homogeneous refutation transported to data from whole-space solutions -/
 
-/-- **TSD propagation fails for perturbed data with the same boundary values**: for every
-whole-space TSD solution `R` and every nonempty bounded open `Ω` there is `W₀ ∈ D(L) ∩ K`
-(`K = {0} × L²(TSD) × L²(TSD)`) such that, for every `T > 0`, the solution of `U' = L_max U` with
-the boundary data of `R` and the TSD initial value `R(0) + W₀` exists, and every such solution
-leaves `K` at some `t ∈ [0, T]`. (The homogeneous problem from `W₀ = (0, 0, β)` fails to propagate,
-`Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`, and `U = R + W`.) -/
+/-- **TSD propagation fails for perturbed data with the same boundary values**: on a nonempty
+bounded open `Ω`, some TSD datum `R(0) + W₀` has solutions, all leaving `K` in every `[0, T]`,
+`T > 0`. -/
 theorem exists_not_propagates (W : WholeSpaceTSD) {Ω : Set R3} (hΩ : IsOpen Ω)
     (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     ∃ W₀ ∈ (gradCurl ℝ hΩ).wave.domain, W₀ ∈ constraint Ω ∧
@@ -197,7 +147,6 @@ theorem exists_not_propagates (W : WholeSpaceTSD) {Ω : Set R3} (hΩ : IsOpen Ω
 
 open Feec.Fourier.Torus (mode coeFn_mode mode_smul mode_sub mode_sum mode_mem_mulDomain mulOp_mode)
 
-/-- Rewriting the operator in an application. -/
 theorem _root_.LinearPMap.apply_of_eq' {G H : Type*} [AddCommGroup G] [Module ℂ G]
     [AddCommGroup H] [Module ℂ H] {f g : G →ₗ.[ℂ] H} (h : f = g) (x : G) (hx : x ∈ f.domain) :
     f ⟨x, hx⟩ = g ⟨x, h ▸ hx⟩ := by
@@ -230,8 +179,6 @@ theorem modeVec_mem_wave_domain (k : d → ℤ) (v : ∀ i, E i) :
   rw [e]
   exact mode_mem_mulDomain _ k (v j)
 
-/-- **Modes are mapped to modes**: `L (δ_k v) = δ_k (L_{2πk} v)` for the wave operator of the
-torus complex. -/
 theorem wave_modeVec (k : d → ℤ) (v : ∀ i, E i) :
     (Torus.complex S).wave ⟨modeVec k v, modeVec_mem_wave_domain S k v⟩ =
       modeVec k (fibreWave S (Torus.freq k) v) := by
@@ -273,7 +220,6 @@ theorem freq_kz (n : ℤ) (j : Fin 3) :
     Torus.freq (kz n) j = if j = 2 then 2 * Real.pi * n else 0 := by
   fin_cases j <;> simp [kz, Torus.freq_apply]
 
-/-- `curl_ξ (P) = i ω curl_z P` at `ξ = 2πn e_z`, `ω = 2πn`. -/
 theorem curl_kz (n : ℤ) (P : Matrix (Fin 3) (Fin 3) ℝ) :
     curl (Torus.freq (kz n)) (cAmp P) =
       (Complex.I * (2 * Real.pi * n : ℝ)) • cAmp (curlZ P) := by
@@ -283,7 +229,6 @@ theorem curl_kz (n : ℤ) (P : Matrix (Fin 3) (Fin 3) ℝ) :
     cAmp_apply]
   fin_cases b <;> simp [curlZ] <;> ring
 
-/-- `div_ξ P = 0` at `ξ = 2πn e_z` for an amplitude with vanishing third column. -/
 theorem div_kz_eq_zero (n : ℤ) (P : Matrix (Fin 3) (Fin 3) ℝ) (hP : ∀ a, P a 2 = 0) :
     div (Torus.freq (kz n)) (cAmp P) = 0 := by
   ext a
@@ -376,14 +321,12 @@ theorem mem_domain_modeVec (Ap Ax : ℝ) (n : ℤ) :
     modeVec (kz n) (pwVec Ap Ax) ∈ complex.wave.domain :=
   modeVec_mem_wave_domain Fourier.GradCurl.gradCurl (kz n) (pwVec Ap Ax)
 
-/-- **`L u₊ = −i ω u₊`** with `ω = 2πn`. -/
 theorem wave_modeVec_kz (Ap Ax : ℝ) (n : ℤ) :
     complex.wave ⟨_, mem_domain_modeVec Ap Ax n⟩ =
       (-(Complex.I * (2 * Real.pi * n : ℝ))) • modeVec (kz n) (pwVec Ap Ax) := by
   exact (wave_modeVec Fourier.GradCurl.gradCurl (kz n) (pwVec Ap Ax)).trans
     (by rw [fibreWave_pwVec, modeVec_smul])
 
-/-- The plane wave modes are TSD: `δ_k (0, E₀, B₀) ∈ K = {0} × L²(TSD) × L²(TSD)`. -/
 theorem modeVec_kz_mem (Ap Ax : ℝ) (n : ℤ) :
     modeVec (kz n) (pwVec Ap Ax) ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint := by
   obtain ⟨-, -, sE, sB, tE, tB, cE, cB⟩ := planeWave_amplitudes Ap Ax
@@ -413,9 +356,7 @@ theorem modeVec_kz_mem (Ap Ax : ℝ) (n : ℤ) :
   · rw [Pi.single_eq_of_ne ha]
     exact Submodule.zero_mem _
 
-/-- **The periodic plane wave on `𝕋³`** (`ω = 2πn`, `n ∈ ℤ`; `fem4gr` runs `ω = 6π`), on the
-Fourier side: the coefficients of `(0, E₀, B₀) sin ω(z − t)` are
-`U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)`. -/
+/-- The periodic plane wave `U(t) = (2i)⁻¹ (e^{-iωt} u₊ − e^{iωt} u₋)` on `𝕋³`, `ω = 2πn`. -/
 def torusPlaneWave (Ap Ax : ℝ) (n : ℤ) (t : ℝ) : PiLp 2 Space :=
   (2 * Complex.I)⁻¹ • (Complex.exp (-(Complex.I * (2 * Real.pi * n : ℝ)) * t) • uPlus Ap Ax n -
     Complex.exp (Complex.I * (2 * Real.pi * n : ℝ) * t) • uMinus Ap Ax n)
@@ -448,8 +389,7 @@ theorem one_sub_ne_zero (s : ℝ) {μ : ℂ} (hμ : μ.re = 0) : 1 - (s : ℂ) *
   have := congrArg Complex.re h
   simp [hμ] at this
 
-/-- **The Crank–Nicolson solution of the periodic run, in closed form**:
-`Uₖ = (2i)⁻¹ (λ₊ᵏ u₊ − λ₋ᵏ u₋)`, `λ± = (1 ∓ i s ω) / (1 ± i s ω)`, `s = Δt / 2`. -/
+/-- The Crank–Nicolson iterates `Uₖ = (2i)⁻¹ (λ₊ᵏ u₊ − λ₋ᵏ u₋)` of the periodic run. -/
 def cnTorusPlaneWave (s : ℝ) (k : ℕ) : PiLp 2 Space :=
   (2 * Complex.I)⁻¹ • (amp s (-(Complex.I * omegaC n)) ^ k • uPlus Ap Ax n -
     amp s (Complex.I * omegaC n) ^ k • uMinus Ap Ax n)
@@ -458,7 +398,6 @@ theorem cnTorusPlaneWave_zero (s : ℝ) :
     cnTorusPlaneWave Ap Ax n s 0 = torusPlaneWave Ap Ax n 0 := by
   simp [cnTorusPlaneWave, torusPlaneWave]
 
-/-- Each `Uₖ ↦ Uₖ₊₁` is a Crank–Nicolson step of the periodic Hodge wave operator. -/
 theorem isCNStep_cnTorusPlaneWave (s : ℝ) (k : ℕ) :
     TimeStepping.IsCNStep complex.wave s (cnTorusPlaneWave Ap Ax n s k)
       (cnTorusPlaneWave Ap Ax n s (k + 1)) := by
@@ -474,11 +413,8 @@ theorem isCNStep_cnTorusPlaneWave (s : ℝ) (k : ℕ) :
   · simp only [cnTorusPlaneWave, amp, pow_succ]
     module
 
-/-- **Discrete energy identity and constraint preservation for the periodic run**: the CN
-iterates conserve the `L²` energy exactly, `‖Uₖ‖ = ‖U₀‖`, stay TSD, and the amplification factors
-have modulus one (`TimeStepping.norm_amplification_eq_one`): CN has a pure phase error,
-`λ₊ = e^{-iθ}`, `θ = 2 arctan(s ω) ≠ 2 s ω` (`amp_eq_exp_phase`). Every CN sequence from `U₀` is
-this one. -/
+/-- **Energy and constraint preservation for the periodic run**: the CN iterates satisfy
+`‖Uₖ‖ = ‖U₀‖`, stay TSD, and are the only CN sequence from `U₀`. -/
 theorem cnTorusPlaneWave_props (s : ℝ) :
     (∀ k, ‖cnTorusPlaneWave Ap Ax n s k‖ = ‖torusPlaneWave Ap Ax n 0‖) ∧
     (∀ k, cnTorusPlaneWave Ap Ax n s k ∈
@@ -506,9 +442,8 @@ theorem cnTorusPlaneWave_props (s : ℝ) :
       exact h1.unique_of_isSkewSymmetric complex.isSkewAdjoint_wave.isSkewSymmetric
         (isCNStep_cnTorusPlaneWave Ap Ax n s k)
 
-/-- **The phase error of the periodic run**: the CN amplification factor of the mode `e^{-iω(z−t)}`
-is `e^{-iθ}` with `θ = 2 arctan(s ω)`, while the exact flow over `Δt = 2 s` is `e^{-2isω}`; for
-`s ≠ 0` and `n ≠ 0` the phases differ (`θ < 2 s ω` for `s ω > 0`). -/
+/-- **The phase error of the periodic run**: the CN amplification factor at the eigenvalue `−iω`
+is `e^{-iθ}` with `θ = 2 arctan(s ω)`, and `θ ≠ 2 s ω` for `s ≠ 0`, `n ≠ 0`. -/
 theorem amp_eq_exp_phase (s : ℝ) :
     amp s (-(Complex.I * omegaC n)) =
       Complex.exp (-(((2 * Real.arctan (s * (2 * Real.pi * n)) : ℝ) : ℂ) * Complex.I)) ∧

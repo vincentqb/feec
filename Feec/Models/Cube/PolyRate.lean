@@ -6,55 +6,21 @@ public import Mathlib.Algebra.Order.Chebyshev
 /-!
 # Rates of convergence of the higher-order finite element methods on the cube
 
-For an admissible sequence `S` reproducing polynomial forms of degree `s` in every form degree
-(`Feec.FiniteElement.PolyOrder n S s`: `P_sΛᵏ ⊆ P(T)ᵏ`; every sequence has order `0`,
-`Feec.FiniteElement.polyOrder_zero`), the canonical interpolant of `S` on the Freudenthal
-meshes of `Q = (0, ½)ⁿ` is of order `h^{s+1}` for `C^{s+2}` forms (`FEM.exists_mem_poly_le`), and
-the rate passes to the finite element methods:
+On the Freudenthal meshes of `Q = (0, ½)ⁿ`, the mixed method ([AFW2010], Thm 3.9) and the
+semi-discrete Hodge wave equation ([QuennevilleBelair2015], Thm 4.14) of an admissible sequence of
+order `s` converge at order `h^{s+1}` for smooth solutions.
 
-* `FEM.IsCsForm s j L x` (resp. `FEM.IsCsFormMin`, vanishing outside `Q`): `x` is a `C^{s+2}`
-  `j`-form whose `(s+1)`-st derivatives and those of `dx` are bounded by `L` on `cl Q`
-  (satisfiable: `exists_isCsFormMin`; the zero form, `IsCsFormMin.zero`).
-* **Degreewise**: `‖x - v‖, ‖d(x - v)‖ ≤ B_j L h_N^{s+1}` for some `v ∈ Vₕʲ`
-  (`IsCsForm.exists_mem_poly_le`), and the graph-norm distances
-  (`IsCsForm.infDist_domainSub_poly_le`).
-* **Mixed Hodge–Laplace problem** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): error
-  `≤ K L h_N^{s+1}` for solutions with `IsCsForm s` components (`mixed_rate_poly`,
-  unconditionally). Only the degrees used matter (`PolyOrderAt n S s j`: `P_s` in degrees `j`
-  and `j + 1`; `mixed_rate_poly_of_polyOrderAt`): the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` of
-  Tables 5.1/6.1 has global order `h` only (because of `P₀Λ³`), but converges at order `h²` for
-  the Hodge Laplacian on `1`-forms (`mixed_rate_lagrangeP2`).
-* **Semi-discrete Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14) on every window:
-  `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}`
-  (`norm_sub_le_window_poly_smooth`; no smoothed projection is needed).
-* The rates in `H̊Λ(Q)` are in `Feec.Models.Cube.TangentialRate`, for the natural class
-  `FEM.IsCsFormTr` (`C^{s+2}` up to `∂Q` with vanishing tangential traces, no condition on the
-  normal components), and for the flat class `IsCsFormMin` as corollaries
-  (`IsCsFormMin.isCsFormTr`).
-* **`H¹` approximation of the smoothed projections** ([AFW2010], §5.5; needed by the BGG
-  discretization): for `y ∈ L²(Q; Λᵏ)` whose coefficients `yₛ` (as `0`-forms, `coeffForm`) lie in
-  the domain of the maximal gradient (`H¹(Q)`), resp. of the minimal gradient (`H¹₀(Q)`: the
-  extension by zero is in `H¹(ℝⁿ)`), `‖y - π_N y‖ ≤ (1 + 2C) K_k h_N Σₛ ‖∇ yₛ‖` with `K_k`
-  independent of `N` (`PolySmoothingEstimates.norm_sub_proj_le_grad`,
-  `PolySmoothingEstimatesMin.norm_sub_proj_le_grad`; both rows of Tables 5.1/6.1 with one
-  smoother: `tableRows_H1`). The approximant is
-  `c⁻ᵏ Q_N y`: **mollification at scale `h_N`**, `‖f - R f‖ ≤ γ h_N √(n 2ⁿ) ‖∇f‖`
-  (`norm_sub_smoothL2_le_pMax`, `norm_sub_smoothL2_le_pMin`: for smooth `f` by the fundamental
-  theorem of calculus along segments, Jensen's inequality, Tonelli and the change of variables
-  of the dilations, `lintegral_sq_sub_molli_dil_le`; for `H¹` by density); the **commutation of
-  the smoother with the gradient** (`partialDeriv_smoothExt_eq_of_maximal`, `_of_minimal`); and
-  the **local interpolation error of the smoothed field** `‖R y - Π_h R y‖ ≲ h_N ‖∇y‖`
-  (`Poly.sq_norm_formL2_sub_smoothedInterp_le`: `h_N sup_T ‖D(R y)‖` on each simplex, Jensen for
-  the smoothed gradient, bounded overlap).
+## Main results
+
+* `FEM.IsCsForm.exists_mem_poly_le`: the degreewise interpolation error `B_j L h_N^{s+1}`.
+* `FEM.mixed_rate_poly_of_polyOrderAt`, `FEM.mixed_rate_lagrangeP2`: rates for the mixed method.
+* `FEM.norm_sub_le_window_poly_smooth_of_polyOrderAt`: the rate for the Hodge wave equation.
+* `FEM.PolySmoothingEstimates.norm_sub_proj_le_grad`, `FEM.tableRows_H1`: `H¹` approximation.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9 (quasi-optimality of the mixed method), §5.5 (smoothed projections)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates, rates for smooth solutions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -72,9 +38,7 @@ variable {n : ℕ}
 
 /-! ### Smooth forms of order `s` -/
 
-/-- `x ∈ L²(Q; Λʲ)` is a `C^{s+2}` form of degree `j` whose `(s+1)`-st derivative and that of
-its exterior derivative are bounded by `L` on `cl Q` (trivially true in negative degrees). For
-`s = 0` this is the `C²` class of `FEM.IsC2Form` (with `‖D^1 w‖ = ‖Dw‖`). -/
+/-- `x` is a `C^{s+2}` `j`-form with `(s+1)`-st derivatives of `x` and `dx` bounded by `L`. -/
 def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
@@ -82,15 +46,7 @@ def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx 
     (∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j ⟨w, hw.continuous⟩
 
-/-- `x ∈ L²(Q; Λʲ)` is a `C^{s+2}` form of degree `j` **vanishing outside `Q`**, with the bounds of
-`IsCsForm`. Since the representative is `C^{s+2}` on `ℝⁿ`, this is flatness of order `s + 2` at
-`∂Q`, stronger than vanishing tangential traces (e.g. `∏ᵢ sin (2π xᵢ)` on `(0, ½)ⁿ` is excluded).
-The general case of `H̊Λ(Q)` is covered, without a rate, by the quasi-optimality of the static
-FEEC theorem for `polyFamilyMin`
-(`Feec.HilbertComplex.ConformingFamily.StaticVerdict.quasiOptimal`). The class with vanishing
-tangential traces only, `FEM.IsCsFormTr` of `Feec.Models.Cube.TangentialRate`, contains this one
-with the same bound (`IsCsFormMin.isCsFormTr`), so the rates for this class there are
-corollaries of those for `FEM.IsCsFormTr`. -/
+/-- `IsCsForm` with a representative vanishing outside `Q`. -/
 def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
@@ -99,7 +55,6 @@ def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formI
     (∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     x = formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j ⟨w, hw.continuous⟩
 
-/-- **Every `C^{s+2}` form vanishing outside `Q` is `IsCsFormMin s`** for some bound. -/
 theorem exists_isCsFormMin (s : ℕ) {k : ℕ} {w : FormField n}
     (hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w) (hdeg : ∀ y, IsDeg k (w y))
     (hsupp : ∀ y ∉ cubeDomain n, w y = 0) :
@@ -128,7 +83,6 @@ theorem IsCsFormMin.isCsForm {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDom
   · exact Or.inl hj
   · exact Or.inr ⟨k, hk, w, hw, hdeg, hL, hL', he⟩
 
-/-- The zero form is in the flat class, with every bound `L ≥ 0`. -/
 theorem IsCsFormMin.zero (s k : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
     IsCsFormMin s (k : ℤ) L (0 : L2F ℝ (cubeDomain n) (formIdx n k)) := by
   have e : extDeriv (0 : FormField n) = 0 := extDeriv_const (0 : Finset (Fin n) → ℝ)
@@ -138,8 +92,7 @@ theorem IsCsFormMin.zero (s k : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
   · rw [e]; simpa using hL0
 
 variable (n) in
-/-- The constant `B_j = A_j + A_{j+1}` of the graph-norm interpolation error of `S` in degree
-`j`. -/
+/-- The constant `B_j = A_j + A_{j+1}` of the graph-norm interpolation error of `S`. -/
 def polyInterpBound (S : PolySeq) (j : ℤ) : ℝ :=
   polyInterpConst n S j.toNat + polyInterpConst n S (j.toNat + 1)
 
@@ -150,9 +103,7 @@ variable [NeZero n]
 
 /-! ### Degreewise rates -/
 
-/-- **Degreewise interpolation error of order `s + 1`**: for `x` with `IsCsForm s j L x` and a
-sequence of order `s`, some `v ∈ Vₕʲ` has `‖x - v‖ ≤ B_j L h_N^{s+1}` and
-`‖d (x - v)‖ ≤ B_j L h_N^{s+1}`. -/
+/-- **Degreewise interpolation error of order `s + 1`**, in `L²` and for `d`: `B_j L h_N^{s+1}`. -/
 theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ}
     (hS : PolyOrderAt n S s j)
     {L : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsCsForm s j L x) (hL0 : 0 ≤ L)
@@ -181,8 +132,6 @@ theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ}
   rw [hval, e]
   linarith
 
-/-- **Graph-norm distance of a smooth form to the higher-order space**:
-`dist_V(σ, Vₕʲ) ≤ 2 B_j L h_N^{s+1}`. -/
 theorem IsCsForm.infDist_domainSub_poly_le {S : PolySeq} {s : ℕ} {j : ℤ}
     (hS : PolyOrderAt n S s j)
     {L : ℝ} {σ : (complex n).domainSpace j} (hσ : IsCsForm s j L ((complex n).domainIncl j σ))
@@ -195,9 +144,7 @@ theorem IsCsForm.infDist_domainSub_poly_le {S : PolySeq} {s : ℕ} {j : ℤ}
 /-! ### Rates for the mixed Hodge Laplacian -/
 
 variable (n) in
-/-- **The Jackson estimate of the complexes of `S`**: for `s : ℕ`, the `C^{s+2}` forms
-(`IsCsForm s`) of the degrees where `S` reproduces `P_s` (`PolyOrderAt`) are approximated at the
-order `h_N^{s+1}` with the constants `polyInterpBound` (`IsCsForm.exists_mem_poly_le`). -/
+/-- The Jackson estimate of order `h_N^{s+1}` of the complexes of `S` for the forms `IsCsForm s`. -/
 def polyJackson (S : PolySeq) : (polyFamily n S).Jackson ℕ where
   meshSize := meshSize
   meshSize_nonneg N := (meshSize_pos N).le
@@ -209,12 +156,8 @@ def polyJackson (S : PolySeq) : (polyFamily n S).Jackson ℕ where
   jackson s N _ _ _ hL hx := by
     rw [Real.rpow_natCast, ← mul_assoc]; exact hx.2.exists_mem_poly_le hx.1 hL N
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method on the cube**, with no
-hypothesis beyond the data ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): for an admissible sequence
-of order `s` (`PolyOrder`, e.g. `s + 1 ≤ r_k` in every degree) and a solution `(σ, u, q)` of the
-mixed problem whose components, the boundary part of `u` and `q` are `C^{s+2}` with
-`(s+1)`-st derivatives bounded by `L`, the error of the discrete mixed solution on the
-level-`(N + 1)` mesh is `≤ K L h_N^{s+1}`, with `K` independent of `N` and of the solution. -/
+/-- **Convergence of order `h^{s+1}` of the higher-order mixed method for `IsCsForm s` solutions**
+([AFW2010], Thm 3.9). -/
 theorem mixed_rate_poly_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
     (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j) (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) :
@@ -241,9 +184,6 @@ theorem mixed_rate_poly_of_polyOrderAt (S : PolySeq) {s : ℕ} {i j k : ℤ}
   rw [← Real.rpow_natCast]
   exact h
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method on the cube** for a
-sequence of order `s` in every degree (`PolyOrder`); see `mixed_rate_poly_of_polyOrderAt` for
-the degreewise form. -/
 theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n j)} {σ : (complex n).domainSpace i}
@@ -266,11 +206,8 @@ theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : 
 
 /-! ### Second-order rates for the bottom row of Tables 5.1/6.1 -/
 
-/-- **Second-order convergence of the mixed method of the bottom row of Tables 5.1/6.1 for the
-Hodge Laplacian on `1`-forms** (`(i, j, k) = (0, 1, 2)`, `HΛ(Q)`; [AFW2010], Thm 3.9): although
-`P₀Λ³` limits the global order to `h` (`PolyOrder` holds only for `s = 0`), the problem in degree
-`1` only uses `P₂Λ⁰, P₂⁻Λ¹, P₁Λ²`, which contain `P₁`, so the error is `≤ K L h_N²` for `C³`
-solutions. -/
+/-- **Second-order convergence of the `PolySeq.lagrangeP2` mixed method on `1`-forms**
+([AFW2010], Thm 3.9). -/
 theorem mixed_rate_lagrangeP2 :
     ∃ K : ℝ, ∀ {f : L2F ℝ (cubeDomain n) (formIdx n 1)} {σ : (complex n).domainSpace 0}
     {u : (complex n).domainSpace 1} {q : (complex n).harmonic 1},
@@ -296,9 +233,6 @@ theorem mixed_rate_lagrangeP2 :
 
 /-! ### Rates for the semi-discrete Hodge wave equation -/
 
-/-- **Graph-norm rate in the total space of a window** for a sequence of order `s`: if every
-component of `ζ ∈ Γ(𝐝)` is `IsCsForm s` with bound `L`, some point of the window of `Vₕ` is
-within `(m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}` of `ζ`. -/
 theorem exists_mem_window_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
     (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i))
     (ζ : ((complex n).window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
@@ -315,13 +249,8 @@ theorem exists_mem_window_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
         fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
     fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
-/-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation** for the
-higher-order complexes ([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7), on every window
-of `HΛ(Q)`: for a weak solution `ξ` in `C¹([t₀, t₁]; Γ(𝐝))` whose values and time derivatives
-have `IsCsForm s` components with bound `L`, and the semi-discrete solutions `ξₕ` started at the
-elliptic projection,
-`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}` with `A` independent of `N`
-(`Feec.HilbertComplex.Subcomplex.norm_sub_le_of_approx`). -/
+/-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation** on every window,
+for `ξ`, `ξ'` in `IsCsForm s` ([QuennevilleBelair2015], Thm 4.14). -/
 theorem norm_sub_le_window_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ} {a : ℤ}
     {m : ℕ} (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complex n).window a m).totalD.GraphSpace}
@@ -344,8 +273,6 @@ theorem norm_sub_le_window_poly_smooth_of_polyOrderAt {S : PolySeq} {s : ℕ} {a
     ⟨exists_mem_window_poly_le hS (ξ τ) hL0 (fun i => (hreg τ hτ i).1) N,
       exists_mem_window_poly_le hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
 
-/-- The case of a sequence of order `s` in every degree (`PolyOrder`) of
-`norm_sub_le_window_poly_smooth_of_polyOrderAt`. -/
 theorem norm_sub_le_window_poly_smooth {S : PolySeq} {s : ℕ} (hS : PolyOrder n S s) (a : ℤ)
     (m : ℕ) {t₀ t₁ : ℝ} {ξ ξ' : ℝ → ((complex n).window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
@@ -370,7 +297,6 @@ theorem norm_sub_le_window_poly_smooth {S : PolySeq} {s : ℕ} (hS : PolyOrder n
 
 section H1Lemmas
 
-/-- `(∫₀¹ f)² ≤ ∫₀¹ f²` for continuous `f`. -/
 theorem sq_intervalIntegral_le {f : ℝ → ℝ} (hf : Continuous f) :
     (∫ τ in (0 : ℝ)..1, f τ) ^ 2 ≤ ∫ τ in (0 : ℝ)..1, f τ ^ 2 := by
   set a := ∫ τ in (0 : ℝ)..1, f τ
@@ -390,7 +316,6 @@ theorem sq_intervalIntegral_le {f : ℝ → ℝ} (hf : Continuous f) :
   rw [e] at h0
   nlinarith
 
-/-- `|L v| ≤ ‖v‖ Σⱼ |L eⱼ|` for a linear form on `ℝⁿ` with the sup norm. -/
 theorem abs_apply_le_norm_mul_sum {n : ℕ} (L : (Fin n → ℝ) →L[ℝ] ℝ) (v : Fin n → ℝ) :
     |L v| ≤ ‖v‖ * ∑ j, |L (Pi.single j 1)| := by
   have hv : v = ∑ j, v j • (Pi.single j 1 : Fin n → ℝ) := by
@@ -405,8 +330,6 @@ theorem abs_apply_le_norm_mul_sum {n : ℕ} (L : (Fin n → ℝ) →L[ℝ] ℝ) 
   have := norm_le_pi_norm v j
   rwa [Real.norm_eq_abs] at this
 
-/-- **The fundamental theorem of calculus with Cauchy–Schwarz** along a segment:
-`(w z - w x)² ≤ ‖z - x‖² n ∫₀¹ Σⱼ (∂ⱼ w)²(x + τ (z - x)) dτ` for `w ∈ C¹(ℝⁿ)`. -/
 theorem sq_sub_le_integral_grad {n : ℕ} {w : (Fin n → ℝ) → ℝ} (hw : ContDiff ℝ 1 w)
     (x z : Fin n → ℝ) :
     (w z - w x) ^ 2 ≤ ‖z - x‖ ^ 2 * n *
@@ -447,8 +370,6 @@ theorem sq_sub_le_integral_grad {n : ℕ} {w : (Fin n → ℝ) → ℝ} (hw : Co
   exact intervalIntegral.integral_mono_on (by norm_num) ((hgc.pow 2).intervalIntegrable _ _)
     ((continuous_const.mul hGc).intervalIntegrable _ _) fun τ _ => hpt τ
 
-/-- **Change of variables for affine dilations** in `ℝⁿ`:
-`∫⁻ F(l x + β) dx = l⁻ⁿ ∫⁻ F` for `l > 0`. -/
 theorem lintegral_comp_smul_add {n : ℕ} (F : (Fin n → ℝ) → ℝ≥0∞) {l : ℝ} (hl : 0 < l)
     (β : Fin n → ℝ) :
     ∫⁻ x, F (l • x + β) = ENNReal.ofReal ((l ^ n)⁻¹) * ∫⁻ x, F x := by
@@ -469,9 +390,6 @@ theorem ofReal_intervalIntegral_le_lintegral {g : ℝ → ℝ} (hg : Continuous 
       (Eventually.of_forall hg0)]
   exact lintegral_mono_set Set.Ioc_subset_Icc_self
 
-/-- **The pointwise error of the mollifier at a displaced point**, in the form needed for the
-`L²` estimate: for `‖ŷ - x‖ ≤ δ`,
-`|w x - (w ⋆ ρ)(ŷ)|² ≤ (δ + r)² n ∫ ρ(u) ∫₀¹ |∇w|²(x + τ (ŷ - u - x)) dτ du`. -/
 theorem ofReal_sq_sub_molli_le {n : ℕ} {w : (Fin n → ℝ) → ℝ} (hw : ContDiff ℝ 1 w)
     (φ : ContDiffBump (0 : Fin n → ℝ)) (x ŷ : Fin n → ℝ) {δ : ℝ} (hδ : ‖ŷ - x‖ ≤ δ) :
     ENNReal.ofReal ((w x - molli φ w ŷ) ^ 2) ≤ ENNReal.ofReal ((δ + φ.rOut) ^ 2 * n) *
@@ -547,11 +465,6 @@ theorem ofReal_sq_sub_molli_le {n : ℕ} {w : (Fin n → ℝ) → ℝ} (hw : Con
           exact ofReal_intervalIntegral_le_lintegral hGc hG0
       _ = _ := by ring
 
-/-- **The `L²` error of the dilated mollifier** for a `C¹` function: if the dilation moves the
-points of `U` by at most `δ`, and the segments from `x ∈ U` to the points sampled by the mollifier
-stay in `V`, then
-`∫_U |w - (w ⋆ ρ) ∘ dil|² ≤ (δ + r)² n 2ⁿ ∫_V |∇w|²` (`r` the outer radius of the bump, the
-dilation factor `c ≥ ½`). -/
 theorem lintegral_sq_sub_molli_dil_le {n : ℕ} {w : (Fin n → ℝ) → ℝ} (hw : ContDiff ℝ 1 w)
     (φ : ContDiffBump (0 : Fin n → ℝ)) (x₀ : Fin n → ℝ) {c : ℝ} (hc1 : 1 / 2 ≤ c)
     {U V : Set (Fin n → ℝ)} (hU : MeasurableSet U) (hV : MeasurableSet V) {δ : ℝ}
@@ -652,7 +565,6 @@ theorem lintegral_sq_sub_molli_dil_le {n : ℕ} {w : (Fin n → ℝ) → ℝ} (h
         simp only [Y, K₀, hG]
         rw [← mul_assoc, ← ENNReal.ofReal_mul (by positivity)]
 
-/-- `‖g‖² ≤ B` for an `L²` class with an a.e. representative `F` with `∫⁻ F² ≤ B`. -/
 theorem sq_norm_le_of_ae_eq {α : Type*} [MeasurableSpace α] {μ : Measure α} (g : Lp ℝ 2 μ)
     {F : α → ℝ} (hgF : (g : α → ℝ) =ᵐ[μ] F) {B : ℝ≥0∞}
     (h : ∫⁻ x, ENNReal.ofReal (F x ^ 2) ∂μ ≤ B) (hB : B ≠ ⊤) : ‖g‖ ^ 2 ≤ B.toReal := by
@@ -676,7 +588,6 @@ theorem extDeriv_apply_singleton (w : FormField n) (x : Fin n → ℝ) (j : Fin 
   simp [ExteriorFibre.sgn, Finset.filter_singleton]
 
 omit [NeZero n] in
-/-- `‖d w‖²_{L²(Ω)} = Σⱼ ∫_Ω (∂ⱼ w)²` for a smooth `0`-form `w`. -/
 theorem norm_sq_formL2_extDeriv_zero {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     (hb : Bornology.IsBounded Ω) {w : FormField n} (hw : ContDiff ℝ 1 w) :
     ‖formL2 hΩ hb (((0 : ℕ) : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv hw⟩‖ ^ 2 =
@@ -702,7 +613,6 @@ theorem norm_sq_formL2_extDeriv_zero {Ω : Set (Fin n → ℝ)} (hΩ : Measurabl
   rw [extDeriv_apply_singleton]
 
 omit [NeZero n] in
-/-- The lintegral of `|∇w|²` over `Q` is `‖d w‖²_{L²(Q)}` for a smooth `0`-form. -/
 theorem lintegral_grad_eq {w : FormField n} (hw : ContDiff ℝ 1 w) :
     ∫⁻ x in cubeDomain n, ENNReal.ofReal (∑ j, (partialDeriv j (fun y => w y ∅) x) ^ 2) =
       ENNReal.ofReal (‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n)
@@ -722,9 +632,6 @@ theorem mem_cubeDomain_seg {x t : Fin n → ℝ} (hx : x ∈ cubeDomain n) (ht :
   (convex_cubeDomain n).add_smul_sub_mem hx ht hτ
 
 omit [NeZero n] in
-/-- **`‖f - R f‖ ≲ γ h ‖∇f‖` for smooth `f`, maximal family**: for the parameters `pMax γ` and a
-smooth `0`-form `w`, the smoother moves the class of `w` on `Q` by at most
-`γ h_N √(n 2ⁿ) ‖dw‖_{L²(Q)}`. -/
 theorem sq_norm_sub_smoothL2_le_pMax {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ)
     {w : FormField n} (hw : ContDiff ℝ 1 w) :
     ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((0 : ℕ) : ℤ)
@@ -782,8 +689,6 @@ theorem sq_norm_sub_smoothL2_le_pMax {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
   gcongr
 
 omit [NeZero n] in
-/-- **`‖f - R f‖ ≲ γ h ‖∇f‖` for smooth `f` vanishing outside `Q`, minimal family** (the
-parameters `pMin γ`). -/
 theorem sq_norm_sub_smoothL2_le_pMin {γ : ℝ} (hγ : 0 < γ) (N : ℕ)
     {w : FormField n} (hw : ContDiff ℝ 1 w) (hsupp : ∀ x ∉ cubeDomain n, w x = 0) :
     ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((0 : ℕ) : ℤ)
@@ -855,8 +760,6 @@ theorem coeffForm_apply {Ω : Set (Fin n → ℝ)} (f : L2 ℝ Ω) (s : formIdx 
     coeffForm f s = f := rfl
 
 omit [NeZero n] in
-/-- **Density step**: an estimate `‖f - S f‖ ≤ K ‖∇f‖` for the classes of smooth `0`-forms
-(`P`) passes to all `f` that are graph-norm limits of such classes, for a bounded `S`. -/
 theorem norm_sub_le_of_approx {Ω : Set (Fin n → ℝ)} (S : L2 ℝ Ω →L[ℝ] L2 ℝ Ω) {K : ℝ}
     (hK : 0 ≤ K) (f : L2 ℝ Ω) {g : ℝ}
     (happ : ∀ ε > 0, ∃ f₀ : L2 ℝ Ω, ∃ g₀ : ℝ, ‖f - f₀‖ < ε ∧ g₀ < g + ε ∧
@@ -881,8 +784,6 @@ theorem norm_le_of_sq_le {a K g : ℝ} (hK : 0 ≤ K) (hg : 0 ≤ g)
   exact le_of_pow_le_pow_left₀ two_ne_zero (mul_nonneg hK hg) h
 
 omit [NeZero n] in
-/-- **`‖f - R f‖ ≤ γ h_N √(n 2ⁿ) ‖∇f‖` for `f ∈ H¹(Q)`, maximal family** (the parameters
-`pMax γ`; `f` in the domain of the maximal gradient, as the coefficient of a `0`-form). -/
 theorem norm_sub_smoothL2_le_pMax {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ)
     (f : L2 ℝ (cubeDomain n)) (hf : coeffForm f ∈ ((complex n).d 0 1).domain) :
     ‖f - smoothL2 (pMax γ hγ hγ1 N) (isOpen_cubeDomain n).measurableSet f‖ ≤
@@ -916,9 +817,6 @@ theorem norm_sub_smoothL2_le_pMax {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N
     ring
 
 omit [NeZero n] in
-/-- **`‖f - R f‖ ≤ γ h_N √(n 2ⁿ) ‖∇f‖` for `f ∈ H¹₀(Q)`, minimal family** (the parameters
-`pMin γ`; `f` in the domain of the minimal gradient, i.e. its extension by zero is in
-`H¹(ℝⁿ)`). -/
 theorem norm_sub_smoothL2_le_pMin {γ : ℝ} (hγ : 0 < γ) (N : ℕ)
     (f : L2 ℝ (cubeDomain n)) (hf : coeffForm f ∈ ((complexMin n).d 0 1).domain) :
     ‖f - smoothL2 (pMin γ hγ N) (isOpen_cubeDomain n).measurableSet f‖ ≤
@@ -952,7 +850,6 @@ theorem norm_sub_smoothL2_le_pMin {γ : ℝ} (hγ : 0 < γ) (N : ℕ)
     ring
 
 omit [NeZero n] in
-/-- `‖DF(x)‖ ≤ Σⱼ Σₜ |∂ⱼ Fₜ(x)|` for a form field differentiable at `x`. -/
 theorem norm_fderiv_le_sum_partialDeriv {F : FormField n} {x : Fin n → ℝ}
     (hF : DifferentiableAt ℝ F x) :
     ‖fderiv ℝ F x‖ ≤ ∑ j, ∑ t, |partialDeriv j (fun z => F z t) x| := by
@@ -977,7 +874,6 @@ theorem norm_fderiv_le_sum_partialDeriv {F : FormField n} {x : Fin n → ℝ}
     _ = _ := mul_comm _ _
 
 omit [NeZero n] in
-/-- `‖w - glue u‖² ≤ Σ_T Σₛ ∫_T (wₛ - (u_T)ₛ)²` (any element family). -/
 theorem norm_sq_formL2_sub_glue_le (E : LocalElement n) (M : SimplicialMesh n)
     (hΩ : MeasurableSet M.domain) (k : ℕ) (w : contForms n) (u : E.Piecewise M k) :
     ‖formL2 hΩ M.isBounded_domain k w - E.glue M k u‖ ^ 2 ≤
@@ -1016,11 +912,6 @@ namespace Poly
 variable (S : PolySeq)
 
 omit [NeZero n] in
-/-- **The interpolation error of the smoothed field in terms of a gradient** (the second
-ingredient of the `H¹` approximation): if the partial derivatives of the smoothed coefficients
-are the smoothed fields of `L²` fields `g s` (the commutation of the smoother with the gradient,
-`hcomm`), then `‖R y - Π_h R y‖² ≲ h_N² Σₛ ‖g s‖²`, through the pointwise interpolation error
-`h_N sup_T ‖D (R y)‖`, Jensen's inequality for the mollifier, and bounded overlap. -/
 theorem sq_norm_formL2_sub_smoothedInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBound S n k B)
     (hB0 : 0 ≤ B) (hD : CoeffBound S n k D) (hD0 : 0 ≤ D) {γ : ℝ}
     {p : SmoothingParam (Fin n → ℝ)} (hp : IsAdm γ N p) (hγ1 : γ ≤ 1)
@@ -1192,7 +1083,6 @@ end Poly
 /-! ### The commutation of the smoother with the gradient -/
 
 omit [NeZero n] in
-/-- The smoothed coefficient of a `0`-form is the smoothed scalar. -/
 theorem smoothForm_zero_apply_empty {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     (p : SmoothingParam (Fin n → ℝ)) (f : L2 ℝ Ω) :
     (fun y => (smoothForm p hΩ ((0 : ℕ) : ℤ) (coeffForm f) : FormField n) y ∅) =
@@ -1202,9 +1092,6 @@ theorem smoothForm_zero_apply_empty {Ω : Set (Fin n → ℝ)} (hΩ : Measurable
   simp [smoothCoeff, coeffForm_apply]
 
 omit [NeZero n] in
-/-- **The smoother commutes with the gradient, maximal family**: for `f` in the domain of the
-maximal gradient and `x ∈ cl Ω`, `∂ⱼ (R f)(x) = (R (∇ f))ⱼ(x)` (the `1`-form smoother, with
-its factor `c`). -/
 theorem partialDeriv_smoothExt_eq_of_maximal {Ω : Set (Fin n → ℝ)} (hΩo : IsOpen Ω)
     {x₀ : Fin n → ℝ} {s₀ : ℝ} (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω)
     {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀) (f : L2 ℝ Ω)
@@ -1224,8 +1111,6 @@ theorem partialDeriv_smoothExt_eq_of_maximal {Ω : Set (Fin n → ℝ)} (hΩo : 
   rfl
 
 omit [NeZero n] in
-/-- **The smoother commutes with the gradient, minimal family**: for `f` in the domain of the
-minimal gradient (`H¹₀`), `∂ⱼ (R f) = (R (∇ f))ⱼ` everywhere. -/
 theorem partialDeriv_smoothExt_eq_of_minimal {Ω : Set (Fin n → ℝ)} (hΩo : IsOpen Ω)
     (p : SmoothingParam (Fin n → ℝ)) (f : L2 ℝ Ω)
     (hf : coeffForm f ∈ (((deRham ℝ n).minimalComplex hΩo).d 0 1).domain)
@@ -1245,7 +1130,6 @@ theorem partialDeriv_smoothExt_eq_of_minimal {Ω : Set (Fin n → ℝ)} (hΩo : 
 /-! ### The `H¹` approximation on the mesh domain -/
 
 omit [NeZero n] in
-/-- `‖v‖ ≤ Σᵢ ‖vᵢ‖` in `L²(Ω; ℝ^ι)`. -/
 theorem L2F.norm_le_sum_norm {Ω : Set (Fin n → ℝ)} {ι : Type*} [Fintype ι] (v : L2F ℝ Ω ι) :
     ‖v‖ ≤ ∑ i, ‖v i‖ := by
   have h : ‖v‖ ^ 2 ≤ (∑ i, ‖v i‖) ^ 2 := by
@@ -1260,7 +1144,6 @@ theorem sqrt_sum_sq_le_sum {ι : Type*} [Fintype ι] (a : ι → ℝ) (ha : ∀ 
   exact Finset.sum_sq_le_sq_sum_of_nonneg fun i _ => ha i
 
 omit [NeZero n] in
-/-- The smoothed form restricted to `Ω`: its coefficients are `cᵏ R(yₛ)`. -/
 theorem formL2_smoothForm_apply {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     (hb : Bornology.IsBounded Ω) (p : SmoothingParam (Fin n → ℝ)) (k : ℕ)
     (y : L2F ℝ Ω (formIdx n k)) (s : formIdx n k) :
@@ -1276,8 +1159,7 @@ theorem formL2_smoothForm_apply {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet 
   simp [smoothCoeff, zpow_natCast]
 
 variable (n) in
-/-- The constant of the `H¹` approximation of degree `k` of the sequence `S` at smoothing scale
-`γ`: `γ √(n 2ⁿ) + 2ᵏ √K₂` (`Poly.sq_norm_formL2_sub_smoothedInterp_le`). -/
+/-- The constant `γ √(n 2ⁿ) + 2ᵏ √K₂` of the `H¹` approximation of degree `k` of `S`. -/
 def h1Const (S : PolySeq) (k : ℕ) (γ : ℝ) : ℝ :=
   γ * √(n * 2 ^ n) + 2 ^ k * √(2 ^ n * (1 + dofConst n S k * Module.finrank ℝ (S.space n k) *
     coeffConst n S k) ^ 2 * (2 ^ (k + 1)) ^ 2 * n ^ 2 * 2 ^ n * (32 / γ) ^ n *
@@ -1288,10 +1170,6 @@ theorem h1Const_nonneg (S : PolySeq) (k : ℕ) {γ : ℝ} (hγ : 0 ≤ γ) : 0 �
   unfold h1Const; positivity
 
 omit [NeZero n] in
-/-- **`H¹` approximation by the higher-order spaces, maximal family, on the mesh domain**: for
-`y ∈ L²(Ω; Λᵏ)` whose coefficients lie in the domain of the maximal gradient, the field
-`v = c⁻ᵏ Q_N y ∈ Vₕᵏ` (`Q_N` the smoothed interpolant of the parameters `pMax γ`) satisfies
-`‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖`, `K = h1Const` independent of `N`. -/
 theorem exists_mem_V_near_grad_pMax (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
     (N k : ℕ) (y : L2F ℝ (mesh n N).domain (formIdx n k))
     (hy : ∀ s, coeffForm (y s) ∈
@@ -1364,10 +1242,6 @@ theorem exists_mem_V_near_grad_pMax (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (hγ
     _ = h1Const n S k γ * h * ∑ s, ‖g s‖ := by simp only [h1Const, K₂]; ring
 
 omit [NeZero n] in
-/-- **`H¹` approximation by the higher-order spaces with vanishing boundary DOFs, on the mesh
-domain**: for `y` whose coefficients lie in the domain of the minimal gradient (their extensions
-by zero are in `H¹(ℝⁿ)`), `v = c⁻ᵏ Q̊_N y ∈ V̊ₕᵏ` (parameters `pMin γ`) satisfies
-`‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖`. -/
 theorem exists_mem_V₀_near_grad_pMin (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
     (N k : ℕ) (y : L2F ℝ (mesh n N).domain (formIdx n k))
     (hy : ∀ s, coeffForm (y s) ∈
@@ -1439,9 +1313,6 @@ theorem exists_mem_V₀_near_grad_pMin (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (
 
 /-! ### The `H¹` approximation of the smoothed projections on the cube -/
 
-/-- **`H¹` approximation by the higher-order spaces on the cube**: for `y ∈ L²(Q; Λᵏ)` whose
-coefficients lie in the domain of the maximal gradient (`H¹(Q)`), some `v ∈ Vₕᵏ` satisfies
-`‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖` with `K = h1Const n S k γ` independent of `N` (any `γ ∈ (0, 1]`). -/
 theorem exists_mem_poly_near_grad (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N k : ℕ)
     (y : L2F ℝ (cubeDomain n) (formIdx n k))
     (hy : ∀ s, coeffForm (y s) ∈ ((complex n).d 0 1).domain) :
@@ -1456,9 +1327,6 @@ theorem exists_mem_poly_near_grad (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (hγ1 
         ∑ s, ‖((deRham ℝ n).maximalComplex hΘ).d 0 1 ⟨coeffForm (y s), hy s⟩‖)
     (fun y hy => exists_mem_V_near_grad_pMax S hγ hγ1 N k y hy) y hy
 
-/-- **`H¹` approximation by the higher-order spaces with vanishing boundary DOFs**: for `y` whose
-coefficients lie in the domain of the minimal gradient (`H¹₀(Q)`), some `v ∈ V̊ₕᵏ` satisfies
-`‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖`. -/
 theorem exists_mem_polyMin_near_grad (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
     (N k : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
     (hy : ∀ s, coeffForm (y s) ∈ ((complexMin n).d 0 1).domain) :
@@ -1474,7 +1342,6 @@ theorem exists_mem_polyMin_near_grad (S : PolySeq) {γ : ℝ} (hγ : 0 < γ) (h�
         ∑ s, ‖((deRham ℝ n).minimalComplex hΘ).d 0 1 ⟨coeffForm (y s), hy s⟩‖)
     (fun y hy => exists_mem_V₀_near_grad_pMin S hγ hγ1 N k y hy) y hy
 
-/-- `‖y - π y‖ ≤ (1 + 2C) ‖y - v‖` for a cochain projection bounded by `2C` and `v ∈ Vₕ`. -/
 theorem norm_sub_π_le_of_mem {𝕜 : Type*} [RCLike 𝕜] {V : ℤ → Type*}
     [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
     {H : HilbertComplex 𝕜 (ComplexShape.up ℤ) V} {S' : H.Subcomplex} (π : S'.CochainProjection)
@@ -1487,14 +1354,7 @@ theorem norm_sub_π_le_of_mem {𝕜 : Type*} [RCLike 𝕜] {V : ℤ → Type*}
     _ ≤ ‖y - v‖ + 2 * C * ‖y - v‖ := add_le_add le_rfl (hπ _)
     _ = (1 + 2 * C) * ‖y - v‖ := by ring
 
-/-- **`H¹` approximation of the smoothed projections** (the estimate needed by the BGG
-discretization): under the smoothing estimates of `S`, for `y ∈ L²(Q; Λᵏ)` whose coefficients
-lie in `H¹(Q)` (the domain of the maximal gradient),
-`‖y - π_N y‖ ≤ (1 + 2C) K h_N Σₛ ‖∇ yₛ‖`, `K = h1Const n S k 1`, independent of `N`. The proof
-compares `y` with `c⁻ᵏ Q_N y`: mollification at scale `h_N` (`‖f - R f‖ ≲ h ‖∇f‖`,
-`norm_sub_smoothL2_le_pMax`, from the fundamental theorem of calculus along segments and a
-change of variables), the local interpolation error of the smoothed field
-(`Poly.sq_norm_formL2_sub_smoothedInterp_le`), and the uniform bound of `π_N`. -/
+/-- **`H¹` approximation of the smoothed projections**: `‖y - π_N y‖ ≤ (1 + 2C) K h_N Σₛ ‖∇ yₛ‖`. -/
 theorem PolySmoothingEstimates.norm_sub_proj_le_grad {S : PolySeq}
     {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimates n S p C) (N k : ℕ)
     (y : L2F ℝ (cubeDomain n) (formIdx n k))
@@ -1509,9 +1369,6 @@ theorem PolySmoothingEstimates.norm_sub_proj_le_grad {S : PolySeq}
         mul_le_mul_of_nonneg_left hyv (by linarith)
     _ = _ := by ring
 
-/-- **`H¹₀` approximation of the smoothed projections with vanishing boundary DOFs**: for `y`
-whose coefficients lie in `H¹₀(Q)` (extend by zero to `H¹(ℝⁿ)`),
-`‖y - π̊_N y‖ ≤ (1 + 2C) K h_N Σₛ ‖∇ yₛ‖`. -/
 theorem PolySmoothingEstimatesMin.norm_sub_proj_le_grad {S : PolySeq}
     {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ} (hE : PolySmoothingEstimatesMin n S p C)
     (N k : ℕ) (y : L2F ℝ (cubeDomain n) (formIdx n k))
@@ -1526,11 +1383,7 @@ theorem PolySmoothingEstimatesMin.norm_sub_proj_le_grad {S : PolySeq}
         mul_le_mul_of_nonneg_left hyv (by linarith)
     _ = _ := by ring
 
-/-- **The rows of Tables 5.1/6.1 with one smoother, with the `H¹₀` approximation**: the
-projections `π̊_N` of the top row (`PolySeq.lowestOrder`) and the bottom row
-(`PolySeq.lagrangeP2`) on `(0, ½)³`, built from the same smoothed fields, are uniformly bounded
-in `L²` and every graph norm and satisfy `‖y - π̊_N y‖ ≤ K_k h_N Σₛ ‖∇ yₛ‖` for `y` with `H¹₀(Q)`
-coefficients. -/
+/-- **Both rows from one smoother, with the `H¹₀` approximation of order `h_N`.** -/
 theorem tableRows_H1 :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)

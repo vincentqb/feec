@@ -5,35 +5,14 @@ public import Feec.Variational.BabuskaNecas
 /-!
 # Saddle point problems: Brezzi's theorem over `ℝ` and `ℂ`
 
-Let `X`, `Y` be Hilbert spaces over `𝕜`, `a : X →L[𝕜] X →L⋆[𝕜] 𝕜` a bounded sesquilinear form
-and `B : X →L[𝕜] Y` bounded (the constraint `b(v, q) = ⟪q, B v⟫`). The saddle point problem is:
-given antilinear `F`, `G`, find `(u, p) ∈ X × Y` with
-
-  `a u v + ⟪v, B† p⟫ = F v` for all `v`,   `⟪q, B u⟫ = G q` for all `q`
-
-(`IsSaddleSolution`). With `Z = ker B`:
-
-## Main results
-
-* `existsUnique_isSaddleSolution` (Brezzi): if `a` restricted to `Z × Z` has the inf-sup property
-  and separates, and `β ‖q‖ ≤ ‖B† q‖` (the inf-sup condition of `b` with the inf over `q`), the
-  problem is uniquely solvable;
-* `IsSaddleSolution.norm_fst_le`, `IsSaddleSolution.norm_snd_le`: the stability bounds
-  `‖u‖ ≤ γ⁻¹ ‖F‖ + β⁻¹ (1 + ‖a‖/γ) ‖G‖` and `‖p‖ ≤ β⁻¹ (‖F‖ + ‖a‖ ‖u‖)`;
-* `brezzi_iff`: the converse, so Brezzi's conditions are *equivalent* to well-posedness;
-* `exists_lift`, `exists_adjoint_eq_of_mem_orthogonal`: `B` is onto with a bounded right inverse
-  and `(ker B)ᗮ = R(B†)` under the inf-sup condition of `b`;
-* `rieszOp`-translation lemmas for constraint forms `b : X →L[𝕜] Y →L⋆[𝕜] 𝕜`
-  (`norm_adjoint_rieszOp_apply`, `isSaddleSolution_rieszOp_iff`).
+The saddle point problem `a u v + ⟪v, B† p⟫ = F v`, `⟪q, B u⟫ = G q` is uniquely solvable for all
+antilinear `F`, `G` iff `a` has the inf-sup property and separates on `ker B` and
+`β ‖q‖ ≤ ‖B† q‖`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.11 (Brezzi, corrected: the inf-sup of `b` is over `q`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 * [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
-* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013],
-  Ch. 4
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 4
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -62,13 +41,10 @@ variable {a : X →L[𝕜] X →L⋆[𝕜] 𝕜} {B : X →L[𝕜] Y} {F : X →
 
 /-! ### The constraint operator -/
 
-/-- `⟪z, B† p⟫ = 0` on `ker B`. -/
 theorem inner_adjoint_eq_zero_of_mem_ker {z : X} (hz : z ∈ B.ker) (p : Y) :
     ⟪z, adjoint B p⟫ = 0 := by
   rw [ContinuousLinearMap.adjoint_inner_right, show B z = 0 from hz, inner_zero_left]
 
-/-- **Lifting.** If `β ‖q‖ ≤ ‖B† q‖`, every antilinear `G` on `Y` is `q ↦ ⟪q, B u_G⟫` with
-`u_G = B† w ∈ R(B†)` and `β ‖u_G‖ ≤ ‖G‖`. [QuennevilleBelair2015], Thm 4.11 -/
 theorem exists_lift (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) (G : Y →L⋆[𝕜] 𝕜) :
     ∃ w : Y, (∀ q, ⟪q, B (adjoint B w)⟫ = G q) ∧ β * ‖adjoint B w‖ ≤ ‖G‖ := by
   set c : Y →L[𝕜] Y →L⋆[𝕜] 𝕜 := (innerSLFlip 𝕜).comp (B.comp (adjoint B))
@@ -90,7 +66,6 @@ theorem exists_lift (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q�
       nlinarith [norm_nonneg G]
     exact le_of_mul_le_mul_right this hpos
 
-/-- Under the inf-sup condition of `b`, `(ker B)ᗮ ⊆ R(B†)`. -/
 theorem exists_adjoint_eq_of_mem_orthogonal (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) {g : X} (hg : g ∈ B.kerᗮ) : ∃ p, adjoint B p = g := by
   obtain ⟨w, hw, -⟩ := exists_lift hβ hb (innerSLFlip 𝕜 (B g))
@@ -111,13 +86,10 @@ theorem exists_adjoint_eq_of_mem_orthogonal (hβ : 0 < β)
 /-! ### Brezzi's theorem -/
 
 omit [CompleteSpace X] in
-/-- The residual `F - a u` of an approximate first equation. -/
 private theorem norm_residual_le (F : X →L⋆[𝕜] 𝕜) (u : X) :
     ‖F - a u‖ ≤ ‖F‖ + ‖a‖ * ‖u‖ :=
   (norm_sub_le _ _).trans (by gcongr; exact a.le_opNorm u)
 
-/-- **Brezzi**, uniqueness: the inf-sup condition of `a` on `ker B` and of `b` force uniqueness.
-[QuennevilleBelair2015], Thm 4.11 -/
 theorem IsSaddleSolution.unique (hZ : InfSup (restrict a B.ker B.ker) γ)
     (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) {u u' : X} {p p' : Y}
     (h : IsSaddleSolution a B F G u p) (h' : IsSaddleSolution a B F G u' p') :
@@ -145,11 +117,8 @@ theorem IsSaddleSolution.unique (hZ : InfSup (restrict a B.ker B.ker) γ)
   rw [hv, norm_zero] at this
   exact sub_eq_zero.1 (norm_le_zero_iff.1 (by nlinarith [norm_nonneg (p - p')]))
 
-/-- **Brezzi's theorem** (Thm 4.11, corrected): if `a` restricted to `Z = ker B` has the inf-sup
-property and separates, and `β ‖q‖ ≤ ‖B† q‖`, the saddle point problem has a unique solution for
-all antilinear `F`, `G`. The thesis' inf-sup condition on `b` (inf over the first argument) is
-unsatisfiable when `Z ≠ 0`; the inf is over `q`, as in [Brezzi1974], to which the thesis
-attributes the theorem. [QuennevilleBelair2015], Thm 4.11 (corrected) -/
+/-- **Brezzi's theorem**: inf-sup and separation of `a` on `ker B` and `β ‖q‖ ≤ ‖B† q‖` give unique
+solvability. [QuennevilleBelair2015], Thm 4.11 (adapted); [Brezzi1974] -/
 theorem existsUnique_isSaddleSolution (hZ : InfSup (restrict a B.ker B.ker) γ)
     (hZs : SeparatingRight (restrict a B.ker B.ker)) (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) (F : X →L⋆[𝕜] 𝕜) (G : Y →L⋆[𝕜] 𝕜) :
@@ -183,8 +152,8 @@ theorem existsUnique_isSaddleSolution (hZ : InfSup (restrict a B.ker B.ker) γ)
   obtain ⟨e1, e2⟩ := IsSaddleSolution.unique hZ hβ hb hup hsol
   exact Prod.ext e1 e2
 
-/-- **Brezzi**, stability of `u`: `‖u‖ ≤ γ⁻¹ ‖F‖ + β⁻¹ (1 + ‖a‖/γ) ‖G‖`. [QuennevilleBelair2015], Thm 4.11;
-see [Brezzi1974]. -/
+/-- **Brezzi**, stability of `u`: `‖u‖ ≤ γ⁻¹ ‖F‖ + β⁻¹ (1 + ‖a‖/γ) ‖G‖`.
+[QuennevilleBelair2015], Thm 4.11; [Brezzi1974] -/
 theorem IsSaddleSolution.norm_fst_le (hZ : InfSup (restrict a B.ker B.ker) γ) (hβ : 0 < β)
     (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) {u : X} {p : Y} (h : IsSaddleSolution a B F G u p) :
     ‖u‖ ≤ γ⁻¹ * ‖F‖ + β⁻¹ * (1 + ‖a‖ / γ) * ‖G‖ := by
@@ -216,7 +185,7 @@ theorem IsSaddleSolution.norm_fst_le (hZ : InfSup (restrict a B.ker B.ker) γ) (
     _ = _ := by ring
 
 /-- **Brezzi**, stability of `p`: `‖p‖ ≤ β⁻¹ (‖F‖ + ‖a‖ ‖u‖)`. [QuennevilleBelair2015], Thm 4.11;
-see [Brezzi1974]. -/
+[Brezzi1974] -/
 theorem IsSaddleSolution.norm_snd_le (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) {u : X}
     {p : Y} (h : IsSaddleSolution a B F G u p) : ‖p‖ ≤ β⁻¹ * (‖F‖ + ‖a‖ * ‖u‖) := by
   set t := adjoint B p
@@ -235,9 +204,8 @@ theorem IsSaddleSolution.norm_snd_le (hβ : 0 < β) (hb : ∀ q, β * ‖q‖ �
   rw [le_inv_mul_iff₀ hβ]
   exact (hb p).trans ht
 
-/-- **Brezzi, equivalence**: the saddle point problem is uniquely solvable for all antilinear
-`F`, `G` iff `a` has the inf-sup property and separates on `Z = ker B` and `b` has the inf-sup
-property (inf over `q`). [QuennevilleBelair2015], Thm 4.11 (corrected); see [Brezzi1974]. -/
+/-- **Brezzi, equivalence**: unique solvability for all `F`, `G` iff Brezzi's conditions hold.
+[QuennevilleBelair2015], Thm 4.11 (adapted); [Brezzi1974] -/
 theorem brezzi_iff :
     ((∃ γ, InfSup (restrict a B.ker B.ker) γ) ∧ SeparatingRight (restrict a B.ker B.ker) ∧
       ∃ β, 0 < β ∧ ∀ q, β * ‖q‖ ≤ ‖adjoint B q‖) ↔
@@ -313,8 +281,6 @@ section Form
 
 variable {b : X →L[𝕜] Y →L⋆[𝕜] 𝕜}
 
-/-- `‖(rieszOp b)† q‖ = sup_v |b v q| / ‖v‖`: the inf-sup condition of `b` with the inf over `q`
-is `β ‖q‖ ≤ ‖(rieszOp b)† q‖`. -/
 theorem norm_adjoint_rieszOp_apply (q : Y) :
     ‖adjoint (rieszOp b) q‖ = ‖(b.flip q : X →L[𝕜] 𝕜)‖ := by
   have : (b.flip q : X →L[𝕜] 𝕜) = InnerProductSpace.toDual 𝕜 X (adjoint (rieszOp b) q) :=
@@ -323,9 +289,6 @@ theorem norm_adjoint_rieszOp_apply (q : Y) :
         inner_rieszOp]; rfl
   rw [this, LinearIsometryEquiv.norm_map]
 
-/-- The saddle point problem with constraint form `b`:
-`a u v + conj (b v p) = F v`, `b u q = G q`, the form `a(u, v) + b(v, p) = F(v)`, `b(u, q) = G(q)` of
-[QuennevilleBelair2015], Thm 4.11 and [Brezzi1974]. -/
 theorem isSaddleSolution_rieszOp_iff {u : X} {p : Y} :
     IsSaddleSolution a (rieszOp b) F G u p ↔
       (∀ v, a u v + star (b v p) = F v) ∧ ∀ q, b u q = G q := by

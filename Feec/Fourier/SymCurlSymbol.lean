@@ -3,27 +3,16 @@ module
 public import Feec.Fourier.GradCurlSymbol
 
 /-!
-# The symbol of the strong-symmetry complex (Thesis (4.16))
+# The symbol of the strong-symmetry complex
 
-The complex `H²(ℂ) --grad grad--> H(curl; S) --curl--> L²(T)` of Thesis (4.16), with `S` the
-symmetric and `T` the trace-free `3 × 3` matrices, has at a frequency `ξ ∈ ℝ³` the symbols
-`hess_ξ c = -c ξ ξᵀ` and the row-wise curl symbol restricted to symmetric matrices, which is
-trace-free (Lemma 3.5). Its adjoint complex (4.17) is `div div ← sym curl`.
-
-## Main results
-
-* `symSub`, `trSub`; `Sym = ↥symSub`, `Tr = ↥trSub` (Hilbert spaces with the Frobenius product).
-* `hess ξ : ℂ →L Sym`, `curlS ξ : Sym →L Tr`, `curlS_hess` (`curl grad grad = 0`).
-* `tsdS ξ ⊆ Sym`, `tsdT ξ ⊆ Tr`: the transverse–traceless fibres, and **`isFibreReducing`**:
-  `({0}, tsdS ξ, tsdT ξ)` reduces the fibre complex at every frequency (Lemma 3.5 on the symbol
-  and self-adjointness of the matrix curl).
-* `symCurl : FibreComplex ℂ ℝ³ ComplexShape.fin3 (W3 ℂ Sym Tr)`, homogeneous of degrees `2` and
-  `1`, with measurable fibre projections.
+The symbols `hess_ξ c = -c ξ ξᵀ` and `curl_ξ : S → T` at a frequency `ξ ∈ ℝ³` of the complex
+`H²(ℂ) --grad grad--> H(curl; S) --curl--> L²(T)` of [QuennevilleBelair2015], (4.16), with `S` and
+`T` the symmetric and trace-free matrices; the transverse–traceless fibres reduce it, and it has
+fibre gaps at `|ξ| ≥ 2π`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Lemma 3.5), §4.11 (Prop 4.19, (4.16)–(4.18))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -57,8 +46,7 @@ def trSub : Submodule ℂ Mat where
     simp only [Set.mem_ofPred_eq] at hM ⊢
     simp [← mul_sum, hM]
 
-/-- The fibre `S` of symmetric matrices (a type synonym of `↥symSub`, with its Hilbert space
-structure declared once, so that instance search never unfolds the submodule). -/
+/-- The fibre `S` of symmetric matrices. -/
 def Sym : Type := ↥symSub
 /-- The fibre `T` of trace-free matrices. -/
 def Tr : Type := ↥trSub
@@ -119,8 +107,7 @@ theorem tsd_le_trSub (ξ : Freq) : tsd ξ ≤ trSub := fun M hM => by
 
 /-! ### The symbols -/
 
-/-- The Hessian symbol `hess_ξ c = -c ξ ξᵀ` (`(grad grad u)_{ab} = ∂_a ∂_b u`), as
-`grad_ξ (i c ξ)`. -/
+/-- The Hessian symbol `hess_ξ c = -c ξ ξᵀ`, with `(grad grad u)_{ab} = ∂_a ∂_b u`. -/
 def hessM (ξ : Freq) : ℂ →L[ℂ] Mat :=
   grad ξ ∘L (ContinuousLinearMap.smulRight (1 : ℂ →L[ℂ] ℂ)
     (WithLp.toLp 2 fun a => Complex.I * (ξ a : ℂ) : Vec))
@@ -140,7 +127,6 @@ def hess (ξ : Freq) : ℂ →L[ℂ] Sym := (hessM ξ).codRestrict symSub (hessM
 
 @[simp] theorem coe_hess (ξ : Freq) (c : ℂ) : (hess ξ c : Mat) = hessM ξ c := rfl
 
-/-- The curl symbol maps symmetric matrices to trace-free ones. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem curl_mem_trSub (ξ : Freq) {M : Mat} (hM : M ∈ symSub) : curl ξ M ∈ trSub := by
   have hs : ∀ c, (MatrixSymbol.symbolJet (cfreq ξ) (toMatrix M) c)ᵀ =
       MatrixSymbol.symbolJet (cfreq ξ) (toMatrix M) c := fun c => by
@@ -158,7 +144,6 @@ def curlS (ξ : Freq) : Sym →L[ℂ] Tr :=
 
 @[simp] theorem coe_curlS (ξ : Freq) (M : Sym) : (curlS ξ M : Mat) = curl ξ M := rfl
 
-/-- **`curl_ξ hess_ξ = 0`**. -/
 theorem curlS_hess (ξ : Freq) (c : ℂ) : curlS ξ (hess ξ c) = 0 := by
   apply Subtype.ext
   change curl ξ (hessM ξ c) = 0
@@ -177,7 +162,7 @@ theorem inner_hess_eq_zero {ξ : Freq} {M : Sym} (hM : M ∈ tsdS ξ) (c : ℂ) 
   rw [Sym.inner_val, coe_hess]
   exact inner_grad_eq_zero hM _
 
-/-- Orthogonal complements in `S` (with the inner-product module structure). -/
+/-- Orthogonal complements in `S`. -/
 abbrev orthS (K : Submodule ℂ Sym) : Submodule ℂ Sym := Submodule.orthogonal (𝕜 := ℂ) (E := Sym) K
 
 /-- Orthogonal complements in `T`. -/
@@ -247,7 +232,7 @@ def sym : ∀ i j : Fin 3, Freq → W3 ℂ Sym Tr i →L[ℂ] W3 ℂ Sym Tr j
   | _, _ => 0
 
 open ShortHilbertComplex in
-/-- **The strong-symmetry family** `ℂ --hess_ξ--> S --curl_ξ--> T` (Thesis (4.16)). -/
+/-- The fibre complex `ℂ --hess_ξ--> S --curl_ξ--> T` ([QuennevilleBelair2015], (4.16)). -/
 def symCurl : FibreComplex ℂ Freq ComplexShape.fin3 (W3 ℂ Sym Tr) where
   m := sym
   shape i j h := by
@@ -272,7 +257,7 @@ theorem symCurl_isHomogeneous12 : symCurl.IsHomogeneous 1 2 1 := fun t ξ _ => b
   rw [symCurl_m12, symCurl_m12, curlS_smul, pow_one]; rfl
 
 open ShortHilbertComplex in
-/-- **The constraint fibres** `({0}, tsd ξ ∩ S, tsd ξ ∩ T)` (Thesis Prop 4.19). -/
+/-- The constraint fibres `({0}, tsd ξ ∩ S, tsd ξ ∩ T)` ([QuennevilleBelair2015], Prop 4.19). -/
 def tsdK : ∀ i : Fin 3, Freq → Submodule ℂ (W3 ℂ Sym Tr i)
   | 0 => fun _ => ⊥
   | 1 => tsdS
@@ -281,8 +266,8 @@ def tsdK : ∀ i : Fin 3, Freq → Submodule ℂ (W3 ℂ Sym Tr i)
 instance (i : Fin 3) (ξ : Freq) : (tsdK i ξ).HasOrthogonalProjection := by
   fin_cases i <;> infer_instance
 
-/-- **`({0}, tsdS ξ, tsdT ξ)` reduces the strong-symmetry fibre complex at every frequency.**
-[QuennevilleBelair2015], Lemma 3.5, Prop 4.19 -/
+/-- `({0}, tsdS ξ, tsdT ξ)` reduces the strong-symmetry fibre complex at every frequency
+([QuennevilleBelair2015], Lemma 3.5, Prop 4.19). -/
 theorem isFibreReducing : symCurl.IsFibreReducing tsdK := by
   refine FibreComplex.IsFibreReducing.of_orthogonal (fun i j ξ => ?_) (fun i j ξ => ?_)
   · fin_cases i <;> fin_cases j
@@ -299,7 +284,6 @@ theorem isFibreReducing : symCurl.IsFibreReducing tsdK := by
 
 /-! ### Measurability of the fibre projections -/
 
-/-- The projection onto a subspace `K ≤ U` of a subspace `U`, computed in the ambient space. -/
 theorem coe_starProjection_comap {U K : Submodule ℂ Mat} (h : K ≤ U) (x : U) :
     ((Submodule.starProjection (𝕜 := ℂ) (E := U) (K.comap U.subtype) x : U) : Mat) =
       K.starProjection (x : Mat) := by
@@ -312,7 +296,6 @@ theorem coe_starProjection_comap {U K : Submodule ℂ Mat} (h : K ≤ U) (x : U)
   have := (Submodule.mem_orthogonal' (𝕜 := ℂ) (E := U) _ _).1 h1 ⟨w, h hw⟩ hw
   rwa [Submodule.coe_inner] at this
 
-/-- `P_{tsdS ξ} = P_S P_{tsd ξ} ι` (a continuous function of `P_{tsd ξ}`). -/
 theorem starProjection_tsdS (ξ : Freq) :
     Submodule.starProjection (𝕜 := ℂ) (E := Sym) (tsdS ξ) =
       symSub.orthogonalProjectionOnto ∘L (tsd ξ).starProjection ∘L symSub.subtypeL := by
@@ -342,8 +325,6 @@ theorem aestronglyMeasurable_starProjection_tsd {α : Type*} [MeasurableSpace α
   have : SecondCountableTopology (Mat →L[ℂ] Mat) := secondCountable_of_proper
   exact (measurable_starProjection_tsd.comp hf).aestronglyMeasurable
 
-/-- The fibre projections of the strong-symmetry constraint are measurable along any measurable
-frequency map. -/
 theorem aestronglyMeasurable_starProjection_tsdK {α : Type*} [MeasurableSpace α]
     {μ : MeasureTheory.Measure α} {f : α → Freq} (hf : Measurable f) (i : Fin 3) :
     MeasureTheory.AEStronglyMeasurable (fun a => (tsdK i (f a)).starProjection) μ := by
@@ -437,7 +418,6 @@ def cjW3 : ∀ i : Fin 3, W3 ℂ Sym Tr i →L[ℝ] W3 ℂ Sym Tr i
   | 2 => cjT
 
 open ShortHilbertComplex in
-/-- **The strong-symmetry symbols are real.** -/
 theorem symCurl_neg_cj (i j : Fin 3) (ξ : Freq) (v : W3 ℂ Sym Tr i) :
     symCurl.m i j (-ξ) (cjW3 i v) = cjW3 j (symCurl.m i j ξ v) := by
   fin_cases i <;> fin_cases j
@@ -477,7 +457,6 @@ theorem norm_cvec (ξ : Freq) : ‖cvec ξ‖ = ‖ξ‖ := by
   refine Finset.sum_congr rfl fun a _ => ?_
   simp [cvec, Complex.norm_real]
 
-/-- `‖hess_ξ c‖ = |ξ|² |c|`. -/
 theorem norm_hessM (ξ : Freq) (c : ℂ) : ‖hessM ξ c‖ = ‖ξ‖ ^ 2 * ‖c‖ := by
   have e : hessM ξ c = grad ξ ((Complex.I * c) • cvec ξ) := by
     ext ⟨a, b⟩
@@ -488,7 +467,6 @@ theorem norm_hessM (ξ : Freq) (c : ℂ) : ‖hessM ξ c‖ = ‖ξ‖ ^ 2 * ‖
   rw [e, norm_grad, norm_smul, norm_mul, Complex.norm_I, one_mul, norm_cvec]
   ring
 
-/-- **Cauchy–Schwarz** for a real frequency against a complex vector. -/
 theorem norm_sum_mul_sq_le (ξ : Freq) (z : Fin 3 → ℂ) :
     ‖∑ a, (ξ a : ℂ) * z a‖ ^ 2 ≤ ‖ξ‖ ^ 2 * ∑ a, ‖z a‖ ^ 2 := by
   have h := norm_inner_le_norm (𝕜 := ℂ) (cvec ξ) (WithLp.toLp 2 z : Vec)
@@ -501,7 +479,6 @@ theorem norm_sum_mul_sq_le (ξ : Freq) (z : Fin 3 → ℂ) :
         pow_le_pow_left₀ (norm_nonneg _) h 2
     _ = ‖ξ‖ ^ 2 * ∑ a, ‖z a‖ ^ 2 := by rw [mul_pow, hz]
 
-/-- Lagrange's identity for a real frequency and a complex vector. -/
 theorem lagrange_cross (ξ : Freq) (w : Fin 3 → ℂ) :
     ∑ b, ‖∑ c, ∑ d, leviCivita3 ℂ b c d * ((ξ c : ℂ) * w d)‖ ^ 2 + ‖∑ a, (ξ a : ℂ) * w a‖ ^ 2 =
       ‖ξ‖ ^ 2 * ∑ a, ‖w a‖ ^ 2 := by
@@ -511,7 +488,6 @@ theorem lagrange_cross (ξ : Freq) (w : Fin 3 → ℂ) :
   simp
   ring
 
-/-- **The key inequality**: for a symmetric matrix with `ξᵀ A ξ = 0`, `|A ξ| ≤ ‖curl_ξ A‖`. -/
 theorem norm_div_le_norm_curl {ξ : Freq} {M : Mat} (hM : M ∈ symSub)
     (h0 : ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * M (a, b) = 0) : ‖div ξ M‖ ≤ ‖curl ξ M‖ := by
   set w : Fin 3 → ℂ := fun a => ∑ b, M (a, b) * (ξ b : ℂ)
@@ -554,7 +530,6 @@ theorem norm_div_le_norm_curl {ξ : Freq} {M : Mat} (hM : M ∈ symSub)
     rw [← hdiv] at h2
     exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 h2
 
-/-- For a symmetric matrix with `ξᵀ A ξ = 0`: `|ξ| ‖A‖ ≤ 2 ‖curl_ξ A‖`. -/
 theorem mul_norm_le_two_norm_curl {ξ : Freq} {M : Mat} (hM : M ∈ symSub)
     (h0 : ∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * M (a, b) = 0) : ‖ξ‖ * ‖M‖ ≤ 2 * ‖curl ξ M‖ := by
   have hkey := norm_div_le_norm_curl hM h0
@@ -564,7 +539,6 @@ theorem mul_norm_le_two_norm_curl {ξ : Freq} {M : Mat} (hM : M ∈ symSub)
       pow_le_pow_left₀ (norm_nonneg _) hkey 2]
   exact (sq_le_sq₀ (by positivity) (by positivity)).1 h2
 
-/-- `ξᵀ A ξ = -⟪hess_ξ 1, A⟫`. -/
 theorem inner_hessM_one (ξ : Freq) (M : Mat) :
     ⟪hessM ξ 1, M⟫_ℂ = -∑ a, ∑ b, (ξ a : ℂ) * (ξ b : ℂ) * M (a, b) := by
   rw [inner_mat, ← Finset.sum_neg_distrib]
@@ -573,8 +547,6 @@ theorem inner_hessM_one (ξ : Freq) (M : Mat) :
   refine Finset.sum_congr rfl fun b _ => ?_
   rw [hessM_apply]; simp
 
-/-- **The fibre gap of the curl on symmetric matrices**: `|ξ| ‖v‖ ≤ 2 ‖curl_ξ v‖` on `N(curl_ξ)ᗮ`
-(in `S`). -/
 theorem mul_norm_le_norm_curlS {ξ : Freq} {v : Sym}
     (hv : v ∈ Submodule.orthogonal (𝕜 := ℂ) (E := Sym) (LinearMap.ker (curlS ξ : Sym →ₗ[ℂ] Tr))) :
     ‖ξ‖ * ‖v‖ ≤ 2 * ‖curlS ξ v‖ := by
@@ -621,8 +593,7 @@ theorem mul_norm_le_norm_curlS {ξ : Freq} {v : Sym}
   · rfl
 
 open ShortHilbertComplex in
-/-- **The fibre gaps of the strong-symmetry complex at the torus frequencies**: `‖v‖ ≤ ‖m_ξ v‖`
-on `N(m_ξ)ᗮ` for `|ξ| ≥ 2π`, for every arrow. -/
+/-- For every arrow, `‖v‖ ≤ ‖m_ξ v‖` on `N(m_ξ)ᗮ` for `|ξ| ≥ 2π`. -/
 theorem symCurl_gap (i j : Fin 3) {ξ : Freq} (hξ : 2 * Real.pi ≤ ‖ξ‖) :
     ∀ v ∈ (LinearMap.ker (symCurl.m i j ξ : W3 ℂ Sym Tr i →ₗ[ℂ] W3 ℂ Sym Tr j))ᗮ,
       ‖v‖ ≤ 1 * ‖symCurl.m i j ξ v‖ := by

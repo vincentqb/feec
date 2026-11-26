@@ -8,31 +8,13 @@ public import Mathlib.Topology.Order.ProjIcc
 /-!
 # Lipschitz fields have `H¹(ℝⁿ)` data
 
-A compactly supported Lipschitz function `F : ℝⁿ → ℝ` has weak first derivatives, its line
-derivatives `∂ₘF` (defined almost everywhere by Rademacher's theorem), bounded by the Lipschitz
-constant: `∫ F ∂ₘφ = -∫ (∂ₘF) φ` for every test function `φ`
-(`integral_mul_fderiv_eq_of_lipschitzWith`, from Mathlib's
-`LipschitzWith.integral_lineDeriv_mul_eq`). So a field of `L²(Ω; ℝ^ι)` that is almost
-everywhere on `Ω` the restriction of compactly supported Lipschitz functions, bounded by `A` with
-Lipschitz constant `K` and supported in a set of volume `V`, has `H¹(ℝⁿ)` data with bound
-`max A K · √V` (`H1Data.ofLipschitz`).
+Fields that are a.e. restrictions of compactly supported Lipschitz functions on `ℝⁿ` have
+`H¹(ℝⁿ)` data, as do `C¹` functions bounded with their derivatives on a closed cube.
 
-On a closed cube `B = closedBall x₀ r` (a closed ball of the sup norm of `Fin n → ℝ`, the cube
-`∏ᵢ [x₀ᵢ - r, x₀ᵢ + r]`), a `C¹` function `f` on `ℝⁿ` whose values and first derivatives are
-bounded by `L` on `B` agrees there with `χ · (f ∘ ρ)`, `ρ` the nearest-point retraction onto `B`
-(`ballRetract`: each coordinate clamped) and `χ` a bump equal to `1` on `B` and supported in
-`closedBall x₀ (2 r)`; this function is Lipschitz with constant `c L`, so the fields of
-`L²(Ω; ℝ^ι)`, `Ω ⊆ B`, that are restrictions of such functions have `H¹(ℝⁿ)` data with bound
-`c L`, `c` depending only on `n` and `r` (`exists_h1Data_closedBall`). In particular the `C²`
-classes with bounded first derivatives on a closed cube (for instance `C²` forms on `(0, ½)ⁿ`
-with vanishing tangential traces, the classes of the `C²` rates of the finite element methods on
-the cube) lie in the `H¹` classes.
+## Main results
 
-## References
-
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2, §5.8
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `H1Data.ofLipschitz`: fields of compactly supported Lipschitz functions have `H¹(ℝⁿ)` data.
+* `exists_h1Data_closedBall`: the bound on a closed cube.
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace NNReal ContDiff
@@ -46,8 +28,6 @@ variable {n : ℕ}
 
 /-! ### Weak derivatives of Lipschitz functions -/
 
-/-- **Weak derivatives of a Lipschitz function**: `∫ F ∂ₘφ = -∫ (∂ₘF) φ` for every test function
-`φ`, with `∂ₘF = lineDeriv ℝ F · eₘ`. -/
 theorem integral_mul_fderiv_eq_of_lipschitzWith {F : (Fin n → ℝ) → ℝ} {K : ℝ≥0}
     (hF : LipschitzWith K F) {φ : (Fin n → ℝ) → ℝ} (hφ : IsTest univ φ) (m : Fin n) :
     ∫ y, F y * fderiv ℝ φ y (coordDir m) = -∫ y, lineDeriv ℝ F y (coordDir m) * φ y := by
@@ -59,7 +39,6 @@ theorem integral_mul_fderiv_eq_of_lipschitzWith {F : (Fin n → ℝ) → ℝ} {K
       rw [(hφ.differentiable y).lineDeriv_eq_fderiv, map_neg]; ring
   simp_rw [e, integral_neg, neg_neg]
 
-/-- The line derivatives of a function vanish off its topological support. -/
 theorem lineDeriv_eq_zero_of_notMem_tsupport {F : (Fin n → ℝ) → ℝ} {y v : Fin n → ℝ}
     (hy : y ∉ tsupport F) : lineDeriv ℝ F y v = 0 := by
   have h : F =ᶠ[𝓝 y] fun _ => 0 := by
@@ -69,7 +48,6 @@ theorem lineDeriv_eq_zero_of_notMem_tsupport {F : (Fin n → ℝ) → ℝ} {y v 
     (hasFDerivAt_const (0 : ℝ) y).congr_of_eventuallyEq h
   simpa using hd.hasLineDerivAt v |>.lineDeriv
 
-/-- `‖toLp f‖ ≤ A √V` for `|f| ≤ A` supported in a set of volume `V`. -/
 theorem norm_toLp_le_of_bound {f : (Fin n → ℝ) → ℝ} (hf : MemLp f 2 volume) {S : Set (Fin n → ℝ)}
     (hS : MeasurableSet S) (hSf : ∀ y ∉ S, f y = 0) {A : ℝ} (hA : ∀ y, |f y| ≤ A)
     (hV : volume S < ⊤) : ‖hf.toLp f‖ ≤ A * √(volume.real S) := by
@@ -93,10 +71,7 @@ theorem norm_toLp_le_of_bound {f : (Fin n → ℝ) → ℝ} (hf : MemLp f 2 volu
     rw [hsq, mul_pow, Real.sq_sqrt measureReal_nonneg]; linarith
   exact (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 h2
 
-/-- **Fields of compactly supported Lipschitz functions have `H¹(ℝⁿ)` data.** If, for every
-component `i`, `u_i` agrees almost everywhere on `Ω` with `F_i`, `|F_i| ≤ A`, `F_i` is
-`K`-Lipschitz and vanishes off a compact set `S`, then `u` has `H¹(ℝⁿ)` data with bound
-`max A K · √|S|`, the weak derivatives being the line derivatives `∂ₘF_i`. -/
+/-- **`H¹(ℝⁿ)` data of fields of compactly supported Lipschitz functions.** -/
 def H1Data.ofLipschitz {Ω : Set (Fin n → ℝ)} {ι : Type*} {u : L2F ℝ Ω ι}
     (F : ι → (Fin n → ℝ) → ℝ) {K : ℝ≥0} (hF : ∀ i, LipschitzWith K (F i))
     {S : Set (Fin n → ℝ)} (hS : IsCompact S) (hSF : ∀ i, ∀ y ∉ S, F i y = 0) {A : ℝ}
@@ -144,8 +119,7 @@ def H1Data.ofLipschitz {Ω : Set (Fin n → ℝ)} {ι : Type*} {u : L2F ℝ Ω �
 
 /-! ### Closed cubes -/
 
-/-- **The nearest-point retraction onto the closed cube `closedBall x₀ r`** of the sup norm (the
-cube `∏ᵢ [x₀ᵢ - r, x₀ᵢ + r]`): each coordinate clamped to `[x₀ᵢ - r, x₀ᵢ + r]`. -/
+/-- **The nearest-point retraction onto the closed cube `closedBall x₀ r`** of the sup norm. -/
 def ballRetract (x₀ : Fin n → ℝ) (r : ℝ) (y : Fin n → ℝ) : Fin n → ℝ :=
   fun i => max (min (y i) (x₀ i + r)) (x₀ i - r)
 
@@ -179,11 +153,7 @@ theorem lipschitzWith_ballRetract (x₀ : Fin n → ℝ) (r : ℝ) :
   rw [sub_self, abs_zero, max_eq_left (abs_nonneg _), ← Real.dist_eq]
   exact dist_le_pi_dist y z i
 
-/-- **`C¹` functions bounded with their derivative on a closed cube have `H¹(ℝⁿ)` data with a
-uniform constant**: on the cube `B = closedBall x₀ r` of the sup norm, `r > 0`, for every family
-`f` of `C¹` functions on `ℝⁿ` with `|f_i| ≤ L` and `‖Df_i‖ ≤ L` on `B`, a field of `L²(Ω; ℝ^ι)`,
-`Ω ⊆ B`, equal to `f` almost everywhere on `Ω` has `H¹(ℝⁿ)` data with bound `c L`; `c` depends
-only on `n` and `r`. -/
+/-- **`C¹` functions bounded with their derivative on a closed cube have `H¹(ℝⁿ)` data.** -/
 theorem exists_h1Data_closedBall (x₀ : Fin n → ℝ) {r : ℝ} (hr : 0 < r) :
     ∃ c : ℝ, 0 ≤ c ∧ ∀ {ι : Type*} {Ω : Set (Fin n → ℝ)}, MeasurableSet Ω →
     Ω ⊆ Metric.closedBall x₀ r → ∀ {u : L2F ℝ Ω ι} (f : ι → (Fin n → ℝ) → ℝ) {L : ℝ},

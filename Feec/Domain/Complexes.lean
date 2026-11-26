@@ -7,43 +7,14 @@ public import Feec.HilbertComplex.Dual
 /-!
 # Hilbert complexes of constant-coefficient operators on a domain
 
-A sequence of constant-coefficient operators `A k : 𝕜^{ι k} → 𝕜^{ι (k+1)}` with
-`A (k+1) ∘ A k = 0` on smooth fields (`Feec.Domain.ConstCoeffComplex`) gives two Hilbert
-complexes on any open `Ω ⊆ E`, of any length:
-
-* the **minimal complex** (`minimalComplex`, "`H̊`", the electric / Dirichlet boundary
-  conditions): `d k = (A k)_min`;
-* the **maximal complex** (`maximalComplex`, "`H`", no boundary condition): `d k = (A k)_max`;
-
-and the two families are dual to each other: the adjoint of the minimal complex is the maximal
-complex of the formal adjoints and vice versa (`dual_minimalComplex_d`, `dual_maximalComplex_d`).
-The three-term versions are `ShortHilbertComplex`es (`ConstCoeffOp.shortMinimal`,
-`ConstCoeffOp.shortMaximal`).
-
-Instances on `ℝⁿ` (`Feec.Domain.Ops`): grad, the row-wise curl, grad–curl–div, the Hessian; the
-bounded-domain models of the thesis are minimal complexes
-(`Feec.Models.BoundedDomain.GradCurl`).
+A complex of constant-coefficient operators gives on every open `Ω ⊆ E` a minimal complex
+`d k = (A k)_min` and a maximal complex `d k = (A k)_max`; the dual of the minimal complex is the
+maximal complex of the formal adjoints, and conversely.
 
 ## Main results
 
-* `ConstCoeffOp.minimal_mapsTo`, `minimal_comp`: `R((A)_min) ⊆ N((B)_min)` when `B A = 0`
-  (closure argument);
-* `ConstCoeffOp.maximal_mapsTo`, `maximal_comp`: `R((A)_max) ⊆ N((B)_max)` (distributional
-  `Aᵗ Bᵗ = 0`, `formalAdj_comp_testField`);
-* `ConstCoeffComplex.minimalComplex`, `maximalComplex`, and their duality;
-* `ConstCoeffComplex.maximalComplex_comm`: maps intertwining the maximal operators degree by
-  degree are cochain maps of the maximal complexes, also across fields.
-
-## References
-
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (the two boundary-condition
-  families and their duality)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (minimal and maximal ideal boundary
-  conditions)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffComplex.dual_minimalComplex_d`, `ConstCoeffComplex.dual_maximalComplex_d`: duality.
+* `ConstCoeffComplex.maximalComplex_comm`: intertwining maps are cochain maps of maximal complexes.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate LinearPMap
@@ -67,7 +38,6 @@ def IsComplexPair : Prop :=
 
 variable {A B}
 
-/-- `R(A_min) ⊆ D(B_min)` and `B_min A_min = 0`, as a graph membership. -/
 theorem minimal_graph_mem (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) (x : (A.minimal Ω).domain) :
     (A.minimal Ω x, (0 : L2F 𝕜 Ω μ)) ∈ (B.minimal Ω).graph := by
   let S : Set (L2F 𝕜 Ω ι × L2F 𝕜 Ω κ) := {p | (p.2, (0 : L2F 𝕜 Ω μ)) ∈ (B.minimal Ω).graph}
@@ -90,7 +60,6 @@ theorem minimal_comp (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) (x : (A.minimal
     B.minimal Ω ⟨_, minimal_mapsTo hΩ hAB x⟩ = 0 :=
   ((LinearPMap.image_iff _).2 (minimal_graph_mem hΩ hAB x)).symm
 
-/-- The formal adjoints compose to zero in `L²(Ω)`: `Aᵗ Bᵗ ψ = 0` for `ψ ∈ C_c^∞(Ω)`. -/
 theorem formalAdj_comp_testField (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) {ψ : μ → E → 𝕜}
     (hψ : IsTestField Ω ψ) :
     testField (A.formalAdj.isTestField_apply (B.formalAdj.isTestField_apply hψ)) = 0 := by
@@ -102,7 +71,6 @@ theorem formalAdj_comp_testField (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) {ψ
   rw [h0, inner_zero_left] at e2
   rw [← inner_conj_symm, ← e1, ← e2, map_zero]
 
-/-- `R(A_max) ⊆ D(B_max)` and `B_max A_max = 0`. -/
 theorem maximal_mapsTo_and_comp (hΩ : IsOpen Ω) (hAB : IsComplexPair A B)
     (x : (A.maximal Ω).domain) :
     ∃ h : (A.maximal Ω x : L2F 𝕜 Ω κ) ∈ (B.maximal Ω).domain, B.maximal Ω ⟨_, h⟩ = 0 := by
@@ -123,8 +91,7 @@ theorem maximal_comp (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) (x : (A.maximal
   (maximal_mapsTo_and_comp hΩ hAB x).2
 
 variable (A B) in
-/-- The short **minimal** complex `L²(Ω; 𝕜^ι) --A_min--> L²(Ω; 𝕜^κ) --B_min--> L²(Ω; 𝕜^μ)`
-(the `H̊` boundary conditions). -/
+/-- The short **minimal** complex `A_min`, `B_min` (the `H̊` boundary conditions). -/
 def shortMinimal (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) :
     ShortHilbertComplex 𝕜 (L2F 𝕜 Ω ι) (L2F 𝕜 Ω κ) (L2F 𝕜 Ω μ) where
   d₀ := A.minimal Ω
@@ -137,8 +104,7 @@ def shortMinimal (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) :
   comp := minimal_comp hΩ hAB
 
 variable (A B) in
-/-- The short **maximal** complex `L²(Ω; 𝕜^ι) --A_max--> L²(Ω; 𝕜^κ) --B_max--> L²(Ω; 𝕜^μ)`
-(no boundary conditions). -/
+/-- The short **maximal** complex `A_max`, `B_max` (no boundary conditions). -/
 def shortMaximal (hΩ : IsOpen Ω) (hAB : IsComplexPair A B) :
     ShortHilbertComplex 𝕜 (L2F 𝕜 Ω ι) (L2F 𝕜 Ω κ) (L2F 𝕜 Ω μ) where
   d₀ := A.maximal Ω
@@ -167,14 +133,10 @@ end ConstCoeffOp
 /-! ## Complexes of any length -/
 
 variable (E 𝕜) in
-/-- A complex of constant-coefficient operators indexed by `ℤ`: component types `ι k` and
-operators `A k : 𝕜^{ι k} → 𝕜^{ι (k+1)}` with `A (k+1) ∘ A k = 0` on smooth fields. Finite
-complexes are padded with empty component types. -/
+/-- A complex of constant-coefficient operators `A k : 𝕜^{ι k} → 𝕜^{ι (k+1)}`, indexed by `ℤ`. -/
 structure ConstCoeffComplex where
-  /-- the component index types -/
   ι : ℤ → Type
   [fintype : ∀ k, Fintype (ι k)]
-  /-- the operators -/
   A : ∀ k, ConstCoeffOp E 𝕜 (ι k) (ι (k + 1))
   comp : ∀ k, (A k).IsComplexPair (A (k + 1))
 
@@ -206,10 +168,7 @@ theorem maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     (C.maximalComplex hΩ).d k (k + 1) = (C.A k).maximal Ω :=
   HilbertComplex.ofSuccD_succ (fun k => (C.A k).maximal Ω) k
 
-/-- **Maps intertwining the maximal operators in each degree are cochain maps of the maximal
-complexes**: if `T_k D(A_k max) ⊆ D(A'_k max)` and `A'_k max T_k = T_{k+1} A_k max`, then
-`T_j D(d_max) ⊆ D(d'_max)` and `d'_max T_j = T_k d_max` (the two complexes may be over different
-fields and domains, e.g. `T` the real part of complex fields, or a pullback). -/
+/-- **Degreewise intertwining maps are cochain maps of the maximal complexes.** -/
 theorem maximalComplex_comm {𝕜₁ 𝕜₂ : Type*} [RCLike 𝕜₁] [RCLike 𝕜₂] {Ω' : Set E}
     (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') {C : ConstCoeffComplex E 𝕜₁} {C' : ConstCoeffComplex E 𝕜₂}
     {T : ∀ k, L2F 𝕜₁ Ω (C.ι k) → L2F 𝕜₂ Ω' (C'.ι k)}
@@ -228,8 +187,7 @@ theorem maximalComplex_comm {𝕜₁ 𝕜₂ : Type*} [RCLike 𝕜₁] [RCLike �
     hv).trans ?_⟩
   exact congrArg _ (LinearPMap.apply_eq_of_eq (C.maximalComplex_d hΩ j) x ⟨_, hx⟩ rfl).symm
 
-/-- **Duality of the two boundary-condition families**: the dual of the minimal complex is the
-maximal complex of the formal adjoints, `(d_min)ᵏ† = (A kᵗ)_max`. -/
+/-- **Duality**: the dual of the minimal complex is the maximal complex of the formal adjoints. -/
 theorem dual_minimalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     (C.minimalComplex hΩ).dual.d (k + 1) k = (C.A k).formalAdj.maximal Ω := by
   rw [HilbertComplex.dual_d, minimalComplex_d, ConstCoeffOp.adjoint_minimal]

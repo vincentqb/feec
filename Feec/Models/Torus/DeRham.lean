@@ -8,44 +8,16 @@ public import Feec.Fourier.TorusWeak
 /-!
 # The `L²` de Rham complex of the torus `𝕋ᵈ`, in every dimension and degree
 
-The de Rham complex `L²Λ⁰(𝕋ᵈ) → L²Λ¹(𝕋ᵈ) → ⋯ → L²Λᵈ(𝕋ᵈ)` with its maximal (weak) domains, on the
-Fourier side: `k`-forms are `ℓ²(ℤᵈ; Λᵏ)` and the exterior derivative is the multiplier
-`d_ξ = i ξ ∧ ·` at `ξ = 2πk` (`Feec.Fourier.Exterior.deRham`). This is the torus model of the
-abstract theory: every result of `Feec.HilbertComplex` (Hodge decomposition, Hodge wave equation,
-constraint propagation) applies to it.
+The de Rham complex `L²Λ⁰(𝕋ᵈ) → ⋯ → L²Λᵈ(𝕋ᵈ)` with its maximal domains, on the Fourier side: it has
+closed range, its harmonic forms are the constant forms, and its window has the compactness
+property.
 
 ## Main results
 
-* `DeRham.complex d`: the Hilbert complex, on `ComplexShape.up ℤ` (the spaces of the degrees
-  `k < 0` and `k > #d` are zero).
-* **`closedRangeAt`**, `dual_closedRangeAt`: closed range in every degree, with the sharp
-  **Poincaré inequality** `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d) ∩ N(d)ᗮ` (`norm_le_of_mem_orthogonal`),
-  from the fibre identity `‖d_ξ v‖ = |ξ| ‖v‖` on `N(d_ξ)ᗮ` and `|2πk| ≥ 2π`.
-* **`mem_harmonic_iff`**: the harmonic `k`-forms are the constant forms (only the zero mode);
-  `harmonicEquiv : ℌᵏ ≃ₗ Λᵏ`, so `ℌᵏ` is finite-dimensional with `finrank_harmonic :
-  dim ℌᵏ = (#d choose k)`, and **`cohomologyEquiv : Hᵏ(𝕋ᵈ) ≃ₗ Λᵏ`** with
-  `finrank_cohomology : dim Hᵏ(𝕋ᵈ) = (#d choose k)` (the Betti numbers of the torus).
-* `window d`: the full complex `Λ⁰ → ⋯ → Λᵈ` on `Fin (d + 1)`; **`window_hasCompactProperty`**
-  (Rellich on `𝕋ᵈ`, from the fibre Cartan identity `window_cartan`) and **`window_eigenDense`**:
-  the Hodge wave group of the torus de Rham complex has a dense set of eigenvectors (discrete
-  spectrum).
-* `windowReal`: the real structure of the window (real forms have `ω̂(-k) = conj ω̂(k)`).
-* **`mem_graph_iff_isWeak`**: the multiplier `d` is the weak exterior derivative of `L²` forms on
-  `𝕋ᵈ`, through their Fourier coefficients (`Fourier.Torus.fieldFourier`), tested against all
-  smooth functions (`Feec.Fourier.TorusWeak`); coefficientwise (`isWeak_deRham_iff`), `w = d u`
-  weakly iff `∫ w_s φ = -Σ_{j ∈ s} ε(j, s) ∫ u_{s ∖ j} ∂_j φ` for every `(k + 1)`-subset `s` and
-  every smooth `φ`.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
-  (the de Rham complex as a Hilbert complex)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (the de Rham complex as a Hilbert
-  complex)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `norm_le_of_mem_orthogonal`: the Poincaré inequality `‖u‖ ≤ (2π)⁻¹ ‖d u‖`.
+* `finrank_cohomology`: `dim Hᵏ(𝕋ᵈ) = (#d choose k)`.
+* `window_eigenDense`: the Hodge wave group has a dense set of eigenvectors.
+* `mem_graph_iff_isWeak`: `d` is the weak exterior derivative.
 -/
 
 @[expose] public noncomputable section
@@ -60,13 +32,12 @@ variable (d : Type*) [Fintype d] [LinearOrder d]
 /-- `L²` `k`-forms on `𝕋ᵈ`, by their Fourier coefficients `ℓ²(ℤᵈ; Λᵏ)`. -/
 abbrev L2Form (k : ℤ) : Type _ := Lp (Form ℂ d k) 2 (Measure.count : Measure (d → ℤ))
 
-/-- **The `L²` de Rham complex of `𝕋ᵈ`** (Fourier coefficients). -/
+/-- The `L²` de Rham complex of `𝕋ᵈ`, by Fourier coefficients. -/
 abbrev complex : HilbertComplex ℂ (ComplexShape.up ℤ) (L2Form d) :=
   Fourier.Torus.complex (deRham d)
 
 variable {d}
 
-/-- The fibre gap of every arrow at the torus frequencies `|ξ| ≥ 2π`. -/
 theorem gap (i j : ℤ) {ξ : EuclideanSpace ℝ d} (hξ : 2 * Real.pi ≤ ‖ξ‖) :
     ∀ v ∈ (LinearMap.ker ((deRham d).m i j ξ : Form ℂ d i →ₗ[ℂ] Form ℂ d j))ᗮ,
       ‖v‖ ≤ (2 * Real.pi)⁻¹ * ‖(deRham d).m i j ξ v‖ := by
@@ -82,17 +53,14 @@ theorem gap (i j : ℤ) {ξ : EuclideanSpace ℝ d} (hξ : 2 * Real.pi ≤ ‖ξ
     rw [h0] at hv ⊢
     simp [eq_zero_of_mem_orthogonal_ker_zero hv]
 
-/-- **The de Rham complex of `𝕋ᵈ` has closed range in every degree.** -/
 theorem closedRangeAt (k : ℤ) : (complex d).ClosedRangeAt k :=
   Fourier.Torus.closedRangeAt_of_gap (deRham_m_zero _ _) fun _ hξ => gap _ _ hξ
 
-/-- Closed range of the adjoint complex in every degree. -/
 theorem dual_closedRangeAt (k : ℤ) : (complex d).dual.ClosedRangeAt k :=
   Fourier.Torus.dual_closedRangeAt_of_gap (j := k + 1) rfl (deRham_m_zero _ _)
     fun _ hξ => gap _ _ hξ
 
-/-- **Poincaré inequality on `𝕋ᵈ` with the sharp constant `(2π)⁻¹`**:
-`‖u‖ ≤ (2π)⁻¹ ‖d u‖` for `u ∈ D(d) ∩ N(d)ᗮ`. -/
+/-- The Poincaré inequality `‖u‖ ≤ (2π)⁻¹ ‖d u‖` for `u ∈ D(d) ∩ N(d)ᗮ`. -/
 theorem norm_le_of_mem_orthogonal {k : ℤ} (u : ((complex d).d k (k + 1)).domain)
     (hu : (u : L2Form d k) ∈ ((complex d).d k (k + 1)).kerᗮ) :
     ‖(u : L2Form d k)‖ ≤ (2 * Real.pi)⁻¹ * ‖(complex d).d k (k + 1) u‖ := by
@@ -105,10 +73,6 @@ theorem norm_le_of_mem_orthogonal {k : ℤ} (u : ((complex d).d k (k + 1)).domai
     simp [eq_zero_of_mem_orthogonal_ker_zero hv]
   · exact gap _ _ (Fourier.Torus.two_pi_le_norm_freq hq)
 
-/-! ### Harmonic forms and cohomology -/
-
-/-- **Harmonic forms on `𝕋ᵈ` are the constant forms**: `u ∈ ℌᵏ` iff all its nonzero Fourier
-modes vanish. -/
 theorem mem_harmonic_iff {k : ℤ} {u : L2Form d k} :
     u ∈ (complex d).harmonic k ↔ ∀ q, q ≠ 0 → u q = 0 := by
   change u ∈ (Fourier.Torus.symbolComplex (deRham d)).toHilbertComplex.harmonic k ↔ _
@@ -133,7 +97,7 @@ theorem const_apply (k : ℤ) (v : Form ℂ d k) (q : d → ℤ) :
 theorem const_mem_harmonic (k : ℤ) (v : Form ℂ d k) : const k v ∈ (complex d).harmonic k :=
   mem_harmonic_iff.2 fun q hq => by simp [const_apply, hq]
 
-/-- **`ℌᵏ(𝕋ᵈ) ≅ Λᵏ`**: a harmonic form is its constant coefficient. -/
+/-- `ℌᵏ(𝕋ᵈ) ≅ Λᵏ`: a harmonic form is its constant coefficient. -/
 def harmonicEquiv (k : ℤ) : (complex d).harmonic k ≃ₗ[ℂ] Form ℂ d k where
   toFun u := (u : L2Form d k) 0
   map_add' u v := by
@@ -154,25 +118,22 @@ def harmonicEquiv (k : ℤ) : (complex d).harmonic k ≃ₗ[ℂ] Form ℂ d k wh
     change (const k v : (d → ℤ) → Form ℂ d k) 0 = v
     simp [const_apply]
 
-/-- **The harmonic forms of the torus are finite-dimensional.** -/
+/-- The harmonic forms of the torus are finite-dimensional. -/
 instance (k : ℤ) : FiniteDimensional ℂ ((complex d).harmonic k) :=
   (harmonicEquiv k).symm.finiteDimensional
 
-/-- **`dim ℌᵏ(𝕋ᵈ) = (#d choose k)`.** -/
 theorem finrank_harmonic (k : ℕ) :
     Module.finrank ℂ ((complex d).harmonic k) = (Fintype.card d).choose k := by
   rw [(harmonicEquiv _).finrank_eq, finrank_form]
 
-/-- **The cohomology of the torus**: `Hᵏ(𝕋ᵈ) ≅ Λᵏ`. -/
+/-- `Hᵏ(𝕋ᵈ) ≅ Λᵏ`. -/
 def cohomologyEquiv (k : ℤ) : (complex d).cohomology k ≃ₗ[ℂ] Form ℂ d k :=
   ((complex d).cohomologyEquivHarmonic (closedRangeAt k)).trans (harmonicEquiv k)
 
-/-- **The Betti numbers of the torus**: `dim Hᵏ(𝕋ᵈ) = (#d choose k)`. -/
+/-- The Betti numbers of the torus: `dim Hᵏ(𝕋ᵈ) = (#d choose k)`. -/
 theorem finrank_cohomology (k : ℕ) :
     Module.finrank ℂ ((complex d).cohomology k) = (Fintype.card d).choose k := by
   rw [(cohomologyEquiv _).finrank_eq, finrank_form]
-
-/-! ### The full de Rham window: compactness and eigenbasis -/
 
 variable (d) in
 /-- The full window `Λ⁰ → Λ¹ → ⋯ → Λᵈ` of the torus de Rham symbol complex. -/
@@ -185,8 +146,7 @@ def windowSymbol : SymbolComplex ℂ (Measure.count : Measure (d → ℤ))
       omega
 
 variable (d) in
-/-- **The full `L²` de Rham complex of `𝕋ᵈ`** on the window `Fin (d + 1)`, whose total space
-carries the Dirac and Hodge wave operators. -/
+/-- The full `L²` de Rham complex of `𝕋ᵈ`, on the window `Fin (d + 1)`. -/
 abbrev window : HilbertComplex ℂ (ComplexShape.window (Fintype.card d + 1))
     fun i : Fin (Fintype.card d + 1) => L2Form d i :=
   (windowSymbol d).toHilbertComplex
@@ -197,7 +157,6 @@ theorem eq_zero_of_card_lt {k : ℤ} (hk : Fintype.card d < k) (v : Form ℂ d k
   have := Finset.card_le_univ s
   omega
 
-/-- The fibre Cartan identity on the window: `‖d_ξ v‖² + ‖d_ξ* v‖² = |ξ|² ‖v‖²`. -/
 theorem window_cartan (i : Fin (Fintype.card d + 1)) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d i) :
     ‖(deRham d).m i ((ComplexShape.window (Fintype.card d + 1)).next i) ξ v‖ ^ 2 +
       ‖ContinuousLinearMap.adjoint
@@ -248,7 +207,6 @@ theorem window_cartan (i : Fin (Fintype.card d + 1)) (ξ : EuclideanSpace ℝ d)
   rw [hnext, hprev, hcartan]
 
 omit [LinearOrder d] in
-/-- The frequencies with `|2πk|² ≤ R` are finitely many. -/
 theorem finite_norm_freq_sq_le (R : ℝ) :
     {k : d → ℤ | ‖Fourier.Torus.freq k‖ ^ 2 ≤ R}.Finite := by
   refine (Fourier.Torus.finite_bandN (d := d) ⌈R⌉₊).subset fun k hk j => ?_
@@ -271,8 +229,6 @@ theorem finite_norm_freq_sq_le (R : ℝ) :
   have : (|k j| : ℝ) ≤ (⌈R⌉₊ : ℝ) := by linarith
   exact_mod_cast this
 
-/-- **The compactness property of the de Rham complex of `𝕋ᵈ`** at every degree (Rellich on the
-torus): `‖d_ξ v‖² + ‖d_ξ* v‖² = |ξ|² ‖v‖²` with `|2πk| → ∞`. -/
 theorem window_coercive (i : Fin (Fintype.card d + 1)) (k : d → ℤ) (v : Form ℂ d i) :
     ‖Fourier.Torus.freq k‖ ^ 2 * ‖v‖ ^ 2 ≤
       ‖(windowSymbol d).m i ((ComplexShape.window (Fintype.card d + 1)).next i) k v‖ ^ 2 +
@@ -284,22 +240,18 @@ theorem window_hasCompactProperty : (window d).HasCompactProperty := fun i =>
   hasCompactPropertyAt_of_coercive (windowSymbol d) i (fun k => ‖Fourier.Torus.freq k‖ ^ 2)
     (window_coercive i) finite_norm_freq_sq_le
 
-/-- The real structure of the total space of the window (a shortcut instance). -/
+/-- The real normed-space structure of the total space of the window. -/
 instance instNormedSpaceRealTotal :
     NormedSpace ℝ (PiLp 2 fun i : Fin (Fintype.card d + 1) => L2Form d i) := inferInstance
 
 instance instIsScalarTowerRealTotal :
     IsScalarTower ℝ ℂ (PiLp 2 fun i : Fin (Fintype.card d + 1) => L2Form d i) := inferInstance
 
-/-- **The Hodge wave group of the de Rham complex of `𝕋ᵈ` has a dense set of eigenvectors**
-(discrete spectrum, from the compact resolvent of the wave operator). -/
+/-- The Hodge wave group of the de Rham complex of `𝕋ᵈ` has a dense set of eigenvectors. -/
 theorem window_eigenDense : (window d).isSkewAdjoint_wave.group.EigenDense :=
   window_hasCompactProperty.eigenDense_wave
 
-/-! ### Real forms -/
-
-/-- **The real structure** of the torus de Rham window: real forms have
-`ω̂(-k) = conj ω̂(k)`. -/
+/-- The real structure of the torus de Rham window: real forms have `ω̂(-k) = conj ω̂(k)`. -/
 def windowReal : (windowSymbol d).RealStructure Reflection.count_neg where
   cj _ := entryConj
   antilinear _ a v := entryConj_smul a v
@@ -310,8 +262,6 @@ def windowReal : (windowSymbol d).RealStructure Reflection.count_neg where
     rw [Fourier.Torus.freq_neg]
     exact deRham_neg_entryConj _ _ _ v
 
-/-! ### The weak exterior derivative -/
-
 section Weak
 
 open scoped Finset
@@ -320,10 +270,6 @@ open scoped Finset
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 open TorusWeak Finset in
-/-- **The weak exterior derivative on `𝕋ᵈ`, coefficientwise**: `w = d u` weakly (the operator
-`-i Σ_c d_{e_c} ∂_c = Σ_c dx_c ∧ ∂_c`) iff for every `(k + 1)`-subset `s` and every smooth `φ`,
-`∫ w_s φ = -Σ_{j ∈ s} ε(j, s) ∫ u_{s ∖ j} ∂_j φ`: the coefficients of
-`d u = Σ_s Σ_{j ∈ s} ε(j, s) ∂_j u_{s ∖ j} dx_s` in the sense of distributions. -/
 theorem isWeak_deRham_iff {k : ℤ} (u : Field d {s : Finset d // (#s : ℤ) = k})
     (w : Field d {s : Finset d // (#s : ℤ) = k + 1}) :
     IsWeak ((deRham d).m k (k + 1)) u w ↔
@@ -358,10 +304,8 @@ theorem isWeak_deRham_iff {k : ℤ} (u : Field d {s : Finset d // (#s : ℤ) = k
   rw [integral_sum_fo _ _ hφ, key s fun c p => ∫ x, u p x * partialT c φ x]
   exact eq_comm.trans neg_eq_iff_eq_neg
 
-/-- **The differential of the `L²` de Rham complex of `𝕋ᵈ` is the weak exterior derivative**:
-through the Fourier coefficients of `L²` forms (Parseval, `Fourier.Torus.fieldFourier`), the graph
-of `d` is the weak graph of the exterior derivative, tested against all smooth functions on `𝕋ᵈ`
-(`isWeak_deRham_iff`). -/
+/-- The differential of the de Rham complex of `𝕋ᵈ` is the weak exterior derivative, through the
+Fourier coefficients. -/
 theorem mem_graph_iff_isWeak {k : ℤ} (u : TorusWeak.Field d {s : Finset d // (#s : ℤ) = k})
     (w : TorusWeak.Field d {s : Finset d // (#s : ℤ) = k + 1}) :
     (Fourier.Torus.fieldFourier d _ u, Fourier.Torus.fieldFourier d _ w) ∈

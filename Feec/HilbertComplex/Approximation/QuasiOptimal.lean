@@ -6,62 +6,19 @@ public import Feec.HilbertComplex.HodgeSolution
 /-!
 # Quasi-optimal error estimates for the mixed Hodge Laplacian
 
-Let `Vₕ` be a finite-dimensional subcomplex of a Hilbert complex `H` with a cochain projection `π`
-bounded by `C ≥ 1` in the graph norm, and let `c_P` be a Poincaré constant of `H` at the arrows
-`i → j → k`. The discrete mixed problem (the mixed problem of the discrete complex
-`S.toHilbertComplex`, with data the `W`-projection of `f`) is uniformly stable, and its solution
-`(σₕ, uₕ, pₕ)` is quasi-optimal ([AFW2010], Thm 3.9):
-
-`‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤ C' (inf ‖σ - τ‖_V + inf ‖u - v‖_V + inf ‖p - q‖ + μ inf ‖P_𝔅 u - v‖_V)`
-
-with `μ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - π q‖` (`harmonicGap`) and the explicit constant
-`C' = (1 + 144 (C √(1 + c_P²))²) (1 + C)`. The infima are over `Vₕⁱ`, `Vₕʲ` (graph norm), `ℌₕʲ`
-(`W` norm) and `Vₕʲ` (graph norm). The `ℌₕʲ` term is at least as sharp as the graph-norm distance
-of `p` to `Vₕʲ` used in [AFW2010], Thm 3.9: `dist(p, ℌₕ) ≤ (1 + C) dist_V(p, Vₕ)`
-(`infDist_harmonicW_le`), which gives the estimate in the exact form of AFW
-(`norm_sub_le_infDist_domainSub`).
-
-The discrete harmonic forms are in general not harmonic (`ℌₕ ⊄ ℌ`): the discrete problem is not
-a Galerkin restriction of the continuous one. As in [AFW2010], §3.4 this *variational crime* is
-handled by comparing the two problems on the discrete test space: the continuous solution
-satisfies the discrete equations up to the consistency term `⟪q', u⟫`, `q' ∈ ℌₕ`, which is bounded
-by `‖(I - π) P_𝔅 u‖ ‖q' - P_ℌ q'‖ ≤ μ ‖(I - π) P_𝔅 u‖ ‖q'‖` (`norm_inner_le_of_orthogonal_harmonic`
-and the second half of the gap estimate, `norm_sub_starProjection_harmonic_le`).
-
-## Main definitions
-
-* `Subcomplex.embD`: the isometric embedding `Vₕⁱ → Vⁱ` of the discrete domain spaces.
-* `CochainProjection.IsGraphBounded`: the graph-norm bound `‖π x‖_V ≤ C ‖x‖_V`, implied by the
-  same bound in `W` (`CochainProjection.isGraphBounded_of_norm_le`).
-* `CochainProjection.harmonicGap`: `μ = sup_{q ∈ ℌ, ‖q‖ ≤ 1} ‖q - π q‖`.
-* `CochainProjection.discreteMixedSolution`: `(σₕ, uₕ, pₕ)`, the solution of the mixed problem
-  of the discrete complex with data `P_{Vₕ} f`.
+For a finite-dimensional subcomplex with a cochain projection bounded in the graph norm, the
+discrete mixed problem is uniformly stable and its solution is quasi-optimal ([AFW2010], Thm 3.9).
 
 ## Main results
 
-* `CochainProjection.norm_sub_starProjection_harmonic_le`: `‖q - P_ℌ q‖ ≤ ‖(I - π) P_ℌ q‖` for
-  `q ∈ ℌₕ` ([AFW2010], Thm 3.5, second inequality); with the first inequality
-  (`norm_sub_starProjection_harmonicW_le`) the gap between `ℌ` and `ℌₕ` is at most `μ` in both
-  directions (`norm_sub_starProjection_harmonic_le_mul`).
-* `CochainProjection.norm_inner_le_of_orthogonal_harmonic`: the consistency estimate.
-* `CochainProjection.infSup_mixedForm_of_graph`: uniform discrete inf-sup with a graph-bounded
-  cochain projection.
-* `CochainProjection.mixedForm_error_eq`, `CochainProjection.norm_mixedForm_error_le`: Galerkin
-  orthogonality up to the consistency term, and the residual bound.
-* **`CochainProjection.norm_sub_le_quasiOptimal`** (`∀`-form),
-  **`CochainProjection.norm_sub_le_infDist`** (`infDist` form) and
-  `CochainProjection.norm_sub_le_infDist_harmonicGap` (`μ = harmonicGap`): the quasi-optimal
-  estimate; `CochainProjection.norm_sub_le_infDist_domainSub`: the same in the form of
-  [AFW2010], Thm 3.9, via `CochainProjection.infDist_harmonicW_le`.
+* `Subcomplex.CochainProjection.norm_sub_le_infDist`: the quasi-optimal estimate.
+* `Subcomplex.CochainProjection.norm_sub_le_infDist_domainSub`: the form of [AFW2010], Thm 3.9.
+* `Subcomplex.CochainProjection.infSup_mixedForm_of_graph`: the uniform discrete inf-sup condition.
+* `Subcomplex.CochainProjection.norm_sub_starProjection_harmonic_le`: the harmonic gap.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.4, Thm 3.5 (gap between `ℌ` and `ℌₕ`), Thm 3.9 (quasi-optimality)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 5.5 (quasi-optimality of
-  the mixed method)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (stable mixed discretizations from bounded cochain projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -106,8 +63,7 @@ variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 abbrev toW (i : ι) (a : S.toHilbertComplex.domainSpace i) : W i :=
   (S.toHilbertComplex.domainIncl i a : W i)
 
-/-- **The embedding `Vₕⁱ → Vⁱ`** of the discrete domain space into the domain space, an
-isometry for the graph norms. -/
+/-- The isometric embedding `Vₕⁱ → Vⁱ` of the discrete domain space into the domain space. -/
 def embD (i : ι) : S.toHilbertComplex.domainSpace i →ₗᵢ[𝕜] H.domainSpace i where
   toFun a := (H.d i (c.next i)).toGraphSpace (S.toDomain i (c.next i)
     (S.toHilbertComplex.domainIncl i a))
@@ -142,15 +98,11 @@ variable {S} (P : S.CochainProjection)
 
 /-! ### Graph-bounded cochain projections -/
 
-/-- `π` is bounded by `C` in the graph norm of `d i j`:
-`‖π x‖² + ‖d π x‖² ≤ C² (‖x‖² + ‖d x‖²)` (the hypothesis of
-`norm_le_of_forall_inner_eq_zero_of_graph`). -/
+/-- `π` is bounded by `C` in the graph norm: `‖π x‖² + ‖d π x‖² ≤ C² (‖x‖² + ‖d x‖²)`. -/
 def IsGraphBounded (i j : ι) (C : ℝ) : Prop :=
   ∀ x : (H.d i j).domain, ‖P.π i x‖ ^ 2 +
     ‖H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩‖ ^ 2 ≤ C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)
 
-/-- **A projection bounded in `W` is bounded in the graph norm**, with the same constant: `π`
-commutes with `d`, so `‖d π x‖ = ‖π d x‖ ≤ C ‖d x‖`. -/
 theorem isGraphBounded_of_norm_le {i j : ι} {C : ℝ} (hπi : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖)
     (hπj : ∀ x, ‖P.π j x‖ ≤ C * ‖x‖) : P.IsGraphBounded i j C := fun x => by
   have h1 := hπi x
@@ -160,8 +112,6 @@ theorem isGraphBounded_of_norm_le {i j : ι} {C : ℝ} (hπi : ∀ x, ‖P.π i 
   have := norm_nonneg (H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩)
   nlinarith
 
-/-- **A graph bound in the form `‖π x‖ + ‖d π x‖ ≤ C (‖x‖ + ‖d x‖)`** gives `IsGraphBounded` with
-the constant `√2 C`. -/
 theorem isGraphBounded_of_add_le {i j : ι} {C : ℝ}
     (hπ : ∀ x : (H.d i j).domain, ‖P.π i x‖ + ‖H.d i j ⟨P.π i x, S.le_domain i j (P.mem i x)⟩‖ ≤
       C * (‖(x : W i)‖ + ‖H.d i j x‖)) : P.IsGraphBounded i j (√2 * C) := fun x => by
@@ -176,7 +126,6 @@ theorem isGraphBounded_of_add_le {i j : ι} {C : ℝ}
       (C * (‖(x : W i)‖ + ‖H.d i j x‖)) ^ 2 := pow_le_pow_left₀ (by positivity) h 2
   nlinarith [sq_nonneg (‖(x : W i)‖ - ‖H.d i j x‖)]
 
-/-- **`IsGraphBounded` gives a graph bound in the form** `‖π x‖ + ‖d π x‖ ≤ √2 C (‖x‖ + ‖d x‖)`. -/
 theorem IsGraphBounded.add_le {P : S.CochainProjection} {i j : ι} {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded i j C)
     (x : (H.d i j).domain) :
@@ -200,8 +149,6 @@ theorem IsGraphBounded.add_le {P : S.CochainProjection} {i j : ι} {C : ℝ} (hC
     _ ≤ 2 * (C ^ 2 * (a' + b') ^ 2) := by gcongr
     _ = (√2 * C * (a' + b')) ^ 2 := by rw [mul_pow, mul_pow, h22]; ring
 
-/-- `‖π (ι x)‖ ≤ C ‖x‖_V`, for `π` bounded in the graph norm of `Vⁱ` (that of `d i (c.next i)`,
-the norm of `W` at a degree without successor). -/
 theorem norm_π_domainIncl_le_of_next {i : ι} {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded i (c.next i) C) (x : H.domainSpace i) :
     ‖P.π i (H.domainIncl i x)‖ ≤ C * ‖x‖ := by
@@ -215,14 +162,12 @@ theorem norm_π_domainIncl_le_of_next {i : ι} {C : ℝ} (hC : 0 ≤ C)
       S.le_domain i _ (P.mem i _)⟩‖]
   exact (abs_le_of_sq_le_sq' h' (mul_nonneg hC (norm_nonneg x))).2
 
-/-- `‖π (ι x)‖ ≤ C ‖x‖_V`. -/
 theorem norm_π_domainIncl_le {i j : ι} (hij : c.Rel i j) {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded i j C) (x : H.domainSpace i) :
     ‖P.π i (H.domainIncl i x)‖ ≤ C * ‖x‖ := by
   obtain rfl := c.next_eq' hij
   exact P.norm_π_domainIncl_le_of_next hC hπ x
 
-/-- `π` maps boundaries to discrete boundaries. -/
 theorem mem_boundariesW {j : ι} {b : W j} (hb : b ∈ H.boundaries j) :
     P.π j b ∈ S.boundariesW j := by
   obtain ⟨ρ, rfl⟩ := hb
@@ -230,8 +175,6 @@ theorem mem_boundariesW {j : ι} {b : W j} (hb : b ∈ H.boundaries j) :
 
 /-! ### The gap between `ℌ` and `ℌₕ` -/
 
-/-- `‖q - P_ℌ q‖ ≤ ‖P_ℌ q - π P_ℌ q‖` for `q ∈ ℌₕ` with `π (q - P_ℌ q) ∈ 𝔅ₕ` (the core of
-`norm_sub_starProjection_harmonic_le`; [AFW2010], (28)). -/
 theorem norm_sub_starProjection_harmonic_le_of_mem {j : ι} {q : W j} (hq : q ∈ S.harmonicW j)
     (hB : P.π j (q - (H.harmonic j).starProjection q) ∈ S.boundariesW j) :
     ‖q - (H.harmonic j).starProjection q‖ ≤
@@ -258,8 +201,8 @@ theorem norm_sub_starProjection_harmonic_le_of_mem {j : ι} {q : W j} (hq : q �
   · rw [← h]; exact norm_nonneg _
   · exact le_of_mul_le_mul_left (by nlinarith) h
 
-/-- **The harmonic gap, discrete to continuous**: for `q ∈ ℌₕ`,
-`‖q - P_ℌ q‖ ≤ ‖P_ℌ q - π P_ℌ q‖`. See [AFW2010], Thm 3.5. -/
+/-- **The harmonic gap, discrete to continuous**: with closed range at `j`, for `q ∈ ℌₕ`,
+`‖q - P_ℌ q‖ ≤ ‖P_ℌ q - π P_ℌ q‖`. [AFW2010], Thm 3.5 -/
 theorem norm_sub_starProjection_harmonic_le {j : ι} (hj : H.ClosedRangeAt j) {q : W j}
     (hq : q ∈ S.harmonicW j) :
     ‖q - (H.harmonic j).starProjection q‖ ≤
@@ -269,16 +212,13 @@ theorem norm_sub_starProjection_harmonic_le {j : ι} (hj : H.ClosedRangeAt j) {q
       (H.harmonic_le_cycles j (Submodule.starProjection_apply_mem _ _)))
       (Submodule.sub_starProjection_mem_orthogonal q)))
 
-/-- With a gap bound `‖q - π q‖ ≤ μ ‖q‖` on `ℌ`: `‖q - P_ℌ q‖ ≤ μ ‖q‖` for `q ∈ ℌₕ`. -/
 theorem norm_sub_starProjection_harmonic_le_mul {j : ι} (hj : H.ClosedRangeAt j) {μ : ℝ}
     (hμ0 : 0 ≤ μ) (hμ : ∀ q ∈ H.harmonic j, ‖q - P.π j q‖ ≤ μ * ‖q‖) {q : W j}
     (hq : q ∈ S.harmonicW j) : ‖q - (H.harmonic j).starProjection q‖ ≤ μ * ‖q‖ :=
   (P.norm_sub_starProjection_harmonic_le hj hq).trans ((hμ _ (Submodule.starProjection_apply_mem
     _ _)).trans (mul_le_mul_of_nonneg_left (Submodule.norm_starProjection_apply_le _ _) hμ0))
 
-/-- **The harmonic gap** `μ = sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - π q‖` ([AFW2010], (3.20)); it is the
-smallest `μ` with `‖q - π q‖ ≤ μ ‖q‖` on `ℌʲ` when that set of `μ` is nonempty
-(`norm_sub_le_harmonicGap_mul`, `harmonicGap_le`). -/
+/-- The harmonic gap `μ = sup_{q ∈ ℌʲ, ‖q‖ ≤ 1} ‖q - π q‖`. -/
 def harmonicGap (j : ι) : ℝ :=
   ⨆ q : {q : H.harmonic j // ‖(q : W j)‖ ≤ 1}, ‖((q : H.harmonic j) : W j) - P.π j q‖
 
@@ -296,7 +236,6 @@ private theorem bddAbove_harmonicGap {j : ι} {μ : ℝ}
   · exact (mul_le_of_le_one_right h q.2).trans (le_max_left _ _)
   · exact (mul_nonpos_of_nonpos_of_nonneg h (norm_nonneg _)).trans (le_max_right _ _)
 
-/-- `‖q - π q‖ ≤ μₕ ‖q‖` on `ℌ`, provided some bound of this form holds. -/
 theorem norm_sub_le_harmonicGap_mul {j : ι} {μ : ℝ}
     (hμ : ∀ q ∈ H.harmonic j, ‖q - P.π j q‖ ≤ μ * ‖q‖) {q : W j} (hq : q ∈ H.harmonic j) :
     ‖q - P.π j q‖ ≤ P.harmonicGap j * ‖q‖ := by
@@ -319,7 +258,6 @@ theorem harmonicGap_le {j : ι} {μ : ℝ} (hμ0 : 0 ≤ μ)
   exact Real.iSup_le (fun (q : {q : H.harmonic j // ‖(q : W j)‖ ≤ 1}) =>
     (hμ _ q.1.2).trans (mul_le_of_le_one_right hμ0 q.2)) hμ0
 
-/-- On cycles the graph norm is the norm of `W`: `‖π z‖ ≤ C ‖z‖` for `z ∈ 𝔷ʲ`. -/
 theorem norm_π_le_of_mem_cycles_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded j (c.next j) C) {z : W j} (hz : z ∈ H.cycles j) :
     ‖P.π j z‖ ≤ C * ‖z‖ := by
@@ -331,7 +269,6 @@ theorem norm_π_le_of_mem_cycles_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
     exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 this
   rwa [domainIncl_cyclesToDomainSpace, hn] at h
 
-/-- A graph-bounded projection has finite harmonic gap: `‖q - π q‖ ≤ (1 + C) ‖q‖` on `ℌʲ`. -/
 theorem norm_sub_π_harmonic_le_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded j (c.next j) C) {q : W j} (hq : q ∈ H.harmonic j) :
     ‖q - P.π j q‖ ≤ (1 + C) * ‖q‖ := by
@@ -339,7 +276,6 @@ theorem norm_sub_π_harmonic_le_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
   calc ‖q - P.π j q‖ ≤ ‖q‖ + ‖P.π j q‖ := norm_sub_le _ _
     _ ≤ _ := by linarith
 
-/-- A graph-bounded projection has finite harmonic gap: `‖q - π q‖ ≤ (1 + C) ‖q‖` on `ℌʲ`. -/
 theorem norm_sub_π_harmonic_le {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded j k C) {q : W j} (hq : q ∈ H.harmonic j) :
     ‖q - P.π j q‖ ≤ (1 + C) * ‖q‖ := by
@@ -348,9 +284,6 @@ theorem norm_sub_π_harmonic_le {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 �
 
 /-! ### The consistency term -/
 
-/-- **The consistency estimate** of the variational crime `ℌₕ ⊄ ℌ`: for `u ⊥ ℌ` and `q ∈ ℌₕ`,
-`|⟪q, u⟫| ≤ ‖q - P_ℌ q‖ ‖(I - π) P_𝔅 u‖` (here `P_𝔅` is the projection onto the closure of the
-boundaries, i.e. onto `𝔅` under closed range). See the proof of [AFW2010], Thm 3.9. -/
 theorem norm_inner_le_of_orthogonal_harmonic {j : ι} (hj : H.ClosedRangeAt j) {q u : W j}
     (hq : q ∈ S.harmonicW j) (hu : u ∈ (H.harmonic j)ᗮ) :
     ‖⟪q, u⟫‖ ≤ ‖q - (H.harmonic j).starProjection q‖ *
@@ -385,7 +318,6 @@ theorem norm_inner_le_of_orthogonal_harmonic {j : ι} (hj : H.ClosedRangeAt j) {
   exact norm_inner_le_norm _ _
 
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- `‖(I - π) b‖ ≤ (1 + C) ‖b - v‖_V` for a cycle `b` and any `v ∈ Vₕʲ`. -/
 theorem norm_sub_π_le_of_mem_cycles_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded j (c.next j) C) {b : W j} (hb : b ∈ H.cycles j)
     (w : S.toHilbertComplex.domainSpace j) :
@@ -404,7 +336,6 @@ theorem norm_sub_π_le_of_mem_cycles_of_next {j : ι} {C : ℝ} (hC : 0 ≤ C)
     _ = _ := by ring
 
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)] in
-/-- `‖(I - π) b‖ ≤ (1 + C) ‖b - v‖_V` for a cycle `b` and any `v ∈ Vₕʲ`. -/
 theorem norm_sub_π_le_of_mem_cycles {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded j k C) {b : W j} (hb : b ∈ H.cycles j)
     (w : S.toHilbertComplex.domainSpace j) :
@@ -416,8 +347,6 @@ theorem norm_sub_π_le_of_mem_cycles {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC 
 
 variable [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
-/-- **The discrete Poincaré inequality** with a cochain projection bounded by `C` in the graph
-norm: the discrete complex has Poincaré constant `C √(1 + c_P²)`. See [AFW2010], Thm 3.6. -/
 theorem poincare_toHilbertComplex_of_graph {i j : ι} (hij : c.Rel i j) {cP C : ℝ}
     (hP : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hC : 0 ≤ C) (hπ : P.IsGraphBounded i j C) :
@@ -437,8 +366,7 @@ theorem one_le_mul_sqrt {cP C : ℝ} (hC : 1 ≤ C) : 1 ≤ C * √(1 + cP ^ 2) 
   one_le_mul_of_one_le_of_one_le hC (Real.one_le_sqrt.2 (by nlinarith [sq_nonneg cP]))
 
 /-- **Uniform inf-sup condition for the discrete mixed Hodge Laplacian** with a cochain
-projection bounded in the graph norm: constant `1 / (16 (C √(1 + c_P²))²)`. See [AFW2010],
-Thm 3.8. -/
+projection bounded in the graph norm: constant `1 / (16 (C √(1 + c_P²))²)`. [AFW2010], Thm 3.8 -/
 theorem infSup_mixedForm_of_graph {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {cP C : ℝ}
     (hC : 1 ≤ C)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
@@ -451,7 +379,6 @@ theorem infSup_mixedForm_of_graph {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j 
 
 /-! ### Quasi-optimality -/
 
-/-- The discrete mixed form in terms of the `W` inner products of the embedded components. -/
 theorem mixedForm_toHilbertComplex_apply {i j k : ι} (x y : S.toHilbertComplex.MixedSpace i j) :
     S.toHilbertComplex.mixedForm i j k x y =
       ⟪H.domainIncl i (S.embD i y.fst), H.domainIncl i (S.embD i x.fst)⟫ -
@@ -484,9 +411,6 @@ private theorem norm_seven_le (x₁ x₂ x₃ x₄ x₅ x₆ x₇ : 𝕜) :
   have := norm_sub_le x₁ x₂
   linarith
 
-/-- **Galerkin orthogonality up to the variational crime**: the discrete mixed form of the
-error `xₕ - z` (`z = (τ, v, q)` discrete) tested with `(τ', v', q')` is the continuous form of
-`(σ, u, p) - z` plus the consistency term `⟪q', u⟫`. -/
 theorem mixedForm_error_eq {i j k : ι} {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j}
     {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p)
     {fh : S.V j} (hfh : ∀ v : S.V j, ⟪(v : W j), (fh : W j)⟫ = ⟪(v : W j), f⟫)
@@ -520,7 +444,6 @@ theorem mixedForm_error_eq {i j k : ι} {f : W j} {σ : H.domainSpace i} {u : H.
   simp only [MixedSpace.mk_fst, MixedSpace.mk_snd_fst, MixedSpace.mk_snd_snd, inner_sub_right]
   linear_combination -eq1 - eq2
 
-/-- The bound on the discrete residual of the error. -/
 theorem norm_mixedForm_error_le {i j k : ι} (hij : c.Rel i j) {cP μ : ℝ} (hμ0 : 0 ≤ μ)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
     (hμ : ∀ q ∈ H.harmonic j, ‖q - P.π j q‖ ≤ μ * ‖q‖)
@@ -600,15 +523,6 @@ private theorem quasiOptimal_arith {E₁ E₂ E₃ a b g e θ ω μ C K : ℝ} (
     mul_nonneg hC (mul_nonneg hμ hω), mul_nonneg (mul_nonneg hK hC) (mul_nonneg hμ hω),
     mul_nonneg hμ hω, mul_nonneg hK hs]
 
-/-- **Quasi-optimality of the mixed finite element method** (`∀` form): with a cochain projection
-bounded by `C ≥ 1` in the graph norm and a Poincaré constant `c_P`, the discrete solution
-`(σₕ, uₕ, pₕ)` of the mixed problem of the subcomplex (data `fₕ`, the `W`-projection of `f`)
-satisfies, for every `τ ∈ Vₕⁱ`, `v, w ∈ Vₕʲ`, `q ∈ ℌₕʲ`,
-
-`‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤ C' (‖σ - τ‖_V + ‖u - v‖_V + ‖p - q‖ + μ ‖P_𝔅 u - w‖_V)`
-
-with `C' = (1 + 144 (C √(1 + c_P²))²) (1 + C)` and `μ` any bound `‖q - π q‖ ≤ μ ‖q‖` on `ℌʲ`
-(e.g. `harmonicGap`). See [AFW2010], Thm 3.9; [Arnold2018], Thm 5.5. -/
 theorem norm_sub_le_quasiOptimal {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     {cP C μ : ℝ} (hC : 1 ≤ C) (hμ0 : 0 ≤ μ)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
@@ -687,8 +601,7 @@ private theorem le_add_mul_infDist {X : Type*} [PseudoMetricSpace X] {s : Set X}
     linarith
 
 variable (S) in
-/-- **The discrete mixed solution** `(σₕ, uₕ, pₕ)`: the solution of the mixed problem of the
-discrete complex with data `P_{Vₕ} f` (the discrete complex has closed range everywhere). -/
+/-- The discrete mixed solution `(σₕ, uₕ, pₕ)` of the discrete complex with data `P_{Vₕ} f`. -/
 def discreteMixedSolution {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) (f : W j) :
     S.toHilbertComplex.MixedSpace i j :=
   S.toHilbertComplex.mixedSolution hij hjk (S.closedRangeAt j) (S.closedRangeAt k)
@@ -709,15 +622,9 @@ theorem isMixedSolution_discreteMixedSolution {i j k : ι} (hij : c.Rel i j) (hj
       (discreteMixedSolution S hij hjk f).snd.snd :=
   S.toHilbertComplex.isMixedSolution_mixedSolution hij hjk _ _ _
 
-/-- **Quasi-optimality of the mixed finite element method** ([AFW2010], Thm 3.9;
-[Arnold2018], Thm 5.5): with a cochain projection bounded by `C ≥ 1` in the graph norm, a
-Poincaré constant `c_P` and a harmonic gap bound `μ`, the discrete solution `(σₕ, uₕ, pₕ)`
-(`discreteMixedSolution`) of the mixed Hodge Laplacian satisfies
-
-`‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤ C' (E_V(σ) + E_V(u) + E(p) + μ E_V(P_𝔅 u))`
-
-with `C' = (1 + 144 (C √(1 + c_P²))²) (1 + C)`, `E_V` the distance in the graph norm to `Vₕ`
-and `E(p)` the `W`-distance to `ℌₕ`. -/
+/-- **Quasi-optimality** ([AFW2010], Thm 3.9): with `π` bounded by `C ≥ 1` in the graph norm, a
+Poincaré constant `c_P` and a harmonic gap bound `μ`, the error is at most
+`C' (E_V(σ) + E_V(u) + E(p) + μ E_V(P_𝔅 u))`, `E_V`, `E` the distances to `Vₕ`, `ℌₕ`. -/
 theorem norm_sub_le_infDist {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     {cP C μ : ℝ} (hC : 1 ≤ C) (hμ0 : 0 ≤ μ)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
@@ -779,8 +686,6 @@ theorem norm_sub_le_infDist {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     rw [dist_eq_norm]; linarith
   linarith
 
-/-- **The harmonic term in the graph norm**: for `q ∈ ℌʲ`,
-`dist(q, ℌₕʲ) ≤ (1 + C) dist_V(q, Vₕʲ)` (`‖q - P_{ℌₕ} q‖ ≤ ‖(I - π) q‖`, [AFW2010], Thm 3.5). -/
 theorem infDist_harmonicW_le {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ C)
     (hπ : P.IsGraphBounded j k C) {q : W j} (hq : q ∈ H.harmonic j) :
     Metric.infDist q (S.harmonicW j) ≤
@@ -795,13 +700,8 @@ theorem infDist_harmonicW_le {j k : ι} (hjk : c.Rel j k) {C : ℝ} (hC : 0 ≤ 
         (P.norm_sub_π_le_of_mem_cycles hjk hC hπ _ w)
   rwa [zero_add] at h
 
-/-- **Quasi-optimality in the form of [AFW2010], Thm 3.9**: the harmonic term measured by the
-graph-norm distance of `p` to `Vₕʲ`,
-
-`‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖ ≤ C' (E_V(σ) + E_V(u) + (1 + C) E_V(p) + μ E_V(P_𝔅 u))`.
-
-This follows from `norm_sub_le_infDist` and `infDist_harmonicW_le`; the `infDist`-to-`ℌₕ` form
-of `norm_sub_le_infDist` is the sharper one. -/
+/-- **Quasi-optimality in the form of [AFW2010], Thm 3.9**: the same estimate with the graph-norm
+distance `(1 + C) E_V(p)` of `p` to `Vₕʲ` in place of `E(p)`. -/
 theorem norm_sub_le_infDist_domainSub {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     {cP C μ : ℝ} (hC : 1 ≤ C) (hμ0 : 0 ≤ μ)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)
@@ -825,8 +725,6 @@ theorem norm_sub_le_infDist_domainSub {i j k : ι} (hij : c.Rel i j) (hjk : c.Re
   have := P.infDist_harmonicW_le hjk (zero_le_one.trans hC) hπj p.2
   linarith
 
-/-- **Quasi-optimality with the harmonic gap** `μ = harmonicGap`: the same estimate with `μ` the
-sup of `‖q - π q‖` over the unit ball of `ℌʲ` ([AFW2010], Thm 3.9). -/
 theorem norm_sub_le_infDist_harmonicGap {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     {cP C : ℝ} (hC : 1 ≤ C)
     (hPi : ∀ z : (H.d i j).domain, (z : W i) ∈ (H.cycles i)ᗮ → ‖(z : W i)‖ ≤ cP * ‖H.d i j z‖)

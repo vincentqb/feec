@@ -7,51 +7,18 @@ public import Feec.TimeStepping.Leapfrog
 /-!
 # The explicit leapfrog Whitney scheme under a CFL condition
 
-The fully discrete scheme of [QuennevilleBelair2015], Ch. 7 with the explicit leapfrog rule in
-place of Crank–Nicolson: on the Whitney row `Vₕ = P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` of the level-`(N + 1)`
-Freudenthal mesh of `Q = (0, ½)³`, with the boundary degrees of freedom of every step taken from
-the exact solution, `uₙ₊₂ − gₙ₊₂ ∈ V̊ₕ`, `⟪uₙ₊₂ − uₙ, v⟫ = 2 Δt ⟪A uₙ₊₁, v⟫` on `V̊ₕ`
-(`TimeStepping.IsDirichletLeapfrogStep`), `A = 𝐝ₕ − 𝐝ₕ*`. Unlike Crank–Nicolson (stable for every
-time step), leapfrog is stable only under a **CFL condition** `Δt ‖A‖ ≤ c < 1`, and the inverse
-estimate makes it concrete: `h ‖𝐝ₕ v‖ ≤ K ‖v‖` on `Vₕ` (`exists_mul_norm_discreteD_whitneyRow_le`,
-from `Feec.FiniteElement.exists_mul_norm_glue_dPiecewise_le_whitney`), so `‖A‖ ≤ 2 K / h`
-(`norm_discreteWave_le`) and `2 K Δt ≤ c h` is a CFL condition.
-
-## The error argument
-
-As for Crank–Nicolson (`Feec.Models.Cube.InhomogeneousError`), the comparison fields
-`ũₙ = wₙ − q (emb wₙ − U(tₙ))` with the boundary correction `q` keep the boundary DOFs of the
-interpolants `wₙ`, are no farther from `U(tₙ)`, and are orthogonal to `emb (D V̊ₕ)`; with the
-centred difference remainder `TimeStepping.norm_centredDifference_le` they solve the leapfrog
-scheme up to residuals `‖ρₙ‖ ≤ Δt (L₃ Δt² / 3 + 4 a)` (`exists_leapfrog_comparison`). The CFL
-estimate of `TimeStepping.norm_succ_sub_le_of_isDirichletLeapfrogStep` then gives
-`(1 − c) ‖emb u_M − U(t_M)‖ ≤ 3 a + T (L₃ Δt² / 3 + 4 a)` from `u₀ = w₀`, `u₁ = w₁`
-(`norm_leapfrog_error_le`).
+The scheme of [QuennevilleBelair2015], Ch. 7 with the leapfrog rule is stable and converges at the
+rate `O(h + Δt²)` under the CFL condition `2 K Δt ≤ c h`, `c < 1`.
 
 ## Main results
 
-* `norm_discreteD_le`, `norm_discreteWave_le`: on a finite element subcomplex, a bound `K` on the
-  discrete differentials `Vₕⁱ → Vₕʲ` bounds `‖𝐝ₕ‖ ≤ K` and `‖𝐝ₕ − 𝐝ₕ*‖ ≤ 2 K`.
-* **`exists_mul_norm_discreteD_whitneyRow_le`**: the inverse estimate
-  `h_N ‖𝐝ₕ v‖ ≤ K ‖v‖` on the Whitney row, `K` independent of `N`.
-* `norm_leapfrog_error_le`, `norm_leapfrog_error_le_of_eq`: the abstract error estimate;
-  `norm_leapfrog_error_le_of_sub_mem`, the same from any starting values with the boundary DOFs of
-  the comparison fields (for `U = 0`, the stability `(1 − c) ‖u_M‖ ≤ ‖u₀‖ + ‖u₁‖`).
-* **`RowSolution.whitney_leapfrog_error_le_row`**: for a smooth `RowSolution` with bound `L`,
-  `2 K Δt ≤ c h_N`, `0 ≤ c < 1`, the leapfrog iterates from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)` with
-  the boundary DOFs of `Π_h U(tₙ)` satisfy
-  `‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²) / (1 − c)`, `C = leapfrogConst`.
-* **`whitney_leapfrog_stable`**: with vanishing boundary DOFs,
-  `√(1 − c) ‖uₙ₊₁‖ ≤ √((1 + c) (‖u₀‖² + ‖u₁‖²))` under the same CFL condition.
+* `RowSolution.whitney_leapfrog_error_le_row`: the `O(h + Δt²)` error bound.
+* `whitney_leapfrog_stable`: stability with vanishing boundary DOFs.
 
 ## References
 
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
-  (leapfrog, discrete energy, CFL condition)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.2 (inverse
-  inequalities)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -71,12 +38,6 @@ variable {V X : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteD
   [NormedAddCommGroup X] [InnerProductSpace ℝ X] {emb : V →ₗ[ℝ] X} {D : V →ₗ[ℝ] V}
   {V₀ : Submodule ℝ V}
 
-/-- **Comparison fields and residuals of the Dirichlet leapfrog scheme**, abstractly, in the
-setting of `exists_comparison_consistency`: the comparison fields `ũₙ = wₙ − q δₙ` have the
-boundary DOFs of `wₙ`, are no farther from `U(tₙ)` than `wₙ`, and solve the leapfrog scheme with
-step `Δt` up to residuals `ρₙ` with `‖ρₙ‖ ≤ Δt (L₃ Δt² / 3 + 4 a)` (the centred difference
-remainder, the time differences of the interpolation error, and `‖emb (D wₙ₊₁) − DU(tₙ₊₁)‖`; the
-adjoint terms vanish by the boundary correction). -/
 theorem exists_leapfrog_comparison (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
     (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
     (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
@@ -200,10 +161,8 @@ theorem exists_leapfrog_comparison (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y
     positivity
   · nlinarith
 
-/-- **Error of the Dirichlet leapfrog scheme under the CFL condition**, abstractly: in the setting
-of `exists_leapfrog_comparison`, with `Δt ‖A‖ ≤ c < 1`, `‖emb wₙ − U(tₙ)‖ ≤ a`, the iterates
-`uₙ` of the scheme started from `u₀ = w₀`, `u₁ = w₁` with the boundary DOFs of `wₙ` satisfy, for
-`M Δt ≤ T`, `(1 − c) ‖emb u_M − U(t_M)‖ ≤ 3 a + T (L₃ Δt² / 3 + 4 a)`. -/
+/-- **Error of the Dirichlet leapfrog scheme under the CFL condition** `Δt ‖A‖ ≤ c < 1`, abstractly:
+`(1 − c) ‖emb u_M − U(t_M)‖ ≤ 3 a + T (L₃ Δt² / 3 + 4 a)`. -/
 theorem norm_leapfrog_error_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
     (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
     (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a c : ℝ} (hΔt : 0 < Δt)
@@ -307,8 +266,6 @@ theorem norm_leapfrog_error_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
       nlinarith
     nlinarith
 
-/-- `norm_leapfrog_error_le` in the form `K (1 + T) (h + Δt²) / (1 − c)`: if `4 a ≤ K h` and
-`L₃ / 3 ≤ K`. -/
 theorem norm_leapfrog_error_le_of_eq (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
     (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
     (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a c : ℝ} (hΔt : 0 < Δt)
@@ -344,11 +301,6 @@ theorem norm_leapfrog_error_le_of_eq (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x,
   rw [le_div_iff₀ (by linarith), mul_comm]
   linarith
 
-/-- **Error of the Dirichlet leapfrog scheme from any starting values**: in the setting of
-`norm_leapfrog_error_le`, for iterates started from `u₀`, `u₁` with the boundary DOFs of `w₀`,
-`w₁` (`u₀ - w₀`, `u₁ - w₁ ∈ V₀`), for `M Δt ≤ T`,
-`(1 − c) ‖emb u_M − U(t_M)‖ ≤ ‖emb u₀ − U(0)‖ + ‖emb u₁ − U(Δt)‖ + 3 a + T (L₃ Δt² / 3 + 4 a)`;
-for `U = 0` the stability `(1 − c) ‖u_M‖ ≤ ‖u₀‖ + ‖u₁‖`. -/
 theorem norm_leapfrog_error_le_of_sub_mem (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
     (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
     (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a c : ℝ} (hΔt : 0 < Δt)
@@ -476,8 +428,6 @@ variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   {H : HilbertComplex ℝ c W} (S : H.Subcomplex) [∀ i, FiniteDimensional ℝ (S.V i)]
 
 omit [∀ i, FiniteDimensional ℝ (S.V i)] in
-/-- **A bound on the discrete differentials bounds `𝐝ₕ`**: if `‖dₕ y‖ ≤ K ‖y‖` for every
-`dₕ : Vₕⁱ → Vₕʲ`, then `‖𝐝ₕ x‖ ≤ K ‖x‖` on `Vₕ = ∏ Vₕⁱ` (each `Vₕⁱ` has at most one successor). -/
 theorem norm_discreteD_le {K : ℝ} (hK0 : 0 ≤ K) (hK : ∀ i j (y : S.V i), ‖S.dLin i j y‖ ≤ K * ‖y‖)
     (x : DState S) : ‖discreteD S x‖ ≤ K * ‖x‖ := by
   classical
@@ -513,8 +463,6 @@ theorem norm_discreteD_le {K : ℝ} (hK0 : 0 ≤ K) (hK : ∀ i j (y : S.V i), �
     exact hsum
   exact (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 h2
 
-/-- **The discrete wave operator is bounded by twice the discrete differential**:
-`‖𝐝ₕ x‖ ≤ K ‖x‖` gives `‖(𝐝ₕ − 𝐝ₕ*) x‖ ≤ 2 K ‖x‖`. -/
 theorem norm_discreteWave_le {K : ℝ} (hK0 : 0 ≤ K) (hD : ∀ x, ‖discreteD S x‖ ≤ K * ‖x‖)
     (x : DState S) : ‖discreteWave S x‖ ≤ 2 * K * ‖x‖ := by
   set y := discreteWave S x
@@ -532,7 +480,6 @@ theorem norm_discreteWave_le {K : ℝ} (hK0 : 0 ≤ K) (hD : ∀ x, ‖discreteD
   · rw [← h0]; positivity
   · nlinarith
 
-/-- `‖𝐝ₕ − 𝐝ₕ*‖ ≤ 2 K` as an operator norm. -/
 theorem opNorm_discreteWave_le {K : ℝ} (hK0 : 0 ≤ K) (hD : ∀ x, ‖discreteD S x‖ ≤ K * ‖x‖) :
     ‖LinearMap.toContinuousLinearMap (discreteWave S)‖ ≤ 2 * K :=
   ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun x => norm_discreteWave_le S hK0 hD x
@@ -551,8 +498,6 @@ private theorem apply_of_eq {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCo
     f y = g z := by
   subst h; rw [show z = y from Subtype.ext hz]
 
-/-- A bound `B ‖d y‖ ≤ K ‖y‖` on the spaces of a subcomplex of `HΛ(M.domain)` holds for the
-subcomplex transported along `M.domain = Ω`. -/
 theorem mul_norm_d_le_of_maximalSubcomplexOfEq {n : ℕ} {M : SimplicialMesh n}
     {Ω : Set (Fin n → ℝ)} (h : M.domain = Ω) (hM : IsOpen M.domain) (hΩ : IsOpen Ω)
     (S : ((deRham ℝ n).maximalComplex hM).Subcomplex) {B K : ℝ}
@@ -585,9 +530,6 @@ private theorem interior_subset_mesh_domain {n : ℕ} (N : ℕ)
         rw [hc.interior_closure_eq_interior_of_nonempty_interior hne,
           (isOpen_mesh_domain n N).interior_eq]
 
-/-- **The inverse estimate on the Whitney complexes of the Freudenthal meshes of the cube**:
-`h_N ‖d y‖ ≤ K ‖y‖` for every `y ∈ Vₕᵃ` and every differential `d : HΛᵃ(Q) → HΛᵇ(Q)` (`d = 0`
-unless `b = a + 1`), one `K` for all `N`, `a`, `b`. -/
 theorem exists_mul_norm_d_whitney_le :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) (a b : ℤ) (y : ((complex 3).d a b).domain),
       y.1 ∈ (whitney 3 N).V a → meshSize N * ‖(complex 3).d a b y‖ ≤ K * ‖y.1‖ := by
@@ -632,8 +574,7 @@ theorem exists_mul_norm_d_whitney_le :
     exact Or.inr (norm_eq_zero.2
       (@Subsingleton.elim (L2F ℝ Mh.domain (formIdx 3 ((k : ℤ) + 1))) this _ _))
 
-/-- **The inverse estimate on the Whitney row** `P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` of the level-`(N + 1)`
-Freudenthal mesh: `h_N ‖𝐝ₕ v‖ ≤ K ‖v‖`, `K` independent of `N`. -/
+/-- **The inverse estimate on the Whitney row**: `h_N ‖𝐝ₕ v‖ ≤ K ‖v‖`, `K` independent of `N`. -/
 theorem exists_mul_norm_discreteD_whitneyRow_le :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) (x : DState (whitneyRow N)),
       meshSize N * ‖discreteD (whitneyRow N) x‖ ≤ K * ‖x‖ := by
@@ -658,16 +599,11 @@ open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre Hilb
 
 variable {T L : ℝ}
 
-/-- The constant of `RowSolution.whitney_leapfrog_error_le_row`: `12 Σᵢ Bᵢ + Σᵢ #Λⁱ |Q|^{1/2}`,
-independent of `N`, `Δt`, `T`, `c` and the solution. -/
+/-- The constant of `RowSolution.whitney_leapfrog_error_le_row`, independent of `N`, `Δt`, `T`. -/
 def leapfrogConst : ℝ := 12 * rowBound + rowL2Const
 
 /-- **`O(h + Δt²)` convergence of the leapfrog Whitney scheme with Dirichlet DOFs under the CFL
-condition** ([Joly2003]; [QuennevilleBelair2015], Ch. 7): with `K` the constant of the inverse
-estimate `exists_mul_norm_discreteD_whitneyRow_le`, `0 ≤ c < 1` and `2 K Δt ≤ c h_N`, for a smooth
-`RowSolution` with bound `L` the leapfrog iterates of the Whitney row from `u₀ = Π_h U(0)`,
-`u₁ = Π_h U(Δt)` with the boundary DOFs of `Π_h U(tₙ)` prescribed at every step satisfy
-`‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²) / (1 − c)` for `M Δt ≤ T`, `C = leapfrogConst`. -/
+condition** `2 K Δt ≤ c h_N`, `c < 1` ([Joly2003]; [QuennevilleBelair2015], Ch. 7). -/
 theorem RowSolution.whitney_leapfrog_error_le_row (X : RowSolution T L) (N : ℕ) {K : ℝ}
     (hK0 : 0 ≤ K)
     (hK : ∀ x : DState (whitneyRow N), meshSize N * ‖discreteD (whitneyRow N) x‖ ≤ K * ‖x‖)
@@ -728,9 +664,8 @@ theorem RowSolution.whitney_leapfrog_error_le_row (X : RowSolution T L) (N : ℕ
     (by rw [leapfrogConst]; nlinarith [mul_nonneg (mul_nonneg hR hL0) hh.le])
     (by rw [leapfrogConst]; nlinarith [mul_nonneg hR hL0, mul_nonneg hB hL0])
 
-/-- **Stability of the leapfrog Whitney scheme under the CFL condition**: with vanishing boundary
-DOFs (`gₙ = 0`, `u₀, u₁ ∈ V̊ₕ`) and `2 K Δt ≤ c h_N`, `0 ≤ c < 1`,
-`√(1 − c) ‖uₙ₊₁‖ ≤ √((1 + c) (‖u₀‖² + ‖u₁‖²))` for every step `n`. [Joly2003] -/
+/-- **Stability of the leapfrog Whitney scheme under the CFL condition** with vanishing boundary
+DOFs: `√(1 − c) ‖uₙ₊₁‖ ≤ √((1 + c) (‖u₀‖² + ‖u₁‖²))` ([Joly2003]). -/
 theorem whitney_leapfrog_stable (N : ℕ) {K : ℝ} (hK0 : 0 ≤ K)
     (hK : ∀ x : DState (whitneyRow N), meshSize N * ‖discreteD (whitneyRow N) x‖ ≤ K * ‖x‖)
     {Δt c : ℝ} (hΔt : 0 ≤ Δt) (hc1 : c < 1) (hcfl : 2 * K * Δt ≤ c * meshSize N) {n : ℕ}

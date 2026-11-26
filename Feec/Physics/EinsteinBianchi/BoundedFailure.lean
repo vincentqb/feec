@@ -7,66 +7,13 @@ public import Feec.Counterexamples.BoundedBGG
 /-!
 # The scheme (6.5) converges to a solution that leaves TSD
 
-[QuennevilleBelair2015], §6.3 discretizes the Einstein–Bianchi system with weak symmetries on
-`Q = (0, ½)³` by the semi-discrete scheme (6.5) with the elements of Table 6.1 and the thesis'
-boundary conditions (`Feec.Models.Cube.WeakSymmetry.cubeWave`). On bounded domains the continuous
-system does not propagate TSD: from the TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`,
-`β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, the solution has `u(t) ∉ L²(TSD)` and `B(t)` non-symmetric for some
-`t` (`Feec.Counterexamples.BoundedBGG.bggComplex_verdict`, matrix model). This file carries that
-solution to the forms model of the scheme (`Feec.EinsteinBianchi.MatrixModel`), proves a
-convergence theorem without rate for (6.5) for data approximable by the `O(h)` rate class, and
-states the resulting failure under that hypothesis; the unconditional versions are in
-`Feec.EinsteinBianchi.BoundedConvergence`.
-
-## Main results
-
-* **Energy estimates with different sources**: `Feec.BGG.WaveData.Solution.norm_vec_sub_le`
-  (`‖U₁(t) − U₂(t)‖ ≤ ‖U₁(0) − U₂(0)‖ + ∫₀ᵗ ‖f₁ − f₂‖` for (6.1)) and `norm_dvec_sub_le` (the same
-  for (6.3)), through the differences `Feec.BGG.WaveData.Solution.sub'`,
-  `Feec.BGG.DiscreteSolution.sub'` of `Feec.HilbertComplex.BGG.TimeDependent`.
-* `exactWave_toSolution`: a classical solution of (6.2) (the class of the rate theorems) is a
-  solution of (6.1) (the multiplier vanishes on `Γ`).
-* **`solutionOfStrong`**: a strong solution of the forms-model Hodge wave equation is a solution
-  of (6.1) of `cubeWaveData` (with `(σ, φ) ↦ (−σ, −φ)`, the convention `U' = L U`); the pointwise
-  equations are `eb_point`, `ea_point`, `ec_point`, `ed_point`.
-* `lax_abstract`, **`tendsto_of_isRateApproximable`** (Lax): if a solution `w` of (6.1) is
-  approximable by classical solutions of the rate class of
-  `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr'` with small residual (`IsRateApproximable`),
-  then every family of solutions of (6.5) whose initial states converge to `w(0)` converges to
-  `w` uniformly on `[0,T]` (consistency: the `O(h)` rate on the class; stability: the energy
-  estimates).
-* `exists_betaSolution`, `betaU`, `betaW`, `isStrongSolution_forms`: the TSD solution in the
-  matrix and forms models; `exists_betaDiscrete`, `tendsto_infDist_rhoBeta`: discrete solutions of
-  (6.5) from `(0, 0, 0, P ρ(0))`, whose initial states converge.
-* `not_isCsFormTr_rhoBeta`, `not_isRateClass_of_rho`: the datum is not in the rate class (the
-  first magnetic row has the tangential component `−y₂` on `{y₁ = 0}`).
-* `waveFEM_converges_to_non_tsd_of_isRateApproximable`: items 1–3 below unconditionally, item 4
-  under `IsRateApproximable betaW`: (1) the continuous solution leaves TSD; (2) it is the
-  solution `betaW` of (6.1); (3) the scheme has solutions from the projected datum, converging at
-  `t = 0`; (4) every such family converges to it uniformly on `[0,T]`, the matrix proxies
-  `E_h = rowsEquiv uₕ`, `B_h = rows2Equiv ρₕ` converge to `E`, `B`, and for all large `N` the
-  discrete fields leave TSD at the times where `E`, `B` do.
-
-**The hypothesis `IsRateApproximable` is removed in `Feec.EinsteinBianchi.BoundedConvergence`**:
-`tendsto_of_mem_wave_domain` and `waveFEM_converges_to_non_tsd` there are unconditional (density
-of `D(L²)` and a rate-free analysis of (6.4) with multipliers represented by `L²` data). The
-results of this file remain as the route through the `O(h)` rate class.
-
-## What is not proved here
-
-The convergence statements of this file assume `IsRateApproximable`: the rate theorems need
-classical solutions that are `C²` up to `∂Q` with vanishing tangential traces (including `M`,
-`ρ`). For the TSD datum this class is not reached: `ρ(0)` has nonzero tangential traces
-(`not_isRateClass_of_rho`), and `u'(0) = diag(1, −1, 0)` violates the boundary condition of `u`
-(not formalized). Whether the TSD solution is approximable by the rate class with small residual
-(a regularity question for (6.1) on the cube) is not decided here; it is not needed, see
-`Feec.EinsteinBianchi.BoundedConvergence`. The regularity hypothesis `CurlPotential` is
-discharged (`curlPotential`).
+For the semi-discrete scheme (6.5) of [QuennevilleBelair2015], §6.3 on `Q = (0, ½)³`: energy
+estimates, convergence for solutions approximable by the `O(h)` rate class, and the TSD datum
+`(0, 0, (0, β))`, whose solution leaves TSD and starts outside the rate class.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.1 ((6.1), (6.2)), §6.2 ((6.3), (6.4), Prop 6.2), §6.3 ((6.5), Table 6.1)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -93,14 +40,11 @@ variable {V0 Vt0 Vt1 W0 W1 W2 Wt1 Wt2 : Type*}
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : WaveData V0 Vt0 Vt1 W0 W1 W2 Wt1 Wt2}
 
-/-- The energy vector `(σ, u, M, ρ)(t)` of a trajectory of (6.1), in `W⁰ × W̃¹ × W² × W̃²`
-(`ℓ²` product, `Feec.BGG.EnergySpace`). -/
+/-- The energy vector `(σ, u, M, ρ)(t)` of a trajectory of (6.1), in `W⁰ × W̃¹ × W² × W̃²`. -/
 def Trajectory.vec {T : ℝ} {f : ℝ → Wt1} (s : D.Trajectory T f) (t : ℝ) :
     Feec.BGG.EnergySpace W0 Wt1 W2 Wt2 :=
   Feec.BGG.energyEmb W0 Wt1 W2 Wt2 (D.i0 (s.σ t), D.it1 (s.u t), s.M t, s.ρ t)
 
-/-- **Energy stability of (6.1) with a source** (§6.1, the energy argument):
-`‖(σ, u, M, ρ)(t)‖ ≤ ‖(σ, u, M, ρ)(0)‖ + ∫₀ᵗ ‖f‖` on `[0,T]`. -/
 theorem Solution.norm_vec_le {T : ℝ} {f : ℝ → Wt1} (s : D.Solution T f)
     (hf : ContinuousOn f (Icc 0 T)) :
     ∀ t ∈ Icc 0 T, ‖s.vec t‖ ≤ ‖s.vec 0‖ + ∫ r in (0:ℝ)..t, ‖f r‖ := by
@@ -140,8 +84,6 @@ theorem Solution.norm_vec_le {T : ℝ} {f : ℝ → Wt1} (s : D.Solution T f)
       real_inner_comm (D.i0 (s.σ t)) (s.σ' t), real_inner_comm (D.it1 (s.u t)) (s.u' t),
       real_inner_comm (s.M t) (s.M' t), real_inner_comm (s.ρ t) (s.ρ' t)]
 
-/-- **Continuous dependence for (6.1)**: two solutions with sources `f₁`, `f₂` satisfy
-`‖U₁(t) − U₂(t)‖ ≤ ‖U₁(0) − U₂(0)‖ + ∫₀ᵗ ‖f₁ − f₂‖` in the energy norm. -/
 theorem Solution.norm_vec_sub_le {T : ℝ} {f₁ f₂ : ℝ → Wt1} (s₁ : D.Solution T f₁)
     (s₂ : D.Solution T f₂) (hf : ContinuousOn (f₁ - f₂) (Icc 0 T)) :
     ∀ t ∈ Icc 0 T, ‖s₁.vec t - s₂.vec t‖ ≤ ‖s₁.vec 0 - s₂.vec 0‖ +
@@ -169,8 +111,7 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
 /-! ### Classical solutions of (6.2) are solutions of (6.1) -/
 
 set_option maxHeartbeats 4000000 in
-/-- **A classical solution of (6.2) is a solution of (6.1)** of `cubeWaveData` (the multiplier
-term vanishes on `Γ`; no `L²` representation of the multiplier is needed). -/
+/-- A classical solution of (6.2) is a solution of (6.1) of `cubeWaveData`. -/
 def exactWave_toSolution {T : ℝ} {f : ℝ → Wv W1}
     (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) : cubeWaveData.Solution T f where
   σ t := D0.toGraphSpace (s.σ t)
@@ -349,8 +290,6 @@ theorem cubeWaveData_dt0_φOf {x : WS} (h : comp0 x ∈ bggHilb.D0Γ.domain) :
     rw [map_neg, map_neg]
   exact e.trans (congrArg Neg.neg (ιt1_bggDt0_gammaOf h))
 
-/-! The components of a point of `D(L)` and of `L x`. -/
-
 section Point
 
 set_option maxHeartbeats 2000000
@@ -379,7 +318,6 @@ theorem comp2_waveOf : comp2 (waveOf x) = bggHilb.D1L ⟨comp1 x, dom1 hx⟩ := 
 theorem comp2_waveOf_eq_TL : comp2 (waveOf x) = bggHilb.TL (vecOf x) := by
   rw [comp2_waveOf hx, D1L_apply_vecOf (dom1 hx)]
 
-/-- (6.1b) at a point of `D(L)`. -/
 theorem eb_point (v : Wv U1) :
     ⟪comp1 (waveOf x), cubeWaveData.it1 v⟫ + ⟪cubeWaveData.dt0 (φOf x), cubeWaveData.it1 v⟫ +
       ⟪compML x, cubeWaveData.S1 v⟫ + ⟪compρL x, cubeWaveData.dt1 v⟫ = 0 := by
@@ -399,7 +337,6 @@ theorem eb_point (v : Wv U1) :
   simp only [inner_sub_left, inner_neg_left]
   linarith
 
-/-- (6.1a) at a point of `D(L)`, tested on `Γ`. -/
 theorem ea_point (τ : V0) (ψ : Vt0) (h : cubeWaveData.d0 τ = cubeWaveData.S0 ψ) :
     ⟪-((comp0 (waveOf x) : bggHilb.Γbar) : W0), cubeWaveData.i0 τ⟫ -
       ⟪cubeWaveData.it1 (uOf x), cubeWaveData.dt0 ψ⟫ = 0 := by
@@ -420,11 +357,9 @@ theorem ea_point (τ : V0) (ψ : Vt0) (h : cubeWaveData.d0 τ = cubeWaveData.S0 
   rw [hadj]
   exact sub_self _
 
-/-- (6.1c) at a point of `D(L)`. -/
 theorem ec_point : (WithLp.ofLp (comp2 (waveOf x))).1 = segS1 (rp1 (vecOf x)) := by
   rw [comp2_waveOf_eq_TL hx]; rfl
 
-/-- (6.1d) at a point of `D(L)`. -/
 theorem ed_point : (WithLp.ofLp (comp2 (waveOf x))).2 = piMap segD1 (rp1 (vecOf x)) := by
   rw [comp2_waveOf_eq_TL hx]
   exact bggDt1_eq (vecOf x)
@@ -522,10 +457,7 @@ theorem traj_ea {t : ℝ} (ht : t ∈ Ico 0 T) (τ : V0) (ψ : Vt0)
       ⟪cubeWaveData.it1 (uOf (V t)), cubeWaveData.dt0 ψ⟫ = 0 :=
   ea_point (hV.mem_domain (Ico_subset_Icc_self ht)) τ ψ h
 
-/-- **A strong solution of the Hodge wave equation of the forms model is a solution of (6.1)**
-of `cubeWaveData`, with `(σ, φ) ↦ (−σ, −φ)` (the convention `U' = L U`, `σ' = −d₀† u`, as in
-`Feec.Models.BoundedDomain.bggComplex_weakEqs_of_isStrongSolution`): `u`, `M`, `ρ` are the components of `U`, and
-`(−σ, −φ)` is the `Γ`-pair of the first one. -/
+/-- A strong solution of the forms-model Hodge wave equation, as a solution of (6.1). -/
 def solutionOfStrong : cubeWaveData.Solution T 0 where
   σ t := σOf (V t)
   φ t := φOf (V t)
@@ -584,10 +516,6 @@ theorem integral_mono_Icc {g₁ g₂ : ℝ → ℝ} {T t : ℝ} (hg₁ : Continu
     ((hg₂.mono (Icc_subset_Icc le_rfl ht.2)).intervalIntegrable_of_Icc ht.1)
     fun r hr => h r ⟨hr.1, hr.2.trans ht.2⟩
 
-/-- **The Lax argument, abstractly**: if `w` is uniformly approximated on `[0,T]` within `a + b`
-by `ws`, which is approximated at rate `c h_N` by `wh N`, the `sh N` are stable with respect to
-the `wh N` up to `b`, `a + b < δ` for every `δ > 0` (some choice), and `sh N (0) → w (0)`, then
-`sh N → w` uniformly on `[0,T]`. -/
 theorem lax_abstract {E : Type*} [SeminormedAddCommGroup E] {T : ℝ} {h : ℕ → ℝ}
     (hh : Tendsto h atTop (𝓝 0)) (w : ℝ → E) (sh : ℕ → ℝ → E)
     (h0 : Tendsto (fun N => ‖w 0 - sh N 0‖) atTop (𝓝 0)) (hT0 : 0 ≤ T)
@@ -623,8 +551,7 @@ theorem lax_abstract {E : Type*} [SeminormedAddCommGroup E] {T : ℝ} {h : ℕ �
 
 variable (Q : Feec.BGG.Discrete bggSegment)
 
-/-- The discrete source: the representer in `Ṽₕ¹` of `v ↦ ⟪f(t), v⟫` (`cubeSource` for the
-discretization of Table 6.1). -/
+/-- The discrete source: the representer in `Ṽₕ¹` of `v ↦ ⟪f(t), v⟫`. -/
 def srcQ [CompleteSpace Q.Vt1h] (f : ℝ → Wv W1) (t : ℝ) : Q.Vt1h :=
   (InnerProductSpace.toDual ℝ Q.Vt1h).symm
     ((innerSL ℝ (f t)).comp (incl1CLM.comp Q.Vt1h.subtypeL))
@@ -651,8 +578,7 @@ theorem norm_srcQ_le [CompleteSpace Q.Vt1h] (f : ℝ → Wv W1) (t : ℝ) :
       rw [← sq, h]; exact h2
     exact le_of_mul_le_mul_right h3 h0
 
-/-- The energy embedding of the domain model `H̊Λ⁰ × H̊Λ¹(Q)³ × L²Λ² × (L²Λ²)³` into the
-continuous energy space. -/
+/-- The energy embedding of `H̊Λ⁰ × H̊Λ¹(Q)³ × L²Λ² × (L²Λ²)³` into the energy space. -/
 def embU : (U0 × Wv U1 × W2 × Wv W2) →L[ℝ] Feec.BGG.EnergySpace W0 (Wv W1) W2 (Wv W2) :=
   (Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2)).comp
     (D0.domain.subtypeL.prodMap (incl1CLM.prodMap (ContinuousLinearMap.id ℝ (W2 × Wv W2))))
@@ -674,8 +600,7 @@ theorem isEnergyEmbedding_embQ : Feec.BGG.Discrete.IsEnergyEmbedding (embQ Q) :=
   isEnergyEmbedding_embU ((a.1 : U0), (a.2.1 : Wv U1), (a.2.2.1 : W2), (a.2.2.2 : Wv W2))
     ((b.1 : U0), (b.2.1 : Wv U1), (b.2.2.1 : W2), (b.2.2.2 : Wv W2))
 
-/-- The energy vector `(σₕ, uₕ, Mₕ, ρₕ)(t)` of a solution of a discretization of (6.1), in the
-continuous energy space. -/
+/-- The energy vector `(σₕ, uₕ, Mₕ, ρₕ)(t)` of a discrete solution, in the energy space. -/
 def dvec {T : ℝ} {g : ℝ → Q.Vt1h} (sh : Feec.BGG.DiscreteSolution Q.toSegmentH T g) (t : ℝ) :
     Feec.BGG.EnergySpace W0 (Wv W1) W2 (Wv W2) :=
   embQ Q (sh.σ t, sh.u t, sh.M t, sh.ρ t)
@@ -687,7 +612,6 @@ theorem norm_dvec_sub {T : ℝ} {g₁ g₂ : ℝ → Q.Vt1h}
       ‖(s₁.sub' s₂).M t‖ ^ 2 + ‖(s₁.sub' s₂).ρ t‖ ^ 2) :=
   Feec.BGG.Discrete.norm_sub_of_isEnergyEmbedding (isEnergyEmbedding_embQ Q) _ _
 
-/-- **Stability of the discrete system**: `‖Uₕ(t) − Vₕ(t)‖ ≤ ‖Uₕ(0) − Vₕ(0)‖ + ∫₀ᵗ ‖g₁ − g₂‖`. -/
 theorem norm_dvec_sub_le {T : ℝ} {g₁ g₂ : ℝ → Q.Vt1h}
     (s₁ : Feec.BGG.DiscreteSolution Q.toSegmentH T g₁)
     (s₂ : Feec.BGG.DiscreteSolution Q.toSegmentH T g₂)
@@ -702,14 +626,11 @@ theorem norm_dvec_sub_le {T : ℝ} {g₁ g₂ : ℝ → Q.Vt1h}
     (s₁.sub' s₂).sqrt_energy_le hg t ht
   linarith
 
-/-- The energy vector of a classical solution of (6.2) through `embU`. -/
 theorem exactWave_toSolution_vec' {T : ℝ} {f : ℝ → Wv W1}
     (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) (t : ℝ) :
     (exactWave_toSolution s).vec t = embU (s.σ t, s.u t, s.M t, s.ρ t) :=
   rfl
 
-/-- The error of a discrete solution with respect to a classical solution of (6.2), in energy
-vectors: the quantity bounded by `cubeWave_rate_tr'`. -/
 theorem norm_vec_sub_dvec {T : ℝ} {f : ℝ → Wv W1} {g : ℝ → Q.Vt1h}
     (s : Feec.BGG.ExactWave bggSegment T (srcFun f))
     (sh : Feec.BGG.DiscreteSolution Q.toSegmentH T g) (t : ℝ) :
@@ -730,32 +651,23 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-/-- **The rate class** of `cubeWave_rate_tr'`: classical solutions of (6.2) whose states and time
-derivatives are `C²` up to `∂Q` with vanishing tangential traces (bound `L`), with
-`L²`-bounded multiplier functionals. -/
+/-- Classical solutions of (6.2) whose states and time derivatives are `C²` with vanishing
+tangential traces, and whose multipliers and their derivatives are bounded, all with bound `L`. -/
 def IsRateClass {T : ℝ} {f : ℝ → Wv W1} (s : Feec.BGG.ExactWave bggSegment T (srcFun f))
     (L : ℝ) : Prop :=
   0 ≤ L ∧ (∀ t ∈ Icc 0 T, IsSmoothStateTr L (s.σ t) (s.φ t) (s.u t) (s.M t) (s.ρ t) ∧
       IsSmoothStateTr L (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t)) ∧
     ∀ t ∈ Icc 0 T, ∀ μ : U1, |s.ℓ t μ| ≤ L * ‖μ‖ ∧ |s.ℓ' t μ| ≤ L * ‖μ‖
 
-/-- **Approximability by the rate class** of a solution `w` of (6.1) with source `fw`: for every
-`ε > 0` there is a classical solution `s` of (6.2) in the rate class, with any continuous source
-`f`, such that `‖w(0) − s(0)‖ + ∫₀ᵀ ‖fw − f‖ < ε` (energy norm). By the continuous energy
-estimate (`Feec.BGG.WaveData.Solution.norm_vec_sub_le`) `s` is then uniformly `ε`-close to `w`
-on `[0,T]`. -/
+/-- Approximability of a solution of (6.1) by the rate class, in energy and in the source. -/
 def IsRateApproximable {T : ℝ} {fw : ℝ → Wv W1} (w : cubeWaveData.Solution T fw) : Prop :=
   ∀ ε > 0, ∃ (f : ℝ → Wv W1) (_ : ContinuousOn f (Icc 0 T))
     (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) (L : ℝ), IsRateClass s L ∧
       ‖w.vec 0 - (exactWave_toSolution s).vec 0‖ + ∫ r in (0:ℝ)..T, ‖fw r - f r‖ < ε
 
 set_option maxHeartbeats 4000000 in
-/-- **Convergence of (6.5) without rate (Lax)**: let `w` be a solution of (6.1) on the cube with
-continuous source `fw`, approximable by the rate class (`IsRateApproximable`). Then every family
-of solutions of (6.5) with source `P_{Ṽₕ¹} fw` (`cubeSource`) whose initial states converge to
-`w(0)` in the energy norm converges to `w` uniformly on `[0,T]`. Consistency is the `O(h)` rate of
-`cubeWave_rate_tr'` on the rate class; stability is the energy estimate of (6.1)
-(`Feec.BGG.WaveData.Solution.norm_vec_sub_le`) and that of (6.5) (`norm_dvec_sub_le`). -/
+/-- If `w` solves (6.1) with a continuous source `fw` and is approximable by the rate class, the
+solutions of (6.5) with source `P fw` and initial states `→ w(0)` converge to `w` uniformly. -/
 theorem tendsto_of_isRateApproximable {T : ℝ} (hT0 : 0 < T) {fw : ℝ → Wv W1}
     (hfw : ContinuousOn fw (Icc 0 T)) (w : cubeWaveData.Solution T fw)
     (hw : IsRateApproximable w)
@@ -811,8 +723,7 @@ open Feec.Counterexamples.BoundedBGG Feec.Counterexamples.BoundedDomainTSD
 theorem nonempty_cubeDomain : (cubeDomain 3).Nonempty :=
   ⟨fun _ => 1 / 4, fun _ _ => ⟨by norm_num, by norm_num⟩⟩
 
-/-- The TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of
-`Feec.Counterexamples.BoundedBGG.bggComplex_verdict` on `Q`, in the matrix model. -/
+/-- The TSD datum `(σ, u, (M, B))(0) = (0, 0, (0, β))`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, on `Q`. -/
 abbrev betaDatum : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))) :=
   ShortHilbertComplex.mk3 0 0 (betaPair (isOpen_cubeDomain 3) (isBounded_cubeDomain 3) 0)
@@ -864,9 +775,6 @@ theorem dvec_eq (Q : Feec.BGG.Discrete bggSegment) {T : ℝ} {g : ℝ → Q.Vt1h
       ((((sh.σ t : Q.V0h) : U0) : W0), incl1 ((sh.u t : Q.Vt1h) : Wv U1),
         ((sh.M t : Q.W2h) : W2), ((sh.ρ t : Q.Wt2h) : Wv W2)) := rfl
 
-/-- **The TSD datum on `Q`** (`bggComplex_verdict`): the matrix-model Hodge wave equation of
-(5.1)/(6.1) has a unique strong solution `U` on `[0,T]` from `(0, 0, (0, β))`; `σ ≡ 0`,
-`u(t) ∉ L²(TSD)` for some `t` and `B(t)` is not symmetric for some `t`. -/
 theorem exists_betaSolution {T : ℝ} (hT0 : 0 < T) :
     ∃ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
         (W2B ℝ (cubeDomain 3))),
@@ -879,8 +787,6 @@ theorem exists_betaSolution {T : ℝ} (hT0 : 0 < T) :
   (bggComplex_verdict (isOpen_cubeDomain 3) (isBounded_cubeDomain 3) nonempty_cubeDomain).2.2 T
     hT0
 
-/-- The matrix solution read in the forms model is a strong solution there
-(`Feec.EinsteinBianchi.MatrixModel.isStrongSolution_iff`). -/
 theorem isStrongSolution_forms {T : ℝ}
     {U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix)
       (W2B ℝ (cubeDomain 3)))}
@@ -910,8 +816,6 @@ theorem solutionOfStrong_vec_zero {T : ℝ} (hT0 : 0 < T)
   rw [e0, e1, e2, neg_zero]
   rfl
 
-/-! The discrete data and the conclusions for the TSD datum. -/
-
 section BetaDiscrete
 
 variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
@@ -921,7 +825,6 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
 theorem Wt2h_eq (N : ℕ) : (cubeFEM hT hB N).Wt2h = tsub ((polyMin 3 PolySeq.lagrangeP2 N).V 2) :=
   rfl
 
-/-- `dist(ρ(0), P₁Λ̊² ⊗ ℝ³) → 0` (the discrete magnetic spaces approximate every field). -/
 theorem tendsto_infDist_rhoBeta :
     Tendsto (fun N => Metric.infDist rhoBeta ((cubeFEM hT hB N).Wt2h : Set (Wv W2))) atTop
       (𝓝 0) := by
@@ -958,9 +861,6 @@ theorem norm_rhoBeta_sub_rhoBetaH (N : ℕ) :
   rw [← dist_eq_norm]
   exact Submodule.dist_starProjection_eq_infDist _ _
 
-/-- **Discrete solutions of (6.5) from the TSD datum exist**: for every `N` the scheme has a
-solution with source `0` and data `(σₕ, uₕ, Mₕ, ρₕ)(0) = (0, 0, 0, P ρ(0))` ((C2) holds since
-`uₕ(0) = 0`). -/
 theorem exists_betaDiscrete {T : ℝ} (hT0 : 0 < T) (N : ℕ) :
     ∃ s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
       s.σ 0 = 0 ∧ s.u 0 = 0 ∧ s.M 0 = 0 ∧ s.ρ 0 = rhoBetaH hT hB N :=
@@ -972,8 +872,6 @@ theorem norm_symm_sub {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace �
     [NormedAddCommGroup F] [InnerProductSpace ℝ F] (e : E ≃ₗᵢ[ℝ] F) (x : F) (y : E) :
     ‖e.symm x - y‖ = ‖x - e y‖ := by
   rw [← e.norm_map, LinearIsometryEquiv.map_sub, LinearIsometryEquiv.apply_symm_apply]
-
-/-! The main theorem. -/
 
 section Main
 
@@ -1002,8 +900,7 @@ def betaE (t : ℝ) : L2F ℝ (cubeDomain 3) Ix := betaU hT0 t 1
 def betaB (t : ℝ) : L2F ℝ (cubeDomain 3) Ix :=
   (WithLp.ofLp (betaU hT0 t 2 : W2B ℝ (cubeDomain 3))).2
 
-/-- The TSD solution in the forms model: a solution of (6.1) of `cubeWaveData`
-(`solutionOfStrong` of the forms reading `totalE⁻¹ ∘ betaU`). -/
+/-- The TSD solution in the forms model, as a solution of (6.1) of `cubeWaveData`. -/
 def betaW : cubeWaveData.Solution T 0 :=
   solutionOfStrong (isStrongSolution_forms (betaU_spec hT0).2.1)
 
@@ -1054,7 +951,6 @@ theorem norm_rows2Equiv_sub_le {t : ℝ} (ht : t ∈ Icc 0 T) {N : ℕ}
     ((sh.ρ t : (cubeFEM hT hB N).Wt2h) : Wv W2)
   exact e3.symm.trans_le (h.trans_eq (congrArg₂ (fun x y => ‖x - y‖) e1.symm e2.symm))
 
-/-- A point outside a closed set has a neighborhood outside it. -/
 theorem eventually_not_mem_of_tendsto {E : Type*} [SeminormedAddCommGroup E] {S : Set E}
     (hS : IsClosed S) {x : E} (hx : x ∉ S) {y : ℕ → E}
     (hy : ∀ ε > 0, ∀ᶠ N in atTop, ‖x - y N‖ < ε) : ∀ᶠ N in atTop, y N ∉ S := by
@@ -1063,28 +959,9 @@ theorem eventually_not_mem_of_tendsto {E : Type*} [SeminormedAddCommGroup E] {S 
   exact hball (by rw [Metric.mem_ball, dist_eq_norm, norm_sub_rev]; exact hN)
 
 set_option maxHeartbeats 4000000 in
-/-- **The method converges to the wrong physics, through the rate class**
-([QuennevilleBelair2015], §6.3, (6.5) with Table 6.1 and the thesis' boundary conditions; the
-regularity hypothesis is discharged by `curlPotential`). For the TSD datum
-`(σ, u, (M, B))(0) = (0, 0, (0, β))`,
-`β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of `Feec.Counterexamples.BoundedBGG.bggComplex_verdict` on `Q`:
-1. the matrix-model Hodge wave equation has a unique strong solution `U = betaU` on `[0,T]`, with
-   `σ ≡ 0`, and `U` **leaves TSD**: `E(t) ∉ L²(TSD)` for some `t` and `B(t)` is not symmetric for
-   some `t`;
-2. read in the forms model (`Feec.EinsteinBianchi.MatrixModel`), `U` is a solution `w = betaW` of
-   (6.1) with initial energy vector `(0, 0, 0, ρ(0))`, `ρ(0) = ⋆β` row by row;
-3. the scheme (6.5) has solutions from the projected data `(0, 0, 0, P ρ(0))`, and their initial
-   states converge to `w(0)`;
-4. **if `w` is approximable by the rate class** (`IsRateApproximable`), then every family of
-   solutions of (6.5) whose initial states converge to `w(0)` converges to `w` uniformly on
-   `[0,T]` (in energy, hence `E_h(t) → E(t)` and `B_h(t) → B(t)` uniformly for the matrix
-   proxies `E_h = rowsEquiv uₕ`, `B_h = rows2Equiv ρₕ`), and the discrete fields themselves
-   leave TSD: at the times of item 1, for all large `N`, `E_h(t) ∉ L²(TSD)` and `B_h(t)` is not
-   symmetric.
-Items 1–3 are unconditional. The solution from this datum is not in the rate class
-(`not_isRateClass_of_rho`: `ρ(0)` has nonzero tangential traces), and whether it is approximable
-by the rate class is not decided here; item 4 holds without the hypothesis
-(`Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd`). -/
+/-- The solution of the TSD datum `(0, 0, (0, β))` leaves TSD; if it is approximable by the rate
+class, solutions of (6.5) with initial states converging to it converge, and their fields leave
+TSD. -/
 theorem waveFEM_converges_to_non_tsd_of_isRateApproximable
     {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -1148,8 +1025,6 @@ end BetaDiscrete
 
 end Beta
 
-/-! ### Every datum in `D(L)` -/
-
 section DomainData
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
@@ -1167,7 +1042,6 @@ section NotRateClass
 
 open Feec.Counterexamples.BoundedDomainTSD
 
-/-- The `{0, 2}`-component of the first magnetic row: `(ρ₀(0))_{{0,2}} = −y₂`. -/
 theorem rhoBeta_zero_idx2_one :
     ((rhoBeta 0 (idx2 1) : L2 ℝ (cubeDomain 3)) : (Fin 3 → ℝ) → ℝ)
       =ᵐ[volume.restrict (cubeDomain 3)] fun y => -y 2 := by
@@ -1186,10 +1060,6 @@ theorem rhoBeta_zero_idx2_one :
     (Fin 3 → ℝ) → ℝ) y = betaField (0, 1) y from h2]
   simp [sgn2, betaField]
 
-/-- **The TSD datum is not in the rate class**: the first magnetic row `ρ₀(0)` (the `2`-form of
-`x₃ e₂`) is in no class `IsCsFormTr s 2 L`: a continuous representative agrees with it on `Q`,
-hence on `cl Q`, and its `{0, 2}`-component `−y₂` is tangential to the face `{y₁ = 0}` and
-nonzero at `(¼, 0, ¼)`. -/
 theorem not_isCsFormTr_rhoBeta (s : ℕ) (L : ℝ) : ¬ IsCsFormTr s 2 L (rhoBeta 0) := by
   rintro (hj | ⟨k, hk, w, hw, -, htan, -, he⟩)
   · norm_num at hj
@@ -1212,9 +1082,8 @@ theorem not_isCsFormTr_rhoBeta (s : ℕ) (L : ℝ) : ¬ IsCsFormTr s 2 L (rhoBet
   rw [h0] at h1
   simp [y₀] at h1
 
-/-- **No classical solution of the rate class starts from the TSD datum**: if `s.ρ(0) = ρ(0)`,
-then `s` is not in `IsRateClass s L` for any `L` (so `cubeWave_rate_tr'` does not apply to the
-TSD solution, and `waveFEM_converges_to_non_tsd` needs `IsRateApproximable`). -/
+/-- No classical solution of the rate class starts from the TSD datum: if `s.ρ(0) = ρ(0)`, then
+`s` is in no `IsRateClass s L`. -/
 theorem not_isRateClass_of_rho {T : ℝ} (hT0 : 0 ≤ T) {f : ℝ → Wv W1}
     (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) (hρ : s.ρ 0 = rhoBeta) (L : ℝ) :
     ¬ IsRateClass s L := fun h => by

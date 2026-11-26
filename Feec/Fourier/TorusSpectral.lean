@@ -7,49 +7,11 @@ public import Feec.HilbertComplex.RestrictScalars
 /-!
 # Pure point spectrum of Fourier models
 
-A Hilbert complex whose total space is exhausted by finite-dimensional reducing subcomplexes has
-an eigenbasis for its wave operator: on each finite-dimensional reducing subspace the wave
-operator `L` is a skew-symmetric matrix, so `L²` is diagonalizable there
-(`LinearPMap.IsSkewSymmetric.dense_span_isEigenSq_of_reducing`). Fourier models are of this
-kind: for a symbol complex on a countable set of frequencies with the counting measure (the
-torus `𝕋ᵈ`, frequencies `ℤᵈ`) and finite-dimensional fibres, the band-limited fields on finite
-sets of frequencies are finite-dimensional reducing subcomplexes. Hence **every torus symbol
-complex with finite-dimensional fibres has a wave group with pure point spectrum**, and forward
-invariance of a closed subspace is full invariance
-(`Feec.C0Group.IsIsometric.mem_invariantCore_of_forward_invariant`). The resolvent need not be
-compact (the harmonic fields may form an infinite-dimensional space, e.g. `ker curl` for the
-grad–curl complex), so `Feec.C0Group.eigenDense_of_compactResolvent` does not apply; the
-Fourier modes replace it.
-
-On the Fourier side the wave operator acts frequency by frequency through the **wave symbol**
-`W(a)` (`SymbolComplex.waveSym`, `(L x)(a) = W(a) x(a)`), so an eigenvector of `L²` with
-eigenvalue `-ω²` is, at every frequency, an eigenvector of `W(a)²`
-(`SymbolComplex.waveSym_sq_of_isEigenSq`).
-
-## Main results
-
-* `HilbertComplex.eigenDense_waveGroup_of_reducing` and the real form `eigenDense_restrictScalars_waveGroup_of_reducing`: finite-dimensional
-  reducing subcomplexes spanning a dense subspace give an eigenbasis.
-* **`SymbolComplex.eigenDense_waveGroup`**, `SymbolComplex.isPurePoint_waveGroup`,
-  `SymbolComplex.mem_invariantCore_of_forward_invariant` (counting measure, finite-dimensional
-  fibres); `SymbolComplex.mem_closure_iUnion_band` (finite bands are dense).
-* **`Torus.eigenDense_waveGroup`**, `Torus.isPurePoint_waveGroup`,
-  `Torus.mem_invariantCore_of_forward_invariant`: every constant-coefficient complex on `𝕋ᵈ`.
-* `SymbolComplex.waveSym`, `SymbolComplex.wave_apply_count`,
-  `SymbolComplex.waveSym_sq_of_isEigenSq`.
-* `SymbolComplex.modeField`, `SymbolComplex.wave_modeField`,
-  **`SymbolComplex.waveGroup_modeField`**: a single Fourier mode `δ_k v` (a plane wave) whose
-  amplitude is an eigenvector of the wave symbol, `W(k) v = c v`, evolves by
-  `e^{tL} δ_k v = exp(t c) δ_k v` (`HilbertComplex.waveGroup_S_eq_of_wave_eq_smul`).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17 on the cube: only stationary data propagate)
-* [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
-  §VII.3 (mean ergodic theorem)
-
-Bibliography: [references.bib](../../docs/references.bib)
+In a Hilbert complex exhausted by finite-dimensional reducing subcomplexes, the eigenvectors of
+`L²`, `L` the wave operator, span a dense subspace; so do those of every symbol complex on a
+countable set of frequencies with the counting measure and finite-dimensional fibres, in
+particular of every constant-coefficient complex on `𝕋ᵈ`, whose wave group then has pure point
+spectrum.
 -/
 
 @[expose] public noncomputable section
@@ -57,15 +19,12 @@ Bibliography: [references.bib](../../docs/references.bib)
 open scoped InnerProductSpace Topology
 open MeasureTheory LinearPMap Set Filter
 
-/-! ### Finite-dimensional reducing subcomplexes -/
-
 namespace Feec.HilbertComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
 
 omit [∀ i, CompleteSpace (W i)] in
-/-- A family of finite-dimensional subspaces has a finite-dimensional total subspace. -/
 theorem finiteDimensional_totalSub (S : ∀ i, Submodule 𝕜 (W i))
     [∀ i, FiniteDimensional 𝕜 (S i)] : FiniteDimensional 𝕜 (totalSub S) := by
   let Φ : totalSub S →ₗ[𝕜] ∀ i, S i :=
@@ -77,9 +36,8 @@ theorem finiteDimensional_totalSub (S : ∀ i, Submodule 𝕜 (W i))
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] (H : HilbertComplex 𝕜 c W)
 
-/-- **An eigenbasis from finite-dimensional reducing subcomplexes**: if finite-dimensional
-reducing subcomplexes `B n` of `H` span a dense subspace of the total space, the eigenvectors of
-`L²` span a dense subspace (`EigenDense`). -/
+/-- If finite-dimensional reducing subcomplexes span a dense subspace, so do the eigenvectors of
+`L²`. -/
 theorem eigenDense_waveGroup_of_reducing {κ : Type*} (B : κ → ∀ i, Submodule 𝕜 (W i))
     [∀ n i, FiniteDimensional 𝕜 (B n i)] (hB : ∀ n, H.ReducingSubcomplex (B n))
     (hspan : Dense ((⨆ n, totalSub (B n) : Submodule 𝕜 (PiLp 2 W)) : Set (PiLp 2 W))) :
@@ -91,8 +49,6 @@ theorem eigenDense_waveGroup_of_reducing {κ : Type*} (B : κ → ∀ i, Submodu
     H.isSkewAdjoint_wave.dense_domain (fun n => totalSub (B n))
     (fun n => (hB n).isReducing_wave) hspan
 
-/-- **The orbit of an eigenvector of the wave operator**: if `L x = c x`, then
-`e^{tL} x = exp(t c) x` (`C0Group.IsIsometric.S_eq_of_generator_eq_smul`). -/
 theorem waveGroup_S_eq_of_wave_eq_smul {x : PiLp 2 W} (hx : x ∈ H.wave.domain) {c : 𝕜}
     (e : H.wave ⟨x, hx⟩ = c • x) (t : ℝ) :
     H.waveGroup.S t x = NormedSpace.exp (t • c) • x := by
@@ -105,19 +61,12 @@ theorem waveGroup_S_eq_of_wave_eq_smul {x : PiLp 2 W} (hx : x ∈ H.wave.domain)
 
 end Feec.HilbertComplex
 
-/-! ### Complex complexes viewed over `ℝ` -/
-
 namespace Feec.HilbertComplex
 
 variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℂ (W i)] [∀ i, CompleteSpace (W i)]
   [∀ i, InnerProductSpace ℝ (W i)] [∀ i, IsScalarTower ℝ ℂ (W i)] {H : HilbertComplex ℂ c W}
 
-/-- **An eigenbasis over `ℝ`**: finite-dimensional complex reducing subcomplexes spanning a dense
-subspace give an eigenbasis for the wave group of the complex viewed over `ℝ`
-(`HilbertComplex.restrictScalars`), provided the real inner products are the real parts of the
-complex ones. Density is asked of the union of the total subspaces, which lies in their real and
-in their complex span. -/
 theorem eigenDense_restrictScalars_waveGroup_of_reducing
     (hre : ∀ i (x y : W i), ⟪x, y⟫_ℝ = RCLike.re ⟪x, y⟫_ℂ) {κ : Type*}
     (B : κ → ∀ i, Submodule ℂ (W i)) [∀ n i, FiniteDimensional ℂ (B n i)]
@@ -136,8 +85,6 @@ theorem eigenDense_restrictScalars_waveGroup_of_reducing
 
 end Feec.HilbertComplex
 
-/-! ### Symbol complexes with the counting measure -/
-
 namespace Feec.Fourier.SymbolComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜] {β : Type*} [MeasurableSpace β]
@@ -153,7 +100,6 @@ def fibre (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) (a : β)
 @[simp] theorem fibre_apply (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) (a : β)
     (i : ι) : fibre x a i = (x i : β → E i) a := rfl
 
-/-- Two fields with the same fibres are equal. -/
 theorem ext_fibre {x y : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)}
     (h : ∀ a, fibre x a = fibre y a) : x = y :=
   PiLp.ext fun i => Lp.ext_count fun a => congrArg (fun v : PiLp 2 E => v i) (h a)
@@ -166,14 +112,12 @@ theorem fibre_smul (r : 𝕜) (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : M
 variable [MeasurableSingletonClass β] [Countable β] [DecidableEq β]
 
 omit [∀ i, InnerProductSpace 𝕜 (E i)] in
-/-- A single Fourier coefficient is square-summable. -/
 theorem memLp_single {i : ι} (k : β) (v : E i) :
     MemLp (Pi.single k v : β → E i) 2 (Measure.count : Measure β) :=
   (memLp_count_iff two_ne_zero).2 (memℓp_gen (summable_of_ne_finset_zero (s := {k}) fun a ha => by
     simp [Finset.mem_singleton.not.1 ha]))
 
-/-- **The single-mode field** `δ_k v` (a plane wave `e^{2πi k·x} v` on the torus): its only
-nonzero fibre is `v`, at the frequency `k`. -/
+/-- The single-mode field `δ_k v`: its only nonzero fibre is `v`, at the frequency `k`. -/
 def modeField (k : β) (v : PiLp 2 E) : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β) :=
   WithLp.toLp 2 fun i => (memLp_single k (v i)).toLp _
 
@@ -199,8 +143,7 @@ end Fibre
 variable [∀ i, CompleteSpace (E i)] [Fintype ι]
   (S : SymbolComplex 𝕜 (Measure.count : Measure β) c E)
 
-/-- **The wave symbol** `W(a) = Σ m(a) - Σ m(a)*` at the frequency `a`: the fibre matrix of the
-wave operator, `(W(a) v)_j = Σ_i m_{ij}(a) v_i - Σ_k m_{jk}(a)* v_k`. -/
+/-- The wave symbol `W(a)`, the fibre matrix of the wave operator at the frequency `a`. -/
 def waveSym (a : β) : PiLp 2 E →L[𝕜] PiLp 2 E :=
   ((PiLp.continuousLinearEquiv 2 𝕜 E).symm : (∀ i, E i) →L[𝕜] PiLp 2 E).comp
     ((ContinuousLinearMap.pi fun j =>
@@ -214,7 +157,6 @@ theorem waveSym_apply (a : β) (v : PiLp 2 E) (j : ι) :
       ∑ i, S.m i j a (v i) - ∑ k, ContinuousLinearMap.adjoint (S.m j k a) (v k) := by
   simp [waveSym]
 
-/-- **The wave operator acts fibrewise**: `(L x)(a) = W(a) x(a)`. -/
 theorem wave_apply_count (x : S.toHilbertComplex.wave.domain) (a : β) :
     fibre (S.toHilbertComplex.wave x) a = S.waveSym a (fibre x a) := by
   ext j
@@ -230,7 +172,6 @@ section Mode
 
 variable [MeasurableSingletonClass β] [Countable β] [DecidableEq β]
 
-/-- Single-mode fields lie in `D(L)`. -/
 theorem modeField_mem_wave_domain (k : β) (v : PiLp 2 E) :
     modeField k v ∈ S.toHilbertComplex.wave.domain := by
   have hm : ∀ {i j : ι} (m : β → E i →L[𝕜] E j),
@@ -246,8 +187,6 @@ theorem modeField_mem_wave_domain (k : β) (v : PiLp 2 E) :
   rw [adjoint_d]
   exact hm fun a => ContinuousLinearMap.adjoint (S.m i j a)
 
-/-- **The wave operator on a single mode** is the wave symbol at its frequency:
-`L (δ_k v) = δ_k (W(k) v)`. -/
 theorem wave_modeField (k : β) (v : PiLp 2 E) :
     S.toHilbertComplex.wave ⟨modeField k v, S.modeField_mem_wave_domain k v⟩ =
       modeField k (S.waveSym k v) :=
@@ -257,8 +196,6 @@ theorem wave_modeField (k : β) (v : PiLp 2 E) :
     · rw [h]
     · exact map_zero _
 
-/-- **Plane waves**: if `v` is an eigenvector of the wave symbol, `W(k) v = c v`, the orbit of the
-single mode `δ_k v` is `e^{tL} δ_k v = exp(t c) δ_k v`. -/
 theorem waveGroup_modeField [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)] (k : β)
     {v : PiLp 2 E} {c : 𝕜} (h : S.waveSym k v = c • v) (t : ℝ) :
     S.toHilbertComplex.waveGroup.S t (modeField k v) = NormedSpace.exp (t • c) • modeField k v :=
@@ -267,8 +204,6 @@ theorem waveGroup_modeField [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower
 
 end Mode
 
-/-- **Fibrewise annihilated fields are harmonic**: if every symbol and every adjoint symbol kills
-the fibres of `x`, then `x ∈ D(L)` and `L x = 0`. -/
 theorem exists_wave_eq_zero_of_fibre {x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)}
     (h : ∀ i j a, S.m i j a ((x i : β → E i) a) = 0 ∧
       ContinuousLinearMap.adjoint (S.m i j a) ((x j : β → E j) a) = 0) :
@@ -290,7 +225,6 @@ theorem exists_wave_eq_zero_of_fibre {x : PiLp 2 fun i => Lp (E i) 2 (Measure.co
   simp only [fibre_apply, (h _ _ a).1, (h _ _ a).2, Finset.sum_const_zero, sub_zero]
   exact (Measure.ae_count_iff.1 (Lp.coeFn_zero (E j) 2 _) a).symm
 
-/-- **Eigenvectors of `L²` are fibrewise eigenvectors of `W(a)²`.** -/
 theorem waveSym_sq_of_isEigenSq [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)]
     {ω : ℝ} {x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)}
     (hx : S.toHilbertComplex.wave.IsEigenSq ω x) (a : β) :
@@ -301,14 +235,10 @@ theorem waveSym_sq_of_isEigenSq [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarT
   simp only [fibre_apply, PiLp.smul_apply]
   exact Measure.ae_count_iff.1 (Lp.coeFn_smul (𝕜 := ℝ) (-(ω ^ 2)) (x j)) a
 
-/-! #### Band-limited fields: the eigenbasis -/
-
 section Bands
 
 variable [MeasurableSingletonClass β]
 
-/-- Band-limited fields on finite sets of frequencies span a dense subspace (they contain the
-Fourier truncations along an exhausting sequence). -/
 theorem mem_closure_iUnion_band {A : ℕ → Set β} (hfin : ∀ N, (A N).Finite) (hmono : Monotone A)
     (hcov : ∀ a, ∃ N, a ∈ A N) [∀ N i, (S.band (A N) i).HasOrthogonalProjection]
     (x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β)) :
@@ -319,10 +249,6 @@ theorem mem_closure_iUnion_band {A : ℕ → Set β} (hfin : ∀ N, (A N).Finite
 
 variable [∀ i, FiniteDimensional 𝕜 (E i)] [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)]
 
-/-- **Every symbol complex on a countable set of frequencies with finite-dimensional fibres has an
-eigenbasis for its wave operator**, given an exhausting increasing sequence of finite sets of
-frequencies (e.g. the cubes `|k|_∞ ≤ N` in `ℤᵈ`): the band-limited fields are finite-dimensional
-reducing subcomplexes. -/
 theorem eigenDense_waveGroup {A : ℕ → Set β} (hfin : ∀ N, (A N).Finite) (hmono : Monotone A)
     (hcov : ∀ a, ∃ N, a ∈ A N) : S.toHilbertComplex.waveGroup.EigenDense := by
   have := fun N i => hasOrthogonalProjection_band S (hfin N).measurableSet i
@@ -334,14 +260,11 @@ theorem eigenDense_waveGroup {A : ℕ → Set β} (hfin : ∀ N, (A N).Finite) (
   exact iUnion_subset fun N y hy =>
     (le_iSup (fun N => HilbertComplex.totalSub (S.band (A N))) N) hy
 
-/-- **Pure point spectrum of Fourier models.** -/
 theorem isPurePoint_waveGroup {A : ℕ → Set β} (hfin : ∀ N, (A N).Finite) (hmono : Monotone A)
     (hcov : ∀ a, ∃ N, a ∈ A N) : S.toHilbertComplex.waveGroup.IsPurePoint :=
   S.toHilbertComplex.isIsometric_waveGroup.isPurePoint_of_eigenDense
     (S.eigenDense_waveGroup hfin hmono hcov)
 
-/-- **In a Fourier model, forward invariance is invariance**: if the forward orbit (`t ≥ 0`) of `x`
-stays in a closed subspace `K`, then so does its whole orbit. -/
 theorem mem_invariantCore_of_forward_invariant {A : ℕ → Set β} (hfin : ∀ N, (A N).Finite)
     (hmono : Monotone A) (hcov : ∀ a, ∃ N, a ∈ A N)
     {K : Submodule 𝕜 (PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure β))}
@@ -356,8 +279,6 @@ end Bands
 
 end Feec.Fourier.SymbolComplex
 
-/-! ### Constant-coefficient complexes on the torus -/
-
 namespace Feec.Fourier.Torus
 
 variable {d : Type*} [Fintype d] {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι]
@@ -366,16 +287,15 @@ variable {d : Type*} [Fintype d] {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fint
   [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)]
   (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E)
 
-/-- **Every constant-coefficient complex on `𝕋ᵈ` with finite-dimensional fibres has an eigenbasis
-for its wave operator** (the Fourier modes; the cubes `|k|_∞ ≤ N` exhaust `ℤᵈ`). -/
+/-- For every constant-coefficient complex on `𝕋ᵈ` with finite-dimensional fibres, the
+eigenvectors of `L²`, `L` the wave operator, span a dense subspace. -/
 theorem eigenDense_waveGroup : (complex S).waveGroup.EigenDense :=
   (symbolComplex S).eigenDense_waveGroup finite_bandN bandN_mono exists_mem_bandN
 
-/-- **Pure point spectrum on the torus.** -/
 theorem isPurePoint_waveGroup : (complex S).waveGroup.IsPurePoint :=
   (complex S).isIsometric_waveGroup.isPurePoint_of_eigenDense (eigenDense_waveGroup S)
 
-/-- **On the torus, forward invariance of a closed subspace is invariance for all times.** -/
+/-- On the torus, forward invariance of a closed subspace is invariance for all times. -/
 theorem mem_invariantCore_of_forward_invariant
     {K : Submodule 𝕜 (PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure (d → ℤ)))}
     (hK : IsClosed (K : Set (PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure (d → ℤ)))))

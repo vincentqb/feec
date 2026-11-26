@@ -7,73 +7,18 @@ public import Feec.Models.Cube.MirrorWeakSymmetryFEM
 /-!
 # Convergence of the mirror scheme (6.5)
 
-The scheme (6.5) of [QuennevilleBelair2015], §6.3, on the cube `Q = (0, ½)³` with the mirror
-boundary conditions (`Feec.Models.Cube.MirrorWeakSymmetryFEM`: top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²`
-without boundary condition, bottom component `a` in `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ²` with vanishing degrees
-of freedom on the faces normal to `eₐ`) converges to the solution of the continuous problem (6.2)
-for the mirror data `mirrorBGGSegment` of `Feec.Models.Cube.MirrorWeakSymmetryComplex`.
-
-**The abstract theorem modulo harmonic forms.** `Feec.BGG.ExactWave.exists_discreteSolution_rate_harm`
-is the end-to-end `O(h)` theorem of `Feec.Models.Cube.WeakSymmetryWave` with `Feec.BGG.Stability`
-replaced by `Feec.BGG.HarmonicStability` (`Feec.HilbertComplex.BGG.Harmonic`): the mirror rows carry
-the constant mode of `HΛ⁰(Q)` and the harmonic forms `dxₐ ⊗ eₐ` of the bottom row, so `Stability`
-fails, but neither matters (the shifted form has a mass term on the top row, and `𝔥 ⊆ Ṽₕ¹` with
-`S¹𝔥 = 0`).
-
-**The discretization** `mirrorFEM` (a `Feec.BGG.Discrete`) uses the parity-smoothed projections of a
-single family of reflection kernels for the four complexes (`exists_mirror_estimates`), and couples
-the rows by `S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹` (the convention of `Feec.Models.Cube.WeakSymmetryWave`;
-the canonical coupling `S_h = Π¹S⁰` of `Feec.Models.Cube.MirrorWeakSymmetryFEM.mirrorSegment`
-is a different scheme, not analysed here): (5.4)
-(`mirrorFEM_compatible`, the parity smoother intertwines `S⁰` on the compatible classes),
-uniform bounds (`mirrorFEM_bounded`), Prop 5.9(1) for `π¹` (`mirrorFEM_happ0`), regular
-potentials of the bottom row with no regularity hypothesis (`mirrorFEMReg`, from the coexact
-potentials of `Feec.Models.Cube.DeRhamIdent.exists_coexact_potential`), `S₀,ₕ` onto
-(`mirrorWave_S0_surjective`) and `grad` injective on the bottom row (`mirrorWave_dt0_injective`).
-
-**Rates.** For classical solutions whose states and time derivatives are `C²` up to `∂Q` with the
-mirror tangential conditions and whose multiplier `M` lies in `D(curl*)` on `HΛ¹(Q)` (vanishing
-normal trace; automatic for TSD data, `M ≡ 0`) (`IsSmoothStateMirror`; no flatness at `∂Q`), the
-error is
-`≤ K L (1 + t) h_N` (`mirrorWave_rate`). For TSD-type solutions (`σ ≡ 0`, `M ≡ 0`), `σₕ` and
-`Mₕ` are `O(h)` and every bounded linear constraint of `B = ρ` (its symmetry) holds for `ρₕ` up to
-`O(h)` (`mirrorWave_rate_tsd`).
-
-**Convergence without rate.** For every classical solution in the energy class of
-`Feec.BGG.ExactWave` (continuity in `L²` of `σ, u, M, ρ, dφ, du, S¹u`) with `L²`-bounded
-multiplier functionals, the error tends to `0` uniformly on `[0,T]` (`mirrorWave_converges`): the
-parity-smoothed projections converge strongly (`tendsto_norm_sub_proj`, by density of the
-finite element spaces), hence uniformly on the compact trajectories (`eventually_mirrorClose`), and
-the consistency constant `K₁` tends to `0` by density of `D(d_max*)` (`eventually_mirrorFEM_K1`).
-
-**The TSD solution.** The theorems above are stated for every classical solution of (6.2) for the
-mirror data. `Feec.Models.Cube.MirrorWeakSymmetryTSD` identifies the real part of the Hodge wave
-solution of `Feec.Models.Cube.MirrorBGG.existsUnique_memQ` (data in `D(L²)`) with such a solution
-and proves that the scheme converges to it (`mirror_waveFEM`).
-
-## Main definitions
-
-* `mirrorDiscrete`, **`mirrorFEM`**, `mirrorWave`, `mirrorSource`, `mirrorSrcFun`.
-* `IsCsFormPart`, `IsSmoothStateMirror`, `MirrorClose`.
+The scheme (6.5) of [QuennevilleBelair2015], §6.3 on `Q = (0, ½)³` with mirror boundary conditions
+converges for solutions with `L²`-bounded multipliers: at the rate `O(h)` for smooth solutions and
+without rate in the energy class.
 
 ## Main results
 
-* **`Feec.BGG.ExactWave.exists_discreteSolution_rate_harm`**.
-* `mirrorFEM_compatible`, `mirrorFEM_bounded`, `mirrorFEM_happ0`, `mirrorFEMReg`, `harmBot_le`,
-  `mirrorWave_S0_surjective`, `mirrorWave_dt0_injective`, `mirrorFEM_strangData_le`.
-* **`mirrorWave_rate`**, **`mirrorWave_rate_tsd`**.
-* `Feec.Models.Cube.FEM.ParitySmoothingEstimates.tendsto_norm_sub_proj`,
-  `eventually_mirrorClose`, `exists_adjoint_approx`, `eventually_mirrorFEM_K1`,
-  **`mirrorWave_converges`**.
+* `mirrorWave_rate`: the error is at most `K L (1 + t) h_N`.
+* `mirrorWave_converges`: the error tends to `0` uniformly on `[0, T]`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3 (Prop 5.9), §6.2 ((6.4), Prop 6.2), §6.3 ((6.5), Table 6.1)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002] (Strang's lemma)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -94,10 +39,9 @@ variable {V0 Vt1 W2 Wt2 V1 Vt0 : Type*}
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} (Q : Discrete D) {T : ℝ} {g : ℝ → Vt1 →ₗ[ℝ] ℝ}
 
-/-- **End-to-end `O(h)` convergence of (6.3) for a classical solution of (6.2), modulo harmonic
-forms**: `Feec.BGG.ExactWave.exists_discreteSolution_rate` with `Stability` replaced by
-`Feec.BGG.HarmonicStability` (no hypothesis on the top row; harmonic forms on the bottom row).
-See [QuennevilleBelair2015], §6.2, (6.3), (6.4), Prop 6.2, and Thm 4.14. -/
+/-- **End-to-end `O(h)` convergence modulo harmonic forms**: the `O(h)` error bound of the discrete
+solution under `Feec.BGG.HarmonicStability` and Strang data of size `O(h)`
+([QuennevilleBelair2015], Prop 6.2, Thm 4.14). -/
 theorem _root_.Feec.BGG.ExactWave.exists_discreteSolution_rate_harm {Hh : Submodule ℝ Vt1}
     {Cp CS : ℝ} (HS : HarmonicStability D Hh Cp CS) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.V0h]
     [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
@@ -215,7 +159,6 @@ theorem dPart1_mem_V (x : (dPart (cubeDomain 3) J 1).domain) (hx : (x : W1) ∈ 
   have h := S'.mapsTo 1 2 x hx
   rwa [d12_apply_part] at h
 
-/-- `d π = π d` in degree `0`. -/
 theorem dPart0_π (P : S'.CochainProjection) (x : (dPart (cubeDomain 3) J 0).domain) :
     dPart (cubeDomain 3) J 0 ⟨P.π 0 x, mem_dPart0_of_mem_V (P.mem 0 x)⟩ =
       P.π 1 (dPart (cubeDomain 3) J 0 x) := by
@@ -223,7 +166,6 @@ theorem dPart0_π (P : S'.CochainProjection) (x : (dPart (cubeDomain 3) J 0).dom
   rw [d01_apply_part, d01_apply_part] at h
   exact h
 
-/-- `d π = π d` in degree `1`. -/
 theorem dPart1_π (P : S'.CochainProjection) (x : (dPart (cubeDomain 3) J 1).domain) :
     dPart (cubeDomain 3) J 1 ⟨P.π 1 x, mem_dPart1_of_mem_V (P.mem 1 x)⟩ =
       P.π 2 (dPart (cubeDomain 3) J 1 x) := by
@@ -299,8 +241,7 @@ def projB2 (PB : ∀ a, (SB a).CochainProjection) : Wv W2 →ₗ[ℝ] Wv W2 wher
   map_add' _ _ := PiLp.ext fun a => map_add ((PB a).π 2) _ _
   map_smul' _ _ := PiLp.ext fun a => map_smul ((PB a).π 2) _ _
 
-/-- **The discretization of the mirror data** by a subcomplex `ST` of the top row `HΛ(Q)` and
-subcomplexes `SB a` of the bottom components `HΛ_{a}(Q)`, with cochain projections. -/
+/-- **The discretization of the mirror data** by subcomplexes of the two rows, with projections. -/
 def mirrorDiscrete (PT : ST.CochainProjection) (PB : ∀ a, (SB a).CochainProjection) :
     Feec.BGG.Discrete mirrorBGGSegment where
   V0h := (ST.V 0).comap TD0.domain.subtype
@@ -343,8 +284,6 @@ theorem graphSq_bD1 (w : BU1) :
   unfold Feec.BGG.graphSq
   rw [norm_sq_BU1, norm_sq_bD1, ← Finset.sum_add_distrib]
 
-/-- **Uniform bounds of the mirror discretization** from graph-norm bounds of the projections in
-degree `1 → 2` and an `L²` bound of the top projection in degree `2`. -/
 theorem mirrorDiscrete_bounded {PT : ST.CochainProjection} {PB : ∀ a, (SB a).CochainProjection}
     {C : ℝ} (hC0 : 0 ≤ C) (hT : ∀ x, ‖PT.π 2 x‖ ≤ C * ‖x‖) (hTg : PT.IsGraphBounded 1 2 C)
     (hBg : ∀ a, (PB a).IsGraphBounded 1 2 C) : (mirrorDiscrete ST SB PT PB).Bounded C where
@@ -365,7 +304,7 @@ theorem mirrorDiscrete_bounded {PT : ST.CochainProjection} {PB : ∀ a, (SB a).C
 end Discretization
 
 
-/-! ### The parity smoother and `S⁰`: compatibility (5.4) -/
+/-! ### The parity smoother and `S⁰`: compatibility -/
 
 section Compat
 
@@ -376,7 +315,6 @@ variable {n : ℕ} (ρ : ReflKernel n)
 theorem smoothFun_zero' (pv : Fin n → ℝ) : smoothFun ρ pv (0 : (Fin n → ℝ) → ℝ) = 0 := by
   simpa using smoothFun_smul ρ pv 0 (0 : (Fin n → ℝ) → ℝ)
 
-/-- The smoothed parity extension of a finite combination of `L²` functions. -/
 theorem smoothFun_L2_sum {ι : Type*} (s : Finset ι) (c : ι → ℝ)
     (f : ι → L2 ℝ (Geometry.Q (Fin n))) (pv : Fin n → ℝ) :
     smoothFun ρ pv (((∑ i ∈ s, c i • f i : L2 ℝ (Geometry.Q (Fin n))) : (Fin n → ℝ) → ℝ)) =
@@ -401,9 +339,6 @@ theorem formExt_apply_pt {k : ℤ} (w : formIdx n k → (Fin n → ℝ) → ℝ)
 theorem symmDiff_empty_singleton (a : Fin n) : symmDiff (∅ : Finset (Fin n)) {a} = {a} := by
   ext x; simp [Finset.mem_symmDiff]
 
-/-- **The parity smoother intertwines `S⁰`** at the level of smooth forms, for compatible classes
-(the components `a` in the classes `J ∆ {a}`): `R^J S⁰ y = S⁰ (R^{J ∆ {a}} yₐ)ₐ` pointwise, the
-smooth-form version of `Feec.Models.Cube.ParitySmoother.wsL2_paritySmooth_symmDiff`. -/
 theorem paritySmoothForm_wsL2_zero {Ω : Set (Fin n → ℝ)} (J : Finset (Fin n))
     (hΩ : Ω = Geometry.Q (Fin n))
     (y : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n ((0 : ℕ) : ℤ)))) :
@@ -449,9 +384,6 @@ open Feec.Models.Cube.ParitySmoother PolySeq
 
 variable (ρ : ReflKernel 3)
 
-/-- **(5.4) at the mesh level**: if the bottom-row parity-smoothed interpolants of `y`, `y'` agree
-componentwise (classes `{a}`), so do the top-row parity-smoothed interpolants of `S⁰y`, `S⁰y'`
-(class `∅`): `Π_h R S⁰ y = Π¹ S⁰ Π̃⁰ R̃ y` (corrected Prop 5.7, `bggS0h_tensorInterp`). -/
 theorem paritySmoothedInterp_wsL2_zero_eq (M : SimplicialMesh 3) (hM : M.domain = Geometry.Q (Fin 3))
     {y y' : PiLp 2 (fun _ : Fin 3 => L2F ℝ M.domain (formIdx 3 0))}
     (h : ∀ a, Ebot.paritySmoothedInterp M ρ {a} hM ((0 : ℕ) : ℤ) (y a) =
@@ -480,7 +412,6 @@ theorem paritySmoothedInterp_wsL2_zero_eq (M : SimplicialMesh 3) (hM : M.domain 
   rw [ht]
 
 
-/-- `paritySmoothedInterp_wsL2_zero_eq` transported along `(mesh 3 N).domain = Θ`. -/
 theorem commutingMapOfEqPart_wsL2_zero_eq (N : ℕ) {Θ : Set (Fin 3 → ℝ)}
     (e : (mesh 3 N).domain = Θ) (hΘ : IsOpen Θ) (hΘQ : Θ ⊆ Geometry.Q (Fin 3))
     {y y' : PiLp 2 (fun _ : Fin 3 => L2F ℝ Θ (formIdx 3 0))}
@@ -515,9 +446,6 @@ theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.mono {n : ℕ} [NeZ
   bound N i x := (hE.bound N i x).trans (mul_le_mul_of_nonneg_right hC (norm_nonneg _))
   close := hE.close
 
-/-- **One smoother for both rows of the mirror scheme**: kernels `ρ_N` (of radius `γ h_N / 32`)
-and a constant `C` for which the parity smoothing estimates hold for the top row (class `∅`,
-`P₁⁻Λ`) and for every bottom component (class `{a}`, `P₂Λ ⊗ ℝ³`). -/
 theorem exists_mirror_estimates : ∃ (ρ : ℕ → ReflKernel 3) (C : ℝ),
     ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C ∧
       ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C := by
@@ -542,8 +470,6 @@ variable {ρ : ℕ → ReflKernel 3} {C : ℝ}
   (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
-/-- **(5.4) for the parity-smoothed projections**: `π¹ S⁰ π̃⁰ = π¹ S⁰` (common smoother;
-`π̃⁰` componentwise, classes `{a}`). -/
 theorem proj_wsL2_compatible (N : ℕ) (x : PiLp 2 (fun _ : Fin 3 => W0)) :
     (hT.proj N).π 1 (wsL2 (Ω := cubeDomain 3) 0
         (WithLp.toLp 2 fun a => ((hB a).proj N).π 0 (x a))) =
@@ -562,16 +488,12 @@ theorem proj_wsL2_compatible (N : ℕ) (x : PiLp 2 (fun _ : Fin 3 => W0)) :
     ⟨(paritySmoothed 3 PolySeq.lagrangeP2 N {a} (ρ N)).Q 0 (x a),
       (paritySmoothed 3 PolySeq.lagrangeP2 N {a} (ρ N)).mem 0 (x a)⟩
 
-/-- **The mirror scheme (6.5) as a discretization of the mirror data**: the spaces of Table 6.1
-with the mirror boundary conditions (`polyPartial`: top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` without
-boundary condition, bottom component `a` `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ²` with vanishing degrees of freedom on
-the faces normal to `eₐ`) on the level-`(N + 1)` Freudenthal mesh, with the parity-smoothed
-projections `π = J⁻¹ Π_h R` of one smoother. -/
+/-- **The mirror scheme**: a discretization of the mirror data with parity-smoothed projections. -/
 def mirrorFEM (N : ℕ) : Feec.BGG.Discrete mirrorBGGSegment :=
   mirrorDiscrete (polyPartial 3 PolySeq.lowestOrder N ∅)
     (fun a => polyPartial 3 PolySeq.lagrangeP2 N {a}) (hT.proj N) fun a => (hB a).proj N
 
-/-- **(5.4) holds for the mirror scheme** (`Feec.BGG.Discrete.Compatible`). -/
+/-- **The mirror scheme is compatible** (`Feec.BGG.Discrete.Compatible`). -/
 theorem mirrorFEM_compatible (N : ℕ) : (mirrorFEM hT hB N).Compatible := fun ψ => by
   refine Subtype.ext ?_
   change (hT.proj N).π 1 (wsL2 (Ω := cubeDomain 3) 0 (bIncl0 (projB0 (fun a => (hB a).proj N) ψ))) =
@@ -580,7 +502,6 @@ theorem mirrorFEM_compatible (N : ℕ) : (mirrorFEM hT hB N).Compatible := fun �
       WithLp.toLp 2 fun a => ((hB a).proj N).π 0 (bIncl0 ψ a) := PiLp.ext fun a => rfl
   rw [e, proj_wsL2_compatible]
 
-/-- **Uniform bounds of the mirror projections**: `Discrete.Bounded (2C)` for every `N`. -/
 theorem mirrorFEM_bounded (N : ℕ) : (mirrorFEM hT hB N).Bounded (2 * C) :=
   mirrorDiscrete_bounded hT.two_mul_nonneg (hT.norm_proj_le N 2)
     ((hT.proj N).isGraphBounded_of_norm_le (hT.norm_proj_le N 1) (hT.norm_proj_le N 2))
@@ -597,15 +518,12 @@ instance mirrorFEM_fd2 (N : ℕ) : FiniteDimensional ℝ (mirrorFEM hT hB N).W2h
 end MirrorFEM
 
 
-/-! ### Prop 5.9(1) for `π¹` on the mirror spaces -/
+/-! ### The consistency of `π¹S⁰` on the mirror spaces -/
 
 section ApproxS0
 
 open PolySeq
 
-/-- **Prop 5.9(1) on the mirror spaces (mesh level)**: for `ψ ∈ ∏ₐ P₂Λ⁰_{Γₐ}` the canonical
-`w = Π¹S⁰ψ ∈ P₁⁻Λ¹` (no boundary condition on the top row) satisfies `‖S⁰ψ − w‖ ≤ C h ‖∇ψ‖`,
-`C` independent of `N` (`norm_sub_glue_bggS0h_le`, which needs no boundary condition). -/
 theorem exists_sub_wsL2_le_mesh_mirror : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (ψ : PiLp 2 (fun _ : Fin 3 => L2F ℝ (mesh 3 N).domain (formIdx 3 0)))
     (_ : ∀ a, ψ a ∈ Ebot.VPartial (mesh 3 N) (partialFaces 3 {a}) 0)
@@ -645,7 +563,6 @@ theorem exists_sub_wsL2_le_mesh_mirror : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
   rw [hd', hψe]
   exact hC N u'
 
-/-- `exists_sub_wsL2_le_mesh_mirror` transported to a domain `Θ = (mesh 3 N).domain`. -/
 theorem exists_sub_wsL2_le_of_eq_mirror {C : ℝ} (N : ℕ)
     (hC : ∀ (ψ : PiLp 2 (fun _ : Fin 3 => L2F ℝ (mesh 3 N).domain (formIdx 3 0)))
       (_ : ∀ a, ψ a ∈ Ebot.VPartial (mesh 3 N) (partialFaces 3 {a}) 0)
@@ -674,9 +591,6 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
-/-- **Consistency of `S₀,ₕ = π¹S⁰` on the mirror spaces** ([QuennevilleBelair2015], Prop 5.9(1),
-transferred to the smoothed projection): `‖(I − π¹)S⁰ψ‖ ≤ C_app h ‖ψ‖_V` on
-`Ṽₕ⁰ = ∏ₐ P₂Λ⁰_{Γₐ}`. -/
 theorem mirrorFEM_happ0 : ∃ Capp, 0 ≤ Capp ∧ ∀ N, ∀ ψ ∈ (mirrorFEM hT hB N).Vt0h,
     ‖mirrorBGGSegment.S0 ψ - (mirrorFEM hT hB N).S0h ψ‖ ^ 2 ≤
       (Capp * meshSize N) ^ 2 * Feec.BGG.graphSq mirrorBGGSegment.dt0 ψ := by
@@ -712,7 +626,6 @@ section Regular
 
 open Feec.Models.Cube.ParitySmoother (zeroForm zeroForm_apply idx₀ eq_idx₀)
 
-/-- `mem_dPart_of_coeff` on the cube domain. -/
 theorem mem_dPart_of_coeff_cube (J : Finset (Fin 3)) (k : ℕ)
     (w : L2F ℝ (cubeDomain 3) (formIdx 3 (k : ℤ)))
     (g : formIdx 3 (k : ℤ) → L2F ℝ (cubeDomain 3) (formIdx 3 (((0 : ℕ) : ℤ) + 1)))
@@ -738,8 +651,7 @@ abbrev RegCoeff (a : Fin 3) (s : formIdx 3 ((1 : ℕ) : ℤ)) :=
 /-- A row of regular potentials. -/
 abbrev RegRow (a : Fin 3) := PiLp 2 fun s : formIdx 3 ((1 : ℕ) : ℤ) => RegCoeff a s
 
-/-- **The regularity space** `X_reg = ∏ₐ ∏_s H¹_{{a} ∆ s}(Q)` (graph norms) of the bottom row:
-`1`-forms in the component `a` whose parity extensions (class `{a}`) have `H¹` coefficients. -/
+/-- **The regularity space** `X_reg = ∏ₐ ∏_s H¹_{{a} ∆ s}(Q)` of the bottom row. -/
 abbrev RegSp := PiLp 2 fun a : Fin 3 => RegRow a
 
 instance : Subsingleton (formIdx 3 ((0 : ℕ) : ℤ)) := ⟨fun a b => (eq_idx₀ a).trans (eq_idx₀ b).symm⟩
@@ -749,7 +661,6 @@ theorem norm_zeroForm {Ω : Set (Fin 3 → ℝ)} (f : L2 ℝ Ω) : ‖(zeroForm 
   refine (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 ?_
   rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_subsingleton _ idx₀, zeroForm_apply]
 
-/-- `exists_coexact_potential_cube` in degree `1`. -/
 theorem exists_coexact_potential_one (J : Finset (Fin 3))
     (u : (dPart (cubeDomain 3) J 1).domain) :
     ∃ w : (dPart (cubeDomain 3) J 1).domain,
@@ -813,8 +724,6 @@ theorem norm_regR_le (y : RegSp) : ‖regR y‖ ≤ 1 * ‖y‖ := by
   rw [norm_sq_BU1, PiLp.norm_sq_eq_of_L2]
   exact Finset.sum_le_sum fun a _ => pow_le_pow_left₀ (norm_nonneg _) (norm_assemble_le a _) 2
 
-/-- **Every bottom field has a regular potential** with `‖y‖ ≤ √(1 + (2π)⁻²) ‖dv‖`
-(`exists_coexact_potential_cube` in each component). -/
 theorem exists_regR (v : BU1) : ∃ y : RegSp, bD1 (regR y) = bD1 v ∧
     ‖y‖ ≤ √(1 + (2 * Real.pi)⁻¹ ^ 2) * ‖bD1 v‖ := by
   choose w hdw hwn g hg hsum using fun a => exists_coexact_potential_one {a} (v a)
@@ -887,8 +796,6 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
-/-- **The `H¹` approximation of the bottom projections on regular fields**:
-`‖Ry − π̃¹Ry‖ ≤ 3 · 3 (1 + 2C) K h ‖y‖`. -/
 theorem norm_regR_sub_Pt1_le (N : ℕ) (y : RegSp) :
     ‖regR y - (mirrorFEM hT hB N).Pt1 (regR y)‖ ≤
       ((Fintype.card (Fin 3) : ℝ) * ((1 + 2 * C) * h1ConstPar 3 PolySeq.lagrangeP2 1 *
@@ -919,9 +826,6 @@ theorem norm_regR_sub_Pt1_le (N : ℕ) (y : RegSp) :
         ((Fintype.card (formIdx 3 1) : ℝ) * ‖y‖) := Finset.sum_le_sum fun a _ => hcomp a
     _ = _ := by rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
 
-/-- **The `H¹` approximation of `S₁,ₕ = π²S¹` on regular fields**: the coefficient `t` of `S¹Ry`
-is a combination of the coefficients `(Ry)ₐ_r`, `r = t ∖ a`, which are `H¹` in the class
-`{a} ∆ r = t = ∅ ∆ t` (the compatible classes), so `‖(I − π²)S¹Ry‖ ≲ h ‖y‖`. -/
 theorem norm_S1_sub_S1h_regR_le (N : ℕ) (y : RegSp) :
     ‖(mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) (regR y)‖ ≤
       ((1 + 2 * C) * h1ConstPar 3 PolySeq.lowestOrder 2 *
@@ -1024,8 +928,6 @@ theorem formL2_dxField (a : Fin 3) :
   congr 1
   exact propext ⟨fun h => Subtype.ext h, fun h => congrArg Subtype.val h⟩
 
-/-- **The harmonic forms are discrete**: `dxₐ ∈ P₂⁻Λ¹_{Γₐ}` (the constant form has vanishing
-tangential trace on the faces normal to `eₐ`, and the interpolation of degree `0` is exact). -/
 theorem dxForm_mem_polyPartial (N : ℕ) (a : Fin 3) :
     dxForm a ∈ (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 1 := by
   have hs : polySpace 3 0 1 ≤ PolySeq.lagrangeP2.space 3 1 :=
@@ -1057,7 +959,6 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
-/-- **`𝔥 ⊆ Ṽₕ¹`**: the harmonic forms of the bottom row are discrete. -/
 theorem harmBot_le (N : ℕ) : harmBot ≤ (mirrorFEM hT hB N).Vt1h := fun v hv a => by
   have h := hv a
   rw [harmonic_one_part, Submodule.mem_span_singleton] at h
@@ -1079,10 +980,7 @@ theorem mirrorRegConst_nonneg (hC : 0 ≤ 2 * C) : 0 ≤ mirrorRegConst C := by
   have : (0 : ℝ) ≤ ∑ _t : formIdx 3 2, ∑ _p : Fin 3 × formIdx 3 1, (1 : ℝ) := by positivity
   unfold mirrorRegConst; positivity
 
-/-- **Regular potentials of the mirror scheme** (`Feec.BGG.Discrete.RegularPotential`) with
-`X_reg = ∏ₐ ∏_s H¹_{{a} ∆ s}(Q)` (`RegSp`), `C_inc = 1`, `C_reg = √(1 + (2π)⁻²)` (no hypothesis:
-the coexact potentials of `HΛ_{a}(Q)`), and the `H¹` approximation of the parity-smoothed
-projections. -/
+/-- **Regular potentials of the mirror scheme** with `C_inc = 1` and `C_reg = √(1 + (2π)⁻²)`. -/
 def mirrorFEMReg (N : ℕ) {Capp : ℝ} (hCapp : mirrorRegConst C ≤ Capp) :
     (mirrorFEM hT hB N).RegularPotential RegSp 1 √(1 + (2 * Real.pi)⁻¹ ^ 2) Capp (meshSize N) where
   R := regR
@@ -1114,8 +1012,7 @@ def mirrorFEMReg (N : ℕ) {Capp : ℝ} (hCapp : mirrorRegConst C ≤ Capp) :
         (Fintype.card (formIdx 3 1) : ℝ)) := by positivity
     linarith
 
-/-- **The discrete mirror scheme (6.5)** as the discrete BGG data of `mirrorFEM`: `d`,
-`S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹` on the finite element spaces. -/
+/-- **The discrete mirror scheme**: `d`, `S₀,ₕ = π¹S⁰` and `S₁,ₕ = π²S¹` on the discrete spaces. -/
 abbrev mirrorWave (N : ℕ) := (mirrorFEM hT hB N).toSegmentH
 
 instance mirrorWave_fdt0 (N : ℕ) : FiniteDimensional ℝ (mirrorFEM hT hB N).Vt0h := by
@@ -1142,11 +1039,9 @@ instance mirrorWave_fdt2 (N : ℕ) : FiniteDimensional ℝ (mirrorFEM hT hB N).W
   refine Module.Finite.of_injective f fun x y h => Subtype.ext (PiLp.ext fun a => ?_)
   exact congrArg Subtype.val (congrFun h a)
 
-/-- `grad` is injective on `∏ₐ P₂Λ⁰_{Γₐ}` (Poincaré on the bottom row). -/
 theorem mirrorWave_dt0_injective (N : ℕ) : Function.Injective (mirrorWave hT hB N).dt0 :=
   mirror_harmonicStability.toSegmentH_dt0_injective
 
-/-- Every test `1`-form on `Q` is `S⁰ψ` for a vector `ψ` of test functions. -/
 theorem exists_mS0_eq_testField {χ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ}
     (hχ : IsTestField (cubeDomain 3) χ) :
     ∃ ψ : BU0, ((mS0 ψ : TU1) : W1) = testField hχ := by
@@ -1158,7 +1053,6 @@ theorem exists_mS0_eq_testField {χ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ}
   exact (wsL2_testField (Ω := cubeDomain 3) (k := 0) hψ).trans
     (testField_congr _ _ (WeakSymmetry.wsFields_proxy0 χ))
 
-/-- **`π¹S⁰` maps `∏ₐ H_{a}Λ⁰(Q)` onto `P₁⁻Λ¹`** (density of test forms). -/
 theorem exists_mirror_S0h_eq (N : ℕ) {μ : TU1} (hμ : μ ∈ (mirrorFEM hT hB N).V1h) :
     ∃ ψ, (mirrorFEM hT hB N).S0h ψ = μ := by
   set π1 : W1 →ₗ[ℝ] W1 := (hT.proj N).π 1
@@ -1188,7 +1082,6 @@ theorem exists_mirror_S0h_eq (N : ℕ) {μ : TU1} (hμ : μ ∈ (mirrorFEM hT hB
   exact (hT.proj N).proj 1 _ hμ
 
 set_option maxHeartbeats 1000000 in
-/-- **`S₀,ₕ = π¹S⁰` maps `∏ₐ P₂Λ⁰_{Γₐ}` onto `P₁⁻Λ¹`** (`exists_mirror_S0h_eq` and (5.4)). -/
 theorem mirrorWave_S0_surjective (N : ℕ) : Function.Surjective (mirrorWave hT hB N).S0 := by
   intro μ
   obtain ⟨ψ, hψ⟩ := exists_mirror_S0h_eq hT hB N (μ := (μ : TU1)) μ.2
@@ -1206,7 +1099,6 @@ section Smooth
 
 open ExteriorFibre (IsDeg)
 
-/-- A partial derivative along a hyperplane vanishes on a function vanishing on it. -/
 theorem partialDeriv_eq_zero_of_hyperplane {f : (Fin 3 → ℝ) → ℝ} {x : Fin 3 → ℝ} {i j : Fin 3}
     (hij : i ≠ j) (hf : ∀ y : Fin 3 → ℝ, y j = x j → f y = 0) :
     partialDeriv i f x = 0 := by
@@ -1223,7 +1115,6 @@ theorem partialDeriv_eq_zero_of_hyperplane {f : (Fin 3 → ℝ) → ℝ} {x : Fi
     exact (h1.unique (hasDerivAt_const 0 0)).symm ▸ rfl
   · rw [partialDeriv_def, fderiv_zero_of_not_differentiableAt hd]; rfl
 
-/-- **`d` preserves the vanishing of the tangential components on a face** `{y_j = c}`. -/
 theorem extDeriv_tangential_zero {w : FormField 3} {j : Fin 3} {c : ℝ}
     (hw : ∀ y : Fin 3 → ℝ, y j = c → ∀ t, j ∉ t → w y t = 0) :
     ∀ y : Fin 3 → ℝ, y j = c → ∀ t, j ∉ t → extDeriv w y t = 0 := by
@@ -1234,12 +1125,7 @@ theorem extDeriv_tangential_zero {w : FormField 3} {j : Fin 3} {c : ℝ}
   rw [partialDeriv_eq_zero_of_hyperplane hij (fun z hz => hw z (hz.trans hy) _
     (fun h => ht (Finset.mem_of_mem_erase h))), mul_zero]
 
-/-- **`C²` forms up to `∂Q` with vanishing tangential components on the faces normal to `J`**:
-`x ∈ L²(Q; Λʲ)` is the restriction of a `C²` `j`-form `w` on `ℝ³` (the restriction of a `C²` field
-on `cl Q`, through an extension theorem for the cube, not formalized) whose components `w_t`,
-`j' ∉ t`, vanish on `{y_{j'} ∈ {0, ½}}` for `j' ∈ J`, with `‖Dw‖, ‖D dw‖ ≤ L` on `cl Q`. For
-`J = {a}` this is the mirror condition of the component `a` of the bottom row, for `J = ∅` no
-condition (top row). The analogue of `FEM.IsCsFormTr` for partial boundary conditions. -/
+/-- **`C²` forms up to `∂Q`** with vanishing tangential components on the faces normal to `J`. -/
 def IsCsFormPart (J : Finset (Fin 3)) (j : ℕ) (L : ℝ) (x : L2F ℝ (cubeDomain 3) (formIdx 3 j)) :
     Prop :=
   ∃ w : FormField 3, ∃ hw : ContDiff ℝ 2 w, (∀ y, IsDeg j (w y)) ∧
@@ -1256,7 +1142,6 @@ theorem IsCsFormPart.mono {J : Finset (Fin 3)} {j : ℕ} {L L' : ℝ}
   exact ⟨w, hw, hdeg, hJ, fun y hy => ⟨(hL y hy).1.trans h, (hL y hy).2.1.trans h,
     (hL y hy).2.2.trans h⟩, rfl⟩
 
-/-- `d_max` on the restrictions of `C¹` forms, on the cube domain. -/
 theorem formL2_maximal_cube (k : ℕ) {w : FormField 3} (hw : ContDiff ℝ 1 w)
     (hdeg : ∀ x, IsDeg k (w x)) :
     ∃ h : formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
@@ -1278,7 +1163,6 @@ theorem formL2_maximal_cube (k : ℕ) {w : FormField 3} (hw : ContDiff ℝ 1 w)
   exact key _ (mesh_domain 3 0) _ _
     (formL2_mem_maximal (mesh 3 0) (isOpen_mesh_domain 3 0) k hw hdeg)
 
-/-- `d_J` on the restriction of a `C²` form: `d_J x = (dw)|_Q`. -/
 theorem dPart_formL2 {J : Finset (Fin 3)} (k : ℕ) {w : FormField 3} (hw : ContDiff ℝ 2 w)
     (hdeg : ∀ x, IsDeg k (w x)) (h : formL2 (isOpen_cubeDomain 3).measurableSet
       (isBounded_cubeDomain 3) k ⟨w, hw.continuous⟩ ∈ (dPart (cubeDomain 3) J (k : ℤ)).domain) :
@@ -1301,7 +1185,6 @@ theorem IsCsFormPart.norm_le {J : Finset (Fin 3)} {j : ℕ} {L : ℝ}
 
 variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
 
-/-- **The `O(h)` interpolation error of a smooth field by a parity-smoothed projection**. -/
 theorem norm_sub_proj_le_of_isCsFormPart {J : Finset (Fin 3)} {S : PolySeq}
     (hE : ParitySmoothingEstimates 3 J S ρ C) (N k : ℕ) (hs : polySpace 3 0 k ≤ S.space 3 k)
     {L : ℝ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hx : IsCsFormPart J k L x) :
@@ -1311,7 +1194,6 @@ theorem norm_sub_proj_le_of_isCsFormPart {J : Finset (Fin 3)} {S : PolySeq}
     (L := L) fun y hy => (hL y hy).2.1
   simpa using h
 
-/-- **The `O(h)` interpolation error of `d x`** (`d` commutes with the projections). -/
 theorem norm_d_sub_proj_le_of_isCsFormPart {J : Finset (Fin 3)} {S : PolySeq}
     (hE : ParitySmoothingEstimates 3 J S ρ C) (N k : ℕ)
     (hs : polySpace 3 0 (k + 1) ≤ S.space 3 (k + 1))
@@ -1341,11 +1223,7 @@ end Smooth
 
 section StrangData
 
-/-- **Regularity of an exact state of the mirror scheme** for the `O(h)` rate: every field is
-`C²` up to `∂Q` with the mirror tangential conditions (`IsCsFormPart`: none on the top row, on
-the faces normal to `eₐ` in the component `a` of the bottom row), with bound `L`; `S¹u` is `C²`;
-and `M` lies in the domain of the adjoint of `curl` on `HΛ¹(Q)` with `‖curl* M‖ ≤ L`
-(`|⟪M, curl w⟫| ≤ L ‖w‖`, i.e. the normal trace of `M` vanishes; `M ≡ 0` for TSD data). -/
+/-- **Regularity of an exact state of the mirror scheme** for the `O(h)` rate, with bound `L`. -/
 def IsSmoothStateMirror (L : ℝ) (σ : TU0) (φ : BU0) (u : BU1) (M : W2) (ρ : Wv W2) : Prop :=
   IsCsFormPart ∅ 0 L (σ : W0) ∧ (∀ a, IsCsFormPart {a} 0 L (φ a : W0)) ∧
     (∀ a, IsCsFormPart {a} 1 L (u a : W1)) ∧ IsCsFormPart ∅ 2 L (mS1 u) ∧
@@ -1453,8 +1331,6 @@ theorem mirrorInterpConst_nonneg (C : ℝ) : 0 ≤ mirrorInterpConst C := by
   unfold mirrorInterpConst; positivity
 
 set_option maxHeartbeats 2000000 in
-/-- **The Strang data of (6.4) for a smooth mirror state**: the interpolation part is
-`≤ mirrorInterpConst C · (L h_N)²`, for every `N`. -/
 theorem mirrorFEM_strangData_le (N : ℕ) {L : ℝ} {σ : TU0} {φ : BU0} {u : BU1}
     {M : W2} {ρ' : Wv W2} (hs : IsSmoothStateMirror L σ φ u M ρ') (K0 K1 : ℝ) :
     (mirrorFEM hT hB N).strangData σ φ u M ρ' K0 K1 ≤
@@ -1496,7 +1372,7 @@ theorem mirrorFEM_strangData_le (N : ℕ) {L : ℝ} {σ : TU0} {φ : BU0} {u : B
 end StrangData
 
 
-/-! ### The `O(h)` rate of the mirror scheme (6.5) -/
+/-! ### The `O(h)` rate of the mirror scheme -/
 
 section Rate
 
@@ -1517,8 +1393,7 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
 instance mirrorWave_completeSpace_t1 (N : ℕ) : CompleteSpace (mirrorFEM hT hB N).Vt1h :=
   FiniteDimensional.complete ℝ _
 
-/-- **The discrete source of the mirror scheme**: the representer in `∏ₐ P₂⁻Λ¹_{Γₐ}` of
-`v ↦ ⟪f(t), v⟫` (the `L²` projection of `f(t)`). -/
+/-- **The discrete source of the mirror scheme**, the `L²` projection of `f(t)`. -/
 def mirrorSource (N : ℕ) (f : ℝ → Wv W1) (t : ℝ) : (mirrorFEM hT hB N).Vt1h :=
   (InnerProductSpace.toDual ℝ (mirrorFEM hT hB N).Vt1h).symm
     ((innerSL ℝ (f t)).comp (bIncl1CLM.comp (mirrorFEM hT hB N).Vt1h.subtypeL))
@@ -1538,22 +1413,9 @@ theorem continuousOn_mirrorSource (N : ℕ) {f : ℝ → Wv W1} {T : ℝ}
     (h1.comp_continuousOn hf)
 
 set_option maxHeartbeats 4000000 in
-/-- **`O(h)` convergence of the mirror scheme (6.5) on the cube**, without hypothesis: there is
-`K`, independent of `N`, `T`, the data and the solution, such that for every `N`, every `T > 0`,
-every `L²` source `f` continuous on `[0,T]` and every classical solution `s` of (6.2) for the
-mirror data (`ExactWave mirrorBGGSegment`) whose states and time derivatives are `C²` up to `∂Q`
-with the mirror tangential conditions and bound `L` (`IsSmoothStateMirror L`), with multiplier
-functionals `L²`-bounded by `L`: the scheme (6.5) with source `P_{Ṽₕ¹} f` (`mirrorSource`) has a
-solution starting from the dynamic part of the elliptic projection (6.4) of the exact initial
-state, and for `t ∈ [0,T]`
-`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ K L (1 + t) h_N`.
-The hypotheses of `Feec.BGG.ExactWave.exists_discreteSolution_rate_harm` are discharged:
-`HarmonicStability` modulo `𝔥 = span{dxₐ ⊗ eₐ}` (`mirror_harmonicStability`; `Stability` fails),
-(5.4) (`mirrorFEM_compatible`), `S₀,ₕ` onto (`mirrorWave_S0_surjective`), `K₀` from Prop 5.9(1)
-(`mirrorFEM_happ0`), `K₁` from the regular potentials of the bottom row (`mirrorFEMReg`,
-proved, no regularity hypothesis) and `𝔥 ⊆ Ṽₕ¹` (`harmBot_le`), the interpolation errors from
-the parity-smoothed projections (`mirrorFEM_strangData_le`).
-See [QuennevilleBelair2015], §6.3, (6.5), Table 6.1, and §6.2, (6.4), Prop 6.2. -/
+/-- **`O(h)` convergence of the mirror scheme on the cube** for classical solutions with smooth
+states and `L²`-bounded multipliers (bound `L`): error at most `K L (1 + t) h_N`
+([QuennevilleBelair2015], §6.3, (6.5), Prop 6.2). -/
 theorem mirrorWave_rate :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
       (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun f))
@@ -1667,8 +1529,6 @@ theorem mirrorWave_rate :
 end Rate
 
 
-/-! ### Non-vacuity: the stationary harmonic modes -/
-
 section Witness
 
 open ExteriorFibre (IsDeg)
@@ -1682,8 +1542,6 @@ section Converge
 
 open scoped Topology LinearPMap
 
-/-- **The parity-smoothed projections converge strongly**: `‖x − π_N x‖ → 0` for every
-`x ∈ L²Λᵏ(Q)` (`‖x − π_N x‖ ≤ (1 + 2C) dist(x, V̊ₕᵏ)` and `V̊ₕᵏ ⊆ V_{h,Γ_J}ᵏ` is dense). -/
 theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.tendsto_norm_sub_proj
     {J : Finset (Fin 3)} {S : PolySeq} {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3}
     {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (k : ℤ)
@@ -1697,7 +1555,6 @@ theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.tendsto_norm_sub_pr
   exact mul_le_mul_of_nonneg_left (Metric.infDist_le_infDist_of_subset
     (polyMin_V_le_polyPartial_V S N J k) ⟨0, Submodule.zero_mem _⟩) (by linarith)
 
-/-- **Uniform convergence of the projections along a continuous trajectory** on `[0,T]`. -/
 theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.eventually_norm_sub_proj_le
     {J : Finset (Fin 3)} {S : PolySeq} {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3}
     {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (k : ℤ) {T : ℝ}
@@ -1708,8 +1565,6 @@ theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.eventually_norm_sub
     (isCompact_Icc.image_of_continuousOn hg) hε).mono fun _ hN _ ht =>
       hN _ (mem_image_of_mem g ht)
 
-/-- **Dense multipliers**: on a compact set of `L²Λ²(Q)`, every point is `δ`-close to a point of
-`D(d_max*)` (here `|⟪z, d w⟫| ≤ c ‖w‖` on `HΛ¹(Q)`), with a common bound `c`. -/
 theorem exists_adjoint_approx {K : Set W2} (hK : IsCompact K) {δ : ℝ} (hδ : 0 < δ) :
     ∃ c : ℝ, 0 ≤ c ∧ ∀ y ∈ K, ∃ z : W2, ‖y - z‖ < δ ∧ ‖z‖ ≤ c ∧
       ∀ w : TU1, |⟪z, tD1 w⟫| ≤ c * ‖w‖ := by
@@ -1752,8 +1607,7 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hT : ParitySmoothingEstimates 3 ∅ PolySeq.lowestOrder ρ C)
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
-/-- **Closeness of a mirror state to its projections** at level `δ`: the `L²` projection errors of
-`σ`, `dφ`, `u`, `du`, `M`, `ρ` and `S¹u` that make up the Strang data of (6.4). -/
+/-- **Closeness of a mirror state to its projections** at level `δ`. -/
 def MirrorClose (N : ℕ) (δ : ℝ) (σ : TU0) (φ : BU0) (u : BU1) (M : W2) (ρ' : Wv W2) : Prop :=
   ‖(σ : W0) - (hT.proj N).π 0 (σ : W0)‖ ≤ δ ∧
     (∀ a, ‖BD0 a (φ a) - ((hB a).proj N).π 1 (BD0 a (φ a))‖ ≤ δ) ∧
@@ -1770,8 +1624,6 @@ theorem mirrorCloseConst_nonneg (C : ℝ) : 0 ≤ mirrorCloseConst C := by
   unfold mirrorCloseConst; positivity
 
 set_option maxHeartbeats 1000000 in
-/-- **The Strang data of (6.4) from the projection errors**: `≤ mirrorCloseConst C · δ² + K₀² + K₁²`
-for a state `δ`-close to its projections (no regularity). -/
 theorem mirrorFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : TU0} {φ : BU0} {u : BU1}
     {M : W2} {ρ' : Wv W2} (hc : MirrorClose hT hB N δ σ φ u M ρ') (K0 K1 : ℝ) :
     (mirrorFEM hT hB N).strangData σ φ u M ρ' K0 K1 ≤
@@ -1835,7 +1687,6 @@ theorem mirrorFEM_strangData_le_of_close (N : ℕ) {δ : ℝ} {σ : TU0} {φ : B
   unfold mirrorCloseConst
   nlinarith
 
-/-- `K₀` of the Strang bound for an `L²`-bounded multiplier functional: `Λ C_app h_N`. -/
 theorem exists_mirrorFEM_K0 : ∃ Capp : ℝ, 0 ≤ Capp ∧ ∀ (N : ℕ) (L : ℝ), 0 ≤ L →
     ∀ ℓ : TU1 →ₗ[ℝ] ℝ, (∀ μ, |ℓ μ| ≤ L * ‖μ‖) → ∀ ψ ∈ (mirrorFEM hT hB N).Vt0h,
       |ℓ ((mirrorBGGSegment.S0 - (mirrorFEM hT hB N).S0h) ψ)| ≤
@@ -1845,8 +1696,6 @@ theorem exists_mirrorFEM_K0 : ∃ Capp : ℝ, 0 ≤ Capp ∧ ∀ (N : ℕ) (L : 
     (meshSize_pos N).le hC00 hL0 ℓ hℓ (hhapp N)⟩
 
 set_option maxHeartbeats 1000000 in
-/-- `K₁` of the Strang bound for a multiplier `z ∈ D(d_max*)`: `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ K h_N c ‖v‖`
-when `‖z‖ ≤ c` and `|⟪z, dw⟫| ≤ c ‖w‖` (regular potentials of the bottom row). -/
 theorem exists_mirrorFEM_K1 : ∃ K : ℝ, 0 ≤ K ∧ ∀ (N : ℕ) (z : W2) (c : ℝ), 0 ≤ c → ‖z‖ ≤ c →
     (∀ w : TU1, |⟪z, tD1 w⟫| ≤ c * ‖w‖) → ∀ v ∈ (mirrorFEM hT hB N).Vt1h,
       |⟪z, (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v⟫| ≤
@@ -1901,7 +1750,6 @@ theorem exists_mirrorFEM_K1 : ∃ K : ℝ, 0 ≤ K ∧ ∀ (N : ℕ) (z : W2) (c
   refine (h1.trans h2).trans (le_of_eq ?_)
   ring
 
-/-- The `L²` part of `K₁`: `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ ‖z‖ (1 + 2C) √2 ‖v‖_{Γₕ}` for every `z`. -/
 theorem mirrorFEM_K1_rest (N : ℕ) (z : W2) (v : BU1) :
     |⟪z, (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v⟫| ≤
       ‖z‖ * ((1 + 2 * C) * √2) * √((mirrorFEM hT hB N).gnSq v) := by
@@ -1938,8 +1786,6 @@ theorem mirrorFEM_K1_rest (N : ℕ) (z : W2) (v : BU1) :
     _ = _ := by ring
 
 
-/-- **`K₁ → 0` uniformly on a compact set of multipliers**, with no regularity of the multipliers:
-split `z = z' + (z − z')` with `z' ∈ D(d_max*)` close to `z` (`exists_adjoint_approx`). -/
 theorem eventually_mirrorFEM_K1 {K : Set W2} (hK : IsCompact K) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∀ z ∈ K, ∀ v ∈ (mirrorFEM hT hB N).Vt1h,
       |⟪z, (mirrorBGGSegment.S1 - (mirrorFEM hT hB N).S1h) v⟫| ≤
@@ -1982,7 +1828,6 @@ theorem eventually_mirrorFEM_K1 {K : Set W2} (hK : IsCompact K) {ε : ℝ} (hε 
   have h7 : K1 * meshSize N * c * G ≤ ε / 2 * G := mul_le_mul_of_nonneg_right hN' hg
   linarith
 
-/-- **A continuous mirror trajectory is uniformly close to its projections** for `N` large. -/
 theorem eventually_mirrorClose {T : ℝ} {σ : ℝ → TU0} {φ : ℝ → BU0} {u : ℝ → BU1}
     {M : ℝ → W2} {ρ' : ℝ → Wv W2} (hσ : ContinuousOn σ (Icc 0 T))
     (hφ : ContinuousOn (fun t => mirrorBGGSegment.dt0 (φ t)) (Icc 0 T))
@@ -2017,17 +1862,8 @@ theorem eventually_mirrorClose {T : ℝ} {σ : ℝ → TU0} {φ : ℝ → BU0} {
 
 
 set_option maxHeartbeats 4000000 in
-/-- **Convergence of the mirror scheme (6.5) on the cube for energy-space solutions** (no rate,
-by density): for every `T > 0`, every `L²` source `f` continuous on `[0,T]`, every classical
-solution `s` of (6.2) for the mirror data (`ExactWave mirrorBGGSegment`, whose regularity is the
-continuity of `σ, u, M, ρ, dφ, du, S¹u` in `L²`), with multiplier functionals `L²`-bounded on
-`[0,T]`, and every `ε > 0`: for all `N` large the scheme (6.5) with source `P_{Ṽₕ¹} f` has a
-solution starting from the dynamic part of the elliptic projection (6.4) of the exact initial
-state with `(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤ ε` on `[0,T]`.
-No smoothness and no boundary flatness: the projection errors tend to `0` uniformly on the
-compact trajectories (`eventually_mirrorClose`), `K₀ = Λ C_app h_N` (`exists_mirrorFEM_K0`) and
-`K₁ → 0` by density of `D(d_max*)` (`eventually_mirrorFEM_K1`).
-See [QuennevilleBelair2015], §6.3, (6.5), and §6.2, (6.4), Prop 6.2. -/
+/-- **Convergence of the mirror scheme on the cube for energy-space solutions** with `L²`-bounded
+multipliers, uniformly on `[0, T]` ([QuennevilleBelair2015], §6.3, (6.5), Prop 6.2). -/
 theorem mirrorWave_converges {T : ℝ} (hT0 : 0 < T) {f : ℝ → Wv W1}
     (hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun f))
     {L : ℝ} (hL0 : 0 ≤ L)
@@ -2100,10 +1936,9 @@ theorem mirrorWave_converges {T : ℝ} (hT0 : 0 < T) {f : ℝ → Wv W1}
 
 
 set_option maxHeartbeats 4000000 in
-/-- **TSD-type solutions** (the class of [QuennevilleBelair2015], Ch. 6: `σ ≡ 0`, `M ≡ 0`): under
-the hypotheses of `mirrorWave_rate`, the discrete `σₕ` and `Mₕ` are `O(h)`, and every bounded
-linear constraint `Φ ρ = 0` satisfied by the exact `ρ = B` on `[0,T]` (for instance the symmetry
-of `B`) holds for `ρₕ` up to `‖Φ‖ K L (1 + t) h_N`. -/
+/-- **TSD-type solutions** (`σ ≡ 0`, `M ≡ 0`; [QuennevilleBelair2015], Ch. 6) with smooth states
+and `L²`-bounded multipliers: `σₕ`, `Mₕ` and the bounded linear constraints of `ρ = B` evaluated
+on `ρₕ` are `O(h)`. -/
 theorem mirrorWave_rate_tsd :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
       (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave mirrorBGGSegment T (mirrorSrcFun f))

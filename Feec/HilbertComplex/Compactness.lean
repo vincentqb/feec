@@ -8,34 +8,21 @@ public import Mathlib.Analysis.Normed.Operator.Compact.Basic
 /-!
 # The compactness property of a Hilbert complex
 
-A Hilbert complex has the **compactness property at `i`** if `Vⁱ ∩ V*ᵢ = D(d i (c.next i)) ∩
-D((d (c.prev i) i)†)`, with the norm `max (‖x‖, ‖d x‖, ‖d† x‖)`, embeds compactly in `Wⁱ`; that
-is, its unit ball lies in a compact subset of `Wⁱ` (`HasCompactPropertyAt`).
+The compactness property at `i`: the unit ball of `Vⁱ ∩ V*ᵢ` in the norm `max (‖x‖, ‖d x‖, ‖d† x‖)`
+lies in a compact subset of `Wⁱ`. It gives closed ranges and finite-dimensional cohomology, and on
+a finite complex a compact resolvent of the wave operator.
 
-At an index with the compactness property:
+## Main results
 
-* both `𝔅ⁱ` and the next boundaries `R(d i (c.next i))` are closed, and so is `𝔅*ᵢ`
-  (`HasCompactPropertyAt.closedRangeAt`, `.isClosed_range`, `.dual_closedRangeAt`);
-* `ℌⁱ` and the cohomology `𝔷ⁱ / 𝔅ⁱ` are finite-dimensional, and the Hodge decomposition holds
-  without closures (`HasCompactPropertyAt.closed_and_fredholm`).
-
-For a finite complex with the compactness property at every index, the wave operator
-`d − d†` has compact resolvent (`HasCompactProperty.isCompactOperator_resolvent_wave`), so the
-eigenvectors of its square are dense (`HasCompactProperty.eigenDense_wave`).
-
-The thesis' wording "`Vᵏ ∩ V*ₖ` is a dense and compact subspace of `Wᵏ`" is read as a compact
-inclusion (a compact subspace is `0`); density is never needed.
+* `HasCompactPropertyAt.closed_and_fredholm`: closed ranges, finite-dimensional `ℌⁱ` and cohomology.
+* `HasCompactProperty.isCompactOperator_resolvent_wave`: `(1 − (d − d†))⁻¹` is compact.
+* `HasCompactProperty.eigenDense_wave`: the eigenvectors of `(d − d†)²` span a dense subspace.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (compactness property; "compactness ⇒ Fredholm ⇒ closed")
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1.3 (compactness property)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §4.2
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (convergence of the discrete Hodge Laplacian under the compactness property)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -51,14 +38,11 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F]
 
-/-- A partial map equal to `S` takes the same values on `S.domain`. -/
 theorem exists_mem_apply_eq_of_eq {R E F : Type*} [Ring R] [AddCommGroup E] [Module R E]
     [AddCommGroup F] [Module R F] {T S : E →ₗ.[R] F} (h : T = S) (x : T.domain) :
     ∃ hx : (x : E) ∈ S.domain, S ⟨x, hx⟩ = T x := by
   subst h; exact ⟨x.2, rfl⟩
 
-/-- **Compactness ⇒ closed range.** If the unit ball of `D(T) ∩ N(T)ᗮ` in the graph box norm
-lies in a compact subset of `E`, then `R(T)` is closed. -/
 theorem isClosed_range_of_subset_isCompact {T : E →ₗ.[𝕜] F} (hc : T.IsClosed)
     {K : Set E} (hK : IsCompact K)
     (hsub : ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ 1 → ‖T x‖ ≤ 1 → (x : E) ∈ K) :
@@ -110,7 +94,6 @@ namespace Submodule
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
-/-- **Riesz:** a closed subspace whose unit ball lies in a compact set is finite-dimensional. -/
 theorem finiteDimensional_of_closedBall_subset_isCompact {S : Submodule 𝕜 E}
     (hS : _root_.IsClosed (S : Set E)) {K : Set E} (hK : IsCompact K)
     (hsub : ∀ x ∈ S, ‖x‖ ≤ 1 → x ∈ K) : FiniteDimensional 𝕜 S := by
@@ -140,14 +123,12 @@ variable {𝕜 E F G : Type*} [RCLike 𝕜]
   [NormedAddCommGroup G] [InnerProductSpace 𝕜 G]
   {T : E →ₗ.[𝕜] F} {S : F →ₗ.[𝕜] G}
 
-/-- **Compactness of the middle space** of a pair `E --T--> F --S--> G`: the unit ball of
-`D(S) ∩ D(T†)` in the norm `max (‖x‖, ‖S x‖, ‖T† x‖)` lies in a compact subset of `F`. -/
+/-- The unit ball of `D(S) ∩ D(T†)` (norm `max (‖x‖, ‖S x‖, ‖T† x‖)`) lies in a compact set. -/
 def HasCompactPair (T : E →ₗ.[𝕜] F) (S : F →ₗ.[𝕜] G) : Prop :=
   ∃ K : Set F, IsCompact K ∧ ∀ (x : F) (hx : x ∈ S.domain) (hx' : x ∈ T†.domain),
     ‖x‖ ≤ 1 → ‖S ⟨x, hx⟩‖ ≤ 1 → ‖T† ⟨x, hx'⟩‖ ≤ 1 → x ∈ K
 
 variable [CompleteSpace G] in
-/-- Compactness of the middle space passes to the adjoint pair `G --S†--> F --T†--> E`. -/
 theorem HasCompactPair.adjoint (h : HasCompactPair T S) (hS : Dense (S.domain : Set F))
     (hSc : S.IsClosed) : HasCompactPair S† T† := by
   obtain ⟨K, hK, hsub⟩ := h
@@ -156,7 +137,6 @@ theorem HasCompactPair.adjoint (h : HasCompactPair T S) (hS : Dense (S.domain : 
   exact hsub x hy hx h1 (by rw [ey]; exact h3) h2
 
 variable [CompleteSpace G] in
-/-- **Compactness ⇒ `R(S)` closed** for a pair with `S T = 0`. -/
 theorem HasCompactPair.isClosed_range_right (h : HasCompactPair T S)
     (hT : Dense (T.domain : Set E)) (hSc : S.IsClosed)
     (hmaps : ∀ x : T.domain, T x ∈ S.domain) (hcomp : ∀ x : T.domain, S ⟨T x, hmaps x⟩ = 0) :
@@ -167,7 +147,6 @@ theorem HasCompactPair.isClosed_range_right (h : HasCompactPair T S)
     (LinearPMap.mem_ker_iff).1 (orthogonal_ker_le_ker_adjoint hT hmaps hcomp hx)
   exact hsub _ x.2 hy h1 h2 (by rw [hy0, norm_zero]; exact zero_le_one)
 
-/-- **Compactness ⇒ `R(T)` closed** for a pair with `S T = 0` (closed range theorem). -/
 theorem HasCompactPair.isClosed_range_left (h : HasCompactPair T S)
     (hT : Dense (T.domain : Set E)) (hTc : T.IsClosed) (hSc : S.IsClosed)
     (hmaps : ∀ x : T.domain, T x ∈ S.domain) (hcomp : ∀ x : T.domain, S ⟨T x, hmaps x⟩ = 0) :
@@ -181,7 +160,6 @@ theorem HasCompactPair.isClosed_range_left (h : HasCompactPair T S)
   exact hsub _ hy x.2 h1 (by rw [hy0, norm_zero]; exact zero_le_one) h2
 
 omit [CompleteSpace F] in
-/-- **Compactness ⇒ `N(S) ∩ N(T†)` finite-dimensional.** -/
 theorem HasCompactPair.finiteDimensional (h : HasCompactPair T S)
     (hT : Dense (T.domain : Set E)) (hSc : S.IsClosed) :
     FiniteDimensional 𝕜 (S.ker ⊓ T†.ker : Submodule 𝕜 F) := by
@@ -202,22 +180,18 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- **The compactness property at `i`**: the unit ball of `Vⁱ ∩ V*ᵢ`, in the norm
-`max (‖x‖, ‖d x‖, ‖d† x‖)`, lies in a compact subset of `Wⁱ`. [QuennevilleBelair2015], §4.2 (corrected);
-see [AFW2010], §3.1.3 and [BruningLesch1992], §2. The thesis ([QuennevilleBelair2015], §4.6, after
-Prop 4.13) recalls that convergence of the discrete Hodge Laplacian [AFW2006], [AFW2010] needs this
-property; its own estimate (`HodgeWave.norm_sub_ellipticProjection_le`) does not use it. -/
+/-- The compactness property at `i`: the unit ball of `Vⁱ ∩ V*ᵢ` lies in a compact subset of `Wⁱ`.
+[QuennevilleBelair2015], §4.2 (adapted); [AFW2010], §3.1.3; [BruningLesch1992], §2 -/
 def HasCompactPropertyAt (i : ι) : Prop :=
   ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain)
     (hx' : x ∈ ((H.d (c.prev i) i)†).domain), ‖x‖ ≤ 1 → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ 1 →
       ‖(H.d (c.prev i) i)† ⟨x, hx'⟩‖ ≤ 1 → x ∈ K
 
-/-- The compactness property at every index. [QuennevilleBelair2015], §4.2 (corrected) -/
+/-- The compactness property at every index. -/
 def HasCompactProperty : Prop := ∀ i, H.HasCompactPropertyAt i
 
 variable {H}
 
-/-- Scaling by `a ≠ 0` maps the box of radius `ρ` to the box of radius `|a| ρ`. -/
 private theorem smul_mem_box {i : ι} {a : ℝ} (ha : 0 < a) {x : W i}
     (hx : x ∈ (H.d i (c.next i)).domain) (hx' : x ∈ ((H.d (c.prev i) i)†).domain) :
     ‖(a : 𝕜) • x‖ = a * ‖x‖ ∧
@@ -234,7 +208,6 @@ private theorem smul_mem_box {i : ι} {a : ℝ} (ha : 0 < a) {x : W i}
   · rw [show (H.d (c.prev i) i)† ⟨(a : 𝕜) • x, Submodule.smul_mem _ _ hx'⟩ =
       (a : 𝕜) • (H.d (c.prev i) i)† ⟨x, hx'⟩ from LinearPMap.map_smul _ _ ⟨x, hx'⟩, hn]
 
-/-- The compactness property, with any radius `r` in place of `1`. -/
 theorem HasCompactPropertyAt.exists_isCompact {i : ι} (h : H.HasCompactPropertyAt i) (r : ℝ) :
     ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i) (hx : x ∈ (H.d i (c.next i)).domain)
       (hx' : x ∈ ((H.d (c.prev i) i)†).domain), ‖x‖ ≤ r → ‖H.d i (c.next i) ⟨x, hx⟩‖ ≤ r →
@@ -252,7 +225,6 @@ theorem HasCompactPropertyAt.exists_isCompact {i : ι} (h : H.HasCompactProperty
   simp only [smul_smul]
   rw [← RCLike.ofReal_mul, mul_inv_cancel₀ hs.ne', RCLike.ofReal_one, one_smul]
 
-/-- The compactness property at `i`, at a related pair `h → i → j`. -/
 theorem hasCompactPropertyAt_iff_of_rel {h i j : ι} (hhi : c.Rel h i) (hij : c.Rel i j) :
     H.HasCompactPropertyAt i ↔ ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i)
       (hx : x ∈ (H.d i j).domain) (hx' : x ∈ ((H.d h i)†).domain), ‖x‖ ≤ 1 →
@@ -261,8 +233,6 @@ theorem hasCompactPropertyAt_iff_of_rel {h i j : ι} (hhi : c.Rel h i) (hij : c.
   obtain rfl := c.prev_eq' hhi
   rfl
 
-/-- The compactness property at an index with no incoming arrow, `i → j`: only `D(d i j)`
-enters. -/
 theorem hasCompactPropertyAt_iff_of_not_rel_of_rel {i j : ι} (hi : ∀ h, ¬ c.Rel h i)
     (hij : c.Rel i j) :
     H.HasCompactPropertyAt i ↔ ∃ K : Set (W i), IsCompact K ∧ ∀ (x : W i)
@@ -276,7 +246,6 @@ theorem hasCompactPropertyAt_iff_of_not_rel_of_rel {i j : ι} (hi : ∀ h, ¬ c.
   · rintro ⟨K, hK, hsub⟩
     exact ⟨K, hK, fun x hx _ h1 h2 _ => hsub x hx h1 h2⟩
 
-/-- Every index of a complex with finite-dimensional spaces has the compactness property. -/
 theorem hasCompactPropertyAt_of_finiteDimensional (i : ι) [FiniteDimensional 𝕜 (W i)] :
     H.HasCompactPropertyAt i :=
   haveI := FiniteDimensional.proper_rclike 𝕜 (W i)
@@ -284,7 +253,6 @@ theorem hasCompactPropertyAt_of_finiteDimensional (i : ι) [FiniteDimensional �
 
 /-! ### Duality -/
 
-/-- The compactness property passes to the dual complex. -/
 theorem HasCompactPropertyAt.dual {i : ι} (h : H.HasCompactPropertyAt i) :
     H.dual.HasCompactPropertyAt i :=
   Operator.HasCompactPair.adjoint h (H.dense _ _) (H.closed _ _)
@@ -294,41 +262,32 @@ theorem HasCompactProperty.dual (h : H.HasCompactProperty) : H.dual.HasCompactPr
 
 /-! ### Compactness ⇒ closed range and finite-dimensional harmonic forms -/
 
-/-- **Compactness ⇒ closed range** of the outgoing differential `d i (c.next i)`.
-[QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.isClosed_range {i : ι} (h : H.HasCompactPropertyAt i) :
     IsClosed (LinearMap.range (H.d i (c.next i)).toFun : Set (W (c.next i))) :=
   Operator.HasCompactPair.isClosed_range_right h (H.dense _ _) (H.closed _ _) (H.mapsTo _ _ _)
     (H.d_comp_d _ _ _)
 
-/-- **Compactness ⇒ closed range** at the next index: `𝔅ʲ` is closed for `i → j`.
-[QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.closedRangeAt_of_rel {i j : ι} (h : H.HasCompactPropertyAt i)
     (hij : c.Rel i j) : H.ClosedRangeAt j := by
   obtain rfl := c.next_eq' hij
   rw [ClosedRangeAt, H.boundaries_eq hij]
   exact h.isClosed_range
 
-/-- **Compactness ⇒ closed range** at `i`: `𝔅ⁱ` is closed. [QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.closedRangeAt {i : ι} (h : H.HasCompactPropertyAt i) :
     H.ClosedRangeAt i :=
   Operator.HasCompactPair.isClosed_range_left h (H.dense _ _) (H.closed _ _) (H.closed _ _)
     (H.mapsTo _ _ _) (H.d_comp_d _ _ _)
 
-/-- **Compactness ⇒ closed dual range** at `i`: `𝔅*ᵢ` is closed. -/
 theorem HasCompactPropertyAt.dual_closedRangeAt {i : ι} (h : H.HasCompactPropertyAt i) :
     H.dual.ClosedRangeAt i :=
   h.dual.closedRangeAt
 
-/-- **Compactness ⇒ finite-dimensional harmonic forms.** [QuennevilleBelair2015], §4.2 (corrected) -/
 theorem HasCompactPropertyAt.finiteDimensional_harmonic {i : ι} (h : H.HasCompactPropertyAt i) :
     FiniteDimensional 𝕜 (H.harmonic i) :=
   Operator.HasCompactPair.finiteDimensional h (H.dense _ _) (H.closed _ _)
 
-/-- **Compactness ⇒ closed and Fredholm** at `i`: `𝔅ⁱ` and `𝔅*ᵢ` are closed, the harmonic
-forms and the cohomology are finite-dimensional, and the Hodge decomposition
-`Wⁱ = 𝔅ⁱ ⊕ ℌⁱ ⊕ 𝔅*ᵢ` holds without closures. This corrects the thesis' chain
-"compactness ⇒ Fredholm ⇒ closed". [QuennevilleBelair2015], §4.2 (corrected), Thm 4.1 -/
+/-- **Compactness ⇒ closed and Fredholm** at `i`: `𝔅ⁱ`, `𝔅*ᵢ` closed, `ℌⁱ` and the cohomology
+finite-dimensional, `𝔅ⁱ + ℌⁱ + 𝔅*ᵢ = Wⁱ`. [QuennevilleBelair2015], §4.2, Thm 4.1 (adapted) -/
 theorem HasCompactPropertyAt.closed_and_fredholm {i : ι} (h : H.HasCompactPropertyAt i) :
     H.ClosedRangeAt i ∧ H.dual.ClosedRangeAt i ∧ FiniteDimensional 𝕜 (H.harmonic i) ∧
       FiniteDimensional 𝕜 (H.cohomology i) ∧
@@ -344,22 +303,18 @@ section Resolvent
 
 variable [Fintype ι]
 
-/-- At a related pair `i → j`, the `j`-th component of `𝐝 x` is `d i j (x i)`. -/
 theorem totalD_apply_of_rel (x : H.totalD.domain) {i j : ι} (hij : c.Rel i j) :
     (H.totalD x) j = H.d i j ⟨(x : PiLp 2 W) i, x.2 i j⟩ := by
   rw [totalD_apply]
   refine Finset.sum_eq_single i (fun i' _ hi' => ?_) (fun h => absurd (Finset.mem_univ i) h)
   exact apply_eq_zero_of_eq_zero (H.shape i' j fun h' => hi' (c.prev_eq h' hij)) _
 
-/-- Each differential of a component is bounded by the total differential. -/
 theorem norm_d_le_norm_totalD (x : H.totalD.domain) (i j : ι) :
     ‖H.d i j ⟨(x : PiLp 2 W) i, x.2 i j⟩‖ ≤ ‖H.totalD x‖ := by
   by_cases hij : c.Rel i j
   · rw [← H.totalD_apply_of_rel x hij]; exact PiLp.norm_apply_le _ _
   · rw [apply_eq_zero_of_not_rel _ hij, norm_zero]; exact norm_nonneg _
 
-/-- `‖(𝐝 − 𝐝†) x‖² = ‖𝐝 x‖² + ‖𝐝† x‖²` on `D(𝐝) ∩ D(𝐝†)` (the cross term vanishes by
-`𝐝 𝐝 = 0`). -/
 theorem norm_wave_sq (x : H.wave.domain) :
     ‖H.wave x‖ ^ 2 = ‖H.totalD ⟨x, x.2.1⟩‖ ^ 2 + ‖H.dual.totalD ⟨x, x.2.2⟩‖ ^ 2 := by
   have hw : H.wave x = H.totalD ⟨x, x.2.1⟩ - H.dual.totalD ⟨x, x.2.2⟩ := rfl
@@ -368,8 +323,8 @@ theorem norm_wave_sq (x : H.wave.domain) :
       H.totalD_comp_totalD, inner_zero_left]
   rw [hw, @norm_sub_sq 𝕜, h0, _root_.map_zero, mul_zero, sub_zero]
 
-/-- **Compact resolvent**: a finite complex with the compactness property at every index has
-`(1 − (d − d†))⁻¹` compact. [QuennevilleBelair2015], §4.2 (corrected) -/
+/-- **Compact resolvent**: with the compactness property at every index, `(1 − (d − d†))⁻¹` is
+compact. [QuennevilleBelair2015], §4.2 (adapted) -/
 theorem HasCompactProperty.isCompactOperator_resolvent_wave (h : H.HasCompactProperty) :
     IsCompactOperator (Operator.resolvent H.wave 1) := by
   choose K hK hsub using fun i => (h i).exists_isCompact 2
@@ -405,9 +360,7 @@ theorem HasCompactProperty.isCompactOperator_resolvent_wave (h : H.HasCompactPro
   · exact (H.norm_d_le_norm_totalD ⟨x, x.2.1⟩ i (c.next i)).trans hT
   · exact (H.dual.norm_d_le_norm_totalD ⟨x, x.2.2⟩ i (c.prev i)).trans hT'
 
-/-- **Compact resolvent ⇒ `EigenDense`**: for a finite complex with the compactness property,
-the eigenvectors of the square of the wave operator are dense, so its Stone group has pure
-point spectrum. -/
+/-- **Compact resolvent ⇒ `EigenDense`** for a finite complex with the compactness property. -/
 theorem HasCompactProperty.eigenDense_wave [NormedSpace ℝ (PiLp 2 W)]
     [IsScalarTower ℝ 𝕜 (PiLp 2 W)] (h : H.HasCompactProperty) :
     H.isSkewAdjoint_wave.group.EigenDense :=

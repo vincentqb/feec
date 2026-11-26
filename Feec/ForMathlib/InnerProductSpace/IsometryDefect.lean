@@ -5,25 +5,12 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 /-!
 # The isometry defect `1 - ι* ι` of a bounded operator
 
-For a bounded operator `ι : X → E` of Hilbert spaces, `1 - ι* ι` measures how far `ι` is from an
-isometry: `⟪(1 - ι* ι) v, w⟫ = ⟪v, w⟫ - ⟪ι v, ι w⟫`. Its norms are therefore read off the inner
-products alone, without the adjoint:
-
-* `ContinuousLinearMap.inner_one_sub_adjoint_comp_self_apply`: the identity above;
-* `ContinuousLinearMap.norm_one_sub_adjoint_comp_self_apply_le`: if
-  `‖⟪v, w⟫ - ⟪ι v, ι w⟫‖ ≤ B ‖w‖` for every `w`, then `‖(1 - ι* ι) v‖ ≤ B`;
-* `ContinuousLinearMap.opNorm_one_sub_adjoint_comp_self_le`: if
-  `‖⟪v, w⟫ - ⟪ι v, ι w⟫‖ ≤ c ‖v‖ ‖w‖` for all `v, w`, then `‖1 - ι* ι‖ ≤ c`;
-* `ContinuousLinearMap.le_opNorm_one_sub_adjoint_comp_self`: if
-  `c ‖v‖² ≤ ‖v‖² - ‖ι v‖²` for some `v ≠ 0`, then `c ≤ ‖1 - ι* ι‖`.
-
-For a reading map `ι = iₕ` of a variational crime it is the inner-product defect `1 - Jₕ` of
-[HolstStern2012], §3.3.
+For a bounded operator `ι : X → E` of Hilbert spaces, the norms of the defect `1 - ι* ι`
+([HolstStern2012], §3.3) are bounded through `⟪(1 - ι* ι) v, w⟫ = ⟪v, w⟫ - ⟪ι v, ι w⟫`.
 
 ## References
 
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3.3
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -38,14 +25,11 @@ variable {𝕜 : Type*} [RCLike 𝕜] {X E : Type*} [NormedAddCommGroup X] [Inne
   [CompleteSpace X] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
   (ι : X →L[𝕜] E)
 
-/-- **The isometry defect in the inner product**: `⟪(1 - ι* ι) v, w⟫ = ⟪v, w⟫ - ⟪ι v, ι w⟫`. -/
 theorem inner_one_sub_adjoint_comp_self_apply (v w : X) :
     ⟪(1 - adjoint ι ∘L ι) v, w⟫_𝕜 = ⟪v, w⟫_𝕜 - ⟪ι v, ι w⟫_𝕜 := by
   change ⟪v - adjoint ι (ι v), w⟫_𝕜 = _
   rw [inner_sub_left, adjoint_inner_left]
 
-/-- **The isometry defect at a vector**: if `‖⟪v, w⟫ - ⟪ι v, ι w⟫‖ ≤ B ‖w‖` for every `w`, then
-`‖(1 - ι* ι) v‖ ≤ B` (test with `w = (1 - ι* ι) v`). -/
 theorem norm_one_sub_adjoint_comp_self_apply_le {v : X} {B : ℝ} (hB : 0 ≤ B)
     (h : ∀ w, ‖⟪v, w⟫_𝕜 - ⟪ι v, ι w⟫_𝕜‖ ≤ B * ‖w‖) : ‖(1 - adjoint ι ∘L ι) v‖ ≤ B := by
   set z := (1 - adjoint ι ∘L ι) v
@@ -57,16 +41,12 @@ theorem norm_one_sub_adjoint_comp_self_apply_le {v : X} {B : ℝ} (hB : 0 ≤ B)
   · rw [← hz]; exact hB
   · nlinarith
 
-/-- **The norm of the isometry defect from above**: if `‖⟪v, w⟫ - ⟪ι v, ι w⟫‖ ≤ c ‖v‖ ‖w‖` for all
-`v, w`, then `‖1 - ι* ι‖ ≤ c`. -/
 theorem opNorm_one_sub_adjoint_comp_self_le {c : ℝ} (hc : 0 ≤ c)
     (h : ∀ v w, ‖⟪v, w⟫_𝕜 - ⟪ι v, ι w⟫_𝕜‖ ≤ c * (‖v‖ * ‖w‖)) : ‖1 - adjoint ι ∘L ι‖ ≤ c :=
   opNorm_le_bound _ hc fun v =>
     norm_one_sub_adjoint_comp_self_apply_le ι (by positivity) fun w =>
       (h v w).trans_eq (by ring)
 
-/-- **The norm of the isometry defect from below**: if `c ‖v‖² ≤ ‖v‖² - ‖ι v‖²` for some `v ≠ 0`,
-then `c ≤ ‖1 - ι* ι‖` (`‖v‖² - ‖ι v‖² = re ⟪(1 - ι* ι) v, v⟫ ≤ ‖1 - ι* ι‖ ‖v‖²`). -/
 theorem le_opNorm_one_sub_adjoint_comp_self {v : X} (hv : v ≠ 0) {c : ℝ}
     (h : c * ‖v‖ ^ 2 ≤ ‖v‖ ^ 2 - ‖ι v‖ ^ 2) : c ≤ ‖1 - adjoint ι ∘L ι‖ := by
   have h1 : ‖v‖ ^ 2 - ‖ι v‖ ^ 2 = RCLike.re ⟪(1 - adjoint ι ∘L ι) v, v⟫_𝕜 := by

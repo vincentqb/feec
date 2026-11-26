@@ -8,25 +8,13 @@ public import Mathlib.Topology.MetricSpace.Antilipschitz
 /-!
 # Range, kernel and adjoint; the closed range theorem
 
-For `T : E →ₗ.[𝕜] F` between Hilbert spaces over `𝕜` (`RCLike`):
-
-* the four identities (4.1a–d): `orthogonal_range_eq_ker_adjoint` (`R(T)ᗮ = N(T†)`, densely
-  defined `T`), `orthogonal_ker` (`N(T)ᗮ = cl R(T†)`), `orthogonal_range_adjoint`
-  (`R(T†)ᗮ = N(T)`), `orthogonal_ker_adjoint` (`N(T†)ᗮ = cl R(T)`);
-* the Poincaré inequality `exists_norm_le_of_isClosed_range` (`‖x‖ ≤ c ‖T x‖` on
-  `D(T) ∩ N(T)ᗮ`) and its converse `isClosed_range_of_norm_le`;
-* the **closed range theorem** `range_adjoint_eq_orthogonal_ker`, `isClosed_range_adjoint_iff`,
-  `range_eq_orthogonal_ker_adjoint`;
-* `closedRange_tfae`: for closed densely defined `T`, closed range of `T`, closed range of
-  `T†`, Poincaré for `T`, Poincaré for `T†`, `R(T†) = N(T)ᗮ` and `R(T) = N(T†)ᗮ` are equivalent.
+For a closed densely defined operator `T` between Hilbert spaces: the orthogonality relations
+between the ranges and kernels of `T` and `T†` ([QuennevilleBelair2015], (4.1)), the Poincaré
+inequality on `D(T) ∩ N(T)ᗮ` as a characterization of closed range, and the closed range theorem.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.1 ((4.1a–d)), Thm 4.2 (Poincaré inequality)
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §IV.5.2 (closed range theorem)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -42,10 +30,6 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
-/-! ### (4.1a–d) -/
-
-/-- (4.1a) `R(T)ᗮ = N(T†)` for densely defined `T` (no closedness needed).
-See [QuennevilleBelair2015], §4.1, (4.1). -/
 theorem orthogonal_range_eq_ker_adjoint (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) :
     (LinearMap.range T.toFun)ᗮ = T†.ker := by
   ext y
@@ -66,7 +50,6 @@ theorem orthogonal_range_eq_ker_adjoint (T : E →ₗ.[𝕜] F) (hT : Dense (T.d
     rw [hy0, inner_zero_left] at this
     exact inner_eq_zero_symm.1 this.symm
 
-/-- (4.1d) `N(T†)ᗮ = cl R(T)` for densely defined `T`. -/
 theorem orthogonal_ker_adjoint [CompleteSpace F] (T : E →ₗ.[𝕜] F)
     (hT : Dense (T.domain : Set E)) :
     T†.kerᗮ = (LinearMap.range T.toFun).topologicalClosure := by
@@ -74,7 +57,6 @@ theorem orthogonal_ker_adjoint [CompleteSpace F] (T : E →ₗ.[𝕜] F)
 
 variable [CompleteSpace F]
 
-/-- (4.1c) `R(T†)ᗮ = N(T)` for closed densely defined `T`. -/
 theorem orthogonal_range_adjoint (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) : (LinearMap.range T†.toFun)ᗮ = T.ker := by
   ext x
@@ -85,7 +67,6 @@ theorem orthogonal_range_adjoint (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain :
     forall_apply_eq_imp_iff]
   rfl
 
-/-- (4.1b) `N(T)ᗮ = cl R(T†)` for closed densely defined `T`. -/
 theorem orthogonal_ker (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClosed) :
     T.kerᗮ = (LinearMap.range T†.toFun).topologicalClosure := by
   rw [← orthogonal_range_adjoint T hT hc, Submodule.orthogonal_orthogonal_eq_closure]
@@ -98,10 +79,7 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F]
 
-/-! ### Poincaré inequality -/
-
 omit [CompleteSpace F] in
-/-- Every value of a closed operator is attained on `D(T) ∩ N(T)ᗮ`. -/
 theorem exists_mem_orthogonal_ker_eq {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) (x : T.domain) :
     ∃ z : T.domain, (z : E) ∈ T.kerᗮ ∧ T z = T x := by
   have : CompleteSpace T.ker := (isClosed_ker hc).completeSpace_coe
@@ -111,7 +89,6 @@ theorem exists_mem_orthogonal_ker_eq {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) (
     sub_zero]
 
 omit [CompleteSpace E] [CompleteSpace F] in
-/-- `T` is injective on `D(T) ∩ N(T)ᗮ`. -/
 theorem eq_of_mem_orthogonal_ker {T : E →ₗ.[𝕜] F} {x x' : T.domain} (hx : (x : E) ∈ T.kerᗮ)
     (hx' : (x' : E) ∈ T.kerᗮ) (h : T x = T x') : x = x' := by
   have h3 : ((x - x' : T.domain) : E) ∈ T.ker ⊓ T.kerᗮ :=
@@ -119,8 +96,6 @@ theorem eq_of_mem_orthogonal_ker {T : E →ₗ.[𝕜] F} {x x' : T.domain} (hx :
   rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot] at h3
   exact sub_eq_zero.1 (Subtype.ext h3)
 
-/-- A closed operator with closed range has a bounded right inverse
-`g : R(T) → D(T) ∩ N(T)ᗮ` (closed graph theorem). -/
 theorem exists_rightInverse_of_isClosed_range (T : E →ₗ.[𝕜] F) (hc : T.IsClosed)
     (hR : _root_.IsClosed (LinearMap.range T.toFun : Set F)) :
     ∃ g : LinearMap.range T.toFun →L[𝕜] E,
@@ -170,8 +145,8 @@ theorem exists_rightInverse_of_isClosed_range (T : E →ₗ.[𝕜] F) (hc : T.Is
       ((Submodule.isClosed_orthogonal _).preimage continuous_snd)
   exact ⟨⟨g₀, g₀.continuous_of_isClosed_graph hgraph⟩, hg₀⟩
 
-/-- **Poincaré inequality** for a closed operator with closed range:
-`‖x‖ ≤ c ‖T x‖` on `D(T) ∩ N(T)ᗮ`. [QuennevilleBelair2015], Thm 4.2. -/
+/-- **Poincaré inequality** for a closed operator with closed range: `‖x‖ ≤ c ‖T x‖` on
+`D(T) ∩ N(T)ᗮ` ([QuennevilleBelair2015], Thm 4.2). -/
 theorem exists_norm_le_of_isClosed_range {T : E →ₗ.[𝕜] F} (hc : T.IsClosed)
     (hR : _root_.IsClosed (LinearMap.range T.toFun : Set F)) :
     ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ := by
@@ -185,8 +160,6 @@ theorem exists_norm_le_of_isClosed_range {T : E →ₗ.[𝕜] F} (hc : T.IsClose
     _ ≤ ‖g‖ * ‖(⟨T x, hy⟩ : LinearMap.range T.toFun)‖ := g.le_opNorm _
     _ = ‖g‖ * ‖T x‖ := rfl
 
-/-- Converse of the Poincaré inequality: for a closed operator, a bound `‖x‖ ≤ c ‖T x‖` on
-`D(T) ∩ N(T)ᗮ` implies closed range. -/
 theorem isClosed_range_of_norm_le {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) {c : ℝ}
     (hP : ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖) :
     _root_.IsClosed (LinearMap.range T.toFun : Set F) := by
@@ -217,17 +190,11 @@ theorem isClosed_range_of_norm_le {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) {c :
   rw [← hrange]
   exact (π.antilipschitz_of_bound hbound).isClosed_range π.uniformContinuous
 
-/-- A closed operator has closed range iff it satisfies a Poincaré inequality on
-`D(T) ∩ N(T)ᗮ`. [QuennevilleBelair2015], Thm 4.2 (with converse). -/
 theorem isClosed_range_iff_exists_norm_le {T : E →ₗ.[𝕜] F} (hc : T.IsClosed) :
     _root_.IsClosed (LinearMap.range T.toFun : Set F) ↔
       ∃ c, ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ c * ‖T x‖ :=
   ⟨exists_norm_le_of_isClosed_range hc, fun ⟨_, h⟩ => isClosed_range_of_norm_le hc h⟩
 
-/-! ### The closed range theorem -/
-
-/-- **Closed range theorem**, first half: if `T` is closed, densely defined and `R(T)` is
-closed, then `R(T†) = N(T)ᗮ`; in particular `R(T†)` is closed. -/
 theorem range_adjoint_eq_orthogonal_ker (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) (hR : _root_.IsClosed (LinearMap.range T.toFun : Set F)) :
     LinearMap.range T†.toFun = T.kerᗮ := by
@@ -255,7 +222,6 @@ theorem range_adjoint_eq_orthogonal_ker (T : E →ₗ.[𝕜] F) (hT : Dense (T.d
     have hmem : (y₀ : F) ∈ T†.domain := mem_adjoint_domain_of_exists _ ⟨f, key⟩
     exact ⟨⟨_, hmem⟩, adjoint_apply_eq hT ⟨_, hmem⟩ key⟩
 
-/-- **Closed range theorem**: for closed densely defined `T`, `R(T†)` is closed iff `R(T)` is. -/
 theorem isClosed_range_adjoint_iff (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E))
     (hc : T.IsClosed) :
     _root_.IsClosed (LinearMap.range T†.toFun : Set E) ↔
@@ -271,15 +237,13 @@ theorem isClosed_range_adjoint_iff (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain
     rw [range_adjoint_eq_orthogonal_ker T hT hc h]
     exact Submodule.isClosed_orthogonal _
 
-/-- Under closed range, (4.1d) holds without closure: `R(T) = N(T†)ᗮ`. -/
 theorem range_eq_orthogonal_ker_adjoint (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E))
     (hR : _root_.IsClosed (LinearMap.range T.toFun : Set F)) :
     LinearMap.range T.toFun = T†.kerᗮ := by
   rw [orthogonal_ker_adjoint T hT, hR.submodule_topologicalClosure_eq]
 
-/-- **Closed range theorem**, all forms: for a closed densely defined `T`, the following are
-equivalent: `R(T)` closed; `R(T†)` closed; the Poincaré inequality for `T` on `D(T) ∩ N(T)ᗮ`;
-the Poincaré inequality for `T†` on `D(T†) ∩ N(T†)ᗮ`; `R(T†) = N(T)ᗮ`; `R(T) = N(T†)ᗮ`. -/
+/-- **Closed range theorem**: for closed densely defined `T`, the closedness of `R(T)` and of
+`R(T†)`, the Poincaré inequalities for `T` and `T†`, `R(T†) = N(T)ᗮ` and `R(T) = N(T†)ᗮ` agree. -/
 theorem closedRange_tfae (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClosed) :
     [_root_.IsClosed (LinearMap.range T.toFun : Set F),
       _root_.IsClosed (LinearMap.range T†.toFun : Set E),

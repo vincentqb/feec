@@ -6,38 +6,13 @@ public import Feec.ForMathlib.LinearPMap.Reducing
 /-!
 # Invariant subspaces of contraction semigroups
 
-For an m-dissipative operator `A` on a Hilbert space `E` over `𝕜 = ℝ` or `ℂ`, with its contraction
-semigroup `S(t)` (`LinearPMap.IsMDissipative.semigroup`), and a closed subspace `K`:
-
-* **`LinearPMap.IsMDissipative.invariant_iff_resolvent`**: `S(t) K ⊆ K` for all `t ≥ 0` iff
-  `(μ - A)⁻¹ K ⊆ K` for all `μ > 0`. (`⇐`: the Yosida approximations `A_n = c_n² R(c_n) - c_n`
-  leave `K` invariant, hence so do `exp(t A_n)` and their strong limit `S(t)`,
-  `semigroup_mem_of_res_mem`; `⇒`: the restriction of `S` to `K`, `C0Semigroup.restrict`, is a
-  contraction semigroup on `K` whose generator is contained in the part of `A` in `K`
-  (`C0Semigroup.restrict_generator`) and is m-dissipative by the converse of Lumer–Phillips.)
-* **`IsMDissipative.invariant_iff_isMDissipative_partIn`**, **`invariant_iff_exists_solve`**: the
-  generator form. `K` is invariant iff the part of `A` in `K` (`LinearPMap.partIn`: `A` on
-  `{u ∈ D(A) ∩ K | A u ∈ K}`) is m-dissipative on `K`, iff for one `μ > 0` every `f ∈ K` is
-  `μ u - A u` for some `u ∈ D(A) ∩ K`.
-* **`IsMDissipative.isReducing_iff`**: `K` reduces `A` iff `K` and `Kᗮ` are both invariant.
-  Forward invariance of `K` alone is weaker (already for skew-adjoint generators: translations on
-  `L²(ℝ)` and `K = L²(0, ∞)`); for a skew-adjoint generator, invariance of `K` for all `t ∈ ℝ` is
-  equivalent to reducing (`C0Group.IsIsometric.isReducing_iff_invariant`).
-* **`IsMDissipative.closure_domain_inter_of_invariant`**: if `K` is invariant, `D(A) ∩ K` is dense
-  in `K` (the restricted generator is densely defined); the contrapositive is a test for
-  non-invariance.
-* `IsMDissipative.eq_of_le`: an m-dissipative operator has no proper dissipative extension
-  (maximality).
-* `C0Semigroup.norm_sq_S_apply`: the energy identity
-  `‖S(t) x‖² = ‖x‖² + ∫₀ᵗ 2 re ⟪S(s) A x, S(s) x⟫ ds` on `D(A)`.
-* `C0Semigroup.mem_of_dense`: invariance of a closed set extends from a dense subset.
+For an m-dissipative `A` on a Hilbert space and a closed `K`, the semigroup of `A` leaves `K`
+invariant iff the resolvents do, iff the part of `A` in `K` is m-dissipative.
 
 ## References
 
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.3 (the Yosida approximation), §1.4 (Thm 4.3 Lumer–Phillips)
 * [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §II.2.3 (subspace semigroups and the part of the generator)
+  §II.2.3
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -53,7 +28,6 @@ namespace Feec
 
 /-! ### Exponentials and closed invariant subspaces -/
 
-/-- A bounded operator leaving a closed subspace `K` invariant has `exp B K ⊆ K` (power series). -/
 theorem exp_apply_mem_of_mapsTo [CompleteSpace E] {K : Submodule 𝕜 E} (hK : IsClosed (K : Set E))
     {B : E →L[𝕜] E} (hB : ∀ x ∈ K, B x ∈ K) {x : E} (hx : x ∈ K) : exp B x ∈ K := by
   have hpow : ∀ n : ℕ, (B ^ n) x ∈ K := fun n => by
@@ -74,7 +48,6 @@ namespace C0Semigroup
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **Invariance of a closed set extends from a dense subset** (continuity of `S(t)`). -/
 theorem mem_of_dense {P : Set E} (hP : IsClosed P) {D : Set E} (hD : ∀ k ∈ P, k ∈ closure (D ∩ P))
     {t : ℝ} (h : ∀ x ∈ D ∩ P, G.S t x ∈ P) : ∀ x ∈ P, G.S t x ∈ P := by
   intro x hx
@@ -90,8 +63,6 @@ namespace C0Semigroup
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
 
-/-- **The energy identity** on `D(A)`:
-`‖S(t) x‖² = ‖x‖² + ∫₀ᵗ 2 re ⟪S(s) (A x), S(s) x⟫ ds` for `t ≥ 0` (`S(s) A x = A S(s) x`). -/
 theorem norm_sq_S_apply [CompleteSpace E] (x : G.generator.domain) {t : ℝ} (ht : 0 ≤ t) :
     ‖G.S t x‖ ^ 2 = ‖(x : E)‖ ^ 2 +
       ∫ s in (0 : ℝ)..t, 2 * RCLike.re ⟪G.S s (G.generator x), G.S s x⟫_𝕜 := by
@@ -155,7 +126,6 @@ variable {G K} in
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 variable {G K} in
-/-- The restriction of a contraction semigroup is a contraction semigroup. -/
 theorem IsContraction.restrict (hG : G.IsContraction) (hK : ∀ t, 0 ≤ t → ∀ x ∈ K, G.S t x ∈ K) :
     (G.restrict K hK).IsContraction := fun t ht =>
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
@@ -165,8 +135,6 @@ theorem IsContraction.restrict (hG : G.IsContraction) (hK : ∀ t, 0 ≤ t → �
       _ = ‖(x : E)‖ := one_mul _
 
 variable {G K} in
-/-- The generator of the restriction is contained in the part of the generator in `K`: its
-domain lies in `D(A) ∩ K`, with the same values. -/
 theorem restrict_generator (hK : ∀ t, 0 ≤ t → ∀ x ∈ K, G.S t x ∈ K)
     (u : (G.restrict K hK).generator.domain) :
     ∃ h : ((u : K) : E) ∈ G.generator.domain,
@@ -206,8 +174,7 @@ def partInDomain : Submodule 𝕜 K where
     have e : (⟨((c • a : K) : E), A.domain.smul_mem c ha⟩ : A.domain) = c • ⟨a, ha⟩ := rfl
     rw [e, LinearPMap.map_smul]; exact K.smul_mem c ha'
 
-/-- **The part of `A` in `K`**: `A` restricted to `{u ∈ D(A) ∩ K | A u ∈ K}`, an operator on `K`.
-Cf. [EngelNagel2000], §II.2.3 -/
+/-- The part of `A` in `K`: `A` on `{u ∈ D(A) ∩ K | A u ∈ K}`. Cf. [EngelNagel2000], §II.2.3 -/
 def partIn : K →ₗ.[𝕜] K where
   domain := A.partInDomain K
   toFun :=
@@ -226,12 +193,10 @@ variable {A K}
 theorem coe_partIn_apply (u : (A.partIn K).domain) :
     ((A.partIn K u : K) : E) = A ⟨((u : K) : E), u.2.1⟩ := rfl
 
-/-- The part of a dissipative operator is dissipative. -/
 theorem IsDissipative.partIn (hA : A.IsDissipative) : (A.partIn K).IsDissipative := fun u => by
   have := hA ⟨((u : K) : E), u.2.1⟩
   rwa [Submodule.coe_inner, coe_partIn_apply]
 
-/-- **Maximality**: an m-dissipative operator has no proper dissipative extension. -/
 theorem IsMDissipative.eq_of_le [CompleteSpace E] (hA : A.IsMDissipative) {B : E →ₗ.[𝕜] E}
     (hAB : A ≤ B) (hB : B.IsDissipative) : B = A := by
   refine (LinearPMap.eq_of_le_of_domain_le hAB fun x hx => ?_).symm
@@ -273,14 +238,12 @@ theorem semigroup_generator_apply (hA : A.IsMDissipative) (x : A.domain) :
     hA.semigroup.generator ⟨x, hA.mem_semigroup_generator_domain x⟩ = A x :=
   pmap_congr hA.generator_semigroup _ _ rfl
 
-/-- `S(t)` maps `D(A)` into `D(A)` (`t ≥ 0`). -/
 theorem semigroup_mem_domain (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     hA.semigroup.S t x ∈ A.domain := by
   have := hA.semigroup.mapsTo_domain ⟨x, hA.mem_semigroup_generator_domain x⟩ ht
   simp only at this
   rwa [hA.generator_semigroup] at this
 
-/-- `A S(t) x = S(t) A x` on `D(A)` (`t ≥ 0`). -/
 theorem apply_semigroup (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     A ⟨_, hA.semigroup_mem_domain x ht⟩ = hA.semigroup.S t (A x) := by
   have h := hA.semigroup.generator_apply_S ⟨x, hA.mem_semigroup_generator_domain x⟩ ht
@@ -288,24 +251,17 @@ theorem apply_semigroup (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0
   rw [← h]
   exact (pmap_congr hA.generator_semigroup _ _ rfl).symm
 
-/-- On `D(A)`, `t ↦ S(t) x` has right derivative `S(t) A x` at every `t ≥ 0`. -/
 theorem hasDerivWithinAt_semigroup (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     HasDerivWithinAt (fun s => hA.semigroup.S s x) (hA.semigroup.S t (A x)) (Ici t) t := by
   have h := hA.semigroup.hasDerivWithinAt_Ici_apply ⟨x, hA.mem_semigroup_generator_domain x⟩ ht
   rwa [hA.semigroup_generator_apply] at h
 
-/-- **The energy identity** for the Lumer–Phillips semigroup:
-`‖S(t) x‖² = ‖x‖² + ∫₀ᵗ 2 re ⟪S(s) A x, S(s) x⟫ ds` on `D(A)`, `t ≥ 0`; the integrand
-`2 re ⟪A S(s) x, S(s) x⟫` is `≤ 0`. -/
 theorem norm_sq_semigroup_apply (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     ‖hA.semigroup.S t x‖ ^ 2 = ‖(x : E)‖ ^ 2 +
       ∫ s in (0 : ℝ)..t, 2 * RCLike.re ⟪hA.semigroup.S s (A x), hA.semigroup.S s x⟫_𝕜 := by
   have h := hA.semigroup.norm_sq_S_apply ⟨x, hA.mem_semigroup_generator_domain x⟩ ht
   rwa [hA.semigroup_generator_apply] at h
 
-/-- **Resolvent invariance gives semigroup invariance**: if the resolvents `R(c_n)`, `c_n = n + 1`,
-leave the closed subspace `K` invariant, so do the Yosida approximations, their exponentials and
-the Lumer–Phillips semigroup (their strong limit). -/
 theorem semigroup_mem_of_res_mem (hA : A.IsMDissipative) (hK : _root_.IsClosed (K : Set E))
     (hR : ∀ n : ℕ, ∀ x ∈ K, res A n x ∈ K) (t : ℝ) {x : E} (hx : x ∈ K) :
     hA.semigroup.S t x ∈ K := by
@@ -318,15 +274,10 @@ theorem semigroup_mem_of_res_mem (hA : A.IsMDissipative) (hK : _root_.IsClosed (
   exact hK.mem_of_tendsto (tendsto_approxS_max hA t x) (Eventually.of_forall hS)
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- `R(μ) (μ u - A u) = u`. -/
 theorem resolvent_apply_sub (hA : A.IsMDissipative) {μ : ℝ} (hμ : 0 < μ) (u : A.domain) :
     resolvent A (μ : 𝕜) ((μ : 𝕜) • (u : E) - A u) = u :=
   (hA.isResolvent hμ).apply_sub u
 
-/-- **Semigroup invariance gives resolvent invariance**: if `S(t) K ⊆ K` for `t ≥ 0`, the
-restricted semigroup on `K` is a contraction semigroup whose generator is the part of `A` in `K`;
-by the converse of Lumer–Phillips it is m-dissipative, so `μ - A` maps `D(A) ∩ K` onto `K`, and
-`R(μ) K ⊆ K`. -/
 theorem exists_solve_of_invariant (hA : A.IsMDissipative) (hK : _root_.IsClosed (K : Set E))
     (hinv : ∀ t, 0 ≤ t → ∀ x ∈ K, hA.semigroup.S t x ∈ K) {μ : ℝ} (hμ : 0 < μ) (y : E)
     (hy : y ∈ K) : ∃ u : A.domain, (u : E) ∈ K ∧ (μ : 𝕜) • (u : E) - A u = y := by
@@ -357,8 +308,6 @@ theorem invariant_iff_resolvent (hA : A.IsMDissipative) (hK : _root_.IsClosed (K
     exact hA.semigroup_mem_of_res_mem hK (fun n y hy => hR _ (Stone.scale_pos n) y hy) t hx
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- If the stationary problem `μ u - A u = f` is solvable in `D(A) ∩ K` for every `f ∈ K` (one
-`μ > 0`), the part of `A` in `K` is m-dissipative. -/
 theorem isMDissipative_partIn_of_solve (hA : A.IsMDissipative) {μ : ℝ} (hμ : 0 < μ)
     (hs : ∀ y ∈ K, ∃ u : A.domain, (u : E) ∈ K ∧ (μ : 𝕜) • (u : E) - A u = y) :
     (A.partIn K).IsMDissipative := by
@@ -371,8 +320,6 @@ theorem isMDissipative_partIn_of_solve (hA : A.IsMDissipative) {μ : ℝ} (hμ :
   simp only [Submodule.coe_sub, Submodule.coe_smul, LinearPMap.coe_partIn_apply]
   exact hu
 
-/-- **The generator criterion for invariance**: `K` is invariant iff for one `μ > 0` every `f ∈ K`
-is `μ u - A u` for some `u ∈ D(A) ∩ K` (the stationary problem is solvable within `K`). -/
 theorem invariant_iff_exists_solve (hA : A.IsMDissipative) (hK : _root_.IsClosed (K : Set E)) :
     (∀ t, 0 ≤ t → ∀ x ∈ K, hA.semigroup.S t x ∈ K) ↔
       ∃ μ : ℝ, 0 < μ ∧ ∀ y ∈ K, ∃ u : A.domain, (u : E) ∈ K ∧ (μ : 𝕜) • (u : E) - A u = y := by
@@ -387,7 +334,7 @@ theorem invariant_iff_exists_solve (hA : A.IsMDissipative) (hK : _root_.IsClosed
   rw [← hu', hA.resolvent_apply_sub hν ⟨_, u.2.1⟩]
   exact ((u : K)).2
 
-/-- **The part of `A` in an invariant `K` is m-dissipative**, and conversely. -/
+/-- **The part of `A` in a closed invariant `K` is m-dissipative**, and conversely. -/
 theorem invariant_iff_isMDissipative_partIn (hA : A.IsMDissipative)
     (hK : _root_.IsClosed (K : Set E)) :
     (∀ t, 0 ≤ t → ∀ x ∈ K, hA.semigroup.S t x ∈ K) ↔ (A.partIn K).IsMDissipative := by
@@ -402,10 +349,6 @@ theorem invariant_iff_isMDissipative_partIn (hA : A.IsMDissipative)
     simp only [Submodule.coe_sub, Submodule.coe_smul, LinearPMap.coe_partIn_apply] at hu'
     exact ⟨⟨_, u.2.1⟩, ((u : K)).2, hu'⟩
 
-/-- **An invariant closed subspace meets `D(A)` densely**: `D(A) ∩ K` is dense in `K`, since the
-generator of the restricted semigroup is densely defined in `K` and its domain lies in
-`D(A) ∩ K`. Contrapositive: if some continuous functional vanishes on `D(A) ∩ K` but not on `K`,
-then `K` is not invariant. -/
 theorem closure_domain_inter_of_invariant (hA : A.IsMDissipative)
     (hK : _root_.IsClosed (K : Set E)) (hinv : ∀ t, 0 ≤ t → ∀ x ∈ K, hA.semigroup.S t x ∈ K) :
     ∀ k ∈ K, k ∈ _root_.closure ((A.domain : Set E) ∩ K) := by

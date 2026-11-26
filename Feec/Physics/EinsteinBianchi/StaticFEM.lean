@@ -5,73 +5,13 @@ public import Feec.Models.Cube.WeakSymmetryFEM
 /-!
 # The time-independent Einstein–Bianchi system with weak symmetries: finite elements on the cube
 
-The time-independent EB system with weakly imposed symmetry, [QuennevilleBelair2015], §5.3,
-(5.3), on `Q = (0, ½)³` with the thesis' boundary conditions, discretized by the elements of
-Table 5.1 on the level-`(N + 1)` Freudenthal meshes (`h_N = 1 / (2 (N + 1))`):
-
-* top row `P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²` (Lagrange, Nédélec, Raviart–Thomas), bottom row
-  `P₂Λ̊⁰ ⊗ ℝ³ → P₂⁻Λ̊¹ ⊗ ℝ³ → P₁Λ̊² ⊗ ℝ³`, all with vanishing boundary DOFs;
-* `S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹` with the **smoothed** cochain projections `π = J⁻¹ Π_h R` of one
-  common smoother for both rows (`Feec.Models.Cube.WeakSymmetry.cubeFEM`); the canonical
-  projections of the thesis are not bounded on `L²` (on the discrete spaces both are defined,
-  and Props 5.7–5.9 for the canonical maps are in `Feec.Models.Cube.WeakSymmetryEstimates`).
-
-**Main theorem** (`staticFEM`, under the regularity hypothesis `CurlPotential`, see below):
-the continuous problem (5.3) is well posed for every `f` (thesis Prop 5.2); for every `N` the
-discretization satisfies the surjectivity hypothesis (5.4) and uniform projection bounds; the
-discrete problem (5.6), i.e. the thesis' (5.7) with `S_h = πS` in place of `Π_h S`, has a unique
-solution for every datum (thesis Prop 5.4); and for exact solutions with `σ, φ, u, S¹u` of class
-`C²`, vanishing outside `Q`, with first derivatives bounded by `L`, and `‖λ‖ ≤ L`,
-`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`
-(thesis Thm 5.5, corrected). The same rate holds for the solution of Prop 5.2 itself whenever its
-multiplier lies in `L²Λ¹(Q)` (`l = jW λ`), through `isSaddle_jW_domain_eqs`.
-
-**Non-vacuity** (`staticFEM_nonvacuous`): the discrete spaces are nonzero for all large `N`
-(unconditionally), and there is a nontrivial smooth exact solution (manufactured data:
-`u` = `dᵗ(f dx₀ ∧ dx₁)` in the first row, `σ = φ = λ = 0`) satisfying every hypothesis of the
-error estimate, whose discrete solutions are nonzero for large `N`; and
-(`staticFEM_nonvacuous_coupled`) a smooth exact solution with all four unknowns nonzero
-(`λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ`, `uₐ = −g dxₐ`, `g` a bump in `Q`), so that the multiplier and the
-constraint `dσ = S⁰φ` are exercised, whose discrete `σₕ, φₕ, uₕ` converge at rate `h_N` and are
-nonzero for large `N`.
-
-**Status of the thesis statements used.**
-* Prop 5.7 (5.4): proved, in the corrected (moment-DOF) form, for the canonical maps
-  (`Feec.FiniteElement.PolySeq.bggS0h_tensorInterp`) and transferred to the smoothed projections
-  of one smoother (`Feec.Models.Cube.WeakSymmetry.cubeFEM_compatible`).
-* Prop 5.8: corrected (the `ℓ¹` DOF sums are replaced by local `ℓ²`/`L²` scaling,
-  `Feec.Models.Cube.WeakSymmetry.norm_glue_bggS0h_le`, `norm_glue_bggS1h_le`); `S₁ = 2 vskw`
-  (the normalization of the anticommutation `d S = −S d`).
-* Prop 5.9(1): proved (`norm_sub_glue_bggS0h_le`), and transferred to `π¹`
-  (`cubeFEM_happ0`).
-* Prop 5.9(2): **refuted** (`exists_interpolationError_ge`, also for every projection onto
-  the Raviart–Thomas spaces, `not_exists_bestApprox_bound`). Thm 5.5 therefore applies with the
-  weak consistency `|⟪S¹u, (S₁ − S₁,ₕ)v⟫| ≤ C h ‖v‖_V` in place of the false hypothesis
-  (`Feec.BGG.Discrete.error_estimate_of_weakConsistency`), which follows from regular `H̊¹`
-  potentials and the `H̊¹` approximation of the smoothed projections
-  (`Feec.Models.Cube.WeakSymmetry.cubeFEMReg`,
-  `Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound`).
-* Thm 5.5: proved for Table 5.1 on the cube, with `λ ∈ L²` (the thesis' `λ ∈ H⁻¹(div)` does not
-  give the bound) and the `h`-dependent norm `‖·‖_{Γₕ}`.
-
-**The remaining hypothesis.** `CurlPotential` (`curl H̊(curl) = curl S⁰ H̊¹(Q; ℝ³)`, the regular
-decomposition of [Hiptmair2002], Lemma 2.4, [HiptmairXu2007], §3) is the one explicit hypothesis;
-it is not in Mathlib (`Feec.Models.Cube.WeakSymmetry.CurlPotential`: equivalent to the closedness
-of `curl S⁰ H̊¹(Q; ℝ³)`, true on test fields). It is now proved
-(`Feec.Models.Cube.WeakSymmetry.curlPotential` in `Feec.Models.Cube.RegularDecomposition`), and the
-theorems of this file with it discharged are `staticFEM_cube`, `staticFEM_nonvacuous_cube` and
-`staticFEM_nonvacuous_coupled_cube` in `Feec.Physics.EinsteinBianchi.Unconditional`.
+Well-posedness and convergence at rate `h_N` of the finite element method of Table 5.1 for the
+system (5.3) of [QuennevilleBelair2015], §5.3 on `Q = (0, ½)³`, under the regularity hypothesis
+`CurlPotential`, and manufactured solutions meeting its hypotheses.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, (5.3), (5.6), (5.7), Table 5.1, Props 5.2, 5.4, 5.7–5.9, Thm 5.5
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
-  §3 (regular decomposition)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -87,22 +27,9 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
 
 set_option maxHeartbeats 1000000 in
-/-- **The time-independent Einstein–Bianchi system with weak symmetries on the cube: well-posedness
-and convergence of the finite element method of Table 5.1** ([QuennevilleBelair2015], §5.3,
-Props 5.2, 5.4, Thm 5.5), under the regularity hypothesis `CurlPotential`. There are smoothing
-parameters `p` (one smoother for both rows) and a constant `C` such that:
-1. (5.3) is well posed for every `f` (`bggHilb.IsSaddle`, with a stability bound);
-2. for every `N` the discretization `cubeFEM hT hB N` satisfies (5.4) (`Compatible`) and the
-   projection bounds `Bounded (2C)`, `C` independent of `N`;
-3. for every `N` and every datum `F` the discrete problem (5.6) (thesis (5.7) with `S_h = πS`)
-   has exactly one solution;
-4. there is `K`, independent of `N` and of the solution, such that for every exact solution
-   `(σ, φ, u, λ)` of (5.3) with `λ ∈ L²`, `‖λ‖ ≤ L`, whose components and `S¹u` are `C²` forms
-   vanishing outside `Q` with first derivatives bounded by `L`, and every discrete solution,
-   `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`;
-5. the same for the solution `(x, l)` of item 1 (right-hand side `f`, discrete datum
-   `F v = ⟪f, v⟫`) whenever its multiplier lies in `L²Λ¹(Q)`, `l = jW λ`: the graph-space
-   components of `x`, read in the domains, are the exact solution of item 4. -/
+/-- Under `CurlPotential`, (5.3) is well posed and, for some common smoother, (5.6) is uniquely
+solvable with `O(h_N)` error for `C²` solutions vanishing outside `Q`.
+[QuennevilleBelair2015], Props 5.2, 5.4, Thm 5.5 (adapted) -/
 theorem staticFEM (hR : CurlPotential) :
     ((∀ f : Wv W1, ∃! xl : Feec.BGG.Xsp V0 Vt0 Vt1 × bggHilb.Wcheck,
         bggHilb.IsSaddle f xl.1 xl.2) ∧
@@ -175,15 +102,8 @@ theorem staticFEM (hR : CurlPotential) :
     cubeFEM_bounded hT hB, cubeFEM_existsUnique hT hB hCR.1 hCR.2,
     cubeFEM_rate_C2 hT hB hCR.1 hCR.2, cubeFEM_rate_isSaddle hT hB hCR.1 hCR.2⟩
 
-/-- **Non-vacuity of `staticFEM`** (for any common smoother `p` of the two rows):
-1. the discrete spaces `Vₕ⁰, Vₕ¹, Ṽₕ⁰, Ṽₕ¹` are nonzero for all large `N` (unconditionally);
-2. the manufactured field `manufacturedU` (first row `dᵗ(f dx₀ ∧ dx₁)`, `f` a bump in `Q`) is
-   nonzero, and `(σ, φ, u, λ) = (0, 0, manufacturedU, 0)` with the datum `manufacturedDatum`
-   solves (5.3) with all the `C²` hypotheses of
-   the error estimate;
-3. under the regularity hypothesis, the discrete solutions `uₕ` of (5.6) with datum
-   `manufacturedDatum` converge
-   to `manufacturedU` at rate `h_N` in `‖·‖_{Γₕ}` and are nonzero for all large `N`. -/
+/-- The discrete spaces are nonzero for large `N`, and a nonzero manufactured solution of (5.3) has
+discrete solutions, under `CurlPotential`, converging at rate `h_N` and nonzero for large `N`. -/
 theorem staticFEM_nonvacuous {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :
@@ -247,11 +167,6 @@ theorem staticFEM_nonvacuous {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → 
   exact le_of_pow_le_pow_left₀ two_ne_zero hKL h1
 
 set_option maxHeartbeats 1000000 in
-/-- **Non-vacuity of `staticFEM` with every unknown coupled** (for any common smoother `p`): the
-manufactured solution `λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ`, `uₐ = −g dxₐ` (`g` a bump in `Q`) has all
-four unknowns nonzero, solves (5.3) with the datum `coupledDatum` and meets every hypothesis of item 4
-of `staticFEM`; under the regularity hypothesis its discrete solutions `(σₕ, φₕ, uₕ)` converge at
-rate `h_N` and `σₕ, φₕ, uₕ` are nonzero for all large `N`. -/
 theorem staticFEM_nonvacuous_coupled {p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) :

@@ -7,34 +7,13 @@ public import Feec.ForMathlib.Analysis.Gronwall
 /-!
 # Strong and classical solutions of `U' = A U + F`
 
-For a (possibly unbounded) operator `A : E →ₗ.[𝕜] E` on an inner product space over
-`𝕜 = ℝ` or `ℂ`, a forcing `F : ℝ → E` and an arbitrary time set `I ⊆ ℝ`:
-
-* `Evolution.IsStrongSolution A I F U`: `U` is continuous on `I` and, at every `t ∈ I`,
-  `U t ∈ D(A)` and `U` has derivative `A (U t) + F t` within `I`. The derivative is stated through
-  the graph of `A` (`∃ v, (U t, v) ∈ A.graph ∧ …`), so no dependent domain proofs appear.
-* `Evolution.IsClassicalSolution A I F U`: a strong solution with `t ↦ A (U t)` continuous on `I`.
-
-Derivatives are within `I`: for `I = Icc a b` they are one-sided at the endpoints, for `I = ℝ`
-they are two-sided.
-
-## Main results
-
-* `IsStrongSolution.iff`: the domain form `∃ h : ∀ t ∈ I, U t ∈ D(A), ∀ t, HasDerivWithinAt …`.
-* `IsStrongSolution.mono`, `.add`, `.smul`, `.sub`, `.neg`: restriction to a smaller time set
-  and linearity (the solution set is an affine space over the homogeneous solutions).
-* `IsStrongSolution.norm_sub_le`, `IsStrongSolution.unique`: for a dissipative `A`, two strong
-  solutions with the same forcing satisfy `‖U t - V t‖ ≤ ‖U a - V a‖` on `[a,b]`, hence are
-  unique. Energy method: no density, closedness or semigroup is needed.
+Strong and classical solutions of `U' = A U + F` on a time set `I ⊆ ℝ`; for a dissipative `A`,
+strong solutions are stable in the initial value, hence unique.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (Thm 4.3), §4.4 (strong solutions, uniqueness by energy)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §4.1 (classical and strong solutions of the inhomogeneous problem)
-* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
-  Prop 4.1.6, Cor 2.4.9
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -49,19 +28,14 @@ section General
 
 variable {𝕜 E : Type*} [Ring 𝕜] [NormedAddCommGroup E] [Module 𝕜 E] [NormedSpace ℝ E]
 
-/-- `U` is a **strong solution** of `U' = A U + F` on the time set `I`: `U` is continuous on `I`
-and at every `t ∈ I` the pair `(U t, v)` lies in the graph of `A` for some `v` with
-`U' t = v + F t` (derivative within `I`).
-See [QuennevilleBelair2015], §4.4; cf. [Pazy1983], §4.1. -/
+/-- `U` is a **strong solution** of `U' = A U + F` on `I`: continuous, with `U t ∈ D(A)` and
+`U' t = A (U t) + F t` within `I`. [QuennevilleBelair2015], §4.4; [Pazy1983], §4.1 -/
 structure IsStrongSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop where
   continuousOn : ContinuousOn U I
   deriv : ∀ t ∈ I, ∃ v, (U t, v) ∈ A.graph ∧ HasDerivWithinAt U (v + F t) I t
 
 /-- `U` is a **classical solution** of `U' = A U + F` on `I`: a strong solution such that
-`t ↦ A (U t)` is continuous on `I` (i.e. `U ∈ C(I; D(A)) ∩ C¹(I; E)` when `F` is continuous).
-See [QuennevilleBelair2015], Thm 4.3; cf. [Pazy1983], §4.1. This is the solution class
-`C([a,b]; D(A)) ∩ C¹([a,b]; E)` of the Hille–Yosida corollary the thesis cites,
-[CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9. -/
+`t ↦ A (U t)` is continuous on `I`. [QuennevilleBelair2015], Thm 4.3; [Pazy1983], §4.1 -/
 structure IsClassicalSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (F U : ℝ → E) : Prop
     extends IsStrongSolution A I F U where
   deriv_cont : ∃ V : ℝ → E, ContinuousOn V I ∧ ∀ t ∈ I, (U t, V t) ∈ A.graph
@@ -70,7 +44,6 @@ variable {A : E →ₗ.[𝕜] E} {I J : Set ℝ} {F G U V : ℝ → E}
 
 namespace IsStrongSolution
 
-/-- Builds a strong solution from the derivative condition alone (continuity follows). -/
 theorem of_deriv (h : ∀ t ∈ I, ∃ v, (U t, v) ∈ A.graph ∧ HasDerivWithinAt U (v + F t) I t) :
     IsStrongSolution A I F U :=
   ⟨fun t ht => (h t ht).choose_spec.2.continuousWithinAt, h⟩
@@ -78,14 +51,12 @@ theorem of_deriv (h : ∀ t ∈ I, ∃ v, (U t, v) ∈ A.graph ∧ HasDerivWithi
 theorem mem_domain (hU : IsStrongSolution A I F U) {t : ℝ} (ht : t ∈ I) : U t ∈ A.domain :=
   LinearPMap.mem_domain_of_mem_graph (hU.deriv t ht).choose_spec.1
 
-/-- The derivative of a strong solution: `U' t = A (U t) + F t` within `I`. -/
 theorem hasDerivWithinAt (hU : IsStrongSolution A I F U) {t : ℝ} (ht : t ∈ I) :
     HasDerivWithinAt U (A ⟨U t, hU.mem_domain ht⟩ + F t) I t := by
   obtain ⟨v, hv, hd⟩ := hU.deriv t ht
   obtain ⟨_, e⟩ := LinearPMap.mem_graph_iff_exists.1 hv
   rwa [e]
 
-/-- Strong solutions in domain form. -/
 theorem iff : IsStrongSolution A I F U ↔ ∃ h : ∀ t ∈ I, U t ∈ A.domain,
     ∀ t (ht : t ∈ I), HasDerivWithinAt U (A ⟨U t, h t ht⟩ + F t) I t :=
   ⟨fun hU => ⟨fun _ => hU.mem_domain, fun _ => hU.hasDerivWithinAt⟩, fun ⟨h, hd⟩ =>
@@ -96,13 +67,11 @@ theorem of_hasDerivWithinAt (h : ∀ t ∈ I, U t ∈ A.domain)
     IsStrongSolution A I F U :=
   iff.2 ⟨h, hd⟩
 
-/-- Restriction to a smaller time set. -/
 theorem mono (hU : IsStrongSolution A I F U) (hJ : J ⊆ I) : IsStrongSolution A J F U :=
   of_deriv fun t ht =>
     let ⟨v, hv, hd⟩ := hU.deriv t (hJ ht)
     ⟨v, hv, hd.mono hJ⟩
 
-/-- Changing `U` and `F` off `I` does not matter. -/
 theorem congr (hU : IsStrongSolution A I F U) (hUV : EqOn U V I) (hFG : EqOn F G I) :
     IsStrongSolution A I G V :=
   of_deriv fun t ht =>
@@ -128,12 +97,10 @@ theorem sub (hU : IsStrongSolution A I F U) (hV : IsStrongSolution A I G V) :
     IsStrongSolution A I (F - G) (U - V) := by
   simpa only [sub_eq_add_neg] using hU.add hV.neg
 
-/-- The zero function solves the homogeneous problem. -/
 theorem zero : IsStrongSolution A I 0 (0 : ℝ → E) :=
   of_deriv fun _ _ => ⟨0, A.graph.zero_mem, by
     rw [Pi.zero_apply, add_zero]; exact hasDerivWithinAt_const _ _ (0 : E)⟩
 
-/-- On `[a,b]`, a strong solution has a right derivative on `[a,b)`. -/
 theorem hasDerivWithinAt_Ici {a b : ℝ} (hU : IsStrongSolution A (Icc a b) F U) {t : ℝ}
     (ht : t ∈ Ico a b) :
     HasDerivWithinAt U (A ⟨U t, hU.mem_domain (Ico_subset_Icc_self ht)⟩ + F t) (Ici t) t :=
@@ -144,7 +111,6 @@ end IsStrongSolution
 
 namespace IsClassicalSolution
 
-/-- Classical solutions in domain form. -/
 theorem iff : IsClassicalSolution A I F U ↔ ∃ h : ∀ t ∈ I, U t ∈ A.domain,
     (∀ t (ht : t ∈ I), HasDerivWithinAt U (A ⟨U t, h t ht⟩ + F t) I t) ∧
     ∃ V : ℝ → E, ContinuousOn V I ∧ ∀ t (ht : t ∈ I), A ⟨U t, h t ht⟩ = V t := by
@@ -160,13 +126,11 @@ theorem mono (hU : IsClassicalSolution A I F U) (hJ : J ⊆ I) : IsClassicalSolu
   let ⟨V, hV, hUV⟩ := hU.deriv_cont
   ⟨hU.toIsStrongSolution.mono hJ, V, hV.mono hJ, fun t ht => hUV t (hJ ht)⟩
 
-/-- Changing `U` and `F` off `I` does not matter. -/
 theorem congr (hU : IsClassicalSolution A I F U) (hUV : EqOn U V I) (hFG : EqOn F G I) :
     IsClassicalSolution A I G V :=
   let ⟨W, hW, hUW⟩ := hU.deriv_cont
   ⟨hU.toIsStrongSolution.congr hUV hFG, W, hW, fun t ht => hUV ht ▸ hUW t ht⟩
 
-/-- A classical solution with continuous forcing is `C¹` on `I`: `U'` is continuous. -/
 theorem continuousOn_deriv (hU : IsClassicalSolution A I F U) (hF : ContinuousOn F I) :
     ∃ U' : ℝ → E, ContinuousOn U' I ∧ ∀ t ∈ I, HasDerivWithinAt U (U' t) I t := by
   obtain ⟨V, hV, hUV⟩ := hU.deriv_cont
@@ -204,10 +168,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 namespace IsStrongSolution
 
-/-- **Stability for a dissipative generator**: two strong solutions of `U' = A U + F` on
-`[a,b]` with the same forcing satisfy `‖U t - V t‖ ≤ ‖U a - V a‖`. Energy method; no density,
-closedness, skew-adjointness or semigroup is needed.
-[QuennevilleBelair2015], Thm 4.3 (uniqueness half). Cf. [Pazy1983], §1.4. -/
 theorem norm_sub_le (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A (Icc a b) F U)
     (hV : IsStrongSolution A (Icc a b) F V) : ∀ t ∈ Icc a b, ‖U t - V t‖ ≤ ‖U a - V a‖ := by
   have hW := hU.sub hV
@@ -224,8 +184,7 @@ theorem norm_sub_le (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A 
   simpa using this
 
 /-- **Uniqueness for a dissipative generator**: strong solutions of `U' = A U + F` on `[a,b]`
-with the same value at `a` agree on `[a,b]`. Every other uniqueness statement of the library is
-a corollary. [QuennevilleBelair2015], Thm 4.3, Thm 4.6 (uniqueness). -/
+with the same value at `a` agree on `[a,b]`. [QuennevilleBelair2015], Thm 4.3, Thm 4.6 (adapted) -/
 theorem unique (hA : A.IsDissipative) {a b : ℝ} (hU : IsStrongSolution A (Icc a b) F U)
     (hV : IsStrongSolution A (Icc a b) F V) (h0 : U a = V a) : EqOn U V (Icc a b) := fun t ht => by
   have := hU.norm_sub_le hA hV t ht

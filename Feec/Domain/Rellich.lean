@@ -6,37 +6,14 @@ public import Feec.HilbertComplex.EigenDenseKernel
 /-!
 # Rellich compactness passes to subdomains and to affine images
 
-For a constant-coefficient operator `A` (`Feec.Domain.ConstCoeffOp`) the compact embedding of
-the minimal domain `D(A_min(Ω)) ↪ L²(Ω)` (`Feec.Operator.HasCompactBall (A.minimal Ω)`: the
-unit box `‖u‖, ‖A u‖ ≤ 1` lies in a compact set) is
+For a constant-coefficient operator `A`, a compact embedding `D(A_min(Ω')) ↪ L²(Ω')` gives one on
+every open `Ω ⊆ Ω'` and, for homogeneous `A`, on every open subset of an affine preimage of `Ω'`.
 
-* **monotone in the domain** (`ConstCoeffOp.hasCompactBall_minimal_of_subset`): for open
-  `Ω ⊆ Ω'` the extension by zero `L²(Ω) → L²(Ω')` (`extendZeroF`, an isometry) maps
-  `D(A_min(Ω))` into `D(A_min(Ω'))` with `A_min(Ω') (ẽu) = (A_min(Ω) u)~`
-  (`ConstCoeffOp.extendZeroF_mem_minimal`: `C_c^∞(Ω) ⊆ C_c^∞(Ω')`, then graph closure), and an
-  isometry is a closed embedding;
-* **invariant under affine changes of variables** for homogeneous `A`
-  (`ConstCoeffOp.hasCompactBall_minimal_pull`, from `ConstCoeffOp.minimal_pull`).
+## Main results
 
-The graph-closure step of the extension holds in general
-(`ConstCoeffOp.mem_minimal_of_mapsTo_testGraph`): bounded maps sending test graphs to test graphs
-send minimal domains to minimal domains. With the reindexing of components
-(`compF`) the same lemma splits a field of `D(A_min)` into components (used for `H̊¹(Ω; ℝᵐ)` in
-`Feec.Models.BoundedDomain.Compactness`).
-
-Hence (`ConstCoeffOp.hasCompactBall_minimal_of_subset_preimage`) a compact embedding on one open
-set `Ω'` gives one on every open `Ω ⊆ T⁻¹(Ω')`, `T x = a x + b`; in particular from the cube on
-every bounded open set. This is the reduction of Rellich's theorem on bounded open sets to the
-cube, [Evans2010], §5.7, Thm 1 (for `W₀^{1,p}` no regularity of `∂Ω` is needed); the cube itself
-is treated in `Feec.Models.BoundedDomain.Compactness`.
-
-## References
-
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.7 (Rellich–Kondrachov)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.3 (Rellich's theorem), §9.4 (extension by zero of `W₀^{1,p}`)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffOp.hasCompactBall_minimal_of_subset`: open subsets.
+* `ConstCoeffOp.hasCompactBall_minimal_pull`: affine preimages.
+* `ConstCoeffOp.hasCompactBall_minimal_of_subset_preimage`: open subsets of affine preimages.
 -/
 
 open scoped InnerProductSpace ENNReal Topology
@@ -66,7 +43,6 @@ theorem coeFn_extendZero (f : L2 𝕜 Ω) :
     (extendZero (Ω' := Ω') hΩ f : E → 𝕜) =ᵐ[volume.restrict Ω'] Ω.indicator (f : E → 𝕜) :=
   (memLp_indicator_restrict hΩ f).coeFn_toLp
 
-/-- An a.e. identity on `Ω` holds a.e. on `Ω'` for the extensions by zero. -/
 theorem indicator_ae_eq_of_ae_eq {f g : E → 𝕜} (h : f =ᵐ[volume.restrict Ω] g) :
     Ω.indicator f =ᵐ[volume.restrict Ω'] Ω.indicator g := by
   refine ae_restrict_of_ae ?_
@@ -95,7 +71,6 @@ theorem extendZero_smul (c : 𝕜) (f : L2 𝕜 Ω) :
   by_cases hx : x ∈ Ω <;> simp [hx]
 
 include hsub in
-/-- **The extension by zero is an isometry.** -/
 theorem norm_extendZero (f : L2 𝕜 Ω) : ‖extendZero (Ω' := Ω') hΩ f‖ = ‖f‖ := by
   rw [Lp.norm_def, Lp.norm_def, eLpNorm_congr_ae (coeFn_extendZero hΩ f),
     eLpNorm_indicator_eq_eLpNorm_restrict hΩ.nullMeasurableSet, Measure.restrict_restrict hΩ,
@@ -138,7 +113,6 @@ section Test
 variable [NormedAddCommGroup E] [NormedSpace ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] {ι : Type*} [Fintype ι]
 
-/-- The extension by zero of a test field of `Ω` is the same test field on `Ω'`. -/
 theorem extendZeroF_testField (hΩ : MeasurableSet Ω) (hsub : Ω ⊆ Ω') {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
     extendZeroF hΩ hsub (testField hφ) = testField fun i => (hφ i).mono hsub := by
   refine PiLp.ext fun i => Lp.ext ?_
@@ -152,7 +126,6 @@ theorem extendZeroF_testField (hΩ : MeasurableSet Ω) (hsub : Ω ⊆ Ω') {φ :
   · rw [indicator_of_notMem hx, (hφ i).eq_zero_of_notMem hx]
 
 omit [Fintype ι] in
-/-- The reindexing of a test field is the reindexed test field. -/
 theorem compF_testField {ι' : Type*} (σ : ι' → ι)
     {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) :
     compF σ (testField hφ) = testField (φ := fun j => φ (σ j)) fun j => hφ (σ j) := rfl
@@ -170,9 +143,6 @@ open Feec.Operator
 variable [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] {ι κ : Type*} [Fintype ι] [Fintype κ] (A : ConstCoeffOp E 𝕜 ι κ)
 
-/-- **Extension by zero maps `D(A_min(Ω))` into `D(A_min(Ω'))`** for open `Ω ⊆ Ω'`, commuting
-with `A`: the test graph of `Ω` maps into the test graph of `Ω'`, and the extension is
-continuous. -/
 theorem extendZeroF_mem_minimal (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (hsub : Ω ⊆ Ω')
     (u : (A.minimal Ω).domain) :
     ∃ h : extendZeroF hΩ.measurableSet hsub (u : L2F 𝕜 Ω ι) ∈ (A.minimal Ω').domain,
@@ -194,9 +164,6 @@ theorem extendZeroF_mem_minimal (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (hsub : Ω
   exact ⟨LinearPMap.mem_domain_of_mem_graph hgr,
     ((LinearPMap.image_iff (LinearPMap.mem_domain_of_mem_graph hgr)).2 hgr).symm⟩
 
-/-- **Minimal domains along maps of test graphs**: continuous linear maps `Φ`, `Ψ` sending the
-test graph of `A` on `Ω` into the test graph of `B` on `Ω'` send `D(A_min(Ω))` into
-`D(B_min(Ω'))`, with `B_min (Φ u) = Ψ (A_min u)` (graph closure). -/
 theorem mem_minimal_of_mapsTo_testGraph {ι' κ' : Type*} [Fintype ι'] [Fintype κ']
     {B : ConstCoeffOp E 𝕜 ι' κ'} (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω')
     (Φ : L2F 𝕜 Ω ι →L[𝕜] L2F 𝕜 Ω' ι') (Ψ : L2F 𝕜 Ω κ →L[𝕜] L2F 𝕜 Ω' κ')
@@ -217,8 +184,7 @@ theorem mem_minimal_of_mapsTo_testGraph {ι' κ' : Type*} [Fintype ι'] [Fintype
   exact ⟨LinearPMap.mem_domain_of_mem_graph hgr,
     ((LinearPMap.image_iff (LinearPMap.mem_domain_of_mem_graph hgr)).2 hgr).symm⟩
 
-/-- **Compactness of the minimal domain is monotone in the domain**: for open `Ω ⊆ Ω'`, a
-compact embedding `D(A_min(Ω')) ↪ L²(Ω')` gives one of `D(A_min(Ω)) ↪ L²(Ω)`. -/
+/-- **Compactness of the minimal domain is monotone in the domain.** -/
 theorem hasCompactBall_minimal_of_subset (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (hsub : Ω ⊆ Ω')
     (h : HasCompactBall (A.minimal Ω')) : HasCompactBall (A.minimal Ω) := by
   set J := extendZeroF (𝕜 := 𝕜) (ι := ι) hΩ.measurableSet hsub
@@ -231,9 +197,7 @@ theorem hasCompactBall_minimal_of_subset (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (
 
 variable {A}
 
-/-- **Compactness of the minimal domain under affine maps**: for `A` homogeneous of order `r`,
-`T x = a x + b` (`a ≠ 0`) and `Ω = T⁻¹(Ω')`, a compact embedding on `Ω'` gives one on `Ω`
-(`A_min,Ω = a^r P A_min,Ω' P⁻¹`, `ConstCoeffOp.minimal_pull`). -/
+/-- **Compactness of the minimal domain is invariant under affine maps**, `A` homogeneous. -/
 theorem hasCompactBall_minimal_pull {r : ℕ} (hA : A.IsHomogeneous r) {a : ℝ} (ha : a ≠ 0)
     (b : E) (hΩo' : IsOpen Ω') (hT : aff a b ⁻¹' Ω' = Ω)
     (h : HasCompactBall (A.minimal Ω')) : HasCompactBall (A.minimal Ω) := by
@@ -256,9 +220,7 @@ theorem hasCompactBall_minimal_pull {r : ℕ} (hA : A.IsHomogeneous r) {a : ℝ}
   gcongr
   exact ContinuousLinearMap.le_opNorm e₂.symm.toContinuousLinearMap _
 
-/-- **Compactness of the minimal domain on subdomains of affine images**: if
-`D(A_min(Ω')) ↪ L²(Ω')` is compact and `Ω ⊆ T⁻¹(Ω')` is open (`T x = a x + b`, `a ≠ 0`, `A`
-homogeneous), then `D(A_min(Ω)) ↪ L²(Ω)` is compact. -/
+/-- **Compactness of the minimal domain passes to open subsets of affine preimages.** -/
 theorem hasCompactBall_minimal_of_subset_preimage {r : ℕ} (hA : A.IsHomogeneous r) {a : ℝ}
     (ha : a ≠ 0) (b : E) (hΩo : IsOpen Ω) (hΩo' : IsOpen Ω') (hsub : Ω ⊆ aff a b ⁻¹' Ω')
     (h : HasCompactBall (A.minimal Ω')) : HasCompactBall (A.minimal Ω) :=

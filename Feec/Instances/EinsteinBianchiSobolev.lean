@@ -6,39 +6,14 @@ public import Feec.Models.Cube.MirrorWaveRegularity
 /-!
 # Sobolev data lie in the approximation classes of the spectral EB discretizations
 
-**`𝕋³`.** For the Fourier spectral family `Feec.Instances.EinsteinBianchi.bandFamily` (bands
-`|n|_∞ ≤ N`), the truncation error of a state in `Hˢ(𝕋³)` (`MemSobStateT s`, the weights
-`⟨ξ_m⟩^{2s}` on the energy at each frequency) is `‖X - P_N X‖ ≤ (N + 1)^{-s} ‖X‖_s`
-(`norm_sub_P_le_sobStateT`): the modes off the band have `|ξ| ≥ 2π (N + 1)`. On the TSD
-constraint `L` multiplies the energy at `m` by `|ξ_m|²` (`fibreEnergy_wave_torus`), so a TSD
-state in `H^{2+s}`, `s ≥ 0`, lies in `D(L²)` (`mem_wave_domain_of_summable_torus`) and in the
-approximation class of order `s`, with norm at most `3 ‖X‖_{2+s}` (`mem_rateData_of_memSobStateT`).
-The TSD state `decayState`, with `E = Σ_k (1 + k²)⁻² e^{2πi k x₃} diag(1, -1, 0)`, lies in `H³`,
-is not band-limited for any `N` and is not stationary (`decayState_nonvacuous`): the torus rate
-class of order `1` contains data on which the spectral method is not exact.
+For the spectral families on `𝕋³` and on the mirror cube, the truncation error of an `Hˢ` state is
+at most `(N + 1)^{-s} ‖X‖_s`, and TSD data in `H^{2+s}` lie in the approximation class of order `s`.
 
-**The mirror cube `Q = (0, ½)³`.** For the cosine–sine family
-`Feec.Instances.EinsteinBianchi.bandFamilyQ`, the truncation error of a state whose mirror extension
-lies in `Hˢ(𝕋³)` is `‖x - P_N x‖ ≤ (N + 1)^{-s} ‖x‖_s` (`norm_sub_P_le_sobState`, from the torus
-bound through the mirror extension), and a TSD datum in `H^{2+s}` lies in the class of order `s`
-with norm at most `3 ‖ξ₀‖_{2+s}` (`mem_rateData_of_memSobState`, from
-`TSDDatum.memSobState_of_add_two`).
+## Main results
 
-**Through the FEEC theorem for reducing families.** The error of the spectral discretizations
-`torusApprox`, `mirrorApprox` is the truncation error of the datum at every time
-(`ReducingFamily.feec`), so the truncation bounds are the **time-uniform** Sobolev rates
-`‖e^{tL} ξ₀ - ι_N e^{tL_N} π_N ξ₀‖ ≤ (N + 1)^{-s} ‖ξ₀‖_s` for all `t ≥ 0` and every `ξ₀ ∈ Hˢ`,
-with the same bound for the TSD residual of TSD data (`einsteinBianchi_torus_approxFEEC_sobolev`,
-`einsteinBianchi_mirror_approxFEEC_sobolev`); no TSD or `D(L)` condition, no factor
-`(1 + C_P)(1 + t)² · 3`. Non-vacuity: `decayState ∈ H³` is TSD, in
-`D(L)`, not stationary and not band-limited for any `N` (`decayState_nonvacuous`).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.12–4.13, Ch. 6
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `mem_rateData_of_memSobStateT`, `mem_rateData_of_memSobState`: the classes of `H^{2+s}` data.
+* `einsteinBianchi_torus_approxFEEC_sobolev`: the time-uniform Sobolev rate on `𝕋³`.
+* `decayState_nonvacuous`: a TSD state in `H³(𝕋³)` that is neither band-limited nor stationary.
 -/
 
 open scoped InnerProductSpace Topology LinearPMap
@@ -56,7 +31,6 @@ open Feec.ShortHilbertComplex (W3)
 /-! ### Truncation errors on `𝕋³` -/
 
 open Classical in
-/-- The Fourier coefficients of the band truncation: `(P_N u)(m) = u(m)` on the band, `0` off. -/
 theorem coe_starProjection_band (N : ℕ) (i : Fin 3) (u : Models.Torus.BGG.Space i)
     (m : Fin 3 → ℤ) :
     ((band N i).starProjection u : (Fin 3 → ℤ) → W3 ℂ Mat VM i) m =
@@ -64,7 +38,6 @@ theorem coe_starProjection_band (N : ℕ) (i : Fin 3) (u : Models.Torus.BGG.Spac
   rw [coeFn_starProjection_band_count, Set.indicator_apply]
 
 open Classical in
-/-- The energy of the truncation error at `m` is the energy of `X` off the band. -/
 theorem fibreEnergy_sub_P (N : ℕ) (X : PiLp 2 Models.Torus.BGG.Space) (m : Fin 3 → ℤ) :
     fibreEnergy (X - bandFamily.P N X) m =
       if m ∈ Fourier.Torus.bandN N then 0 else fibreEnergy X m := by
@@ -79,7 +52,6 @@ theorem fibreEnergy_sub_P (N : ℕ) (X : PiLp 2 Models.Torus.BGG.Space) (m : Fin
   simp only [e]
   split_ifs <;> simp
 
-/-- Off the band `|n|_∞ ≤ N`: `(2π (N + 1))^{2s} ≤ ⟨ξ_m⟩^{2s}` for `s ≥ 0`. -/
 theorem pow_le_weight {N : ℕ} {m : Fin 3 → ℤ} (hm : m ∉ Fourier.Torus.bandN N) {s : ℝ}
     (hs : 0 ≤ s) : ((2 * Real.pi * ((N : ℝ) + 1)) ^ 2) ^ s ≤ weight s m := by
   have h2 : (2 * Real.pi * ((N : ℝ) + 1)) ^ 2 ≤ 1 + ‖Fourier.Torus.freq m‖ ^ 2 := by
@@ -88,7 +60,6 @@ theorem pow_le_weight {N : ℕ} {m : Fin 3 → ℤ} (hm : m ∉ Fourier.Torus.ba
     linarith
   exact Real.rpow_le_rpow (sq_nonneg _) h2 hs
 
-/-- `(2π (N + 1))^{-2s} ≤ (N + 1)^{-2s}` for `s ≥ 0`. -/
 theorem inv_rpow_le_one_div_rpow_sq (N : ℕ) {s : ℝ} (hs : 0 ≤ s) :
     (((2 * Real.pi * ((N : ℝ) + 1)) ^ 2) ^ s)⁻¹ ≤ ((1 / ((N : ℝ) + 1)) ^ s) ^ 2 := by
   have hN : (0 : ℝ) < (N : ℝ) + 1 := by positivity
@@ -105,7 +76,7 @@ theorem inv_rpow_le_one_div_rpow_sq (N : ℕ) {s : ℝ} (hs : 0 ≤ s) :
   rw [h4, inv_pow]
   exact inv_anti₀ (by positivity) (h3 ▸ h2)
 
-/-- **The Sobolev norm of a torus state**: `‖X‖²_s = Σ_m ⟨ξ_m⟩^{2s} Σᵢ |X̂ᵢ(m)|²`. -/
+/-- The Sobolev norm of a torus state: `‖X‖²_s = Σ_m ⟨ξ_m⟩^{2s} Σᵢ |X̂ᵢ(m)|²`. -/
 def sobStateT (s : ℝ) (X : PiLp 2 Models.Torus.BGG.Space) : ℝ :=
   ∑' m, weight s m * fibreEnergy X m
 
@@ -146,7 +117,6 @@ theorem norm_sub_P_le_sobStateT {s : ℝ} (hs : 0 ≤ s) {X : PiLp 2 Models.Toru
 
 /-! ### TSD states of `H^{2+s}(𝕋³)` -/
 
-/-- A TSD torus state with `Σ_m |ξ_m|² Σᵢ |X̂ᵢ(m)|² < ∞` lies in `D(L)`. -/
 theorem mem_wave_domain_of_summable_torus {X : PiLp 2 Models.Torus.BGG.Space}
     (hX : X ∈ totalSub Models.Torus.BGG.constraint)
     (h : Summable fun m => ‖Fourier.Torus.freq m‖ ^ 2 * fibreEnergy X m) :
@@ -201,7 +171,6 @@ theorem mem_wave_domain_of_summable_torus {X : PiLp 2 Models.Torus.BGG.Space}
     rw [ENNReal.toReal_ofNat, Real.rpow_two]
     rfl
 
-/-- `|ξ_m|^{2j} e_X(m)` is summable for `X ∈ H^{2+s}`, `s ≥ 0`, `j ≤ 2`. -/
 theorem summable_freq_pow_of_memSobStateT {s : ℝ} (hs : 0 ≤ s) {j : ℕ} (hj : j ≤ 2)
     {X : PiLp 2 Models.Torus.BGG.Space} (h : MemSobStateT (2 + s) X) :
     Summable fun m => (‖Fourier.Torus.freq m‖ ^ 2) ^ j * fibreEnergy X m := by
@@ -213,8 +182,6 @@ theorem summable_freq_pow_of_memSobStateT {s : ℝ} (hs : 0 ≤ s) {j : ℕ} (hj
     mul_nonneg (pow_nonneg (sq_nonneg _) _) (fibreEnergy_nonneg _ m)
   nlinarith
 
-/-- If `e_X(m) = |ξ_m|^{2j} e_Y(m)` with `j ≤ 2` and `Y ∈ H^{2+s}`, then `X ∈ Hˢ` and
-`‖X‖²_s ≤ ‖Y‖²_{2+s}`. -/
 theorem sobStateT_le_of_fibreEnergy_eq {s : ℝ} {j : ℕ} (hj : j ≤ 2)
     {X Y : PiLp 2 Models.Torus.BGG.Space}
     (hXY : ∀ m, fibreEnergy X m = (‖Fourier.Torus.freq m‖ ^ 2) ^ j * fibreEnergy Y m)
@@ -226,8 +193,8 @@ theorem sobStateT_le_of_fibreEnergy_eq {s : ℝ} {j : ℕ} (hj : j ≤ 2)
   have hX : MemSobStateT s X := Summable.of_nonneg_of_le h0 hle hY
   exact ⟨hX, Summable.tsum_le_tsum hle hX hY⟩
 
-/-- **TSD data in `H^{2+s}(𝕋³)` lie in the approximation class of order `s`** of the Fourier
-spectral discretization, with class norm at most `3 ‖X‖_{2+s}` (in particular `X ∈ D(L²)`). -/
+/-- **TSD data in `H^{2+s}(𝕋³)` lie in the approximation class of order `s`**, with class norm at
+most `3 ‖X‖_{2+s}`. -/
 theorem mem_rateData_of_memSobStateT {X : PiLp 2 Models.Torus.BGG.Space}
     (hK : X ∈ totalSub Models.Torus.BGG.constraint) {s : ℝ} (hs : 0 ≤ s)
     (h : MemSobStateT (2 + s) X) :
@@ -316,7 +283,6 @@ theorem norm_decayCoeff_lineFreq (k : ℤ) :
   rw [decayCoeff_lineFreq, norm_smul, Complex.norm_real, Real.norm_eq_abs,
     abs_of_pos (decayAmp_pos k)]
 
-/-- Summability of a sequence supported on the line `(0, 0, k)` from its restriction. -/
 theorem summable_of_line {f : (Fin 3 → ℤ) → ℝ} (hf : ∀ n ∉ range lineFreq, f n = 0)
     (h : Summable fun k => f (lineFreq k)) : Summable f :=
   (lineFreq_injective.summable_iff hf).1 h
@@ -335,13 +301,13 @@ theorem memLp_decayCoeff : MemLp decayCoeff 2 (Measure.count : Measure (Fin 3 �
   rw [norm_decayCoeff_lineFreq, mul_pow, mul_comm]
   exact mul_le_mul_of_nonneg_left (decayAmp_sq_le k) (sq_nonneg _)
 
-/-- **The electric field** `E = Σ_k (1 + k²)⁻² e^{2πi k x₃} diag(1, -1, 0)` (Fourier side). -/
+/-- The electric field `E = Σ_k (1 + k²)⁻² e^{2πi k x₃} diag(1, -1, 0)`, on the Fourier side. -/
 def decayE : Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ)) := memLp_decayCoeff.toLp decayCoeff
 
 theorem coe_decayE (n : Fin 3 → ℤ) : (decayE : (Fin 3 → ℤ) → Mat) n = decayCoeff n :=
   Measure.ae_count_iff.1 memLp_decayCoeff.coeFn_toLp n
 
-/-- **The state** `(0, E, (0, 0))`. -/
+/-- The state `(0, E, (0, 0))`. -/
 def decayState : PiLp 2 Models.Torus.BGG.Space := WithLp.toLp 2 (Pi.single 1 decayE)
 
 theorem decayState_zero : decayState 0 = 0 :=
@@ -374,7 +340,6 @@ theorem decayE_mem_constraint : decayE ∈ Models.Torus.BGG.constraint 1 := by
   · exact Submodule.smul_mem _ _ (M0_mem_tsd_of h)
   · exact Submodule.zero_mem _
 
-/-- `decayState` is TSD. -/
 theorem decayState_mem_constraint : decayState ∈ totalSub Models.Torus.BGG.constraint := by
   intro i
   fin_cases i
@@ -399,7 +364,6 @@ theorem fibreEnergy_decayState (n : Fin 3 → ℤ) :
   rw [fibreEnergy_eq, c0, c1, c2, norm_zero, norm_zero]
   ring
 
-/-- **`decayState ∈ H³(𝕋³)`**: `⟨2πk⟩⁶ (1 + k²)⁻⁴ ≤ (4π²)³ (1 + k²)⁻¹`. -/
 theorem decayState_memSobStateT : MemSobStateT (2 + 1) decayState := by
   refine summable_of_line (fun n hn => by
     rw [fibreEnergy_decayState, decayCoeff_eq_zero hn, norm_zero]; ring) ?_
@@ -441,7 +405,6 @@ theorem decayCoeff_lineFreq_ne_zero (k : ℤ) : decayCoeff (lineFreq k) ≠ 0 :=
   rw [decayCoeff_lineFreq]
   exact smul_ne_zero (by exact_mod_cast (decayAmp_pos k).ne') M0_ne_zero
 
-/-- **`decayState` is not band-limited**: it has the mode `(0, 0, N + 1)` off every band. -/
 theorem decayState_not_mem_band (N : ℕ) : decayState ∉ totalSub (band N) := by
   intro h
   have h1 := h 1
@@ -454,9 +417,8 @@ theorem decayState_not_mem_band (N : ℕ) : decayState ∉ totalSub (band N) := 
   rw [← coe_decayE, ← decayState_one]
   exact h1 _ hn
 
-/-- **Non-vacuity of the torus Sobolev rate**: `decayState` is TSD, lies in `H³` (so in the
-approximation class of order `1`, `mem_rateData_of_memSobStateT`), is not band-limited for any
-`N`, and is not stationary (`L X ≠ 0`). -/
+/-- **Non-vacuity of the torus Sobolev rate**: `decayState` is TSD, in `H³`, not band-limited and
+not stationary. -/
 theorem decayState_nonvacuous :
     decayState ∈ totalSub Models.Torus.BGG.constraint ∧ MemSobStateT (2 + 1) decayState ∧
       (∀ N, decayState ∉ totalSub (band N)) ∧
@@ -482,8 +444,7 @@ theorem decayState_nonvacuous :
 
 /-! ### The mirror cube -/
 
-/-- **Truncation error of `Hˢ` states on `Q`**: `‖x - P_N x‖ ≤ (N + 1)^{-s} ‖x‖_s` (the torus
-bound `norm_sub_P_le_sobStateT` for the mirror extension, `‖J y‖² = 8 ‖y‖²`). -/
+/-- **Truncation error of `Hˢ` states on `Q`**: `‖x - P_N x‖ ≤ (N + 1)^{-s} ‖x‖_s`. -/
 theorem norm_sub_P_le_sobState {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 Models.Cube.MirrorBGG.SpaceQ}
     (hx : MemSobState s x) (N : ℕ) :
     ‖x - bandFamilyQ.P N x‖ ≤ (1 / ((N : ℝ) + 1)) ^ s * √(sobState s x) := by
@@ -510,7 +471,7 @@ theorem norm_sub_P_le_sobState {s : ℝ} (hs : 0 ≤ s) {x : PiLp 2 Models.Cube.
   exact (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 key
 
 /-- **TSD data in `H^{2+s}` lie in the approximation class of order `s`** of the mirror spectral
-discretization, with class norm at most `3 ‖ξ₀‖_{2+s}`. -/
+discretization. -/
 theorem mem_rateData_of_memSobState (D : TSDDatum) {s : ℝ} (hs : 0 ≤ s)
     (h : MemSobState (2 + s) D.U₀) :
     D.U₀ ∈ bandFamilyQ.rateData s ∧
@@ -527,12 +488,10 @@ theorem mem_rateData_of_memSobState (D : TSDDatum) {s : ℝ} (hs : 0 ≤ s)
   unfold TSDDatum.sobSize
   linarith
 
-/-- States with finitely many modes lie in every `Hʳ`. -/
 theorem memSobState_of_finite {x : PiLp 2 Models.Cube.MirrorBGG.SpaceQ} (S : Finset (Fin 3 → ℤ))
     (hx : ∀ m ∉ S, fibreEnergy (extState x) m = 0) (r : ℝ) : MemSobState r x :=
   summable_of_ne_finset_zero fun m hm => by rw [hx m hm, mul_zero]
 
-/-- **The cos datum lies in every `Hʳ`**: its mirror extension has the modes `±k₀` only. -/
 theorem cosDatum_memSobState (r : ℝ) : MemSobState r cosDatum.U₀ := by
   refine memSobState_of_finite {Models.Cube.Mirror.k0, -Models.Cube.Mirror.k0} (fun m hm => ?_) r
   change fibreEnergy (totalJ Models.Cube.MirrorBGG.J Models.Cube.MirrorBGG.cosStateQ) m = 0
@@ -549,9 +508,7 @@ open Metric
 open Models.Torus.BGG (complex constraint Space)
 open Models.Cube.MirrorBGG (complexQ tsdQ SpaceQ)
 
-/-- **The time-uniform Sobolev rate on `𝕋³`**: for every state `X ∈ Hˢ(𝕋³)`, `s ≥ 0`, the error of
-the Fourier spectral solution from `π_N X` is `≤ (N + 1)^{-s} ‖X‖_s` for all `t ≥ 0`, and so is
-its TSD residual when `X` is TSD. -/
+/-- **The time-uniform Sobolev rate on `𝕋³`**: error and TSD residual `≤ (N + 1)^{-s} ‖X‖_s`. -/
 abbrev TorusSobolevApproxRate : Prop :=
   ∀ {s : ℝ}, 0 ≤ s → ∀ X : PiLp 2 Space, MemSobStateT s X → ∀ (N : ℕ) {t : ℝ}, 0 ≤ t →
     ‖complex.waveGroup.S t X - torusApprox.sol N ((torusBands.B N).orthogonalProjectionOnto X) t‖ ≤
@@ -561,8 +518,7 @@ abbrev TorusSobolevApproxRate : Prop :=
             (totalSub constraint : Set (PiLp 2 Space)) ≤
           (1 / ((N : ℝ) + 1)) ^ s * √(sobStateT s X))
 
-/-- `TorusSobolevApproxRate`, from the error identity of `ReducingFamily.feec` (the error is the
-truncation error of the datum) and the residual bound of `approxFEEC`. -/
+/-- **The time-uniform Sobolev rate on `𝕋³`**: `TorusSobolevApproxRate`. -/
 theorem einsteinBianchi_torus_approxFEEC_sobolev : TorusSobolevApproxRate := by
   intro s hs X hX N t ht
   have V := einsteinBianchi_torus_approxFEEC
@@ -571,9 +527,7 @@ theorem einsteinBianchi_torus_approxFEEC_sobolev : TorusSobolevApproxRate := by
     ht).trans ?_⟩
   rwa [ApproxFEEC.S_eq_waveGroup _ ht]
 
-/-- **The time-uniform Sobolev rate on the mirror cube**: for every state `x` with mirror
-extension in `Hˢ`, `s ≥ 0`, the error of the cosine–sine spectral solution from `π_N x` is
-`≤ (N + 1)^{-s} ‖x‖_s` for all `t ≥ 0`, and so is its TSD residual when `x` is TSD. -/
+/-- **The time-uniform Sobolev rate on the mirror cube**, `(N + 1)^{-s} ‖x‖_s`. -/
 abbrev MirrorSobolevApproxRate : Prop :=
   ∀ {s : ℝ}, 0 ≤ s → ∀ x : PiLp 2 SpaceQ, MemSobState s x → ∀ (N : ℕ) {t : ℝ}, 0 ≤ t →
     ‖complexQ.waveGroup.S t x -

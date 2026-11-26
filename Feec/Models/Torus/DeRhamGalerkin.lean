@@ -6,36 +6,18 @@ public import Feec.HilbertComplex.Approximation.QuasiOptimal
 /-!
 # Spectral Galerkin approximation of the torus de Rham complex
 
-The band-limited forms `|n|_∞ ≤ N` (`Fourier.Torus.bandN N`) of the `L²` de Rham complex of the
-torus form a finite-dimensional subcomplex `bandSubcomplex d N` (a finite-dimensional reducing
-subspace lies in the domain, `LinearPMap.IsReducingPair.le_domain`), with the Fourier truncation as
-a cochain projection (`bandProj d N`) of graph norm `1`. The harmonic forms (the constant forms) are
-band-limited for every `N`, so the harmonic gap `μ` vanishes. The abstract quasi-optimal estimate of
-the mixed Hodge Laplacian (`Subcomplex.CochainProjection.norm_sub_le_infDist`, [AFW2010], Thm 3.9)
-then applies with the constants `C = 1`, `c_P = (2π)⁻¹`, `μ = 0`, and the spectral Galerkin
-solutions converge to the solution of the mixed problem as `N → ∞` (`tendsto_bandGalerkin`). This
-shows the hypotheses of the abstract theory are satisfiable by a nontrivial family of subcomplexes.
-For `s ≥ 0` and the forms of finite `Hˢ` norm, `‖u‖²_{Hˢ} = Σ_n (1 + |2πn|²)^s ‖u n‖²`, the
-truncation error is `‖u - π_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}`
-(`Fourier.Torus.norm_sub_starProjection_band_le`, for every symbol complex of the torus), and,
-since `d π_N = π_N d`, that of `d` is bounded by `‖d u‖_{Hˢ}` alike: a Jackson estimate of order
-`s` with mesh size `(2π (N + 1))⁻¹`.
+The band-limited forms `|n|_∞ ≤ N` of the torus de Rham complex form subcomplexes with the Fourier
+truncation as a cochain projection, and the spectral Galerkin solutions of the mixed Hodge
+Laplacian converge ([AFW2010], Thm 3.9).
 
 ## Main results
 
-* `bandSubcomplex`, `bandProj`, `isGraphBounded_bandProj`, `bandProj_harmonic`; coefficientwise,
-  `mem_band_iff` and `coeFn_starProjection_band`; `tendsto_starProjection_band`.
-* `norm_sub_le_bandGalerkin`: the quasi-optimal estimate for the spectral Galerkin method.
-* **`tendsto_bandGalerkin`**: convergence of the discrete mixed solutions.
+* `norm_sub_le_bandGalerkin`: the quasi-optimal estimate.
+* `tendsto_bandGalerkin`: convergence of the discrete mixed solutions.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3–3.4 (subcomplexes, cochain projections, Thm 3.9)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (cochain projections and stable discretizations)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (approximation of Hilbert
-  complexes)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -63,7 +45,7 @@ theorem reducingSubcomplex_band (N : ℕ) : (complex d).ReducingSubcomplex (band
   Fourier.reducingSubcomplex_band _ (Fourier.Torus.finite_bandN N).measurableSet
 
 variable (d) in
-/-- **The band subcomplex** `Vₕᵏ = {u | û(n) = 0 for |n|_∞ > N}` of the torus de Rham complex. -/
+/-- The band subcomplex `Vₕᵏ = {u | û(n) = 0 for |n|_∞ > N}` of the torus de Rham complex. -/
 def bandSubcomplex (N : ℕ) : (complex d).Subcomplex where
   V := band N
   le_domain k j :=
@@ -74,7 +56,7 @@ instance (N : ℕ) (k : ℤ) : FiniteDimensional ℂ ((bandSubcomplex d N).V k) 
   inferInstanceAs (FiniteDimensional ℂ (band (d := d) N k))
 
 variable (d) in
-/-- **The Fourier truncation** as a cochain projection onto the band subcomplex. -/
+/-- The Fourier truncation, as a cochain projection onto the band subcomplex. -/
 def bandProj (N : ℕ) : (bandSubcomplex d N).CochainProjection where
   π k := ((band (d := d) N k).starProjection : L2Form d k →ₗ[ℂ] L2Form d k)
   mem _ x := Submodule.starProjection_apply_mem _ x
@@ -84,26 +66,21 @@ def bandProj (N : ℕ) : (bandSubcomplex d N).CochainProjection where
 theorem bandProj_apply (N : ℕ) (k : ℤ) (x : L2Form d k) :
     (bandProj d N).π k x = (band (d := d) N k).starProjection x := rfl
 
-/-- **The band-limited forms, coefficientwise**: `u ∈ V_Nᵏ` iff `û(n) = 0` for `|n|_∞ > N`. -/
 theorem mem_band_iff {N : ℕ} {k : ℤ} {u : L2Form d k} :
     u ∈ band N k ↔ ∀ n, n ∉ Fourier.Torus.bandN N → u n = 0 := by
   rw [Fourier.mem_band_iff, Measure.ae_count_iff]
 
 open scoped Classical in
-/-- **The Fourier truncation, coefficientwise**: `(π_N x)(n) = x(n)` for `|n|_∞ ≤ N`, else
-`0`. -/
 theorem coeFn_starProjection_band (N : ℕ) (k : ℤ) (x : L2Form d k) (n : d → ℤ) :
     ((band N k).starProjection x : L2Form d k) n =
       if n ∈ Fourier.Torus.bandN N then x n else 0 := by
   rw [Fourier.coeFn_starProjection_band_count, Set.indicator_apply]
 
-/-- **The Fourier truncations converge**: `π_N u → u` as `N → ∞`. -/
 theorem tendsto_starProjection_band (k : ℤ) (u : L2Form d k) :
     Tendsto (fun N => (band (d := d) N k).starProjection u) atTop (𝓝 u) :=
   Fourier.tendsto_starProjection_band _ (fun N => (Fourier.Torus.finite_bandN N).measurableSet)
     Fourier.Torus.bandN_mono Fourier.Torus.exists_mem_bandN k u
 
-/-- The Fourier truncation has graph norm `1`. -/
 theorem isGraphBounded_bandProj (N : ℕ) (k j : ℤ) : (bandProj d N).IsGraphBounded k j 1 := by
   intro x
   have hc := ((reducingSubcomplex_band (d := d) N).reduces k j).comm x
@@ -117,7 +94,6 @@ theorem isGraphBounded_bandProj (N : ℕ) (k j : ℤ) : (bandProj d N).IsGraphBo
 omit [Fintype d] [LinearOrder d] in
 theorem zero_mem_bandN (N : ℕ) : (0 : d → ℤ) ∈ Fourier.Torus.bandN N := fun j => by simp
 
-/-- **Harmonic forms are band-limited**: `π q = q` on `ℌᵏ`, for every `N`. -/
 theorem bandProj_harmonic (N : ℕ) {k : ℤ} {q : L2Form d k} (hq : q ∈ (complex d).harmonic k) :
     (bandProj d N).π k q = q := by
   refine (bandProj d N).proj k q ?_
@@ -126,12 +102,10 @@ theorem bandProj_harmonic (N : ℕ) {k : ℤ} {q : L2Form d k} (hq : q ∈ (comp
   intro n hn
   exact mem_harmonic_iff.1 hq n fun h => hn (h ▸ zero_mem_bandN N)
 
-/-- The harmonic gap of the Fourier truncation vanishes. -/
 theorem norm_sub_bandProj_harmonic (N : ℕ) {k : ℤ} :
     ∀ q ∈ (complex d).harmonic k, ‖q - (bandProj d N).π k q‖ ≤ 0 * ‖q‖ := fun q hq => by
   rw [bandProj_harmonic N hq, sub_self, norm_zero, zero_mul]
 
-/-- The Poincaré inequality of the torus in the form of the abstract theory. -/
 theorem poincare {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (z : ((complex d).d i j).domain) (hz : (z : L2Form d i) ∈ ((complex d).cycles i)ᗮ) :
     ‖(z : L2Form d i)‖ ≤ (2 * Real.pi)⁻¹ * ‖(complex d).d i j z‖ := by
@@ -143,8 +117,8 @@ theorem poincare {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
 def bandConst : ℝ := (1 + 144 * (1 * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) * (1 + 1)
 
 set_option maxHeartbeats 2000000 in
-/-- **Quasi-optimality of the spectral Galerkin mixed method** on the torus: the abstract
-estimate ([AFW2010], Thm 3.9) with `C = 1`, `c_P = (2π)⁻¹` and `μ = 0`. -/
+/-- Quasi-optimality of the spectral Galerkin mixed method on the torus, with `C = 1`,
+`c_P = (2π)⁻¹` and `μ = 0`. [AFW2010], Thm 3.9 -/
 theorem norm_sub_le_bandGalerkin (N : ℕ) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2Form d j} {σ : (complex d).domainSpace i}
     {u : (complex d).domainSpace j} {p : (complex d).harmonic j}
@@ -168,8 +142,6 @@ theorem norm_sub_le_bandGalerkin (N : ℕ) {i j k : ℤ} (hij : (ComplexShape.up
   refine h.trans_eq ?_
   rfl
 
-/-! ### Convergence -/
-
 variable (d) in
 /-- The truncation of a point of `Vⁱ` as a point of the discrete domain space. -/
 def truncD (N : ℕ) (i : ℤ) (x : (complex d).domainSpace i) :
@@ -179,7 +151,6 @@ def truncD (N : ℕ) (i : ℤ) (x : (complex d).domainSpace i) :
       Submodule.starProjection_apply_mem _ _⟩, Submodule.mem_top⟩
 
 set_option maxHeartbeats 2000000 in
-/-- `‖x - E(P_N x)‖_V ≤ ‖x - P_N x‖ + ‖d x - P_N d x‖`. -/
 theorem norm_sub_embD_truncD_le (N : ℕ) (i : ℤ) (x : (complex d).domainSpace i) :
     ‖x - (bandSubcomplex d N).embD i (truncD d N i x)‖ ≤
       ‖(complex d).domainIncl i x - (band (d := d) N i).starProjection ((complex d).domainIncl i x)‖ +
@@ -215,7 +186,6 @@ private theorem tendsto_norm_sub_starProjection_band {k : ℤ} (v : L2Form d k) 
   simpa only [norm_sub_rev] using tendsto_iff_norm_sub_tendsto_zero.1
     (tendsto_starProjection_band k v)
 
-/-- `dist_V(x, Vₕⁱ) → 0` as `N → ∞`. -/
 theorem tendsto_infDist_domainSub (i : ℤ) (x : (complex d).domainSpace i) :
     Tendsto (fun N => Metric.infDist x ((bandSubcomplex d N).domainSub i)) atTop (𝓝 0) := by
   have ht := (tendsto_norm_sub_starProjection_band (d := d) ((complex d).domainIncl i x)).add
@@ -228,7 +198,6 @@ theorem tendsto_infDist_domainSub (i : ℤ) (x : (complex d).domainSpace i) :
   rw [dist_eq_norm]
   exact norm_sub_embD_truncD_le N i x
 
-/-- Harmonic forms are discrete harmonic forms of every band subcomplex. -/
 theorem mem_harmonicW_band (N : ℕ) {j : ℤ} {p : L2Form d j} (hp : p ∈ (complex d).harmonic j) :
     p ∈ (bandSubcomplex d N).harmonicW j := by
   refine (bandSubcomplex d N).mem_harmonicW_iff.2 ⟨?_, (complex d).harmonic_le_cycles j hp,
@@ -237,9 +206,8 @@ theorem mem_harmonicW_band (N : ℕ) {j : ℤ} {p : L2Form d j} (hp : p ∈ (com
   · exact Submodule.inner_right_of_mem_orthogonal ((bandSubcomplex d N).boundariesW_le j hb)
       ((complex d).mem_harmonic_iff.1 hp).2
 
-/-- **Convergence of the spectral Galerkin mixed method** on the torus: the discrete mixed
-solutions on the bands `|n|_∞ ≤ N` converge to the solution of the mixed Hodge Laplacian in the
-norm of `Vⁱ × Vʲ × Wʲ`. -/
+/-- The spectral Galerkin solutions on the bands `|n|_∞ ≤ N` converge to the solution of the mixed
+Hodge Laplacian. -/
 theorem tendsto_bandGalerkin {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2Form d j} {σ : (complex d).domainSpace i}
     {u : (complex d).domainSpace j} {p : (complex d).harmonic j}

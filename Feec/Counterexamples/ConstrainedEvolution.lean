@@ -3,26 +3,16 @@ module
 public import Feec.HilbertComplex.BGG.TimeDependent
 
 /-!
-# Constrained evolution: the discrete BGG system (6.3) is not well posed for arbitrary data
+# Constrained evolution: the discrete BGG system (6.3) is not solvable for arbitrary data
 
-Thesis Prop 6.2 asserts that the semi-discrete differential-algebraic system (6.3) for the
-Hodge wave equation of the complex with weak symmetries has a solution for every initial datum.
-This is false, and so is the natural repair with projected algebraic data:
-
-* `not_forall_exists_discreteSolution`: for concrete discrete BGG data satisfying every
-  hypothesis of Prop 6.2 (exact rows, `d` injective on `Ṽₕ⁰`, `S₀,ₕ` surjective,
-  anticommutation), the initial value `u₀ = e₁ ∈ ker S₀,ₕ` admits no solution for any source,
-  and even compatible data with `φ₀ = e₁` admit none. The correct statement is
-  `Feec.BGG.exists_discreteSolution_iff` (existence ⇔ the compatibility conditions (C1)–(C3)).
-* `not_projected_compatible_phi`: in an instance of the elliptic-projection convergence theorem
-  `Feec.BGG.exists_discreteSolution_norm_sub_le`, the projected algebraic datum `Q(0)` violates
-  (C3), so `φₕ(0) = Q(0)` is not admissible in general; `exists_discreteSolution_projected_ne`
-  exhibits the solution with the admissible datum `φₕ(0) = Φ(σₕ(0), f(0)) ≠ Q(0)`.
+Discrete BGG data with the hypotheses of [QuennevilleBelair2015], Prop 6.2 for which (6.3) has no
+solution from some initial data, and an instance of `Feec.BGG.exists_discreteSolution_norm_sub_le`
+in which the projected algebraic datum violates the compatibility condition (C3).
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), Prop 6.2)
+  §6.2
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -36,17 +26,14 @@ namespace Feec.Counterexamples.ConstrainedEvolution
 
 open Feec.BGG
 
-/-! ### A concrete counterexample to Prop 6.2 as stated -/
+/-! ### Data without solutions of (6.3) -/
 
 section Counterexample
 
 /-- `e₁ = (0, 1) ∈ ℝ²`, spanning `ker S₀,ₕ` in `incompatibleSegment`. -/
 def kerVector : EuclideanSpace ℝ (Fin 2) := EuclideanSpace.single 1 1
 
-/-- Concrete discrete BGG data refuting Prop 6.2: `Vₕ⁰ = Vₕ¹ = ℝ`, `Ṽₕ⁰ = Ṽₕ¹ = ℝ²`,
-`W²ₕ = W̃²ₕ = ℝ`; `d = id` on `Vₕ⁰` and on `Ṽₕ⁰`, `S₀,ₕ` = first coordinate, all other maps
-zero. Both rows are exact, `d` is injective on `Ṽₕ⁰`, `S₀,ₕ` is surjective and the
-anticommutation holds, yet `ker S₀,ₕ = ℝ e₁ ≠ 0` (`incompatibleSegment_hyps`). -/
+/-- Discrete BGG data on `ℝ` and `ℝ²`, with `S₀,ₕ` the first coordinate on `Ṽₕ⁰ = ℝ²`. -/
 def incompatibleSegment : Segment ℝ ℝ ℝ ℝ (EuclideanSpace ℝ (Fin 2))
     (EuclideanSpace ℝ (Fin 2)) ℝ where
   d0 := LinearMap.id
@@ -59,9 +46,6 @@ def incompatibleSegment : Segment ℝ ℝ ℝ ℝ (EuclideanSpace ℝ (Fin 2))
   dt1_dt0 := fun _ => rfl
   anticomm := fun _ => by simp
 
-/-- `incompatibleSegment` satisfies every hypothesis of Prop 6.2 (and of the corrected
-`exists_discreteSolution_iff`), both
-rows are exact, and `e₁ ∈ ker S₀,ₕ` has `d e₁ ≠ 0`. -/
 theorem incompatibleSegment_hyps :
     Function.Injective incompatibleSegment.dt0 ∧ Function.Surjective incompatibleSegment.S0 ∧
       incompatibleSegment.ExactTop ∧ incompatibleSegment.ExactBot ∧
@@ -75,14 +59,8 @@ theorem incompatibleSegment_hyps :
     have := congrArg (fun v : EuclideanSpace ℝ (Fin 2) => v 1) h
     simp [incompatibleSegment, kerVector] at this
 
-/-- **Thesis Prop 6.2 is false (concrete instance).** For the data `incompatibleSegment`, which
-satisfy all
-hypotheses of Prop 6.2 (exact rows, `d` injective on `Ṽₕ⁰`, `S₀,ₕ` surjective, anticommutation):
-(a) the initial value `u₀ = e₁` admits no solution, for any source `f` and any `σ₀, φ₀, M₀, ρ₀`;
-(b) even the compatible data `σ₀ = 0`, `φ₀ = e₁` (so `dσ₀ = S₀,ₕφ₀`), `u₀ = 0`, `f = 0` admit no
-solution, so `φ₀` cannot be prescribed freely. This makes `not_exists_discreteSolution_of_ker` and
-`not_exists_discreteSolution_phi_of_ker` non-vacuous. Refutes [QuennevilleBelair2015], Prop 6.2.
-[QuennevilleBelair2015], Prop 6.2 (refuted as stated) -/
+/-- For `incompatibleSegment`, no solution of (6.3) has `u(0) = e₁`, and none with `f = 0`
+starts from the compatible data `σ₀ = 0`, `φ₀ = e₁`, `u₀ = 0`. -/
 theorem not_forall_exists_discreteSolution {T : ℝ} (hT : 0 < T) :
     (∀ f : ℝ → EuclideanSpace ℝ (Fin 2),
       ¬ ∃ s : DiscreteSolution incompatibleSegment T f, s.u 0 = kerVector) ∧
@@ -98,7 +76,7 @@ theorem not_forall_exists_discreteSolution {T : ℝ} (hT : 0 < T) :
 
 end Counterexample
 
-/-! ### A concrete instance where the projected algebraic datum is not admissible -/
+/-! ### An instance where the projected algebraic datum violates (C3) -/
 
 section Counterexample
 
@@ -107,9 +85,7 @@ abbrev E0 := EuclideanSpace ℝ (Fin 0)
 
 lemma E0_eq_zero (v : E0) : v = 0 := Subsingleton.elim _ _
 
-/-- BGG data with `Ṽ⁰ = Ṽ¹ = ℝ`, `d = id` on `Ṽ⁰` and all other spaces zero. `S₀,ₕ : ℝ → 0` is
-surjective with kernel `ℝ`, and `d` is injective, as in the hypotheses of
-`exists_discreteSolution_iff_compatible_u`. -/
+/-- BGG data with `Ṽ⁰ = Ṽ¹ = ℝ`, `d = id` on `Ṽ⁰` and all other spaces zero. -/
 def projSegment : Segment ℝ E0 E0 E0 ℝ ℝ E0 where
   d0 := 0
   d1 := 0
@@ -125,27 +101,14 @@ def projSegment : Segment ℝ E0 E0 E0 ℝ ℝ E0 where
 def projι : (E0 × ℝ × E0 × E0) →L[ℝ] ℝ :=
   (ContinuousLinearMap.fst ℝ ℝ (E0 × E0)).comp (ContinuousLinearMap.snd ℝ E0 (ℝ × E0 × E0))
 
-/-- The form `Ah((x, z), (y, w)) = −x w + z y` (`discreteSkewForm` of `projSegment` through
-`ι × id`). -/
+/-- The form `Ah((x, z), (y, w)) = −x w + z y`. -/
 def projAh : (ℝ × ℝ) →ₗ[ℝ] (ℝ × ℝ) →ₗ[ℝ] ℝ :=
   LinearMap.mk₂ ℝ (fun x y => -(x.1 * y.2) + x.2 * y.1)
     (fun _ _ _ => by simp; ring) (fun _ _ _ => by simp; ring)
     (fun _ _ _ => by simp; ring) (fun _ _ _ => by simp; ring)
 
-/-- **The projected algebraic datum `Q(0)` can violate (C3).** Instance: `projSegment`, `ι = projι`,
-`j = id`, `A = 0`, `Ah = projAh`, `Bh = 0`, `P = 0`, exact solution `ξ(t) = t`, `ξ̇ = 1`,
-`χ = 0`, `ℓ(t)(x, z) = x`, `F = 0`, `f = 0`, `Q = −1`, `λ_P = 0`, any `T > 0`. All hypotheses
-of `exists_discreteSolution_norm_sub_le` hold (listed in the statement, plus `d` injective and
-`S₀,ₕ`
-surjective). But the consistency term `(ξ̇(0), ι(0, d1, 0, 0)) = 1` is nonzero, so `q = Q(0)`
-violates (C3), and no solution of (6.3) has `φₕ(0) = Q(0)`. The solution supplied by
-`exists_discreteSolution_norm_sub_le` starts at `Pξ(0)` with `φₕ(0) = Φ(σₕ(0), f(0)) ≠ Q(0)`.
-
-So `φₕ(0) = Q(0)` is not admissible in general, and `projected_compatible_phi_iff` cannot be
-improved to an
-unconditional statement. This instance only checks the abstract hypotheses: `ℓ` is a free
-functional there, and the instance uses that freedom. It is not built from the FE spaces of
-§6.3. Repair of [QuennevilleBelair2015], §6.2 (initial data for (6.3)). -/
+/-- For `projSegment`, every hypothesis of `exists_discreteSolution_norm_sub_le` holds, yet the
+projected algebraic datum `Q(0) = −1` violates (C3). -/
 theorem not_projected_compatible_phi {T : ℝ} (hT : 0 < T) :
     Function.Injective projSegment.dt0 ∧ Function.Surjective projSegment.S0 ∧
     (∀ a b, ⟪projι a, projι b⟫ = ⟪a.1, b.1⟫ + ⟪a.2.1, b.2.1⟫ + ⟪a.2.2.1, b.2.2.1⟫ +
@@ -194,11 +157,6 @@ theorem not_projected_compatible_phi {T : ℝ} (hT : 0 < T) :
   · have := DiscreteSolution.inner_dt0_phi_eq s ⟨le_rfl, hT⟩ (ψ := 1) (E0_eq_zero _)
     simp [projSegment, h] at this
 
-/-- The instance of `not_projected_compatible_phi` is a genuine instance of
-`exists_discreteSolution_norm_sub_le` (its hypotheses are discharged by
-`not_projected_compatible_phi`):
-a solution of (6.3) with the projected dynamic data exists, satisfies the error bound, and has
-`φₕ(0) ≠ Q(0) = −1`. -/
 theorem exists_discreteSolution_projected_ne {T : ℝ} (hT : 0 < T) :
     ∃ s : DiscreteSolution projSegment T (fun _ => 0),
       projι (s.σ 0, s.u 0, s.M 0, s.ρ 0) = (0 : ℝ →L[ℝ] ℝ) 0 ∧

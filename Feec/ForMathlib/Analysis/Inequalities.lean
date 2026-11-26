@@ -7,23 +7,12 @@ public import Mathlib.Analysis.Normed.Lp.PiLp
 /-!
 # Elementary inequalities used in a priori estimates
 
-* `mul_le_sq_div_add_mul_sq_div`: Young's inequality `xy ≤ x²/(2θ) + θy²/2` (`θ > 0`);
-* `Finset.le_mul_sum_sq_of_mul_le_sum_mul`: the absorption step of an a priori estimate;
-* `norm_add_sq_le_two_mul`, `norm_sub_sq_le_two_mul`, `norm_add₃_sq_le_three_mul`: squared
-  triangle inequalities;
-* `Submodule.norm_le_of_mem_orthogonal_of_sub_mem`: minimum-norm principle;
-* `PiLp.norm_le_sum_norm`: `‖x‖ ≤ Σᵢ ‖xᵢ‖` in `PiLp 2`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+Young's inequality with a parameter, the absorption step of an a priori estimate, squared triangle
+inequalities and the minimum-norm principle.
 -/
 
 @[expose] public noncomputable section
 
-/-- **Young's inequality** with a parameter: `x y ≤ x² / (2θ) + θ y² / 2` for `θ > 0`. -/
 theorem mul_le_sq_div_add_mul_sq_div (x y : ℝ) {θ : ℝ} (hθ : 0 < θ) :
     x * y ≤ x ^ 2 / (2 * θ) + θ * y ^ 2 / 2 := by
   have h := sq_nonneg (x - θ * y)
@@ -34,8 +23,6 @@ theorem mul_le_sq_div_add_mul_sq_div (x y : ℝ) {θ : ℝ} (hθ : 0 < θ) :
     rw [add_mul, div_mul_cancel₀ _ (by positivity)]; ring
   rw [this]; linarith
 
-/-- **Absorption.** If `κ N ≤ Σᵢ Dᵢ Lᵢ` with `κ, K > 0` and `Lᵢ² ≤ K N` for every `i ∈ s`, then
-`N ≤ (#s + 1) K / κ² · Σᵢ Dᵢ²`. -/
 theorem Finset.le_mul_sum_sq_of_mul_le_sum_mul {ι : Type*} (s : Finset ι) (D L : ι → ℝ)
     {κ K N : ℝ} (hκ : 0 < κ) (hK : 0 < K)
     (hL : ∀ i ∈ s, L i ^ 2 ≤ K * N) (h : κ * N ≤ ∑ i ∈ s, D i * L i) :
@@ -70,18 +57,15 @@ theorem Finset.le_mul_sum_sq_of_mul_le_sum_mul {ι : Type*} (s : Finset ι) (D L
   rw [le_div_iff₀ hκ]
   linarith
 
-/-- `‖x + y‖² ≤ 2‖x‖² + 2‖y‖²`. -/
 theorem norm_add_sq_le_two_mul {E : Type*} [SeminormedAddCommGroup E] (x y : E) :
     ‖x + y‖ ^ 2 ≤ 2 * ‖x‖ ^ 2 + 2 * ‖y‖ ^ 2 := by
   have := norm_add_le x y
   nlinarith [norm_nonneg (x + y), sq_nonneg (‖x‖ - ‖y‖)]
 
-/-- `‖x - y‖² ≤ 2‖x‖² + 2‖y‖²`. -/
 theorem norm_sub_sq_le_two_mul {E : Type*} [SeminormedAddCommGroup E] (x y : E) :
     ‖x - y‖ ^ 2 ≤ 2 * ‖x‖ ^ 2 + 2 * ‖y‖ ^ 2 := by
   simpa [sub_eq_add_neg] using norm_add_sq_le_two_mul x (-y)
 
-/-- `‖x + y + z‖² ≤ 3(‖x‖² + ‖y‖² + ‖z‖²)`. -/
 theorem norm_add₃_sq_le_three_mul {E : Type*} [SeminormedAddCommGroup E] (x y z : E) :
     ‖x + y + z‖ ^ 2 ≤ 3 * (‖x‖ ^ 2 + ‖y‖ ^ 2 + ‖z‖ ^ 2) := by
   have h1 := norm_add_le (x + y) z
@@ -89,7 +73,6 @@ theorem norm_add₃_sq_le_three_mul {E : Type*} [SeminormedAddCommGroup E] (x y 
   nlinarith [norm_nonneg (x + y + z), sq_nonneg (‖x‖ - ‖y‖), sq_nonneg (‖x‖ - ‖z‖),
     sq_nonneg (‖y‖ - ‖z‖), norm_nonneg x, norm_nonneg y, norm_nonneg z, norm_nonneg (x + y)]
 
-/-- **Minimum-norm principle**: if `u ⊥ K` and `u' - u ∈ K` then `‖u‖ ≤ ‖u'‖`. -/
 theorem Submodule.norm_le_of_mem_orthogonal_of_sub_mem {𝕜 E : Type*} [RCLike 𝕜]
     [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {K : Submodule 𝕜 E} {u u' : E}
     (hu : u ∈ Kᗮ) (h : u' - u ∈ K) : ‖u‖ ≤ ‖u'‖ := by
@@ -100,7 +83,6 @@ theorem Submodule.norm_le_of_mem_orthogonal_of_sub_mem {𝕜 E : Type*} [RCLike 
 
 namespace PiLp
 
-/-- `‖x‖ ≤ Σᵢ ‖xᵢ‖` in `PiLp 2`. -/
 theorem norm_le_sum_norm {ι : Type*} [Fintype ι] {β : ι → Type*}
     [∀ i, SeminormedAddCommGroup (β i)] (x : PiLp 2 β) : ‖x‖ ≤ ∑ i, ‖x i‖ := by
   refine (abs_le_of_sq_le_sq' ?_ (Finset.sum_nonneg fun _ _ => norm_nonneg _)).2

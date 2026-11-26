@@ -5,32 +5,20 @@ public import Feec.Fourier.SymCurlSymbol
 public import Feec.Fourier.Reality
 
 /-!
-# The strong-symmetry complex on `𝕋³`: TSD constraints propagate (Thesis Prop 4.19)
+# The strong-symmetry complex on `𝕋³`: TSD constraints propagate
 
-The complex (4.16) `H²(𝕋³) --grad grad--> H(curl; 𝕋³, S) --curl--> L²(𝕋³; T)` (`S` symmetric, `T`
-trace-free matrices), on the Fourier side: the torus instance of the symbol theory with the fibre
-complex `Feec.Fourier.SymCurl.symCurl`. Its adjoint complex is (4.17), `div div ← sym curl`, and
-its Hodge wave equation is (4.18).
+The complex (4.16) `H²(𝕋³) --grad grad--> H(curl; 𝕋³, S) --curl--> L²(𝕋³; T)` on the Fourier side:
+it has closed range, and `K = {0} × L²(TSD ∩ S) × L²(TSD ∩ T)` is a reducing subcomplex, so TSD
+data and forcing give TSD solutions.
 
 ## Main results
 
-* `SymCurl.complex`: the Hilbert complex, on the window `Fin 3`.
-* `SymCurl.constraint = {0} × L²(TSD ∩ S) × L²(TSD ∩ T)` and **`reducingSubcomplex`**: the
-  thesis' projection and density "conjectures" are not needed; the projection hypothesis holds.
-* **`tsd_propagates`**, `tsd_propagates_neg`, **`tsd_existsUnique`**, `waveGroup_mem`: Prop 4.19 on
-  `𝕋³`, with existence and uniqueness, forcing, any time interval.
-* **`closedRangeAt`**, `dual_closedRangeAt'`, **`hodge`**: closed range at every index (Poincaré
-  constant `1`) and the Hodge decomposition without closures.
-* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`: real fields
-  (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
-  (`Feec.Fourier.SymbolComplex.RealStructure`).
-* **`hodge_real`**: the Hodge pieces of a real field are real
-  (`L²(𝕋³; S) = R(grad grad) ⊕ ℌ ⊕ R(sym curl)` over the real fields).
+* `tsd_existsUnique`: TSD propagation, with existence and uniqueness.
+* `closedRangeAt`, `hodge`, `hodge_real`: closed range and the Hodge decomposition without closures.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.11 (Prop 4.19, (4.16)–(4.18))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -47,17 +35,14 @@ namespace Feec.Models.Torus.SymCurl
 abbrev Space (i : Fin 3) : Type :=
   Lp (W3 ℂ Sym Tr i) 2 (Measure.count : Measure (Fin 3 → ℤ))
 
-/-- **The periodic strong-symmetry complex** (4.16) (Fourier side): `grad grad`, then the
-row-wise `curl` from symmetric to trace-free matrices.
-See [QuennevilleBelair2015], Eq. (4.16) (§4.11). -/
+/-- The periodic strong-symmetry complex (4.16), on the Fourier side. -/
 abbrev complex : HilbertComplex ℂ ComplexShape.fin3 Space :=
   Fourier.Torus.complex symCurl
 
-/-- **The constraint space** `K = {0} × L²(TSD ∩ S) × L²(TSD ∩ T)`. -/
+/-- The constraint space `K = {0} × L²(TSD ∩ S) × L²(TSD ∩ T)`. -/
 abbrev constraint (i : Fin 3) : Submodule ℂ (Space i) :=
   Operator.fibreSub Measure.count fun k => SymCurl.tsdK i (Fourier.Torus.freq k)
 
-/-- The fibrewise reducing family on the torus. -/
 theorem fibreReducing :
     FibreReducing (Fourier.Torus.symbolComplex symCurl)
       fun i k => SymCurl.tsdK i (Fourier.Torus.freq k) :=
@@ -66,14 +51,9 @@ theorem fibreReducing :
 instance (i : Fin 3) : (constraint i).HasOrthogonalProjection :=
   fibreReducing.hasOrthogonalProjection i
 
-/-- **`K` is a reducing subcomplex** (the projection hypothesis of Prop 4.19, proved).
-[QuennevilleBelair2015], Prop 4.19 -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   fibreReducing.toReducingSubcomplex
 
-/-- **Thesis Prop 4.19 on `𝕋³`**: strong solutions of the Hodge wave system (4.18),
-`U' = L U + F`, with data and forcing in `K` stay in `K`.
-See [QuennevilleBelair2015], Eq. (4.18) (§4.11). [QuennevilleBelair2015], Prop 4.19 -/
 theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -81,7 +61,6 @@ theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates hU h0 hF
 
-/-- Prop 4.19 for the sign convention `U' = -L U + F` of Thesis (4.4). [QuennevilleBelair2015], Prop 4.19 -/
 theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution (-complex.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -89,9 +68,8 @@ theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates_neg hU h0 hF
 
-/-- **Prop 4.19 on `𝕋³` with existence**: for `U₀ ∈ D(L) ∩ K` and admissible forcing in `K`, the
-Hodge wave equation has a classical solution, unique among strong solutions, staying in `K`.
-[QuennevilleBelair2015], Prop 4.19 -/
+/-- Data in `K ∩ D(L)` and admissible forcing in `K` give a classical solution, unique among strong
+solutions, that stays in `K`. [QuennevilleBelair2015], Prop 4.19 (adapted) -/
 theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) {F : ℝ → PiLp 2 Space} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -102,32 +80,19 @@ theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.do
         EqOn V U (Icc a b) :=
   fibreReducing.existsUnique_mem hU₀ hU₀K hF hFK
 
-/-- The wave group of the periodic complex preserves `K` for all times (forward and backward).
-[QuennevilleBelair2015], Prop 4.19 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
 
-/-! ### Closed range and the Hodge decomposition -/
-
-/-- **The periodic strong-symmetry complex has closed range** at every index (the thesis defers
-this to its next chapter), so the ranges of the adjoint complex (4.17) are closed too and the
-Hodge wave system (4.18) has a Hodge decomposition without closures.
-See [QuennevilleBelair2015], Eqs. (4.16)–(4.18) (§4.11). The incoming gap of `curl` uses `|A ξ| ≤ ‖curl_ξ A‖` for symmetric `A`
-with `ξᵀ A ξ = 0` (`Feec.Fourier.SymCurl.norm_div_le_norm_curl`). -/
+/-- The periodic strong-symmetry complex has closed range at every index. -/
 theorem closedRangeAt (i : Fin 3) : complex.ClosedRangeAt i :=
   Fourier.Torus.closedRangeAt_of_gap (symCurl_m_zero _ _) fun _ hξ => symCurl_gap _ _ hξ
 
-/-- **The adjoint complex (4.17)**, `div div ← sym curl`, is the complex of the adjoint symbols:
-`(d i j)†` is the multiplier by `m_{ij}(ξ)*`.
-See [QuennevilleBelair2015], Eq. (4.17) (§4.11). -/
 theorem adjoint_d (i j : Fin 3) :
     (complex.d i j)† = Operator.mulOp Measure.count fun k =>
       ContinuousLinearMap.adjoint (symCurl.m i j (Fourier.Torus.freq k)) :=
   (Fourier.Torus.symbolComplex symCurl).adjoint_d i j
 
-/-- Closed range of the adjoint complex (4.17).
-See [QuennevilleBelair2015], Eq. (4.17) (§4.11). -/
 theorem dual_closedRangeAt {i j : Fin 3} (hij : ComplexShape.fin3.Rel i j) :
     complex.dual.ClosedRangeAt i :=
   Fourier.Torus.dual_closedRangeAt_of_gap hij (symCurl_m_zero _ _) fun _ hξ => symCurl_gap _ _ hξ
@@ -140,8 +105,7 @@ theorem dual_closedRangeAt' (i : Fin 3) : complex.dual.ClosedRangeAt i := by
       have : (2 : Fin 3).val + 1 = k.val := h
       have := k.isLt; omega
 
-/-- **Hodge decomposition without closures** at every index (e.g. `L²(𝕋³; S)` is
-`R(grad grad) ⊕ ℌ ⊕ R(sym curl)`), pairwise orthogonal. -/
+/-- The Hodge decomposition without closures at every index, pairwise orthogonal. -/
 theorem hodge (i : Fin 3) :
     complex.boundaries i ⊔ complex.harmonic i ⊔ complex.dual.boundaries i = ⊤ ∧
       complex.boundaries i ⟂ complex.harmonic i ∧
@@ -149,9 +113,7 @@ theorem hodge (i : Fin 3) :
       complex.boundaries i ⟂ complex.dual.boundaries i :=
   complex.hodge_of_closedRangeAt (closedRangeAt i) (dual_closedRangeAt' i)
 
-/-! ### Real fields -/
-
-/-- **The real structure**: real fields are those with `Â(-ξ) = conj Â(ξ)`. -/
+/-- The real structure: real fields are those with `Â(-ξ) = conj Â(ξ)`. -/
 def realStructure : (Fourier.Torus.symbolComplex symCurl).RealStructure Reflection.count_neg where
   cj := SymCurl.cjW3
   antilinear := SymCurl.cjW3_smul
@@ -164,8 +126,6 @@ def realStructure : (Fourier.Torus.symbolComplex symCurl).RealStructure Reflecti
 /-- The conjugation `C u = conj (u ∘ (-·))` of the state space. -/
 abbrev realConj : PiLp 2 Space →L[ℝ] PiLp 2 Space := realStructure.toConj.totalConj
 
-/-- **Thesis Prop 4.19 for real fields**: real TSD data and forcing give a strong solution that
-stays real and TSD. [QuennevilleBelair2015], Prop 4.19 -/
 theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint) (h0r : realConj (U a) = U a)
@@ -174,7 +134,6 @@ theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t :=
   realStructure.toConj.propagates_real reducingSubcomplex hU h0 h0r hF hFr
 
-/-- **Prop 4.19 for real fields, with existence and uniqueness.** [QuennevilleBelair2015], Prop 4.19 -/
 theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) (hU₀r : realConj U₀ = U₀)
     {F : ℝ → PiLp 2 Space} {a b : ℝ}
@@ -187,9 +146,7 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
         EqOn V U (Icc a b) :=
   realStructure.toConj.existsUnique_mem_real reducingSubcomplex hU₀ hU₀K hU₀r hF hFK hFr
 
-/-- **Real Hodge decomposition on `𝕋³`**: a real field (`C x = x`, i.e. `x̂(-ξ) = conj x̂(ξ)`) is
-`x = b + h + a` with `b ∈ R(d)`, `h` harmonic, `a ∈ R(d†)`, all three real. For `i = 1`:
-`A = grad grad u + h + sym curl ρ` in `L²(𝕋³; S)`. -/
+/-- A real field is `b + h + a` with `b ∈ R(d)`, `h` harmonic and `a ∈ R(d†)`, all three real. -/
 theorem hodge_real {i : Fin 3} {x : Space i} (hx : realStructure.toConj.C i x = x) :
     ∃ b ∈ complex.boundaries i, ∃ h ∈ complex.harmonic i, ∃ a ∈ complex.dual.boundaries i,
       x = b + h + a ∧ realStructure.toConj.C i b = b ∧ realStructure.toConj.C i h = h ∧

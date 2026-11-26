@@ -6,32 +6,13 @@ public import Feec.HilbertComplex.Approximation.HeatCrime
 /-!
 # Non-vacuity of the static and heat theorems with variational crimes
 
-On `𝕜 --id--> 𝕜 → 0` (`Feec.HilbertComplex.ConstrainedFEEC.idComplex`), the shifted family
-`Feec.HilbertComplex.ApproxComplexCrime.shiftedFamily` (`Xₙ = 𝕜 × 𝕜 × 0`, `𝐝ₙ = cₙ·d`,
-`cₙ = 1 + 1/(n+1)`, read by the identity: isometric, not a cochain map, with a nonzero cochain
-defect, `Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness`) satisfies every hypothesis
-of the static and heat FEEC theorems with crimes:
+On `𝕜 --id--> 𝕜 → 0`, the shifted family `𝐝ₙ = cₙ d`, read by the identity, not a cochain map,
+satisfies the hypotheses of the static and heat theorems with crimes, with a positive static error.
 
-* closed range (`closedRangeAt_idComplex`: finite dimension), and the **uniform discrete Poincaré
-  inequality**, through the projection criterion `ApproxComplexCrime.Family.isPoincare_of_proj`
-  (`πₙ = 1` maps `ker 𝐝` into `ker 𝐝ₙ`, `‖𝐝 v‖ ≤ ‖𝐝ₙ v‖`; `shifted_isPoincare`);
-* **consistent approximation for every datum** (`shifted_staticConsistent`), through
-  `ApproxComplexCrime.Family.staticConsistent_of_split` with the continuous solution itself as
-  approximant: read error `≤ (cₙ - 1) (‖σ‖ + ‖u‖)`, cochain defects `≤ (cₙ - 1) ‖u‖`,
-  `(cₙ - 1) ‖𝐝 u‖`, no harmonic forms (`eq_zero_of_mem_harmonic_total`,
-  `eq_zero_of_mem_shifted_harmonic`), inner-product defect `0`;
+## Main results
 
-so the static errors tend to `0` for every datum (`shifted_tendsto_staticError`), the heat FEEC
-theorem with crimes applies (`shifted_heat`), and the method is **not exact**: the static error
-is positive at every level for the datum `(1, 0, 0)` (`shifted_staticError_pos`; there `u₀ = 1`
-while `iₙ 𝐝ₙ uₙ = 𝐝 u` would force `(cₙ - 1) u₀ = 0`). Summary: `shifted_static_nonvacuous`.
-
-## References
-
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (the static theory with crimes)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `ApproxComplexCrime.shifted_static_nonvacuous`: the witness for the static theorem with crimes.
+* `ApproxComplexCrime.shifted_heat`: the heat FEEC theorem with crimes applies.
 -/
 
 open scoped InnerProductSpace
@@ -83,8 +64,6 @@ theorem norm_shifted_D_le (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
 theorem closedRangeAt_idComplex (i : Fin 3) : (idComplex 𝕜).ClosedRangeAt i :=
   Submodule.closed_of_finiteDimensional _
 
-/-- **The uniform discrete Poincaré inequality for the shifted family**, from the projection
-criterion `Family.isPoincare_of_proj` (`πₙ = 1`, `‖𝐝 v‖ ≤ ‖𝐝ₙ v‖`). -/
 theorem shifted_isPoincare : ∃ cP, 1 ≤ cP ∧ (shiftedFamily 𝕜).IsPoincare cP := by
   obtain ⟨C, hC⟩ := (idComplex 𝕜).exists_poincare_totalD closedRangeAt_idComplex
   have h := (shiftedFamily 𝕜).isPoincare_of_proj (c₀ := max C 0) (C' := 1)
@@ -105,8 +84,6 @@ theorem shifted_isPoincare : ∃ cP, 1 ≤ cP ∧ (shiftedFamily 𝕜).IsPoincar
 
 /-! ### No harmonic forms -/
 
-/-- The continuous complex has no harmonic forms: `𝐝 q = 0` forces `q₀ = 0`, `q ⊥ 𝐝 (1, 0, 0)`
-forces `q₁ = 0`. -/
 theorem eq_zero_of_mem_harmonic_total {q : PiLp 2 (W3 𝕜 𝕜 PUnit)}
     (hq : q ∈ (idComplex 𝕜).total.harmonic ()) : q = 0 := by
   obtain ⟨hz, hb⟩ := (idComplex 𝕜).total.mem_harmonic_iff.1 hq
@@ -121,8 +98,6 @@ theorem eq_zero_of_mem_harmonic_total {q : PiLp 2 (W3 𝕜 𝕜 PUnit)}
     simpa [show c0 (firstDatum 𝕜) = (1 : 𝕜) from rfl] using this
   exact ext3 h0 h1
 
-/-- The discrete differential spaces have no harmonic forms: `𝐝ₙ q = 0` forces `q₀ = 0`,
-`𝐝ₙ* q = 0` forces `q₁ = 0`. -/
 theorem eq_zero_of_mem_shifted_harmonic (n : ℕ) {q : PiLp 2 (W3 𝕜 𝕜 PUnit)}
     (hq : q ∈ ((shiftedFamily 𝕜).cpx n).harmonic ()) : q = 0 := by
   obtain ⟨h1, h2⟩ := (mem_diffComplex_harmonic _ _).1 hq
@@ -178,7 +153,6 @@ theorem shiftedApprox_snd_snd (n : ℕ) (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (shiftedApprox n f).snd.snd = 0 := by
   simp only [shiftedApprox, MixedSpace.mk_snd_snd]
 
-/-- The approximant is bounded uniformly in `n`: `‖x̃‖ ≤ 3 ‖σ‖ + 3 ‖u‖`. -/
 theorem norm_shiftedApprox_le (n : ℕ) (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ‖shiftedApprox n f‖ ≤
       3 * ‖(idComplex 𝕜).total.mixedI0 () () ((idComplex 𝕜).totalMixedSolution
@@ -200,7 +174,6 @@ theorem norm_shiftedApprox_le (n : ℕ) (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
       ((idComplex 𝕜).total.mixedI1 () () ((idComplex 𝕜).totalMixedSolution
         closedRangeAt_idComplex f)))]
 
-/-- The read error of the approximant: `≤ (cₙ - 1) (‖σ‖ + ‖u‖)`. -/
 theorem readError_shiftedApprox_le (n : ℕ) (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (shiftedFamily 𝕜).readError n ((idComplex 𝕜).totalMixedSolution closedRangeAt_idComplex f)
         (shiftedApprox n f) ≤
@@ -246,8 +219,6 @@ theorem readError_shiftedApprox_le (n : ℕ) (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
   unfold Family.readError
   linarith
 
-/-- **Consistent approximation for every datum**: the shifted family meets the split criterion
-`Family.staticConsistent_of_split` with the approximant `shiftedApprox`. -/
 theorem shifted_staticConsistent (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (shiftedFamily 𝕜).StaticConsistent closedRangeAt_idComplex atTop f := by
   set X := (idComplex 𝕜).totalMixedSolution closedRangeAt_idComplex f
@@ -286,16 +257,12 @@ theorem shifted_staticConsistent (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
   · rw [eq_zero_of_mem_shifted_harmonic n hq, _root_.map_zero, inner_zero_left, norm_zero,
       norm_zero, mul_zero]
 
-/-- **The static errors of the shifted family tend to `0` for every datum.** -/
 theorem shifted_tendsto_staticError (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     Tendsto (fun n => (shiftedFamily 𝕜).staticError closedRangeAt_idComplex n f) atTop (𝓝 0) :=
   let ⟨_, hcP, hP⟩ := shifted_isPoincare (𝕜 := 𝕜)
   ((shiftedFamily 𝕜).staticConsistent_iff_tendsto closedRangeAt_idComplex hP hcP atTop f).1
     (shifted_staticConsistent f)
 
-/-- **The method is not exact**: the static error is positive at every level for the datum
-`(1, 0, 0)`. With `u` the potential, the mixed equation tested with `(1, 0, 0)` gives `u₀ = 1`,
-while a zero error would give `uₙ = u` and `𝐝ₙ u = 𝐝 u`, i.e. `(cₙ - 1) u₀ = 0`. -/
 theorem shifted_staticError_pos (n : ℕ) :
     0 < (shiftedFamily 𝕜).staticError closedRangeAt_idComplex n (firstDatum 𝕜) := by
   set X := (idComplex 𝕜).totalMixedSolution closedRangeAt_idComplex (firstDatum 𝕜)
@@ -343,9 +310,7 @@ theorem shifted_staticError_pos (n : ℕ) :
 
 variable (Q : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit))) (hQ : IsClosed (Q : Set (PiLp 2 (W3 𝕜 𝕜 PUnit))))
 
-/-- **The heat FEEC theorem with crimes applies to the shifted family**: every hypothesis of the
-field `heat` of `ApproxComplexCrime.Verdict` holds (closed range, the uniform discrete Poincaré
-inequality, static convergence for every datum). -/
+/-- **The heat FEEC theorem with crimes applies to the shifted family.** -/
 theorem shifted_heat : ∃ (cP : ℝ) (hcP : 1 ≤ cP) (hP : (shiftedFamily 𝕜).IsPoincare cP),
     (shifted 𝕜 Q hQ).toHeat.Verdict ((shifted 𝕜 Q hQ).heatCore closedRangeAt_idComplex hcP hP
       shifted_tendsto_staticError) :=
@@ -353,10 +318,8 @@ theorem shifted_heat : ∃ (cP : ℝ) (hcP : 1 ≤ cP) (hP : (shiftedFamily 𝕜
   ⟨cP, hcP, hP, (shifted 𝕜 Q hQ).heatFEEC closedRangeAt_idComplex hcP hP _⟩
 
 variable (𝕜) in
-/-- **Non-vacuity of the static FEEC theorem with crimes**: for the shifted family (a reading map
-that is not a cochain map, with a nonzero cochain defect at every level), closed range and the
-uniform discrete Poincaré inequality hold, every datum is consistently approximated, the static
-errors tend to `0`, and they are positive at every level for the datum `(1, 0, 0)`. -/
+/-- **Non-vacuity of the static FEEC theorem with crimes**: for the shifted family, with a nonzero
+cochain defect, the hypotheses hold and the static errors tend to `0`, positive at `(1, 0, 0)`. -/
 theorem shifted_static_nonvacuous :
     (∀ i, (idComplex 𝕜).ClosedRangeAt i) ∧
       (∃ cP, 1 ≤ cP ∧ (shiftedFamily 𝕜).IsPoincare cP) ∧

@@ -7,36 +7,18 @@ public import Feec.Models.Cube.WeakSymmetryWave
 /-!
 # The elliptic projection (6.4) as a comparison trajectory of the generator of (6.3)
 
-For the source-free scheme (6.3) of [QuennevilleBelair2015], §6.2, written as the skew generator
-`Lₕ = waveGen` on the hidden space (`Feec.Instances.EinsteinBianchiFEMGenerator`), the dynamic
-part `Πₕ(t)` of the elliptic projection (6.4) of an exact solution of (6.2) is a **comparison
-trajectory with a consistency defect**, in the sense of the approximating FEEC theorem
-(`Feec.HilbertComplex.DissipFEEC.Comparison`):
+For the source-free scheme (6.3) of [QuennevilleBelair2015], §6.2, the elliptic projection (6.4)
+`Πₕ(t)` of an exact solution of (6.2) is a comparison trajectory of the generator `Lₕ`, whose
+consistency defect is bounded by the projection errors.
 
-* `Πₕ(t)` lies in the hidden space (`IsEllipticProjection.mem_hiddenSpace`; the data of (6.4)
-  vanish on the tests `(0, ψ)` by the exact equation (6.2a));
-* `⟪Lₕ Πₕ, y⟫ = ⟪Πₕ, y⟫ - G(y, Φ(y))` for hidden `y` (`IsEllipticProjection.inner_waveOp`; the
-  mismatch `φₚ - Φ(σₚ, 0)` of the algebraic variable lies in `ker S₀,ₕ` and pairs to zero with
-  hidden tests);
-* with the exact equation, `⟪Πₕ' - Lₕ Πₕ, y⟫ = ⟪Πₕ' - ξ', y⟫ + ⟪ξ - Πₕ, y⟫`
-  (`inner_ellDefect`), so the **consistency defect** is bounded by the projection errors of the
-  exact state and of its time derivative (`norm_ellDefect_le`):
-  `‖Πₕ' - Lₕ Πₕ‖ ≤ ‖ξ' - Πₕ'‖ + ‖ξ - Πₕ‖`;
-* the projection errors obey the Strang bound of (6.4) modulo harmonic forms
-  (`norm_sub_ellTraj_le`, from `Feec.BGG.HarmonicStability.strang_of_isEllipticProjection`).
+## Main results
 
-Nothing here forces the defect to vanish: `Πₕ` is not a discrete orbit, and `Lₕ` is built with
-`S₀,ₕ`, `S₁,ₕ`, the data of (6.4) with `S₀`, `S₁` (the variational crime `S_h ≠ S`). That it is
-nonzero for some datum is **not** proved. For the mirror TSD data the consistency terms of the
-Strang bound vanish exactly (`K₀ = K₁ = 0`), so there any defect comes from the elliptic
-projection not commuting with the flow.
+* `norm_ellDefect_le`: `‖Πₕ' - Lₕ Πₕ‖ ≤ ‖ξ' - Πₕ'‖ + ‖ξ - Πₕ‖`.
+* `norm_sub_ellTraj_le`: the Strang bound of the elliptic trajectory.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), (6.4), Prop 6.2)
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  Thm 3.9, Thm 3.10 (elliptic analogue: best approximation plus consistency)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -75,8 +57,6 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
   {D : Segment ℝ P0 P1 P2 Pt0 Pt1 Pt2}
   {G : Module.Dual ℝ ((P0 × Pt1 × P2 × Pt2) × Pt0)} {x : ((P0 × Pt1 × P2 × Pt2) × Pt0) × P1}
 
-/-- **The elliptic projection lies in the hidden space** when its data vanish on the tests
-`(0, ψ)`, `ψ ∈ ker S₀,ₕ`. -/
 theorem IsEllipticProjection.mem_hiddenSpace (hx : IsEllipticProjection D G 0 x)
     (hG : ∀ ψ, D.S0 ψ = 0 → G (0, ψ) = 0) : EState.mkL x.1.1 ∈ hiddenSpace D := by
   intro ψ hψ
@@ -91,10 +71,6 @@ variable [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P1] [FiniteDimensiona
   [FiniteDimensional ℝ Pt0] [FiniteDimensional ℝ Pt1] [FiniteDimensional ℝ Pt2]
   (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
 
-/-- **The generator against the elliptic projection**: for hidden `y`,
-`⟪Lₕ Πₕ, y⟫ = ⟪Πₕ, y⟫ - G(y, Φ(y_σ, 0))`. The algebraic variable `φₚ` of the projection and
-`Φ(σₚ, 0)` of the generator differ by an element of `ker S₀,ₕ`, which pairs to zero with the
-hidden test. -/
 theorem IsEllipticProjection.inner_waveOp (hx : IsEllipticProjection D G 0 x)
     (hmem : EState.mkL x.1.1 ∈ hiddenSpace D) {y : EState P0 Pt1 P2 Pt2}
     (hy : y ∈ hiddenSpace D) :
@@ -156,14 +132,12 @@ def exState (s : ExactWave D T g) (t : ℝ) : EState V0 Vt1 W2 Wt2 :=
 def exState' (s : ExactWave D T g) (t : ℝ) : EState V0 Vt1 W2 Wt2 :=
   EState.mk (s.σ' t) (s.u' t) (s.M' t) (s.ρ' t)
 
-/-- The error of a discrete energy state against the exact state, in components. -/
 theorem norm_exState_sub_coeH_sq (s : ExactWave D T g) (t : ℝ)
     (p : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) :
     ‖exState s t - coeH Q p‖ ^ 2 = ‖s.σ t - (p.σ : V0)‖ ^ 2 + ‖s.u t - (p.u : Vt1)‖ ^ 2 +
       ‖s.M t - (p.M : W2)‖ ^ 2 + ‖s.ρ t - (p.ρ : Wt2)‖ ^ 2 :=
   EState.norm_sq _
 
-/-- The error of a discrete energy state against the time derivative, in components. -/
 theorem norm_exState'_sub_coeH_sq (s : ExactWave D T g) (t : ℝ)
     (p : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) :
     ‖exState' s t - coeH Q p‖ ^ 2 = ‖s.σ' t - (p.σ : V0)‖ ^ 2 + ‖s.u' t - (p.u : Vt1)‖ ^ 2 +
@@ -180,8 +154,6 @@ abbrev ellData' (s : ExactWave D T g) (t : ℝ) :
     Module.Dual ℝ ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) :=
   Q.ellipticDataH (s.σ' t) (s.φ' t) (s.u' t) (s.M' t) (s.ρ' t) (s.ℓ' t)
 
-/-- **The data of (6.4) along a source-free exact solution** are the energy pairing of
-`ξ - ξ'` with the test: `G(t)(b, ψ) = ⟪ξ(t) - ξ'(t), b⟫` (the exact equations (6.2a)–(6.2d)). -/
 theorem ellData_apply (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t v = 0) {t : ℝ}
     (ht : t ∈ Ico 0 T) (b : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) (ψ : Q.Vt0h) :
     ellData Q s t (b, ψ) = ⟪exState s t - exState' s t, coeH Q (EState.mkL b)⟫ := by
@@ -198,12 +170,10 @@ theorem ellData_apply (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t 
   simp only [shiftedFormC]
   linarith
 
-/-- The data of (6.4) vanish on the tests `(0, ψ)` along the exact solution. -/
 theorem ellData_zero (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t v = 0) {t : ℝ}
     (ht : t ∈ Ico 0 T) (ψ : Q.Vt0h) : ellData Q s t (0, ψ) = 0 := by
   rw [ellData_apply Q s hg ht, map_zero, map_zero, inner_zero_right]
 
-/-- So do the data of the time derivative (the derivative of a function vanishing on `[t, T)`). -/
 theorem ellData'_zero (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t v = 0) {t : ℝ}
     (ht : t ∈ Ico 0 T) (ψ : Q.Vt0h) : ellData' Q s t (0, ψ) = 0 := by
   have hT' : t ∈ Ico 0 ((t + T) / 2) := ⟨ht.1, by linarith [ht.2]⟩
@@ -229,12 +199,11 @@ def ellRead : (((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h) × Q.V1h) →L[�
   hiddenProjL Q ∘L EState.mkL.toContinuousLinearMap ∘L
     ((ContinuousLinearMap.fst ℝ _ _).comp (ContinuousLinearMap.fst ℝ _ _))
 
-/-- **The elliptic projection of data `G` as a hidden state.** -/
+/-- The elliptic projection of data `G` as a hidden state. -/
 def ellHidden (G : Module.Dual ℝ ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h)) :
     HiddenState Q.toSegmentH :=
   ellRead Q (ellProj Q hdinj hS G)
 
-/-- When the data vanish on `(0, ψ)`, the hidden state is the elliptic projection itself. -/
 theorem toEState_ellHidden {G : Module.Dual ℝ ((Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) × Q.Vt0h)}
     (hG : ∀ ψ, Q.toSegmentH.S0 ψ = 0 → G (0, ψ) = 0) :
     (ellHidden Q hdinj hS G).toEState = EState.mkL (ellProj Q hdinj hS G).1.1 := by
@@ -281,12 +250,9 @@ theorem toEState_ellTraj' (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, 
 
 omit [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
   [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h] [FiniteDimensional ℝ Q.Wt2h] in
-/-- Energy states read back from their components. -/
 theorem mkL_tuple (y : EState Q.V0h Q.Vt1h Q.W2h Q.Wt2h) :
     EState.mkL (y.σ, y.u, y.M, y.ρ) = y := rfl
 
-/-- **The consistency defect of the elliptic trajectory, weakly**: for hidden `y`,
-`⟪Πₕ' - Lₕ Πₕ, y⟫ = ⟪Πₕ' - ξ', y⟫ + ⟪ξ - Πₕ, y⟫` (pairings in the continuous energy space). -/
 theorem inner_ellDefect (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t v = 0) {t : ℝ}
     (ht : t ∈ Ico 0 T) (y : HiddenState Q.toSegmentH) :
     ⟪ellTraj' Q hdinj hS s t - waveGen Q.toSegmentH hdinj hS (ellTraj Q hdinj hS s t), y⟫ =
@@ -334,7 +300,6 @@ theorem norm_ellDefect_le (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, 
 
 omit [FiniteDimensional ℝ Q.V0h] [FiniteDimensional ℝ Q.V1h] [FiniteDimensional ℝ Q.W2h]
   [FiniteDimensional ℝ Q.Vt0h] [FiniteDimensional ℝ Q.Vt1h] [FiniteDimensional ℝ Q.Wt2h] in
-/-- The error of the hidden state against the exact state, in components. -/
 theorem norm_sub_coeH_sq (a : EState V0 Vt1 W2 Wt2) (x : Q.V0h × Q.Vt1h × Q.W2h × Q.Wt2h) :
     ‖a - coeH Q (EState.mkL x)‖ ^ 2 = ‖a.σ - x.1‖ ^ 2 + ‖a.u - x.2.1‖ ^ 2 +
       ‖a.M - x.2.2.1‖ ^ 2 + ‖a.ρ - x.2.2.2‖ ^ 2 := by
@@ -344,8 +309,9 @@ variable {Hh : Submodule ℝ Vt1} {Cp CS : ℝ} (HS : HarmonicStability D Hh Cp 
   (h54 : Q.Compatible)
 
 include HS h54 in
-/-- **The Strang bound for the elliptic trajectory**: if the exact state at `t` has Strang data
-`≤ ε²` with consistency constants `K₀`, `K₁`, then `‖ξ(t) - Πₕ(t)‖ ≤ √(2(C + 1)) ε`. -/
+/-- **The Strang bound for the elliptic trajectory**: under harmonic stability and (5.4), if the
+exact state at `t` of a solution with vanishing source has Strang data `≤ ε²` with consistency
+constants `K₀`, `K₁`, then `‖ξ(t) - Πₕ(t)‖ ≤ √(2(C + 1)) |ε|`. -/
 theorem norm_sub_ellTraj_le (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t v = 0) {t : ℝ}
     (ht : t ∈ Ico 0 T) {K0 K1 ε : ℝ}
     (hK0 : ∀ ψ ∈ Q.Vt0h, |s.ℓ t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))
@@ -363,7 +329,6 @@ theorem norm_sub_ellTraj_le (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v
   exact Real.sqrt_le_sqrt (hS'.trans (mul_le_mul_of_nonneg_left hdata hC))
 
 include HS h54 in
-/-- **The Strang bound for the time derivative of the elliptic trajectory.** -/
 theorem norm_sub_ellTraj'_le (s : ExactWave D T g) (hg : ∀ t ∈ Ico 0 T, ∀ v, g t v = 0)
     {t : ℝ} (ht : t ∈ Ico 0 T) {K0 K1 ε : ℝ}
     (hK0 : ∀ ψ ∈ Q.Vt0h, |s.ℓ' t ((D.S0 - Q.S0h) ψ)| ≤ K0 * √(graphSq D.dt0 ψ))

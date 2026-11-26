@@ -7,26 +7,8 @@ public import Mathlib.MeasureTheory.Integral.Lebesgue.Countable
 /-!
 # `ℓᵖ` as `Lᵖ` of the counting measure
 
-On a countable type `α` with measurable singletons, `ℓᵖ(α; E)` and `Lᵖ(α, count; E)` are the
-same space: every function is strongly measurable, a.e. equality is equality, and the `Lᵖ`
-integral is the sum over `α`.
-
-* `MeasureTheory.memLp_count_iff`: `MemLp f p count ↔ Memℓp f p` (`p ≠ 0`);
-* `MeasureTheory.Lp.ext_count`, `MeasureTheory.Lp.coeFn_eq_count_iff`: elements of
-  `Lᵖ(count)` are determined by their values everywhere;
-* `lp.equivLpCount`: the linear isometric equivalence `ℓᵖ(α; E) ≃ₗᵢ[𝕜] Lᵖ(α, count; E)`
-  (`1 ≤ p`, including `p = ∞`), acting as the identity on functions (`lp.coeFn_equivLpCount`,
-  `lp.equivLpCount_symm_apply`).
-
-For `p = 2` the equivalence is unitary, so it transports inner products, adjoints and
-orthogonal projections. It is how the `ℓ²(ℤⁿ)` Fourier-coefficient spaces of the torus become an
-instance of the multiplication-operator theory on `L²(μ; E)` (`Feec.Operator.mulOp`).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+On a countable type `α` with measurable singletons, `ℓᵖ(α; E)` and `Lᵖ(α, count; E)` are the same
+space: `lp.equivLpCount` is a linear isometric equivalence, the identity on functions.
 -/
 
 open scoped ENNReal NNReal
@@ -39,27 +21,23 @@ namespace MeasureTheory
 variable {α : Type*} [MeasurableSpace α] [MeasurableSingletonClass α] [Countable α]
 variable {E : Type*} [NormedAddCommGroup E] {p : ℝ≥0∞}
 
-/-- For `0 < p < ∞`, the `Lᵖ(count)` seminorm is the `ℓᵖ` sum. -/
 theorem eLpNorm_count_eq_tsum (hp0 : p ≠ 0) (hpt : p ≠ ∞) (f : α → E) :
     eLpNorm f p count = (∑' a, ‖f a‖ₑ ^ p.toReal) ^ (1 / p.toReal) := by
   rw [eLpNorm_eq_lintegral_rpow_enorm_toReal hp0 hpt AEStronglyMeasurable.of_discrete,
     lintegral_count]
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] [Countable α] in
-/-- For `0 < p < ∞`, the `ℓᵖ` sum of `‖f‖ₑ` as a coerced `ℝ≥0`-valued sum. -/
 theorem tsum_enorm_rpow_eq (hp : 0 < p.toReal) (f : α → E) :
     ∑' a, ‖f a‖ₑ ^ p.toReal = ∑' a, ((‖f a‖₊ ^ p.toReal : ℝ≥0) : ℝ≥0∞) := by
   congr 1; funext a
   rw [ENNReal.coe_rpow_of_nonneg _ hp.le, enorm_eq_nnnorm]
 
 omit [MeasurableSpace α] [MeasurableSingletonClass α] [Countable α] in
-/-- `Summable ‖f‖₊ ^ p ↔ Summable ‖f‖ ^ p`. -/
 theorem summable_nnnorm_rpow_iff {r : ℝ} (f : α → E) :
     Summable (fun a => ‖f a‖₊ ^ r) ↔ Summable fun a => ‖f a‖ ^ r := by
   rw [← NNReal.summable_coe]
   simp only [NNReal.coe_rpow, coe_nnnorm]
 
-/-- **`Lᵖ` of the counting measure is `ℓᵖ`**: `MemLp f p count ↔ Memℓp f p` for `p ≠ 0`. -/
 theorem memLp_count_iff (hp0 : p ≠ 0) {f : α → E} : MemLp f p count ↔ Memℓp f p := by
   rw [memLp_iff]
   rcases eq_or_ne p ∞ with rfl | hpt
@@ -81,22 +59,18 @@ theorem memLp_count_iff (hp0 : p ≠ 0) {f : α → E} : MemLp f p count ↔ Mem
       ENNReal.rpow_lt_top_iff_of_pos (by positivity), lt_top_iff_ne_top]
 
 omit [MeasurableSingletonClass α] [Countable α] in
-/-- Elements of `Lᵖ(count)` are equal as soon as they agree everywhere. -/
 theorem Lp.ext_count {f g : Lp E p (count : Measure α)} (h : ∀ a, f a = g a) : f = g :=
   Lp.ext (ae_count_iff.2 h)
 
 omit [MeasurableSingletonClass α] [Countable α] in
-/-- For the counting measure, a.e. equality of a representative is equality everywhere. -/
 theorem Lp.coeFn_eq_count_iff {f : Lp E p (count : Measure α)} {g : α → E} :
     (f : α → E) =ᵐ[count] g ↔ ⇑f = g := by
   rw [Filter.EventuallyEq, ae_count_iff, funext_iff]
 
 omit [MeasurableSingletonClass α] [Countable α] in
-/-- `MemLp.toLp` for the counting measure is the function itself, everywhere. -/
 theorem MemLp.coeFn_toLp_count {f : α → E} (hf : MemLp f p count) : ⇑(hf.toLp f) = f :=
   Lp.coeFn_eq_count_iff.1 hf.coeFn_toLp
 
-/-- The `Lᵖ(count)` norm is the `ℓᵖ` norm. -/
 theorem Lp.norm_count_eq [Fact (1 ≤ p)] (f : lp (fun _ : α => E) p) (hf : MemLp (⇑f) p count) :
     ‖hf.toLp f‖ = ‖f‖ := by
   have hp0 : p ≠ 0 := (zero_lt_one.trans_le (Fact.out : 1 ≤ p)).ne'
@@ -136,8 +110,7 @@ theorem memLp_count (f : lp (fun _ : α => E) p) : MemLp (⇑f) p (count : Measu
 theorem memℓp_count (g : Lp E p (count : Measure α)) : Memℓp (⇑g) p :=
   (memLp_count_iff (zero_lt_one.trans_le (Fact.out : 1 ≤ p)).ne').1 (Lp.memLp g)
 
-/-- **`ℓᵖ(α; E) ≃ₗᵢ Lᵖ(α, count; E)`** for countable `α` with measurable singletons, acting as
-the identity on functions. -/
+/-- The linear isometric equivalence `ℓᵖ(α; E) ≃ₗᵢ Lᵖ(α, count; E)`, the identity on functions. -/
 def equivLpCount : lp (fun _ : α => E) p ≃ₗᵢ[𝕜] Lp E p (count : Measure α) where
   toFun f := (memLp_count α E p f).toLp f
   invFun g := ⟨⇑g, memℓp_count α E p g⟩

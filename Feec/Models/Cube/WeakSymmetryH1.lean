@@ -6,22 +6,14 @@ public import Feec.Models.Cube.WeakSymmetrySobolevRate
 /-!
 # Restrictions of `H¹(ℝ³)` with vanishing tangential traces lie in the relative class `H¹_univ`
 
-A form `x` on the cube `Q = (0, ½)³` with `H¹(ℝ³)` data (`Feec.Domain.H1Data`) lies in the domain
-of `d_min†` (`Feec.Domain.H1Data.mem_adjoint`); if it also lies in the domain of `d_min` (vanishing
-tangential traces), Gaffney's identity on the cube (`sobRel_zero_of_mem`, `sobRel_one_of_mem`,
-`sobRel_two_of_mem`) puts it in the relative parity class `H¹_univ` of `SobRel` with norm `O(B)`
-(`sobRel_of_h1_zero`, `sobRel_of_h1_one`, `sobRel_of_h1_two`). For the connecting maps of the
-complex with weak symmetry, `S v = Σₐ dxₐ ∧ vₐ` lies in the domain of `d_min†` when the `vₐ` have
-`H¹(ℝⁿ)` data (`mem_adjoint_wsL2_of_h1Data`), so `S⁰φ` (closed, in `D(d_min)`) and `S¹u` (`uₐ` in
-`D(d_min)`) lie in `H¹_univ` (`sobRel_wsL2_zero`, `sobRel_wsL2_one`).
+On `Q = (0, ½)³`, forms of degree `≤ 2` in `D(d_min)` with `H¹(ℝ³)` data of bound `B` lie in the
+relative parity class `H¹_univ` with bound `O(B)`, and so do the images `S⁰v` (closed) and `S¹v`.
 
-## References
+## Main results
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (Gaffney's inequality)
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `mem_adjoint_wsL2_of_h1Data`: `S v ∈ D(d_min†)` when the `vₐ` have `H¹` data.
+* `sobRel_of_h1_zero`, `sobRel_of_h1_one`, `sobRel_of_h1_two`: forms in `D(d_min)` with `H¹` data.
+* `sobRel_wsL2_zero`, `sobRel_wsL2_one`: the images `S⁰v` (closed) and `S¹v`.
 -/
 
 open scoped InnerProductSpace RealInnerProductSpace LinearPMap
@@ -44,8 +36,7 @@ private theorem sqrt_sq_add_sq_add_sq_le {a b c : ℝ} (ha : 0 ≤ a) (hb : 0 �
   Real.sqrt_le_iff.2 ⟨by positivity, by
     nlinarith [mul_nonneg ha hb, mul_nonneg hb hc, mul_nonneg ha hc]⟩
 
-/-- **`S v` lies in the domain of `(d_min)†`** for a vector `v` of `k`-forms with `H¹(ℝⁿ)` data
-`hv a`, with `‖(d_min)† S v‖ ≤ c B` for a constant `c` depending only on `n` and `k`. -/
+/-- **`S v ∈ D((d_min)†)`** for `vₐ` with `H¹` data of bound `B`, and `‖(d_min)† S v‖ ≤ c B`. -/
 theorem mem_adjoint_wsL2_of_h1Data (hΩ : IsOpen Ω) {k : ℤ} :
     ∃ c : ℝ, ∀ {B : ℝ} {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))}
       (_ : ∀ a, H1Data Ω (v a) B), ∃ hx : wsL2 k v ∈ ((extDerivOp ℝ n k).minimal Ω)†.domain,
@@ -132,7 +123,6 @@ theorem sobRel_of_h1_two : ∃ c : ℝ, 0 ≤ c ∧ ∀ {B : ℝ} {x : W2}, 0 �
   have := h.norm_le
   linarith
 
-/-- `‖v‖ ≤ card ι · B` in `PiLp 2` when every `‖vₐ‖ ≤ B`. -/
 theorem norm_le_card_mul {ι V : Type*} [Fintype ι] [NormedAddCommGroup V]
     {v : PiLp 2 (fun _ : ι => V)} {B : ℝ} (h : ∀ a, ‖v a‖ ≤ B) : ‖v‖ ≤ Fintype.card ι * B := by
   refine (PiLp.norm_le_sum_norm v).trans ?_

@@ -8,55 +8,20 @@ public import Feec.HilbertComplex.CompressCompact
 /-!
 # Boxes with tensorial mirror boundary conditions: TSD data propagate
 
-The mirror conditions of `Feec.Models.Cube.Mirror` (`σ · n = 0`, `E_{nτ} = 0` on the faces)
-carry over from cubes to every box `B = ∏ (aᵢ, aᵢ + ℓᵢ)` with possibly unequal sides `ℓᵢ > 0`.
-The diagonal map `T x = d * (x - a)`, `dᵢ = 1/(2ℓᵢ)`, maps `B` onto `Q = (0, ½)³` and turns
-`grad`, `curl` into `grad_d`, `curl_d` (`∂ᵢ ↦ dᵢ ∂ᵢ`, `Feec.Domain.ConstCoeffOp.minimal_pullDiag`).
-On the Fourier side this is the anisotropic torus complex `Box.complexD` (frequencies
-`ξ_d(n) = d * 2πn`, `Feec.Models.Box.symD`). Every ingredient of the cube argument holds at every
-frequency, so nothing else changes:
-
-* the mirror reflections `n ↦ flip_k n`, `v ↦ D_k v`, `E ↦ D_k E D_k`, `B ↦ -D_k B D_k` are fibre
-  symmetries of `symD d` (`Box.Mirror.symmetriesD`), because `ξ_d(flip_k n) = D_k ξ_d(n)`
-  (`dfreq_flipAt`); their fixed fields are those of the cube (`fixed_actionD`), the range of the
-  mirror extensions `Feec.Models.Cube.Mirror.J`;
-* the TSD fibres `tsdK i ξ` are a fibre reducing family at every `ξ`
-  (`Feec.Fourier.GradCurl.isFibreReducing`), so the anisotropic constraint
-  `{0} × L²(TSD_{ξ_d}) × L²(TSD_{ξ_d})` reduces `complexD d` (`reducingSubcomplexD`), and it is
-  permuted by the reflections (`fib_mem_tsdKD`).
-
-The mirror complex on `Q` with the weights `d` is the compression `Box.Mirror.complexQD d`; it
-is the cube mirror complex `Feec.Models.Cube.Mirror.complexQ` reweighted by the column scalings
-`E ↦ E D`, `B ↦ det D · B D⁻¹`, as for the row-wise conditions
-(`Feec.Models.Box.complexBox_eq_transport`). The **mirror complex on the box**
-`Box.Mirror.complexBoxM a ℓ` is its pull-back along `T`.
+On every box `∏ (aᵢ, aᵢ + ℓᵢ)`, the grad–curl complex with the mirror boundary conditions
+`σ · n = 0`, `E_{nτ} = 0` (`Box.Mirror.complexBoxM`) is reduced by the TSD constraint, has a
+complete set of eigenvectors, and has non-stationary TSD data.
 
 ## Main results
 
-* **`Box.Mirror.reducingSubcomplexBox`**: TSD reduces the mirror complex on every box;
-  `propagatesBox`, `existsUnique_memBox`, **`invariantCore_eqBox`** (`K* = K`, thesis Prop 4.17
-  with mirror conditions).
-* **`Box.Mirror.eigenDense_complexBoxM`**: a complete set of eigenvectors (the analogue of
-  `Feec.Models.Cube.Mirror.eigenDense_complexCube`); also `eigenDense_complexD`,
-  `eigenDense_complexQD`.
-* **`Box.Mirror.exists_nonstationaryBox`**: the datum `(0, 2 cos(π (x₃ - a₃)/ℓ₃) diag(1, -1, 0), 0)`
-  (the pull-back of the cube datum) is TSD, in `D(L)`, and not stationary: the constraint has
-  dynamical content.
-
-## Scope
-
-As for cubes (`Feec.Models.Cube.Mirror`), the mirror conditions are not the thesis' row-wise
-conditions: with those (`Feec.Models.Box.EigenDense`, `Feec.Counterexamples.BoxStationary`)
-only stationary TSD data propagate on boxes. On general bounded `Ω` (balls, Lipschitz domains)
-the question for the thesis' complex is **still open**
-(`Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff`).
+* `Box.Mirror.propagatesBox`: TSD data and forcing give TSD solutions.
+* `Box.Mirror.invariantCore_eqBox`: `K* = K`.
+* `Box.Mirror.eigenDense_complexBoxM`: a complete set of eigenvectors.
+* `Box.Mirror.exists_nonstationaryBox`: a non-stationary TSD datum in `D(L)`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17, (4.14), (4.15))
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -82,8 +47,6 @@ open Feec.Models.Cube.Geometry (Q)
 
 variable {d : R3}
 
-/-! ### The mirror symmetries of the anisotropic torus complex -/
-
 theorem dfreq_flipAt (d : R3) (k : Fin 3) (n : Fin 3 → ℤ) (a : Fin 3) :
     ((dfreq d (flipAt k n) a : ℝ) : ℂ) = sgn k a * (dfreq d n a : ℂ) := by
   simp only [dfreq_apply, flipAt_apply, sgn]
@@ -107,7 +70,6 @@ theorem curl_flipD (d : R3) (k : Fin 3) (n : Fin 3 → ℤ) (M : Mat) :
   linear_combination (Complex.I * sgn k a * (dfreq d n c : ℂ) * M (a, e)) *
     leviCivita3_sgn k b c e
 
-/-- The anisotropic TSD fibres are permuted by the reflections. -/
 theorem matR_mem_tsdD (d : R3) (k : Fin 3) (n : Fin 3 → ℤ) {s : Fin 3 × Fin 3 → ℂ}
     (hs : ∀ p, s p = s (p.2, p.1)) (hd : ∀ a, s (a, a) = s (0, 0))
     (hsgn : ∀ p, s p = s (0, 0) * (sgn k p.1 * sgn k p.2)) {M : Mat}
@@ -133,7 +95,7 @@ theorem matR_mem_tsdD (d : R3) (k : Fin 3) (n : Fin 3 → ℤ) {s : Fin 3 × Fin
       rw [sgnCLM_apply, hsgn]; ring, this, mul_zero]
 
 variable (d) in
-/-- **The tensorial reflections of the anisotropic torus grad–curl complex.** -/
+/-- The tensorial reflections of the anisotropic torus grad–curl complex. -/
 def symmetriesD : (symD d).Symmetries (Fin 3) where
   R := flipRefl
   ρ := fib
@@ -154,7 +116,6 @@ variable (d) in
 /-- The mirror action of `(ℤ/2)³` on the anisotropic torus complex. -/
 abbrev actionD : (complexD d).Action (Multiplicative (Fin 3 → ZMod 2)) := (symmetriesD d).toAction
 
-/-- **The fixed fields do not depend on the frequencies**: they are the mirror parity fields. -/
 theorem fixed_actionD (i : Fin 3) : (actionD d).fixed i = action.fixed i := by
   ext x
   exact (symmetriesD d).mem_fixed_toAction.trans Cube.Mirror.mem_fixed_iff.symm
@@ -164,17 +125,13 @@ theorem range_JD (i : Fin 3) :
   (range_J i).trans (fixed_actionD i).symm
 
 variable (d) in
-/-- The ranges of the mirror extensions reduce the anisotropic torus complex. -/
 theorem reducingSubcomplex_rangeD :
     (complexD d).ReducingSubcomplex fun i => LinearMap.range (J i : SpaceQ i →ₗ[ℂ] Space i) := by
   convert (actionD d).reducingSubcomplex_fixed using 1
   exact funext range_JD
 
-/-! ### The anisotropic TSD constraint -/
-
 variable (d) in
-/-- **The anisotropic constraint** `{0} × L²(TSD_{ξ_d}) × L²(TSD_{ξ_d})`: fibrewise symmetric,
-trace-free, and `M ξ_d(n) = 0`. -/
+/-- The anisotropic constraint `{0} × L²(TSD_{ξ_d}) × L²(TSD_{ξ_d})`. -/
 abbrev constraintD (i : Fin 3) : Submodule ℂ (Space i) :=
   Operator.fibreSub Measure.count fun n => tsdK i (dfreq d n)
 
@@ -187,7 +144,6 @@ instance (i : Fin 3) : (constraintD d i).HasOrthogonalProjection :=
   (fibreReducingD d).hasOrthogonalProjection i
 
 variable (d) in
-/-- **The anisotropic TSD constraint reduces the anisotropic torus complex.** -/
 theorem reducingSubcomplexD : (complexD d).ReducingSubcomplex (constraintD d) :=
   (fibreReducingD d).toReducingSubcomplex
 
@@ -212,11 +168,8 @@ theorem act_mem_constraintD (g : Multiplicative (Fin 3 → ZMod 2)) (i : Fin 3) 
   (symmetriesD d).act_mem_fibreSub (K := fun i n => tsdK i (dfreq d n))
     (fun k i n _ hv => fib_mem_tsdKD k i n hv) g i hx
 
-/-! ### The mirror complex on `Q` with weights `d` -/
-
 variable (d) in
-/-- **The weighted mirror complex on `Q`**: `grad_d`, `curl_d` with `σ · n = 0`, `E_{nτ} = 0`,
-the compression of the anisotropic torus complex along the mirror extensions. -/
+/-- The weighted mirror complex on `Q`, a compression of the anisotropic torus complex. -/
 abbrev complexQD : HilbertComplex ℂ ComplexShape.fin3 SpaceQ :=
   (complexD d).compress J eight_pos inner_J (reducingSubcomplex_rangeD d)
 
@@ -241,12 +194,10 @@ theorem exists_J_eq_starProjectionD (i : Fin 3) (x : SpaceQ i) :
   exact ⟨y, hy⟩
 
 variable (d) in
-/-- **TSD reduces the weighted mirror complex on `Q`.** -/
 theorem reducingSubcomplexQD : (complexQD d).ReducingSubcomplex (tsdQD d) :=
   (embeddingQD d).reducingSubcomplex_comap (reducingSubcomplexD d) exists_J_eq_starProjectionD
 
 
-/-! ### A non-stationary TSD datum -/
 
 theorem M0_mem_tsdD {n : Fin 3 → ℤ} (hn : n = k0 ∨ n = -k0) : M0 ∈ tsd (dfreq d n) := by
   have h0 : n 0 = 0 ∧ n 1 = 0 := by
@@ -270,7 +221,6 @@ theorem cosE_mem_constraintD : cosE ∈ constraintD d 1 := by
   · exact M0_mem_tsdD h
   · exact Submodule.zero_mem _
 
-/-- `curl_{ξ_d(k₀)} M₀ ≠ 0`: its `(0, 1)` entry is `2π i d₂`. -/
 theorem curl_M0_neD (hd : ∀ i, 0 < d i) : curl (dfreq d k0) M0 ≠ 0 := by
   intro h
   have := congrArg (fun M : Mat => M (0, 1)) h
@@ -308,8 +258,6 @@ theorem cosState_mem_constraintD (i : Fin 3) : cosState i ∈ constraintD d i :=
   · change cosState 1 ∈ _; rw [cosState_one]; exact cosE_mem_constraintD
   · change cosState 2 ∈ _; rw [cosState_two]; exact Submodule.zero_mem _
 
-/-! ### Every box -/
-
 section Box
 
 open Domain (L2F)
@@ -346,9 +294,7 @@ def kappaB : Fin 3 → Fin 3 → ℂ := fun _ _ => ((1 : ℝ) : ℂ)
 
 theorem kappaB_ne_zero (i j : Fin 3) : kappaB i j ≠ 0 := by simp [kappaB]
 
-/-- **The mirror complex on the box** `∏ (aᵢ, aᵢ + ℓᵢ)`: `grad`, `curl` with `σ · n = 0`,
-`E_{nτ} = 0` on the faces, the pull-back of the weighted mirror complex on `Q` along
-`T x = d * (x - a)`. -/
+/-- The mirror complex on the box `∏ (aᵢ, aᵢ + ℓᵢ)`, with `σ · n = 0`, `E_{nτ} = 0` on the faces. -/
 abbrev complexBoxM (a ℓ : R3) (hℓ : ∀ i, 0 < ℓ i) :
     HilbertComplex ℂ ComplexShape.fin3 (SpaceBox a ℓ) :=
   (complexQD (dB ℓ)).transport (pullBC hℓ) kappaB kappaB_ne_zero
@@ -358,31 +304,26 @@ def embeddingBox : ScaledEmbedding (complexBoxM a ℓ hℓ) (complexQD (dB ℓ))
   ScaledEmbedding.ofTransportSymm (pullBC hℓ) kappaB kappaB_ne_zero
     (fun _ => (Domain.jacD (dB ℓ))⁻¹) (fun _ => jacD_inv_pos hℓ) (inner_pullBC hℓ)
 
-/-- **The TSD constraint on the box**: the fields whose transplant to `Q` lies in `tsdQD`. -/
+/-- The TSD constraint on the box: the fields whose transplant to `Q` lies in `tsdQD`. -/
 abbrev tsdBox (a ℓ : R3) (hℓ : ∀ i, 0 < ℓ i) (i : Fin 3) : Submodule ℂ (SpaceBox a ℓ i) :=
   (tsdQD (dB ℓ) i).comap ((pullBC (a := a) hℓ i).symm : SpaceBox a ℓ i →ₗ[ℂ] SpaceQ i)
 
 instance (i : Fin 3) : (tsdBox a ℓ hℓ i).HasOrthogonalProjection :=
   (embeddingBox (a := a) hℓ).comap_hasOrthogonalProjection i _
 
-/-- **TSD reduces the mirror complex on every box.**
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem reducingSubcomplexBox : (complexBoxM a ℓ hℓ).ReducingSubcomplex (tsdBox a ℓ hℓ) :=
   (embeddingBox (a := a) hℓ).reducingSubcomplex_comap (reducingSubcomplexQD (dB ℓ)) fun i x =>
     ⟨pullBC hℓ i ((tsdQD (dB ℓ) i).starProjection ((pullBC hℓ i).symm x)),
       (pullBC hℓ i).symm_apply_apply _⟩
 
-/-- **Prop 4.17 on every box with mirror boundary conditions**: TSD data and forcing give TSD
-solutions.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- With mirror boundary conditions, TSD data and forcing give TSD strong solutions on every box.
+[QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem propagatesBox {s t : ℝ} {F U : ℝ → PiLp 2 (SpaceBox a ℓ)}
     (hU : Evolution.IsStrongSolution (complexBoxM a ℓ hℓ).wave (Icc s t) F U)
     (h0 : U s ∈ totalSub (tsdBox a ℓ hℓ)) (hF : ∀ τ ∈ Icc s t, F τ ∈ totalSub (tsdBox a ℓ hℓ)) :
     ∀ τ ∈ Icc s t, U τ ∈ totalSub (tsdBox a ℓ hℓ) :=
   (reducingSubcomplexBox hℓ).propagates hU h0 hF
 
-/-- Prop 4.17 on every box with mirror boundary conditions, with existence and uniqueness.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
 theorem existsUnique_memBox {U₀ : PiLp 2 (SpaceBox a ℓ)}
     (hU₀ : U₀ ∈ (complexBoxM a ℓ hℓ).wave.domain) (hU₀S : U₀ ∈ totalSub (tsdBox a ℓ hℓ))
     {F : ℝ → PiLp 2 (SpaceBox a ℓ)} {s t : ℝ}
@@ -394,38 +335,31 @@ theorem existsUnique_memBox {U₀ : PiLp 2 (SpaceBox a ℓ)}
         EqOn V U (Icc s t) :=
   (reducingSubcomplexBox hℓ).existsUnique_mem hU₀ hU₀S hF hFS
 
-/-- **`K* = K` on every box with mirror boundary conditions.**
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- `K* = K` on every box with mirror boundary conditions. [QuennevilleBelair2015], Prop 4.17
+(adapted) -/
 theorem invariantCore_eqBox :
     (complexBoxM a ℓ hℓ).waveGroup.invariantCore (totalSub (tsdBox a ℓ hℓ)) =
       totalSub (tsdBox a ℓ hℓ) :=
   (reducingSubcomplexBox hℓ).invariantCore_eq
 
-/-! #### A complete set of eigenvectors -/
-
 variable (d) in
-/-- **The anisotropic torus complex has an eigenbasis** (the Fourier modes). -/
 theorem eigenDense_complexD : (complexD d).waveGroup.EigenDense :=
   (symD d).eigenDense_waveGroup Fourier.Torus.finite_bandN Fourier.Torus.bandN_mono
     Fourier.Torus.exists_mem_bandN
 
 variable (d) in
-/-- **The weighted mirror complex on `Q` has a dense set of eigenvectors.** -/
 theorem eigenDense_complexQD : (complexQD d).waveGroup.EigenDense :=
   HilbertComplex.eigenDense_compress eight_pos inner_J (reducingSubcomplex_rangeD d)
     (eigenDense_complexD d)
 
-/-- **The mirror complex on every box has a dense set of eigenvectors** (the analogue of
-`Feec.Models.Cube.Mirror.eigenDense_complexCube`). -/
+/-- The mirror complex on every box has a dense set of eigenvectors. -/
 theorem eigenDense_complexBoxM : (complexBoxM a ℓ hℓ).waveGroup.EigenDense :=
   HilbertComplex.eigenDense_transport_const (complexQD (dB ℓ)) (jacD_inv_pos hℓ)
     (inner_pullBC hℓ) one_ne_zero (eigenDense_complexQD (dB ℓ))
 
 
-/-! #### A non-stationary TSD datum -/
 
-/-- The datum `(0, E₀ ∘ T, 0)` on the box, `E₀ = (2 cos(2π x₃) diag(1, -1, 0))|_Q`, i.e.
-`2 cos(π (x₃ - a₃)/ℓ₃) diag(1, -1, 0)`. -/
+/-- The datum `(0, 2 cos(π (x₃ - a₃)/ℓ₃) diag(1, -1, 0), 0)` on the box. -/
 def cosStateBox (a ℓ : R3) (hℓ : ∀ i, 0 < ℓ i) : PiLp 2 (SpaceBox a ℓ) :=
   HilbertComplex.totalMap (pullBC hℓ) cosStateQ
 
@@ -434,9 +368,7 @@ theorem totalMap_symm_cosStateBox :
       cosStateQ :=
   PiLp.ext fun i => (pullBC hℓ i).symm_apply_apply _
 
-/-- **A non-stationary TSD datum on every box with mirror conditions**: the constraint has
-dynamical content.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
+/-- On every box with mirror boundary conditions, some TSD datum in `D(L)` is not stationary. -/
 theorem exists_nonstationaryBox :
     ∃ y ∈ (complexBoxM a ℓ hℓ).wave.domain, y ∈ totalSub (tsdBox a ℓ hℓ) ∧
       y ∉ (complexBoxM a ℓ hℓ).waveGroup.stationary := by

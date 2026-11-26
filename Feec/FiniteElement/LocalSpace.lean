@@ -10,68 +10,20 @@ public import Mathlib.Algebra.MvPolynomial.NoZeroDivisors
 /-!
 # The local spaces `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)`
 
-Let `T` be an `n`-simplex in `ℝⁿ` with vertices `p₀, …, pₙ` (affinely independent, e.g. the
-points of a Mathlib `Affine.Simplex ℝ (Fin n → ℝ) n`) and `F_T(x̂) = p₀ + B x̂` its affine
-parametrization by the reference simplex `T̂ₙ`. The shape functions of the two FEEC families
-are the polynomial form fields
-
-  `P_rΛᵏ(T) = (F_T⁻¹)^* P_rΛᵏ(ℝⁿ)`, `P_r⁻Λᵏ(T) = (F_T⁻¹)^* P_r⁻Λᵏ(ℝⁿ)`,
-
-pullbacks of the algebraic spaces `Feec.Koszul.polyForm`, `Feec.Koszul.polyFormMinus`
-(evaluated as form fields by `Feec.FiniteElement.evalForm`). The trace on a face `f = p ∘ e`
-(`e : Fin (m + 1) → Fin (n + 1)` listing its vertices) is the pullback along its
-parametrization `F_f : ℝᵐ → ℝⁿ`, and a form has vanishing trace on `∂T` (it is a *bubble*) when
-its traces on all proper faces vanish ([AFW2006], §3–4; [AFW2010], §5.1–5.2; [Arnold2018], Ch. 7).
-
-## Main definitions
-
-* `Feec.FiniteElement.polySubst B b`, `polyPullback B b`: affine substitution in polynomials and
-  the pullback of polynomial forms along `x̂ ↦ B x̂ + b`;
-* `Feec.FiniteElement.polySpace n r k`, `polyMinusSpace n r k`: `P_rΛᵏ(ℝⁿ)`, `P_r⁻Λᵏ(ℝⁿ)` as
-  spaces of form fields;
-* `Feec.FiniteElement.localPolySpace p r k`, `localPolyMinusSpace p r k`: `P_rΛᵏ(T)`,
-  `P_r⁻Λᵏ(T)`;
-* `Feec.FiniteElement.faceTrace p e`: the trace on the face `p ∘ e`;
-* `Feec.FiniteElement.IsBubble p ω`, `bubbleSpace p V`: vanishing trace on `∂T`, `V̊`;
-* `Feec.FiniteElement.wedgeField ω η`: the pointwise exterior product.
+The spaces `P_rΛᵏ(T)` and `P_r⁻Λᵏ(T)` do not depend on the simplex `T`, have the same spaces as
+traces on the faces, and have no nonzero bubble orthogonal to the top-face test forms ([AFW2006],
+§3–4; [AFW2010], §5.1–5.2; [Arnold2018], Ch. 7).
 
 ## Main results
 
-* fibre identities: `Feec.ExteriorFibre.pullback_wedgeForm` (`B^*(α ∧ β) = B^*α ∧ B^*β`);
-* polynomial calculus: `partialDeriv_eval`, `extDeriv_evalForm` (`d` of an evaluated polynomial
-  form), `evalForm_injective`, `evalForm_wedgeForm`;
-* **affine invariance**: `polyPullback_mem_polyForm`, `polyPullback_mem_polyFormMinus`
-  (`F^* P_rΛᵏ(ℝⁿ) ⊆ P_rΛᵏ(ℝᵐ)`, `F^* P_r⁻Λᵏ(ℝⁿ) ⊆ P_r⁻Λᵏ(ℝᵐ)` for every affine `F : ℝᵐ → ℝⁿ`,
-  via `F^*(κω) = κ(F^*ω) + F^*(ι_b ω)`), hence `localPolySpace_eq`, `localPolyMinusSpace_eq`:
-  `P_rΛᵏ(T) = P_rΛᵏ(ℝⁿ)` and `P_r⁻Λᵏ(T) = P_r⁻Λᵏ(ℝⁿ)` for every simplex;
-* the extreme degrees: `polyMinusSpace_zero` (`P_r⁻Λ⁰ = P_rΛ⁰`) and `polyMinusSpace_top`
-  (`P_r⁻Λⁿ = P_{r-1}Λⁿ`);
-* **traces**: `map_faceTrace_polySpace`, `map_faceTrace_polyMinusSpace`:
-  `tr_f P_rΛᵏ(T) = P_rΛᵏ(f)`, `tr_f P_r⁻Λᵏ(T) = P_r⁻Λᵏ(f)` (the inclusion by affine invariance,
-  the equality by the barycentric retraction of `T` onto `f`); traces are multiplicative
-  (`faceTrace_wedgeField`) and commute with `d` (`faceTrace_extDeriv`);
-* **bubbles** ([AFW2006], Lemmas 4.5–4.7, 4.11): `eq_zero_of_coordTrace_of_integral` (a form whose
-  traces vanish on the faces through `0` and which is orthogonal to `P_{r+k-n}Λ^{n-k}` vanishes),
-  `eq_zero_of_isBubble_of_mem_polyForm` (a bubble of `P_rΛᵏ` orthogonal to
-  `P⁻_{r+k-n}Λ^{n-k}` vanishes), `eq_zero_of_isBubble_of_mem_polyFormMinus` (a bubble of
-  `P_r⁻Λᵏ` orthogonal to `P_{r+k-n-1}Λ^{n-k}` vanishes); the dimensions of the bubble spaces are
-  in `Feec.FiniteElement.LocalDof`;
-* `integral_extDeriv_wedge_of_isBubble`: Stokes' theorem for a bubble,
-  `∫_{T̂} dω ∧ μ = -(-1)^k ∫_{T̂} ω ∧ dμ`.
-
-## Implementation notes
-
-Form fields are defined on all of `ℝⁿ`, so the traces of polynomial forms are polynomial form
-fields on all of `ℝᵐ`, and "vanishing trace" means that this polynomial form vanishes (for
-polynomials, equivalently on the face). The orthogonality hypotheses use the integral
-`∫_{T̂} (ω ∧ η)_{univ}` of the reference simplex (`Feec.FiniteElement.simplexIntegral`).
+* `localPolySpace_eq`, `localPolyMinusSpace_eq`: the local spaces do not depend on `T`.
+* `map_faceTrace_polySpace`, `map_faceTrace_polyMinusSpace`: the traces on the faces.
+* `eq_zero_of_isBubble_of_mem_polyForm`, `eq_zero_of_isBubble_of_mem_polyFormMinus`: bubbles.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (affine invariance), §4.5–4.6 (Lemmas 4.5–4.7, 4.11)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.1–5.2 (the spaces on simplices and their traces)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006], §3–4
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.1–5.2
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -101,7 +53,6 @@ theorem map_wedgeProd {S : Type*} [CommRing S] (φ : R →+* S) (θ : ι → d �
     funext t'
     exact ih t'
 
-/-- `B^*(θ_s^∧ ∧ β) = (Bᵀθ)_s^∧ ∧ B^* β`. -/
 theorem pullback_wedgeForm_wedgeProd [Fintype ι] {κ : Type*} [LinearOrder κ] {μ : Type*}
     [LinearOrder μ] (B : ι → κ → R) (θ : μ → ι → R) (s : Finset μ) (β : Finset ι → R) :
     pullback B (wedgeForm (wedgeProd θ s) β) =
@@ -115,7 +66,6 @@ theorem pullback_wedgeForm_wedgeProd [Fintype ι] {κ : Type*} [LinearOrder κ] 
 theorem eq_sum_smul_single [Fintype d] (α : Finset d → R) : α = ∑ s, α s • Pi.single s 1 := by
   funext t; simp [Finset.sum_apply, Pi.single_apply]
 
-/-- **Pullback is multiplicative**: `B^*(α ∧ β) = B^*α ∧ B^*β`. -/
 theorem pullback_wedgeForm [Fintype ι] {κ : Type*} [LinearOrder κ] (B : ι → κ → R)
     (α β : Finset ι → R) :
     pullback B (wedgeForm α β) = wedgeForm (pullback B α) (pullback B β) := by
@@ -136,8 +86,6 @@ open ExteriorFibre MvPolynomial
 
 variable {K : Type*} [Field K] {d : Type*} [LinearOrder d] [Fintype d]
 
-/-- `κ P_{r-1}Λ^{k+1} ⊆ P_r⁻Λᵏ` (`r ≥ 1`; the second form of the definition of `P_r⁻Λᵏ`,
-[AFW2010], §5.1.3). -/
 theorem koszul_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm K d}
     (h : ω ∈ polyForm K d (r - 1) (k + 1)) :
     koszul ω ∈ polyFormMinus K d r k := by
@@ -153,7 +101,6 @@ theorem koszul_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm K d}
     exact Submodule.mem_sup_right ⟨_, hm, rfl⟩
 
 omit [Fintype d] in
-/-- Contraction with a constant vector: `ι_b : P_rΛ^{k+1} → P_rΛᵏ`. -/
 theorem interior_C_mem_polyForm [Fintype d] (b : d → K) {r k : ℕ} {ω : PolyForm K d}
     (h : ω ∈ polyForm K d r (k + 1)) : interior (fun j => C (b j)) ω ∈ polyForm K d r k := by
   refine ⟨(h.1).interior _, fun s => (totalDegree_finsetSum _ _).trans
@@ -186,7 +133,6 @@ theorem differentiable_eval (p : MvPolynomial (Fin n) ℝ) :
     Differentiable ℝ (fun x : Fin n → ℝ => eval x p) :=
   (contDiff_eval p (r := 1)).differentiable one_ne_zero
 
-/-- Partial derivatives of polynomial functions are the formal partial derivatives. -/
 theorem partialDeriv_eval (p : MvPolynomial (Fin n) ℝ) (j : Fin n) (x : Fin n → ℝ) :
     partialDeriv j (fun y => eval y p) x = eval x (pderiv j p) := by
   induction p using MvPolynomial.induction_on with
@@ -206,7 +152,6 @@ theorem contDiff_evalForm (ω : Koszul.PolyForm ℝ (Fin n)) {r : WithTop ℕ∞
     ContDiff ℝ r (evalForm n ω) :=
   contDiff_pi.2 fun s => contDiff_eval (ω s)
 
-/-- `d` of an evaluated polynomial form is the evaluated formal exterior derivative. -/
 theorem extDeriv_evalForm (ω : Koszul.PolyForm ℝ (Fin n)) :
     extDeriv (evalForm n ω) = evalForm n (Koszul.extDeriv ω) := by
   funext x s
@@ -215,13 +160,11 @@ theorem extDeriv_evalForm (ω : Koszul.PolyForm ℝ (Fin n)) :
   rw [partialDeriv_eval]
   simp [sgn]
 
-/-- Evaluation is injective on polynomial forms. -/
 theorem evalForm_injective : Function.Injective (evalForm n) := by
   intro ω η h
   funext s
   exact MvPolynomial.funext fun x => congrFun (congrFun h x) s
 
-/-- Evaluation commutes with the exterior product. -/
 theorem evalForm_wedgeForm (ω η : Koszul.PolyForm ℝ (Fin n)) (x : Fin n → ℝ) :
     evalForm n (wedgeForm ω η) x = wedgeForm (evalForm n ω x) (evalForm n η x) := by
   funext u
@@ -256,7 +199,6 @@ theorem totalDegree_affineCoord_le (B : Fin n → Fin m → R) (b : Fin n → R)
     (Finset.sup_le fun l _ => ?_)) (by simp))
   exact (totalDegree_mul _ _).trans (by rw [totalDegree_C, totalDegree_X])
 
-/-- Affine substitution does not raise the total degree. -/
 theorem totalDegree_polySubst_le (B : Fin n → Fin m → R) (b : Fin n → R)
     (p : MvPolynomial (Fin n) R) : (polySubst B b p).totalDegree ≤ p.totalDegree := by
   conv_lhs => rw [p.as_sum, map_sum]
@@ -285,7 +227,6 @@ theorem polyPullback_apply (B : Fin n → Fin m → R) (b : Fin n → R)
   rw [map_wedgeProd C B s t]
   rfl
 
-/-- `F^*` of an evaluated polynomial form is the evaluated polynomial pullback. -/
 theorem evalForm_polyPullback (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
     (ω : Koszul.PolyForm ℝ (Fin n)) :
     evalForm m (polyPullback B b ω) = affinePullback B b (evalForm n ω) := by
@@ -299,7 +240,6 @@ theorem polyPullback_add (B : Fin n → Fin m → R) (b : Fin n → R)
   rw [polyPullback, polyPullback, polyPullback, ← pullback_add]
   congr 1; funext s; simp
 
-/-- **`F^* P_rΛᵏ(ℝⁿ) ⊆ P_rΛᵏ(ℝᵐ)`** for every affine `F : ℝᵐ → ℝⁿ`. -/
 theorem polyPullback_mem_polyForm (B : Fin n → Fin m → R) (b : Fin n → R) {r k : ℕ}
     {ω : Koszul.PolyForm R (Fin n)} (h : ω ∈ Koszul.polyForm R (Fin n) r k) :
     polyPullback B b ω ∈ Koszul.polyForm R (Fin m) r k := by
@@ -309,7 +249,6 @@ theorem polyPullback_mem_polyForm (B : Fin n → Fin m → R) (b : Fin n → R) 
   rw [totalDegree_C, add_zero]
   exact (totalDegree_polySubst_le B b _).trans (h.2 s)
 
-/-- The pullback of `κ ω` along `F(x̂) = B x̂ + b`: `F^*(κ ω) = κ (F^* ω) + F^*(ι_b ω)`. -/
 theorem polyPullback_koszul (B : Fin n → Fin m → R) (b : Fin n → R)
     (ω : Koszul.PolyForm R (Fin n)) :
     polyPullback B b (Koszul.koszul ω) = Koszul.koszul (polyPullback B b ω) +
@@ -331,8 +270,6 @@ theorem polyPullback_koszul (B : Fin n → Fin m → R) (b : Fin n → R)
   rw [polyPullback, hsub, pullback_add, pullback_interior, polyPullback, polyPullback, hsub2]
   rfl
 
-/-- **`F^* P_r⁻Λᵏ(ℝⁿ) ⊆ P_r⁻Λᵏ(ℝᵐ)`** for every affine `F : ℝᵐ → ℝⁿ` ([AFW2010], §5.1.3: the
-trimmed spaces do not depend on the base point of `κ`). -/
 theorem polyPullback_mem_polyFormMinus {K : Type*} [Field K] (B : Fin n → Fin m → K)
     (b : Fin n → K) {r k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
     (h : ω ∈ Koszul.polyFormMinus K (Fin n) r k) :
@@ -358,14 +295,12 @@ end Subst
 /-! ### The spaces `P_rΛᵏ(ℝⁿ)`, `P_r⁻Λᵏ(ℝⁿ)` of form fields -/
 
 variable (n) in
-/-- `P_rΛᵏ(ℝⁿ)` as a space of (smooth) form fields: the evaluated polynomial forms of
-`Feec.Koszul.polyForm`. -/
+/-- `P_rΛᵏ(ℝⁿ)` as a space of form fields: the evaluated polynomial forms of `Koszul.polyForm`. -/
 def polySpace (r k : ℕ) : Submodule ℝ (FormField n) :=
   (Koszul.polyForm ℝ (Fin n) r k).map (evalForm n)
 
 variable (n) in
-/-- `P_r⁻Λᵏ(ℝⁿ)` as a space of form fields: the evaluated polynomial forms of
-`Feec.Koszul.polyFormMinus` (`P_0⁻Λᵏ = 0`). -/
+/-- `P_r⁻Λᵏ(ℝⁿ)` as a space of form fields: the evaluated forms of `Koszul.polyFormMinus`. -/
 def polyMinusSpace (r k : ℕ) : Submodule ℝ (FormField n) :=
   (Koszul.polyFormMinus ℝ (Fin n) r k).map (evalForm n)
 
@@ -396,7 +331,6 @@ theorem affinePullback_id (ω : FormField n) :
     funext i; simp [affine_apply]
   rw [affinePullback_apply, this, pullback_id]
 
-/-- If `G ∘ F = id` for affine maps, then `F^* ∘ G^* = id`. -/
 theorem affinePullback_affinePullback_of_comp_eq_id (C : Fin m → Fin n → ℝ)
     (c : Fin m → ℝ) (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
     (h : ∀ x, affine C c (affine B b x) = x) (ω : FormField m) :
@@ -428,13 +362,9 @@ theorem polySpace_le_polyMinusSpace {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     polySpace n (r - 1) k ≤ polyMinusSpace n r k :=
   Submodule.map_mono (Koszul.polyForm_le_polyFormMinus hr k)
 
-/-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions.
-[AFW2006], §3 -/
 theorem polyMinusSpace_zero {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r 0 = polySpace n r 0 := by
   rw [polyMinusSpace, polySpace, Koszul.polyFormMinus_zero_right hr]
 
-/-- **`P_r⁻Λⁿ = P_{r-1}Λⁿ`** (`r ≥ 1`): in the top degree the trimmed space is the full space of
-one degree less (for `r = 1`, the constants: piecewise constants are `P₁⁻Λⁿ`). [AFW2006], §3 -/
 theorem polyMinusSpace_top {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r n = polySpace n (r - 1) n := by
   have h := Koszul.polyFormMinus_top (K := ℝ) (d := Fin n) hr
   rw [Fintype.card_fin] at h
@@ -474,17 +404,15 @@ theorem simplexMap_affine_inv (hp : IsUnit (edgeMatrix p).det) (x : Fin n → �
     Matrix.mul_nonsing_inv _ hp, Matrix.one_mulVec]
   abel
 
-/-- **The local space** `P_rΛᵏ(T)`: the pullback of the reference space `P_rΛᵏ(ℝⁿ)` (on `T̂`)
-along `F_T⁻¹`. -/
+/-- The local space `P_rΛᵏ(T)`: the pullback of `P_rΛᵏ(ℝⁿ)` along `F_T⁻¹`. -/
 def localPolySpace (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) : Submodule ℝ (FormField n) :=
   (polySpace n r k).map (affinePullbackₗ (invMatrix p) (invOffset p))
 
-/-- **The local space** `P_r⁻Λᵏ(T)`: the pullback of `P_r⁻Λᵏ(ℝⁿ)` along `F_T⁻¹`. -/
+/-- The local space `P_r⁻Λᵏ(T)`: the pullback of `P_r⁻Λᵏ(ℝⁿ)` along `F_T⁻¹`. -/
 def localPolyMinusSpace (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) : Submodule ℝ (FormField n) :=
   (polyMinusSpace n r k).map (affinePullbackₗ (invMatrix p) (invOffset p))
 
-/-- **Affine invariance**: `P_rΛᵏ(T)` is the space of polynomial `k`-forms of degree `≤ r`,
-independently of `T`. [AFW2010], §5.1.3 (remark on affine invariance) -/
+/-- `P_rΛᵏ(T) = P_rΛᵏ(ℝⁿ)`, independently of `T` ([AFW2010], §5.1.3). -/
 theorem localPolySpace_eq (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
     localPolySpace p r k = polySpace n r k := by
   refine le_antisymm ?_ fun ω h => ⟨affinePullback (simplexMatrix p) (p 0) ω,
@@ -493,7 +421,7 @@ theorem localPolySpace_eq (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
     exact affinePullback_mem_polySpace _ _ h
   · exact affinePullback_affinePullback_of_comp_eq_id _ _ _ _ (simplexMap_affine_inv hp) ω
 
-/-- **Affine invariance** of the trimmed spaces: `P_r⁻Λᵏ(T) = P_r⁻Λᵏ(ℝⁿ)`. -/
+/-- `P_r⁻Λᵏ(T) = P_r⁻Λᵏ(ℝⁿ)`, independently of `T`. -/
 theorem localPolyMinusSpace_eq (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
     localPolyMinusSpace p r k = polyMinusSpace n r k := by
   refine le_antisymm ?_ fun ω h => ⟨affinePullback (simplexMatrix p) (p 0) ω,
@@ -504,8 +432,7 @@ theorem localPolyMinusSpace_eq (hp : IsUnit (edgeMatrix p).det) (r k : ℕ) :
 
 /-! ### Traces on faces -/
 
-/-- The **trace** on the face `p ∘ e` (`e : Fin (m + 1) → Fin (n + 1)` listing its vertices):
-the pullback along the parametrization `F_{p ∘ e} : ℝᵐ → ℝⁿ`. -/
+/-- The trace on the face `p ∘ e`: the pullback along its parametrization `F_{p ∘ e}`. -/
 def faceTrace (p : Fin (n + 1) → Fin n → ℝ) (e : Fin (m + 1) → Fin (n + 1)) :
     FormField n →ₗ[ℝ] FormField m :=
   affinePullbackₗ (simplexMatrix (p ∘ e)) (p (e 0))
@@ -534,7 +461,7 @@ theorem affine_faceRetract_simplexMap (hp : IsUnit (edgeMatrix p).det)
   rw [h, sum_eq_single l.succ (fun j _ hj => by simp [he.ne hj]) (by simp)]
   simp
 
-/-- **Traces of `P_rΛᵏ`**: `tr_f P_rΛᵏ(T) = P_rΛᵏ(f)` for every face `f` of `T`. [AFW2010], §5.2 -/
+/-- `tr_f P_rΛᵏ(T) = P_rΛᵏ(f)` for every face `f` of `T` ([AFW2010], §5.2). -/
 theorem map_faceTrace_polySpace (hp : IsUnit (edgeMatrix p).det)
     {e : Fin (m + 1) → Fin (n + 1)} (he : Function.Injective e) (r k : ℕ) :
     (polySpace n r k).map (faceTrace p e) = polySpace m r k := by
@@ -545,7 +472,7 @@ theorem map_faceTrace_polySpace (hp : IsUnit (edgeMatrix p).det)
   · exact affinePullback_affinePullback_of_comp_eq_id _ _ _ _
       (affine_faceRetract_simplexMap hp he) η
 
-/-- **Traces of `P_r⁻Λᵏ`**: `tr_f P_r⁻Λᵏ(T) = P_r⁻Λᵏ(f)`. [AFW2010], §5.2 -/
+/-- `tr_f P_r⁻Λᵏ(T) = P_r⁻Λᵏ(f)` for every face `f` of `T` ([AFW2010], §5.2). -/
 theorem map_faceTrace_polyMinusSpace (hp : IsUnit (edgeMatrix p).det)
     {e : Fin (m + 1) → Fin (n + 1)} (he : Function.Injective e) (r k : ℕ) :
     (polyMinusSpace n r k).map (faceTrace p e) = polyMinusSpace m r k := by
@@ -558,7 +485,6 @@ theorem map_faceTrace_polyMinusSpace (hp : IsUnit (edgeMatrix p).det)
 
 /-! ### Polynomials vanishing on coordinate hyperplanes -/
 
-/-- A real polynomial vanishing on the hyperplane `xᵢ = 0` is divisible by `xᵢ`. -/
 theorem X_dvd_of_eval_eq_zero {q : MvPolynomial (Fin n) ℝ} {i : Fin n}
     (h : ∀ x : Fin n → ℝ, x i = 0 → eval x q = 0) : X i ∣ q := by
   classical
@@ -586,7 +512,6 @@ theorem X_dvd_of_eval_eq_zero {q : MvPolynomial (Fin n) ℝ} {i : Fin n}
   rw [← hq, map_add, map_mul, eval_X, Function.update_self, zero_mul, zero_add] at h0
   exact h0
 
-/-- Divisibility by distinct variables gives divisibility by their product. -/
 theorem prod_X_dvd {q : MvPolynomial (Fin n) ℝ} (S : Finset (Fin n)) (h : ∀ j ∈ S, X j ∣ q) :
     (∏ j ∈ S, X j) ∣ q := by
   classical
@@ -623,7 +548,6 @@ theorem eval_prod_X_nonneg {S : Finset (Fin n)} {x : Fin n → ℝ} (hx : ∀ j,
 
 /-! ### A positivity argument on the reference simplex -/
 
-/-- A box in the interior of `T̂ₙ`. -/
 theorem pi_Ioo_subset_refSimplex :
     Set.univ.pi (fun _ : Fin n => Set.Ioo (0 : ℝ) (1 / (n + 1))) ⊆ refSimplex n := by
   intro x hx
@@ -634,8 +558,6 @@ theorem pi_Ioo_subset_refSimplex :
     _ = n / (n + 1) := by simp [div_eq_mul_inv]
     _ ≤ 1 := by rw [div_le_one (by positivity)]; linarith
 
-/-- A continuous function, nonnegative on `T̂ₙ` with zero integral, vanishes on an interior
-box. -/
 theorem eq_zero_of_setIntegral_refSimplex_eq_zero {g : (Fin n → ℝ) → ℝ} (hg : Continuous g)
     (h0 : ∀ x ∈ refSimplex n, 0 ≤ g x) (hint : ∫ x in refSimplex n, g x = 0) :
     ∀ x ∈ Set.univ.pi (fun _ : Fin n => Set.Ioo (0 : ℝ) (1 / (n + 1))), g x = 0 := by
@@ -655,7 +577,6 @@ theorem eq_zero_of_setIntegral_refSimplex_eq_zero {g : (Fin n → ℝ) → ℝ} 
   exact lt_of_lt_of_le (hU.measure_pos volume hUne) (measure_mono
     (Set.inter_subset_inter_right _ pi_Ioo_subset_refSimplex))
 
-/-- A polynomial vanishing on an interior box of `T̂ₙ` vanishes. -/
 theorem eq_zero_of_eval_eq_zero_on_box {q : MvPolynomial (Fin n) ℝ}
     (h : ∀ x ∈ Set.univ.pi (fun _ : Fin n => Set.Ioo (0 : ℝ) (1 / (n + 1))), eval x q = 0) :
     q = 0 := by
@@ -665,12 +586,6 @@ theorem eq_zero_of_eval_eq_zero_on_box {q : MvPolynomial (Fin n) ℝ}
 
 /-! ### Forms with vanishing traces on the coordinate faces ([AFW2006], Lemmas 4.5–4.6) -/
 
-/-- **[AFW2006], Lemmas 4.5–4.6**: a polynomial `k`-form `ω ∈ P_rΛᵏ(ℝⁿ)` whose coefficients
-`ω_σ` vanish on the coordinate hyperplanes `xᵢ = 0`, `i ∉ σ` (i.e. whose traces on the faces of
-`T̂` through the origin vanish), and which is orthogonal on `T̂` to `P_{r+k-n}Λ^{n-k}` under
-`(ω, η) ↦ ∫_{T̂} ω ∧ η`, vanishes. (If `r + k < n` the test space is `0` and no orthogonality is
-needed.) By Lemma 4.5, `ω_σ = x_{σᶜ} b_σ` with `b_σ ∈ P_{r+k-n}`, and the test form
-`η = Σ_σ ε(σ, σᶜ) b_σ dx_{σᶜ}` gives `∫_{T̂} Σ_σ x_{σᶜ} b_σ² = 0`. -/
 theorem eq_zero_of_coordTrace_of_integral {r k : ℕ} {Ω : Koszul.PolyForm ℝ (Fin n)}
     (hΩ : Ω ∈ Koszul.polyForm ℝ (Fin n) r k)
     (htr : ∀ σ : Finset (Fin n), ∀ i ∉ σ, ∀ x : Fin n → ℝ, x i = 0 → eval x (Ω σ) = 0)
@@ -754,12 +669,11 @@ theorem eq_zero_of_coordTrace_of_integral {r k : ℕ} {Ω : Koszul.PolyForm ℝ 
 
 /-! ### Bubbles: forms with vanishing trace on `∂T` -/
 
-/-- `ω` has **vanishing trace on `∂T`**: its traces on all proper faces `p ∘ e`
-(`e : Fin (m + 1) ↪o Fin (n + 1)`, `m < n`) vanish. -/
+/-- `ω` has vanishing trace on `∂T`: its traces on all proper faces of `T` vanish. -/
 def IsBubble (p : Fin (n + 1) → Fin n → ℝ) (ω : FormField n) : Prop :=
   ∀ (m : ℕ) (e : Fin (m + 1) ↪o Fin (n + 1)), m < n → faceTrace p e ω = 0
 
-/-- The **bubble space** `V̊ = {ω ∈ V | tr_{∂T} ω = 0}` of a space `V` of form fields on `T`. -/
+/-- The bubble space `V̊ = {ω ∈ V | tr_{∂T} ω = 0}` of a space `V` of form fields on `T`. -/
 def bubbleSpace (p : Fin (n + 1) → Fin n → ℝ) (V : Submodule ℝ (FormField n)) :
     Submodule ℝ (FormField n) where
   carrier := {ω | ω ∈ V ∧ IsBubble p ω}
@@ -775,14 +689,12 @@ theorem evalForm_wedgeForm' (ω η : Koszul.PolyForm ℝ (Fin n)) :
     evalForm n (wedgeForm ω η) = wedgeField (evalForm n ω) (evalForm n η) :=
   funext fun x => evalForm_wedgeForm ω η x
 
-/-- **Traces are multiplicative**: `tr_f (ω ∧ η) = tr_f ω ∧ tr_f η`. -/
 theorem faceTrace_wedgeField (p : Fin (n + 1) → Fin n → ℝ) (e : Fin (m + 1) → Fin (n + 1))
     (ω η : FormField n) :
     faceTrace p e (wedgeField ω η) = wedgeField (faceTrace p e ω) (faceTrace p e η) := by
   funext x
   simp only [faceTrace_apply, affinePullback_apply, wedgeField, pullback_wedgeForm]
 
-/-- **Traces commute with `d`** (for differentiable forms). -/
 theorem faceTrace_extDeriv (p : Fin (n + 1) → Fin n → ℝ) (e : Fin (m + 1) → Fin (n + 1))
     {ω : FormField n} (hω : Differentiable ℝ ω) :
     faceTrace p e (extDeriv ω) = extDeriv (faceTrace p e ω) := by
@@ -794,8 +706,6 @@ theorem IsBubble.extDeriv {p : Fin (n + 1) → Fin n → ℝ} {ω : FormField n}
   rw [faceTrace_extDeriv p e hω, h m e hm]
   funext x s; simp [FiniteElement.extDeriv_apply]
 
-/-- The trace on the coordinate face `{xᵢ = 0}` of `T̂_{N+1}` (opposite the vertex `v̂_{i+1}`)
-restricts to the coordinates other than `i`. -/
 theorem faceTrace_refVertex_succAbove_succ {N : ℕ} (i : Fin (N + 1)) (ω : FormField (N + 1))
     (y : Fin N → ℝ) :
     faceTrace (refVertex (N + 1)) (Fin.succAbove i.succ) ω y =
@@ -813,8 +723,6 @@ theorem faceTrace_refVertex_succAbove_succ {N : ℕ} (i : Fin (N + 1)) (ω : For
   simp only [Fin.coe_succAboveOrderEmb]
   exact ⟨fun h => by simp [h], fun h => by simp [h]⟩
 
-/-- Vanishing traces on the coordinate faces mean that the coefficients `ω_σ` vanish on the
-hyperplanes `xᵢ = 0`, `i ∉ σ`. -/
 theorem apply_eq_zero_of_faceTrace_eq_zero {N : ℕ} {i : Fin (N + 1)} {ω : FormField (N + 1)}
     (h : faceTrace (refVertex (N + 1)) (Fin.succAbove i.succ) ω = 0) {σ : Finset (Fin (N + 1))}
     (hσ : i ∉ σ) {x : Fin (N + 1) → ℝ} (hx : x i = 0) : ω x σ = 0 := by
@@ -851,7 +759,6 @@ theorem IsBubble.faceTrace_succAbove {N : ℕ} {p : Fin (N + 2) → Fin (N + 1) 
   have := h N (Fin.succAboveOrderEmb i) (Nat.lt_succ_self N)
   rwa [Fin.coe_succAboveOrderEmb] at this
 
-/-- A bubble's coefficients vanish on the coordinate hyperplanes `xᵢ = 0`, `i ∉ σ`. -/
 theorem IsBubble.eval_eq_zero {Ω : Koszul.PolyForm ℝ (Fin n)}
     (h : IsBubble (refVertex n) (evalForm n Ω)) (σ : Finset (Fin n)) (i : Fin n) (hi : i ∉ σ)
     (x : Fin n → ℝ) (hx : x i = 0) : eval x (Ω σ) = 0 := by
@@ -861,14 +768,11 @@ theorem IsBubble.eval_eq_zero {Ω : Koszul.PolyForm ℝ (Fin n)}
     have := apply_eq_zero_of_faceTrace_eq_zero (h.faceTrace_succAbove i.succ) hi hx
     rwa [evalForm_apply] at this
 
-/-- `d` of a polynomial form with constant coefficients vanishes. -/
 theorem extDeriv_eq_zero_of_mem_polyForm_zero {k : ℕ} {Ω : Koszul.PolyForm ℝ (Fin n)}
     (h : Ω ∈ Koszul.polyForm ℝ (Fin n) 0 k) : Koszul.extDeriv Ω = 0 := by
   rw [← Koszul.sum_homComp h, Finset.sum_range_one]
   exact Koszul.extDeriv_homComp_zero Ω
 
-/-- **Stokes' theorem for a bubble**: if `ω` has vanishing trace on `∂T̂`, then
-`∫_{T̂} dω ∧ μ = -(-1)^k ∫_{T̂} ω ∧ dμ` for polynomial forms `ω` (of degree `k`) and `μ`. -/
 theorem integral_extDeriv_wedge_of_isBubble {N k : ℕ} {Ω M : Koszul.PolyForm ℝ (Fin (N + 1))}
     (hΩ : IsDeg k Ω) (hbub : IsBubble (refVertex (N + 1)) (evalForm (N + 1) Ω)) :
     ∫ x in refSimplex (N + 1), eval x (wedgeForm (Koszul.extDeriv Ω) M univ) =
@@ -900,7 +804,6 @@ theorem integral_extDeriv_wedge_of_isBubble {N k : ℕ} {Ω M : Koszul.PolyForm 
   rw [hsplit, integral_add (hc _) ((hc _).const_mul _), integral_const_mul] at hS
   linarith
 
-/-- If `ω` is a closed bubble, `∫_{T̂} ω ∧ dμ = 0`. -/
 theorem integral_wedge_extDeriv_eq_zero_of_isBubble {N k : ℕ}
     {Ω M : Koszul.PolyForm ℝ (Fin (N + 1))} (hΩ : IsDeg k Ω)
     (hbub : IsBubble (refVertex (N + 1)) (evalForm (N + 1) Ω)) (hd : Koszul.extDeriv Ω = 0) :
@@ -926,7 +829,6 @@ theorem integral_wedge_add {Ω H H' : Koszul.PolyForm ℝ (Fin n)} :
   funext x
   rw [wedgeForm_add_right, Pi.add_apply, map_add]
 
-/-- `P_r⁻Λⁿ(ℝⁿ) = P_{r-1}Λⁿ(ℝⁿ)` (`κ` of an `(n+1)`-form vanishes). -/
 theorem polyFormMinus_top_le (r : ℕ) :
     Koszul.polyFormMinus ℝ (Fin n) r n ≤ Koszul.polyForm ℝ (Fin n) (r - 1) n := by
   rcases r with _ | r
@@ -938,9 +840,8 @@ theorem polyFormMinus_top_le (r : ℕ) :
   rw [this, map_zero]
   exact Submodule.zero_mem _
 
-/-- **[AFW2006], Lemma 4.7** (bubbles of `P_rΛᵏ`): if `ω ∈ P_rΛᵏ(T̂)` (`r ≥ 1`) has vanishing
-trace on `∂T̂` and `∫_{T̂} ω ∧ η = 0` for all `η ∈ P⁻_{r+k-n}Λ^{n-k}` (a condition only when
-`r + k > n`; otherwise this test space is `0`), then `ω = 0`. -/
+/-- If `ω ∈ P_rΛᵏ(T̂)`, `r ≥ 1`, has vanishing trace on `∂T̂` and `∫_{T̂} ω ∧ η = 0` for all
+`η ∈ P⁻_{r+k-n}Λ^{n-k}`, then `ω = 0` ([AFW2006], Lemma 4.7). -/
 theorem eq_zero_of_isBubble_of_mem_polyForm {r k : ℕ} (hr : 1 ≤ r)
     {Ω : Koszul.PolyForm ℝ (Fin n)} (hΩ : Ω ∈ Koszul.polyForm ℝ (Fin n) r k)
     (hbub : IsBubble (refVertex n) (evalForm n Ω))
@@ -985,9 +886,8 @@ theorem eq_zero_of_isBubble_of_mem_polyForm {r k : ℕ} (hr : 1 ≤ r)
       show (Koszul.extDerivₗ ℝ (Fin (N + 1))) c = Koszul.extDeriv c from rfl,
       integral_wedge_extDeriv_eq_zero_of_isBubble hΩ.1 hbub hd, add_zero]
 
-/-- **[AFW2006], Lemma 4.11** (bubbles of `P_r⁻Λᵏ`): if `ω ∈ P_r⁻Λᵏ(T̂)` has vanishing trace on
-`∂T̂` and `∫_{T̂} ω ∧ η = 0` for all `η ∈ P_{r+k-n-1}Λ^{n-k}` (a condition only when `r + k > n`),
-then `ω = 0`. -/
+/-- If `ω ∈ P_r⁻Λᵏ(T̂)` has vanishing trace on `∂T̂` and `∫_{T̂} ω ∧ η = 0` for all
+`η ∈ P_{r+k-n-1}Λ^{n-k}`, then `ω = 0` ([AFW2006], Lemma 4.11). -/
 theorem eq_zero_of_isBubble_of_mem_polyFormMinus {r k : ℕ}
     {Ω : Koszul.PolyForm ℝ (Fin n)} (hΩ : Ω ∈ Koszul.polyFormMinus ℝ (Fin n) r k)
     (hbub : IsBubble (refVertex n) (evalForm n Ω))
@@ -1035,9 +935,6 @@ theorem simplexIntegral_wedgeField_evalForm (Ω H : Koszul.PolyForm ℝ (Fin n))
   rw [simplexIntegral_refVertex, ← evalForm_wedgeForm']
   rfl
 
-/-- **The bubbles of `P_rΛᵏ(T̂)` are detected by `P⁻_{r+k-n}Λ^{n-k}(T̂)`** ([AFW2006], Lemma 4.7):
-a form in `P̊_rΛᵏ(T̂)` with `∫_{T̂} ω ∧ η = 0` for all `η ∈ P⁻_{r+k-n}Λ^{n-k}` vanishes; and
-`P̊_rΛᵏ(T̂) = 0` when `r + k ≤ n`. -/
 theorem eq_zero_of_mem_bubbleSpace_polySpace {r k : ℕ} (hr : 1 ≤ r) {ω : FormField n}
     (hω : ω ∈ bubbleSpace (refVertex n) (polySpace n r k))
     (hint : n < r + k → ∀ η ∈ polyMinusSpace n (r + k - n) (n - k),
@@ -1046,8 +943,6 @@ theorem eq_zero_of_mem_bubbleSpace_polySpace {r k : ℕ} (hr : 1 ≤ r) {ω : Fo
   rw [eq_zero_of_isBubble_of_mem_polyForm hr hΩ hbub fun h H hH => by
     rw [← simplexIntegral_wedgeField_evalForm]; exact hint h _ ⟨H, hH, rfl⟩, map_zero]
 
-/-- **The bubbles of `P_r⁻Λᵏ(T̂)` are detected by `P_{r+k-n-1}Λ^{n-k}(T̂)`** ([AFW2006],
-Lemma 4.11); `P̊_r⁻Λᵏ(T̂) = 0` when `r + k ≤ n`. -/
 theorem eq_zero_of_mem_bubbleSpace_polyMinusSpace {r k : ℕ} {ω : FormField n}
     (hω : ω ∈ bubbleSpace (refVertex n) (polyMinusSpace n r k))
     (hint : n < r + k → ∀ η ∈ polySpace n (r + k - n - 1) (n - k),

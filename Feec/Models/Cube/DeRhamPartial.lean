@@ -6,51 +6,18 @@ public import Feec.Models.Cube.DeRham
 # The de Rham complex of the cube `(0, ½)ⁿ` with boundary conditions on part of the boundary:
 the parity model
 
-The relative and absolute classes of `Feec.Models.Cube.DeRham` are the fixed complexes of the
-reflections `-R_j^*` (resp. `R_j^*`) of the torus de Rham window, for every direction `j`. Mixing
-the two signs gives the **mixed classes**: for a set `J` of directions (those with a boundary
-condition), the class `mixed d J` is the fixed complex of `ε_j R_j^*`, `ε_j = -1` for `j ∈ J`
-and `ε_j = 1` otherwise (`mixedSign`). The coefficient `ω_s` of `dx_s` is then odd in `x_j` iff
-`j ∈ J` and `j ∉ s` (the tangential components vanish on the faces `x_j ∈ {0, ½}`, `j ∈ J`) or
-`j ∉ J` and `j ∈ s` (the normal components vanish on the other faces): **vanishing tangential
-traces on the faces normal to the directions of `J`, vanishing normal traces on the others**
-([AFW2010], §4.3; [Arnold2018], Ch. 6, the de Rham complex with boundary conditions on part of
-the boundary).
-
-This file proves, in every dimension and degree:
-
-* **the compactness property** (`hasCompactProperty_mixed`) and the **Poincaré inequality**
-  `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d) ∩ N(d)ᗮ` (`norm_le_of_mem_orthogonal_mixed`);
-* **the harmonic forms**: only the zero Fourier mode is harmonic, and a constant form `dx_s` is
-  fixed by every `ε_j R_j^*` iff `s = J` (`forall_mixedSign_mul_reflSign_eq_one_iff`), so
-  `ℌᵏ = 0` for `k ≠ |J|` (`mixed_harmonic_eq_bot`) and `ℌ^{|J|}` is the line of `dx_J`
-  (`finrank_mixed_harmonic`, `mixed_harmonic_eq_span`): `Hᵏ(Q, Γ_J) ≅ ℝ` for `k = |J|`;
-* **the extreme cases are the relative and absolute classes**: `mixedSymmetries d univ` and
-  `mixedSymmetries d ∅` are the symmetries of `relative d` and `absolute d`
-  (`mixedSymmetries_univ`, `mixedSymmetries_empty`).
-
-The identification of the mixed class with the `L²` de Rham complex of `Q` with vanishing
-tangential traces on the faces normal to `J` is `Feec.Models.Cube.DeRhamPartialIdent`.
-
-The name `partial` of the task is a Lean keyword; the mixed class is `mixed`.
-
-## Main definitions
-
-* `mixedSign`, `mixedSymmetries`, `mixedAction`, `mixed`; `constMode`.
+The mixed class `mixed d J` is the fixed complex of the reflections `ε_j R_j^*` of the torus window,
+the parity model of boundary conditions on part of the boundary ([AFW2010], §4.3; [Arnold2018]).
 
 ## Main results
 
-* `mem_mixed_fixed_iff`, **`hasCompactProperty_mixed`**, **`norm_le_of_mem_orthogonal_mixed`**.
-* `mem_mixed_harmonic_iff`, **`forall_mixedSign_mul_reflSign_eq_one_iff`**,
-  **`mixed_harmonic_eq_bot`**, **`finrank_mixed_harmonic`**, `mixed_harmonic_eq_span`.
-* **`mixedSymmetries_univ`**, **`mixedSymmetries_empty`**.
+* `hasCompactProperty_mixed`, `norm_le_of_mem_orthogonal_mixed`: compactness and Poincaré.
+* `mixed_harmonic_eq_span`: the harmonic `|J|`-forms are the line of `dx_J`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (the de Rham complex with boundary conditions, compactness)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (boundary conditions on
-  part of the boundary; harmonic forms)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -69,8 +36,7 @@ variable {d : Type*} [LinearOrder d]
 
 /-! ### The mixed signs -/
 
-/-- The sign `ε_j` of the mixed class: `-1` for the directions with a boundary condition
-(`j ∈ J`), `1` otherwise. -/
+/-- The sign `ε_j` of the mixed class: `-1` for `j ∈ J`, `1` otherwise. -/
 def mixedSign (J : Finset d) (j : d) : ℂ := if j ∈ J then -1 else 1
 
 theorem mixedSign_mul_self (J : Finset d) (j : d) : mixedSign J j * mixedSign J j = 1 := by
@@ -83,8 +49,6 @@ theorem conj_mixedSign_mul_self (J : Finset d) (j : d) :
 @[simp] theorem mixedSign_univ [Fintype d] (j : d) : mixedSign Finset.univ j = parSign true := by
   simp [mixedSign, parSign]
 
-/-- **A constant form `dx_s` is fixed by every `ε_j R_j^*` iff `s = J`**: `ε_j ε_j(s) = 1` iff
-(`j ∈ J` iff `j ∈ s`). -/
 theorem forall_mixedSign_mul_reflSign_eq_one_iff {J s : Finset d} :
     (∀ j, mixedSign J j * reflSign j s = 1) ↔ s = J := by
   constructor
@@ -100,8 +64,7 @@ theorem forall_mixedSign_mul_reflSign_eq_one_iff {J s : Finset d} :
 variable [Fintype d]
 
 variable (d) in
-/-- **The reflections of the cube in the mixed class `J`**, as fibre symmetries of the torus de
-Rham window: `n ↦ flip_j n` on the frequencies, `v ↦ ε_j R_j^* v` on the coefficients. -/
+/-- **The reflections of the cube in the mixed class `J`**, as fibre symmetries of the window. -/
 def mixedSymmetries (J : Finset d) : (windowSymbol d).Symmetries d where
   R j := Reflection.count_of_involutive (flipAt j) (flipAt_involutive j)
   ρ j i := mixedSign J j • reflForm j i
@@ -129,16 +92,12 @@ instance instCompleteSpaceMixedFixed (J : Finset d) (i : Fin (Fintype.card d + 1
   ((mixedAction d J).isClosed_fixed i).completeSpace_coe
 
 variable (d) in
-/-- **The de Rham complex of the cube in the mixed class `J`**: vanishing tangential traces on
-the faces `x_j ∈ {0, ½}`, `j ∈ J`, vanishing normal traces on the other faces (the method of
-images). -/
+/-- **The de Rham complex of the cube in the mixed class `J`**, the parity model. -/
 abbrev mixed (J : Finset d) :
     HilbertComplex ℂ (ComplexShape.window (Fintype.card d + 1))
       fun i => (mixedAction d J).fixed i :=
   (mixedAction d J).fixedComplex
 
-/-- **The mixed class, coefficientwise**: `u` is fixed iff `ε_j R_j^* u(flip_j n) = u(n)` for all
-`j` and `n`. -/
 theorem mem_mixed_fixed_iff {J : Finset d} {i : Fin (Fintype.card d + 1)}
     {u : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))} :
     u ∈ (mixedAction d J).fixed i ↔
@@ -155,13 +114,11 @@ theorem mem_mixed_fixed_iff {J : Finset d} {i : Fin (Fintype.card d + 1)}
 
 /-! ### Compactness -/
 
-/-- **The compactness property of the de Rham complex of the cube in the mixed class `J`**, in
-every degree (Rellich and Gaffney with mixed boundary conditions, in this model). [AFW2010], §4.3 -/
+/-- **The compactness property in the mixed class `J`** ([AFW2010], §4.3). -/
 theorem hasCompactProperty_mixed (J : Finset d) : (mixed d J).HasCompactProperty :=
   (mixedAction d J).hasCompactProperty_fixedComplex Torus.DeRham.window_hasCompactProperty
 
-/-- **The Poincaré inequality on the cube in the mixed class `J`**, every degree:
-`‖u‖ ≤ (2π)⁻¹ ‖d u‖` for `u ∈ D(d) ∩ N(d)ᗮ`. -/
+/-- **The Poincaré inequality in the mixed class `J`**: `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d) ∩ N(d)ᗮ`. -/
 theorem norm_le_of_mem_orthogonal_mixed (J : Finset d) {i j : Fin (Fintype.card d + 1)}
     (u : ((mixed d J).d i j).domain)
     (hu : (u : (mixedAction d J).fixed i) ∈ ((mixed d J).d i j).kerᗮ) :
@@ -169,14 +126,12 @@ theorem norm_le_of_mem_orthogonal_mixed (J : Finset d) {i j : Fin (Fintype.card 
   (mixedAction d J).reducingSubcomplex_fixed.norm_le_of_mem_orthogonal
     window_norm_le_of_mem_orthogonal u hu
 
-/-- **The harmonic forms of the mixed class** are the fixed constant forms. -/
 theorem mem_mixed_harmonic_iff {J : Finset d} {i : Fin (Fintype.card d + 1)}
     {x : (mixedAction d J).fixed i} :
     x ∈ (mixed d J).harmonic i ↔
       ∀ n, n ≠ 0 → (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) n = 0 :=
   ((mixedAction d J).mem_harmonic_fixedComplex_iff).trans mem_window_harmonic_iff
 
-/-- The zero mode of a fixed form is fixed by every `ε_j R_j^*`. -/
 theorem mixedSign_reflForm_zero {J : Finset d} {i : Fin (Fintype.card d + 1)}
     (x : (mixedAction d J).fixed i) (j : d) (t : {s : Finset d // (#s : ℤ) = (i : ℕ)}) :
     mixedSign J j * reflSign j t.1 *
@@ -186,7 +141,6 @@ theorem mixedSign_reflForm_zero {J : Finset d} {i : Fin (Fintype.card d + 1)}
   simp only [flipAt_zero, PiLp.smul_apply, reflForm_apply, smul_eq_mul] at h
   rw [mul_assoc]; exact h
 
-/-- **The zero mode of a fixed form vanishes off `J`.** -/
 theorem coeff_zero_eq_zero_of_ne {J : Finset d} {i : Fin (Fintype.card d + 1)}
     (x : (mixedAction d J).fixed i) {t : {s : Finset d // (#s : ℤ) = (i : ℕ)}} (ht : t.1 ≠ J) :
     (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t = 0 := by
@@ -280,20 +234,16 @@ theorem mixed_harmonic_eq_span (J : Finset d) {i : Fin (Fintype.card d + 1)}
   · rw [mem_mixed_harmonic_iff.1 hw n hn]
     simp [hn]
 
-/-- **The harmonic forms of the mixed class are one-dimensional in degree `|J|`**
-(`H^{|J|}(Q, Γ_J) ≅ ℂ`). -/
 theorem finrank_mixed_harmonic (J : Finset d) {i : Fin (Fintype.card d + 1)}
     (hi : (i : ℕ) = #J) : Module.finrank ℂ ((mixed d J).harmonic i) = 1 := by
   rw [mixed_harmonic_eq_span J hi]
   exact finrank_span_singleton (constMode_ne_zero J hi)
 
-/-- **`J = univ` is the relative class**: the mixed symmetries are those of `relative d`. -/
 theorem mixedSymmetries_univ : mixedSymmetries d Finset.univ = symmetries d true := by
   unfold mixedSymmetries symmetries
   congr 1
   all_goals (funext j i; rw [mixedSign_univ])
 
-/-- **`J = ∅` is the absolute class**: the mixed symmetries are those of `absolute d`. -/
 theorem mixedSymmetries_empty : mixedSymmetries d ∅ = symmetries d false := by
   unfold mixedSymmetries symmetries
   congr 1

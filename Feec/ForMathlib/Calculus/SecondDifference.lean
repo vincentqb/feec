@@ -9,22 +9,8 @@ public import Feec.ForMathlib.Calculus.Partial
 /-!
 # Polynomial growth from derivative bounds, and the second difference
 
-* `norm_image_le_of_norm_deriv_le_pow`: `‖g(t)‖ ≤ c (t - a)ᵐ⁺¹ / (m + 1)` on `[a, b]` from
-  `g(a) = 0` and `‖g'(t)‖ ≤ c (t - a)ᵐ` (right derivatives);
-* `abs_secondDiff_sub_le`: the truncation error of the centred second difference,
-  `|g(h) - 2 g(0) + g(-h) - h² g''(0)| ≤ B h⁴ / 12` for `|g⁗| ≤ B` on `[-h, h]`;
-* `abs_taylor_one_le`: `|g(1) - g(0) - g'(0)| ≤ M / 2` for `|g''| ≤ M` on `[0, 1]`;
-* along the lines of `ℝⁿ` (`hasDerivAt_comp_line`;
-  `DifferentiableAt.hasDerivAt_comp_add_smul_single` in `Feec.ForMathlib.Calculus.Partial`):
-  Taylor's formula along an axis (`abs_axis_taylor_le`), the second difference along an axis
-  (`abs_axis_secondDiff_le`) and its truncation error for `C⁴` functions
-  (`abs_partialDeriv_sub_secondDiff_le`).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+Growth bounds from derivative bounds, Taylor's formula to second order, and the truncation error of
+the centred second difference, on `ℝ` and along the axes of `ℝⁿ`.
 -/
 
 open Set
@@ -35,7 +21,6 @@ section
 
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
 
-/-- `‖g(t)‖ ≤ c (t - a)ᵐ⁺¹ / (m + 1)` on `[a, b]` from `g(a) = 0` and `‖g'(t)‖ ≤ c (t - a)ᵐ`. -/
 theorem norm_image_le_of_norm_deriv_le_pow {g g' : ℝ → X} {a b c : ℝ} (m : ℕ)
     (hg : ContinuousOn g (Icc a b)) (hg' : ∀ t ∈ Ico a b, HasDerivWithinAt g (g' t) (Ici t) t)
     (ha : g a = 0) (hb : ∀ t ∈ Ico a b, ‖g' t‖ ≤ c * (t - a) ^ m) :
@@ -50,8 +35,6 @@ theorem norm_image_le_of_norm_deriv_le_pow {g g' : ℝ → X} {a b c : ℝ} (m :
 
 end
 
-/-- **The second difference**: for `g` with derivatives `g₁, …, g₄` on `[-h, h]` and
-`|g₄| ≤ B`, `|g(h) - 2 g(0) + g(-h) - h² g₂(0)| ≤ B h⁴ / 12`. -/
 theorem abs_secondDiff_sub_le {g g₁ g₂ g₃ g₄ : ℝ → ℝ} {h B : ℝ} (hh : 0 ≤ h)
     (h₀ : ∀ t ∈ Icc (-h) h, HasDerivAt g (g₁ t) t) (h₁ : ∀ t ∈ Icc (-h) h, HasDerivAt g₁ (g₂ t) t)
     (h₂ : ∀ t ∈ Icc (-h) h, HasDerivAt g₂ (g₃ t) t) (h₃ : ∀ t ∈ Icc (-h) h, HasDerivAt g₃ (g₄ t) t)
@@ -101,13 +84,10 @@ theorem abs_secondDiff_sub_le {g g₁ g₂ g₃ g₄ : ℝ → ℝ} {h B : ℝ} 
     _ ≤ _ := this
     _ = B * h ^ 4 / 12 := by push_cast; ring
 
-/-! ### Taylor's formula along the lines of `ℝⁿ` -/
-
 namespace Feec
 
 variable {n : ℕ}
 
-/-- `|g(1) - g(0) - g'(0)| ≤ M / 2` for `|g''| ≤ M` on `[0, 1]`. -/
 theorem abs_taylor_one_le {g g₁ g₂ : ℝ → ℝ} {M : ℝ}
     (h₀ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt g (g₁ t) t)
     (h₁ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt g₁ (g₂ t) t) (hM : ∀ t ∈ Icc (0 : ℝ) 1, |g₂ t| ≤ M) :
@@ -130,7 +110,6 @@ theorem abs_taylor_one_le {g g₁ g₂ : ℝ → ℝ} {M : ℝ}
   convert this using 2
   norm_num
 
-/-- `t ↦ f(x + t v)` has derivative `Σᵢ vᵢ ∂ᵢ f(x + t v)`. -/
 theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ} {t : ℝ}
     (hf : DifferentiableAt ℝ f (x + t • v)) :
     HasDerivAt (fun t : ℝ => f (x + t • v)) (∑ i, v i * partialDeriv i f (x + t • v)) t := by
@@ -146,8 +125,6 @@ theorem sum_smul_single_mul (l : Fin n) (t : ℝ) (F : Fin n → ℝ) :
   · intro i _ hi; simp [hi]
   · simp
 
-/-- **Taylor along an axis**: `|f(x + t eₗ) - f(x) - t ∂ₗf(x)| ≤ B t² / 2` for `|∂ₗ²f| ≤ B` on
-the segment. -/
 theorem abs_axis_taylor_le {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) (x : Fin n → ℝ)
     (l : Fin n) (t : ℝ) {B : ℝ}
     (hB : ∀ τ ∈ uIcc 0 t, |partialDeriv l (partialDeriv l f) (x + τ • Pi.single l 1)| ≤ B) :
@@ -180,7 +157,6 @@ theorem abs_axis_taylor_le {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 2 f)
       nlinarith [sq_nonneg t])
   simpa [v] using this
 
-/-- **The second difference**: `|f(x + h eₗ) - 2 f(x) + f(x - h eₗ)| ≤ B h²`. -/
 theorem abs_axis_secondDiff_le {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) (x : Fin n → ℝ)
     (l : Fin n) {h B : ℝ}
     (hB : ∀ τ ∈ Icc (-|h|) |h|, |partialDeriv l (partialDeriv l f) (x + τ • Pi.single l 1)| ≤ B) :
@@ -196,8 +172,6 @@ theorem abs_axis_secondDiff_le {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 
           (f (x + (-h) • Pi.single l 1) - f x - -h * partialDeriv l f x)| := by ring_nf
     _ ≤ _ := (abs_add_le _ _).trans (by nlinarith [neg_sq h])
 
-/-- **The truncation error of the second difference**: for `u ∈ C⁴` with `|∂ₗ⁴u| ≤ B` on
-`x + [-h, h] eₗ`, `|∂ₗ²u(x) - (u(x + h eₗ) - 2 u(x) + u(x - h eₗ)) / h²| ≤ B h² / 12`. -/
 theorem abs_partialDeriv_sub_secondDiff_le {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u) {h B : ℝ}
     (hh : 0 < h) (x : Fin n → ℝ) (l : Fin n)
     (hB : ∀ t ∈ Icc (-h) h, |(partialDeriv l)^[4] u (x + t • Pi.single l 1)| ≤ B) :

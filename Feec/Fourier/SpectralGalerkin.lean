@@ -7,47 +7,10 @@ public import Feec.HilbertComplex.Compactness
 /-!
 # Spectral Galerkin approximation of symbol complexes
 
-For a symbol complex and a measurable set `A` of frequencies, the band-limited fields
-`L²_A = {u | u = 0 a.e. off A}` form a reducing subcomplex: every multiplier preserves them, and
-their orthogonal projection (the Fourier truncation) commutes with every differential. Hence the
-**spectral Galerkin method** (truncate the data to the band, solve the Hodge wave equation) is
-exact on band-limited data, and its error for general data is the truncation error of the data,
-uniformly in time (`norm_waveGroup_sub_waveGroup_band`). For an exhausting sequence of bands the
-truncations converge to the identity (`tendsto_totalProj_band`).
-
-On the torus the bands `|k|_∞ ≤ N` are finite sets of modes: this is the Fourier spectral method.
-
-## Main results
-
-* `bandFibre A`, `band A i = L²_A`, `mem_band_iff`; `starProjection_bandFibre` (the fibre
-  projection is the cut-off `𝟙_A`); for the counting measure `coeFn_starProjection_band_count`
-  (`P_A u = 𝟙_A u`).
-* **`fibreReducing_band`**, `reducingSubcomplex_band`: band-limited fields reduce every symbol
-  complex.
-* `band_propagates`: band-limited data and forcing give band-limited strong solutions.
-* `waveGroup_totalProj_band`: the wave group commutes with the Fourier truncation.
-* **`norm_waveGroup_sub_waveGroup_band`**: `‖S(t) U₀ - S(t) P_A U₀‖ = ‖U₀ - P_A U₀‖` for all `t`.
-* **`tendsto_totalProj_band`**: `P_{A_N} U₀ → U₀` for an increasing exhausting sequence of bands,
-  so the spectral Galerkin solutions converge uniformly in time.
-* `Torus.bandN N = {k | ∀ j, |k j| ≤ N}`: finite bands exhausting `ℤᵈ`.
-* **`Torus.norm_sub_starProjection_band_le`**: the spectral approximation estimate
-  `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}`, `s ≥ 0`, for every symbol complex of the torus
-  (with `d P_N = P_N d`, a Jackson estimate of order `s`), from its form in every weaker norm,
-  `‖u - P_N u‖²_{Hᵗ} ≤ (1 + (2π (N + 1))²)^{t - s} ‖u‖²_{Hˢ}` for `t ≤ s`
-  (`Torus.sobolev_sub_starProjection_band_le`).
-* `finiteDimensional_band` (finite bands are finite-dimensional) and
-  **`hasCompactPropertyAt_of_coercive`**: for the counting measure, a coercive symbol
-  `λ(a) ‖v‖² ≤ ‖m v‖² + ‖m'* v‖²` with finite sublevel sets gives the compactness property
-  (truncation to finitely many modes plus a uniformly small tail).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.12–4.13 (Galerkin approximation of the Hodge wave equation)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5 (approximation of Hilbert
-  complexes)
-
-Bibliography: [references.bib](../../docs/references.bib)
+For measurable `A`, the band-limited fields `L²_A = {u | u = 0 a.e. off A}` form a reducing
+subcomplex of a symbol complex, so the spectral Galerkin solution `S(t) P_A U₀` has the error
+`‖U₀ - P_A U₀‖` at all times; on the torus, `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}` for `s ≥ 0`
+and the bands `|k|_∞ ≤ N`.
 -/
 
 @[expose] public noncomputable section
@@ -85,7 +48,6 @@ theorem aestronglyMeasurable_starProjection_bandFibre {A : Set α} (hA : Measura
   simp_rw [starProjection_bandFibre]
   exact Operator.aestronglyMeasurable_cutoff hA
 
-/-- **Band-limited fields reduce every symbol complex.** -/
 theorem fibreReducing_band (S : SymbolComplex 𝕜 μ c E) {A : Set α} (hA : MeasurableSet A) :
     FibreReducing S (bandFibre A) where
   map i j a := by
@@ -127,8 +89,6 @@ theorem reducingSubcomplex_band [∀ i, (S.band A i).HasOrthogonalProjection] :
 variable [Fintype ι] [∀ i, (S.band A i).HasOrthogonalProjection]
   [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)]
 
-/-- **Band-limited data stay band-limited**: strong solutions of the Hodge wave equation with
-band-limited data and forcing are band-limited for all times. -/
 theorem band_propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
     (hU : Evolution.IsStrongSolution S.toHilbertComplex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub (S.band A))
@@ -136,7 +96,6 @@ theorem band_propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub (S.band A) :=
   (fibreReducing_band S hA).propagates hU h0 hF
 
-/-- The wave group commutes with the Fourier truncation. -/
 theorem waveGroup_totalProj_band (t : ℝ) (x : PiLp 2 fun i => Lp (E i) 2 μ) :
     S.toHilbertComplex.waveGroup.S t
         ((HilbertComplex.totalSub (S.band A)).starProjection x) =
@@ -146,8 +105,7 @@ theorem waveGroup_totalProj_band (t : ℝ) (x : PiLp 2 fun i => Lp (E i) 2 μ) :
     (fun s _ hy => (fibreReducing_band S hA).waveGroup_mem s hy) t x
 
 omit hA in
-/-- **The error of the spectral Galerkin method is the truncation error of the data**, uniformly
-in time: `‖S(t) U₀ - S(t) P_A U₀‖ = ‖U₀ - P_A U₀‖`. -/
+/-- The spectral Galerkin error: `‖S(t) U₀ - S(t) P_A U₀‖ = ‖U₀ - P_A U₀‖`. -/
 theorem norm_waveGroup_sub_waveGroup_band (t : ℝ) (x : PiLp 2 fun i => Lp (E i) 2 μ) :
     ‖S.toHilbertComplex.waveGroup.S t x - S.toHilbertComplex.waveGroup.S t
         ((HilbertComplex.totalSub (S.band A)).starProjection x)‖ =
@@ -159,8 +117,6 @@ end Band
 
 /-! ### Convergence of the truncations -/
 
-/-- **Fourier truncations converge to the identity** along an increasing exhausting sequence of
-bands. -/
 theorem tendsto_starProjection_band (S : SymbolComplex 𝕜 μ c E) {A : ℕ → Set α} (hA : ∀ N, MeasurableSet (A N))
     (hmono : Monotone A) (hcov : ∀ a, ∃ N, a ∈ A N) (i : ι)
     [∀ N, (S.band (A N) i).HasOrthogonalProjection] (u : Lp (E i) 2 μ) :
@@ -189,7 +145,6 @@ theorem tendsto_starProjection_band (S : SymbolComplex 𝕜 μ c E) {A : ℕ →
       exact ha N hN
     exact Lp.ext (hw'.trans (Lp.coeFn_zero (E i) 2 μ).symm)
 
-/-- The total truncation converges to the identity. -/
 theorem tendsto_totalProj_band [Fintype ι] (S : SymbolComplex 𝕜 μ c E) {A : ℕ → Set α} (hA : ∀ N, MeasurableSet (A N))
     (hmono : Monotone A) (hcov : ∀ a, ∃ N, a ∈ A N)
     [∀ N i, (S.band (A N) i).HasOrthogonalProjection]
@@ -211,7 +166,6 @@ variable {β : Type*} [MeasurableSpace β] [MeasurableSingletonClass β] [Counta
 
 omit [∀ i, CompleteSpace (E i)] in
 include 𝕜 in
-/-- The `ℓ²` norm identity on `L²(count)`: `‖u‖² = Σ_a ‖u a‖²`. -/
 theorem hasSum_norm_sq_count {i : ι} (u : Lp (E i) 2 (Measure.count : Measure β)) :
     HasSum (fun a => ‖u a‖ ^ 2) (‖u‖ ^ 2) := by
   have h := lp.hasSum_norm (p := 2) (by norm_num) ((lp.equivLpCount 𝕜 β (E i) 2).symm u)
@@ -220,8 +174,6 @@ theorem hasSum_norm_sq_count {i : ι} (u : Lp (E i) 2 (Measure.count : Measure �
   exact h
 
 omit [∀ i, CompleteSpace (E i)] in
-/-- **The Fourier truncation, coefficientwise** (counting measure): `P_A u = 𝟙_A u`, i.e.
-`(P_A u)(a) = u(a)` for `a ∈ A` and `0` off `A`. -/
 theorem coeFn_starProjection_band_count (S : SymbolComplex 𝕜 (Measure.count : Measure β) c E)
     (A : Set β) (i : ι) [(S.band A i).HasOrthogonalProjection]
     (u : Lp (E i) 2 (Measure.count : Measure β)) :
@@ -252,7 +204,6 @@ theorem coeFn_adjoint_d_count (S : SymbolComplex 𝕜 (Measure.count : Measure �
   Measure.ae_count_iff.1 (Operator.coeFn_adjoint_mulOp (S.meas i j) u) a
 
 omit [∀ i, CompleteSpace (E i)] [MeasurableSingletonClass β] [Countable β] in
-/-- Band-limited fields on a finite set of frequencies form a finite-dimensional space. -/
 theorem finiteDimensional_band (S : SymbolComplex 𝕜 (Measure.count : Measure β) c E)
     {A : Set β} (hA : A.Finite) (i : ι) : FiniteDimensional 𝕜 (S.band A i) := by
   have : Fintype A := hA.fintype
@@ -278,10 +229,8 @@ theorem finiteDimensional_band (S : SymbolComplex 𝕜 (Measure.count : Measure 
     · exact h0 a ha
   exact Module.Finite.of_injective Φ hinj
 
-/-- **The compactness property from a coercive symbol.** If
-`λ(a) ‖v‖² ≤ ‖m_{i → next} v‖² + ‖m_{prev → i}* v‖²` with finite sublevel sets of `λ`, the
-symbol complex has the compactness property at `i` (Rellich: the box of `D(d) ∩ D(d*)` is
-uniformly small off a finite set of frequencies). -/
+/-- For the counting measure and finite-dimensional fibres, a coercive symbol with finite sublevel
+sets gives the compactness property. -/
 theorem hasCompactPropertyAt_of_coercive (S : SymbolComplex 𝕜 (Measure.count : Measure β) c E)
     (i : ι) (lam : β → ℝ)
     (hcoer : ∀ a (v : E i), lam a * ‖v‖ ^ 2 ≤ ‖S.m i (c.next i) a v‖ ^ 2 +
@@ -390,7 +339,6 @@ theorem finite_bandN (N : ℕ) : (bandN (d := d) N).Finite := by
     abs_le.1 (hk j)
   exact (Set.Finite.pi fun _ => Set.finite_Icc _ _).subset this
 
-/-- Off the band `|k|_∞ ≤ N` the frequencies are at least `2π (N + 1)`. -/
 theorem two_pi_mul_add_one_le_norm_freq_of_notMem {N : ℕ} {k : d → ℤ} (hk : k ∉ bandN N) :
     2 * Real.pi * (N + 1) ≤ ‖freq k‖ := by
   obtain ⟨j, hj⟩ := not_forall.1 (mt mem_bandN.2 hk)
@@ -402,11 +350,6 @@ theorem two_pi_mul_add_one_le_norm_freq_of_notMem {N : ℕ} {k : d → ℤ} (hk 
   exact (mul_le_mul_of_nonneg_left h1 Real.two_pi_pos.le).trans h2
 
 omit [∀ i, CompleteSpace (E i)] in
-/-- **The spectral approximation estimate on `𝕋ᵈ`, in every weaker norm**: for `t ≤ s`, the
-Fourier truncation to `|k|_∞ ≤ N` of a field `u` of finite `Hˢ` norm,
-`‖u‖²_{Hˢ} = Σ_k (1 + |2πk|²)^s ‖u k‖²`, has an error of finite `Hᵗ` norm with
-`‖u - P_N u‖²_{Hᵗ} ≤ (1 + (2π (N + 1))²)^{t - s} ‖u‖²_{Hˢ}` (the modes off the band have
-`|2πk| ≥ 2π (N + 1)`). -/
 theorem sobolev_sub_starProjection_band_le
     (S : SymbolComplex 𝕜 (Measure.count : Measure (d → ℤ)) c E) {s t : ℝ} (hts : t ≤ s) (N : ℕ)
     {i : ι} [(S.band (bandN N) i).HasOrthogonalProjection]
@@ -439,11 +382,7 @@ theorem sobolev_sub_starProjection_band_le
   exact ⟨hsum, (Summable.tsum_le_tsum hle hsum (hu.mul_left B)).trans_eq tsum_mul_left⟩
 
 omit [∀ i, CompleteSpace (E i)] in
-/-- **The spectral approximation estimate on `𝕋ᵈ`**: for `s ≥ 0`, the Fourier truncation to
-`|k|_∞ ≤ N` of a field `u` of finite `Hˢ` norm, `‖u‖²_{Hˢ} = Σ_k (1 + |2πk|²)^s ‖u k‖²`, has the
-error `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}` (`sobolev_sub_starProjection_band_le` with
-`t = 0`). Applied to `d u`, with `d P_N = P_N d` (`reducingSubcomplex_band`), it bounds
-`‖d (u - P_N u)‖` by `(2π (N + 1))^{-s} ‖d u‖_{Hˢ}`: a Jackson estimate of order `s`. -/
+/-- `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}` on `𝕋ᵈ` for `s ≥ 0`. -/
 theorem norm_sub_starProjection_band_le (S : SymbolComplex 𝕜 (Measure.count : Measure (d → ℤ)) c E)
     {s : ℝ} (hs : 0 ≤ s) (N : ℕ) {i : ι} [(S.band (bandN N) i).HasOrthogonalProjection]
     {u : Lp (E i) 2 (Measure.count : Measure (d → ℤ))}

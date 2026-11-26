@@ -5,67 +5,26 @@ public import Feec.Models.StarShaped.FiniteElement
 public import Feec.FiniteElement.PolyOrder
 
 /-!
-# The higher-order finite element method on star-shaped domains and parallelepipeds
+# The higher-order finite element method on star-shaped domains
 
-Let `Ω ⊆ ℝⁿ` be a bounded domain star-shaped with respect to a ball (`StarDomain`) with a family
-`M_N` of conforming, uniformly shape-regular and quasi-uniform meshes, `h_N → 0` (`MeshFamily`).
-For every admissible sequence `S` (`P_{r_k}Λᵏ`, `P_{r_k}⁻Λᵏ` and the mixed rows), both
-boundary-condition families (`MeshFamily.poly`, `MeshFamily.polyMin`; `Min` for `H̊Λ(Ω)`), the
-finite element theory of the Whitney forms (`Feec.Models.StarShaped.FiniteElement`) holds at every
-order, from the uniformly bounded cochain projections of `Feec.Models.StarShaped.PolySmoothing`.
+On a bounded domain star-shaped with respect to a ball with a shape-regular, quasi-uniform mesh
+family, the complexes of every admissible sequence (`MeshFamily.poly`) are conforming families with
+Jackson estimates of order `h_N^{s+1}` for `C^{s+2}` forms.
 
-**Approximation, unconditionally.** The interpolation error on shape-regular meshes gives the rate
-`h_N^{s+1}` for `C^{s+2}` forms (`MeshFamily.exists_mem_poly_le`,
-`MeshFamily.exists_mem_polyMin_le`; degreewise `MeshFamily.exists_mem_poly_le_of_isCsForm` for the
-class `StarDomain.IsCsForm s`, `C^{s+2}` on `cl Ω`, and `StarDomain.IsCsFormMin s`, vanishing
-outside `Ω`), and with the density of smooth forms the graph-norm density of the spaces
-(`MeshFamily.eventually_exists_poly_near`, `MeshFamily.tendsto_infDist_poly`).
+## Main results
 
-**The finite element theorems** (`MeshFamily`, every `S`):
-* the complexes of `S` are **conforming families** (`MeshFamily.polyFamily`,
-  `MeshFamily.polyFamilyMin`) with the **Jackson estimates** of order `h_N^{s+1}`
-  (`MeshFamily.polyJackson`, `MeshFamily.polyJacksonMin`), so the static FEEC theorem
-  (`Feec.HilbertComplex.ConformingFamily.staticFEEC`: uniform discrete Poincaré inequality,
-  well-posedness and stability, harmonic gap, cohomology, quasi-optimality, convergence) holds;
-* **`mixed_rate_poly`**: error `≤ K L h_N^{s+1}` for solutions of class `IsCsForm s` and `S` of
-  order `s` (`Feec.FiniteElement.PolyOrder`), `K` independent of `N`, of the solution and of `L`
-  ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), and the degreewise form
-  `mixed_rate_poly_of_polyOrderAt` (`Feec.FiniteElement.PolyOrderAt`: only the degrees of the
-  problem matter, e.g. order `h²` of the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` on `1`-forms);
-* `exists_tendstoUniformlyOn_window_poly`: convergence of the semi-discrete Hodge wave equation on
-  every window ([QuennevilleBelair2015], Thm 4.14), and its rate `O(h_N^{s+1})` for smooth
-  solutions (`norm_sub_le_window_poly_smooth`, `norm_sub_le_window_poly_smooth_of_polyOrderAt`);
-* the same with vanishing boundary DOFs (`..._polyMin`, `..._windowMin_poly...`).
-
-**Remaining hypotheses.** On a general star-shaped domain the only hypothesis is the Poincaré
-inequality of `HΛ(Ω)`, resp. `H̊Λ(Ω)` (`HasPoincare`, equivalently closed range), used by the
-static theorems and `mixed_rate_poly(_of_polyOrderAt)` (and their `Min` versions); it holds on
-every bounded Lipschitz domain through the regularized Poincaré and Bogovskiĭ operators
-([CostabelMcIntosh2010]), a theory absent from Mathlib. The harmonic gap and the cohomology also
-use the finite-dimensionality of the harmonic forms; the rate theorems do not
-(`ConformingFamily.rate`). The cochain
-projections, the approximation results and the wave convergence and rates are proved with no
-hypothesis.
-
-**Parallelepipeds and non-vacuity** (`Feec.Models.Parallelepiped.StarShaped`): on every
-parallelepiped, for every quasi-uniform shape-regular mesh family, the Poincaré inequalities are
-theorems and the rates hold unconditionally (`Parallelepiped.mixed_rate_poly_general`); the cube
-and the parallelepipeds with their (image) Freudenthal meshes satisfy all the hypotheses for the
-bottom row (`CubeWitness.mixed_rate_lagrangeP2`, `ParallelepipedWitness.mixed_rate_lagrangeP2`).
+* `MeshFamily.exists_uniform_polyProj`: uniformly bounded smoothed cochain projections.
+* `MeshFamily.exists_mem_poly_le`: the interpolation error of order `h_N^{s+1}`.
+* `MeshFamily.mixed_rate_poly`: the rate `h^{s+1}` of the mixed method, given a Poincaré bound.
+* `MeshFamily.exists_tendstoUniformlyOn_window_poly`: convergence of the semi-discrete scheme.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (Thm 3.4, 3.6), Thm 3.8, Thm 3.9, §5.5 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1–3.2
-  (shape-regular families, interpolation error)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
-  solutions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
-* [M. Costabel, A. McIntosh, *On Bogovskiĭ and Regularized Poincaré Integral Operators for de Rham Complexes on Lipschitz Domains*][CostabelMcIntosh2010]
-  (the Poincaré inequality on bounded Lipschitz domains)
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -87,9 +46,6 @@ section Interp
 
 variable (S : PolySeq)
 
-/-- **Taylor approximation on a simplex**: for a `C^{s+1}` degree-`k` field `w` with
-`‖D^{s+1} w‖ ≤ M` on `T`, the degree-`k` part `P` of its Taylor polynomial of order `s` at a
-vertex lies in `P_sΛᵏ` and `‖w - P‖ ≤ h_T^{s+1} M` on `T`. -/
 theorem exists_polySpace_near_diam {k s : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {w : FormField n} (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
     (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) :
@@ -114,12 +70,6 @@ theorem exists_polySpace_near_diam {k s : ℕ} {T : Affine.Simplex ℝ (Fin n �
   rw [e]
   exact (norm_degPart_le k _).trans htay
 
-/-- **The pointwise interpolation error of the canonical interpolant `Π_T` of an admissible
-sequence on a shape-regular simplex** ([Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7): if
-`P_sΛᵏ ⊆ P(T)ᵏ` and `‖D^{s+1} w‖ ≤ M` on `T`, then
-`‖w - Π_T w‖ ≤ (1 + B D) h_T^{s+1} M` on `T`, with `B` the DOF constant of the shape-regular family
-and `D` the coefficient constant of the degrees of freedom (Bramble–Hilbert through the DOF bound
-and the DOF stability). -/
 theorem norm_sub_polyLocalInterp_le {k s : ℕ} (hs : polySpace n s k ≤ S.space n k)
     {C c B D : ℝ} (hB : PolyDofBound S n k C c B) (hD0 : 0 ≤ D) (hD : PolyCoeffBound S n k D)
     {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} (hS : IsShapeRegular Sset C c)
@@ -177,8 +127,7 @@ namespace MeshFamily
 
 variable {D : StarDomain n} (F : MeshFamily D) [NeZero n] (S : PolySeq)
 
-/-- **The complex `Vₕ(S, M_N)` of the admissible sequence `S`** (`P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in
-degree `k`) on the mesh `M_N`, as a subcomplex of `HΛ(Ω)`. -/
+/-- The complex `Vₕ(S, M_N)` of the admissible sequence `S`, a subcomplex of `HΛ(Ω)`. -/
 def poly (N : ℕ) : D.complex.Subcomplex :=
   (deRham ℝ n).maximalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
     (S.subcomplex (F.mesh N) (F.isOpen_domain N))
@@ -186,8 +135,7 @@ def poly (N : ℕ) : D.complex.Subcomplex :=
 instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.poly S N).V k) :=
   (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
 
-/-- **The complex `V̊ₕ(S, M_N)` of `S` with vanishing boundary DOFs** on the mesh `M_N`, as a
-subcomplex of `H̊Λ(Ω)`. -/
+/-- The complex `V̊ₕ(S, M_N)` of `S` with vanishing boundary DOFs, a subcomplex of `H̊Λ(Ω)`. -/
 def polyMin (N : ℕ) : D.complexMin.Subcomplex :=
   (deRham ℝ n).minimalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
     (S.subcomplexMin (F.mesh N) (F.isOpen_domain N) D.x₀ (F.strict_mesh N))
@@ -195,9 +143,8 @@ def polyMin (N : ℕ) : D.complexMin.Subcomplex :=
 instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.polyMin S N).V k) :=
   (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
 
-/-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` on the family**,
-in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.5; [ChristiansenWinther2008]), with no
-hypothesis beyond shape regularity and quasi-uniformity. -/
+/-- Uniformly bounded smoothed cochain projections onto the complexes of `S` on the family, in `L²`
+and in every graph norm. [AFW2010], §5.5; [ChristiansenWinther2008] -/
 theorem exists_uniform_polyProj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
     ∃ π : (F.poly S N).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
@@ -211,8 +158,6 @@ theorem exists_uniform_polyProj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
     (fun Θ hΘ S' => ∃ π : S'.CochainProjection, (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧
       ∀ i j, π.IsGraphBounded i j K) ⟨π, h1, h2⟩
 
-/-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` with vanishing
-boundary DOFs on the family**, in `L²` and in every graph norm of `H̊Λ(Ω)`. -/
 theorem exists_uniform_polyProjMin : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
     ∃ π : (F.polyMin S N).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
@@ -234,16 +179,13 @@ namespace StarDomain
 
 variable (D : StarDomain n)
 
-/-- A `C^m` form has a bounded `m`-th derivative on the compact `cl Ω`. -/
 theorem exists_bound_iteratedFDeriv {m : ℕ} {w : FormField n} (hw : ContDiff ℝ m w) :
     ∃ L, 0 ≤ L ∧ ∀ y ∈ closure D.Ω, ‖iteratedFDeriv ℝ m w y‖ ≤ L := by
   obtain ⟨L, hL⟩ := D.isCompact_closure.exists_bound_of_continuousOn
     (hw.continuous_iteratedFDeriv le_rfl).continuousOn
   exact ⟨max L 0, le_max_right _ _, fun y hy => (hL y hy).trans (le_max_left _ _)⟩
 
-/-- `x ∈ L²(Ω; Λʲ)` is a `C^{s+2}` form of degree `j` whose `(s+1)`-st derivative and that of its
-exterior derivative are bounded by `L` on `cl Ω` (trivially true in negative degrees): the
-regularity class of the rate `h^{s+1}` (for `s = 0` the class `IsC2Form`, with `‖D¹w‖ = ‖Dw‖`). -/
+/-- `x` is a `C^{s+2}` form of degree `j` with `(s+1)`-st derivative bounds `L` on `cl Ω`. -/
 def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ D.Ω (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧
@@ -285,8 +227,7 @@ namespace MeshFamily
 
 variable {D : StarDomain n} (F : MeshFamily D) (S : PolySeq)
 
-/-- The DOF constant `B_k` of `S` for the shape-regularity constants of the family
-(`PolyDofBound`). -/
+/-- The DOF constant `B_k` of `S` for the shape-regularity constants of the family. -/
 def polyDofConst (k : ℕ) : ℝ := (exists_polyDofBound (n := n) S k F.C F.c).choose
 
 theorem polyDofConst_nonneg (k : ℕ) : 0 ≤ F.polyDofConst S k :=
@@ -295,8 +236,7 @@ theorem polyDofConst_nonneg (k : ℕ) : 0 ≤ F.polyDofConst S k :=
 theorem polyDofBound_polyDofConst (k : ℕ) : PolyDofBound S n k F.C F.c (F.polyDofConst S k) :=
   (exists_polyDofBound (n := n) S k F.C F.c).choose_spec.2
 
-/-- The constant of the `L²` interpolation estimate of degree `k` of `S` on the family:
-`#Λᵏ |Ω|^{1/2} (1 + B_k D_k)`, independent of the mesh and of the order. -/
+/-- The constant `#Λᵏ |Ω|^{1/2} (1 + B_k D_k)` of the `L²` interpolation estimate of `S`. -/
 def polyInterpConst (k : ℕ) : ℝ :=
   Fintype.card (formIdx n k) * (volume.real D.Ω ^ (1 / 2 : ℝ) *
     (1 + F.polyDofConst S k * polyCoeffConst n S k))
@@ -307,14 +247,12 @@ theorem polyInterpConst_nonneg (k : ℕ) : 0 ≤ F.polyInterpConst S k := by
   have := polyCoeffConst_nonneg (n := n) S k
   positivity
 
-/-- The constant `B_j = A_j + A_{j+1}` of the graph-norm interpolation error of `S` in
-degree `j`. -/
+/-- The constant `B_j = A_j + A_{j+1}` of the graph-norm interpolation error of `S`. -/
 def polyInterpBound (j : ℤ) : ℝ := F.polyInterpConst S j.toNat + F.polyInterpConst S (j.toNat + 1)
 
 theorem polyInterpBound_nonneg (j : ℤ) : 0 ≤ F.polyInterpBound S j :=
   add_nonneg (F.polyInterpConst_nonneg _ _) (F.polyInterpConst_nonneg _ _)
 
-/-- The global canonical interpolant on a simplex is the local one. -/
 theorem globalInterp_apply_eq_localInterp (E : LocalElement n) (M : SimplicialMesh n) (k : ℕ)
     (w : contForms n) (T : M.simplices) :
     ((E.globalInterp M k w : E.Piecewise M k) T) = E.localInterp T k w :=
@@ -322,9 +260,6 @@ theorem globalInterp_apply_eq_localInterp (E : LocalElement n) (M : SimplicialMe
     rw [LocalElement.localDof_globalInterp _ _ _ _ _ _ hg,
       LocalElement.localDof_localInterp _ _ _ _ _ hg]
 
-/-- **The pointwise interpolation error on the meshes of the family**: for `w ∈ C^{s+1}` of
-degree `k` with `‖D^{s+1} w‖ ≤ L` on `cl Ω` and `P_sΛᵏ ⊆ P(T)ᵏ`, on every closed simplex,
-`|w - Π_h w| ≤ (1 + B D) h_N^{s+1} L`. -/
 theorem abs_sub_globalInterp_le [NeZero n] {N k s : ℕ} (hs : polySpace n s k ≤ S.space n k)
     {w : FormField n} (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {L : ℝ}
     (hL : ∀ y ∈ closure D.Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L)
@@ -359,11 +294,8 @@ theorem abs_sub_globalInterp_le [NeZero n] {N k s : ℕ} (hs : polySpace n s k �
 
 variable [NeZero n]
 
-/-- **The `L²` interpolation error of order `s + 1` of an admissible sequence on the meshes of the
-family** ([Arnold2018], Ch. 7; [Ciarlet2002], Thm 3.1.4): for a `C^{s+2}` degree-`k` form `w` with
-`‖D^{s+1} w‖ ≤ L` and `‖D^{s+1} dw‖ ≤ L'` on `cl Ω`, and `P_sΛᵏ ⊆ P(T)ᵏ`,
-`P_sΛᵏ⁺¹ ⊆ P(T)ᵏ⁺¹`, the canonical interpolant `v = Π_N w ∈ Vₕᵏ` satisfies
-`‖w - v‖ ≤ A_k h_N^{s+1} L` and `‖dw - dv‖ ≤ A_{k+1} h_N^{s+1} L'`. -/
+/-- The `L²` interpolation error of order `h_N^{s+1}` of an admissible sequence for `C^{s+2}` forms.
+[Arnold2018], Ch. 7; [Ciarlet2002], Thm 3.1.4 -/
 theorem exists_mem_poly_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
     (hs' : polySpace n s (k + 1) ≤ S.space n (k + 1)) {w : FormField n}
     (hw : ContDiff ℝ (s + 2) w) (hdeg : ∀ x, IsDeg k (w x)) {L L' : ℝ} (hL0 : 0 ≤ L)
@@ -409,9 +341,6 @@ theorem exists_mem_poly_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
       ).trans_eq ?_) <;>
   · rw [F.domain_eq N, polyInterpConst]; push_cast; ring
 
-/-- **The `L²` interpolation error with vanishing boundary DOFs**: for a `C^{s+2}` form `w`
-vanishing outside `Ω`, the canonical interpolant lies in `V̊ₕᵏ ⊆ H̊Λᵏ(Ω)`, with the estimates of
-`exists_mem_poly_le`. -/
 theorem exists_mem_polyMin_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
     (hs' : polySpace n s (k + 1) ≤ S.space n (k + 1)) {w : FormField n}
     (hw : ContDiff ℝ (s + 2) w) (hdeg : ∀ x, IsDeg k (w x)) (hsupp : ∀ x ∉ D.Ω, w x = 0)
@@ -459,9 +388,6 @@ theorem exists_mem_polyMin_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n 
 
 /-! ### Degreewise rates -/
 
-/-- **Degreewise interpolation error of order `s + 1`**: for `x` with `IsCsForm s j L x` and a
-sequence reproducing `P_s` in the degrees `j, j + 1` (`PolyOrderAt`), some `v ∈ Vₕʲ` has
-`‖x - v‖ ≤ B_j L h_N^{s+1}` and `‖d (x - v)‖ ≤ B_j L h_N^{s+1}`. -/
 theorem exists_mem_poly_le_of_isCsForm {s : ℕ} {j : ℤ} (hS : PolyOrderAt n S s j) {L : ℝ}
     {x : L2F ℝ D.Ω (formIdx n j)} (hx : D.IsCsForm s j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (F.poly S N).V j,
@@ -489,8 +415,6 @@ theorem exists_mem_poly_le_of_isCsForm {s : ℕ} {j : ℤ} (hS : PolyOrderAt n S
   rw [hval, e]
   linarith
 
-/-- **Degreewise interpolation error of order `s + 1` with vanishing boundary DOFs**, in
-`H̊Λ(Ω)`. -/
 theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : PolyOrderAt n S s j)
     {L : ℝ} {x : L2F ℝ D.Ω (formIdx n j)} (hx : D.IsCsFormMin s j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (F.polyMin S N).V j,
@@ -520,9 +444,6 @@ theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : PolyOrder
 
 /-! ### Density of the higher-order complexes -/
 
-/-- **Graph-norm density of the higher-order spaces in `HΛᵏ(Ω)`**: the canonical interpolants of
-smooth forms converge at rate `h_N` (`exists_mem_poly_le` with `s = 0`,
-`eventually_exists_graph_of_smooth`). -/
 theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complex.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.poly S N).V k, ‖x - v‖ < ε ∧
@@ -551,13 +472,11 @@ theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hdv,
     hv2.trans (le_add_of_nonneg_left hb0)⟩
 
-/-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.poly S N).V k, ‖x - v‖ < ε :=
   Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) k x hε
 
-/-- **Degreewise approximation in every graph norm of `HΛ(Ω)`** by the higher-order spaces. -/
 theorem eventually_exists_poly_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.poly S N).V i, ‖x - v‖ < ε ∧
@@ -567,16 +486,12 @@ theorem eventually_exists_poly_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
   Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) i x hε
 
-/-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_poly (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.poly S N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
   Subcomplex.tendsto_infDist_of_lt (S := fun N => F.poly S N) q fun _ ha =>
     F.eventually_exists_poly_lt S j q ha
 
-/-- **Graph-norm density of the higher-order spaces with vanishing boundary DOFs in
-`H̊Λᵏ(Ω)`**: the canonical interpolants of smooth forms vanishing outside `Ω` lie in `V̊ₕᵏ` and
-converge at rate `h_N` (`exists_mem_polyMin_le`, `eventually_exists_graph_of_smooth_min`). -/
 theorem eventually_exists_polyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complexMin.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.polyMin S N).V k, ‖x - v‖ < ε ∧
@@ -605,14 +520,11 @@ theorem eventually_exists_polyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hdv,
     hv2.trans (le_add_of_nonneg_left hb0)⟩
 
-/-- **`L²` density of the higher-order spaces with vanishing boundary DOFs** `V̊ₕᵏ` in
-`L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_polyMin_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.polyMin S N).V k, ‖x - v‖ < ε :=
   Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_polyMin_graph S k x hx hε) k x hε
 
-/-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.polyMin S N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
@@ -635,8 +547,7 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((F.polyMin S N).window a m).V i) :=
   inferInstanceAs (FiniteDimensional ℝ ((F.polyMin S N).V (a + i)))
 
-/-- **The finite element complexes of an admissible sequence `S` on the mesh family**, with the
-smoothed projections (`exists_uniform_polyProj`), a conforming family of `HΛ(Ω)`. -/
+/-- The complexes of `S` on the mesh family, a conforming family of `HΛ(Ω)`. -/
 def polyFamily : ConformingFamily D.complex ℕ :=
   .ofExists atTop (F.poly S)
     (by
@@ -645,8 +556,7 @@ def polyFamily : ConformingFamily D.complex ℕ :=
       exact ⟨K, π, hb⟩)
     (F.tendsto_infDist_poly S)
 
-/-- **The finite element complexes of `S` with vanishing boundary DOFs on the mesh family**, a
-conforming family of `H̊Λ(Ω)`. -/
+/-- The complexes of `S` with vanishing boundary DOFs, a conforming family of `H̊Λ(Ω)`. -/
 def polyFamilyMin : ConformingFamily D.complexMin ℕ :=
   .ofExists atTop (F.polyMin S)
     (by
@@ -659,9 +569,7 @@ def polyFamilyMin : ConformingFamily D.complexMin ℕ :=
 
 @[simp] theorem polyFamilyMin_V : (F.polyFamilyMin S).V = F.polyMin S := rfl
 
-/-- **The Jackson estimate of the complexes of `S` on the mesh family**: for `s : ℕ`, the
-`C^{s+2}` forms on `cl Ω` (`StarDomain.IsCsForm s`) of the degrees where `S` reproduces `P_s`
-(`PolyOrderAt`) at the order `h_N^{s+1}` (`exists_mem_poly_le_of_isCsForm`). -/
+/-- The Jackson estimate of order `h_N^{s+1}` of the complexes of `S`. -/
 def polyJackson : (F.polyFamily S).Jackson ℕ where
   meshSize N := (F.mesh N).meshSize
   meshSize_nonneg N := (F.meshSize_pos N).le
@@ -673,8 +581,7 @@ def polyJackson : (F.polyFamily S).Jackson ℕ where
   jackson s N _ _ _ hL hx := by
     rw [Real.rpow_natCast, ← mul_assoc]; exact F.exists_mem_poly_le_of_isCsForm S hx.1 hx.2 hL N
 
-/-- **The Jackson estimate of the complexes of `S` with vanishing boundary DOFs**: the forms of
-class `StarDomain.IsCsFormMin s` at the order `h_N^{s+1}`. -/
+/-- The Jackson estimate of order `h_N^{s+1}` of the complexes of `S` with vanishing DOFs. -/
 def polyJacksonMin : (F.polyFamilyMin S).Jackson ℕ where
   meshSize N := (F.mesh N).meshSize
   meshSize_nonneg N := (F.meshSize_pos N).le
@@ -687,12 +594,6 @@ def polyJacksonMin : (F.polyFamilyMin S).Jackson ℕ where
     rw [Real.rpow_natCast, ← mul_assoc]
     exact F.exists_mem_polyMin_le_of_isCsFormMin S hx.1 hx.2 hL N
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method for smooth solutions**
-([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), degreewise form, under the Poincaré inequality of
-`HΛ(Ω)`: if `S` reproduces `P_s` in the degrees `i, i + 1, j, j + 1` (`PolyOrderAt`) and `σ`,
-`u`, `P_𝔅 u` and the harmonic part `q` are `IsCsForm s` with bound `L` (`C^{s+2}` on `cl Ω`), the
-error of the discrete solutions is `≤ K L h_N^{s+1}`, with `K` independent of `N`, of the solution
-and of `L`. No finite-dimensionality of `ℌ` is needed. -/
 theorem mixed_rate_poly_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex cP) {s : ℕ}
     {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
@@ -720,10 +621,8 @@ theorem mixed_rate_poly_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex cP
   rw [← Real.rpow_natCast]
   exact h
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method for smooth solutions**
-([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), under the Poincaré inequality of `HΛ(Ω)`, for a
-sequence of order `s` in every degree (`PolyOrder`, e.g. `s + 1 ≤ r_k`): error
-`≤ K L h_N^{s+1}` for solutions of class `IsCsForm s`. -/
+/-- Under the Poincaré inequality, the higher-order mixed method converges at the order `h^{s+1}`
+for `C^{s+2}` solutions. [AFW2010], Thm 3.9; [Arnold2018], Ch. 7 -/
 theorem mixed_rate_poly {cP : ℝ} (hP : HasPoincare D.complex cP) {s : ℕ}
     (hS : PolyOrder n S s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) :
@@ -744,9 +643,8 @@ theorem mixed_rate_poly {cP : ℝ} (hP : HasPoincare D.complex cP) {s : ℕ}
       K * L * (F.mesh N).meshSize ^ (s + 1) :=
   F.mixed_rate_poly_of_polyOrderAt S hP (hS.polyOrderAt i) (hS.polyOrderAt j) hij hjk
 
-/-- **Convergence of the semi-discrete Hodge wave equation** on every window of `HΛ(Ω)` for the
-complexes of `S` ([QuennevilleBelair2015], Thm 4.14), with no hypothesis: the higher-order windows
-approximate every point of the graph space (`eventually_exists_poly_near`). -/
+/-- Convergence of the semi-discrete Hodge wave equation on every window of `HΛ(Ω)` for the
+complexes of `S`. [QuennevilleBelair2015], Thm 4.14 -/
 theorem exists_tendstoUniformlyOn_window_poly (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
     (x : (D.complex.window a m).wave.domain) :
     ∃ ξh ξh' : ℕ → ℝ → (D.complex.window a m).totalD.GraphSpace,
@@ -760,9 +658,6 @@ theorem exists_tendstoUniformlyOn_window_poly (a : ℤ) (m : ℕ) (t₀ t₁ : �
   Subcomplex.exists_tendstoUniformlyOn_window_of
     (fun i x _ hε => F.eventually_exists_poly_near S i x hε) a m t₀ t₁ x
 
-/-- **Graph-norm rate in the total space of a window** for a sequence of order `s`: if every
-component of `ζ ∈ Γ(𝐝)` is `IsCsForm s` with bound `L`, some point of the window of `Vₕ` is
-within `(m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}` of `ζ`. -/
 theorem exists_mem_window_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
     (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i))
     (ζ : (D.complex.window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
@@ -779,12 +674,6 @@ theorem exists_mem_window_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
         fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
     fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
-/-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation** for the
-complexes of `S` ([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7), degreewise form, on
-every window of `HΛ(Ω)`, with no hypothesis beyond the regularity of the solution: for a weak
-solution `ξ` in `C¹([t₀, t₁]; Γ(𝐝))` whose values and time derivatives have `IsCsForm s`
-components with bound `L`, and the semi-discrete solutions `ξₕ` started at the elliptic
-projection, `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}`. -/
 theorem norm_sub_le_window_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
     {m : ℕ} (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → (D.complex.window a m).totalD.GraphSpace}
@@ -808,8 +697,6 @@ theorem norm_sub_le_window_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
     ⟨F.exists_mem_window_poly_le S hS (ξ τ) hL0 (fun i => (hreg τ hτ i).1) N,
       F.exists_mem_window_poly_le S hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
 
-/-- The case of a sequence of order `s` in every degree (`PolyOrder`) of
-`norm_sub_le_window_poly_smooth_of_polyOrderAt`. -/
 theorem norm_sub_le_window_poly_smooth {s : ℕ} (hS : PolyOrder n S s) (a : ℤ)
     (m : ℕ) {t₀ t₁ : ℝ} {ξ ξ' : ℝ → (D.complex.window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
@@ -831,11 +718,6 @@ theorem norm_sub_le_window_poly_smooth {s : ℕ} (hS : PolyOrder n S s) (a : ℤ
   F.norm_sub_le_window_poly_smooth_of_polyOrderAt S (fun _ => hS.polyOrderAt _) hξ hξh h0 hL0
     hreg N ht
 
-/-! #### Vanishing boundary DOFs -/
-
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing boundary
-DOFs for smooth solutions**, degreewise form, under the Poincaré inequality of `H̊Λ(Ω)`, for
-solutions of class `IsCsFormMin s` (`C^{s+2}`, vanishing outside `Ω`). -/
 theorem mixed_rate_polyMin_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complexMin cP) {s : ℕ}
     {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
@@ -864,8 +746,6 @@ theorem mixed_rate_polyMin_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex
   rw [← Real.rpow_natCast]
   exact h
 
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing boundary
-DOFs** for a sequence of order `s` in every degree. -/
 theorem mixed_rate_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) {s : ℕ}
     (hS : PolyOrder n S s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) :
@@ -887,8 +767,6 @@ theorem mixed_rate_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) {s : �
       K * L * (F.mesh N).meshSize ^ (s + 1) :=
   F.mixed_rate_polyMin_of_polyOrderAt S hP (hS.polyOrderAt i) (hS.polyOrderAt j) hij hjk
 
-/-- **Graph-norm rate in the total space of a window of `H̊Λ(Ω)`** for a sequence of order
-`s`. -/
 theorem exists_mem_windowMin_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
     (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i))
     (ζ : (D.complexMin.window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
@@ -906,8 +784,6 @@ theorem exists_mem_windowMin_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
         fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
     fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
-/-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation with vanishing
-boundary DOFs** for the complexes of `S`, degreewise form, on every window of `H̊Λ(Ω)`. -/
 theorem norm_sub_le_windowMin_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
     {m : ℕ} (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → (D.complexMin.window a m).totalD.GraphSpace}

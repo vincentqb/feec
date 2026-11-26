@@ -7,30 +7,14 @@ public import Feec.Fourier.Weak
 /-!
 # The `L²` de Rham complex of `ℝᵈ`, in every dimension and degree
 
-The de Rham complex `L²Λ⁰(ℝᵈ) → ⋯ → L²Λᵈ(ℝᵈ)` with its maximal domains, on the Fourier side
-(Plancherel, `Feec.Fourier.Euclidean.fourier`): `k`-forms are `L²(ℝᵈ; Λᵏ)` and the exterior
-derivative is the multiplier `d_ξ = i ξ ∧ ·` at `ξ = 2πx` (`Feec.Fourier.Exterior.deRham`).
+The de Rham complex `L²Λ⁰(ℝᵈ) → ⋯ → L²Λᵈ(ℝᵈ)` with its maximal domains, on the Fourier side: it has
+no closed range in degrees `1 ≤ k ≤ d` and, for `d ≥ 1`, no `L²` harmonic forms.
 
-In contrast with the torus (`Feec.Models.Torus.DeRham`):
+## Main results
 
-* **no closed range** in degrees `1 ≤ k ≤ d` (`not_closedRangeAt`): the symbol degenerates at low
-  frequencies, so there is no Poincaré inequality;
-* **no `L²` harmonic forms** in any degree, for `d ≥ 1` (`harmonic_eq_bot`): the fibre harmonic
-  spaces vanish off `ξ = 0`, a null set;
-* hence the complex is not exact although `ℌᵏ = 0` (`boundaries_ne_cycles`): the cycles are the
-  closure of the boundaries;
-* `window d`, `windowReal`: the full window `Λ⁰ → ⋯ → Λᵈ` and its real structure.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
-  (Hilbert complexes; closed range and Poincaré inequalities)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (Hilbert complexes; closed range
-  and Poincaré inequalities)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `not_closedRangeAt`: no closed range in degrees `1 ≤ k ≤ d`.
+* `harmonic_eq_bot`: no `L²` harmonic forms, for `d ≥ 1`.
+* `boundaries_ne_cycles`: the complex is not exact in degrees `1 ≤ k ≤ d`.
 -/
 
 @[expose] public noncomputable section
@@ -46,13 +30,12 @@ variable (d : Type*) [Fintype d] [LinearOrder d]
 /-- `L²` `k`-forms on `ℝᵈ`, by their Fourier transforms. -/
 abbrev L2Form (k : ℤ) : Type _ := Lp (Form ℂ d k) 2 (volume : Measure (EuclideanSpace ℝ d))
 
-/-- **The `L²` de Rham complex of `ℝᵈ`** (Fourier side). -/
+/-- The `L²` de Rham complex of `ℝᵈ`, on the Fourier side. -/
 abbrev complex : HilbertComplex ℂ (ComplexShape.up ℤ) (L2Form d) :=
   Fourier.Euclidean.complex (deRham d)
 
 variable {d}
 
-/-- The de Rham symbol `Λⁱ → Λʲ`, `j = i + 1`, is not identically zero for `0 ≤ i < #d`. -/
 theorem deRham_m_ne_zero {i j : ℤ} (hij : i + 1 = j) (hi0 : 0 ≤ i) (hi : i < Fintype.card d) :
     (deRham d).m i j ≠ 0 := by
   classical
@@ -80,7 +63,7 @@ theorem deRham_m_ne_zero {i j : ℤ} (hij : i + 1 = j) (hi0 : 0 ≤ i) (hi : i <
     simp
   · intro h; exact absurd hj h
 
-/-- **No closed range on `ℝᵈ`** in the degrees `1 ≤ k ≤ #d`. -/
+/-- No closed range on `ℝᵈ` in the degrees `1 ≤ k ≤ #d`. -/
 theorem not_closedRangeAt {k : ℕ} (hk : k < Fintype.card d) :
     ¬ (complex d).ClosedRangeAt (k + 1) := by
   have hp : (ComplexShape.up ℤ).prev ((k : ℤ) + 1) = k := (ComplexShape.up ℤ).prev_eq' rfl
@@ -90,7 +73,7 @@ theorem not_closedRangeAt {k : ℕ} (hk : k < Fintype.card d) :
     rw [hp]; exact deRham_m_ne_zero rfl k.cast_nonneg (by exact_mod_cast hk)
   exact Fourier.Euclidean.not_closedRangeAt one_pos h1 h2
 
-/-- **There are no `L²` harmonic forms on `ℝᵈ`**, in any degree. -/
+/-- For `d ≥ 1` there are no `L²` harmonic forms on `ℝᵈ`, in any degree. -/
 theorem harmonic_eq_bot [Nonempty d] (k : ℤ) : (complex d).harmonic k = ⊥ := by
   rw [eq_bot_iff]
   intro u hu
@@ -109,20 +92,15 @@ theorem harmonic_eq_bot [Nonempty d] (k : ℤ) : (complex d).harmonic k = ⊥ :=
   simp only [Fourier.Euclidean.symbolComplex_m, deRham_harmonic_fibre hξ k] at h1
   exact h1
 
-/-- On `ℝᵈ` the de Rham complex is not exact in degrees `1 ≤ k ≤ #d`, although it has no
-harmonic forms: the boundaries are dense in, but not equal to, the cycles. -/
+/-- On `ℝᵈ` the de Rham complex is not exact in the degrees `1 ≤ k ≤ #d`. -/
 theorem boundaries_ne_cycles {k : ℕ} (hk : k < Fintype.card d) :
     (complex d).boundaries (k + 1) ≠ (complex d).cycles (k + 1) :=
   (complex d).boundaries_ne_cycles_of_not_closedRangeAt (not_closedRangeAt hk)
-
-/-! ### Weak exterior derivatives -/
 
 /-- The exterior derivative of Schwartz `k`-forms, `d ψ = Σ_j dx_j ∧ ∂_j ψ`. -/
 def extDeriv (k : ℤ) :
     𝓢(EuclideanSpace ℝ d, Form ℂ d k) → 𝓢(EuclideanSpace ℝ d, Form ℂ d (k + 1)) :=
   Weak.symbolOp ((deRham d).m k (k + 1))
-
-/-! ### The full window and real forms -/
 
 variable (d) in
 /-- The full window `Λ⁰ → ⋯ → Λᵈ` of the whole-space de Rham symbol complex. -/
@@ -135,13 +113,12 @@ def windowSymbol : SymbolComplex ℂ (volume : Measure (EuclideanSpace ℝ d))
       omega
 
 variable (d) in
-/-- **The full `L²` de Rham complex of `ℝᵈ`** on the window `Fin (d + 1)`. -/
+/-- The full `L²` de Rham complex of `ℝᵈ`, on the window `Fin (d + 1)`. -/
 abbrev window : HilbertComplex ℂ (ComplexShape.window (Fintype.card d + 1))
     fun i : Fin (Fintype.card d + 1) => L2Form d i :=
   (windowSymbol d).toHilbertComplex
 
-/-- **The real structure** of the whole-space de Rham window: real forms have
-`𝓕ω(-ξ) = conj 𝓕ω(ξ)`. -/
+/-- The real structure of the whole-space de Rham window, `𝓕ω(-ξ) = conj 𝓕ω(ξ)`. -/
 def windowReal : (windowSymbol d).RealStructure (Reflection.neg volume) where
   cj _ := entryConj
   antilinear _ a v := entryConj_smul a v

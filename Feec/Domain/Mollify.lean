@@ -9,37 +9,13 @@ public import Mathlib.Analysis.Calculus.BumpFunction.FiniteDimension
 /-!
 # Mollification and dilation on a finite-dimensional real space
 
-Let `E` be a finite-dimensional real normed space with an additive Haar measure (`ℝⁿ`).
+On a bounded open set star-shaped with respect to a ball, dilated mollifications give the density
+of constrained test fields and of smooth fields satisfying an interior constraint.
 
-* `molli φ f = f ⋆ ρ_φ` (`ρ_φ` the normalized bump), an `L²`-contraction (`eLpNorm_molli_le`),
-  smooth (`contDiff_molli`), commuting with derivatives (`iterDeriv_molli`);
-* `dil x₀ c f = f (x₀ + c (· - x₀))`, bounded on `L²` by `2ⁿ` for `c ≥ 1/2`
-  (`eLpNorm_dil_le_of_half_le`), with
-  `∂^{vs} (dil x₀ c f) = c^k dil x₀ c (∂^{vs} f)` (`iterDeriv_dil`);
-* **convergence**: `dil x₀ c (molli φ f) → f` in `L²(E)` as `c → 1` and the bump radius `→ 0`
-  (`eLpNorm_dil_molli_sub_le_of_abs`);
-* **geometry** (`dil_mem_of_starBall`): on a domain star-shaped with respect to a ball,
-  dilating towards the centre moves `cl Ω + B(0, r)` inside `Ω`;
-* **constrained density** (`exists_isTestField_ker_dist_lt`): on a bounded open `Ω` star-shaped
-  with respect to a ball, every `u ∈ L²(Ω; ℝ^ι)` whose zero extension satisfies `A ū = 0` in
-  `𝒟'(E)`, for a row-homogeneous constant-coefficient operator `A` (each output row of a single
-  order, e.g. pointwise algebraic constraints together with `div`), is an `L²` limit of test fields
-  `φ` with `A φ = 0` everywhere. This is the general form of the density of smooth TSD fields in
-  `L²(TSD₀)` (thesis Prop 4.17 density gap).
-* **interior constraints** (`exists_contDiff_ker_on_dist_lt`): if `A u = 0` only in `𝒟'(Ω)` (no
-  boundary condition), `u` is an `L²(Ω)` limit of fields smooth on `E` with `A φ = 0` on `Ω`
-  (mollification followed by an expansion about the centre, `c < 1`,
-  `closedBall_dil_subset_of_starBall`, with the two-sided estimates
-  `eLpNorm_dil_le_of_half_le`, `eLpNorm_dil_molli_sub_le_of_abs`).
+## Main results
 
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  Ch. 4 (convolution, mollifiers, density of `C_c` in `L^p`)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17 and its proof)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `exists_isTestField_ker_dist_lt`: density of constrained test fields.
+* `exists_contDiff_ker_on_dist_lt`: density of smooth fields satisfying an interior constraint.
 -/
 
 @[expose] public noncomputable section
@@ -59,13 +35,10 @@ def molli (φ : ContDiffBump (0 : E)) (f : E → ℝ) : E → ℝ :=
   f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] φ.normed volume
 
 omit [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- `(f ⋆ ρ)(x) = ∫ f(t) ρ(x - t) dt`. -/
 theorem molli_apply (φ : ContDiffBump (0 : E)) (f : E → ℝ) (x : E) :
     molli φ f x = ∫ t, f t * φ.normed volume (x - t) := by
   simp [molli, convolution_def]
 
-/-- **Mollification is an `L²`-contraction** (squared form): by Cauchy–Schwarz against the
-probability density `ρ(x - ·)`, `|(f ⋆ ρ)(x)|² ≤ ∫ ρ(x - t) |f(t)|² dt`, and Tonelli. -/
 theorem lintegral_sq_molli_le (φ : ContDiffBump (0 : E)) {f : E → ℝ}
     (hf : AEStronglyMeasurable f volume) :
     ∫⁻ x, ‖molli φ f x‖ₑ ^ (2 : ℝ) ≤ ∫⁻ x, ‖f x‖ₑ ^ (2 : ℝ) := by
@@ -121,7 +94,6 @@ theorem lintegral_sq_molli_le (φ : ContDiffBump (0 : E)) {f : E → ℝ}
 def dil (x₀ : E) (c : ℝ) (f : E → ℝ) : E → ℝ := fun x => f (x₀ + c • (x - x₀))
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- The dilation is a translation composed with `x ↦ c x`. -/
 theorem dil_eq (x₀ : E) (c : ℝ) (f : E → ℝ) :
     dil x₀ c f = (fun y => f ((x₀ - c • x₀) + y)) ∘ (c • ·) := by
   ext x
@@ -129,18 +101,15 @@ theorem dil_eq (x₀ : E) (c : ℝ) (f : E → ℝ) :
   congr 1
   abel
 
-/-- Mollifications of locally integrable functions are continuous. -/
 theorem continuous_molli (φ : ContDiffBump (0 : E)) {f : E → ℝ}
     (hf : LocallyIntegrable f volume) : Continuous (molli φ f) :=
   (φ.hasCompactSupport_normed).continuous_convolution_right _ hf φ.continuous_normed
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- Dilations of continuous functions are continuous. -/
 theorem continuous_dil (x₀ : E) (c : ℝ) {f : E → ℝ} (hf : Continuous f) :
     Continuous (dil x₀ c f) :=
   hf.comp (by fun_prop)
 
-/-- **Mollification is an `L²`-contraction.** -/
 theorem eLpNorm_molli_le (φ : ContDiffBump (0 : E)) {f : E → ℝ} (hf : MemLp f 2 volume) :
     eLpNorm (molli φ f) 2 volume ≤ eLpNorm f 2 volume := by
   have hm := (continuous_molli φ (hf.locallyIntegrable (by norm_num))).aestronglyMeasurable
@@ -150,7 +119,6 @@ theorem eLpNorm_molli_le (φ : ContDiffBump (0 : E)) {f : E → ℝ} (hf : MemLp
   simp only [ENNReal.toReal_ofNat]
   exact ENNReal.rpow_le_rpow (lintegral_sq_molli_le φ hf.aestronglyMeasurable) (by norm_num)
 
-/-- `f ⋆ ρ = ρ ⋆ f`, in the form used by `ContDiffBump.dist_normed_convolution_le`. -/
 theorem molli_eq_normed_convolution (φ : ContDiffBump (0 : E)) (f : E → ℝ) :
     molli φ f = φ.normed volume ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] f := by
   rw [molli, ← convolution_flip]
@@ -158,9 +126,6 @@ theorem molli_eq_normed_convolution (φ : ContDiffBump (0 : E)) (f : E → ℝ) 
   ext
   simp
 
-/-- For a continuous compactly supported `g`, `dil x₀ c (g ⋆ ρ_φ)` is `ε`-close to `g` in `L²`
-once `|c - 1|` and the bump radius are small: the dilated mollification is uniformly close to `g`,
-with support in a fixed ball. -/
 theorem eLpNorm_dil_molli_sub_le_of_continuous_of_abs (x₀ : E) {g : E → ℝ} (hgc : Continuous g)
     (hgs : HasCompactSupport g) {ε : ℝ} (hε : 0 < ε) :
     ∃ η > 0, η ≤ 1 / 2 ∧ ∀ c : ℝ, |c - 1| < η → ∀ φ : ContDiffBump (0 : E), φ.rOut < η →
@@ -255,19 +220,15 @@ theorem eLpNorm_dil_molli_sub_le_of_continuous_of_abs (x₀ : E) {g : E → ℝ}
   exact ENNReal.ofReal_le_ofReal hε'M
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- The dilation is additive. -/
 theorem dil_add (x₀ : E) (c : ℝ) (f g : E → ℝ) : dil x₀ c (f + g) = dil x₀ c f + dil x₀ c g :=
   rfl
 
-/-- Mollification is additive on locally integrable functions. -/
 theorem molli_add (φ : ContDiffBump (0 : E)) {f g : E → ℝ} (hf : LocallyIntegrable f volume)
     (hg : LocallyIntegrable g volume) : molli φ (f + g) = molli φ f + molli φ g :=
   ConvolutionExists.add_distrib
     (φ.hasCompactSupport_normed.convolutionExists_right _ hf φ.continuous_normed)
     (φ.hasCompactSupport_normed.convolutionExists_right _ hg φ.continuous_normed)
 
-/-- **Dilation with `c ≥ 1/2`** is bounded on `L²(E)`: `‖f(x₀ + c (· - x₀))‖₂ ≤ 2ⁿ ‖f‖₂`,
-`n = dim E` (the norm scales by `c^{-n/2}`). -/
 theorem eLpNorm_dil_le_of_half_le (x₀ : E) {c : ℝ} (hc : 1 / 2 ≤ c) {f : E → ℝ}
     (hf : AEStronglyMeasurable f volume) :
     eLpNorm (dil x₀ c f) 2 volume ≤ 2 ^ Module.finrank ℝ E * eLpNorm f 2 volume := by
@@ -301,9 +262,6 @@ theorem eLpNorm_dil_le_of_half_le (x₀ : E) {c : ℝ} (hc : 1 / 2 ≤ c) {f : E
   rw [smul_eq_mul]
   exact mul_le_mul_left h2 _
 
-/-- **Two-sided dilated mollification converges in `L²(E)`**: for `f ∈ L²(E)` and `ε > 0`,
-`x ↦ (f ⋆ ρ_φ)(x₀ + c (x - x₀))` is `ε`-close to `f` once `|c - 1|` and the bump radius are
-small (`c < 1` allowed). -/
 theorem eLpNorm_dil_molli_sub_le_of_abs (x₀ : E) {f : E → ℝ} (hf : MemLp f 2 volume) {ε : ℝ}
     (hε : 0 < ε) :
     ∃ η > 0, η ≤ 1 / 2 ∧ ∀ c : ℝ, |c - 1| < η → ∀ φ : ContDiffBump (0 : E), φ.rOut < η →
@@ -353,13 +311,11 @@ theorem eLpNorm_dil_molli_sub_le_of_abs (x₀ : E) {f : E → ℝ} (hf : MemLp f
         congr 1
         rw [hε₀d]; field_simp; ring
 
-/-- Mollifications are smooth. -/
 theorem contDiff_molli (φ : ContDiffBump (0 : E)) {f : E → ℝ}
     (hf : LocallyIntegrable f volume) : ContDiff ℝ ∞ (molli φ f) :=
   φ.hasCompactSupport_normed.contDiff_convolution_right _ hf φ.contDiff_normed
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- Dilations of smooth functions are smooth. -/
 theorem contDiff_dil (x₀ : E) (c : ℝ) {f : E → ℝ} (hf : ContDiff ℝ ∞ f) :
     ContDiff ℝ ∞ (dil x₀ c f) :=
   hf.comp (by fun_prop)
@@ -370,9 +326,6 @@ theorem contDiff_dil (x₀ : E) (c : ℝ) {f : E → ℝ} (hf : ContDiff ℝ ∞
 variable {Ω : Set E}
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- **Dilation towards the center of a ball of star-shapedness.** If `Ω` is star-shaped with
-respect to every point of `B(x₀, s)`, `c > 1` and `r < s (c - 1) / 2`, then
-`x₀ + c⁻¹ (q + v - x₀) ∈ Ω` for every `q ∈ closure Ω` and `‖v‖ ≤ r`. -/
 theorem dil_mem_of_starBall {x₀ : E} {s : ℝ}
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) {c r : ℝ} (hc : 1 < c)
     (hr : r < s * (c - 1) / 2) {q : E} (hq : q ∈ closure Ω) {v : E} (hv : ‖v‖ ≤ r) :
@@ -399,7 +352,6 @@ theorem dil_mem_of_starBall {x₀ : E} {s : ℝ}
   abel
 
 omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- The compact set containing the support of the dilated mollification. -/
 theorem isCompact_dilImage (hb : Bornology.IsBounded Ω) (x₀ : E) (c r : ℝ) :
     IsCompact ((fun p : E × E => x₀ + c⁻¹ • (p.1 + p.2 - x₀)) ''
       (closure Ω ×ˢ Metric.closedBall 0 r)) :=
@@ -409,12 +361,10 @@ theorem isCompact_dilImage (hb : Bornology.IsBounded Ω) (x₀ : E) (c r : ℝ) 
 /-! ## Derivatives of mollifications, dilations and reflections -/
 
 omit [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- The convolution `f ⋆ ρ` of a locally integrable `f` with a smooth compactly supported `ρ`. -/
 theorem convolution_apply_mul (ρ f : E → ℝ) (y : E) :
     (f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] ρ) y = ∫ t, f t * ρ (y - t) := by
   simp [convolution_def]
 
-/-- `∂_v (f ⋆ ρ) = f ⋆ ∂_v ρ`. -/
 theorem fderiv_convolution_apply {ρ : E → ℝ} (hρ : IsTest (univ : Set E) ρ) {f : E → ℝ}
     (hf : LocallyIntegrable f volume) (y v : E) :
     fderiv ℝ (f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] ρ) y v =
@@ -425,7 +375,6 @@ theorem fderiv_convolution_apply {ρ : E → ℝ} (hρ : IsTest (univ : Set E) �
   rw [hd.fderiv, convolution_precompR_apply _ hf (hρ.hasCompactSupport.fderiv ℝ)
     (hρ1.continuous_fderiv one_ne_zero)]
 
-/-- `∂^{vs} (f ⋆ ρ) = f ⋆ ∂^{vs} ρ`. -/
 theorem iterDeriv_convolution {ρ : E → ℝ} (hρ : IsTest (univ : Set E) ρ) {f : E → ℝ}
     (hf : LocallyIntegrable f volume) (vs : List E) :
     iterDeriv vs (f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] ρ) =
@@ -441,7 +390,6 @@ theorem iterDeriv_convolution {ρ : E → ℝ} (hρ : IsTest (univ : Set E) ρ) 
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- `∂^l [t ↦ g (y - t)] = (-1)^{#l} (∂^l g)(y - ·)`. -/
 theorem iterDeriv_comp_sub {g : E → ℝ} (hg : ContDiff ℝ ∞ g) (y : E) (l : List E) :
     iterDeriv l (fun t => g (y - t)) = fun t => (-1) ^ l.length * iterDeriv l g (y - t) := by
   induction l with
@@ -461,7 +409,6 @@ theorem iterDeriv_comp_sub {g : E → ℝ} (hg : ContDiff ℝ ∞ g) (y : E) (l 
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- Moving the first derivative to the end (Schwarz). -/
 theorem iterDeriv_append_singleton {g : E → ℝ} (hg : ContDiff ℝ ∞ g) (v : E) (l : List E) :
     iterDeriv (l ++ [v]) g = iterDeriv (v :: l) g := by
   induction l with
@@ -473,7 +420,6 @@ theorem iterDeriv_append_singleton {g : E → ℝ} (hg : ContDiff ℝ ∞ g) (v 
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- **Partial derivatives of a smooth function commute**: `∂^{rev l} g = ∂^l g`. -/
 theorem iterDeriv_reverse {g : E → ℝ} (hg : ContDiff ℝ ∞ g) (l : List E) :
     iterDeriv l.reverse g = iterDeriv l g := by
   induction l generalizing g with
@@ -484,7 +430,6 @@ theorem iterDeriv_reverse {g : E → ℝ} (hg : ContDiff ℝ ∞ g) (l : List E)
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- `∂^{vs} (dil x₀ c f) = c^{#vs} dil x₀ c (∂^{vs} f)`. -/
 theorem iterDeriv_dil (x₀ : E) (c : ℝ) {f : E → ℝ} (hf : ContDiff ℝ ∞ f) (vs : List E) :
     iterDeriv vs (dil x₀ c f) = fun x => c ^ vs.length * iterDeriv vs f (x₀ + c • (x - x₀)) := by
   induction vs with
@@ -511,14 +456,12 @@ namespace ConstCoeffOp
 
 variable {ι κ : Type*} [Fintype ι] [Fintype κ]
 
-/-- `A` is **row-homogeneous** of orders `k`: every term of the output row `j` has order `k j`
-(for example zeroth-order algebraic constraints together with first-order `div`). -/
+/-- `A` is **row-homogeneous** of orders `k`: every term of the output row `j` has order `k j`. -/
 def IsRowHomogeneous (A : ConstCoeffOp E ℝ ι κ) (k : κ → ℕ) : Prop :=
   ∀ j i, ∀ t ∈ A.coeff j i, t.1.length = k j
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] [Fintype κ] in
-/-- Row-homogeneous operators commute with dilations up to the factor `c^{k j}`. -/
 theorem apply_dil {A : ConstCoeffOp E ℝ ι κ} {k : κ → ℕ} (hA : A.IsRowHomogeneous k) (x₀ : E)
     (c : ℝ) {f : ι → E → ℝ} (hf : ∀ i, ContDiff ℝ ∞ (f i)) (j : κ) (x : E) :
     A.apply (fun i => dil x₀ c (f i)) j x = c ^ k j * A.apply f j (x₀ + c • (x - x₀)) := by
@@ -546,15 +489,12 @@ theorem _root_.Feec.Domain.integrable_mul_isTest {f g : E → ℝ} (hf : Locally
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- The reflected kernel `s ↦ ρ (y - s)` is a test function on `E`. -/
 theorem _root_.Feec.Domain.IsTest.comp_sub {ρ : E → ℝ} (hρ : IsTest (univ : Set E) ρ) (y : E) :
     IsTest (univ : Set E) (fun s => ρ (y - s)) :=
   ⟨hρ.contDiff.comp (contDiff_const.sub contDiff_id),
     hρ.hasCompactSupport.comp_homeomorph (Homeomorph.subLeft y), subset_univ _⟩
 
 omit [Fintype ι] [Fintype κ] in
-/-- `P (f ⋆ ρ) (y)` is the pairing of `f` with the formal adjoint of `P` applied to the reflected
-kernel (real scalars). -/
 theorem applyEntry_convolution (P : List (List E × ℝ)) {ρ : E → ℝ}
     (hρ : IsTest (univ : Set E) ρ) {f : E → ℝ} (hf : LocallyIntegrable f volume) (y : E) :
     applyEntry P (f ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume] ρ) y =
@@ -583,8 +523,6 @@ theorem applyEntry_convolution (P : List (List E × ℝ)) {ρ : E → ℝ}
     · exact (integrable_mul_isTest hf ((hρ.iterDeriv vs).comp_sub y)).const_mul c
     · exact integrable_mul_isTest hf (IsTest.applyEntry (adjEntry P) (hρ.comp_sub y))
 
-/-- **`A (f ⋆ ρ)` is a distributional pairing**: `(A (f ⋆ ρ))ⱼ (y) = Σᵢ ∫ fᵢ (Aᵗ ψ)ᵢ` with
-`ψ = eⱼ ρ (y - ·)`. -/
 theorem apply_convolution (A : ConstCoeffOp E ℝ ι κ) {ρ : E → ℝ}
     (hρ : IsTest (univ : Set E) ρ) {f : ι → E → ℝ} (hf : ∀ i, LocallyIntegrable (f i) volume)
     [DecidableEq κ] (j : κ) (y : E) :
@@ -608,8 +546,6 @@ end ConstCoeffOp
 
 /-! ## Dilated mollifications of zero extensions are test functions -/
 
-/-- The support of the dilated mollification of a function vanishing off `Ω` lies in the image
-of `cl Ω × B̄(0, r)` under `(q, v) ↦ x₀ + c⁻¹ (q + v - x₀)`. -/
 theorem support_dil_molli_indicator_subset (f : E → ℝ) (x₀ : E) {c : ℝ} (hc : c ≠ 0)
     (φ : ContDiffBump (0 : E)) :
     Function.support (dil x₀ c (molli φ (Ω.indicator f))) ⊆
@@ -626,8 +562,6 @@ theorem support_dil_molli_indicator_subset (f : E → ℝ) (x₀ : E) {c : ℝ} 
   simp only at huv ⊢
   rw [huv, add_sub_cancel_left, smul_smul, inv_mul_cancel₀ hc, one_smul, add_sub_cancel]
 
-/-- **The dilated mollification of a zero extension is a test function on `Ω`** (`Ω` bounded,
-star-shaped with respect to every point of `B(x₀, s)`, `c > 1`, bump radius `< s (c - 1) / 2`). -/
 theorem isTest_dil_molli_indicator (hb : Bornology.IsBounded Ω) {x₀ : E} {s : ℝ}
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) {f : E → ℝ}
     (hf : LocallyIntegrable (Ω.indicator f) volume) {c : ℝ} (hc : 1 < c)
@@ -649,8 +583,6 @@ theorem isTest_dil_molli_indicator (hb : Bornology.IsBounded Ω) {x₀ : E} {s :
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- Componentwise closeness to the zero extensions: if `‖Φᵢ - ūᵢ‖_{L²(E)} ≤ ε / (#ι + 1)` for
-every `i` and `vᵢ = Φᵢ` a.e. on `Ω`, then `dist u v < ε` in `L²(Ω; ℝ^ι)`. -/
 theorem dist_lt_of_eLpNorm_sub_indicator_le {ι : Type*} [Fintype ι] (hΩ : MeasurableSet Ω)
     {u v : L2F ℝ Ω ι} {Φ : ι → E → ℝ} (hv : ∀ i, (v i : E → ℝ) =ᵐ[volume.restrict Ω] Φ i)
     {ε : ℝ} (hε : 0 < ε)
@@ -681,11 +613,7 @@ theorem dist_lt_of_eLpNorm_sub_indicator_le {ι : Type*} [Fintype ι] (hΩ : Mea
         have : (Fintype.card ι : ℝ) < N ^ 2 := by rw [hN]; nlinarith
         nlinarith [sq_nonneg ε, sq_pos_of_pos hε]
 
-/-- **Density of constrained test fields** on a bounded open `Ω` star-shaped with respect to a
-ball. Let `A` be a row-homogeneous constant-coefficient operator and `u ∈ L²(Ω; ℝ^ι)` whose zero
-extension `ū` satisfies `A ū = 0` in `𝒟'(E)` (tested against all of `C_c^∞(E)`: a boundary
-condition, e.g. `B n = 0` on `∂Ω` for `A = div`). Then `u` is an `L²` limit of test fields
-`φ ∈ C_c^∞(Ω; ℝ^ι)` with `A φ = 0` everywhere: `φ = ū ⋆ ρ` dilated towards the centre. -/
+/-- **Density of constrained test fields** on bounded domains star-shaped with respect to a ball. -/
 theorem exists_isTestField_ker_dist_lt {ι κ : Type*} [Fintype ι] [Fintype κ] [DecidableEq κ]
     (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : E} {s : ℝ} (hs : 0 < s)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω)
@@ -738,17 +666,10 @@ theorem exists_isTestField_ker_dist_lt {ι κ : Type*} [Fintype ι] [Fintype κ]
     exact hηP i c (abs_lt.2 ⟨by linarith [hη₀le i], by linarith [hη₀le i]⟩) φ
       (by rw [hφr]; exact (min_le_left _ _).trans_lt (by linarith [hη₀le i]))
 
-/-! ## Expansion: density of smooth fields satisfying an interior constraint
-
-Running the dilation the other way (`c < 1`, expanding `Ω` about the centre `x₀`) after
-mollifying gives fields smooth on all of `E` that satisfy an *interior* constraint pointwise on a
-neighbourhood of `cl Ω`, but are not compactly supported in `Ω`. -/
+/-! ## Expansion: density of smooth fields satisfying an interior constraint -/
 
 omit [FiniteDimensional ℝ E] [MeasureSpace E] [BorelSpace E]
   [(volume : Measure E).IsAddHaarMeasure] in
-/-- **Expansion about the centre of a ball of star-shapedness.** If `Ω` is star-shaped with
-respect to every point of `B(x₀, s)`, `1/2 ≤ c < 1` and `r < s (1 - c) / 4`, then for
-`x ∈ cl Ω` the ball `B̄(x₀ + c (x - x₀), r)` lies in `Ω`. -/
 theorem closedBall_dil_subset_of_starBall {x₀ : E} {s : ℝ}
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) {c r : ℝ} (hc2 : 1 / 2 ≤ c)
     (hc1 : c < 1) (hr : r < s * (1 - c) / 4) {x : E} (hx : x ∈ closure Ω) :
@@ -778,8 +699,6 @@ theorem closedBall_dil_subset_of_starBall {x₀ : E} {s : ℝ}
   abel
 
 omit [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure] in
-/-- The reflected kernel `s ↦ ρ(y - s)` of a bump supported in `B̄(0, r)` is a test function on
-`Ω` when `B̄(y, r) ⊆ Ω`. -/
 theorem isTest_comp_sub_of_closedBall_subset {ρ : E → ℝ} (hρ : IsTest (univ : Set E) ρ)
     {r : ℝ} (hsupp : tsupport ρ ⊆ Metric.closedBall 0 r) {y : E}
     (hy : Metric.closedBall y r ⊆ Ω) : IsTest Ω (fun s => ρ (y - s)) := by
@@ -793,13 +712,7 @@ theorem isTest_comp_sub_of_closedBall_subset {ρ : E → ℝ} (hρ : IsTest (uni
   by_contra hc
   exact hz' (hz z hc)
 
-/-- **Density of smooth fields satisfying an interior constraint** on a bounded open `Ω`
-star-shaped with respect to a ball. Let `A` be a row-homogeneous constant-coefficient operator
-and `u ∈ L²(Ω; ℝ^ι)` with `A u = 0` in `𝒟'(Ω)` (tested against `C_c^∞(Ω)` only: **no** boundary
-condition). Then `u` is an `L²(Ω)` limit of fields `φ` smooth on all of `E` with `A φ = 0` at every
-point of `Ω`: `φ = ū ⋆ ρ` expanded about the centre (`c < 1`), so that only points whose
-`ρ`-ball lies in `Ω` are sampled. Compare `exists_isTestField_ker_dist_lt`, where a boundary
-condition gives test fields. -/
+/-- **Density of smooth fields satisfying an interior constraint** on star-shaped bounded `Ω`. -/
 theorem exists_contDiff_ker_on_dist_lt {ι κ : Type*} [Fintype ι] [Fintype κ] [DecidableEq κ]
     (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : E} {s : ℝ} (hs : 0 < s)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω)

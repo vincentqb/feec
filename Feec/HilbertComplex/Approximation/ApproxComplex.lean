@@ -5,98 +5,21 @@ public import Feec.HilbertComplex.Approximation.ApproxConforming
 /-!
 # Approximating families of discrete Hilbert complexes
 
-The complex-level front end of the approximating FEEC theorem (`Feec.HilbertComplex.approxFEEC`):
-a Holst–Stern discretization ([HolstStern2012], §3) of a Hilbert complex `H` is turned into an
-approximating FEEC discretization (`Feec.HilbertComplex.ApproxFEEC`) of its Hodge wave equation,
-and every hypothesis of its core (`ApproxFEEC.Core.ofOperator`: approximation along the orbits
-and vanishing consistency defect) is derived from the complex-level ones.
-
-## Setting
-
-An **approximating family of discrete complexes** (`Feec.HilbertComplex.ApproxComplex`, data
-`ApproxComplex.Family`) has, for each `h`,
-
-* a Hilbert complex `Vₕ` (`cpx h`, same index shape as `H`) of finite-dimensional spaces with their
-  own inner products (its differentials are bounded, `d_domain_eq_top_of_finiteDimensional`);
-* bounded **cochain maps** `iₕ : Vₕ → W` (`𝐝 iₕ = iₕ 𝐝ₕ`), not necessarily isometric, with left
-  inverses `πₕ` (`πₕ iₕ = 1`), `‖iₕ‖`, `‖πₕ‖` uniformly bounded; `πₕ` need not commute with `𝐝`;
-* the **inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ} → 0`, `Jₕ = iₕ* iₕ`
-  (`ApproxComplex.Family.J`): the norm of `1 - Jₕ` from the graph space of `𝐝ₕ` to `Vₕ`
-  (`ApproxComplex.Family.graphDefect`, `ContinuousLinearMap.graphOpNorm`), at most `‖1 - Jₕ‖`, so
-  that `‖1 - Jₕ‖ → 0` suffices (`ContinuousLinearMap.graphOpNorm_le`). The estimates apply `1 - Jₕ`
-  only to discrete forms whose discrete graph norm they control;
-* the **graph-norm approximation property** (`ApproxComplex.Family.GraphApprox`): every `ζ ∈ Γ(𝐝)`
-  is approximated by lifts `(iₕ v, 𝐝 iₕ v)`. It follows from `L²` approximation `iₕ πₕ → 1` and a
-  **commutation defect** `𝐝ₕ πₕ ζ₁ - πₕ ζ₂ → 0` on a dense set of `Γ(𝐝)`
-  (`ApproxComplex.Family.graphApprox_of_commute`).
-
-Since `iₕ` is an injective cochain map, `iₕ Vₕ` is a subcomplex of `H` and `𝐝ₕ = iₕ⁻¹ 𝐝 iₕ`:
-the variational crimes allowed here are the inner product of `Vₕ` (`Jₕ ≠ 1`) and a left inverse
-`πₕ` that need not be a cochain map, not a discrete differential independent of `𝐝`.
-
-No consistency hypothesis along exact solutions is made. The comparison uses `iₕ*`, which
-intertwines the adjoints exactly, `iₕ* 𝐝* = 𝐝ₕ* iₕ*` (`iₕ` being a cochain map), so no
-adjoint-consistency hypothesis is needed. Operator-norm consistency is not used and would be too
-strong in general (for the BGG scheme (6.5) of [QuennevilleBelair2015] the static strong consistency
-bound fails on the Freudenthal meshes of the cube with constants independent of `h`,
-`Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`; that scheme enters through `ApproxFEEC`
-directly: its discrete differential uses `S₀,ₕ = π¹S⁰ ≠ S⁰`, and its reading maps are not shown to
-be cochain maps).
-
-## Main definitions
-
-* `waveL`, `totalDL`: the Hodge wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*` and the differential of a
-  finite-dimensional complex as bounded operators; `waveL_apply`: `Lₕ` is its wave operator,
-  `ofBounded_waveL_S`: `e^{tLₕ}` is its wave group.
-* `ApproxComplex.Family.graphDefect`: the inner-product defect in the graph norm, the norm
-  `ContinuousLinearMap.graphOpNorm` of `1 - Jₕ` in the graph norm of `𝐝ₕ`
-  (`Feec.ForMathlib.LinearPMap.GraphSpace`).
-* `ApproxComplex.Family.ellProj`: the **modified elliptic projection**
-  `Rₕ = (1 - Lₕ)⁻¹ Gₕ : Γ(𝐝) → Vₕ`, with `Gₕ (y, 𝐝y) = iₕ* (1 - L) y` on `D(L)`
-  (`ApproxComplex.Family.G_waveLift`): the elliptic projection (4.11) of
-  [QuennevilleBelair2015] with `iₕ*` in place of the orthogonal projection.
-* `ApproxFEEC.ofComplex`: the approximating FEEC discretization (`Xₕ = Vₕ`, `Lₕ` the Hodge wave
-  operator of `Vₕ`, `ιₕ = iₕ`); `ApproxFEEC.ofComplexCore`: its core `D(L²)` (dense), with the
-  comparison trajectories `Rₕ (e^{tL} x, 𝐝 e^{tL} x)` (`Core.ofOperator`).
+Discretizations of a Hilbert complex in the setting of [HolstStern2012], §3: finite-dimensional
+complexes with their own inner products and cochain maps into it, with the inner-product defect in
+the graph norm tending to zero and the graph-norm approximation property. Each is an approximating
+FEEC discretization of the Hodge wave equation.
 
 ## Main results
 
-* `ApproxComplex.Family.norm_ellProj_add_le`: `‖Rₕ ζ‖ + ‖𝐝ₕ Rₕ ζ‖ ≤ 16 C ‖ζ‖_Γ` (coercivity of
-  `1 - Lₕ` in the discrete graph norm, `norm_add_norm_le_of_inner`, from `𝐝ₕ 𝐝ₕ = 0`).
-* **The Strang lemma** `ApproxComplex.Family.norm_graphFst_sub_inclL_ellProj_le`:
-  `‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16 C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖_Γ + 8 C (‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖)` for
-  every `w`: best approximation plus the inner-product defect at `w` and `𝐝ₕ w` (at most
-  `2 C ‖1 - Jₕ‖ ‖(iₕ w, 𝐝 iₕ w)‖_Γ`, and at most `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`).
-* `ApproxComplex.Family.ellProj_defect`: the defect identity
-  `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) - Δₕ y`, `Δₕ = Rₕ - iₕ* graphFst`, and
-  `ApproxComplex.Family.norm_defectOp_apply_le`:
-  `‖Δₕ ζ‖ ≤ ‖(1 - Jₕ) Rₕ ζ‖ + C ‖ζ₁ - iₕ Rₕ ζ‖`, the first term at most `16 C ‖1 - Jₕ‖_{Vₕ} ‖ζ‖_Γ`
-  (`Rₕ` is bounded in the discrete graph norm); hence (`ApproxComplex.tendsto_inclL_ellProj`,
-  `ApproxComplex.tendsto_defectOp`) all hypotheses of `Core.ofOperator` hold.
-* `approxFEEC_ofComplex`: the four conclusions of `approxFEEC` for `ofComplex`, and, now
-  expressible, **discrete constraints**: `Kₕ ⊆ Vₕ` is preserved by `e^{tLₕ}` iff it reduces the
-  discrete wave operator; a reducing subcomplex of `Vₕ` (e.g. discrete Gauss laws) is preserved
-  exactly and its `𝐝ₕ`-closed components are read in `W` as `𝐝`-closed; if `iₕ Kₕ ⊆ K` the
-  residual is exactly `0`; with the Strang and defect bounds.
-* **The conforming case**: `ConstrainedFEEC.toComplex` (subcomplexes with the `W` inner products,
-  `iₕ` the inclusions, `Jₕ = 1`: zero inner-product defect, `ConstrainedFEEC.toFamily_J`; the
-  graph-norm approximation through `graphApprox_of_commute` with commutation defect `0`), whose
-  discrete solutions are those of the subcomplex scheme (4.10), `ConstrainedFEEC.toApprox`
-  (`ConstrainedFEEC.toComplex_sol`), and whose modified elliptic projection is the elliptic
-  projection (4.11) on `D(L)` (`ConstrainedFEEC.toXh_ellProj_waveLift`).
-
-A witness with a genuine inner-product crime (non-isometric `iₕ`, positive inner-product defect,
-nonzero consistency defect, inexact scheme) is
-`Feec.HilbertComplex.ApproxComplex.scaled_nonvacuous`
-(`Feec.HilbertComplex.Approximation.ApproxComplexWitness`). A nonzero commutation defect is not
-exercised by any instance.
+* `ApproxComplex.Family.norm_graphFst_sub_inclL_ellProj_le`: the Strang lemma.
+* `approxFEEC_ofComplex`: the approximating FEEC theorem for `ofComplex`, with discrete constraints.
+* `ConstrainedFEEC.toComplex_sol`: the conforming case recovers the subcomplex scheme.
 
 ## References
 
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (Thm 3.9, Thm 3.10)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 ((4.10), (4.11))
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -122,8 +45,6 @@ variable {V : ι → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProdu
   [∀ i, CompleteSpace (V i)] [∀ i, FiniteDimensional 𝕜 (V i)] (E : HilbertComplex 𝕜 c V)
 
 omit [Fintype ι] in
-/-- On finite-dimensional spaces the differentials are everywhere defined (dense subspaces of a
-finite-dimensional space are closed, hence everything). -/
 theorem d_domain_eq_top_of_finiteDimensional (i j : ι) : (E.d i j).domain = ⊤ := by
   have hc : IsClosed ((E.d i j).domain : Set (V i)) := Submodule.closed_of_finiteDimensional _
   rw [← SetLike.coe_set_eq, Submodule.top_coe, ← hc.closure_eq, (E.dense i j).closure_eq]
@@ -152,8 +73,7 @@ theorem totalDL_apply (v : PiLp 2 V) (hv : v ∈ E.totalD.domain) :
 theorem totalDL_totalDL (v : PiLp 2 V) : E.totalDL (E.totalDL v) = 0 :=
   E.totalD_comp_totalD ⟨v, E.mem_totalD_domain_of_finiteDimensional v⟩
 
-/-- The Hodge wave operator `L = 𝐝 - 𝐝*` of a finite-dimensional complex, as a bounded
-operator. -/
+/-- The Hodge wave operator `L = 𝐝 - 𝐝*` of a finite-dimensional complex, as a bounded operator. -/
 def waveL : PiLp 2 V →L[𝕜] PiLp 2 V := E.totalDL - E.totalDL.adjoint
 
 theorem waveL_apply' (v : PiLp 2 V) : E.waveL v = E.totalDL v - E.totalDL.adjoint v := rfl
@@ -166,7 +86,6 @@ theorem waveL_skew (v w : PiLp 2 V) : ⟪E.waveL v, w⟫_𝕜 = -⟪v, E.waveL w
   rw [inner_waveL, waveL_apply', inner_sub_right, ContinuousLinearMap.adjoint_inner_right]
   ring
 
-/-- **`waveL` is the Hodge wave operator of the complex.** -/
 theorem waveL_apply (v : PiLp 2 V) :
     E.waveL v = E.wave ⟨v, E.mem_wave_domain_of_finiteDimensional v⟩ := by
   refine ext_inner_right 𝕜 fun w => ?_
@@ -184,7 +103,6 @@ theorem re_inner_sub_waveL_self (v : PiLp 2 V) :
     linarith
   rw [inner_sub_left, _root_.map_sub, hs, sub_zero, inner_self_eq_norm_sq]
 
-/-- `1 - L` is injective (`L` is skew). -/
 theorem injective_one_sub_waveL :
     Function.Injective ((1 - E.waveL : PiLp 2 V →L[𝕜] PiLp 2 V) : PiLp 2 V →ₗ[𝕜] PiLp 2 V) := by
   intro a b hab
@@ -197,14 +115,12 @@ theorem injective_one_sub_waveL :
   have : ‖a - b‖ = 0 := by nlinarith [norm_nonneg (a - b)]
   exact sub_eq_zero.1 (norm_eq_zero.1 this)
 
-/-- The resolvent `(1 - L)⁻¹` (finite dimension: `1 - L` is invertible). -/
+/-- `1 - L` as a continuous linear equivalence. -/
 def oneSubWaveL : PiLp 2 V ≃L[𝕜] PiLp 2 V :=
   (LinearEquiv.ofInjectiveEndo _ E.injective_one_sub_waveL).toContinuousLinearEquiv
 
 theorem oneSubWaveL_apply (v : PiLp 2 V) : E.oneSubWaveL v = v - E.waveL v := rfl
 
-/-- **Coercivity of `1 - L` in the discrete graph norm**: if `|⟪r - L r, v⟫| ≤ M (‖v‖ + ‖𝐝 v‖)`
-for every `v`, then `‖r‖ + ‖𝐝 r‖ ≤ 8 M` (test with `v = r - 𝐝 r`, using `𝐝 𝐝 = 0`). -/
 theorem norm_add_norm_le_of_inner (r : PiLp 2 V) {M : ℝ} (hM : 0 ≤ M)
     (h : ∀ v, ‖⟪r - E.waveL r, v⟫_𝕜‖ ≤ M * (‖v‖ + ‖E.totalDL v‖)) :
     ‖r‖ + ‖E.totalDL r‖ ≤ 8 * M := by
@@ -239,7 +155,6 @@ variable {V : ι → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProdu
   [∀ i, CompleteSpace (V i)] [∀ i, FiniteDimensional 𝕜 (V i)] [∀ i, NormedSpace ℝ (V i)]
   [∀ i, IsScalarTower ℝ 𝕜 (V i)] (E : HilbertComplex 𝕜 c V)
 
-/-- **`e^{t waveL}` is the wave group of the complex.** -/
 theorem ofBounded_waveL_S (t : ℝ) (v : PiLp 2 V) :
     (C0Group.ofBounded E.waveL).S t v = E.waveGroup.S t v := by
   have hv := E.mem_wave_domain_of_finiteDimensional v
@@ -260,12 +175,7 @@ section Family
 variable {W : ι → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
   [∀ i, CompleteSpace (W i)]
 
-/-- A **family of discrete Hilbert complexes with reading maps** for the Hilbert complex `H`
-([HolstStern2012], §3): for each `h`, a Hilbert complex `Vₕ` (`cpx h`, same index shape as
-`H`) of finite-dimensional spaces with their own inner products, injective bounded cochain maps
-`iₕ : Vₕ → W` (`𝐝 iₕ = iₕ 𝐝ₕ`: `incl_mem`, `incl_d`), left inverses `πₕ : W → Vₕ`
-(`πₕ iₕ = 1`), and uniform bounds on `‖iₕ‖`, `‖πₕ‖`. The maps `iₕ` need not be isometric and
-`πₕ` need not commute with `𝐝`. -/
+/-- A **family of discrete Hilbert complexes with reading maps** `iₕ : Vₕ → W`. -/
 structure ApproxComplex.Family (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the discrete spaces -/
   V : κ → ι → Type u
@@ -292,7 +202,6 @@ attribute [instance] ApproxComplex.Family.normedAddCommGroup
   ApproxComplex.Family.finiteDimensional ApproxComplex.Family.normedSpaceReal
   ApproxComplex.Family.isScalarTower
 
-/-- `‖(fᵢ xᵢ)ᵢ‖ ≤ C ‖x‖` in `PiLp 2` when `‖fᵢ xᵢ‖ ≤ C ‖xᵢ‖` for each `i`. -/
 theorem norm_piLp_le_of_le {A B : ι → Type*} [∀ i, SeminormedAddCommGroup (A i)]
     [∀ i, SeminormedAddCommGroup (B i)] {x : PiLp 2 A} {y : PiLp 2 B} {C : ℝ} (hC : 0 ≤ C)
     (h : ∀ i, ‖y i‖ ≤ C * ‖x i‖) : ‖y‖ ≤ C * ‖x‖ := by
@@ -356,7 +265,6 @@ theorem norm_inclL_le (h : κ) : ‖S.inclL h‖ ≤ S.boundConst :=
 theorem norm_projL_le (h : κ) : ‖S.projL h‖ ≤ S.boundConst :=
   LinearMap.mkContinuous_norm_le _ S.boundConst_nonneg _
 
-/-- **Stability of the reading map**: `‖v‖ ≤ C ‖iₕ v‖` (from `πₕ iₕ = 1`). -/
 theorem norm_le_norm_inclL (h : κ) (v : PiLp 2 (S.V h)) :
     ‖v‖ ≤ S.boundConst * ‖S.inclL h v‖ :=
   calc ‖v‖ = ‖S.projL h (S.inclL h v)‖ := by rw [S.projL_inclL]
@@ -373,10 +281,9 @@ theorem inclL_mem (h : κ) (v : PiLp 2 (S.V h)) : S.inclL h v ∈ H.totalD.domai
 /-- The discrete total differential `𝐝ₕ` on `Vₕ`. -/
 abbrev D (h : κ) : PiLp 2 (S.V h) →L[𝕜] PiLp 2 (S.V h) := (S.cpx h).totalDL
 
-/-- The discrete Hodge wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*` (adjoint in the inner product of `Vₕ`). -/
+/-- The discrete Hodge wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*`. -/
 abbrev L (h : κ) : PiLp 2 (S.V h) →L[𝕜] PiLp 2 (S.V h) := (S.cpx h).waveL
 
-/-- **`iₕ` is a cochain map** (total form): `iₕ 𝐝ₕ v = 𝐝 iₕ v`. -/
 theorem inclL_D (h : κ) (v : PiLp 2 (S.V h)) :
     S.inclL h (S.D h v) = H.totalD ⟨S.inclL h v, S.inclL_mem h v⟩ := by
   refine PiLp.ext fun j => ?_
@@ -399,23 +306,16 @@ theorem graphFst_graphIncl (h : κ) (v : PiLp 2 (S.V h)) :
 theorem graphSnd_graphIncl (h : κ) (v : PiLp 2 (S.V h)) :
     H.totalD.graphSnd (S.graphIncl h v) = S.inclL h (S.D h v) := by rw [S.inclL_D]; rfl
 
-/-- The **inner-product operator** `Jₕ = iₕ* iₕ` (`⟪Jₕ v, w⟫ = ⟪iₕ v, iₕ w⟫`); `‖1 - Jₕ‖` is the
-inner-product defect of [HolstStern2012], §3. -/
+/-- The **inner-product operator** `Jₕ = iₕ* iₕ`. -/
 def J (h : κ) : PiLp 2 (S.V h) →L[𝕜] PiLp 2 (S.V h) := (S.inclL h).adjoint ∘L S.inclL h
 
 theorem inner_J (h : κ) (v w : PiLp 2 (S.V h)) :
     ⟪S.J h v, w⟫_𝕜 = ⟪S.inclL h v, S.inclL h w⟫_𝕜 := by
   rw [J, ContinuousLinearMap.comp_apply, ContinuousLinearMap.adjoint_inner_left]
 
-/-- **The inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ}`: the norm of `1 - Jₕ` from the
-graph space of `𝐝ₕ` (`‖v‖² + ‖𝐝ₕ v‖²`) to `Vₕ` (`ContinuousLinearMap.graphOpNorm`), so
-`‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`ContinuousLinearMap.norm_apply_le_graphOpNorm`); at
-most `‖1 - Jₕ‖` (`ContinuousLinearMap.graphOpNorm_le`). It is the defect of the family read as a
-family of discrete differential spaces (`ApproxComplexCrime.Family.graphDefect` of
-`toCrimeFamily`). -/
+/-- **The inner-product defect** `graphDefect`: the norm of `1 - Jₕ` on the graph space of `𝐝ₕ`. -/
 def graphDefect (h : κ) : ℝ := (S.D h).graphOpNorm (1 - S.J h)
 
-/-- `‖v‖ + ‖𝐝ₕ v‖ ≤ 2 C ‖(iₕ v, 𝐝 iₕ v)‖_Γ`. -/
 theorem norm_add_norm_D_le (h : κ) (v : PiLp 2 (S.V h)) :
     ‖v‖ + ‖S.D h v‖ ≤ 2 * S.boundConst * ‖S.graphIncl h v‖ := by
   have h1 := S.norm_le_norm_inclL h v
@@ -429,9 +329,7 @@ theorem norm_add_norm_D_le (h : κ) (v : PiLp 2 (S.V h)) :
 
 /-! #### The modified elliptic projection -/
 
-/-- The **discrete load** `Gₕ ζ = iₕ* ζ₁ - iₕ* ζ₂ + 𝐝ₕ* iₕ* ζ₁` of `ζ = (ζ₁, ζ₂) ∈ Γ(𝐝)`:
-`⟪Gₕ ζ, v⟫ = ⟪ζ₁, iₕ v⟫ - ⟪ζ₂, iₕ v⟫ + ⟪ζ₁, iₕ 𝐝ₕ v⟫`, the shifted form of `ζ` tested with the
-lift of `v` (cf. the right-hand side `iₕ* f` of the discrete problems of [HolstStern2012], §3). -/
+/-- The **discrete load** `Gₕ ζ = iₕ* ζ₁ - iₕ* ζ₂ + 𝐝ₕ* iₕ* ζ₁` of `ζ = (ζ₁, ζ₂) ∈ Γ(𝐝)`. -/
 def G (h : κ) : H.totalD.GraphSpace →L[𝕜] PiLp 2 (S.V h) :=
   (S.inclL h).adjoint ∘L H.totalD.graphFst - (S.inclL h).adjoint ∘L H.totalD.graphSnd +
     (S.D h).adjoint ∘L (S.inclL h).adjoint ∘L H.totalD.graphFst
@@ -443,8 +341,6 @@ theorem inner_G (h : κ) (ζ : H.totalD.GraphSpace) (v : PiLp 2 (S.V h)) :
     ContinuousLinearMap.comp_apply, inner_add_left, inner_sub_left,
     ContinuousLinearMap.adjoint_inner_left]
 
-/-- On the lift of `y ∈ D(L)`, `Gₕ (y, 𝐝 y) = iₕ* (y - L y)` (the weak form of `L`, and
-`iₕ` a cochain map). -/
 theorem G_waveLift (h : κ) (y : H.wave.domain) :
     S.G h (waveLift H y) = (S.inclL h).adjoint ((y : PiLp 2 W) - H.wave y) := by
   refine ext_inner_right 𝕜 fun v => ?_
@@ -454,8 +350,6 @@ theorem G_waveLift (h : κ) (y : H.wave.domain) :
   change _ = _ - (⟪H.totalD.graphSnd (waveLift H y), _⟫_𝕜 - _)
   ring
 
-/-- On a lift `(iₕ w, 𝐝 iₕ w)`, `⟪Gₕ ·, v⟫` is the shifted form of `Vₕ` with `Jₕ` in place of
-the identity. -/
 theorem inner_G_graphIncl (h : κ) (w v : PiLp 2 (S.V h)) :
     ⟪S.G h (S.graphIncl h w), v⟫_𝕜 =
       ⟪S.J h w, v⟫_𝕜 - ⟪S.J h (S.D h w), v⟫_𝕜 + ⟪S.J h w, S.D h v⟫_𝕜 := by
@@ -484,11 +378,7 @@ theorem norm_inner_G_le (h : κ) (ζ : H.totalD.GraphSpace) (v : PiLp 2 (S.V h))
         ‖ζ‖ * (S.boundConst * ‖S.D h v‖) := by linarith
     _ ≤ _ := by nlinarith [mul_nonneg (mul_nonneg hz hC) (norm_nonneg (S.D h v))]
 
-/-- The **modified elliptic projection** `Rₕ = (1 - Lₕ)⁻¹ Gₕ : Γ(𝐝) → Vₕ`: on `D(L)`,
-`(1 - Lₕ) Rₕ y = iₕ* (1 - L) y`. In the conforming case (`iₕ` an inclusion, `iₕ*` the orthogonal
-projection) it agrees on `D(L)` with the elliptic projection
-(`ConstrainedFEEC.toXh_ellProj_waveLift`; [QuennevilleBelair2015], (4.11)); in general `iₕ*`
-replaces the orthogonal projection (cf. [HolstStern2012], §3). -/
+/-- The **modified elliptic projection** `Rₕ = (1 - Lₕ)⁻¹ Gₕ : Γ(𝐝) → Vₕ`. -/
 def ellProj (h : κ) : H.totalD.GraphSpace →L[𝕜] PiLp 2 (S.V h) :=
   ((S.cpx h).oneSubWaveL.symm : PiLp 2 (S.V h) →L[𝕜] PiLp 2 (S.V h)) ∘L S.G h
 
@@ -501,8 +391,6 @@ theorem eq_ellProj (h : κ) {ζ : H.totalD.GraphSpace} {r : PiLp 2 (S.V h)}
   (S.cpx h).oneSubWaveL.injective (by
     rw [oneSubWaveL_apply, oneSubWaveL_apply, hr, S.ellProj_sub])
 
-/-- **Uniform stability of `Rₕ` in the discrete graph norm**:
-`‖Rₕ ζ‖ + ‖𝐝ₕ Rₕ ζ‖ ≤ 16 C ‖ζ‖_Γ`. -/
 theorem norm_ellProj_add_le (h : κ) (ζ : H.totalD.GraphSpace) :
     ‖S.ellProj h ζ‖ + ‖S.D h (S.ellProj h ζ)‖ ≤ 16 * S.boundConst * ‖ζ‖ := by
   have := (S.cpx h).norm_add_norm_le_of_inner (S.ellProj h ζ)
@@ -518,8 +406,6 @@ theorem norm_ellProj_le (h : κ) : ‖S.ellProj h‖ ≤ 16 * S.boundConst :=
   ContinuousLinearMap.opNorm_le_bound _ (by have := S.boundConst_nonneg; positivity)
     (S.norm_ellProj_apply_le h)
 
-/-- The discrete error `w - Rₕ ζ` in the discrete graph norm, for any `w ∈ Vₕ`: the inner-product
-defect at `w` and `𝐝ₕ w`, plus the graph-norm distance of `ζ` to the lift of `w`. -/
 theorem norm_sub_ellProj_add_le (h : κ) (ζ : H.totalD.GraphSpace) (w : PiLp 2 (S.V h)) :
     ‖w - S.ellProj h ζ‖ + ‖S.D h (w - S.ellProj h ζ)‖ ≤
       8 * (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ +
@@ -553,13 +439,8 @@ theorem norm_sub_ellProj_add_le (h : κ) (ζ : H.totalD.GraphSpace) (w : PiLp 2 
           exact (norm_add_le _ _).trans (by gcongr; exact norm_sub_le _ _))
     _ ≤ _ := by nlinarith [mul_nonneg hq hDv]
 
-/-- **The Strang lemma for the modified elliptic projection** (cf. [HolstStern2012], Thm 3.9,
-Thm 3.10): for every `w ∈ Vₕ`,
-`‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16 C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖_Γ + 8 C (‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖)`:
-best approximation in the graph norm plus the inner-product defect at `w` and `𝐝ₕ w`, which is at
-most `2 C ‖1 - Jₕ‖ ‖(iₕ w, 𝐝 iₕ w)‖_Γ` (`norm_add_norm_D_le`) and at most
-`‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`ContinuousLinearMap.norm_apply_le_graphOpNorm`,
-`𝐝ₕ 𝐝ₕ = 0`). -/
+/-- **The Strang lemma**: best approximation in the graph norm plus the inner-product defect at `w`
+and `𝐝ₕ w` (cf. [HolstStern2012], Thm 3.9, Thm 3.10). -/
 theorem norm_graphFst_sub_inclL_ellProj_le (h : κ) (ζ : H.totalD.GraphSpace)
     (w : PiLp 2 (S.V h)) :
     ‖H.totalD.graphFst ζ - S.inclL h (S.ellProj h ζ)‖ ≤
@@ -603,8 +484,6 @@ theorem norm_defectOp_le (h : κ) : ‖S.defectOp h‖ ≤ 17 * S.boundConst := 
     nlinarith [norm_nonneg (S.inclL h), norm_nonneg H.totalD.graphFst]
   linarith
 
-/-- **The defect identity** of the modified elliptic projection along `D(L²)`:
-`Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) - Δₕ y` (lifts to `Γ(𝐝)`). -/
 theorem ellProj_defect (h : κ) (y : H.wave.domain) (hLy : H.wave y ∈ H.wave.domain) :
     S.ellProj h (waveLift H ⟨_, hLy⟩) - S.L h (S.ellProj h (waveLift H y)) =
       S.defectOp h (waveLift H ⟨_, hLy⟩) + (-S.defectOp h) (waveLift H y) := by
@@ -617,9 +496,6 @@ theorem ellProj_defect (h : κ) (y : H.wave.domain) (hLy : H.wave y ∈ H.wave.d
     ContinuousLinearMap.comp_apply, graphFst_waveLift, graphFst_waveLift, _root_.map_sub]
   abel
 
-/-- The defect is controlled by the inner-product defect at the projection and the reading error:
-`‖Δₕ ζ‖ ≤ ‖(1 - Jₕ) Rₕ ζ‖ + C ‖ζ₁ - iₕ Rₕ ζ‖`. The first term is at most `16 C ‖1 - Jₕ‖ ‖ζ‖_Γ` and
-at most `16 C ‖1 - Jₕ‖_{Vₕ} ‖ζ‖_Γ` (`norm_one_sub_J_ellProj_le`). -/
 theorem norm_defectOp_apply_le (h : κ) (ζ : H.totalD.GraphSpace) :
     ‖S.defectOp h ζ‖ ≤ ‖(1 - S.J h) (S.ellProj h ζ)‖ +
       S.boundConst * ‖H.totalD.graphFst ζ - S.inclL h (S.ellProj h ζ)‖ := by
@@ -634,8 +510,6 @@ theorem norm_defectOp_apply_le (h : κ) (ζ : H.totalD.GraphSpace) :
   rw [ContinuousLinearMap.adjoint.norm_map (S.inclL h)]
   exact mul_le_mul_of_nonneg_right (S.norm_inclL_le h) (norm_nonneg _)
 
-/-- **The inner-product defect at the projection**: `‖(1 - Jₕ) Rₕ ζ‖ ≤ 16 C ‖1 - Jₕ‖_{Vₕ} ‖ζ‖_Γ`
-(`Rₕ` is bounded in the discrete graph norm, `norm_ellProj_add_le`). -/
 theorem norm_one_sub_J_ellProj_le (h : κ) (ζ : H.totalD.GraphSpace) :
     ‖(1 - S.J h) (S.ellProj h ζ)‖ ≤ S.graphDefect h * (16 * S.boundConst * ‖ζ‖) :=
   ((S.D h).norm_apply_le_graphOpNorm (1 - S.J h) _).trans
@@ -647,16 +521,10 @@ instance (h : κ) (K : Submodule 𝕜 (PiLp 2 (S.V h))) : K.HasOrthogonalProject
 instance (h : κ) (i : ι) (K : Submodule 𝕜 (S.V h i)) : K.HasOrthogonalProjection :=
   haveI := FiniteDimensional.complete 𝕜 K; .ofCompleteSpace K
 
-/-- The **approximation property in the graph norm** along `l` (the best-approximation term
-`inf_v ‖u - iₕ v‖_V` of [HolstStern2012], Thm 3.9, tends to `0`): every `ζ ∈ Γ(𝐝)` is approximated
-by lifts `(iₕ v, 𝐝 iₕ v)`. -/
+/-- The **approximation property in the graph norm**: every `ζ ∈ Γ(𝐝)` is approximated by lifts. -/
 def GraphApprox (l : Filter κ) : Prop :=
   ∀ ζ : H.totalD.GraphSpace, ∀ ε > 0, ∀ᶠ h in l, ∃ v : PiLp 2 (S.V h), ‖ζ - S.graphIncl h v‖ < ε
 
-/-- **The graph-norm approximation property from `L²` approximation and a commutation defect**:
-if `iₕ πₕ → 1` pointwise on `W` and the commutation defect `𝐝ₕ πₕ ζ₁ - πₕ ζ₂` of `πₕ` with `𝐝`
-tends to `0` on a dense set `Z` of `Γ(𝐝)` (e.g. smooth data; it vanishes for a cochain
-projection, [HolstStern2012], §3), then `GraphApprox` holds. -/
 theorem graphApprox_of_commute {l : Filter κ}
     (hπ : ∀ x : PiLp 2 W, Tendsto (fun h => S.inclL h (S.projL h x)) l (𝓝 x))
     {Z : Set H.totalD.GraphSpace} (hZ : Dense Z)
@@ -702,28 +570,14 @@ theorem graphApprox_of_commute {l : Filter κ}
 
 end ApproxComplex.Family
 
-/-- An **approximating family of discrete Hilbert complexes** for `H` (the setting of
-[HolstStern2012], §3, for the Hodge wave equation): a family of discrete complexes `Vₕ` with
-cochain maps `iₕ` and left inverses `πₕ` (`ApproxComplex.Family`), a closed constraint `K`, a
-filter `l`, and the two hypotheses of [HolstStern2012], §3, the first in a weaker form:
-
-* the **inner-product defect in the graph norm** `‖1 - iₕ* iₕ‖_{Vₕ} → 0` (`iₕ` need not be
-  isometric; `Family.graphDefect`, the norm of `1 - iₕ* iₕ` on the graph space of `𝐝ₕ`, at most
-  `‖1 - iₕ* iₕ‖`, so the hypothesis `‖1 - iₕ* iₕ‖ → 0` of Holst–Stern implies it,
-  `ContinuousLinearMap.graphOpNorm_le`);
-* the **approximation property in the graph norm** (`GraphApprox`; from `L²` approximation and
-  a commutation defect of `πₕ` tending to `0` on a dense set by
-  `ApproxComplex.Family.graphApprox_of_commute`).
-
-No consistency hypothesis along exact solutions is made: the consistency defect of the comparison
-built from the modified elliptic projection is derived (`ApproxComplex.tendsto_defectOp`). -/
+/-- An **approximating family of discrete complexes**: `graphDefect → 0` and `GraphApprox`. -/
 structure ApproxComplex (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the discrete complexes and reading maps -/
   toFamily : ApproxComplex.Family.{u} H κ
   /-- the constraint subspace -/
   K : Submodule 𝕜 (PiLp 2 W)
   isClosed_K : IsClosed (K : Set (PiLp 2 W))
-  /-- the filter along which the discretization is refined -/
+  /-- the filter of refinement -/
   l : Filter κ
   tendsto_graphDefect : Tendsto toFamily.graphDefect l (𝓝 0)
   graphApprox : toFamily.GraphApprox l
@@ -732,10 +586,6 @@ namespace ApproxComplex
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ)
 
-/-- **Convergence of the modified elliptic projection**: `iₕ Rₕ ζ → ζ₁` for every `ζ ∈ Γ(𝐝)`
-(the Strang lemma `norm_graphFst_sub_inclL_ellProj_le`, the graph-norm approximation property
-and the inner-product defect in the graph norm: the approximants are bounded in the discrete
-graph norm). -/
 theorem tendsto_inclL_ellProj (ζ : H.totalD.GraphSpace) :
     Tendsto (fun h => F.toFamily.inclL h (F.toFamily.ellProj h ζ)) F.l
       (𝓝 (H.totalD.graphFst ζ)) := by
@@ -791,8 +641,6 @@ theorem tendsto_inclL_ellProj (ζ : H.totalD.GraphSpace) :
     nlinarith
   linarith
 
-/-- **The derived consistency**: the defect operator `Δₕ = Rₕ - iₕ* graphFst` tends to `0`
-pointwise on `Γ(𝐝)`. -/
 theorem tendsto_defectOp (ζ : H.totalD.GraphSpace) :
     Tendsto (fun h => ‖F.toFamily.defectOp h ζ‖) F.l (𝓝 0) := by
   set S := F.toFamily
@@ -811,7 +659,7 @@ end ApproxComplex
 
 end Family
 
-/-! ### The approximating FEEC discretization of an approximating family of complexes -/
+/-! ### The approximating FEEC discretization -/
 
 section OfComplex
 
@@ -822,9 +670,7 @@ namespace ApproxFEEC
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ)
 
-/-- **The approximating FEEC discretization of an approximating family of discrete complexes**:
-`Xₕ = Vₕ` (total space, with the inner product of `Vₕ`), `Lₕ` the Hodge wave operator of `Vₕ`
-(`HilbertComplex.waveL_apply`), `ιₕ = iₕ`, `πₕ` the left inverses. -/
+/-- **The approximating FEEC discretization** of `F`: `Xₕ = Vₕ`, `Lₕ = 𝐝ₕ - 𝐝ₕ*`, `ιₕ = iₕ`. -/
 def ofComplex : ApproxFEEC H κ where
   K := F.K
   isClosed_K := F.isClosed_K
@@ -839,7 +685,6 @@ def ofComplex : ApproxFEEC H κ where
   bound := ⟨F.toFamily.boundConst, fun h => ⟨F.toFamily.norm_inclL_le h,
     F.toFamily.norm_projL_le h⟩⟩
 
-/-- The discrete group is the wave group of `Vₕ`. -/
 theorem ofComplex_group (h : κ) (t : ℝ) (v : PiLp 2 (F.toFamily.V h)) :
     ((ofComplex F).group h).S t v = (F.toFamily.cpx h).waveGroup.S t v :=
   (F.toFamily.cpx h).ofBounded_waveL_S t v
@@ -851,10 +696,7 @@ theorem ofComplex_sol (h : κ) (v : PiLp 2 (F.toFamily.V h)) (t : ℝ) :
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **The core of `ofComplex`**: data `D(L²)`, comparison trajectories the modified elliptic
-projections `Rₕ (e^{tL} x, 𝐝 e^{tL} x)` of the exact orbit (the Trotter–Kato bridge
-`Core.ofOperator` with `Δₕ = Rₕ - iₕ* graphFst`, `Δₕ' = -Δₕ`). Every hypothesis of
-`Core.ofOperator` is derived from the complex-level ones. -/
+/-- **The core of `ofComplex`**: `D(L²)`, with the modified elliptic projections of the orbits. -/
 def ofComplexCore : (ofComplex F).Core :=
   Core.ofOperator (ofComplex F) F.toFamily.ellProj
     ⟨_, F.toFamily.norm_ellProj_le⟩ F.tendsto_inclL_ellProj
@@ -879,24 +721,8 @@ theorem ofComplexCore_cmp_p' (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domainS
 end ApproxFEEC
 
 open ApproxFEEC in
-/-- **The approximating FEEC theorem for approximating families of discrete complexes.** For an
-approximating family `F` of finite-dimensional Hilbert complexes `Vₕ` with cochain maps
-`iₕ : Vₕ → W` (inner-product defect `‖1 - iₕ* iₕ‖_{Vₕ} → 0` in the graph norm of `𝐝ₕ`, graph-norm
-approximation), the discretization `ofComplex F` (generator the Hodge wave operator of `Vₕ` in its
-own inner product) with the core `ofComplexCore F` (comparison: the modified elliptic projection of
-the exact orbit) satisfies:
-
-1. the four conclusions of `approxFEEC` (`ApproxFEEC.Verdict`), on the dense core `D(L²)`;
-2. the discrete generator is the Hodge wave operator of `Vₕ` and `e^{tLₕ}` its wave group;
-3. **discrete constraints**: a subspace `Kₕ ⊆ Vₕ` is preserved by `e^{tLₕ}` for all `t` iff it
-   reduces the discrete wave operator; a reducing subcomplex of `Vₕ` (e.g. discrete Gauss laws) is
-   preserved exactly, and its `𝐝ₕ`-closed components are read in `W` as `𝐝`-closed (`iₕ` is a
-   cochain map); if `iₕ Kₕ ⊆ K`, the residual `dist(ξₕ(t), K)` is exactly `0`;
-4. the **Strang estimate** `‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖ +
-   8C (‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖)` for every `w`, and the **consistency defect bound**
-   `‖Δₕ ζ‖ ≤ ‖(1 - Jₕ) Rₕ ζ‖ + C ‖ζ₁ - iₕ Rₕ ζ‖`; both tend to `0`.
-
-Cf. [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues) -/
+/-- **The approximating FEEC theorem for approximating families of discrete complexes**, with the
+discrete constraints and the Strang and consistency defect bounds. -/
 theorem approxFEEC_ofComplex [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
     {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ) :
     (ofComplex F).Verdict (ofComplexCore F) ∧
@@ -960,9 +786,7 @@ namespace ConstrainedFEEC
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ConstrainedFEEC H κ)
 
-/-- The discrete complexes `Vₕ` of a constrained FEEC discretization (subcomplexes with the `W`
-inner products, `Subcomplex.toHilbertComplex`), with `iₕ` the inclusions and `πₕ` the orthogonal
-projections onto `Vₕⁱ`. -/
+/-- The discrete complexes of a constrained FEEC discretization, `iₕ` the inclusions. -/
 def toFamily : ApproxComplex.Family H κ where
   V h i := ↥((F.V h).V i)
   completeSpace _ _ := FiniteDimensional.complete 𝕜 _
@@ -977,23 +801,19 @@ def toFamily : ApproxComplex.Family H κ where
       ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
         rw [one_mul]; exact ((F.V h).V i).norm_orthogonalProjectionOnto_apply_le x⟩⟩
 
-/-- `iₕ` is isometric: `Jₕ = 1`. -/
 theorem toFamily_J (h : κ) : F.toFamily.J h = 1 := by
   refine ContinuousLinearMap.ext fun v => ext_inner_right 𝕜 fun w => ?_
   rw [ApproxComplex.Family.inner_J, one_apply_eq_self, PiLp.inner_apply,
     PiLp.inner_apply]
   rfl
 
-/-- **The graph-norm approximation property of the family** (`ConstrainedFEEC.dense_graph`). -/
 theorem toFamily_graphApprox : F.toFamily.GraphApprox F.l := fun ζ ε hε => by
   filter_upwards [F.dense_graph ζ ε hε] with h ⟨w, hw, hlt⟩
   refine ⟨WithLp.toLp 2 fun i => ⟨H.totalD.graphFst w i, hw i⟩, ?_⟩
   convert hlt using 3
   exact H.totalD.graphFst_injective (by rw [F.toFamily.graphFst_graphIncl]; rfl)
 
-/-- **A constrained FEEC discretization is an approximating family of discrete complexes**,
-with zero inner-product defect (`toFamily_J`) and graph-norm approximation from the commuting
-projections (`toFamily_graphApprox`). -/
+/-- **A constrained FEEC discretization as an approximating family**, with `Jₕ = 1`. -/
 def toComplex : ApproxComplex H κ where
   toFamily := F.toFamily
   K := F.K
@@ -1022,8 +842,6 @@ theorem inner_toXh (h : κ) (v w : PiLp 2 (F.toFamily.V h)) :
 theorem toXh_surjective (h : κ) : Function.Surjective (F.toXh h) := fun y =>
   ⟨WithLp.toLp 2 fun i => ⟨(y : PiLp 2 W) i, y.2 i⟩, Subtype.ext rfl⟩
 
-/-- The discrete wave operators agree: `Xₕ ≅ Vₕ` intertwines `Lₕ` with the discrete wave
-operator (4.10). -/
 theorem toXh_L (h : κ) (v : PiLp 2 (F.toFamily.V h)) :
     F.toXh h (F.toFamily.L h v) = F.discreteWave h (F.toXh h v) := by
   refine ext_inner_right 𝕜 fun y => ?_
@@ -1033,9 +851,8 @@ theorem toXh_L (h : κ) (v : PiLp 2 (F.toFamily.V h)) :
   congr 1 <;> congr 1
   all_goals first | exact F.toFamily.inclL_D h v | exact F.toFamily.inclL_D h w
 
-/-- **The conforming instance recovers the subcomplex scheme**: the discrete solutions of
-`ofComplex F.toComplex` are those of `ConstrainedFEEC.toApprox` (the semi-discrete scheme
-(4.10) of [QuennevilleBelair2015]), through `Vₕ ≅ Xₕ`. -/
+/-- **The conforming instance recovers the subcomplex scheme** through `Vₕ ≅ Xₕ`
+([QuennevilleBelair2015], (4.10)). -/
 theorem toComplex_sol (h : κ) (v : PiLp 2 (F.toFamily.V h)) (t : ℝ) :
     (ApproxFEEC.ofComplex F.toComplex).sol h v t = F.toApprox.sol h (F.toXh h v) t := by
   set B := F.toFamily.L h
@@ -1055,7 +872,6 @@ theorem toComplex_sol (h : κ) (v : PiLp 2 (F.toFamily.V h)) (t : ℝ) :
 theorem toXh_injective (h : κ) : Function.Injective (F.toXh h) := fun _ _ hab =>
   F.toFamily.inclL_injective h (congrArg Subtype.val hab)
 
-/-- `iₕ*` is the orthogonal projection `Qₕ` onto `Xₕ`. -/
 theorem toXh_inclL_adjoint (h : κ) (z : PiLp 2 W) :
     F.toXh h ((F.toFamily.inclL h).adjoint z) = F.orthProj h z := by
   refine ext_inner_right 𝕜 fun y => ?_
@@ -1064,9 +880,6 @@ theorem toXh_inclL_adjoint (h : κ) (z : PiLp 2 W) :
     Submodule.inner_orthogonalProjectionOnto_eq_of_mem_right]
   rfl
 
-/-- **In the conforming case the modified elliptic projection is the elliptic projection** (4.11)
-on `D(L)`: both solve `(1 - Lₕ) r = Qₕ (1 - L) y` (`discreteWave_ellipticProj`).
-[QuennevilleBelair2015], (4.11) -/
 theorem toXh_ellProj_waveLift (h : κ) (y : H.wave.domain) :
     F.toXh h (F.toFamily.ellProj h (waveLift H y)) = F.ellipticProj h (waveLift H y) := by
   obtain ⟨r, hr⟩ := F.toXh_surjective h (F.ellipticProj h (waveLift H y))

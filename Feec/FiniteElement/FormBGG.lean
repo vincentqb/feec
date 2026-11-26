@@ -8,69 +8,20 @@ public import Feec.HilbertComplex.BGG.DomainData
 /-!
 # BGG diagrams of differential forms: the Hessian and div–div diagrams
 
-On an open `Ω ⊆ ℝⁿ`, the maximal `L²` de Rham complex `HΛ(Ω)` (`formRow hΩ`) and its `n`-fold
-product `HΛ(Ω) ⊗ ℝⁿ` (`vecRow hΩ`, vectors of forms, `Feec.HilbertComplex.pi`) are linked by
-constant-coefficient maps built from **the exterior product with `dxₐ`** (`dxL2`,
-`(dxₐ ∧ φ)_t = ε(a, t) φ_{t ∖ a}`), the `L²` realization of `S(φ eₐ)` for the map
-`S v = Σₐ dxₐ ∧ vₐ` of `Feec.FiniteElement.wsL2`:
-
-* `S v = Σₐ dxₐ ∧ vₐ` (`wsL2`, vectors of forms to forms): **the Hessian diagram**, `HΛ(Ω)` over
-  `HΛ(Ω) ⊗ ℝⁿ` (`hessianFormData`); on `ℝ³` these are the maps `I`, `2 vskw`, `tr` of the vector
-  proxies of `Feec.Domain.hessianMaximalData` ([ArnoldHu2021], §4.1);
-* `(S φ)ₐ = dxₐ ∧ φ` (`dxVecL2`, forms to vectors of forms): **the div–div diagram**,
-  `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)` (`divDivFormData`); on `ℝ³` the maps `· I`, `v ↦ v × ·`, `I`.
-
-Both map the maximal domains into each other with `d S = −S d` (`wsL2_mem_maximal`,
-`dxL2_mem_maximal`), so they are analytic BGG data (`Feec.BGG.HilbertData`). The algebra of the
-fibre maps decides the hypotheses of the analytic BGG theorem (`Feec.BGG.HilbertData.bggVerdict`):
-
-* **the Hessian diagram at `J = 0`**: `S` on vector `0`-forms is an isometry
-  (`wsL2Adj_wsL2_zero`, `Sᵀ S = 1`), and `S Sᵀ = k + 1` on `(k + 1)`-forms (`wsL2_wsL2Adj`, the
-  Euler identity `Σₐ dxₐ ∧ ι_{eₐ} = k + 1`), so `S` has an `H¹`-preserving right inverse in every
-  degree and the `H¹`-regular decompositions of `HΛ(Ω)` from `0` on give the regular
-  decompositions of the diagram (`hessianFormData_regularDecomposition`);
-* **the div–div diagram at `J = n − 1`**: `Sᵀ S = n − k` on `k`-forms (`dxVecAdj_dxVecL2`, the
-  identity `Σₐ ι_{eₐ} (dxₐ ∧ ·) = n − k`), so `S` is bounded below in the degrees `k < n`, and
-  `S Sᵀ = 1` in the top degree `k + 1 = n` (`dxVecL2_dxVecAdj`), so the `H¹`-regular
-  decompositions of the rows from `n − 1` on give those of the diagram
-  (`divDivFormData_regularDecomposition`).
-
-The adjoints are the contractions `ι_c` (`ιL2`), with the Cartan identity
-`ι_c (dx_{c'} ∧ ·) + dx_{c'} ∧ ι_c = δ_{cc'}` (`ιL2_dxL2_add_dxL2_ιL2`) and the Euler identities
-`Σ_c dx_c ∧ ι_c = k + 1`, `Σ_c ι_c (dx_c ∧ ·) = n − k` (`sum_dxL2_ιL2`, `sum_ιL2_dxL2`), from which
-`Feec.FiniteElement.FormBGGElasticity` builds the elasticity diagram on `ℝ³`; the anticommutation
-`dxₐ ∧ dx_c ∧ · = −dx_c ∧ dxₐ ∧ ·` (`dxL2_dxL2_add_dxL2_dxL2`) gives its identity
-`S^{k+1} S^k = −D W` (`Feec.FiniteElement.crossL2_crossL2`).
-
-**`Sᴶ` is not onto between the domains** on every nonempty open `Ω`, `n ≥ 1`, at the `J` of both
-diagrams (`hessianFormData_exists_forall_S_ne`, `divDivFormData_exists_forall_S_ne`): (23) of
-[ArnoldHu2021] fails between the `L²` domains, and the weaker hypothesis "onto modulo `d`" of
-`Feec.BGG.HilbertData.bggVerdict` is the one the regular decompositions give. The rescalings of a
-test field `φ` with `d (Sᴶ φ) = 0` (a gradient `Sᵀ dχ`, resp. any `(n − 1)`-form) make
-`‖d̃ᴶ φ‖ / ‖φ‖` unbounded, which an onto `Sᴶ` forbids (`Feec.BGG.HilbertData.exists_forall_S_ne`).
-
-## Main definitions
-
-* `dxL2`, `dxVecL2`, `dxVecAdj`, `ιL2`; `formRow`, `vecRow`; `hessianFormData`, `divDivFormData`.
+The exterior products with `dxₐ` link `HΛ(Ω)` and `HΛ(Ω) ⊗ ℝⁿ` into the Hessian and div–div diagrams
+of [ArnoldHu2021], §4.1, whose regular decompositions follow from those of `HΛ(Ω)`; `Sᴶ` is not onto
+between the `L²` domains.
 
 ## Main results
 
-* `sum_wsCoeff_mul_wsCoeff`, `wsL2_wsL2Adj`, `wsL2Adj_wsL2_zero`, `sum_sum_wsCoeff_mul_wsCoeff`,
-  `dxVecAdj_dxVecL2`, `sum_wsCoeff_mul_wsCoeff_right`, `dxVecL2_dxVecAdj`.
-* `inner_dxL2`, `sum_dxL2_ιL2`, `sum_ιL2_dxL2`, **`ιL2_dxL2_add_dxL2_ιL2`**, `ιL2_dxL2_zero`.
-* `dxL2_mem_maximal`.
-* `hessianFormData_antilipschitz`, **`hessianFormData_regularDecomposition`**;
-  `divDivFormData_antilipschitz`, **`divDivFormData_regularDecomposition`**.
-* `dxL2_dxL2_add_dxL2_dxL2`, `dxL2_dxL2_self`, `wsFields_wsFieldsAdj`.
-* `hessianFormData_exists_lt_norm`, **`hessianFormData_exists_forall_S_ne`**;
-  `divDivFormData_exists_lt_norm`, **`divDivFormData_exists_forall_S_ne`**.
+* `hessianFormData_regularDecomposition`: the regular decompositions of the Hessian diagram.
+* `divDivFormData_regularDecomposition`: the regular decompositions of the div–div diagram.
+* `hessianFormData_exists_forall_S_ne`: `S⁰` is not onto between the `L²` domains.
+* `divDivFormData_exists_forall_S_ne`: `Sⁿ⁻¹` is not onto between the `L²` domains.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the Hessian and div–div
-  diagrams), §2 (regular decompositions), §3 ((23), the hypothesis of Theorem 7)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (exterior algebra: `dxₐ ∧ ·` and its adjoint, the contraction)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -88,9 +39,7 @@ open Feec.Domain
 
 variable {n : ℕ} {Ω : Set (Fin n → ℝ)}
 
-/-- **The exterior product with `dxₐ`** on `L²(Ω; Λᵏ)`, `dxₐ ∧ φ = S(φ eₐ)` (`wsL2` of the vector
-with `φ` in place `a`): `(dxₐ ∧ φ)_t = ε(a, t) φ_{t ∖ a}` for `a ∈ t`, and `0` otherwise
-(`dxL2_apply`). -/
+/-- The exterior product with `dxₐ` on `L²(Ω; Λᵏ)`: `(dxₐ ∧ φ)_t = ε(a, t) φ_{t ∖ a}`. -/
 def dxL2 (k : ℤ) (a : Fin n) : L2F ℝ Ω (formIdx n k) →L[ℝ] L2F ℝ Ω (formIdx n (k + 1)) :=
   wsL2 k ∘L (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin n =>
       L2F ℝ Ω (formIdx n k)).symm.toContinuousLinearMap ∘L
@@ -105,7 +54,7 @@ theorem dxL2_apply (k : ℤ) (a : Fin n) (φ : L2F ℝ Ω (formIdx n k)) (t : fo
     simp [hb]) (by simp)]
   simp
 
-/-- **The div–div connecting map** `(S φ)ₐ = dxₐ ∧ φ`, `L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)ⁿ`. -/
+/-- The div–div connecting map `(S φ)ₐ = dxₐ ∧ φ`, `L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)ⁿ`. -/
 def dxVecL2 (k : ℤ) :
     L2F ℝ Ω (formIdx n k) →L[ℝ] PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1))) :=
   (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin n =>
@@ -115,8 +64,7 @@ def dxVecL2 (k : ℤ) :
 @[simp] theorem dxVecL2_apply (k : ℤ) (φ : L2F ℝ Ω (formIdx n k)) (a : Fin n) :
     dxVecL2 k φ a = dxL2 k a φ := rfl
 
-/-- The adjoint of `dxVecL2`, the sum of the contractions `Σₐ ι_{eₐ} wₐ`:
-`(Sᵀ w)_r = Σₐ Σ_t c(t; a, r) (wₐ)_t`. -/
+/-- The adjoint `Sᵀ w = Σₐ ι_{eₐ} wₐ` of `dxVecL2`. -/
 def dxVecAdj (k : ℤ) :
     PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1))) →L[ℝ] L2F ℝ Ω (formIdx n k) :=
   ∑ a : Fin n, PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k)) a ∘L wsL2Adj k ∘L
@@ -133,7 +81,6 @@ theorem wsCoeff_mul_self {k : ℤ} (t : formIdx n (k + 1)) (p : Fin n × formIdx
   rw [← abs_mul_abs_self, abs_wsCoeff]
   split_ifs <;> norm_num
 
-/-- `t = r ∪ {a}` is determined by `(a, r)`. -/
 theorem eq_of_wsCoeff_ne_zero {k : ℤ} {t t' : formIdx n (k + 1)} {p : Fin n × formIdx n k}
     (h : wsCoeff k t p ≠ 0) (h' : wsCoeff k t' p ≠ 0) : t = t' := by
   rw [wsCoeff_eq] at h h'
@@ -141,8 +88,6 @@ theorem eq_of_wsCoeff_ne_zero {k : ℤ} {t t' : formIdx n (k + 1)} {p : Fin n ×
   · exact Subtype.ext (by rw [← Finset.insert_erase h1.1, ← Finset.insert_erase h2.1, h1.2, h2.2])
   all_goals exact absurd rfl ‹_›
 
-/-- **`S Sᵀ = k + 1`** on the coefficients: `Σ_{a,r} c(t; a, r) c(t'; a, r) = (k + 1) [t = t']`
-(the Euler identity `Σₐ dxₐ ∧ ι_{eₐ} = k + 1` on `(k + 1)`-forms). -/
 theorem sum_wsCoeff_mul_wsCoeff (k : ℤ) (t t' : formIdx n (k + 1)) :
     ∑ p : Fin n × formIdx n k, wsCoeff k t p * wsCoeff k t' p =
       if t = t' then (k : ℝ) + 1 else 0 := by
@@ -155,7 +100,6 @@ theorem sum_wsCoeff_mul_wsCoeff (k : ℤ) (t t' : formIdx n (k + 1)) :
     by_contra hp
     exact h (eq_of_wsCoeff_ne_zero (left_ne_zero_of_mul hp) (right_ne_zero_of_mul hp))
 
-/-- **`S Sᵀ = k + 1` on coefficient fields**: `S (Sᵀ ψ) = (k + 1) ψ` (`sum_wsCoeff_mul_wsCoeff`). -/
 theorem wsFields_wsFieldsAdj {F : Type*} [AddCommMonoid F] [Module ℝ F] (k : ℤ)
     (ψ : formIdx n (k + 1) → F) : wsFields k (wsFieldsAdj k ψ) = ((k : ℝ) + 1) • ψ := by
   funext t
@@ -164,7 +108,6 @@ theorem wsFields_wsFieldsAdj {F : Type*} [AddCommMonoid F] [Module ℝ F] (k : �
   simp only [← Finset.sum_smul, sum_wsCoeff_mul_wsCoeff, ite_smul, zero_smul,
     Finset.sum_ite_eq, Finset.mem_univ, ite_true]
 
-/-- **`S Sᵀ = k + 1`**: `S (Sᵀ w) = (k + 1) w` on `L²(Ω; Λᵏ⁺¹)` (`wsFields_wsFieldsAdj`). -/
 theorem wsL2_wsL2Adj (k : ℤ) (w : L2F ℝ Ω (formIdx n (k + 1))) :
     wsL2 k (wsL2Adj k w) = ((k : ℝ) + 1) • w := by
   refine PiLp.ext fun t => ?_
@@ -172,13 +115,11 @@ theorem wsL2_wsL2Adj (k : ℤ) (w : L2F ℝ Ω (formIdx n (k + 1))) :
   simp only [wsL2Adj_apply]
   exact congrFun (wsFields_wsFieldsAdj k fun t => w t) t
 
-/-- The `0`-forms have one coefficient, that of `∅`. -/
 theorem formIdx_zero_eq (r s : formIdx n 0) : r = s := by
   have hr : r.1 = ∅ := Finset.card_eq_zero.1 (by have := r.2; omega)
   have hs : s.1 = ∅ := Finset.card_eq_zero.1 (by have := s.2; omega)
   exact Subtype.ext (hr.trans hs.symm)
 
-/-- The coefficients of `S` on the vector `0`-forms: `Σ_t c(t; a, ∅) c(t; b, ∅) = [a = b]`. -/
 theorem sum_wsCoeff_mul_wsCoeff_zero (a b : Fin n) (r s : formIdx n 0) :
     ∑ t : formIdx n (0 + 1), wsCoeff 0 t (a, r) * wsCoeff 0 t (b, s) =
       if a = b then 1 else 0 := by
@@ -207,7 +148,6 @@ theorem sum_wsCoeff_mul_wsCoeff_zero (a b : Fin n) (r s : formIdx n 0) :
         ite_eq_right (fun hb => hab (Finset.singleton_injective (ha.symm.trans hb))), mul_zero]
     · rw [ite_eq_right ha, zero_mul]
 
-/-- **`S` is an isometry on vector `0`-forms** (`S⁰ = I` in vector proxies): `Sᵀ S = 1`. -/
 theorem wsL2Adj_wsL2_zero (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n 0))) :
     wsL2Adj 0 (wsL2 0 v) = v := by
   refine PiLp.ext fun a => PiLp.ext fun r => ?_
@@ -220,7 +160,6 @@ theorem wsL2Adj_wsL2_zero (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n 0)
   simp only [ite_true]
   exact Finset.sum_eq_single r (fun s _ hs => absurd (formIdx_zero_eq s r) hs) (by simp)
 
-/-- `Σ_t c(t; a, r) c(t; a, r') = [r = r', a ∉ r]`: `t = r ∪ {a}`. -/
 theorem sum_wsCoeff_mul_wsCoeff_left (k : ℤ) (a : Fin n) (r r' : formIdx n k) :
     ∑ t : formIdx n (k + 1), wsCoeff k t (a, r) * wsCoeff k t (a, r') =
       if r = r' ∧ a ∉ r.1 then 1 else 0 := by
@@ -247,8 +186,6 @@ theorem sum_wsCoeff_mul_wsCoeff_left (k : ℤ) (a : Fin n) (r r' : formIdx n k) 
     · exact absurd (Subtype.ext (h1.2.symm.trans h2.2)) hrr
     all_goals simp
 
-/-- **`Sᵀ S = n − k` for the div–div map** on the coefficients:
-`Σₐ Σ_t c(t; a, r) c(t; a, r') = (n − k) [r = r']` (`Σₐ ι_{eₐ} (dxₐ ∧ ·) = n − k` on `k`-forms). -/
 theorem sum_sum_wsCoeff_mul_wsCoeff (k : ℤ) (r r' : formIdx n k) :
     ∑ a : Fin n, ∑ t : formIdx n (k + 1), wsCoeff k t (a, r) * wsCoeff k t (a, r') =
       if r = r' then (n : ℝ) - k else 0 := by
@@ -264,7 +201,6 @@ theorem sum_sum_wsCoeff_mul_wsCoeff (k : ℤ) (r r' : formIdx n k) :
     rw [h]
   · simp [hrr]
 
-/-- **`Sᵀ S = n − k`**: `Sᵀ (S φ) = (n − k) φ` for the div–div map. -/
 theorem dxVecAdj_dxVecL2 (k : ℤ) (φ : L2F ℝ Ω (formIdx n k)) :
     dxVecAdj k (dxVecL2 k φ) = ((n : ℝ) - k) • φ := by
   refine PiLp.ext fun r => ?_
@@ -279,7 +215,6 @@ theorem dxVecAdj_dxVecL2 (k : ℤ) (φ : L2F ℝ Ω (formIdx n k)) :
   simp only [← Finset.sum_smul, sum_sum_wsCoeff_mul_wsCoeff, ite_smul, zero_smul, Finset.sum_ite_eq,
     Finset.mem_univ, ite_true]
 
-/-- `Σ_r c(t; a, r) c(t; b, r) = [a = b, a ∈ t]`: `r = t ∖ {a}`. -/
 theorem sum_wsCoeff_mul_wsCoeff_right (k : ℤ) (t : formIdx n (k + 1)) (a b : Fin n) :
     ∑ r : formIdx n k, wsCoeff k t (a, r) * wsCoeff k t (b, r) =
       if a = b ∧ a ∈ t.1 then 1 else 0 := by
@@ -303,7 +238,6 @@ theorem sum_wsCoeff_mul_wsCoeff_right (k : ℤ) (t : formIdx n (k + 1)) (a b : F
       exact absurd hb (Finset.notMem_erase b t.1)
     all_goals simp
 
-/-- In the top degree there is one coefficient, that of `{0, …, n - 1}`. -/
 theorem formIdx_top_univ {k : ℤ} (hk : k + 1 = n) (t : formIdx n (k + 1)) :
     t.1 = Finset.univ :=
   Finset.eq_univ_of_card _ (by have := t.2; rw [Fintype.card_fin]; omega)
@@ -311,7 +245,6 @@ theorem formIdx_top_univ {k : ℤ} (hk : k + 1 = n) (t : formIdx n (k + 1)) :
 theorem formIdx_top_eq {k : ℤ} (hk : k + 1 = n) (t t' : formIdx n (k + 1)) : t = t' :=
   Subtype.ext ((formIdx_top_univ hk t).trans (formIdx_top_univ hk t').symm)
 
-/-- **`S Sᵀ = 1` for the div–div map in the top degree** `k + 1 = n`. -/
 theorem dxVecL2_dxVecAdj {k : ℤ} (hk : k + 1 = n)
     (w : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1)))) :
     dxVecL2 k (dxVecAdj k w) = w := by
@@ -333,8 +266,7 @@ theorem dxVecL2_dxVecAdj {k : ℤ} (hk : k + 1 = n)
 
 /-! ### The contraction and the Cartan identity -/
 
-/-- **The contraction** `ι_c = ι_{e_c}` on `L²(Ω; Λᵏ⁺¹)`, the component `c` of `Sᵀ`:
-`(ι_c w)_r = Σ_t c(t; c, r) w_t`, the adjoint of `dx_c ∧ ·` (`inner_dxL2`). -/
+/-- The contraction `ι_c = ι_{e_c}` on `L²(Ω; Λᵏ⁺¹)`, the adjoint of `dx_c ∧ ·`. -/
 def ιL2 (k : ℤ) (c : Fin n) : L2F ℝ Ω (formIdx n (k + 1)) →L[ℝ] L2F ℝ Ω (formIdx n k) :=
   PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k)) c ∘L wsL2Adj k
 
@@ -345,13 +277,11 @@ theorem ιL2_apply (k : ℤ) (c : Fin n) (w : L2F ℝ Ω (formIdx n (k + 1))) (r
     ιL2 k c w r = ∑ t, wsCoeff k t (c, r) • w t :=
   wsL2Adj_apply w c r
 
-/-- `⟪dx_c ∧ φ, w⟫ = ⟪φ, ι_c w⟫`. -/
 theorem inner_dxL2 (k : ℤ) (c : Fin n) (φ : L2F ℝ Ω (formIdx n k))
     (w : L2F ℝ Ω (formIdx n (k + 1))) : ⟪dxL2 k c φ, w⟫_ℝ = ⟪φ, ιL2 k c w⟫_ℝ := by
   rw [dxL2_eq, inner_wsL2, real_inner_comm, PiLp.single, inner_toLp_single, real_inner_comm,
     ιL2_eq]
 
-/-- `S v = Σ_c dx_c ∧ v_c`. -/
 theorem wsL2_eq_sum (k : ℤ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :
     wsL2 k v = ∑ c, dxL2 k c (v c) := by
   conv_lhs => rw [show v = ∑ c, PiLp.single 2 c (v c) from
@@ -359,24 +289,20 @@ theorem wsL2_eq_sum (k : ℤ) (v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx 
   rw [map_sum]
   rfl
 
-/-- **The Euler identity** `Σ_c dx_c ∧ ι_c = k + 1` on `L²(Ω; Λᵏ⁺¹)` (`S Sᵀ = k + 1`). -/
 theorem sum_dxL2_ιL2 (k : ℤ) (w : L2F ℝ Ω (formIdx n (k + 1))) :
     ∑ c, dxL2 k c (ιL2 k c w) = ((k : ℝ) + 1) • w := by
   rw [← wsL2_wsL2Adj, wsL2_eq_sum]
   rfl
 
-/-- `Sᵀ w = Σ_c ι_c w_c` for the div–div map. -/
 theorem dxVecAdj_eq_sum (k : ℤ) (w : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1)))) :
     dxVecAdj k w = ∑ c, ιL2 k c (w c) := by
   simp [dxVecAdj, ιL2]
 
-/-- **`Σ_c ι_c (dx_c ∧ ·) = n − k`** on `L²(Ω; Λᵏ)` (`Sᵀ S = n − k` for the div–div map). -/
 theorem sum_ιL2_dxL2 (k : ℤ) (φ : L2F ℝ Ω (formIdx n k)) :
     ∑ c, ιL2 k c (dxL2 k c φ) = ((n : ℝ) - k) • φ := by
   rw [← dxVecAdj_dxVecL2, dxVecAdj_eq_sum]
   rfl
 
-/-- `Σ_s c(r; a, s) c(r'; a, s) = [r = r', a ∈ r]`: `s = r ∖ {a}`. -/
 theorem sum_wsCoeff_mul_wsCoeff_same (k : ℤ) (a : Fin n) (r r' : formIdx n (k + 1)) :
     ∑ s : formIdx n k, wsCoeff k r (a, s) * wsCoeff k r' (a, s) =
       if r = r' ∧ a ∈ r.1 then 1 else 0 := by
@@ -389,9 +315,6 @@ theorem sum_wsCoeff_mul_wsCoeff_same (k : ℤ) (a : Fin n) (r r' : formIdx n (k 
     by_contra hs
     exact hrr (eq_of_wsCoeff_ne_zero (left_ne_zero_of_mul hs) (right_ne_zero_of_mul hs))
 
-/-- **The Cartan identity on the coefficients**:
-`Σ_t c(t; c, r) c(t; c', r') + Σ_s c(r; c', s) c(r'; c, s) = [c = c'] [r = r']`
-(`ι_c (dx_{c'} ∧ ·) + dx_{c'} ∧ ι_c · = δ_{cc'}`). -/
 theorem wsCoeff_cartan (k : ℤ) (c c' : Fin n) (r r' : formIdx n (k + 1)) :
     ∑ t : formIdx n (k + 1 + 1), wsCoeff (k + 1) t (c, r) * wsCoeff (k + 1) t (c', r') +
       ∑ s : formIdx n k, wsCoeff k r (c', s) * wsCoeff k r' (c, s) =
@@ -459,8 +382,6 @@ theorem wsCoeff_cartan (k : ℤ) (c c' : Fin n) (r r' : formIdx n (k + 1)) :
         rw [Finset.erase_insert_of_ne hcc]
       all_goals simp
 
-/-- **The Cartan identity** `ι_c (dx_{c'} ∧ w) + dx_{c'} ∧ ι_c w = δ_{cc'} w` on
-`L²(Ω; Λᵏ⁺¹)`. -/
 theorem ιL2_dxL2_add_dxL2_ιL2 (k : ℤ) (c c' : Fin n) (w : L2F ℝ Ω (formIdx n (k + 1))) :
     ιL2 (k + 1) c (dxL2 (k + 1) c' w) + dxL2 k c' (ιL2 k c w) = if c = c' then w else 0 := by
   refine PiLp.ext fun r => ?_
@@ -482,8 +403,6 @@ theorem ιL2_dxL2_add_dxL2_ιL2 (k : ℤ) (c c' : Fin n) (w : L2F ℝ Ω (formId
         · rw [PiLp.zero_apply]
           exact Finset.sum_eq_zero fun r' _ => ite_eq_right fun h' => h h'.1
 
-/-- **The Cartan identity on `0`-forms** `ι_c (dx_{c'} ∧ φ) = δ_{cc'} φ` (`Sᵀ S = 1` on vector
-`0`-forms). -/
 theorem ιL2_dxL2_zero (c c' : Fin n) (φ : L2F ℝ Ω (formIdx n 0)) :
     ιL2 0 c (dxL2 0 c' φ) = if c = c' then φ else 0 := by
   rw [ιL2_eq, dxL2_eq, wsL2Adj_wsL2_zero]
@@ -492,14 +411,12 @@ theorem ιL2_dxL2_zero (c c' : Fin n) (φ : L2F ℝ Ω (formIdx n 0)) :
     simp
   · simp [h]
 
-/-- The Cartan identity as `ι_c (dx_{c'} ∧ w) = δ_{cc'} w - dx_{c'} ∧ ι_c w`. -/
 theorem ιL2_dxL2 (k : ℤ) (c c' : Fin n) (w : L2F ℝ Ω (formIdx n (k + 1))) :
     ιL2 (k + 1) c (dxL2 (k + 1) c' w) = (if c = c' then w else 0) - dxL2 k c' (ιL2 k c w) :=
   eq_sub_of_add_eq (ιL2_dxL2_add_dxL2_ιL2 k c c' w)
 
 /-! ### `dxₐ ∧ dx_c ∧ · = -dx_c ∧ dxₐ ∧ ·` -/
 
-/-- `Σ_{r'} c(t; a, r') X(r') = ε(a, t) X(t ∖ a)` for `a ∈ t`, and `0` otherwise. -/
 theorem sum_wsCoeff_mul (k : ℤ) (a : Fin n) (t : formIdx n (k + 1)) (X : formIdx n k → ℝ) :
     ∑ r, wsCoeff k t (a, r) * X r =
       if h : a ∈ t.1 then ExteriorFibre.sgn a t.1 * X ⟨t.1.erase a, card_erase_of_formIdx t h⟩
@@ -510,8 +427,6 @@ theorem sum_wsCoeff_mul (k : ℤ) (a : Fin n) (t : formIdx n (k + 1)) (X : formI
       wsCoeff_eq, ite_eq_left ⟨h, rfl⟩]
   · exact Finset.sum_eq_zero fun r _ => by rw [wsCoeff_eq, ite_eq_right fun h' => h h'.1, zero_mul]
 
-/-- **`dxₐ ∧ dx_c ∧ · = -dx_c ∧ dxₐ ∧ ·` on the coefficients**:
-`Σ_{r'} (c(t; a, r') c(r'; c, r) + c(t; c, r') c(r'; a, r)) = 0`. -/
 theorem sum_wsCoeff_mul_wsCoeff_add (k : ℤ) (a c : Fin n) (t : formIdx n (k + 1 + 1))
     (r : formIdx n k) :
     ∑ r', (wsCoeff (k + 1) t (a, r') * wsCoeff k r' (c, r) +
@@ -541,7 +456,6 @@ theorem sum_wsCoeff_mul_wsCoeff_add (k : ℤ) (a c : Fin n) (t : formIdx n (k + 
     · rw [wsCoeff_eq, ite_eq_right fun h' => ha (Finset.mem_of_mem_erase h'.1)]; ring
     · ring
 
-/-- **`dxₐ ∧ dx_c ∧ φ + dx_c ∧ dxₐ ∧ φ = 0`** on `L²(Ω; Λᵏ)`. -/
 theorem dxL2_dxL2_add_dxL2_dxL2 (k : ℤ) (a c : Fin n) (φ : L2F ℝ Ω (formIdx n k)) :
     dxL2 (k + 1) a (dxL2 k c φ) + dxL2 (k + 1) c (dxL2 k a φ) = 0 := by
   refine PiLp.ext fun t => ?_
@@ -554,7 +468,6 @@ theorem dxL2_dxL2_add_dxL2_dxL2 (k : ℤ) (a c : Fin n) (φ : L2F ℝ Ω (formId
   simp only [← add_smul]
   rw [← Finset.sum_smul, sum_wsCoeff_mul_wsCoeff_add, zero_smul]
 
-/-- **`dxₐ ∧ dxₐ ∧ φ = 0`** on `L²(Ω; Λᵏ)`. -/
 theorem dxL2_dxL2_self (k : ℤ) (a : Fin n) (φ : L2F ℝ Ω (formIdx n k)) :
     dxL2 (k + 1) a (dxL2 k a φ) = 0 := by
   have h := dxL2_dxL2_add_dxL2_dxL2 k a a φ
@@ -571,14 +484,12 @@ theorem wsL2Adj_apply_eq_ofMatrixCLM (k : ℤ) (w : L2F ℝ Ω (formIdx n (k + 1
     wsL2Adj k w a = L2F.ofMatrixCLM (Matrix.of fun r t => wsCoeff k t (a, r)) w :=
   PiLp.ext fun r => by rw [wsL2Adj_apply, L2F.ofMatrixCLM_apply]; rfl
 
-/-- `Sᵀ` maps `H¹` to `H¹` (constant coefficients). -/
 theorem wsL2Adj_mem_fieldH1 (k : ℤ) {w : L2F ℝ Ω (formIdx n (k + 1))}
     (hw : w ∈ fieldH1 ℝ Ω (formIdx n (k + 1))) (a : Fin n) :
     wsL2Adj k w a ∈ fieldH1 ℝ Ω (formIdx n k) := by
   rw [wsL2Adj_apply_eq_ofMatrixCLM]
   exact ofMatrixCLM_mem_fieldH1 hΩ _ hw
 
-/-- The sum of the contractions maps vectors of `H¹` fields to `H¹`. -/
 theorem dxVecAdj_mem_fieldH1 (k : ℤ) {w : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1)))}
     (hw : ∀ a, w a ∈ fieldH1 ℝ Ω (formIdx n (k + 1))) :
     dxVecAdj k w ∈ fieldH1 ℝ Ω (formIdx n k) := by
@@ -586,7 +497,6 @@ theorem dxVecAdj_mem_fieldH1 (k : ℤ) {w : PiLp 2 (fun _ : Fin n => L2F ℝ Ω 
   rw [this]
   exact Submodule.sum_mem _ fun a _ => wsL2Adj_mem_fieldH1 hΩ k (hw a) a
 
-/-- `dx_c ∧ ·` maps `H¹` to `H¹` (constant coefficients). -/
 theorem dxL2_mem_fieldH1 (k : ℤ) (c : Fin n) {φ : L2F ℝ Ω (formIdx n k)}
     (hφ : φ ∈ fieldH1 ℝ Ω (formIdx n k)) : dxL2 k c φ ∈ fieldH1 ℝ Ω (formIdx n (k + 1)) := by
   have : dxL2 k c φ = L2F.ofMatrixCLM (Matrix.of fun t r => wsCoeff k t (c, r)) φ :=
@@ -594,7 +504,6 @@ theorem dxL2_mem_fieldH1 (k : ℤ) (c : Fin n) {φ : L2F ℝ Ω (formIdx n k)}
   rw [this]
   exact ofMatrixCLM_mem_fieldH1 hΩ _ hφ
 
-/-- `S = Σₐ dxₐ ∧ ·` maps vectors of `H¹` fields to `H¹`. -/
 theorem wsL2_mem_fieldH1 (k : ℤ) {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))}
     (hv : ∀ a, v a ∈ fieldH1 ℝ Ω (formIdx n k)) : wsL2 k v ∈ fieldH1 ℝ Ω (formIdx n (k + 1)) := by
   rw [wsL2_eq_sum]
@@ -602,7 +511,6 @@ theorem wsL2_mem_fieldH1 (k : ℤ) {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (for
 
 /-! ### The maps on the maximal domains -/
 
-/-- **`dxₐ ∧ ·` maps `D(d_max)` into `D(d_max)` with `d (dxₐ ∧ φ) = −dxₐ ∧ dφ`.** -/
 theorem dxL2_mem_maximal (k : ℤ) (a : Fin n) {φ : L2F ℝ Ω (formIdx n k)}
     (hφ : φ ∈ ((extDerivOp ℝ n k).maximal Ω).domain) :
     ∃ h : dxL2 k a φ ∈ ((extDerivOp ℝ n (k + 1)).maximal Ω).domain,
@@ -658,8 +566,7 @@ theorem vecRow_d_apply {k : ℤ} (v : ((vecRow n hΩ).d k (k + 1)).domain) (a : 
   rw [HilbertComplex.pi_d_apply]
   exact LinearPMap.apply_eq_of_eq (formRow_d hΩ k) _ _ rfl
 
-/-- **The Hessian diagram of forms** on `Ω`: `HΛ(Ω)` over `HΛ(Ω) ⊗ ℝⁿ`, linked by
-`S v = Σₐ dxₐ ∧ vₐ` ([ArnoldHu2021], §4.1). -/
+/-- The Hessian diagram of forms, `HΛ(Ω)` over `HΛ(Ω) ⊗ ℝⁿ` ([ArnoldHu2021], §4.1). -/
 def hessianFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ) (fun k => L2F ℝ Ω (formIdx n k))
     (fun k => PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :=
   BGG.HilbertData.ofSucc (formRow n hΩ) (vecRow n hΩ) (fun k => wsL2 k)
@@ -676,8 +583,7 @@ def hessianFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ) (fun k => L2F �
   BGG.HilbertData.succCLM_succ (X := fun k => PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k)))
     (Y := fun k => L2F ℝ Ω (formIdx n k)) (fun k => wsL2 k) k
 
-/-- **The div–div diagram of forms** on `Ω`: `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)`, linked by
-`(S φ)ₐ = dxₐ ∧ φ` ([ArnoldHu2021], §4.1). -/
+/-- The div–div diagram of forms, `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)` ([ArnoldHu2021], §4.1). -/
 def divDivFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ)
     (fun k => PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) (fun k => L2F ℝ Ω (formIdx n k)) :=
   BGG.HilbertData.ofSucc (vecRow n hΩ) (formRow n hΩ) (fun k => dxVecL2 k)
@@ -697,8 +603,6 @@ def divDivFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ)
 
 /-! ### Bounded below -/
 
-/-- **`S` is bounded below up to `0`** in the Hessian diagram (`S⁰` is an isometry; below the
-spaces are zero). -/
 theorem hessianFormData_antilipschitz :
     ∀ i ≤ 0, ∃ K, AntilipschitzWith K ((hessianFormData hΩ).S i (i + 1)) := by
   intro i hi
@@ -708,7 +612,6 @@ theorem hessianFormData_antilipschitz :
     exact ⟨0, AntilipschitzWith.of_subsingleton⟩
   · exact ⟨_, (wsL2Adj 0).lipschitzWith.to_rightInverse wsL2Adj_wsL2_zero⟩
 
-/-- **`S` is bounded below up to `n − 1`** in the div–div diagram (`Sᵀ S = n − k`). -/
 theorem divDivFormData_antilipschitz :
     ∀ i ≤ (n : ℤ) - 1, ∃ K, AntilipschitzWith K ((divDivFormData hΩ).S i (i + 1)) := by
   intro i hi
@@ -722,7 +625,6 @@ theorem divDivFormData_antilipschitz :
 /-! ### Regular decompositions -/
 
 omit hΩ in
-/-- **The `H¹`-regular decompositions of `HΛ(Ω) ⊗ ℝⁿ`**, componentwise from those of `HΛ(Ω)`. -/
 theorem vecRow_exists_sub_mem_fieldH1 {J : ℤ} (h : (deRham ℝ n).HasRegularDecomposition Ω J)
     {i : ℤ} (hi : J ≤ i) {u : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (i + 1)))}
     (hu : ∀ a, u a ∈ ((extDerivOp ℝ n (i + 1)).maximal Ω).domain) :
@@ -735,10 +637,6 @@ theorem vecRow_exists_sub_mem_fieldH1 {J : ℤ} (h : (deRham ℝ n).HasRegularDe
   choose p hp using h'
   exact ⟨WithLp.toLp 2 fun a => (p a).1, fun a => (p a).2, hp⟩
 
-/-- **The `L²` splittings of the Hessian diagram** from the `H¹`-regular decompositions of `HΛ(Ω)`
-from `0` on: every `u ∈ D(dⁱ⁺¹)`, `i ≥ 0`, is `dⁱ p + Sⁱ φ`; for `u = d p + w`, `w ∈ H¹`, take
-`φ = (i + 1)⁻¹ Sᵀ w`, an `H¹` field, so `S φ = w` (`wsL2_wsL2Adj`) ([ArnoldHu2021], §2, Theorem 3
-and §4). -/
 theorem hessianFormData_exists_add_eq (h : (deRham ℝ n).HasRegularDecomposition Ω 0) {i : ℤ}
     (hi : 0 ≤ i) {u : L2F ℝ Ω (formIdx n (i + 1))}
     (hu : u ∈ ((formRow n hΩ).d (i + 1) (i + 1 + 1)).domain) :
@@ -763,15 +661,12 @@ theorem hessianFormData_exists_add_eq (h : (deRham ℝ n).HasRegularDecompositio
   simp only [w]
   abel
 
-/-- **The regular decompositions of the Hessian diagram** (`hessianFormData_exists_add_eq`). -/
+/-- The regular decompositions of the Hessian diagram, from those of `HΛ(Ω)` from `0` on. -/
 theorem hessianFormData_regularDecomposition (h : (deRham ℝ n).HasRegularDecomposition Ω 0) :
     (hessianFormData hΩ).RegularDecomposition 0 :=
   (hessianFormData hΩ).regularDecomposition_of_forall_exists fun _ hi _ hu =>
     hessianFormData_exists_add_eq hΩ h hi hu
 
-/-- **The `L²` splittings of the div–div diagram** from the `H¹`-regular decompositions of `HΛ(Ω)`
-from `n − 1` on: in the top degree `u = d p + w` with `w ∈ H¹` and `w = S (Sᵀ w)`
-(`dxVecL2_dxVecAdj`); above it the spaces are zero ([ArnoldHu2021], §2, Theorem 3 and §4). -/
 theorem divDivFormData_exists_add_eq
     (h : (deRham ℝ n).HasRegularDecomposition Ω ((n : ℤ) - 1)) {i : ℤ} (hi : (n : ℤ) - 1 ≤ i)
     {u : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (i + 1)))}
@@ -804,24 +699,15 @@ theorem divDivFormData_exists_add_eq
     simp only [w]
     abel
 
-/-- **The regular decompositions of the div–div diagram** (`divDivFormData_exists_add_eq`). -/
+/-- The regular decompositions of the div–div diagram, from those of `HΛ(Ω)` from `n − 1` on. -/
 theorem divDivFormData_regularDecomposition
     (h : (deRham ℝ n).HasRegularDecomposition Ω ((n : ℤ) - 1)) :
     (divDivFormData hΩ).RegularDecomposition ((n : ℤ) - 1) :=
   (divDivFormData hΩ).regularDecomposition_of_forall_exists fun _ hi _ hu =>
     divDivFormData_exists_add_eq hΩ h hi hu
 
-/-! ### `S` is not onto between the `L²` domains
+/-! ### `S` is not onto between the `L²` domains -/
 
-At `J = 0` (Hessian) and `J = n − 1` (div–div) the regular decompositions make `Sᴶ` onto modulo
-`d`, but not onto: (23) of [ArnoldHu2021] fails between the domains. The rescalings of a test
-field `φ` with `d (Sᴶ φ) = 0` make `‖d̃ᴶ φ‖ / ‖φ‖` unbounded
-(`Feec.Domain.ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff`), which an onto `Sᴶ` forbids
-(`Feec.BGG.HilbertData.exists_forall_S_ne`). -/
-
-/-- **`d̃⁰` is unbounded on the gradients of the Hessian diagram**: on every nonempty open
-`Ω ⊆ ℝⁿ`, `n ≥ 1`, for every `C` some vector `0`-form `φ ∈ D(d̃⁰)`, the rescaled gradient
-`Sᵀ dχ` of a test function `χ`, has `S φ` closed and `C ‖φ‖ < ‖d̃⁰ φ‖`. -/
 theorem hessianFormData_exists_lt_norm (hne : Ω.Nonempty) (hn : 0 < n) (C : ℝ) :
     ∃ φ : ((hessianFormData hΩ).Ht.d 0 (0 + 1)).domain,
       (hessianFormData hΩ).H.d (0 + 1) (0 + 1 + 1)
@@ -893,10 +779,8 @@ theorem hessianFormData_exists_lt_norm (hne : Ω.Nonempty) (hn : 0 < n) (C : ℝ
     rw [e2]
     exact hlt
 
-/-- **`S⁰` is not onto between the `L²` domains of the Hessian diagram** on every nonempty open
-`Ω ⊆ ℝⁿ`, `n ≥ 1`: some `u ∈ HΛ¹(Ω)` is `S φ = Σₐ dxₐ ∧ φₐ` for no `φ ∈ HΛ⁰(Ω) ⊗ ℝⁿ` (for `n = 3`,
-in vector proxies, `S⁰ = I` maps `H¹(Ω; ℝ³)` onto a proper subspace of `H(curl; Ω)`;
-`Feec.Domain.hessianMaximalData_not_surjective`). -/
+/-- `S⁰` is not onto between the `L²` domains of the Hessian diagram: on every nonempty open
+`Ω ⊆ ℝⁿ`, `n ≥ 1`, some `u ∈ HΛ¹(Ω)` is `S φ = Σₐ dxₐ ∧ φₐ` for no `φ ∈ HΛ⁰(Ω) ⊗ ℝⁿ`. -/
 theorem hessianFormData_exists_forall_S_ne (hne : Ω.Nonempty) (hn : 0 < n) :
     ∃ u ∈ ((formRow n hΩ).d (0 + 1) (0 + 1 + 1)).domain,
       ∀ φ ∈ ((vecRow n hΩ).d 0 (0 + 1)).domain, wsL2 0 φ ≠ u := by
@@ -906,9 +790,6 @@ theorem hessianFormData_exists_forall_S_ne (hne : Ω.Nonempty) (hn : 0 < n) :
   rw [hessianFormData_S] at h
   exact h
 
-/-- **`d` is unbounded on the `(n - 1)`-forms of the div–div diagram**: on every nonempty open
-`Ω ⊆ ℝⁿ`, `n ≥ 1`, for every `C` some `φ ∈ HΛⁿ⁻¹(Ω)`, a rescaled test form `χ dx_{{j}ᶜ}`, has
-`C ‖φ‖ < ‖dφ‖`; `d (S φ) = 0` holds for every `φ` (no `(n + 1)`-forms). -/
 theorem divDivFormData_exists_lt_norm (hne : Ω.Nonempty) (hn : 0 < n) (C : ℝ) :
     ∃ φ : ((divDivFormData hΩ).Ht.d ((n : ℤ) - 1) ((n : ℤ) - 1 + 1)).domain,
       (divDivFormData hΩ).H.d ((n : ℤ) - 1 + 1) ((n : ℤ) - 1 + 1 + 1)
@@ -973,10 +854,8 @@ theorem divDivFormData_exists_lt_norm (hne : Ω.Nonempty) (hn : 0 < n) (C : ℝ)
     ← (B.minimal_le_maximal hΩ).2 (x := ⟨_, hmin⟩) rfl, B.minimal_testField hΩ hφ]
   exact hlt
 
-/-- **`Sⁿ⁻¹` is not onto between the `L²` domains of the div–div diagram** on every nonempty
-open `Ω ⊆ ℝⁿ`, `n ≥ 1`: some `u ∈ L²(Ω; Λⁿ ⊗ ℝⁿ)` is `S φ = (dxₐ ∧ φ)ₐ` for no
-`φ ∈ HΛⁿ⁻¹(Ω)` (for `n = 3`, in vector proxies, `S² = I` maps `H(div; Ω)` onto a proper subspace
-of `L²(Ω; ℝ³)`; `Feec.Domain.divDivMaximalData_not_surjective`). -/
+/-- `Sⁿ⁻¹` is not onto between the `L²` domains of the div–div diagram: on every nonempty open
+`Ω ⊆ ℝⁿ`, `n ≥ 1`, some `u ∈ L²(Ω; Λⁿ ⊗ ℝⁿ)` is `S φ = (dxₐ ∧ φ)ₐ` for no `φ ∈ HΛⁿ⁻¹(Ω)`. -/
 theorem divDivFormData_exists_forall_S_ne (hne : Ω.Nonempty) (hn : 0 < n) :
     ∃ u ∈ ((vecRow n hΩ).d ((n : ℤ) - 1 + 1) ((n : ℤ) - 1 + 1 + 1)).domain,
       ∀ φ ∈ ((formRow n hΩ).d ((n : ℤ) - 1) ((n : ℤ) - 1 + 1)).domain, dxVecL2 _ φ ≠ u := by

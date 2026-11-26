@@ -8,41 +8,8 @@ public import Feec.ForMathlib.Lp.ProdEquiv
 /-!
 # Extension by parity of fields on the cube `Q = (0, ½)ᵈ`
 
-The cube `Q = (0, ½)ᵈ` is a fundamental domain of the reflections `x_j ↦ -x_j` of the torus
-`𝕋ᵈ = ℝᵈ/ℤᵈ`. For a sign vector `c ∈ {±1}ᵈ`, the functions on `𝕋ᵈ` with parity `c_j` in each
-variable `x_j` are the `L²` functions whose Fourier coefficients satisfy
-`f̂(…, -n_j, …) = c_j f̂(n)` (`paritySub c`). Restriction to `Q` is, on these, a scaled isometry
-(`‖f‖² = 2ᵈ ‖f|_Q‖²`, `Feec.Models.Cube.Geometry.norm_sq_eq_two_pow`) onto `L²(Q)` (its range is
-closed and contains the extensions of all test functions, `Feec.Models.Cube.Geometry.ext`), so it
-has an inverse: the **extension by parity** `extL2 c : L²(Q) → L²(𝕋ᵈ)`. This is the method of
-images: a homogeneous condition "`f = 0` on the faces `x_j ∈ {0, ½}`" is imposed by extending `f`
-oddly in `x_j`, a Neumann-type condition by extending evenly.
-
-For fields `L²(Q; ℂᴾ)` with a parity vector `c p` per component, `extF c` extends componentwise
-and takes Fourier coefficients (`Feec.Fourier.Torus.fieldFourier`): a scaled isometric embedding
-`L²(Q; ℂᴾ) → ℓ²(ℤᵈ; ℂᴾ)` onto the coefficient sequences with the parities `c`
-(`range_extF`). These are the embeddings of the mirror cube complexes into the torus complexes
-(`Feec.Models.Cube.Mirror`, `MirrorSym`, `MirrorBGG`).
-
-## Main definitions
-
-* `paritySub c`, `extL2 c`: the parity subspace of `L²(𝕋ᵈ)` and the extension `L²(Q) → L²(𝕋ᵈ)`.
-* `fieldParity c`, `extF c`: the same for fields, on the Fourier side.
-
-## Main results
-
-* `resQ_extL2`, `extL2_resQ`, `inner_extL2` (`⟪ext f, ext g⟫ = 2ᵈ ⟪f, g⟫`),
-  `extL2_toL2` (on test functions `extL2` is the classical extension `Geometry.ext`).
-* `inner_extF`, `range_extF`, `resQF_extF`, `extF_testField`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The extension by parity `extL2 c : L²(Q) → L²(𝕋ᵈ)`, inverse to restriction on the functions with
+parity `c`, and its Fourier-side version for fields `extF c`, with range `fieldParity c`.
 -/
 
 open scoped InnerProductSpace ENNReal
@@ -55,7 +22,7 @@ namespace Feec.Models.Cube.MirrorExt
 open Geometry
 open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_involutive)
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 variable {d : Type*} [Fintype d] [DecidableEq d]
@@ -101,8 +68,7 @@ theorem coeffCLM_apply (n : d → ℤ) (f : T2 d) :
 
 /-! ### Parity functions -/
 
-/-- **The functions on `𝕋ᵈ` with parity `c`**: `f̂(flip_k n) = c_k f̂(n)` for every variable `k`
-(for `c_k = ±1`: `f` even or odd in `x_k`). -/
+/-- **The functions on `𝕋ᵈ` with parity `c`**: `f̂(flip_k n) = c_k f̂(n)` for every variable `k`. -/
 def paritySub (c : d → ℂ) : Submodule ℂ (T2 d) :=
   ⨅ k, ⨅ n, LinearMap.ker ((coeffCLM (flipAt k n) - c k • coeffCLM n : T2 d →L[ℂ] ℂ) :
     T2 d →ₗ[ℂ] ℂ)
@@ -124,8 +90,6 @@ theorem isClosed_paritySub (c : d → ℂ) : IsClosed (paritySub c : Set (T2 d))
 
 instance (c : d → ℂ) : CompleteSpace (paritySub c) := (isClosed_paritySub c).completeSpace_coe
 
-/-- Parity under one reflection gives parity under every reflection `R_ε`, with the sign
-`sign c ε = ∏_{ε_j} c_j`. -/
 theorem mFourierCoeff_flipB {c : d → ℂ} {f : T2 d} (hf : f ∈ paritySub c) (ε : d → Bool)
     (n : d → ℤ) : mFourierCoeff (f : UnitAddTorus d → ℂ) (flipB ε n) =
       sign c ε * mFourierCoeff (f : UnitAddTorus d → ℂ) n := by
@@ -137,19 +101,16 @@ theorem mFourierCoeff_flipB {c : d → ℂ} {f : T2 d} (hf : f ∈ paritySub c) 
   | insert k s hk ih =>
     rw [flipB_boolOf_insert hk, mem_paritySub.1 hf, ih, sign_boolOf_insert c hk, mul_assoc]
 
-/-- A parity function has `|f ∘ R_ε| = |f|` a.e. -/
 theorem norm_comp_reflB_of_mem {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {f : T2 d}
     (hf : f ∈ paritySub c) (ε : d → Bool) :
     (fun x => ‖(f : UnitAddTorus d → ℂ) (reflB ε x)‖) =ᵐ[volume]
       fun x => ‖(f : UnitAddTorus d → ℂ) x‖ :=
   norm_comp_reflB_ae (norm_sign hc ε) (mFourierCoeff_flipB hf ε)
 
-/-- **The norm of a parity function**: `‖f‖² = 2ᵈ ‖f|_Q‖²`. -/
 theorem norm_sq_of_mem {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {f : T2 d}
     (hf : f ∈ paritySub c) : ‖f‖ ^ 2 = 2 ^ Fintype.card d * ‖resQ f‖ ^ 2 :=
   norm_sq_eq_two_pow (norm_comp_reflB_of_mem hc hf)
 
-/-- The classical extension of a test function has the parity `c`. -/
 theorem toL2_ext_mem {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {Φ : (d → ℝ) → ℂ}
     (hΦ : Domain.IsTest (Q d) Φ) : toL2 (continuous_ext c hΦ) ∈ paritySub c := by
   refine mem_paritySub.2 fun k n => ?_
@@ -215,8 +176,7 @@ def resEquiv : paritySub c ≃L[ℂ] Domain.L2 ℂ (Q d) :=
   ContinuousLinearEquiv.ofBijective (resP c) (LinearMap.ker_eq_bot.2 (injective_resP hc))
     (LinearMap.range_eq_top.2 (surjective_resP hc))
 
-/-- **The extension by parity** `L²(Q) → L²(𝕋ᵈ)`: the parity function with parity `c`
-restricting to the given function on `Q`. -/
+/-- **The extension by parity** `L²(Q) → L²(𝕋ᵈ)`, inverse to the restriction on `paritySub c`. -/
 def extL2 : Domain.L2 ℂ (Q d) →L[ℂ] T2 d :=
   (paritySub c).subtypeL.comp (resEquiv hc).symm.toContinuousLinearMap
 
@@ -265,7 +225,6 @@ theorem inner_extL2 (f g : Domain.L2 ℂ (Q d)) :
   rw [e f, e g, inner_smul_left, inner_smul_right, h, Complex.conj_ofReal, ← mul_assoc,
     ← Complex.ofReal_mul, Real.mul_self_sqrt (by positivity)]
 
-/-- **On test functions the extension is the classical one** (`Geometry.ext`). -/
 theorem extL2_toL2 {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ) :
     extL2 hc (Domain.toL2 hΦ) = toL2 (continuous_ext c hΦ) :=
   ((eq_extL2_iff hc).2 ⟨toL2_ext_mem hc hΦ, resQ_toL2_ext c hΦ⟩).symm
@@ -357,7 +316,6 @@ theorem mem_fieldParity_iff {w : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Me
 theorem extF_mem (u : Domain.L2F ℂ (Q d) P) : extF hc u ∈ fieldParity c := fun p => by
   rw [fieldFourier_symm_extF, extPi_apply]; exact extL2_mem (hc p) _
 
-/-- **A coefficient sequence with the parities `c` is the extension of its restriction.** -/
 theorem extF_resQF {w : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ))}
     (hw : w ∈ fieldParity c) :
     extF hc (resQF ((Fourier.Torus.fieldFourier d P).symm w)) = w := by
@@ -374,7 +332,6 @@ theorem range_extF : LinearMap.range (extF hc : Domain.L2F ℂ (Q d) P →ₗ[�
   · intro hw; exact ⟨_, extF_resQF hc hw⟩
 
 omit [Fintype P] in
-/-- **On test fields the extension is the classical one.** -/
 theorem extPi_testField {Φ : P → (d → ℝ) → ℂ} (hΦ : Domain.IsTestField (Q d) Φ) :
     extPi hc (Domain.testField hΦ) = WithLp.toLp 2 fun p => toL2 (continuous_ext (c p) (hΦ p)) := by
   ext1 p
@@ -382,7 +339,6 @@ theorem extPi_testField {Φ : P → (d → ℝ) → ℂ} (hΦ : Domain.IsTestFie
   exact extL2_toL2 (hc p) (hΦ p)
 
 omit [Fintype P] in
-/-- `ext c` is linear in the test function. -/
 theorem ext_sum (c : d → ℂ) {ι : Type*} (s : Finset ι) (a : ι → ℂ) (f : ι → (d → ℝ) → ℂ) :
     ext c (fun y => ∑ i ∈ s, a i * f i y) = fun x => ∑ i ∈ s, a i * ext c (f i) x := by
   funext x
@@ -393,7 +349,6 @@ theorem ext_sum (c : d → ℂ) {ι : Type*} (s : Finset ι) (a : ι → ℂ) (f
 /-! ### Fourier coefficients of extensions of test functions -/
 
 omit [DecidableEq d] [Fintype P] in
-/-- Fourier coefficients of finite linear combinations of continuous functions. -/
 theorem mFourierCoeff_sum {ι : Type*} (s : Finset ι) (a : ι → ℂ) {f : ι → UnitAddTorus d → ℂ}
     (hf : ∀ i, Continuous (f i)) (n : d → ℤ) :
     mFourierCoeff (fun x => ∑ i ∈ s, a i * f i x) n = ∑ i ∈ s, a i * mFourierCoeff (f i) n := by
@@ -406,7 +361,6 @@ theorem mFourierCoeff_sum {ι : Type*} (s : Finset ι) (a : ι → ℂ) {f : ι 
   congr 1; funext x; ring
 
 omit [Fintype P] in
-/-- `(ext Σ aᵢ fᵢ)^ = Σ aᵢ (ext fᵢ)^` for test functions. -/
 theorem mFourierCoeff_ext_sum (c : d → ℂ) {ι : Type*} (s : Finset ι) (a : ι → ℂ)
     {f : ι → (d → ℝ) → ℂ} (hf : ∀ i, Domain.IsTest (Q d) (f i)) (n : d → ℤ) :
     mFourierCoeff (ext c fun y => ∑ i ∈ s, a i * f i y) n =
@@ -428,8 +382,6 @@ theorem mFourierCoeff_ext_sub (c : d → ℂ) {f g : (d → ℝ) → ℂ} (hf : 
   simp [Fin.sum_univ_two, sub_eq_add_neg]
 
 omit [Fintype P] in
-/-- **Integration by parts for extensions**: the extension of `∂_k Φ` with the parity of `x_k`
-reversed has coefficients `2πi n_k` times those of the extension of `Φ`. -/
 theorem mFourierCoeff_ext_fderiv (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ)
     (k : d) (n : d → ℤ) :
     mFourierCoeff (ext (Function.update c k (-c k)) fun y => fderiv ℝ Φ y (Pi.single k 1)) n =
@@ -437,7 +389,6 @@ theorem mFourierCoeff_ext_fderiv (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ
   rw [← partialT_ext c hΦ k, mFourierCoeff_partialT (isSmooth_ext c hΦ).contDiff_one]
 
 omit [Fintype P] in
-/-- The same, for a parity vector `c'` equal to `c` with the parity of `x_k` reversed. -/
 theorem mFourierCoeff_ext_fderiv' {c c' : d → ℂ} (k : d) (hc : c' = Function.update c k (-c k))
     {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ) (n : d → ℤ) :
     mFourierCoeff (ext c' fun y => fderiv ℝ Φ y (Pi.single k 1)) n =
@@ -447,7 +398,6 @@ theorem mFourierCoeff_ext_fderiv' {c c' : d → ℂ} (k : d) (hc : c' = Function
 /-! ### Finitely supported coefficient sequences -/
 
 omit [Fintype d] [DecidableEq d] [Fintype P] in
-/-- A finitely supported function is in `L²` of the counting measure. -/
 theorem memLp_count_of_finite {α E : Type*} [MeasurableSpace α] [MeasurableSingletonClass α]
     [Countable α] [NormedAddCommGroup E] {f : α → E} (S : Finset α) (hS : ∀ a ∉ S, f a = 0) :
     MemLp f 2 (Measure.count : Measure α) :=
@@ -455,7 +405,6 @@ theorem memLp_count_of_finite {α E : Type*} [MeasurableSpace α] [MeasurableSin
     simp [hS a ha]))
 
 omit [Fintype d] [DecidableEq d] [Fintype P] in
-/-- **Finitely supported sequences lie in the domain of every `ℓ²` multiplier.** -/
 theorem mem_mulDomain_of_finite {α E F : Type*} [MeasurableSpace α] [MeasurableSingletonClass α]
     [Countable α] [NormedAddCommGroup E] [InnerProductSpace ℂ E] [NormedAddCommGroup F]
     [InnerProductSpace ℂ F] (m : α → E →L[ℂ] F) {u : Lp E 2 (Measure.count : Measure α)}
@@ -506,8 +455,6 @@ theorem sgnCLM_comm (s t : P → ℂ) (v : EuclideanSpace ℂ P) :
     sgnCLM P s (sgnCLM P t v) = sgnCLM P t (sgnCLM P s v) := by
   ext p; simp only [sgnCLM_apply]; ring
 
-/-- **Parities are fixed points of the fibre symmetries**: `w` has the parities `c` iff it is
-fixed by every `u ↦ D_k u ∘ flip_k`, `D_k = diag(c_{·,k})`. -/
 theorem mem_fieldParity_iff_symLp (hc : ∀ p j, c p j * c p j = 1)
     {w : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (d → ℤ))} :
     w ∈ fieldParity c ↔
@@ -532,8 +479,7 @@ theorem mem_fieldParity_iff_symLp (hc : ∀ p j, c p j * c p j = 1)
 /-! ### Scalar fields on the Fourier side -/
 
 variable (d) in
-/-- **Fourier coefficients of scalar functions**: `L²(𝕋ᵈ) ≃ₗᵢ ℓ²(ℤᵈ)`, as `L²` of the counting
-measure. -/
+/-- **Fourier coefficients of scalar functions**: `L²(𝕋ᵈ) ≃ₗᵢ ℓ²(ℤᵈ)`. -/
 def scalarFourier : T2 d ≃ₗᵢ[ℂ] Lp ℂ 2 (Measure.count : Measure (d → ℤ)) :=
   (mFourierBasis (d := d)).repr.trans (lp.equivLpCount ℂ (d → ℤ) ℂ 2)
 
@@ -589,7 +535,6 @@ theorem extS_injective {c : d → ℂ} (hc : ∀ j, c j * c j = 1) : Function.In
     rw [← resQ_extL2 hc f, ← resQ_extL2 hc g, ← scalarFourier_symm_extS hc f,
       ← scalarFourier_symm_extS hc g, h]
 
-/-- **Scalar parities are fixed points of the scalar fibre symmetries** `u ↦ c_k · u ∘ flip_k`. -/
 theorem mem_scalarParity_iff_symLp {c : d → ℂ} (hc : ∀ j, c j * c j = 1)
     {u : Lp ℂ 2 (Measure.count : Measure (d → ℤ))} :
     u ∈ scalarParity d c ↔
@@ -617,8 +562,7 @@ section LiftLp
 variable {α E F : Type*} [MeasurableSpace α] [MeasurableSingletonClass α] [Countable α]
   [NormedAddCommGroup E] [InnerProductSpace ℂ E] [NormedAddCommGroup F] [InnerProductSpace ℂ F]
 
-/-- The isometry `L²(α; F) → L²(α; E)` induced by an isometric embedding `ι : F → E` (counting
-measure). -/
+/-- The isometry `L²(α; F) → L²(α; E)` induced by an isometric embedding `ι : F → E`. -/
 def liftLp (ι : F →ₗᵢ[ℂ] E) :
     Lp F 2 (Measure.count : Measure α) →ₗᵢ[ℂ] Lp E 2 (Measure.count : Measure α) where
   toLinearMap := (ι.toContinuousLinearMap.compLpL 2 (Measure.count : Measure α)).toLinearMap
@@ -681,7 +625,6 @@ theorem inner_corestrictLp (x y : X) :
   rw [← (liftLp ι).inner_map_map, liftLp_corestrictLp, liftLp_corestrictLp]
 
 omit [MeasurableSingletonClass α] [Countable α] in
-/-- `liftLp` intertwines the fibre symmetries `u ↦ ρ ∘ u ∘ σ`. -/
 theorem liftLp_symLp (R : Fourier.Reflection (Measure.count : Measure α)) {ρ : F →L[ℂ] F}
     {ρ' : E →L[ℂ] E} (h : ∀ v, ι (ρ v) = ρ' (ι v)) (u : Lp F 2 (Measure.count : Measure α)) :
     liftLp ι (Fourier.symLp R ρ u) = Fourier.symLp R ρ' (liftLp ι u) := by
@@ -752,8 +695,6 @@ end ProdLp
 
 /-! ### `ℓ²` multipliers pointwise -/
 
-/-- **A pointwise identity gives the multiplier graph**: if `m a (u a) = v a` for every `a`, then
-`u ∈ D(mulOp m)` and `mulOp m u = v` (counting measure). -/
 theorem exists_mulOp_count_eq {α E F : Type*} [MeasurableSpace α] [MeasurableSingletonClass α]
     [Countable α] [NormedAddCommGroup E] [InnerProductSpace ℂ E] [NormedAddCommGroup F]
     [InnerProductSpace ℂ F] (m : α → E →L[ℂ] F) {u : Lp E 2 (Measure.count : Measure α)}

@@ -9,30 +9,22 @@ public import Mathlib.Analysis.InnerProductSpace.PiL2
 /-!
 # Non-vacuity witnesses
 
-Concrete objects satisfying the standing hypotheses of the abstract theorems, over `𝕜 = ℝ` or
-`ℂ`, so that none of them is vacuous.
+Concrete operators and complexes over `𝕜 = ℝ` or `ℂ` that satisfy the standing hypotheses of the
+existence, constraint-propagation and Hodge wave theorems.
 
-* **Bounded skew generators.** For every bounded `B` with `⟪B x, y⟫ = -⟪x, B y⟫`, the operator
-  `B` with domain `E` is densely defined and skew-adjoint, every continuous forcing is admissible,
-  and `U' = B U + F` has a unique classical solution (`bounded_standing_hypotheses`).
-* **Constraint spaces**: for bounded `B` commuting with `A`, `ker B` reduces `A` and is
-  propagated (`ker_standing_hypotheses`).
-* **A nonzero witness**: the rotation generator `J (x₀, x₁) = (-x₁, x₀)` on `𝕜²`
-  (`rotGen_standing_hypotheses`).
-* **A Hodge wave equation with `L ≠ 0`**: the short complex `𝕜 --id--> 𝕜 → 0` has a nonzero
-  wave operator, and its Hodge wave equation is well posed (`idComplex_nonvacuous`).
+## Main results
 
-Further witnesses live next to the theory they instantiate: the compactness property on an
-infinite-dimensional space (`Feec.Counterexamples.hasCompactProperty_infiniteDimensional`), BGG
-discretizations (`Feec.BGG.Discrete.exists_nonvacuous`) and the Einstein–Bianchi propagation
-hypotheses (`Feec.EinsteinBianchi.propagation_hyps_nonvacuous`).
+* `bounded_standing_hypotheses`: a bounded skew-symmetric `B` generates unique classical solutions
+  for continuous forcing.
+* `ker_standing_hypotheses`: for bounded `A`, `B` with `A` skew and `AB = BA`, `ker B` reduces
+  `A` and is kept.
+* `rotGen_standing_hypotheses`: the rotation generator on `𝕜²`, a nonzero witness.
+* `idComplex_nonvacuous`: `𝕜 --id--> 𝕜 → 0` has a nonzero, well-posed Hodge wave operator.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (Thm 4.3, Cor 4.5), §4.4 (Thms 4.6, 4.7)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  Ch. 1 (uniformly continuous groups)
+  §4.3, §4.4
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -52,7 +44,6 @@ section Bounded
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
-/-- For a bounded `B` with domain `E`, every continuous forcing lies in `C([a,b]; D(B))`. -/
 theorem contDomain_toPMap_top (B : E →L[𝕜] E) {a b : ℝ} {F : ℝ → E}
     (hF : ContinuousOn F (Icc a b)) :
     Evolution.ForcingClass.contDomain ((B : E →ₗ[𝕜] E).toPMap ⊤) a b F :=
@@ -61,7 +52,6 @@ theorem contDomain_toPMap_top (B : E →L[𝕜] E) {a b : ℝ} {F : ℝ → E}
 
 variable [CompleteSpace E]
 
-/-- A bounded skew-symmetric operator is skew-adjoint as an unbounded operator. -/
 theorem isSkewAdjoint_toPMap_top {B : E →L[𝕜] E} (hB : ∀ x y, ⟪B x, y⟫_𝕜 = -⟪x, B y⟫_𝕜) :
     ((B : E →ₗ[𝕜] E).toPMap ⊤).IsSkewAdjoint :=
   (ContinuousLinearMap.isSkewAdjoint_toPMap_top_iff B).2
@@ -69,10 +59,9 @@ theorem isSkewAdjoint_toPMap_top {B : E →L[𝕜] E} (hB : ∀ x y, ⟪B x, y�
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **The standing hypotheses of Thm 4.3 are satisfiable**: for every bounded `B` with
-`⟪B x, y⟫ = -⟪x, B y⟫`, the operator `B` (domain `E`) is densely defined and skew-adjoint, and
-for every `U₀ ∈ E` and every continuous forcing `F` the problem `U' = B U + F`, `U a = U₀` has a
-classical solution on `[a, b]`, unique among strong solutions. [QuennevilleBelair2015], Thm 4.3 -/
+/-- **The standing hypotheses of Thm 4.3 are satisfiable**: a bounded skew-symmetric `B` is
+skew-adjoint, with classical solutions for continuous forcing, unique among strong ones.
+[QuennevilleBelair2015], Thm 4.3 -/
 theorem bounded_standing_hypotheses (B : E →L[𝕜] E) (hB : ∀ x y, ⟪B x, y⟫_𝕜 = -⟪x, B y⟫_𝕜) :
     Dense (((B : E →ₗ[𝕜] E).toPMap ⊤).domain : Set E) ∧
       ((B : E →ₗ[𝕜] E).toPMap ⊤).IsSkewAdjoint ∧
@@ -84,10 +73,8 @@ theorem bounded_standing_hypotheses (B : E →L[𝕜] E) (hB : ∀ x y, ⟪B x, 
   exact (isSkewAdjoint_toPMap_top hB).existsUnique_classicalSolution Submodule.mem_top
     (contDomain_toPMap_top B hF).admissible
 
-/-- **The hypotheses of Cor 4.5 are satisfiable**: for a bounded skew `A` and a bounded `B`
-commuting with `A`, the constraint space `K = ker B` reduces `A`, so for `U₀ ∈ K` and continuous
-`K`-valued forcing the classical solution of `U' = A U + F` stays in `K`. `K` is nontrivial
-whenever `B` is neither `0` nor injective. [QuennevilleBelair2015], Cor 4.5 -/
+/-- **The hypotheses of Cor 4.5 are satisfiable**: for bounded `A` skew and `B` commuting with `A`,
+`ker B` reduces `A` and is kept by the solutions. [QuennevilleBelair2015], Cor 4.5 -/
 theorem ker_standing_hypotheses (A B : E →L[𝕜] E) (hA : ∀ x y, ⟪A x, y⟫_𝕜 = -⟪x, A y⟫_𝕜)
     (hAB : A.comp B = B.comp A) :
     ∃ _ : (LinearMap.ker (B : E →ₗ[𝕜] E)).HasOrthogonalProjection,
@@ -124,7 +111,6 @@ theorem rotGen_apply (x : EuclideanSpace 𝕜 (Fin 2)) :
       x 1 • EuclideanSpace.single (0 : Fin 2) (1 : 𝕜) := by
   simp [rotGen]
 
-/-- `J` is skew-symmetric. -/
 theorem rotGen_skew (x y : EuclideanSpace 𝕜 (Fin 2)) :
     ⟪rotGen 𝕜 x, y⟫_𝕜 = -⟪x, rotGen 𝕜 y⟫_𝕜 := by
   simp only [rotGen_apply, inner_sub_left, inner_sub_right, inner_smul_left, inner_smul_right,
@@ -132,7 +118,6 @@ theorem rotGen_skew (x y : EuclideanSpace 𝕜 (Fin 2)) :
   simp
   ring
 
-/-- `J ≠ 0`. -/
 theorem rotGen_ne_zero : rotGen 𝕜 ≠ 0 := by
   intro h
   have := congrArg (fun f : EuclideanSpace 𝕜 (Fin 2) →L[𝕜] EuclideanSpace 𝕜 (Fin 2) =>
@@ -174,9 +159,9 @@ theorem idDatum_mem : (idDatum : PiLp 2 (ShortHilbertComplex.W3 𝕜 𝕜 PUnit)
   · rw [show (idComplex 𝕜).d₁ = 0 from rfl, LinearPMap.adjoint_zero]
     trivial
 
-/-- **The hypotheses of Thms 4.6/4.7 hold with a nonzero Hodge wave operator**: for
-`𝕜 --id--> 𝕜 → 0`, `L (1, 0, 0) ≠ 0`, and for every datum in `D(L)` the Hodge wave equation has a
-classical solution, unique among strong and weak solutions. [QuennevilleBelair2015], Thm 4.6, Thm 4.7 -/
+/-- **The hypotheses of Thms 4.6/4.7 hold with a nonzero Hodge wave operator** on `𝕜 --id--> 𝕜 → 0`,
+with classical solutions of the homogeneous equation unique among weak ones.
+[QuennevilleBelair2015], Thm 4.6, Thm 4.7 -/
 theorem idComplex_nonvacuous :
     (∃ x : (idComplex 𝕜).wave.domain, (idComplex 𝕜).wave x ≠ 0) ∧
       ∀ U₀ ∈ (idComplex 𝕜).wave.domain, ∀ a b : ℝ,

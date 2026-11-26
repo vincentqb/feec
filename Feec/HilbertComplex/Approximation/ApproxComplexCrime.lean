@@ -7,140 +7,23 @@ public import Feec.HilbertComplex.Approximation.RitzResolvent
 /-!
 # Approximating families of discrete differential spaces with a cochain defect
 
-The complex-level front end `Feec.HilbertComplex.ApproxFEEC.ofComplex` requires the reading maps
-`iₕ : Vₕ → W` to be exact cochain maps (`𝐝 iₕ = iₕ 𝐝ₕ`). This file removes that hypothesis: the
-discrete differential `𝐝ₕ` is independent of `𝐝`, and its failure to commute with the reading map
-enters, weakly, as a **cochain defect**, next to the inner-product defect of [HolstStern2012],
-§3. The result is again an approximating FEEC discretization (`Feec.HilbertComplex.ApproxFEEC`):
-the hypotheses of the Trotter–Kato bridge are derived from the inner-product defect and from
-pointwise convergence `iₕ Rₕ y → y` of the modified elliptic projection on the admissible states,
-which is what the field `consistent` amounts to (`consistent_iff_tendsto_incl_load`).
-
-## Setting
-
-An **approximating family of discrete differential spaces** (`ApproxComplexCrime.Family`) has,
-for each `h`, a finite-dimensional inner product space `Xₕ` (its own inner product), a
-**differential** `𝐝ₕ : Xₕ → Xₕ` with `𝐝ₕ 𝐝ₕ = 0` (a total discrete complex: no grading is needed
-for the convergence theory), uniformly bounded reading maps `iₕ : Xₕ → W` and left inverses `πₕ`.
-Nothing relates `𝐝ₕ` to `𝐝`, and `iₕ Xₕ` need not lie in `D(𝐝)`. The discrete generator is the
-Hodge wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*` (`ApproxComplexCrime.Family.L`), `Jₕ = iₕ* iₕ`.
-
-The **cochain defect** of `y ∈ D(L)` is `κₕ(y) = 𝐝ₕ* iₕ* y - iₕ* 𝐝* y ∈ Xₕ`
-(`ApproxComplexCrime.Family.cochainDefect`): `⟪κₕ(y), v⟫ = ⟪y, iₕ 𝐝ₕ v⟫ - ⟪𝐝* y, iₕ v⟫`, the
-pairing of `y` with `(iₕ 𝐝ₕ - 𝐝 iₕ) v` when `iₕ v ∈ D(𝐝)` (`inner_cochainDefect_of_mem`). It
-vanishes for cochain maps (`cochainDefect_eq_zero`) and is measured in the dual discrete graph
-norm, `|⟪κₕ(y), v⟫| ≤ δ (‖v‖ + ‖𝐝ₕ v‖)`.
-
-The comparison is the **exact-load modified elliptic projection** `Rₕ y = (1 - Lₕ)⁻¹ iₕ* (1 - L) y`
-of `y ∈ D(L)` (`load` applied to `y - L y`). It needs `L y`, not only `(y, 𝐝 y)`: with a cochain
-defect the load of `ApproxComplex.Family.ellProj` (defined on `Γ(𝐝)`) differs from `iₕ*(1 - L)`
-on `D(L)` by `κₕ`, which is not a bounded function of `(y, 𝐝 y)`. So the comparison is the
-**load Ritz projection** `ApproxFEEC.loadRitz` (a `DissipFEEC.Ritz` of the resolvent lift
-`ℓ = 1 - L`, `DissipFEEC.Lift.resolvent`, with `Δₕ = Bₕ - iₕ* (1 - L)⁻¹`, `Δₕ' = -Δₕ`), restricted
-to the core (`ApproxFEEC.crimeCmp`, `ApproxFEEC.ofComplexCrimeCore`), and the hypotheses of the
-core (approximation, vanishing defects, uniformly on `[0, T]`) are derived on the admissible
-states.
-
-**The approximating family** (`ApproxComplexCrime`) adds a constraint `K`, a filter, a set
-`A ⊆ D(L)` of admissible states and a core `Z ≤ D(L²)` whose forward orbits (and those of `L Z`)
-stay in `A`, and two hypotheses: the inner-product defect in the graph norm of `𝐝ₕ` tends to `0`
-(`ApproxComplexCrime.Family.graphDefect`, the norm of `1 - Jₕ` on the graph space of `𝐝ₕ`, at most
-`‖1 - Jₕ‖`; with the family, the constraint and the filter, the data
-`ApproxComplexCrime.HeatFamily` of the heat theorem with crimes, which it extends), and **consistent
-approximation** on `A` (`ApproxComplexCrime.consistent`): approximants `wₕ` with
-`‖y - iₕ wₕ‖ → 0` whose discrete residual `⟪(1 - Lₕ) wₕ, v⟫ - ⟪(1 - L) y, iₕ v⟫` tends to `0` in
-the dual discrete graph norm (a "best approximation plus consistency" condition in the spirit of
-[HolstStern2012], §3.3). Since `Rₕ y` is itself an approximant with residual `0`, this is
-equivalent to `iₕ Rₕ y → y` (`ApproxComplexCrime.consistent_iff_tendsto_incl_load`): the field
-is the convergence hypothesis on the projection, and the content is in the ways to check it.
-The residual splits exactly (`inner_residual_eq`) into the inner-product defect, the
-graph-norm approximation error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖` and the cochain defect, so graph-norm
-approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖_{Vₕ} → 0` give it
-(`consistent_of_cochainDefect`, `ApproxComplexCrime.ofCochainDefect`). It also holds with a
-Galerkin projection as approximant (residual `0`): `ApproxComplexCrime.ofGalerkinCore` re-reads a
-discretization whose generator is `𝐝ₕ - 𝐝ₕ*`, with `‖1 - Jₕ‖_{Vₕ} → 0` (orthogonal reading maps
-are the case `Jₕ = 1`), and a core whose comparison satisfies the Galerkin identity
-`(1 - Lₕ) pₕ(t) = iₕ* (1 - L) e^{tL} x` as a complex-level family; the cochain defect is then
-absorbed by the Galerkin identity and not computed. This bridge takes the existing core (its
-convergence is not re-proved) and adds the complex-level structure.
+Generalizations of the Holst–Stern discretizations ([HolstStern2012], §3) in which the reading
+maps need not be cochain maps: discrete differentials independent of `𝐝`, with the inner-product
+defect in the graph norm and a cochain defect. With consistent approximation, each is an
+approximating FEEC discretization of the Hodge wave equation, with rates from complex-level
+estimates.
 
 ## Main results
 
-* `ApproxComplexCrime.Family.norm_sub_load_add_le`, `norm_sub_incl_load_le`: **the Strang lemma**,
-  `‖w - Rₕ y‖ + ‖𝐝ₕ (w - Rₕ y)‖ ≤ 8 ε` and `‖y - iₕ Rₕ y‖ ≤ ‖y - iₕ w‖ + 8 C ε` for an approximant
-  `w` of residual `≤ ε`.
-* `ApproxComplexCrime.Family.inner_residual_eq`, `norm_residual_le`: the residual is at most
-  `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ`, `δ` the cochain
-  defect, and `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖` is at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)` and at most
-  `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`norm_one_sub_J_add_le_opNorm`, `norm_one_sub_J_add_le`).
-* `ApproxComplexCrime.Family.graphDefect`: **the inner-product defect in the graph norm**
-  `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ`
-  (`ContinuousLinearMap.graphOpNorm`, as for the discrete complexes of `ofComplex`,
-  `ApproxComplex.Family.graphDefect`), so
-  `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`norm_one_sub_J_apply_le`); at most `‖1 - Jₕ‖`
-  (`graphDefect_le`), and at most `√2 δ` if `‖(1 - Jₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v`
-  (`graphDefect_le_of_forall`). It is the defect hypothesis of the heat and wave families
-  (`HeatFamily`, `ApproxComplexCrime`): `Bₕ` is bounded in the graph norm,
-  `‖Bₕ z‖ + ‖𝐝ₕ Bₕ z‖ ≤ 8 C ‖z‖` (`norm_load_add_le`).
-* `ApproxComplexCrime.Family.load_defect`, `norm_load_sub_adjoint_le`: **the defect identity**
-  `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) - Δₕ y`, `Δₕ z = Rₕ z - iₕ* z`, and
-  `‖Δₕ z‖ ≤ ‖(1 - Jₕ) Rₕ z‖ + C ‖z - iₕ Rₕ z‖`.
-* `ApproxFEEC.ofComplexCrime`, `ApproxFEEC.ofComplexCrimeCore`, `approxFEEC_ofComplexCrime`: the
-  approximating FEEC discretization (`Xₕ`, `Lₕ = 𝐝ₕ - 𝐝ₕ*`, `iₕ`, `πₕ`) with the core `Z`
-  (comparison `Rₕ e^{tL} x`), the four conclusions of `approxFEEC`, the Strang and defect bounds,
-  and discrete constraints (an `Lₕ`-invariant subspace of `Xₕ` is preserved exactly,
-  `mem_of_invariant`; if it is read inside `K` the residual is `0`).
-* **The cochain special case**: `ApproxComplex.toCrime` (zero cochain defect,
-  `ApproxComplex.Family.cochainDefect_toCrimeFamily`) has `ofComplexCrime F.toCrime = ofComplex F`
-  (`ApproxFEEC.ofComplexCrime_toCrime`, by `rfl`) and the same comparison on `D(L²)`
-  (`ApproxFEEC.ofComplexCrimeCore_toCrime_p`); in particular a conforming discretization is the
-  case of zero defects (`ConstrainedFEEC.toCrime`, `toCrime_J`, `toCrime_cochainDefect`,
-  `toCrime_sol`), the embedding through which the crown contains the FEEC theorem for these
-  families (`ApproxComplexCrime.feec`, `Feec.HilbertComplex.Approximation.Crown`).
-* **Galerkin cores** (`ApproxComplexCrime.ofGalerkinCore`): the discrete solutions are those of
-  the given discretization (`ofComplexCrime_ofGalerkinCore_sol`), the comparison is the given one
-  (`galerkin_p_eq`, `galerkin_p'_eq` for the derivative), and `iₕ iₕ* → 1` on the closure of the
-  core (`tendsto_incl_adjoint_galerkin`, from the defect in the graph norm and the uniform bound,
-  `ContinuousLinearMap.tendsto_apply_of_mem_closure`). Complexification of a
-  differential and of Galerkin identities: `ApproxFEEC.complexifyD`,
-  `ApproxFEEC.complexify_L_eq_diffWave`, `ApproxFEEC.complexify_galerkin`.
-* **Rates from complex-level estimates** (`ApproxComplexCrime.rateClass`, the rate class of the
-  load Ritz projection, `DissipFEEC.Ritz.orbitRateClass`): approximants along the
-  trajectory with approximation, inner-product defect `‖(1 - Jₕ) w‖` and residual `O(m(h)ᵅ)` give
-  a `DissipFEEC.RateClass` with `C = (1 + 8 C_ι) Cₐ`,
-  `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`, hence
-  `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c` (`error_le_of_rateClass`);
-  `ApproxComplexCrime.rateClass_of_split` gives a rate class at order `min(α, β, γ)` from
-  graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` at the approximants
-  (`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖`) and cochain defect `O(m^γ)` (`0 ≤ m ≤ 1`), with
-  `Cₐ' = (1 + C_ι) Cₐ + C_β + C_γ` in place of `Cₐ` (through `Family.rateData_of_split` and
-  `add_rpow_le_rpow_min`), and `error_le_of_split`; `galerkinRateClass` for Galerkin cores
-  (approximation and inner-product defect along the comparison; `galerkinRateClass_of_isOrthogonal`
-  for orthogonal reading maps);
-  `ConstrainedFEEC.RateClass.toCrimeRate`: the conforming rate classes give rate classes of
-  `ofComplex` (factor `C + C_ι C' t`, `ConstrainedFEEC.RateClass.norm_sub_ofComplex_le`).
-
-The static and heat FEEC theorems for these families (the mixed Hodge Laplacian with the load
-`iₕ* f`, and the heat equation with the heat Ritz projection) are in
-`Feec.HilbertComplex.Approximation.StaticCrime` and `Feec.HilbertComplex.Approximation.HeatCrime`.
-
-Non-vacuity, with a nonzero cochain defect and a non-cochain isometric reading map:
-`Feec.HilbertComplex.ApproxComplexCrime.shifted_nonvacuous`
-(`Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness`); with distinct orders in
-`rateClass_of_split` (inner-product defect `O(h)`, cochain defect and graph-norm error `O(h²)`,
-rate class of order `1`): `Feec.HilbertComplex.ApproxComplexCrime.mixed_nonvacuous`. Instances: the
-scheme (6.5) of [QuennevilleBelair2015] with both boundary conditions
-(`Feec.Instances.EinsteinBianchiFEMComplex`) and the Maxwell discretizations
-(`Feec.Instances.Maxwell.cubePMC_ofComplex`).
+* `ApproxComplexCrime.Family.norm_sub_incl_load_le`: the Strang lemma.
+* `ApproxComplexCrime.Family.inner_residual_eq`: the splitting of the residual.
+* `approxFEEC_ofComplexCrime`: the approximating FEEC theorem for `ofComplexCrime`.
+* `ApproxFEEC.ofComplexCrime_toCrime`: `ofComplex` is the cochain special case.
+* `ApproxComplexCrime.error_le_of_split`: the error at order `min(α, β, γ)`.
 
 ## References
 
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (§3.3, Thm 3.10)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 ((4.11)), §6.2 ((6.4))
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §3.4 (Trotter–Kato)
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -158,11 +41,8 @@ open _root_.Feec.HodgeWave
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-! ### Uniform convergence on compact sets, from pointwise convergence on the set -/
+/-! ### Uniform convergence on compact sets -/
 
-/-- **Pointwise convergence to `0` on a compact set is uniform there** for a family of functions
-with a uniform Lipschitz-type bound (the centres of a finite cover by small balls lie in the
-set). -/
 theorem eventually_forall_lt_of_tendsto_on {κ F : Type*} [SeminormedAddCommGroup F]
     {l : Filter κ} {f : κ → F → ℝ} {M : ℝ} (hf : ∀ h ζ ζ', f h ζ ≤ f h ζ' + M * ‖ζ - ζ'‖)
     {S : Set F} (hlim : ∀ ζ ∈ S, Tendsto (fun h => f h ζ) l (𝓝 0)) (hS : IsCompact S) {ε : ℝ}
@@ -196,7 +76,7 @@ section DiffSpace
 variable {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X]
   (D : X →L[𝕜] X)
 
-/-- The **Hodge wave operator** `D - D*` of an operator `D` (a differential when `D D = 0`). -/
+/-- The **Hodge wave operator** `D - D*` of an operator `D`. -/
 def diffWave : X →L[𝕜] X := D - D.adjoint
 
 theorem diffWave_apply (v : X) : diffWave D v = D v - D.adjoint v := rfl
@@ -218,7 +98,6 @@ theorem re_inner_sub_diffWave_self (v : X) :
     linarith
   rw [inner_sub_left, _root_.map_sub, hs, sub_zero, inner_self_eq_norm_sq]
 
-/-- `‖v‖ ≤ ‖v - (D - D*) v‖` (skewness). -/
 theorem norm_le_norm_sub_diffWave (v : X) : ‖v‖ ≤ ‖v - diffWave D v‖ := by
   have h := re_inner_sub_diffWave_self D v
   have h1 : RCLike.re ⟪v - diffWave D v, v⟫_𝕜 ≤ ‖v - diffWave D v‖ * ‖v‖ :=
@@ -240,21 +119,17 @@ theorem injective_one_sub_diffWave :
 
 variable [FiniteDimensional 𝕜 X]
 
-/-- `1 - (D - D*)` as an isomorphism (finite dimension: it is injective). -/
+/-- `1 - (D - D*)` as a continuous linear equivalence. -/
 def diffResolvent : X ≃L[𝕜] X :=
   (LinearEquiv.ofInjectiveEndo _ (injective_one_sub_diffWave D)).toContinuousLinearEquiv
 
 theorem diffResolvent_apply (v : X) : diffResolvent D v = v - diffWave D v := rfl
 
-/-- `‖(1 - (D - D*))⁻¹ v‖ ≤ ‖v‖`. -/
 theorem norm_diffResolvent_symm_apply_le (v : X) : ‖(diffResolvent D).symm v‖ ≤ ‖v‖ := by
   have h := norm_le_norm_sub_diffWave D ((diffResolvent D).symm v)
   rwa [← diffResolvent_apply, ContinuousLinearEquiv.apply_symm_apply] at h
 
 omit [FiniteDimensional 𝕜 X] in
-/-- **Coercivity of `1 - (D - D*)` in the discrete graph norm** of a differential (`D D = 0`): if
-`|⟪r - L r, v⟫| ≤ M (‖v‖ + ‖D v‖)` for every `v`, then `‖r‖ + ‖D r‖ ≤ 8 M` (test with
-`v = r - D r`). -/
 theorem norm_add_norm_le_of_inner_diff (hDD : ∀ v, D (D v) = 0) (r : X) {M : ℝ} (hM : 0 ≤ M)
     (h : ∀ v, ‖⟪r - diffWave D r, v⟫_𝕜‖ ≤ M * (‖v‖ + ‖D v‖)) :
     ‖r‖ + ‖D r‖ ≤ 8 * M := by
@@ -280,9 +155,6 @@ theorem norm_add_norm_le_of_inner_diff (hDD : ∀ v, D (D v) = 0) (r : X) {M : �
     nlinarith [sq_nonneg (‖r‖ - ‖D r‖)]
   nlinarith
 
-/-- **Invariant subspaces of a skew generator are preserved by its group**: if `L` is skew on a
-finite-dimensional `X` and `L K ⊆ K`, then `e^{tL} K ⊆ K` for all `t` (the orbit of the
-restriction solves `u' = L u`, and the solution is unique). -/
 theorem mem_of_invariant [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X)
     (hL : ∀ x y, ⟪L x, y⟫_𝕜 = -⟪x, L y⟫_𝕜) (K : Submodule 𝕜 X) (hK : ∀ v ∈ K, L v ∈ K)
     {v : X} (hv : v ∈ K) (t : ℝ) : (C0Group.ofBounded L).S t v ∈ K := by
@@ -310,11 +182,9 @@ section WaveDomain
 
 variable (H : HilbertComplex 𝕜 c W)
 
-/-- `L y = 𝐝 y - 𝐝* y` on `D(L)`. -/
 theorem wave_eq_sub (y : H.wave.domain) :
     H.wave y = H.totalD ⟨y, y.2.1⟩ - H.dual.totalD ⟨y, y.2.2⟩ := rfl
 
-/-- `‖L y‖² = ‖𝐝 y‖² + ‖𝐝* y‖²` on `D(L)` (`𝐝 𝐝 = 0`). -/
 theorem norm_wave_sq' (y : H.wave.domain) :
     ‖H.wave y‖ ^ 2 = ‖H.totalD ⟨y, y.2.1⟩‖ ^ 2 + ‖H.dual.totalD ⟨y, y.2.2⟩‖ ^ 2 := by
   have h0 : ⟪H.totalD ⟨y, y.2.1⟩, H.dual.totalD ⟨y, y.2.2⟩⟫_𝕜 = 0 := by
@@ -322,7 +192,6 @@ theorem norm_wave_sq' (y : H.wave.domain) :
       H.totalD_comp_totalD, inner_zero_left]
   rw [wave_eq_sub, @norm_sub_sq 𝕜, h0, _root_.map_zero, mul_zero, sub_zero]
 
-/-- `‖𝐝 y‖ ≤ ‖L y‖` on `D(L)`. -/
 theorem norm_totalD_le_norm_wave (y : H.wave.domain) : ‖H.totalD ⟨y, y.2.1⟩‖ ≤ ‖H.wave y‖ := by
   have h := norm_wave_sq' H y
   nlinarith [norm_nonneg (H.totalD ⟨y, y.2.1⟩), norm_nonneg (H.wave y),
@@ -332,11 +201,7 @@ end WaveDomain
 
 /-! ### Approximating families of discrete differential spaces -/
 
-/-- A **family of discrete differential spaces with reading maps** for the Hilbert complex `H`:
-for each `h`, a finite-dimensional inner product space `Xₕ` with its own inner product, a
-differential `𝐝ₕ` (`𝐝ₕ 𝐝ₕ = 0`), bounded reading maps `iₕ : Xₕ → W` with left inverses `πₕ`
-(`πₕ iₕ = 1`), uniformly bounded. `𝐝ₕ` is not related to `𝐝`: `iₕ` need not be a cochain map,
-nor isometric, nor map into `D(𝐝)`. -/
+/-- A **family of discrete differential spaces** with uniformly bounded reading maps `iₕ`. -/
 structure ApproxComplexCrime.Family (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the discrete spaces -/
   X : κ → Type u
@@ -385,16 +250,15 @@ theorem norm_adjoint_incl_apply_le (h : κ) (z : PiLp 2 W) :
     ((ContinuousLinearMap.adjoint.norm_map (S.incl h)).trans_le (S.norm_incl_le h))
     (norm_nonneg _))
 
-/-- **Stability of the reading map**: `‖v‖ ≤ C ‖iₕ v‖` (from `πₕ iₕ = 1`). -/
 theorem norm_le_norm_incl (h : κ) (v : S.X h) : ‖v‖ ≤ S.boundConst * ‖S.incl h v‖ :=
   calc ‖v‖ = ‖S.proj h (S.incl h v)‖ := by rw [S.proj_incl]
     _ ≤ ‖S.proj h‖ * ‖S.incl h v‖ := (S.proj h).le_opNorm _
     _ ≤ _ := mul_le_mul_of_nonneg_right (S.norm_proj_le h) (norm_nonneg _)
 
-/-- The discrete Hodge wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*` (adjoint in the inner product of `Xₕ`). -/
+/-- The discrete Hodge wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*`. -/
 abbrev L (h : κ) : S.X h →L[𝕜] S.X h := diffWave (S.D h)
 
-/-- The **inner-product operator** `Jₕ = iₕ* iₕ` (`⟪Jₕ v, w⟫ = ⟪iₕ v, iₕ w⟫`). -/
+/-- The **inner-product operator** `Jₕ = iₕ* iₕ`. -/
 def J (h : κ) : S.X h →L[𝕜] S.X h := (S.incl h).adjoint ∘L S.incl h
 
 theorem inner_J (h : κ) (v w : S.X h) : ⟪S.J h v, w⟫_𝕜 = ⟪S.incl h v, S.incl h w⟫_𝕜 := by
@@ -406,69 +270,49 @@ theorem norm_one_sub_J_le (h : κ) : ‖1 - S.J h‖ ≤ 1 + S.boundConst ^ 2 :=
   rw [ContinuousLinearMap.adjoint.norm_map, pow_two]
   exact mul_le_mul (S.norm_incl_le h) (S.norm_incl_le h) (norm_nonneg _) S.boundConst_nonneg
 
-/-- **The inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ}`: the norm of `1 - Jₕ` from the
-graph space `Vₕ` of `𝐝ₕ` (`‖v‖²_{Vₕ} = ‖v‖² + ‖𝐝ₕ v‖²`) to `Xₕ`
-(`ContinuousLinearMap.graphOpNorm`), the least `δ` with `‖(1 - Jₕ) v‖ ≤ δ ‖v‖_{Vₕ}`. It is at most
-`‖1 - Jₕ‖` (`graphDefect_le`), and it is the defect that the static, heat and wave theories with
-crimes use: they apply `1 - Jₕ` only to discrete forms whose graph norm they control
-(`norm_one_sub_J_apply_le`, `norm_one_sub_J_apply_le_of_D_eq_zero`). -/
+/-- **The inner-product defect** `graphDefect`: the norm of `1 - Jₕ` on the graph space of `𝐝ₕ`. -/
 def graphDefect (h : κ) : ℝ := (S.D h).graphOpNorm (1 - S.J h)
 
 theorem graphDefect_nonneg (h : κ) : 0 ≤ S.graphDefect h := (S.D h).graphOpNorm_nonneg _
 
-/-- `‖1 - Jₕ‖_{Vₕ} ≤ ‖1 - Jₕ‖`. -/
 theorem graphDefect_le (h : κ) : S.graphDefect h ≤ ‖1 - S.J h‖ := (S.D h).graphOpNorm_le _
 
-/-- `‖1 - Jₕ‖_{Vₕ} = 0` iff `Jₕ = 1` (the inclusion of the graph space is onto). -/
 theorem graphDefect_eq_zero_iff (h : κ) : S.graphDefect h = 0 ↔ S.J h = 1 :=
   ((S.D h).graphOpNorm_eq_zero_iff _).trans (sub_eq_zero.trans eq_comm)
 
-/-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖_{Vₕ}` on the graph space `Vₕ` of `𝐝ₕ`. -/
 theorem norm_one_sub_J_graphFst_le (h : κ)
     (v : ((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).GraphSpace) :
     ‖(1 - S.J h) (((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).graphFst v)‖ ≤ S.graphDefect h * ‖v‖ :=
   (S.D h).norm_graphFst_le_graphOpNorm _ v
 
-/-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)`. -/
 theorem norm_one_sub_J_apply_le (h : κ) (v : S.X h) :
     ‖(1 - S.J h) v‖ ≤ S.graphDefect h * (‖v‖ + ‖S.D h v‖) :=
   (S.D h).norm_apply_le_graphOpNorm _ v
 
-/-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖` on the discrete cycles (`𝐝ₕ v = 0`). -/
 theorem norm_one_sub_J_apply_le_of_D_eq_zero (h : κ) {v : S.X h} (hv : S.D h v = 0) :
     ‖(1 - S.J h) v‖ ≤ S.graphDefect h * ‖v‖ :=
   (S.D h).norm_apply_le_graphOpNorm_of_eq_zero _ hv
 
-/-- **The inner-product defect of a discrete form and of its differential**, the form in which the
-residual bound uses it (`norm_residual_le`):
-`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`, since `𝐝ₕ 𝐝ₕ w = 0`. -/
 theorem norm_one_sub_J_add_le (h : κ) (w : S.X h) :
     ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ S.graphDefect h * (‖w‖ + 2 * ‖S.D h w‖) :=
   (add_le_add (S.norm_one_sub_J_apply_le h w)
     (S.norm_one_sub_J_apply_le_of_D_eq_zero h (S.D_D h w))).trans_eq (by ring)
 
-/-- `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ ‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)`. -/
 theorem norm_one_sub_J_add_le_opNorm (h : κ) (w : S.X h) :
     ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ ‖1 - S.J h‖ * (‖w‖ + ‖S.D h w‖) :=
   (add_le_add ((1 - S.J h).le_opNorm w) ((1 - S.J h).le_opNorm _)).trans_eq (by ring)
 
-/-- **The defect from a bound in the graph norm**: if `‖(1 - Jₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every
-`v`, then `‖1 - Jₕ‖_{Vₕ} ≤ √2 δ` (`‖v‖ + ‖𝐝ₕ v‖ ≤ √2 ‖v‖_{Vₕ}`). -/
 theorem graphDefect_le_of_forall (h : κ) {δ : ℝ} (hδ : 0 ≤ δ)
     (hb : ∀ v, ‖(1 - S.J h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) : S.graphDefect h ≤ √2 * δ :=
   (S.D h).graphOpNorm_le_of_forall _ hδ hb
 
-/-- `‖1 - Jₕ‖ → 0` implies `‖1 - Jₕ‖_{Vₕ} → 0`. -/
 theorem tendsto_graphDefect_of_tendsto {l : Filter κ}
     (hJ : Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0)) : Tendsto S.graphDefect l (𝓝 0) :=
   squeeze_zero S.graphDefect_nonneg S.graphDefect_le hJ
 
 /-! #### The exact-load elliptic projection -/
 
-/-- The **load map** `Bₕ = (1 - Lₕ)⁻¹ iₕ* : W → Xₕ`; the exact-load modified elliptic projection
-of `y ∈ D(L)` is `Rₕ y = Bₕ (y - L y)`, the solution of `⟪(1 - Lₕ) Rₕ y, v⟫ = ⟪(1 - L) y, iₕ v⟫`
-(the elliptic projection (4.11) of [QuennevilleBelair2015] with `iₕ*` in place of the orthogonal
-projection; cf. the thesis' (6.4)). -/
+/-- The **load map** `Bₕ = (1 - Lₕ)⁻¹ iₕ*`, with `Rₕ y = Bₕ (y - L y)` the exact-load projection. -/
 def load (h : κ) : PiLp 2 W →L[𝕜] S.X h :=
   ((diffResolvent (S.D h)).symm : S.X h →L[𝕜] S.X h) ∘L (S.incl h).adjoint
 
@@ -480,7 +324,6 @@ theorem inner_load_sub (h : κ) (z : PiLp 2 W) (v : S.X h) :
     ⟪S.load h z - S.L h (S.load h z), v⟫_𝕜 = ⟪z, S.incl h v⟫_𝕜 := by
   rw [S.load_sub, ContinuousLinearMap.adjoint_inner_left]
 
-/-- `Bₕ` is characterized by `(1 - Lₕ) Bₕ z = iₕ* z`. -/
 theorem eq_load (h : κ) {z : PiLp 2 W} {r : S.X h} (hr : r - S.L h r = (S.incl h).adjoint z) :
     r = S.load h z :=
   (diffResolvent (S.D h)).injective (by
@@ -489,8 +332,6 @@ theorem eq_load (h : κ) {z : PiLp 2 W} {r : S.X h} (hr : r - S.L h r = (S.incl 
 theorem norm_load_apply_le (h : κ) (z : PiLp 2 W) : ‖S.load h z‖ ≤ S.boundConst * ‖z‖ :=
   (norm_diffResolvent_symm_apply_le (S.D h) _).trans (S.norm_adjoint_incl_apply_le h z)
 
-/-- **`Bₕ` is bounded in the discrete graph norm**: `‖Bₕ z‖ + ‖𝐝ₕ Bₕ z‖ ≤ 8 C ‖z‖`, since
-`⟪(1 - Lₕ) Bₕ z, v⟫ = ⟪z, iₕ v⟫` (`norm_add_norm_le_of_inner_diff`). -/
 theorem norm_load_add_le (h : κ) (z : PiLp 2 W) :
     ‖S.load h z‖ + ‖S.D h (S.load h z)‖ ≤ 8 * S.boundConst * ‖z‖ := by
   have hC := S.boundConst_nonneg
@@ -504,8 +345,6 @@ theorem norm_load_add_le (h : κ) (z : PiLp 2 W) :
     _ ≤ S.boundConst * ‖z‖ * (‖v‖ + ‖S.D h v‖) :=
         mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (norm_nonneg _)) (by positivity)
 
-/-- **The inner-product defect at the load**: `‖(1 - Jₕ) Bₕ z‖ ≤ 8 C ‖1 - Jₕ‖_{Vₕ} ‖z‖` (`Bₕ` is
-bounded in the discrete graph norm, `norm_load_add_le`). -/
 theorem norm_one_sub_J_load_le (h : κ) (z : PiLp 2 W) :
     ‖(1 - S.J h) (S.load h z)‖ ≤ S.graphDefect h * (8 * S.boundConst * ‖z‖) :=
   (S.norm_one_sub_J_apply_le h _).trans
@@ -513,9 +352,6 @@ theorem norm_one_sub_J_load_le (h : κ) (z : PiLp 2 W) :
 
 /-! #### The Strang lemma -/
 
-/-- **The Strang lemma, discrete form**: if the discrete residual of `w` against the load `z`,
-`⟪(1 - Lₕ) w, v⟫ - ⟪z, iₕ v⟫`, is at most `ε (‖v‖ + ‖𝐝ₕ v‖)`, then
-`‖w - Bₕ z‖ + ‖𝐝ₕ (w - Bₕ z)‖ ≤ 8 ε`. -/
 theorem norm_sub_load_add_le (h : κ) (z : PiLp 2 W) (w : S.X h) {ε : ℝ} (hε : 0 ≤ ε)
     (hres : ∀ v, ‖⟪w - S.L h w, v⟫_𝕜 - ⟪z, S.incl h v⟫_𝕜‖ ≤ ε * (‖v‖ + ‖S.D h v‖)) :
     ‖w - S.load h z‖ + ‖S.D h (w - S.load h z)‖ ≤ 8 * ε := by
@@ -543,9 +379,6 @@ theorem norm_sub_incl_load_le (h : κ) (y z : PiLp 2 W) (w : S.X h) {ε : ℝ} (
 
 /-! #### The consistency defect -/
 
-/-- **The defect bound**: `Δₕ = Bₕ z - iₕ* y` satisfies
-`‖Δₕ‖ ≤ ‖(1 - Jₕ) Bₕ z‖ + C ‖y - iₕ Bₕ z‖`; the first term is at most `‖1 - Jₕ‖ ‖Bₕ z‖` and at most
-`8 C ‖1 - Jₕ‖_{Vₕ} ‖z‖` (`norm_one_sub_J_load_le`). -/
 theorem norm_load_sub_adjoint_le (h : κ) (y z : PiLp 2 W) :
     ‖S.load h z - (S.incl h).adjoint y‖ ≤
       ‖(1 - S.J h) (S.load h z)‖ + S.boundConst * ‖y - S.incl h (S.load h z)‖ := by
@@ -557,9 +390,6 @@ theorem norm_load_sub_adjoint_le (h : κ) (y z : PiLp 2 W) :
   rw [e]
   exact (norm_sub_le _ _).trans (add_le_add le_rfl (S.norm_adjoint_incl_apply_le h _))
 
-/-- **The defect identity** (algebraic): for states `a`, `b`, `b'`,
-`Bₕ (b - b') - Lₕ Bₕ (a - b) = (Bₕ (b - b') - iₕ* b) - (Bₕ (a - b) - iₕ* a)`; along a trajectory
-(`b = L a`, `b' = L b`) this is `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) - Δₕ y`. -/
 theorem load_defect (h : κ) (a b b' : PiLp 2 W) :
     S.load h (b - b') - S.L h (S.load h (a - b)) =
       (S.load h (b - b') - (S.incl h).adjoint b) - (S.load h (a - b) - (S.incl h).adjoint a) := by
@@ -572,8 +402,7 @@ theorem load_defect (h : κ) (a b b' : PiLp 2 W) :
 
 /-! #### The cochain defect and the splitting of the residual -/
 
-/-- The **cochain defect** `κₕ(y) = 𝐝ₕ* iₕ* y - iₕ* 𝐝* y` of `y ∈ D(L)`:
-`⟪κₕ(y), v⟫ = ⟪y, iₕ 𝐝ₕ v⟫ - ⟪𝐝* y, iₕ v⟫` (`inner_cochainDefect`). -/
+/-- The **cochain defect** `κₕ(y) = 𝐝ₕ* iₕ* y - iₕ* 𝐝* y` of `y ∈ D(L)`. -/
 def cochainDefect (h : κ) (y : H.wave.domain) : S.X h :=
   (S.D h).adjoint ((S.incl h).adjoint y) - (S.incl h).adjoint (H.dual.totalD ⟨y, y.2.2⟩)
 
@@ -583,8 +412,6 @@ theorem inner_cochainDefect (h : κ) (y : H.wave.domain) (v : S.X h) :
   rw [cochainDefect, inner_sub_left, ContinuousLinearMap.adjoint_inner_left,
     ContinuousLinearMap.adjoint_inner_left, ContinuousLinearMap.adjoint_inner_left]
 
-/-- When `iₕ v ∈ D(𝐝)`, the cochain defect pairs `y` with the strong cochain defect:
-`⟪κₕ(y), v⟫ = ⟪y, iₕ 𝐝ₕ v - 𝐝 iₕ v⟫`. -/
 theorem inner_cochainDefect_of_mem (h : κ) (y : H.wave.domain) (v : S.X h)
     (hv : S.incl h v ∈ H.totalD.domain) :
     ⟪S.cochainDefect h y, v⟫_𝕜 =
@@ -593,8 +420,6 @@ theorem inner_cochainDefect_of_mem (h : κ) (y : H.wave.domain) (v : S.X h)
   congr 1
   rw [← inner_conj_symm, ← H.inner_totalD_dual ⟨_, hv⟩ ⟨y, y.2.2⟩, inner_conj_symm]
 
-/-- **The cochain defect vanishes for cochain maps**: if `iₕ Xₕ ⊆ D(𝐝)` and `𝐝 iₕ = iₕ 𝐝ₕ`,
-then `κₕ = 0`. -/
 theorem cochainDefect_eq_zero (h : κ) (hmem : ∀ v, S.incl h v ∈ H.totalD.domain)
     (hcomm : ∀ v, H.totalD ⟨_, hmem v⟩ = S.incl h (S.D h v)) (y : H.wave.domain) :
     S.cochainDefect h y = 0 :=
@@ -602,10 +427,8 @@ theorem cochainDefect_eq_zero (h : κ) (hmem : ∀ v, S.incl h v ∈ H.totalD.do
     rw [S.inner_cochainDefect_of_mem h y v (hmem v), hcomm, sub_self, inner_zero_right,
       inner_zero_left]
 
-/-- **The residual splits** into the inner-product defect, the graph-norm approximation error and
-the cochain defect: for `y ∈ D(L)` and every approximant `w`,
-`⟪(1 - Lₕ) w, v⟫ - ⟪(1 - L) y, iₕ v⟫ = ⟪(1 - Jₕ) w, v⟫ - ⟪(1 - Jₕ) 𝐝ₕ w, v⟫ + ⟪(1 - Jₕ) w, 𝐝ₕ v⟫
-+ ⟪iₕ w - y, iₕ v⟫ - ⟪iₕ 𝐝ₕ w - 𝐝 y, iₕ v⟫ + ⟪iₕ w - y, iₕ 𝐝ₕ v⟫ + ⟪κₕ(y), v⟫`. -/
+/-- **The residual splits** into the inner-product defect at `w` and `𝐝ₕ w`, the graph-norm
+approximation error and the cochain defect. -/
 theorem inner_residual_eq (h : κ) (y : H.wave.domain) (w v : S.X h) :
     ⟪w - S.L h w, v⟫_𝕜 - ⟪(y : PiLp 2 W) - H.wave y, S.incl h v⟫_𝕜 =
       ⟪(1 - S.J h) w, v⟫_𝕜 - ⟪(1 - S.J h) (S.D h w), v⟫_𝕜 + ⟪(1 - S.J h) w, S.D h v⟫_𝕜 +
@@ -616,12 +439,6 @@ theorem inner_residual_eq (h : κ) (y : H.wave.domain) (w v : S.X h) :
   simp only [_root_.sub_apply, one_apply_eq_self, inner_sub_left, inner_diffWave, S.inner_J]
   ring
 
-/-- **The residual bound**: if the cochain defect is at most `δ` in the dual discrete graph norm,
-the residual of `w` is at most
-`(‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ) (‖v‖ + ‖𝐝ₕ v‖)`. The
-inner-product defect enters only at `w` and `𝐝ₕ w`: at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)`
-(`norm_one_sub_J_add_le_opNorm`) and at most `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`
-(`norm_one_sub_J_add_le`). -/
 theorem norm_residual_le (h : κ) (y : H.wave.domain) (w : S.X h) {δ : ℝ}
     (hδ : ∀ v, ‖⟪S.cochainDefect h y, v⟫_𝕜‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) (v : S.X h) :
     ‖⟪w - S.L h w, v⟫_𝕜 - ⟪(y : PiLp 2 W) - H.wave y, S.incl h v⟫_𝕜‖ ≤
@@ -669,7 +486,6 @@ theorem norm_residual_le (h : κ) (y : H.wave.domain) (w : S.X h) {δ : ℝ}
         exact norm_sub_le _ _
     _ ≤ _ := by nlinarith [mul_nonneg hq hDv, mul_nonneg (mul_nonneg hC hb) hDv]
 
-/-- The reading error `‖a - iₕ Bₕ (a - b)‖` is Lipschitz in the pair `(a, b)`. -/
 theorem reading_le (h : κ)
     (ζ ζ' : PiLp 2 W × PiLp 2 W) :
     ‖ζ.1 - S.incl h (S.load h (ζ.1 - ζ.2))‖ ≤ ‖ζ'.1 - S.incl h (S.load h (ζ'.1 - ζ'.2))‖ +
@@ -694,7 +510,6 @@ theorem reading_le (h : κ)
   refine (norm_add_le _ _).trans (add_le_add le_rfl ((norm_sub_le _ _).trans ?_))
   nlinarith
 
-/-- The defect `‖Bₕ (a - b) - iₕ* a‖` is Lipschitz in the pair `(a, b)`. -/
 theorem defect_le (h : κ)
     (ζ ζ' : PiLp 2 W × PiLp 2 W) :
     ‖S.load h (ζ.1 - ζ.2) - (S.incl h).adjoint ζ.1‖ ≤
@@ -726,43 +541,18 @@ section Families
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- A **family of discrete differential spaces for the heat equation** for `H`: a family
-(`ApproxComplexCrime.Family`) of discrete differential spaces `(Xₕ, 𝐝ₕ)` with reading maps that
-need not be cochain maps, a closed constraint `K`, a filter `l`, and the **inner-product defect in
-the graph norm** `‖1 - Jₕ‖_{Vₕ} → 0` (`Family.graphDefect`; implied by `‖1 - iₕ* iₕ‖ → 0`,
-`Family.tendsto_graphDefect_of_tendsto`): the data of the heat FEEC theorem with crimes
-(`Feec.HilbertComplex.Approximation.HeatCrime`). An approximating family (`ApproxComplexCrime`)
-adds the admissible states, the core and consistent approximation of the wave equation. -/
+/-- A **family for the heat equation**: a constraint, a filter, and `graphDefect → 0`. -/
 structure ApproxComplexCrime.HeatFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   /-- the discrete differential spaces and reading maps -/
   toFamily : ApproxComplexCrime.Family.{u} H κ
   /-- the constraint subspace -/
   K : Submodule 𝕜 (PiLp 2 W)
   isClosed_K : IsClosed (K : Set (PiLp 2 W))
-  /-- the filter along which the discretization is refined -/
+  /-- the filter of refinement -/
   l : Filter κ
   tendsto_graphDefect : Tendsto toFamily.graphDefect l (𝓝 0)
 
-/-- An **approximating family of discrete differential spaces** for `H`: a family
-(`ApproxComplexCrime.Family`) of discrete differential spaces `(Xₕ, 𝐝ₕ)` with reading maps that
-need not be cochain maps, a closed constraint `K`, a filter `l`, a set `A ⊆ D(L)` of admissible
-states, a core `Z ≤ D(L²)` whose forward orbits and those of `L Z` stay in `A`, and hypotheses
-of Holst–Stern type:
-
-* the **inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ} → 0` (`Family.graphDefect`);
-* **consistent approximation** on `A`: approximants `wₕ` with `‖y - iₕ wₕ‖ → 0` whose discrete
-  residual `⟪(1 - Lₕ) wₕ, v⟫ - ⟪(1 - L) y, iₕ v⟫` tends to `0` in the dual discrete graph norm.
-  By `ApproxComplexCrime.Family.inner_residual_eq` the residual is the sum of the inner-product
-  defect, the graph-norm approximation error and the cochain defect, so it follows from graph-norm
-  approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖_{Vₕ} → 0`
-  (`ApproxComplexCrime.ofCochainDefect`); it can also be checked directly with a Galerkin
-  projection as approximant (residual `0`).
-
-The field `consistent` is equivalent to `iₕ Rₕ y → y` on `A`
-(`consistent_iff_tendsto_incl_load`); from it and the inner-product defect, the uniform
-approximation of the comparison trajectories `Rₕ e^{tL} x` and their consistency defects are
-derived (`ApproxFEEC.ofComplexCrimeCore`). The family, the constraint, the filter and the
-inner-product defect form the data of the heat equation (`ApproxComplexCrime.HeatFamily`). -/
+/-- An **approximating family**: admissible states, a core, and consistent approximation on them. -/
 structure ApproxComplexCrime (H : HilbertComplex 𝕜 c W) (κ : Type*) extends
     ApproxComplexCrime.HeatFamily.{u} H κ where
   /-- the admissible states -/
@@ -781,12 +571,6 @@ namespace ApproxComplexCrime
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
 
-/-- **Consistent approximation at `y` is pointwise convergence of the exact-load projection**:
-the approximants of `ApproxComplexCrime.consistent` exist at `y` iff `iₕ Rₕ y → y`,
-`Rₕ y = Bₕ (y - L y)`. Forward: the Strang lemma. Backward: `Rₕ y` itself is an approximant with
-residual `0` (`Family.inner_load_sub`). So the field `consistent` is exactly the hypothesis
-`iₕ Rₕ y → y` on `A`; the splittings `consistent_of_cochainDefect` and `ofGalerkinCore` are the
-ways it is checked. -/
 theorem consistent_iff_tendsto_incl_load (y : PiLp 2 W) :
     (∀ ε > 0, ∀ᶠ h in F.l, ∃ w : F.toFamily.X h,
       ‖y - F.toFamily.incl h w‖ ≤ ε ∧ ∀ v, ‖⟪w - F.toFamily.L h w, v⟫_𝕜 -
@@ -818,15 +602,11 @@ theorem consistent_iff_tendsto_incl_load (y : PiLp 2 W) :
     rw [S.inner_load_sub, sub_self, norm_zero]
     exact mul_nonneg hε.le (by positivity)
 
-/-- **Convergence of the exact-load elliptic projection** at an admissible state:
-`iₕ Rₕ y → y`, `Rₕ y = Bₕ (y - L y)` (the Strang lemma and consistent approximation). -/
 theorem tendsto_incl_load {y : PiLp 2 W} (hy : y ∈ F.A) :
     Tendsto (fun h => ‖y - F.toFamily.incl h (F.toFamily.load h (y - waveExt H y))‖) F.l
       (𝓝 0) :=
   (F.consistent_iff_tendsto_incl_load y).1 (F.consistent y hy)
 
-/-- **The derived consistency**: the defect `Δₕ y = Rₕ y - iₕ* y` tends to `0` at admissible
-states. -/
 theorem tendsto_defect {y : PiLp 2 W} (hy : y ∈ F.A) :
     Tendsto (fun h => ‖F.toFamily.load h (y - waveExt H y) - (F.toFamily.incl h).adjoint y‖)
       F.l (𝓝 0) := by
@@ -850,9 +630,7 @@ namespace ApproxFEEC
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
 
-/-- **The approximating FEEC discretization of an approximating family of discrete differential
-spaces**: `Xₕ` with its own inner product, `Lₕ = 𝐝ₕ - 𝐝ₕ*` (the Hodge wave operator of
-`(Xₕ, 𝐝ₕ)`), `ιₕ = iₕ`, `πₕ` the left inverses. -/
+/-- **The approximating FEEC discretization** of `F`: `Xₕ`, `Lₕ = 𝐝ₕ - 𝐝ₕ*`, `ιₕ = iₕ`, `πₕ`. -/
 def ofComplexCrime : ApproxFEEC H κ where
   K := F.K
   isClosed_K := F.isClosed_K
@@ -870,8 +648,7 @@ theorem ofComplexCrime_L (h : κ) :
     (ofComplexCrime F).L h = F.toFamily.D h - (F.toFamily.D h).adjoint :=
   rfl
 
-/-- The defect `Δₕ = Bₕ - iₕ* (1 - L)⁻¹` of the exact-load elliptic projection on lifted states:
-`Δₕ (y - L y) = Bₕ (y - L y) - iₕ* y` (`loadDefect_apply`). -/
+/-- The defect `Δₕ = Bₕ - iₕ* (1 - L)⁻¹` of the exact-load elliptic projection. -/
 def loadDefect (h : κ) : PiLp 2 W →L[𝕜] F.toFamily.X h :=
   F.toFamily.load h - (F.toFamily.incl h).adjoint ∘L Operator.resolvent H.wave 1
 
@@ -885,9 +662,7 @@ theorem loadDefect_apply (h : κ) {y : PiLp 2 W} (hy : y ∈ H.wave.domain) :
     (Operator.resolvent H.wave (1 : 𝕜) (y - waveExt H y)) = _
   rw [e]
 
-/-- **The load Ritz projection**: the exact-load modified elliptic projection `Rₕ = Bₕ` on the
-resolvent lift `ℓ = 1 - L` (`DissipFEEC.Lift.resolvent`, data `D(L²)`), with `Δₕ = loadDefect`,
-`Δₕ' = -Δₕ` (the defect identity `Family.load_defect`). -/
+/-- **The load Ritz projection**: `Rₕ = Bₕ` on the resolvent lift `ℓ = 1 - L`. -/
 def loadRitz : DissipFEEC.Ritz (DissipFEEC.Lift.resolvent (ofComplexCrime F).toDissipFEEC) where
   R := F.toFamily.load
   Δ := loadDefect F
@@ -923,15 +698,11 @@ def loadRitz : DissipFEEC.Ritz (DissipFEEC.Lift.resolvent (ofComplexCrime F).toD
       (F.toFamily.norm_load_apply_le h)).trans (by linarith), hD h,
       (norm_neg (loadDefect F h)).trans_le (hD h)⟩⟩
 
-/-- **The comparison of `ofComplexCrime`** on `[0, T]`: the comparison of the load Ritz projection
-on the core `Z`, `pₕ(t) = Bₕ (e^{tL} x - e^{tL} L x) = Rₕ (e^{tL} x)` (`crimeCmp_p`: the
-exact-load modified elliptic projection of the exact orbit), with derivative `Rₕ (e^{tL} L x)`. -/
+/-- **The comparison of `ofComplexCrime`** on `[0, T]`: `pₕ(t) = Rₕ (e^{tL} x)` on the core. -/
 def crimeCmp (T : ℝ) : (ofComplexCrime F).Comparison T :=
   ((loadRitz F).cmp T).restrict F.Z fun _ hx =>
     DissipFEEC.domainSq_le_resData (ofComplexCrime F).isMDissipative (F.Z_le hx)
 
-/-- The comparison trajectories of the load Ritz projection:
-`pₕ(t) = Bₕ (e^{tL} x - e^{tL} L x)` for `t ≥ 0`. -/
 theorem loadRitz_cmp_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (h : κ) {t : ℝ}
     (ht : 0 ≤ t) :
     ((loadRitz F).cmp T).p x h t =
@@ -946,16 +717,12 @@ theorem crimeCmp_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domain) (h : κ) 
       F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x)) :=
   loadRitz_cmp_p F T hx h ht
 
-/-- On the core, the comparison is the exact-load elliptic projection of the exact state:
-`pₕ(t) = Bₕ (y - L y)`, `y = e^{tL} x`. -/
 theorem crimeCmp_p_eq (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
     (crimeCmp F T).p x h t = F.toFamily.load h (H.waveGroup.S t x -
       waveExt H (H.waveGroup.S t x)) := by
   rw [crimeCmp_p F T (domainSq_le_domain (F.Z_le hx)) h ht,
     waveExt_waveGroup H (domainSq_le_domain (F.Z_le hx))]
 
-/-- The consistency defect of the comparison is `Δₕ (L y) - Δₕ y` along the orbit
-(`DissipFEEC.Ritz.cmp_defect`). -/
 theorem crimeCmp_defect (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) (h : κ) {t : ℝ} (ht : 0 ≤ t) :
     (crimeCmp F T).defect x h t =
       (F.toFamily.load h (H.waveGroup.S t (waveExt H x) -
@@ -979,13 +746,10 @@ theorem crimeCmp_defect (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) (h : κ) {t : 
     waveExt_waveGroup H hx1]
   abel
 
-/-- The orbit pairs `(e^{tL} x, e^{tL} L x)`, `t ∈ [0, T]`, form a compact set. -/
 theorem isCompact_orbitPair (x : PiLp 2 W) (T : ℝ) :
     IsCompact ((fun t => (H.waveGroup.S t x, H.waveGroup.S t (waveExt H x))) '' Icc 0 T) :=
   isCompact_Icc.image ((H.waveGroup.strongCont _).prodMk (H.waveGroup.strongCont _))
 
-/-- **Uniform approximation of the orbit by the comparison** (from the Strang lemma at the
-admissible states, by compactness). -/
 theorem crimeCmp_tendsto_approx (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) :
     TendstoUniformlyOn (fun h t => F.toFamily.incl h
       (F.toFamily.load h (H.waveGroup.S t x - H.waveGroup.S t (waveExt H x))))
@@ -1009,8 +773,6 @@ theorem crimeCmp_tendsto_approx (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) :
   rw [dist_eq_norm]
   exact hh (H.waveGroup.S t x, H.waveGroup.S t (waveExt H x)) ⟨t, ht, rfl⟩
 
-/-- **The consistency defect of the comparison tends to `0` uniformly** (from the defect
-identity and the defect bound at the admissible states, by compactness). -/
 theorem crimeCmp_tendsto_defect (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) :
     TendstoUniformlyOn (fun h t => ‖(crimeCmp F T).defect x h t‖) (fun _ => 0) F.l
       (Icc 0 T) := by
@@ -1055,11 +817,7 @@ theorem crimeCmp_tendsto_defect (T : ℝ) {x : PiLp 2 W} (hx : x ∈ F.Z) :
     h2 (H.waveGroup.S t (waveExt H x), H.waveGroup.S t (waveExt H (waveExt H x))) ⟨t, ht, rfl⟩
   exact lt_of_lt_of_eq (add_lt_add a2 a1) (add_halves ε)
 
-/-- **The core of `ofComplexCrime`**: data `Z`, comparison `crimeCmp` (the load Ritz projection
-on `Z`). Its two hypotheses (uniform approximation of the orbit, uniform vanishing of the
-consistency defect) are derived from the Strang lemma and the defect identity at the admissible
-states only, by compactness of the orbits (`crimeCmp_tendsto_approx`, `crimeCmp_tendsto_defect`):
-the pointwise hypotheses of `DissipFEEC.Ritz.toCore` on all states are not available. -/
+/-- **The core of `ofComplexCrime`**: data `Z`, with the comparison `crimeCmp`. -/
 def ofComplexCrimeCore : (ofComplexCrime F).Core where
   Data := F.Z
   cmp T := crimeCmp F T
@@ -1075,27 +833,8 @@ theorem ofComplexCrimeCore_cmp (T : ℝ) : (ofComplexCrimeCore F).cmp T = crimeC
 end ApproxFEEC
 
 open ApproxFEEC in
-/-- **The approximating FEEC theorem for approximating families of discrete differential spaces**
-(reading maps that need not be cochain maps). For an approximating family `F`
-(`ApproxComplexCrime`: inner-product defect `‖1 - Jₕ‖_{Vₕ} → 0` in the graph norm and consistent
-approximation on the admissible states), the discretization `ofComplexCrime F` (generator the Hodge wave operator
-`𝐝ₕ - 𝐝ₕ*` of `Xₕ`) with the core `ofComplexCrimeCore F` (comparison: the exact-load modified
-elliptic projection of the exact orbit) satisfies:
-
-1. the four conclusions of `approxFEEC` (`ApproxFEEC.Verdict`), on the core `Z` and its closure;
-2. the discrete generator is `𝐝ₕ - 𝐝ₕ*`;
-3. **discrete constraints**: a subspace `Kₕ ⊆ Xₕ` invariant under `Lₕ` is preserved exactly by
-   `e^{tLₕ}` for all `t`, and if `iₕ Kₕ ⊆ K` the residual `dist(ξₕ(t), K)` of the discrete
-   solutions from `Kₕ` is exactly `0`;
-4. the **Strang estimate** `‖y - iₕ Rₕ y‖ ≤ ‖y - iₕ w‖ + 8 C ε` for every approximant `w` of
-   residual `≤ ε`, with the **splitting** of the residual into the inner-product defect at `w` and
-   `𝐝ₕ w`, the graph-norm approximation error and the cochain defect, and the **defect bound**
-   `‖Δₕ y‖ ≤ ‖(1 - Jₕ) Rₕ y‖ + C ‖y - iₕ Rₕ y‖`; both tend to `0` at admissible states. The
-   inner-product defect enters applied to `w`, `𝐝ₕ w` and `Rₕ y` only: at most `‖1 - Jₕ‖` times
-   their norms, and at most `‖1 - Jₕ‖_{Vₕ}` times their discrete graph norms
-   (`Family.norm_one_sub_J_add_le`, `Family.norm_one_sub_J_apply_le`).
-
-Cf. [HolstStern2012], §3.3, Thm 3.10 (elliptic analogues) -/
+/-- **The approximating FEEC theorem for approximating families of discrete differential
+spaces**, with the discrete constraints and the Strang, residual and defect bounds. -/
 theorem approxFEEC_ofComplexCrime {H : HilbertComplex 𝕜 c W} {κ : Type*}
     (F : ApproxComplexCrime.{u} H κ) :
     (ofComplexCrime F).Verdict (ofComplexCrimeCore F) ∧
@@ -1141,7 +880,7 @@ end OfComplexCrime
 
 end Families
 
-/-! ### From the split hypotheses: graph-norm approximation and the cochain defect -/
+/-! ### From the split hypotheses -/
 
 section Split
 
@@ -1152,12 +891,6 @@ namespace ApproxComplexCrime.Family
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (S : ApproxComplexCrime.Family.{u} H κ)
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- **Consistent approximation from the Holst–Stern hypotheses with a cochain defect**: at
-`y ∈ D(L)`, graph-norm approximation (`‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ → 0`), the inner-product
-defect in the graph norm `‖1 - Jₕ‖_{Vₕ} → 0` (implied by `‖1 - Jₕ‖ → 0`,
-`tendsto_graphDefect_of_tendsto`) and the cochain defect `κₕ(y) → 0` in the dual discrete graph
-norm give approximants whose residual tends to `0` (`norm_residual_le`: the approximants are
-bounded in the discrete graph norm, and `1 - Jₕ` enters only at `w` and `𝐝ₕ w`). -/
 theorem consistent_of_cochainDefect {l : Filter κ} {y : PiLp 2 W} (hy : y ∈ H.wave.domain)
     (hJ : Tendsto S.graphDefect l (𝓝 0))
     (hgraph : ∀ ε > 0, ∀ᶠ h in l, ∃ w : S.X h,
@@ -1231,10 +964,7 @@ theorem consistent_of_cochainDefect {l : Filter κ} {y : PiLp 2 W} (hy : y ∈ H
 
 end ApproxComplexCrime.Family
 
-/-- **An approximating family from the split hypotheses** of Holst–Stern type with a cochain
-defect: graph-norm approximation and a cochain defect tending to `0` (dual discrete graph norm)
-at the admissible states, and the inner-product defect in the graph norm `‖1 - Jₕ‖_{Vₕ} → 0`
-(implied by `‖1 - Jₕ‖ → 0`, `Family.tendsto_graphDefect_of_tendsto`). -/
+/-- An **approximating family from graph-norm approximation and a cochain defect `→ 0`**. -/
 def ApproxComplexCrime.ofCochainDefect {H : HilbertComplex 𝕜 c W} {κ : Type*}
     (S : ApproxComplexCrime.Family.{u} H κ) (K : Submodule 𝕜 (PiLp 2 W))
     (hK : IsClosed (K : Set (PiLp 2 W))) (l : Filter κ) (A : Set (PiLp 2 W))
@@ -1269,8 +999,7 @@ namespace ApproxComplex.Family
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (S : ApproxComplex.Family.{u} H κ)
 
-/-- **A family of discrete complexes with cochain reading maps is a family of discrete
-differential spaces**: `Xₕ = Vₕ` (total space), `𝐝ₕ` its total differential. -/
+/-- A family of discrete complexes as a family of discrete differential spaces. -/
 def toCrimeFamily : ApproxComplexCrime.Family H κ where
   X h := PiLp 2 (S.V h)
   D h := S.D h
@@ -1280,17 +1009,13 @@ def toCrimeFamily : ApproxComplexCrime.Family H κ where
   proj_incl := S.projL_inclL
   bound := ⟨S.boundConst, fun h => ⟨S.norm_inclL_le h, S.norm_projL_le h⟩⟩
 
-/-- The inner-product defect in the graph norm is that of the discrete complexes. -/
 theorem graphDefect_toCrimeFamily (h : κ) : S.toCrimeFamily.graphDefect h = S.graphDefect h :=
   rfl
 
-/-- **The cochain defect of cochain reading maps vanishes.** -/
 theorem cochainDefect_toCrimeFamily (h : κ) (y : H.wave.domain) :
     S.toCrimeFamily.cochainDefect h y = 0 :=
   S.toCrimeFamily.cochainDefect_eq_zero h (S.inclL_mem h) (fun v => (S.inclL_D h v).symm) y
 
-/-- On `D(L)` the modified elliptic projection of `ofComplex` is the exact-load projection:
-`Rₕ (y, 𝐝 y) = Bₕ (y - L y)` (`ApproxComplex.Family.G_waveLift`). -/
 theorem ellProj_waveLift_eq_load (h : κ) (y : H.wave.domain) :
     S.ellProj h (waveLift H y) = S.toCrimeFamily.load h ((y : PiLp 2 W) - H.wave y) :=
   S.toCrimeFamily.eq_load h ((S.ellProj_sub h _).trans (S.G_waveLift h y))
@@ -1303,11 +1028,7 @@ namespace ApproxComplex
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ)
 
-/-- **An approximating family of discrete complexes with cochain reading maps is an approximating
-family of discrete differential spaces** with zero cochain defect
-(`Family.cochainDefect_toCrimeFamily`): admissible states `D(L)`, core `D(L²)`, consistent
-approximation from the graph-norm approximation property and the inner-product defect in the graph
-norm (that of the discrete complexes, `Family.graphDefect_toCrimeFamily`). -/
+/-- **An approximating family of discrete complexes as one of discrete differential spaces**. -/
 def toCrime : ApproxComplexCrime H κ :=
   ApproxComplexCrime.ofCochainDefect F.toFamily.toCrimeFamily F.K F.isClosed_K F.l
     H.wave.domain (fun _ hy => hy) H.wave.domainSq le_rfl
@@ -1338,12 +1059,9 @@ namespace ApproxFEEC
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ)
 
-/-- **`ofComplex` is the cochain special case of `ofComplexCrime`**: the same spaces, generators,
-reading maps and left inverses. -/
+/-- **`ofComplex` is the cochain special case of `ofComplexCrime`**. -/
 theorem ofComplexCrime_toCrime : ofComplexCrime F.toCrime = ofComplex F := rfl
 
-/-- **The comparisons agree on `D(L²)`**: the trajectory of `ofComplexCrimeCore F.toCrime` is the
-modified elliptic projection `Rₕ (e^{tL} x, 𝐝 e^{tL} x)` of `ofComplexCore F`. -/
 theorem ofComplexCrimeCore_toCrime_p (T : ℝ) {x : PiLp 2 W} (hx : x ∈ H.wave.domainSq)
     (h : κ) {t : ℝ} (ht : 0 ≤ t) :
     ((ofComplexCrimeCore F.toCrime).cmp T).p x h t = ((ofComplexCore F).cmp T).p x h t := by
@@ -1359,23 +1077,15 @@ namespace ConstrainedFEEC
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ConstrainedFEEC H κ)
 
-/-- **The conforming case of an approximating family of discrete differential spaces**: a
-constrained FEEC discretization (subcomplexes `Vₕ ⊆ W` with commuting cochain projections),
-read as `F.toComplex.toCrime`. Both Holst–Stern defects vanish (`toCrime_J`,
-`toCrime_cochainDefect`), and its discrete solutions are those of the subcomplex scheme
-(`toCrime_sol`). [HolstStern2012], §3 -/
+/-- **The conforming case**: a constrained FEEC discretization as an approximating family. -/
 abbrev toCrime : ApproxComplexCrime H κ := F.toComplex.toCrime
 
-/-- **Zero inner-product defect**: the reading maps are the inclusions, `Jₕ = iₕ* iₕ = 1`. -/
 theorem toCrime_J (h : κ) : F.toCrime.toFamily.J h = 1 := F.toFamily_J h
 
-/-- **Zero cochain defect**: the inclusions are cochain maps. -/
 theorem toCrime_cochainDefect (h : κ) (y : H.wave.domain) :
     F.toCrime.toFamily.cochainDefect h y = 0 :=
   F.toFamily.cochainDefect_toCrimeFamily h y
 
-/-- **The discrete solutions are those of the subcomplex scheme** (4.10) of
-[QuennevilleBelair2015], through `Vₕ ≅ Xₕ` (`ConstrainedFEEC.toComplex_sol`). -/
 theorem toCrime_sol (h : κ) (v : PiLp 2 (F.toFamily.V h)) (t : ℝ) :
     (ApproxFEEC.ofComplexCrime F.toCrime).sol h v t = F.toApprox.sol h (F.toXh h v) t :=
   F.toComplex_sol h v t
@@ -1398,8 +1108,6 @@ def rateConstA : ℝ := 1 + 8 * S.boundConst
 /-- The consistency constant `1 + 8 (1 + C²) + C (1 + 8 C)` of the defect bound. -/
 def rateConstD : ℝ := 1 + 8 * (1 + S.boundConst ^ 2) + S.boundConst * (1 + 8 * S.boundConst)
 
-/-- **The Strang lemma with rates**: an approximant `w` of `y` with `‖y - iₕ w‖ ≤ ε` and residual
-`≤ ε` gives `‖y - iₕ Bₕ z‖ ≤ (1 + 8 C) ε`. -/
 theorem norm_sub_incl_load_le_of_rate (h : κ) (y z : PiLp 2 W) (w : S.X h) {ε : ℝ}
     (hw : ‖y - S.incl h w‖ ≤ ε)
     (hres : ∀ v, ‖⟪w - S.L h w, v⟫_𝕜 - ⟪z, S.incl h v⟫_𝕜‖ ≤ ε * (‖v‖ + ‖S.D h v‖)) :
@@ -1408,8 +1116,6 @@ theorem norm_sub_incl_load_le_of_rate (h : κ) (y z : PiLp 2 W) (w : S.X h) {ε 
   have := S.norm_sub_incl_load_le h y z w hε hres
   unfold rateConstA; nlinarith
 
-/-- **The defect bound with rates**: if moreover `‖(1 - Jₕ) w‖ ≤ ε`, then
-`‖Bₕ z - iₕ* y‖ ≤ (1 + 8 (1 + C²) + C (1 + 8 C)) ε`. -/
 theorem norm_load_sub_adjoint_le_of_rate (h : κ) (y z : PiLp 2 W) (w : S.X h) {ε : ℝ}
     (hw : ‖y - S.incl h w‖ ≤ ε) (hJw : ‖(1 - S.J h) w‖ ≤ ε)
     (hres : ∀ v, ‖⟪w - S.L h w, v⟫_𝕜 - ⟪z, S.incl h v⟫_𝕜‖ ≤ ε * (‖v‖ + ‖S.D h v‖)) :
@@ -1433,13 +1139,6 @@ theorem norm_load_sub_adjoint_le_of_rate (h : κ) (y z : PiLp 2 W) (w : S.X h) {
   unfold rateConstA at h5
   nlinarith
 
-/-- **Rate data from the split estimates**: at `y ∈ D(L)`, an approximant `w` with graph-norm
-error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Eₐ`, inner-product defect
-`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ E_β` and a cochain defect `≤ E_γ` in the dual discrete graph
-norm satisfies `‖y - iₕ w‖ ≤ Eₐ`, `‖(1 - Jₕ) w‖ ≤ E_β` and has residual `≤ E_β + C Eₐ + E_γ`
-(`norm_residual_le`). For an approximant of size `‖w‖ + ‖𝐝ₕ w‖ ≤ E_w`, one can take
-`E_β = ‖1 - Jₕ‖ E_w` (`norm_one_sub_J_add_le_opNorm`) or `E_β = 2 ‖1 - Jₕ‖_{Vₕ} E_w`
-(`norm_one_sub_J_add_le`). -/
 theorem rateData_of_split (h : κ) (y : H.wave.domain) (w : S.X h) {Ea Eb Eg : ℝ}
     (ha : ‖(y : PiLp 2 W) - S.incl h w‖ + ‖H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w)‖ ≤ Ea)
     (hb : ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ Eb)
@@ -1455,8 +1154,6 @@ theorem rateData_of_split (h : κ) (y : H.wave.domain) (w : S.X h) {Ea Eb Eg : �
 
 end ApproxComplexCrime.Family
 
-/-- **Combining the orders**: for `0 ≤ m ≤ 1` and orders `α, β, γ ≥ 0`,
-`A mᵅ + B m^β + G m^γ ≤ (A + B + G) m^{min(α, β, γ)}` (`A, B, G ≥ 0`). -/
 theorem add_rpow_le_rpow_min {m α β γ A B G : ℝ} (hm0 : 0 ≤ m) (hm1 : m ≤ 1) (hα : 0 ≤ α)
     (hβ : 0 ≤ β) (hγ : 0 ≤ γ) (hA : 0 ≤ A) (hB : 0 ≤ B) (hG : 0 ≤ G) :
     A * m ^ α + B * m ^ β + G * m ^ γ ≤ (A + B + G) * m ^ min α (min β γ) := by
@@ -1477,15 +1174,7 @@ namespace ApproxComplexCrime
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
 
 open ApproxFEEC in
-/-- **A rate class from complex-level rate data**. Data `Dc ⊆ Z` with a class norm `‖·‖_c`, a mesh
-size `m` and an order `α`: if along the exact trajectory, for `y = e^{tL} x` and `y = e^{tL} L x`,
-`t ∈ [0, T]`, there are approximants `w` with `‖y - iₕ w‖`, `‖(1 - Jₕ) w‖` and the residual (dual
-discrete graph norm) all `≤ Cₐ m(h)ᵅ ‖x‖_c`, then the load Ritz projection on `Dc` gives a rate
-class (`DissipFEEC.Ritz.orbitRateClass`, with the Strang lemma and the defect bound along the
-orbit) with `C = (1 + 8 C_ι) Cₐ` and
-`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`. The data can be assembled from graph-norm best
-approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`, at order
-`min(α, β, γ)`, by `rateClass_of_split` (through `rateData_of_split` and `add_rpow_le_rpow_min`). -/
+/-- **A rate class from complex-level rate data** along the trajectories. -/
 def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (hrate : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T, ∀ y ∈ ({H.waveGroup.S t x,
@@ -1525,9 +1214,6 @@ def rateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W
             F.toFamily.rateConstD * (Ca * m h ^ α * cn x) := add_le_add d2 d1
         _ = _ := by ring)
 
-/-- **The error bound of a rate class of `ofComplexCrime`** (the rate clause of the verdict,
-`dissipFEEC_rate`, from the comparison initial value): `‖e^{tL} x - iₕ e^{tLₕ} pₕ(0)‖ ≤
-(C + C_ι C' t) m(h)ᵅ ‖x‖_c` on `[0, T]`, with `C_ι` the uniform bound of the reading maps. -/
 theorem error_le_of_rateClass {T : ℝ} (R : (ApproxFEEC.ofComplexCrime F).RateClass T)
     {x : PiLp 2 W} (hx : x ∈ R.Data) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖H.waveGroup.S t x - (ApproxFEEC.ofComplexCrime F).sol h (R.p x h 0) t‖ ≤
@@ -1561,17 +1247,12 @@ namespace ConstrainedFEEC
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ConstrainedFEEC H κ)
 
-/-- A point of the discrete graph space `Kₕ` is the lift of an element of the discrete complex. -/
 theorem exists_graphIncl_eq {h : κ} {w : H.totalD.GraphSpace} (hw : w ∈ F.Kh h) :
     ∃ u : PiLp 2 (F.toFamily.V h), F.toFamily.graphIncl h u = w :=
   ⟨WithLp.toLp 2 fun i => ⟨H.totalD.graphFst w i, hw i⟩,
     H.totalD.graphFst_injective (PiLp.ext fun _ => rfl)⟩
 
-/-- **The rate classes of a constrained FEEC discretization are rate classes of `ofComplex`**
-(through `ofComplexCrime F.toComplex.toCrime = ofComplex F.toComplex`): graph-norm best
-approximation `O(hᵅ)` along the trajectory, zero inner-product defect and zero cochain defect,
-with `Cₐ = 2 (1 + C_ι) R.C`. Through `dissipFEEC_rate` the error has the factor
-`C₁ + C₂ t`, not `(1 + C_P)(1 + t)²`. -/
+/-- The rate classes of a constrained FEEC discretization as rate classes of `ofComplex`. -/
 def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
     (ApproxFEEC.ofComplexCrime F.toComplex.toCrime).RateClass T :=
   F.toComplex.toCrime.rateClass T R.Data
@@ -1641,11 +1322,6 @@ def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
         exact key ⟨_, waveGroup_mem_domain H hLx t⟩ w hw hle
 
 variable {F} in
-/-- **The rate of a constrained FEEC discretization through the discrete complex**: for data in a
-rate class `R` on `[0, T]`, the discrete solution of `ofComplex F.toComplex` from the modified
-elliptic projection `Rₕ (x, 𝐝 x)` of the datum (the comparison of `ofComplexCore`) satisfies
-`‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) hᵅ ‖x‖_class`, with the constants of
-`RateClass.toCrimeRate` (`error_le_of_rateClass`, `ofComplexCrimeCore_toCrime_p`). -/
 theorem RateClass.norm_sub_ofComplex_le {T : ℝ} (R : F.RateClass T) {x : PiLp 2 W}
     (hx : x ∈ R.Data) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖H.waveGroup.S t x - (ApproxFEEC.ofComplex F.toComplex).sol h
@@ -1660,17 +1336,14 @@ end ConstrainedFEEC
 
 end Rate
 
-/-! ### From a Galerkin core: discretizations whose comparison is a Galerkin projection -/
+/-! ### From a Galerkin core -/
 
 section Galerkin
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   {H : HilbertComplex 𝕜 c W} {κ : Type*}
 
-/-- **The discrete differential spaces of an approximating FEEC discretization** with a
-differential `𝐝ₕ` on its spaces: the same spaces, reading maps and left inverses. When
-`Lₕ = 𝐝ₕ - 𝐝ₕ*` the discretization is `ofComplexCrime` of it (`ofComplexCrime_ofGalerkinCore_sol`).
--/
+/-- The discrete differential spaces of an approximating FEEC discretization with a differential. -/
 def ApproxComplexCrime.Family.ofApproxFEEC (F : ApproxFEEC.{u} H κ)
     [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)] (D : ∀ h, F.X h →L[𝕜] F.X h)
     (hDD : ∀ h v, D h (D h v) = 0) : ApproxComplexCrime.Family.{u} H κ where
@@ -1689,7 +1362,6 @@ def ApproxComplexCrime.Family.ofApproxFEEC (F : ApproxFEEC.{u} H κ)
   bound := F.bound
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- Orthogonal reading maps have no inner-product defect: `Jₕ = 1`. -/
 theorem ApproxComplexCrime.Family.ofApproxFEEC_J (F : ApproxFEEC.{u} H κ)
     [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)] (D : ∀ h, F.X h →L[𝕜] F.X h)
     (hDD : ∀ h v, D h (D h v) = 0) (hF : F.IsOrthogonal) (h : κ) :
@@ -1699,7 +1371,6 @@ theorem ApproxComplexCrime.Family.ofApproxFEEC_J (F : ApproxFEEC.{u} H κ)
     exact hF.inner_incl h v w
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- Orthogonal reading maps have no inner-product defect in the graph norm either. -/
 theorem ApproxComplexCrime.Family.tendsto_graphDefect_ofApproxFEEC (F : ApproxFEEC.{u} H κ)
     [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)] (D : ∀ h, F.X h →L[𝕜] F.X h)
     (hDD : ∀ h v, D h (D h v) = 0) (hF : F.IsOrthogonal) :
@@ -1720,7 +1391,6 @@ theorem orbitStates_sub {Z : Set (PiLp 2 W)} (hZ : Z ⊆ H.wave.domainSq) :
   · exact waveGroup_mem_domain H (waveExt_mem_domain H (hZ hx)) t
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- Orthogonal reading maps: `ιₕ* = πₕ`. -/
 theorem ApproxFEEC.IsOrthogonal.adjoint_incl {F : ApproxFEEC.{u} H κ} (hF : F.IsOrthogonal)
     (h : κ) : (F.incl h).adjoint = F.proj h :=
   ContinuousLinearMap.ext fun y => ext_inner_right 𝕜 fun a => by
@@ -1740,8 +1410,6 @@ variable (F : ApproxFEEC.{u} H κ) [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)]
     H.waveGroup.S t (waveExt H x) ∈ Z0.Data.topologicalClosure)
 
 include hL hgal in
-/-- **The Galerkin comparison is the exact-load elliptic projection**: on `[0, T)`,
-`pₕ(t) = Bₕ (e^{tL} x - e^{tL} L x)`. -/
 theorem galerkin_p_eq {T : ℝ} {x : PiLp 2 W} (hx : x ∈ Z0.Data) (h : κ) {t : ℝ}
     (ht : t ∈ Ico 0 T) :
     (Z0.cmp T).p x h t = (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).load h
@@ -1752,8 +1420,6 @@ theorem galerkin_p_eq {T : ℝ} {x : PiLp 2 W} (hx : x ∈ Z0.Data) (h : κ) {t 
     exact e)
 
 include hL hgal hZ in
-/-- **The derivative of the Galerkin comparison is the exact-load elliptic projection of the
-derivative** (uniqueness of one-sided derivatives): `pₕ'(t) = Bₕ (e^{tL} L x - e^{tL} L² x)`. -/
 theorem galerkin_p'_eq {T : ℝ} {x : PiLp 2 W} (hx : x ∈ Z0.Data) (h : κ) {t : ℝ}
     (ht : t ∈ Ico 0 T) :
     (Z0.cmp T).p' x h t = (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).load h
@@ -1776,12 +1442,6 @@ theorem galerkin_p'_eq {T : ℝ} {x : PiLp 2 W} (hx : x ∈ Z0.Data) (h : κ) {t
   exact (uniqueDiffWithinAt_Ici t).eq_deriv _ hp hq'
 
 include hJ hL hgal in
-/-- **`iₕ iₕ* → 1` on the closure of a Galerkin core** (for orthogonal reading maps `iₕ* = πₕ`,
-`DissipFEEC.tendsto_incl_proj`). At a point `x` of the core the comparison `pₕ(0) = Bₕ (x - L x)`
-approximates `x` and is bounded in the discrete graph norm, so with `‖1 - Jₕ‖_{Vₕ} → 0`,
-`iₕ iₕ* x - x = iₕ iₕ* (x - iₕ pₕ(0)) - iₕ (1 - Jₕ) pₕ(0) + (iₕ pₕ(0) - x) → 0`
-(`Family.norm_one_sub_J_load_le`); the uniform bound `‖iₕ iₕ*‖ ≤ C²` carries it to the closure
-(`ContinuousLinearMap.tendsto_apply_of_mem_closure`). -/
 theorem tendsto_incl_adjoint_galerkin {z : PiLp 2 W} (hz : z ∈ Z0.Data.topologicalClosure) :
     Tendsto (fun h => F.incl h ((F.incl h).adjoint z)) F.l (𝓝 z) := by
   set S := ApproxComplexCrime.Family.ofApproxFEEC F D hDD
@@ -1831,12 +1491,6 @@ theorem tendsto_incl_adjoint_galerkin {z : PiLp 2 W} (hz : z ∈ Z0.Data.topolog
     nlinarith
 
 include hJ hL hgal hZ hcl in
-/-- **Convergence of the exact-load elliptic projection at the orbit states of a Galerkin core**:
-`iₕ Rₕ y → y` for `y = e^{tL} x` (the approximation of the core) and for `y = e^{tL} L x` (the
-consistency of the core, the Galerkin identity
-`iₕ* y' - pₕ' = -(pₕ' - Lₕ pₕ) + iₕ* (y - iₕ pₕ) - (1 - Jₕ) pₕ`, `y' = e^{tL} L x`, the
-inner-product defect at the comparison `pₕ = Bₕ (y - y')`, which is bounded in the discrete graph
-norm, and `iₕ iₕ* → 1` on the closure of the core, `tendsto_incl_adjoint_galerkin`). -/
 theorem tendsto_reading_galerkin {y : PiLp 2 W} (hy : y ∈ orbitStates H Z0.Data) :
     Tendsto (fun h => ‖y - (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).incl h
       ((ApproxComplexCrime.Family.ofApproxFEEC F D hDD).load h (y - waveExt H y))‖) F.l
@@ -1913,24 +1567,7 @@ theorem tendsto_reading_galerkin {y : PiLp 2 W} (hy : y ∈ orbitStates H Z0.Dat
     exact S.norm_one_sub_J_load_le h _
 
 include hJ hL hgal hZ hcl in
-/-- **An approximating family of discrete differential spaces from a Galerkin core**: an
-approximating FEEC discretization `F` whose generator is the Hodge wave operator `𝐝ₕ - 𝐝ₕ*` of a
-differential `𝐝ₕ`, with inner-product defect `‖1 - Jₕ‖_{Vₕ} → 0` in the graph norm of `𝐝ₕ`
-(`0` for orthogonal reading maps, `Family.tendsto_graphDefect_ofApproxFEEC`), and a core
-`Z0 ≤ D(L²)` whose comparison trajectories satisfy the **Galerkin identity**
-`⟪(1 - Lₕ) pₕ(t), v⟫ = ⟪(1 - L) e^{tL} x, iₕ v⟫` (an elliptic projection of the exact orbit, with
-the continuous forms on the exact state), with `e^{tL} L x` in the closure of the core. The
-admissible states are the orbit states of the core; consistent approximation holds with the
-elliptic projection as approximant (residual `0`, approximation from the core,
-`tendsto_reading_galerkin`). The cochain defect is not required to be computed: it is absorbed by
-the Galerkin identity.
-
-This is a **bridge, not a new convergence proof**: it takes an existing `DissipFEEC.Core` `Z0`
-of `F` (whose approximation and consistency hypotheses were established for `F` elsewhere) and
-re-reads it as a complex-level family. What it adds is the complex-level structure on the same
-discrete solutions (`ofComplexCrime_ofGalerkinCore_sol`): the generator `𝐝ₕ - 𝐝ₕ*`, the
-preserved `Lₕ`-invariant subspaces, the Strang and defect bounds, and rates
-(`galerkinRateClass`). -/
+/-- **An approximating family from a Galerkin core** of an approximating FEEC discretization. -/
 def ApproxComplexCrime.ofGalerkinCore : ApproxComplexCrime.{u} H κ where
   toFamily := ApproxComplexCrime.Family.ofApproxFEEC F D hDD
   K := F.K
@@ -1951,8 +1588,6 @@ def ApproxComplexCrime.ofGalerkinCore : ApproxComplexCrime.{u} H κ where
     positivity
 
 include hL in
-/-- **The discrete solutions are those of `F`**: `ofComplexCrime` of the Galerkin family has the
-spaces, reading maps and (by `Lₕ = 𝐝ₕ - 𝐝ₕ*`) the generators of `F`. -/
 theorem ofComplexCrime_ofGalerkinCore_sol (h : κ) (v : F.X h) (t : ℝ) :
     (ApproxFEEC.ofComplexCrime (ApproxComplexCrime.ofGalerkinCore F D hDD hJ hL Z0 hZ hgal
       hcl)).sol h v t = F.sol h v t := by
@@ -1961,16 +1596,7 @@ theorem ofComplexCrime_ofGalerkinCore_sol (h : κ) (v : F.X h) (t : ℝ) :
   rw [hL]
 
 include hJ hL hgal hZ hcl in
-/-- **Rates of a Galerkin family**: approximation estimates of the Galerkin comparison and of its
-derivative along the trajectory, `‖e^{tL} x - iₕ pₕ(t)‖`,
-`‖e^{tL} L x - iₕ pₕ'(t)‖ ≤ Cₐ m(h)ᵅ ‖x‖_c` on `[0, T]` (horizon `T + 1` of the core), and the
-inner-product defect at them, `‖(1 - Jₕ) pₕ(t)‖, ‖(1 - Jₕ) pₕ'(t)‖ ≤ Cₐ m(h)ᵅ ‖x‖_c`, give the
-complex-level rate data with the elliptic projection as approximant (residual `0`), hence a rate
-class of `ofComplexCrime` (`ApproxComplexCrime.rateClass`). The defect along the comparison
-vanishes for orthogonal reading maps (`galerkinRateClass_of_isOrthogonal`), and it is at most
-`8 C ‖1 - Jₕ‖_{Vₕ} ‖y - L y‖` at `y = e^{tL} x` and `y = e^{tL} L x`
-(`pₕ = Bₕ (y - L y)`, `Family.norm_one_sub_J_load_le`). The estimates `happ` are rates of the given
-core; this transports them to the complex-level constants, it does not derive them. -/
+/-- **The rate class of a Galerkin family** from approximation estimates of its comparison. -/
 def galerkinRateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (Z0.Data : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (happ : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T,
@@ -2023,9 +1649,7 @@ theorem galerkinRateClass_p (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α C
     (galerkin_p_eq F D hDD hL Z0 hgal (hDc hx) h ht).symm
 
 include hF hL hgal hZ hcl in
-/-- **Rates of a Galerkin family with orthogonal reading maps**: there the inner-product defect
-vanishes (`Family.ofApproxFEEC_J`), and the approximation estimates of the comparison and of its
-derivative give the rate class (`galerkinRateClass`, with the same constants). -/
+/-- The rate class of a Galerkin family with orthogonal reading maps. -/
 def galerkinRateClass_of_isOrthogonal (T : ℝ) (Dc : Set (PiLp 2 W))
     (hDc : Dc ⊆ (Z0.Data : Set (PiLp 2 W))) (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (happ : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T,
@@ -2053,7 +1677,7 @@ end Bridge
 
 end Galerkin
 
-/-! ### Complexification of a differential (real schemes for complex data) -/
+/-! ### Complexification of a differential -/
 
 section Complexify
 
@@ -2086,8 +1710,6 @@ theorem complexifyD_D (D : ∀ h, F.X h →L[ℝ] F.X h) (hDD : ∀ h v, D h (D 
   obtain ⟨⟨a, b⟩⟩ := v
   rw [complexifyD_apply, complexifyD_apply, hDD, hDD]; rfl
 
-/-- **The complexified generator is the Hodge wave operator of the complexified differential**:
-if `Lₕ = 𝐝ₕ - 𝐝ₕ*`, then `Lₕ ⊕ Lₕ = (𝐝ₕ ⊕ 𝐝ₕ) - (𝐝ₕ ⊕ 𝐝ₕ)*`. -/
 theorem complexify_L_eq_diffWave (D : ∀ h, F.X h →L[ℝ] F.X h)
     (hL : ∀ h, F.L h = diffWave (D h)) (h : κ') :
     (F.complexify J hJJ hJ hπJ hJι).L h = diffWave (F.complexifyD J hJJ hJ hπJ hJι D h) := by
@@ -2101,7 +1723,6 @@ theorem complexify_L_eq_diffWave (D : ∀ h, F.X h →L[ℝ] F.X h)
   simp only [WithLp.prod_inner_apply, hL, inner_diffWave]
   ring
 
-/-- The complexified discrete spaces are finite-dimensional. -/
 theorem complexify_finiteDimensional [hfd : ∀ h, FiniteDimensional ℝ (F.X h)] (h : κ') :
     FiniteDimensional ℝ ((F.complexify J hJJ hJ hπJ hJι).X h) :=
   inferInstanceAs (FiniteDimensional ℝ (WithLp 2 (F.X h × F.X h)))
@@ -2110,9 +1731,6 @@ theorem complexify_finiteDimensional [hfd : ∀ h, FiniteDimensional ℝ (F.X h)
 def complexifyPair (h : κ') (a b : F.X h) : (F.complexify J hJJ hJ hπJ hJι).X h :=
   WithLp.toLp 2 (a, b)
 
-/-- **Galerkin identities pass to the complexification**: if real and imaginary parts satisfy
-`(1 - Lₕ) a = πₕ z` and `(1 - Lₕ) b = -πₕ (J z)`, the pair satisfies `(1 - Lₕ') (a, b) = ι'* z`
-(orthogonal reading maps). -/
 theorem complexify_galerkin (hF : F.IsOrthogonal) (h : κ') (a b : F.X h) (z : PiLp 2 W')
     (h1 : a - F.L h a = F.proj h z) (h2 : b - F.L h b = -F.proj h (J z)) :
     F.complexifyPair J hJJ hJ hπJ hJι h a b -
@@ -2141,22 +1759,7 @@ variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} 
 def splitConst (Ca Cb Cg : ℝ) : ℝ := (1 + F.toFamily.boundConst) * Ca + Cb + Cg
 
 open ApproxFEEC in
-/-- **A rate class at order `min(α, β, γ)` from the split estimates** (Holst–Stern type, with a
-cochain defect). For a mesh size `0 ≤ m(h) ≤ 1`, orders `α, β, γ ≥ 0` and constants
-`Cₐ, C_β, C_γ ≥ 0`: if along the exact trajectory (`y = e^{tL} x` and `y = e^{tL} L x`,
-`t ∈ [0, T]`, `x ∈ Dc`) there are approximants `w` with graph-norm error
-`‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Cₐ m(h)ᵅ ‖x‖_c` and inner-product defect
-`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ C_β m(h)^β ‖x‖_c`, and the cochain defect of `y` is
-`≤ C_γ m(h)^γ ‖x‖_c` in the dual discrete graph norm, then the comparison of `ofComplexCrimeCore`
-on `Dc` is a rate class of order `min(α, β, γ)` (`rateClass` with `Cₐ' = (1 + C_ι) Cₐ + C_β + C_γ`,
-`splitConst`): its constants are `C = (1 + 8 C_ι) Cₐ'` and
-`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ'` (`rateClass_of_split_C`,
-`rateClass_of_split_C'`). For approximants of size `‖w‖ + ‖𝐝ₕ w‖ ≤ C_w ‖x‖_c`, the inner-product
-defect at them is `O(m^β)` with `C_β = c C_w` when `‖1 - Jₕ‖ ≤ c m(h)^β`
-(`Family.norm_one_sub_J_add_le_opNorm`; the former hypotheses of this constructor, with the same
-constants) and with `C_β = 2 c C_w` when only the defect in the graph norm is,
-`‖1 - Jₕ‖_{Vₕ} ≤ c m(h)^β` (`Family.norm_one_sub_J_add_le`). The three estimates enter
-through `Family.rateData_of_split` and are combined by `add_rpow_le_rpow_min`. -/
+/-- **A rate class at order `min(α, β, γ)`** from graph-norm, inner-product and cochain rates. -/
 def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cb Cg : ℝ)
     (hm0 : ∀ h, 0 ≤ m h) (hm1 : ∀ h, m h ≤ 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (hγ : 0 ≤ γ)
@@ -2242,28 +1845,22 @@ variable (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
   (hm0 : ∀ h, 0 ≤ m h) (hm1 : ∀ h, m h ≤ 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (hγ : 0 ≤ γ)
   (hCa : 0 ≤ Ca) (hCb : 0 ≤ Cb) (hCg : 0 ≤ Cg) (hcn : ∀ x ∈ Dc, 0 ≤ cn x) (hsplit)
 
-/-- The order of `rateClass_of_split` is `min(α, β, γ)`. -/
 theorem rateClass_of_split_α :
     (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg hcn
       hsplit).α = min α (min β γ) := rfl
 
-/-- The approximation constant of `rateClass_of_split`:
-`C = (1 + 8 C_ι) ((1 + C_ι) Cₐ + C_β + C_γ)`. -/
 theorem rateClass_of_split_C :
     (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg hcn
       hsplit).C = (1 + 8 * F.toFamily.boundConst) *
         ((1 + F.toFamily.boundConst) * Ca + Cb + Cg) := rfl
 
-/-- The consistency constant of `rateClass_of_split`:
-`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) ((1 + C_ι) Cₐ + C_β + C_γ)`. -/
 theorem rateClass_of_split_C' :
     (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg hcn
       hsplit).C' = 2 * (1 + 8 * (1 + F.toFamily.boundConst ^ 2) +
         F.toFamily.boundConst * (1 + 8 * F.toFamily.boundConst)) *
         ((1 + F.toFamily.boundConst) * Ca + Cb + Cg) := rfl
 
-/-- **The error at order `min(α, β, γ)`**: under the split estimates of `rateClass_of_split`,
-from the comparison initial value `Rₕ x`,
+/-- **The error at order `min(α, β, γ)`**:
 `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)^{min(α, β, γ)} ‖x‖_c` on `[0, T]`. -/
 theorem error_le_of_split {x : PiLp 2 W} (hx : x ∈ Dc) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖H.waveGroup.S t x - (ApproxFEEC.ofComplexCrime F).sol h

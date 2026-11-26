@@ -11,44 +11,20 @@ public import Mathlib.LinearAlgebra.Matrix.Block
 /-!
 # Integration of differential forms over affine simplices
 
-The reference `k`-simplex is `T̂_k = {x̂ ∈ ℝᵏ | x̂ᵢ ≥ 0, Σᵢ x̂ᵢ ≤ 1}`, with vertices
-`v̂₀ = 0`, `v̂ᵢ₊₁ = eᵢ` and barycentric coordinates `λ̂(x̂) = (1 - Σᵢ x̂ᵢ, x̂₀, …, x̂_{k-1})`. An
-oriented affine `k`-simplex in `ℝⁿ` is an ordered family of vertices `p₀, …, p_k`
-(e.g. the points of a Mathlib `Affine.Simplex ℝ (Fin n → ℝ) k`); it is parametrized by the affine
-map `F_p(x̂) = Σᵢ λ̂ᵢ(x̂) pᵢ = p₀ + Σᵢ x̂ᵢ (pᵢ₊₁ - p₀)` of `T̂_k` onto its convex hull. The integral
-of a `k`-form `ω` over it is defined by pullback, without any surface measure:
-
-  `∫_p ω = ∫_{T̂_k} (F_p^* ω)_{univ} dx̂`.
-
-This is the integral of [AFW2006], §2 and [Arnold2018], Ch. 6 for a simplex oriented by the
-order of its vertices. For degenerate (affinely dependent) vertex families the pullback vanishes
-and so does the integral.
-
-## Main definitions
-
-* `Feec.FiniteElement.refSimplex k`, `refBary`, `refVertex`;
-* `Feec.FiniteElement.simplexMatrix p`, `simplexMap p`: the parametrization `F_p`;
-* `Feec.FiniteElement.simplexIntegral p ω`: the integral of the form `ω` over the oriented
-  simplex `p`.
+The integral of a `k`-form `ω` over an oriented affine `k`-simplex `p` in `ℝⁿ` is
+`∫_p ω = ∫_{T̂_k} (F_p^* ω)_{univ} dx̂`, with `F_p` the affine parametrization of `p` by the
+reference simplex ([AFW2006], §2; [Arnold2018], Ch. 6).
 
 ## Main results
 
-* `setIntegral_refSimplex_succ`: Fubini on the reference simplex, slicing along any coordinate;
-* `volume_real_refSimplex`: `|T̂_k| = 1 / k!`;
-* `simplexIntegral_comp_affine`: invariance under affine maps, `∫_{G ∘ p} ω = ∫_p G^* ω`;
-* `simplexIntegral_comp_perm`: **independence of the parametrization**, up to the orientation:
-  `∫_{p ∘ π} ω = sign π · ∫_p ω` for every permutation `π` of the vertices;
-* `simplexIntegral_add`, `simplexIntegral_smul`, `simplexIntegral_sum`: linearity, and
-  `simplexIntegral_add_of_simplexIntegrable` under the integrability hypothesis
-  `SimplexIntegrable`;
-* `abs_simplexIntegral_le`: `|∫_p ω| ≤ (Σ_s |minor_s(F_p)|) · sup |ω| / k!` (by Cauchy–Binet
-  `Σ_s |minor_s| ≥ k! vol_k`, so this is weaker than `vol_k · sup |ω|` when `k < n`).
+* `simplexIntegral_comp_affine`: `∫_{G ∘ p} ω = ∫_p G^* ω` for affine maps `G`.
+* `simplexIntegral_comp_perm`: `∫_{p ∘ π} ω = sign π · ∫_p ω`.
+* `abs_simplexIntegral_le`: `|∫_p ω| ≤ (Σ_s |minor_s(F_p)|) · sup |ω| / k!`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (integration of differential forms)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -62,8 +38,6 @@ namespace Feec.FiniteElement
 open ExteriorFibre
 
 variable {n m k : ℕ}
-
-/-! ### The reference simplex -/
 
 /-- The barycentric coordinates `λ̂(x̂) = (1 - Σᵢ x̂ᵢ, x̂₀, …, x̂_{k-1})` on `ℝᵏ`. -/
 def refBary (x : Fin k → ℝ) : Fin (k + 1) → ℝ := Fin.cons (1 - ∑ i, x i) x
@@ -117,7 +91,6 @@ def refVertex (k : ℕ) : Fin (k + 1) → Fin k → ℝ := Fin.cons 0 fun i => P
 
 @[simp] theorem refVertex_succ (i : Fin k) : refVertex k i.succ = Pi.single i 1 := rfl
 
-/-- `λ̂ⱼ(v̂ᵢ) = δᵢⱼ`. -/
 theorem refBary_refVertex (i j : Fin (k + 1)) :
     refBary (refVertex k i) j = if i = j then 1 else 0 := by
   refine Fin.cases ?_ (fun i => ?_) i <;> refine Fin.cases ?_ (fun j => ?_) j
@@ -126,7 +99,6 @@ theorem refBary_refVertex (i j : Fin (k + 1)) :
   · simp [Fin.succ_ne_zero i]
   · simp [Pi.single_apply, eq_comm]
 
-/-- The point with barycentric coordinates `c` (`Σ c = 1`) is `Σᵢ cᵢ v̂ᵢ`. -/
 theorem refBary_sum_smul_refVertex {c : Fin (k + 1) → ℝ} (hc : ∑ i, c i = 1) :
     refBary (∑ i, c i • refVertex k i) = c := by
   have h : ∑ i, c i • refVertex k i = fun j => c j.succ := by
@@ -139,8 +111,6 @@ theorem refBary_sum_smul_refVertex {c : Fin (k + 1) → ℝ} (hc : ∑ i, c i = 
   · rw [Fin.sum_univ_succ] at hc
     simp only [refBary_zero]; linarith
   · rfl
-
-/-! ### Fubini on the reference simplex -/
 
 theorem sum_insertNth (j : Fin (m + 1)) (t : ℝ) (y : Fin m → ℝ) :
     ∑ i, Fin.insertNth j t y i = t + ∑ i, y i := by
@@ -157,8 +127,6 @@ theorem insertNth_mem_refSimplex_iff (j : Fin (m + 1)) (t : ℝ) (y : Fin m → 
   · rintro ⟨⟨hy, -⟩, ht, hs⟩
     exact ⟨⟨ht, hy⟩, by linarith⟩
 
-/-- **Fubini on the reference simplex**, slicing along the coordinate `j`:
-`∫_{T̂_{m+1}} g = ∫_{ŷ ∈ T̂_m} ∫_0^{1 - Σ ŷ} g(ŷ with t inserted at j) dt dŷ`. -/
 theorem setIntegral_refSimplex_succ (j : Fin (m + 1)) {g : (Fin (m + 1) → ℝ) → ℝ}
     (hg : IntegrableOn g (refSimplex (m + 1))) :
     ∫ x in refSimplex (m + 1), g x =
@@ -194,7 +162,6 @@ theorem setIntegral_refSimplex_succ (j : Fin (m + 1)) {g : (Fin (m + 1) → ℝ)
     refine integral_eq_zero_of_ae (Filter.Eventually.of_forall fun t => ?_)
     exact Set.indicator_of_notMem (fun h => hy ((insertNth_mem_refSimplex_iff j t y).1 h).1) _
 
-/-- `∫_{T̂_m} (1 - Σ x̂)^r dx̂ = r! / (r + m)!`. -/
 theorem setIntegral_refSimplex_one_sub_sum_pow (m r : ℕ) :
     ∫ x in refSimplex m, (1 - ∑ i, x i) ^ r = (r.factorial : ℝ) / (r + m).factorial := by
   induction m generalizing r with
@@ -224,15 +191,12 @@ theorem setIntegral_refSimplex_one_sub_sum_pow (m r : ℕ) :
     push_cast
     field_simp
 
-/-- **The volume of the reference simplex**: `|T̂_k| = 1 / k!`. -/
 theorem volume_real_refSimplex (k : ℕ) : volume.real (refSimplex k) = 1 / k.factorial := by
   have := setIntegral_refSimplex_one_sub_sum_pow k 0
   simpa using this
 
 theorem volume_refSimplex_lt_top (k : ℕ) : volume (refSimplex k) < ⊤ :=
   (isCompact_refSimplex k).measure_lt_top
-
-/-! ### Parametrization of an affine simplex and the integral of a form -/
 
 /-- The edge matrix of an ordered vertex family: its columns are the edges `pₗ₊₁ - p₀`. -/
 def simplexMatrix (p : Fin (k + 1) → Fin n → ℝ) : Fin n → Fin k → ℝ :=
@@ -242,7 +206,6 @@ def simplexMatrix (p : Fin (k + 1) → Fin n → ℝ) : Fin n → Fin k → ℝ 
 def simplexMap (p : Fin (k + 1) → Fin n → ℝ) : (Fin k → ℝ) → Fin n → ℝ :=
   affine (simplexMatrix p) (p 0)
 
-/-- `F_p(x̂) = Σᵢ λ̂ᵢ(x̂) pᵢ`. -/
 theorem simplexMap_eq_sum (p : Fin (k + 1) → Fin n → ℝ) (x : Fin k → ℝ) :
     simplexMap p x = ∑ i, refBary x i • p i := by
   funext j
@@ -252,14 +215,12 @@ theorem simplexMap_eq_sum (p : Fin (k + 1) → Fin n → ℝ) (x : Fin k → ℝ
   simp only [mul_comm (x _) _]
   ring
 
-/-- `F_p(T̂_k)` lies in the convex hull of the vertices. -/
 theorem simplexMap_mem_convexHull (p : Fin (k + 1) → Fin n → ℝ) {x : Fin k → ℝ}
     (hx : x ∈ refSimplex k) : simplexMap p x ∈ convexHull ℝ (Set.range p) := by
   rw [simplexMap_eq_sum]
   exact (convex_convexHull ℝ _).sum_mem (fun i _ => hx i) (sum_refBary x)
     fun i _ => subset_convexHull ℝ _ ⟨i, rfl⟩
 
-/-- `F_p(v̂ᵢ) = pᵢ`. -/
 theorem simplexMap_refVertex (p : Fin (k + 1) → Fin n → ℝ) (i : Fin (k + 1)) :
     simplexMap p (refVertex k i) = p i := by
   rw [simplexMap_eq_sum]
@@ -269,7 +230,6 @@ theorem simplexMap_refVertex (p : Fin (k + 1) → Fin n → ℝ) (i : Fin (k + 1
 theorem continuous_simplexMap (p : Fin (k + 1) → Fin n → ℝ) : Continuous (simplexMap p) :=
   continuous_affine _ _
 
-/-- The edge matrix of an affine image `G ∘ q` (`G(y) = C y + c`) is `C` times that of `q`. -/
 theorem simplexMatrix_comp_affine (C : Fin m → Fin n → ℝ) (c : Fin m → ℝ)
     (q : Fin (k + 1) → Fin n → ℝ) :
     simplexMatrix (fun i => affine C c (q i)) = fun j l => ∑ i, C j i * simplexMatrix q i l := by
@@ -277,16 +237,12 @@ theorem simplexMatrix_comp_affine (C : Fin m → Fin n → ℝ) (c : Fin m → �
   simp only [simplexMatrix, affine_apply, mul_sub, Finset.sum_sub_distrib]
   ring
 
-/-- Affine maps commute with the parametrization: `F_{G ∘ q} = G ∘ F_q`. -/
 theorem simplexMap_comp_affine (C : Fin m → Fin n → ℝ) (c : Fin m → ℝ)
     (q : Fin (k + 1) → Fin n → ℝ) (x : Fin k → ℝ) :
     simplexMap (fun i => affine C c (q i)) x = affine C c (simplexMap q x) := by
   rw [simplexMap, simplexMap, affine_comp, simplexMatrix_comp_affine]
 
-/-- **The integral of a `k`-form over an oriented affine `k`-simplex** `p = (p₀, …, p_k)` in
-`ℝⁿ`: `∫_p ω = ∫_{T̂_k} (F_p^* ω)_{univ}`, the coefficient of `dx̂₀ ∧ ⋯ ∧ dx̂_{k-1}` of the pullback
-by the parametrization `F_p`. For a Mathlib simplex `σ : Affine.Simplex ℝ (Fin n → ℝ) k` the
-integral over `σ` is `simplexIntegral σ.points ω`. -/
+/-- The integral `∫_p ω = ∫_{T̂_k} (F_p^* ω)_{univ}` of a `k`-form over the oriented simplex `p`. -/
 def simplexIntegral (p : Fin (k + 1) → Fin n → ℝ) (ω : FormField n) : ℝ :=
   ∫ x in refSimplex k, affinePullback (simplexMatrix p) (p 0) ω x univ
 
@@ -307,8 +263,6 @@ theorem simplexMatrix_refVertex :
   funext i j
   simp [simplexMatrix, Pi.single_apply]
 
-/-- On the reference simplex itself the integral is the Lebesgue integral of the top
-coefficient. -/
 theorem simplexIntegral_refVertex (η : FormField k) :
     simplexIntegral (refVertex k) η = ∫ x in refSimplex k, η x univ := by
   have ha : ∀ x, affine (fun i j : Fin k => if i = j then (1 : ℝ) else 0) 0 x = x := by
@@ -317,15 +271,11 @@ theorem simplexIntegral_refVertex (η : FormField k) :
   simp only [simplexIntegral, affinePullback_apply, simplexMatrix_refVertex, refVertex_zero, ha,
     pullback_id]
 
-/-- `∫_p ω` is the integral of the pullback `F_p^* ω` over the reference simplex. -/
 theorem simplexIntegral_eq_refVertex (p : Fin (k + 1) → Fin n → ℝ) (ω : FormField n) :
     simplexIntegral p ω =
       simplexIntegral (refVertex k) (affinePullback (simplexMatrix p) (p 0) ω) := by
   rw [simplexIntegral_refVertex]; rfl
 
-/-! ### Measure-preserving affine maps -/
-
-/-- An affine self-map of `ℝᵏ` with `|det| = 1` preserves the Lebesgue measure. -/
 theorem measurePreserving_affine {B : Fin k → Fin k → ℝ} (hB : |(Matrix.of B).det| = 1)
     (b : Fin k → ℝ) : MeasurePreserving (affine B b) := by
   have hdet : LinearMap.det (Matrix.toLin' (Matrix.of B)) ≠ 0 := by
@@ -340,13 +290,10 @@ theorem measurePreserving_affine {B : Fin k → Fin k → ℝ} (hB : |(Matrix.of
   rw [this]
   exact (measurePreserving_add_right volume b).comp hlin
 
-/-! ### Permutations of the vertices -/
-
 /-- The affine self-map `x̂ ↦ F_{v̂ ∘ π}(x̂)` of `ℝᵏ` sending `v̂ᵢ` to `v̂_{π i}`. -/
 def permMap (π : Equiv.Perm (Fin (k + 1))) : (Fin k → ℝ) → Fin k → ℝ :=
   simplexMap (refVertex k ∘ π)
 
-/-- `permMap π` permutes the barycentric coordinates: `λ̂(A_π x̂) = λ̂(x̂) ∘ π⁻¹`. -/
 theorem refBary_permMap (π : Equiv.Perm (Fin (k + 1))) (x : Fin k → ℝ) :
     refBary (permMap π x) = refBary x ∘ π.symm := by
   rw [permMap, simplexMap_eq_sum]
@@ -453,7 +400,6 @@ theorem permDet_swap_zero_one (m : ℕ) :
   simp only [hL]
   simp [Fin.succ_ne_zero]
 
-/-- `permDet π` is the sign of the permutation `π`. -/
 theorem permDet_eq_sign (π : Equiv.Perm (Fin (k + 1))) :
     permDet π = ((Equiv.Perm.sign π : ℤ) : ℝ) := by
   induction π using Equiv.Perm.swap_induction_on with
@@ -499,7 +445,6 @@ def permMapEquiv (π : Equiv.Perm (Fin (k + 1))) : (Fin k → ℝ) ≃ᵐ (Fin k
   measurable_toFun := (continuous_simplexMap _).measurable
   measurable_invFun := (continuous_simplexMap _).measurable
 
-/-- Vertex permutations of `T̂_k` preserve integrals over `T̂_k`. -/
 theorem setIntegral_refSimplex_comp_permMap (π : Equiv.Perm (Fin (k + 1)))
     (g : (Fin k → ℝ) → ℝ) :
     ∫ x in refSimplex k, g (permMap π x) = ∫ x in refSimplex k, g x := by
@@ -507,8 +452,7 @@ theorem setIntegral_refSimplex_comp_permMap (π : Equiv.Perm (Fin (k + 1)))
     (permMapEquiv π).measurableEmbedding g (refSimplex k)
   rwa [permMap_preimage_refSimplex] at h
 
-/-- **Independence of the parametrization**: permuting the vertices multiplies the integral by
-the sign of the permutation (the change of orientation). -/
+/-- **Independence of the parametrization**: `∫_{p ∘ π} ω = sign π · ∫_p ω`. -/
 theorem simplexIntegral_comp_perm (p : Fin (k + 1) → Fin n → ℝ) (π : Equiv.Perm (Fin (k + 1)))
     (ω : FormField n) :
     simplexIntegral (p ∘ π) ω = ((Equiv.Perm.sign π : ℤ) : ℝ) * simplexIntegral p ω := by
@@ -520,8 +464,6 @@ theorem simplexIntegral_comp_perm (p : Fin (k + 1) → Fin n → ℝ) (π : Equi
   rw [integral_const_mul]
   change permDet π * ∫ x in refSimplex k, η (permMap π x) univ = _
   rw [permDet_eq_sign, setIntegral_refSimplex_comp_permMap π (fun x => η x univ)]
-
-/-! ### Linearity and bounds -/
 
 theorem continuousOn_pullback_univ {p : Fin (k + 1) → Fin n → ℝ} {ω : FormField n}
     (hω : ContinuousOn ω (simplexMap p '' refSimplex k)) :
@@ -537,12 +479,10 @@ theorem integrableOn_pullback_univ {p : Fin (k + 1) → Fin n → ℝ} {ω : For
     IntegrableOn (fun x => affinePullback (simplexMatrix p) (p 0) ω x univ) (refSimplex k) :=
   (continuousOn_pullback_univ hω).integrableOn_compact (isCompact_refSimplex k)
 
-/-- `ω` is integrable over the oriented simplex `p`: the top coefficient of `F_p^* ω` is
-integrable on `T̂_k`. -/
+/-- `ω` is integrable over `p`: the top coefficient of `F_p^* ω` is integrable on `T̂_k`. -/
 def SimplexIntegrable (p : Fin (k + 1) → Fin n → ℝ) (ω : FormField n) : Prop :=
   IntegrableOn (fun x => affinePullback (simplexMatrix p) (p 0) ω x univ) (refSimplex k)
 
-/-- Additivity of the integral for integrable forms. -/
 theorem simplexIntegral_add_of_simplexIntegrable {p : Fin (k + 1) → Fin n → ℝ}
     {ω η : FormField n} (hω : SimplexIntegrable p ω) (hη : SimplexIntegrable p η) :
     simplexIntegral p (ω + η) = simplexIntegral p ω + simplexIntegral p η := by
@@ -591,9 +531,8 @@ theorem simplexIntegral_sum {β : Type*} (p : Fin (k + 1) → Fin n → ℝ) (u 
       funext x; simp [Finset.sum_apply]
     exact hs
 
-/-- **Bound**: if `|ω_s| ≤ M` on the simplex, then
-`|∫_p ω| ≤ (Σ_s |minor_s(F_p)|) · M / k!`, where `minor_s(F_p)` are the `k × k` minors of the
-edge matrix (the coefficients of `F_p^* dx_s`). -/
+/-- **Bound**: if `|ω_s| ≤ M` on the simplex, then `|∫_p ω| ≤ (Σ_s |minor_s(F_p)|) · M / k!`,
+with `minor_s(F_p)` the `k × k` minors of the edge matrix. -/
 theorem abs_simplexIntegral_le {p : Fin (k + 1) → Fin n → ℝ} {ω : FormField n} {M : ℝ}
     (hM : ∀ x ∈ refSimplex k, ∀ s, |ω (simplexMap p x) s| ≤ M) :
     |simplexIntegral p ω| ≤

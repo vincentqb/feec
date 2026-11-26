@@ -7,36 +7,13 @@ public import Feec.Models.Cube.WeakSymmetryTangentialRate
 /-!
 # The Einstein–Bianchi system on the cube: rates for solutions with vanishing tangential traces
 
-The headline theorems `Feec.EinsteinBianchi.StaticFEM.staticFEM` (items 4, 5: thesis Thm 5.5 with
-the elements of Table 5.1) and `Feec.EinsteinBianchi.WaveFEM.waveFEM` (item 5: the `O(h)` rate of
-(6.5)) assume solutions that are `C²` and vanish outside `Q` (flat at `∂Q`). This module restates
-them, under the same regularity hypothesis `CurlPotential` (through its constant; it is proved, and
-`Feec.Physics.EinsteinBianchi.WaveFEMTangentialCube` states the results without it), for solutions
-that are `C²` **up to the boundary** with vanishing tangential traces on `∂Q`
-(`Feec.Models.Cube.FEM.IsCsFormTr`, `Feec.Models.Cube.WeakSymmetry.IsSmoothStateTr`), the boundary
-conditions of the discrete spaces:
-
-* **`staticFEM_rate_tr`**: Thm 5.5 (`cubeFEM_rate_tr`) and its form for the solution of Prop 5.2
-  (`cubeFEM_rate_isSaddle_tr`);
-* **`waveFEM_rate_tr`**: items 1–4 of `waveFEM` unchanged, item 5 on `IsSmoothStateTr`
-  (`cubeWave_rate_tr`), and the `O(h)` rate of the elliptic projection (6.4) on the cube
-  (`cubeFEM_ellipticProjection_rate_tr`);
-* non-vacuity beyond the flat class: `waveFEM_rate_tr_nonvacuous` (the classical solution
-  `waveTangential T` of (6.2)).
-
-"`C²` up to `∂Q`" means the restriction to `Q` of a `C²` field on `ℝ³` (equivalent through an
-extension theorem for the cube, which is not formalized). The class of `S¹u` is derived from that
-of `u` (`exists_isCsFormTr_segS1`). The states `M`, `ρ` are required to have vanishing tangential
-traces as well: the discrete `Mₕ, ρₕ` have vanishing boundary DOFs, so without that condition the
-error is expected to be of order `h^{1/2}` at `t = 0` already (boundary-layer argument, not
-formalized; see `Feec.Models.Cube.WeakSymmetryWave`).
+The rates of `Feec.EinsteinBianchi.StaticFEM.staticFEM` and `Feec.EinsteinBianchi.WaveFEM.waveFEM`
+([QuennevilleBelair2015], §5.3, §6.3) for solutions that are `C²` up to `∂Q` with vanishing
+tangential traces (`staticFEM_rate_tr`, `waveFEM_rate_tr`, `waveFEM_rate_tr_nonvacuous`).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3 (Table 5.1, Thm 5.5), §6.2 ((6.4), Prop 6.2), §6.3 ((6.5), Table 6.1)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -52,15 +29,8 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
 
 set_option maxHeartbeats 1000000 in
-/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1 for solutions with vanishing
-tangential traces**, under the regularity hypothesis: there are smoothing parameters `p` (one
-smoother for both rows) and `C` such that
-1. there is `K`, independent of `N` and of the solution, such that for every exact solution
-   `(σ, φ, u, λ)` of (5.3) with `λ ∈ L²`, `‖λ‖ ≤ L`, whose components `σ, φ, u` are `C²` up to
-   `∂Q` with vanishing tangential traces (`IsCsFormTr 0`, bound `L` on the values and first
-   derivatives) and every discrete solution of (5.6),
-   `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`;
-2. the same for the solution `x` of Prop 5.2 (`bggHilb.IsSaddle`) with multiplier in `L²Λ¹(Q)`. -/
+/-- Under `CurlPotential`, for some common smoother, the error of (5.6) is `O(h_N)` for solutions of
+(5.3) that are `C²` up to `∂Q` with vanishing tangential traces. [QuennevilleBelair2015], Thm 5.5 -/
 theorem staticFEM_rate_tr (hR : CurlPotential) :
     ∃ (p : ℕ → Feec.Domain.SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -122,18 +92,8 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
 
 set_option maxHeartbeats 4000000 in
-/-- **`waveFEM` for solutions with vanishing tangential traces** ([QuennevilleBelair2015], §6.3),
-under the regularity hypothesis `CurlPotential`: for one smoother `p` and constant `C`, items 1–4
-of `waveFEM` ((5.4) and uniform bounds; `grad` injective and `S₀,ₕ` onto; corrected Prop 6.2;
-energy stability) and
-5. (`O(h)` convergence of (6.5)) there is `K` such that for every classical solution of (6.2)
-   whose states and time derivatives are `C²` up to `∂Q` with vanishing tangential traces
-   (`IsSmoothStateTr L`: no flatness, no condition on the normal components) and `L²`-bounded
-   multiplier, the solution of (6.5) from the elliptic projection (6.4) of the exact initial state
-   satisfies `‖(σ, u, M, ρ)(t) − (σₕ, uₕ, Mₕ, ρₕ)(t)‖ ≤ K L (1 + t) h_N` on `[0,T]`;
-6. (the `O(h)` rate of (6.4)) there is `K'` such that every solution `x` of the elliptic projection
-   (6.4) of a state `(σ, φ, u, M, ρ)` in `IsSmoothStateTr L` with `dσ = S₀φ` and
-   `|ℓ μ| ≤ L ‖μ‖` has energy error `≤ K' L h_N`. -/
+/-- Under `CurlPotential`, the conclusions of `waveFEM` with its rate for solutions of (6.2) in
+`IsSmoothStateTr`, and the rate of the elliptic projection (6.4). [QuennevilleBelair2015], §6.3 -/
 theorem waveFEM_rate_tr (hR : CurlPotential) :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
@@ -185,11 +145,8 @@ theorem waveFEM_rate_tr (hR : CurlPotential) :
     cubeFEM_ellipticProjection_rate_tr hT hB hCR.1 hCR.2⟩
 
 set_option maxHeartbeats 4000000 in
-/-- **Non-vacuity of `waveFEM_rate_tr` beyond flat data** (for any common smoother): the classical
-solution `waveTangential T` of (6.2) (`u(t) = tangentialU`, `ρ(t) = t curl u`, `M = 0`, source
-`t (curl* curl u, 0, 0)`) has `u(t) ≠ 0` not flat (no class `IsCsFormMin`), meets every hypothesis
-of item 5, and under `CurlPotential` the solutions of (6.5) from the elliptic projection of its
-initial state converge at rate `h_N`. -/
+/-- Under `CurlPotential`, the classical solution `waveTangential T` of (6.2), nonzero and outside
+every flat class `IsCsFormMin`, is approximated by solutions of (6.5) at rate `h_N`. -/
 theorem waveFEM_rate_tr_nonvacuous {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) (hR : CurlPotential) {T : ℝ}

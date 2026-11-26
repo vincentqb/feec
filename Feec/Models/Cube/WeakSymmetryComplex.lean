@@ -9,67 +9,19 @@ public import Feec.HilbertComplex.BGG.WeakSymmetry
 /-!
 # The continuous BGG data (4.16) on the cube
 
-The complex of [QuennevilleBelair2015], §5.3, on `Q = (0, ½)³` with the thesis' boundary
-conditions,
-
-`H̊Λ⁰(Q) --d--> H̊Λ¹(Q) --d--> L²Λ²(Q)` (top row: `H̊¹ → H̊(curl) → L²(V)`),
-`H̊Λ⁰(Q)³ --d--> H̊Λ¹(Q)³ --d--> L²Λ²(Q)³` (bottom row: `H̊¹(V) → H̊(curl, M) → L²(M)`),
-
-linked by `S⁰ = I` and `S¹ = 2 vskw` (`Feec.FiniteElement.wsL2`, `Σᵢ dxᵢ ∧ ·`), as BGG data
-`Feec.BGG.Hilb` (`bggHilb`, hence the segment `bggHilb.toSegment`): the domains carry the graph
-inner products (`LinearPMap.GraphSpace` of the minimal realizations `d_min`), `d S⁰ = −S¹ d`
-(`Feec.FiniteElement.wsL2_mem_minimal`).
-
-**The hypotheses (H1)–(H3), (H6) of §5.1** (`Feec.BGG.Hilb.Hyps`), and the continuous constants
-`Feec.BGG.Stability` of Prop 5.3, hold on the cube from the identification of `H̊Λ(Q)` with the
-parity classes of the torus de Rham complex (`Feec.Models.Cube.DeRhamIdentFEM`: closed range and
-`ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ 3`): injectivity of `d⁰` (`D0_eq_zero`, `bggD0_injective`), closed
-ranges, exactness at
-`H̊Λ¹` (`exact1`) and the Hodge decomposition with Poincaré constant `(2π)⁻¹` (`hodge_one`), in
-both rows; `‖S⁰ψ‖ ≤ ‖ψ‖`, `‖S¹v‖² ≤ 2 ‖v‖²` (`Feec.FiniteElement.norm_wsL2_sq_le`).
-
-**The regularity hypothesis** `curl H̊(curl) = curl H̊¹(V)` (`CurlPotential`) is not proved
-here: it is the regular decomposition `H̊(curl) = H̊¹(V) + grad H̊¹` of [Hiptmair2002], Lemma 2.4,
-[HiptmairXu2007], §3 (Costabel–McIntosh regularized Poincaré operators), which is absent from
-Mathlib and does not follow from the parity model of the cube (the potential must vanish on `∂Q`
-in every component, a parity class different from that of `H̊Λ¹`). Its constant `C_R` follows
-from the open mapping theorem (`CurlPotential.exists_bound`), and it is proved in
-`Feec.Models.Cube.RegularDecomposition` (`curlPotential`). With it, `bggHyps` and
-`bggStability` hold. The hypothesis is now a theorem,
-`Feec.Models.Cube.WeakSymmetry.curlPotential` in `Feec.Models.Cube.RegularDecomposition` (a
-Helmholtz decomposition on a larger cell and a Hestenes extension from the shell around `Q`), and
-the unconditional forms of `bggHyps`, `bggStability`, Props 5.1 and 5.2 are `bggHilb_hyps`,
-`bggStability'`, `bggShort_closedRange_exact'` and `bgg_existsUnique_isSaddle'` there.
-
-## Main definitions
-
-* `D0`, `D1` (`d_min` in degrees `0`, `1`), `V0`, `V1` (graph spaces), `Vt0`, `Vt1` (`ℝ³`-valued),
-  `bggD0`, `bggDt0`, `bggS0`, `bggS1`; `bggHilb : Feec.BGG.Hilb ℝ …`.
-* `CurlPotential`: the regularity hypothesis.
-* `bggSegment`: the same data in the `W`-normed domain model of `Feec.BGG.Stability`.
+The complex of [QuennevilleBelair2015], §5.3, on `Q = (0, ½)³`, with rows `H̊Λ⁰ → H̊Λ¹ → L²Λ²` and
+`(H̊Λ⁰)³ → (H̊Λ¹)³ → (L²Λ²)³` linked by `S⁰ = I` and `S¹ = 2 vskw`, as BGG data, for which the
+hypotheses of §5.1, Props 5.1 and 5.2 and the constants of Prop 5.3 hold under the regularity
+hypothesis `CurlPotential`.
 
 ## Main results
 
-* `D0_eq_zero`, `cycles_zero_eq_bot` (`ℌ⁰(H̊Λ(Q)) = 0`), `bggD0_injective`, `exact1`,
-  `exists_D0_eq`, `isClosed_range_D0`, `isClosed_range_D1`, `isClosed_range_bggD0`,
-  `isClosed_range_bggD1`, `poincare0`, `poincare1`, `hodge_one`, `bggS0_injective`;
-* **`bggHyps`** (`CurlPotential → bggHilb.Hyps`), **`bggStability`** (constants `(2π)⁻¹`, `C_R`,
-  `√2` of Prop 5.3);
-* **Prop 5.1** (`bggShort_closedRange_exact`) and **Prop 5.2** (`bgg_existsUnique_isSaddle`) on
-  the cube, under `CurlPotential`;
-* `CurlPotential.exists_bound`.
+* `bggHyps`, `bggStability`: the hypotheses (H1)–(H3), (H6) of §5.1 and the constants of Prop 5.3.
+* `bggShort_closedRange_exact`, `bgg_existsUnique_isSaddle`: Props 5.1 and 5.2 on the cube.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (hypotheses of Prop 5.1, Prop 5.3), §5.3 (the complex (4.16), Table 5.1)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
-  §3 (regular decomposition)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (Poincaré inequality, Hodge decomposition), §4.3 (the de Rham complex)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG construction)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -210,7 +162,6 @@ abbrev ιt0 : Vt0 →L[ℝ] Wv W0 := piCLM D0.graphFst
 /-- The inclusion `H̊Λ¹(Q)³ → L²Λ¹(Q)³`. -/
 abbrev ιt1 : Vt1 →L[ℝ] Wv W1 := piCLM D1.graphFst
 
-/-- `S⁰ ψ ∈ H̊Λ¹(Q)` for `ψ ∈ H̊Λ⁰(Q)³`, with `d S⁰ψ = −S¹ dψ`. -/
 theorem wsL2_zero_mem (φ : Vt0) :
     ∃ h : wsL2 (Ω := cubeDomain 3) 0 (ιt0 φ) ∈ D1.domain,
       D1 ⟨_, h⟩ = -wsL2 (Ω := cubeDomain 3) 1 (ιt1 (bggDt0 φ)) := by
@@ -256,7 +207,6 @@ theorem graphFst_bggS0 (φ : Vt0) : D1.graphFst (bggS0 φ) = wsL2 (Ω := cubeDom
 /-- **`S¹ = 2 vskw : H̊Λ¹(Q)³ → L²Λ²(Q)`**. -/
 def bggS1 : Vt1 →L[ℝ] W2 := wsL2 (Ω := cubeDomain 3) 1 ∘L ιt1
 
-/-- **The anticommutation** `d S⁰ = −S¹ d̃` (`curl S₀ = −S₁ grad`). -/
 theorem bggAnticomm (φ : Vt0) : bggD1 (bggS0 φ) = -bggS1 (bggDt0 φ) := (wsL2_zero_mem φ).2
 
 /-! ### The BGG data as `Feec.BGG.Hilb` -/
@@ -289,8 +239,7 @@ theorem bgg_grapht1 (u v : Vt1) :
 theorem bgg_dt1_dt0 (φ : Vt0) : bggDt1 (bggDt0 φ) = 0 :=
   PiLp.ext fun _ => graphSnd_bggD0 _
 
-/-- **The BGG data (4.16) on the cube** with the thesis' boundary conditions: top row
-`H̊Λ⁰ → H̊Λ¹ → L²Λ²`, bottom row `(H̊Λ⁰)³ → (H̊Λ¹)³ → (L²Λ²)³`, `S⁰ = I`, `S¹ = 2 vskw`. -/
+/-- **The BGG data (4.16) on the cube**, with `S⁰ = I` and `S¹ = 2 vskw`. -/
 def bggHilb : Feec.BGG.Hilb ℝ W0 W1 (Wv W0) (Wv W1) W2 (Wv W2) V0 V1 Vt0 Vt1 where
   ι0 := D0.graphFst
   ι1 := D1.graphFst
@@ -326,7 +275,6 @@ theorem rel_m10 : (ComplexShape.up ℤ).Rel (-1) 0 := rfl
 theorem rel_01 : (ComplexShape.up ℤ).Rel 0 1 := rfl
 theorem rel_12 : (ComplexShape.up ℤ).Rel 1 2 := rfl
 
-/-- **`ker d⁰ = 0` on `H̊Λ⁰(Q)`** (`ℌ⁰(H̊Λ(Q)) = 0`). -/
 theorem D0_eq_zero {x : D0.domain} (hx : D0 x = 0) : (x : W0) = 0 := by
   have hz : (x : W0) ∈ (complexMin 3).cycles 0 := by
     rw [(complexMin 3).cycles_eq rel_01, complexMin_d01]
@@ -340,7 +288,6 @@ theorem D0_eq_zero {x : D0.domain} (hx : D0 x = 0) : (x : W0) = 0 := by
   rw [← hy, hy0]
   exact LinearPMap.map_zero _
 
-/-- **Exactness of `H̊Λ(Q)` at `H̊Λ¹`**: `d¹ u = 0` gives `u = d⁰ x`. -/
 theorem exists_D0_eq {u : D1.domain} (hu : D1 u = 0) : ∃ x : D0.domain, D0 x = u := by
   have hz : (u : W1) ∈ (complexMin 3).cycles 1 := by
     rw [(complexMin 3).cycles_eq rel_12, complexMin_d12]
@@ -406,7 +353,6 @@ theorem isClosed_range_bggD1 : IsClosed (Set.range bggD1) := by
   change IsClosed (Set.range D1.graphSnd)
   rw [range_graphSnd D1]; exact isClosed_range_D1
 
-/-- **Exactness of the top row at `H̊Λ¹(Q)`.** -/
 theorem exact1 : LinearMap.ker (bggD1 : V1 →ₗ[ℝ] W2) = LinearMap.range (bggD0 : V0 →ₗ[ℝ] V1) := by
   ext v
   simp only [LinearMap.mem_ker, LinearMap.mem_range, ContinuousLinearMap.coe_coe]
@@ -420,17 +366,10 @@ theorem exact1 : LinearMap.ker (bggD1 : V1 →ₗ[ℝ] W2) = LinearMap.range (bg
   · rintro ⟨x, rfl⟩
     exact graphSnd_bggD0 x
 
-/-- **The regularity hypothesis** of [QuennevilleBelair2015], §5.3, `curl H̊(curl, Q) ⊆
-curl S⁰ H̊¹(Q; ℝ³)`: every `d u`, `u ∈ H̊Λ¹(Q)`, is `d (S⁰ φ)` for a vector field
-`φ ∈ H̊Λ⁰(Q)³`, i.e. has a potential with components in `H̊¹(Q)`. The thesis derives it from the
-regular decomposition `H̊(curl) = H̊¹(V) + grad H̊¹` ([Hiptmair2002], Lemma 2.4;
-[HiptmairXu2007], §3), which is not in Mathlib; it is the field `reg` of `Feec.BGG.Hilb.Hyps`.
-It carries its constant (`CurlPotential.exists_bound`). It is proved in `Feec.Models.Cube.RegularDecomposition`
-(`Feec.Models.Cube.WeakSymmetry.curlPotential`). -/
+/-- **The regularity hypothesis** of [QuennevilleBelair2015], §5.3: each `d u` is a `d (S⁰ φ)`. -/
 def CurlPotential : Prop := Set.range bggD1 ⊆ Set.range (bggD1 ∘ bggS0)
 
-/-- **The hypotheses (H1)–(H3), (H6) of [QuennevilleBelair2015], §5.1 on the cube**, with the
-regularity hypothesis `CurlPotential` (the only one not proved from `H̊Λ(Q)`). -/
+/-- **The hypotheses (H1)–(H3), (H6) of [QuennevilleBelair2015], §5.1**, under `CurlPotential`. -/
 theorem bggHyps (hR : CurlPotential) : bggHilb.Hyps where
   d0_injective := bggD0_injective
   dt0_injective := injective_piCLM bggD0_injective
@@ -458,7 +397,7 @@ theorem bggHyps (hR : CurlPotential) : bggHilb.Hyps where
   dt1_closed := isClosed_range_pi isClosed_range_bggD1
   reg := hR
 
-/-! ### The regularity hypothesis: non-vacuity and the constant -/
+/-! ### The regularity hypothesis: vector proxies and the constant -/
 
 /-- The vector proxy of a `1`-form: `ψₐ = u_{{a}}`, a vector of `0`-forms with `S⁰ ψ = u`. -/
 def proxy0 (φ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ) : Fin 3 → formIdx 3 0 → (Fin 3 → ℝ) → ℝ :=
@@ -485,8 +424,6 @@ theorem wsFields_proxy0 (φ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ) :
     simp [ha]
   · simp
 
-/-- **The constant of the regularity hypothesis** (open mapping theorem): a potential can be
-chosen with `‖φ‖_{H̊Λ⁰(Q)³} ≤ C_R ‖d u‖`. -/
 theorem CurlPotential.exists_bound (h : CurlPotential) :
     ∃ CR, 0 ≤ CR ∧ ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖ := by
   set R := Set.range bggD1
@@ -514,21 +451,17 @@ theorem cycles_zero_eq_bot : (complexMin 3).cycles 0 = ⊥ := by
   obtain ⟨y, rfl, hy⟩ := LinearPMap.mem_ker_iff.1 hx
   exact D0_eq_zero hy
 
-/-- **Poincaré on `H̊Λ⁰(Q)`**: `‖σ‖ ≤ (2π)⁻¹ ‖dσ‖`. -/
 theorem poincare0 (x : D0.domain) : ‖(x : W0)‖ ≤ (2 * Real.pi)⁻¹ * ‖D0 x‖ := by
   have h := norm_le_of_mem_orthogonal_cycles_min (n := 3) rel_01
   rw [complexMin_d01] at h
   exact h x (by rw [cycles_zero_eq_bot, Submodule.bot_orthogonal_eq_top]; exact Submodule.mem_top)
 
-/-- **Poincaré on `H̊Λ¹(Q) ∩ (𝔷¹)ᗮ`**. -/
 theorem poincare1 (x : D1.domain) (hx : (x : W1) ∈ ((complexMin 3).cycles 1)ᗮ) :
     ‖(x : W1)‖ ≤ (2 * Real.pi)⁻¹ * ‖D1 x‖ := by
   have h := norm_le_of_mem_orthogonal_cycles_min (n := 3) rel_12
   rw [complexMin_d12] at h
   exact h x hx
 
-/-- **Hodge decomposition of `H̊Λ¹(Q)`** (no harmonic part): `u = d ψ + w` with `d w = d u` and
-`‖w‖ ≤ (2π)⁻¹ ‖d u‖`. -/
 theorem hodge_one (u : D1.domain) :
     ∃ ψ : D0.domain, ∃ w : D1.domain, (u : W1) = D0 ψ + w ∧ D1 w = D1 u ∧
       ‖(w : W1)‖ ≤ (2 * Real.pi)⁻¹ * ‖D1 u‖ := by
@@ -695,8 +628,8 @@ theorem seg_boundS1 (v : Wv U1) :
     _ ≤ 2 * (‖v‖ ^ 2 + ‖piMap segD1 v‖ ^ 2) := by nlinarith [sq_nonneg ‖piMap segD1 v‖]
     _ = Real.sqrt 2 ^ 2 * (‖v‖ ^ 2 + ‖piMap segD1 v‖ ^ 2) := by rw [hsq2]
 
-/-- **The continuous constants of Prop 5.3 on the cube** (`Feec.BGG.Stability`), with
-`C_p = (2π)⁻¹`, `C_S = √2`, and `C_R` the constant of the regularity hypothesis. -/
+/-- **The constants of [QuennevilleBelair2015], Prop 5.3, on the cube**: under `CurlPotential`,
+`C_p = (2π)⁻¹`, `C_S = √2` and some `C_R`. -/
 theorem bggStability (hR : CurlPotential) :
     ∃ CR, Feec.BGG.Stability bggSegment (2 * Real.pi)⁻¹ CR (Real.sqrt 2) := by
   obtain ⟨CR, hCR0, hCR⟩ := hR.exists_bound
@@ -706,7 +639,6 @@ theorem bggStability (hR : CurlPotential) :
 
 /-! ### Consequences -/
 
-/-- `(S⁰ψ)_{{j}} = ψⱼ`: the `L²` form of `S₀ = I`. -/
 theorem wsL2_zero_apply (v : Wv W0) (j : Fin 3) :
     wsL2 (Ω := cubeDomain 3) 0 v ⟨{j}, by simp⟩ = v j ⟨∅, by simp⟩ := by
   rw [wsL2_apply, Fintype.sum_prod_type, Finset.sum_eq_single j]
@@ -724,7 +656,6 @@ theorem wsL2_zero_apply (v : Wv W0) (j : Fin 3) :
     simp [ha]
   · simp
 
-/-- `S⁰` is injective (`S₀ = I`). -/
 theorem bggS0_injective : Function.Injective bggS0 := by
   refine (injective_iff_map_eq_zero bggS0).2 fun φ hφ => ?_
   have h1 : wsL2 (Ω := cubeDomain 3) 0 (ιt0 φ) = 0 := by
@@ -741,8 +672,8 @@ theorem bggS0_injective : Function.Injective bggS0 := by
   rw [wsL2_zero_apply] at this
   exact this
 
-/-- **Thesis Prop 5.1 on the cube**: under the regularity hypothesis, the complex (5.1)
-`Γ̄ → W̃¹ → W² × W̃²` built from (4.16) is a closed, exact short Hilbert complex. -/
+/-- **[QuennevilleBelair2015], Prop 5.1, on the cube**: under `CurlPotential`, the complex (5.1)
+built from (4.16) is closed and exact. -/
 theorem bggShort_closedRange_exact (hR : CurlPotential) :
     IsClosed (LinearMap.range (bggHilb.toShort (bggHyps hR) bggS0_injective).d₀.toFun :
       Set (Wv W1)) ∧
@@ -753,8 +684,8 @@ theorem bggShort_closedRange_exact (hR : CurlPotential) :
     (bggHilb.toShort (bggHyps hR) bggS0_injective).d₀.ker = ⊥ :=
   bggHilb.toShort_closedRange_exact (bggHyps hR) bggS0_injective
 
-/-- **Thesis Prop 5.2 on the cube**: under the regularity hypothesis, the saddle point problem
-(5.3) for (4.16) is well posed. -/
+/-- **[QuennevilleBelair2015], Prop 5.2 (adapted), on the cube**: under `CurlPotential`, the
+saddle point problem (5.3) for (4.16) is well posed. -/
 theorem bgg_existsUnique_isSaddle (hR : CurlPotential) :
     (∀ f : Wv W1, ∃! xl : Feec.BGG.Xsp V0 Vt0 Vt1 × bggHilb.Wcheck,
       bggHilb.IsSaddle f xl.1 xl.2) ∧
@@ -764,7 +695,6 @@ theorem bgg_existsUnique_isSaddle (hR : CurlPotential) :
 
 /-! ### An elementary estimate -/
 
-/-- `∑ₐ fₐ² ≤ 3 B` when every `fₐ² ≤ B`. -/
 theorem sum_sq_le_three {f : Fin 3 → ℝ} {B : ℝ} (h : ∀ a, f a ^ 2 ≤ B) :
     ∑ a, f a ^ 2 ≤ 3 * B := by
   have := Finset.sum_le_sum (s := Finset.univ) fun a (_ : a ∈ Finset.univ) => h a

@@ -6,30 +6,12 @@ public import Feec.ForMathlib.LinearPMap.Basic
 /-!
 # Skew-symmetric, skew-adjoint and dissipative unbounded operators
 
-For `A : E →ₗ.[𝕜] E` on an inner product space over `𝕜` (`RCLike`):
-
-* `LinearPMap.IsSymmetric A`: `⟪A x, y⟫ = ⟪x, A y⟫` on `D(A)`;
-  `LinearPMap.IsSkewSymmetric A`: `⟪A x, y⟫ = -⟪x, A y⟫` on `D(A)`.
-* `LinearPMap.IsSkewAdjoint A`: `A† = -A` (equal domains).
-* `LinearPMap.IsDissipative A`: `re ⟪A x, x⟫ ≤ 0`; `LinearPMap.IsMDissipative A`: dissipative
-  with `μ - A` onto for some `μ > 0`.
-
-## Main results
-
-* `IsSkewAdjoint.dense_domain`: a skew-adjoint operator is densely defined (as for Mathlib's
-  `IsSelfAdjoint.dense_domain`), so density is never a separate hypothesis.
-* `IsSkewAdjoint.isSkewSymmetric`, `IsSkewAdjoint.isClosed`, `IsSkewAdjoint.neg`.
-* `IsSkewSymmetric.re_inner_self`: `re ⟪A x, x⟫ = 0`, hence `A` and `-A` are dissipative.
-* `isSkewAdjoint_iff`: skew-adjoint iff skew-symmetric and `D(A†) ⊆ D(A)`; the analogous
-  `isSelfAdjoint_iff`, and the forms `-A ≤ A†`, `A ≤ A†` of (skew-)symmetry.
-* `adjoint_neg`: `(-T)† = -T†`; `IsClosed.neg`.
+Symmetric, skew-symmetric, skew-adjoint (`A† = -A`), dissipative (`re ⟪A x, x⟫ ≤ 0`) and
+m-dissipative partial linear maps on an inner product space ([QuennevilleBelair2015], §4.1).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.1
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.4 (dissipative operators), §1.10 (Stone's theorem)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -52,7 +34,6 @@ theorem mem_graph_neg_iff {f : E →ₗ.[R] F} {x : E} {y : F} :
   · rintro ⟨z, hz, rfl⟩; exact ⟨z, hz, by simp⟩
   · rintro ⟨z, hz, h⟩; exact ⟨z, hz, by simp [h]⟩
 
-/-- The negative of a closed operator is closed. -/
 theorem IsClosed.neg [TopologicalSpace E] [TopologicalSpace F] [ContinuousNeg F]
     {f : E →ₗ.[R] F} (hf : f.IsClosed) : (-f).IsClosed := by
   have : ((-f).graph : Set (E × F)) = (fun p : E × F => (p.1, -p.2)) ⁻¹' f.graph := by
@@ -69,14 +50,11 @@ variable {𝕜 E F : Type*} [RCLike 𝕜]
 def IsSymmetric (A : E →ₗ.[𝕜] E) : Prop :=
   ∀ x y : A.domain, ⟪A x, (y : E)⟫_𝕜 = ⟪(x : E), A y⟫_𝕜
 
-/-- Skew-symmetry on the domain: `⟪A x, y⟫ = -⟪x, A y⟫`. Weaker than skew-adjointness, and enough
-for every energy, uniqueness and constraint-propagation argument.
-See [QuennevilleBelair2015], §4.1. -/
+/-- Skew-symmetry on the domain: `⟪A x, y⟫ = -⟪x, A y⟫`. -/
 def IsSkewSymmetric (A : E →ₗ.[𝕜] E) : Prop :=
   ∀ x y : A.domain, ⟪A x, (y : E)⟫_𝕜 = -⟪(x : E), A y⟫_𝕜
 
-/-- Skew-adjoint (possibly unbounded) operator: `A† = -A`, with equal domains.
-See [QuennevilleBelair2015], §4.1. -/
+/-- Skew-adjoint operator: `A† = -A`, with equal domains. -/
 def IsSkewAdjoint [CompleteSpace E] (A : E →ₗ.[𝕜] E) : Prop := A† = -A
 
 /-- Dissipative operator: `re ⟪A x, x⟫ ≤ 0` on `D(A)`. -/
@@ -101,7 +79,6 @@ theorem isSkewSymmetric_iff_isFormalAdjoint_neg : A.IsSkewSymmetric ↔ A.IsForm
     rw [neg_apply, inner_neg_right] at this
     exact this
 
-/-- Skew-symmetry gives `re ⟪A x, x⟫ = 0` (the energy identity). -/
 theorem IsSkewSymmetric.re_inner_self (hA : A.IsSkewSymmetric) (x : A.domain) :
     RCLike.re ⟪A x, (x : E)⟫_𝕜 = 0 := by
   have h1 : RCLike.re ⟪A x, (x : E)⟫_𝕜 = -RCLike.re ⟪(x : E), A x⟫_𝕜 := by
@@ -120,7 +97,6 @@ section Complete
 
 variable [CompleteSpace E]
 
-/-- `(-T)† = -T†`. -/
 theorem adjoint_neg (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) : (-T)† = -T† := by
   have hT' : Dense ((-T).domain : Set E) := hT
   have hdom : (-T)†.domain = (-T†).domain := by
@@ -137,9 +113,6 @@ theorem adjoint_neg (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) : (-
   change ⟪-T† ⟨y, hy'⟩, (x : E)⟫_𝕜 = ⟪y, -T x⟫_𝕜
   rw [inner_neg_left, inner_neg_right, h]
 
-/-- A skew-adjoint operator is densely defined. As for Mathlib's `IsSelfAdjoint.dense_domain`,
-this is not part of the definition: the adjoint of a non-densely defined operator is `0` on its
-domain, which forces `A = 0` on `D(A)`, hence `D(A) = E`. -/
 theorem IsSkewAdjoint.dense_domain (hA : A.IsSkewAdjoint) : Dense (A.domain : Set E) := by
   by_contra h
   have hle : A† ≤ -A := hA ▸ le_rfl
@@ -160,7 +133,6 @@ theorem IsSkewAdjoint.dense_domain (hA : A.IsSkewAdjoint) : Dense (A.domain : Se
     rw [hA] at hy; exact hy
   exact h (by rw [htop]; simp [dense_univ])
 
-/-- Skew-adjoint ⇒ skew-symmetric. See [QuennevilleBelair2015], §4.1. -/
 theorem IsSkewAdjoint.isSkewSymmetric (hA : A.IsSkewAdjoint) : A.IsSkewSymmetric := by
   intro x y
   have hle : -A ≤ A† := hA ▸ le_rfl
@@ -170,13 +142,11 @@ theorem IsSkewAdjoint.isSkewSymmetric (hA : A.IsSkewAdjoint) : A.IsSkewSymmetric
   rw [h2, inner_neg_left] at h1
   rw [← neg_eq_iff_eq_neg, h1]
 
-/-- A skew-adjoint operator is closed. -/
 theorem IsSkewAdjoint.isClosed (hA : A.IsSkewAdjoint) : A.IsClosed := by
   have h : A = -A† := by rw [hA, neg_neg]
   rw [h]
   exact (adjoint_isClosed hA.dense_domain).neg
 
-/-- If `A` is skew-adjoint, so is `-A`. -/
 theorem IsSkewAdjoint.neg (hA : A.IsSkewAdjoint) : (-A).IsSkewAdjoint := by
   unfold IsSkewAdjoint
   rw [adjoint_neg A hA.dense_domain, hA]
@@ -184,7 +154,6 @@ theorem IsSkewAdjoint.neg (hA : A.IsSkewAdjoint) : (-A).IsSkewAdjoint := by
 theorem IsSkewAdjoint.isDissipative (hA : A.IsSkewAdjoint) : A.IsDissipative :=
   hA.isSkewSymmetric.isDissipative
 
-/-- For densely defined `A`: skew-symmetric iff `-A ≤ A†`. -/
 theorem isSkewSymmetric_iff_neg_le_adjoint (hD : Dense (A.domain : Set E)) :
     A.IsSkewSymmetric ↔ -A ≤ A† := by
   constructor
@@ -197,7 +166,6 @@ theorem isSkewSymmetric_iff_neg_le_adjoint (hD : Dense (A.domain : Set E)) :
     rw [h2, inner_neg_left] at h1
     rw [← neg_eq_iff_eq_neg, h1]
 
-/-- For densely defined `A`: symmetric iff `A ≤ A†`. -/
 theorem isSymmetric_iff_le_adjoint (hD : Dense (A.domain : Set E)) :
     A.IsSymmetric ↔ A ≤ A† := by
   constructor
@@ -211,7 +179,6 @@ theorem isSymmetric_iff_le_adjoint (hD : Dense (A.domain : Set E)) :
     have h1' : ⟪(y : E), A x⟫_𝕜 = ⟪A y, (x : E)⟫_𝕜 := h1.symm
     rw [← inner_conj_symm (A x) (y : E), h1', inner_conj_symm]
 
-/-- `A` is skew-adjoint iff `-A ≤ A†` and `D(A†) ⊆ D(A)`. -/
 theorem isSkewAdjoint_iff_neg_le_adjoint :
     A.IsSkewAdjoint ↔ -A ≤ A† ∧ A†.domain ≤ A.domain := by
   constructor
@@ -222,13 +189,10 @@ theorem isSkewAdjoint_iff_neg_le_adjoint :
   · rintro ⟨hle, hdom⟩
     exact (LinearPMap.eq_of_le_of_domain_le hle hdom).symm
 
-/-- `A` is skew-adjoint iff it is densely defined, skew-symmetric and `D(A†) ⊆ D(A)`.
-See [QuennevilleBelair2015], §4.1. -/
 theorem isSkewAdjoint_iff (hD : Dense (A.domain : Set E)) :
     A.IsSkewAdjoint ↔ A.IsSkewSymmetric ∧ A†.domain ≤ A.domain := by
   rw [isSkewAdjoint_iff_neg_le_adjoint, isSkewSymmetric_iff_neg_le_adjoint hD]
 
-/-- `A` is self-adjoint iff `A ≤ A†` and `D(A†) ⊆ D(A)` (no density needed). -/
 theorem isSelfAdjoint_iff_le_adjoint :
     IsSelfAdjoint A ↔ A ≤ A† ∧ A†.domain ≤ A.domain := by
   rw [isSelfAdjoint_def]
@@ -239,7 +203,6 @@ theorem isSelfAdjoint_iff_le_adjoint :
   · rintro ⟨hle, hdom⟩
     exact (LinearPMap.eq_of_le_of_domain_le hle hdom).symm
 
-/-- A densely defined `A` is self-adjoint iff it is symmetric and `D(A†) ⊆ D(A)`. -/
 theorem isSelfAdjoint_iff (hD : Dense (A.domain : Set E)) :
     IsSelfAdjoint A ↔ A.IsSymmetric ∧ A†.domain ≤ A.domain := by
   rw [isSelfAdjoint_iff_le_adjoint, isSymmetric_iff_le_adjoint hD]

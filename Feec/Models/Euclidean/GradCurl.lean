@@ -5,35 +5,22 @@ public import Feec.Fourier.GradCurlSymbol
 public import Feec.Fourier.Weak
 
 /-!
-# The matrix grad–curl complex on `ℝ³`: TSD constraints propagate (Thesis Prop 4.17)
+# The matrix grad–curl complex on `ℝ³`: TSD constraints propagate
 
-The complex `H¹(ℝ³; ℂ³) --grad--> H(curl; ℝ³, ℂ³ˣ³) --curl--> L²(ℝ³; ℂ³ˣ³)` with the row-wise curl,
-on the Fourier side (Plancherel, `Feec.Fourier.Euclidean.fourier`): the whole-space instance of the
-symbol theory with the fibre complex `Feec.Fourier.GradCurl.gradCurl`, the physical setting of an
-isolated source.
+The complex `H¹(ℝ³; ℂ³) --grad--> H(curl; ℝ³, ℂ³ˣ³) --curl--> L²(ℝ³; ℂ³ˣ³)` on the Fourier side:
+the constraint space `K = {0} × L²(TSD) × L²(TSD)` is a reducing subcomplex, so TSD data and
+forcing give TSD solutions.
 
 ## Main results
 
-* `GradCurl.complex`, `GradCurl.constraint = {0} × L²(TSD) × L²(TSD)` and
-  **`reducingSubcomplex`** (the fibre projection `ξ ↦ P_ξ` is discontinuous at `0` but measurable,
-  `Feec.Fourier.GradCurl.measurable_starProjection_tsd`).
-* **`tsd_propagates`**, `tsd_propagates_neg`, **`tsd_existsUnique`**, `waveGroup_mem`: Prop 4.17
-  on `ℝ³`, with existence and uniqueness, forcing, any time interval.
-* `not_closedRangeAt_one`, `not_closedRangeAt_two`: neither differential has closed range (no
-  Poincaré inequality at low frequencies), which Prop 4.17 does not need.
-* **`mem_domain_grad_iff_weak`**, **`mem_domain_curl_iff_weak`**: `H¹` and `H(curl)` of the
-  Fourier model are the weak-derivative spaces tested against all Schwartz fields (formal
-  adjoints `-div` and the row-wise `curl`).
-* **`fourier_mem_constraint_iff`**: the constraint space `L²(TSD)` is the Fourier image of the
-  physical TSD fields: symmetric and trace-free a.e., and weakly
-  divergence-free (`mem_ker_adjoint_grad_iff_weak`: `⟪f, ∇φ⟫ = 0` for all Schwartz `φ`).
-* `realStructure`, **`real_tsd_propagates`**, `real_tsd_existsUnique`: real fields (`Â(-ξ) = conj Â(ξ)`) stay real, together with the constraint
-  (`Feec.Fourier.SymbolComplex.RealStructure`).
+* `tsd_existsUnique`: TSD propagation, with existence and uniqueness.
+* `mem_domain_grad_iff_weak`, `mem_domain_curl_iff_weak`: the domains are the weak `H¹`, `H(curl)`.
+* `fourier_mem_constraint_iff`: `L²(TSD)` is the Fourier image of the physical TSD fields.
+* `not_closedRangeAt_one`, `not_closedRangeAt_two`: neither differential has closed range.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17, (4.14))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -50,11 +37,11 @@ namespace Feec.Models.Euclidean.GradCurl
 abbrev Space (i : Fin 3) : Type :=
   Lp (W3 Vec Mat Mat i) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))
 
-/-- **The whole-space grad–curl matrix complex** (Fourier side). -/
+/-- The grad–curl matrix complex on `ℝ³`, on the Fourier side. -/
 abbrev complex : HilbertComplex ℂ ComplexShape.fin3 Space :=
   Fourier.Euclidean.complex gradCurl
 
-/-- **The constraint space** `K = {0} × L²(TSD) × L²(TSD)`. -/
+/-- The constraint space `K = {0} × L²(TSD) × L²(TSD)`. -/
 abbrev constraint (i : Fin 3) : Submodule ℂ (Space i) :=
   Operator.fibreSub volume fun x => tsdK i (Fourier.Euclidean.scale x)
 
@@ -65,12 +52,9 @@ theorem fibreReducing : FibreReducing (Fourier.Euclidean.symbolComplex gradCurl)
 instance (i : Fin 3) : (constraint i).HasOrthogonalProjection :=
   fibreReducing.hasOrthogonalProjection i
 
-/-- **`K` is a reducing subcomplex** on `ℝ³`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   fibreReducing.toReducingSubcomplex
 
-/-- **Thesis Prop 4.17 on `ℝ³`**: strong solutions of `U' = L U + F` with data and forcing in `K`
-stay in `K`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -78,7 +62,6 @@ theorem tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates hU h0 hF
 
-/-- Prop 4.17 on `ℝ³` for `U' = -L U + F`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution (-complex.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint)
@@ -86,7 +69,8 @@ theorem tsd_propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.propagates_neg hU h0 hF
 
-/-- **Prop 4.17 on `ℝ³` with existence and uniqueness.** [QuennevilleBelair2015], Prop 4.17 -/
+/-- Data in `K ∩ D(L)` and admissible forcing in `K` give a classical solution on `ℝ³`, unique
+among strong solutions, that stays in `K`. [QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) {F : ℝ → PiLp 2 Space} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -97,14 +81,11 @@ theorem tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.do
         EqOn V U (Icc a b) :=
   fibreReducing.existsUnique_mem hU₀ hU₀K hF hFK
 
-/-- The wave group preserves `K` for all times. [QuennevilleBelair2015], Prop 4.17 -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 Space} (hx : x ∈ HilbertComplex.totalSub constraint) :
     complex.waveGroup.S t x ∈ HilbertComplex.totalSub constraint :=
   fibreReducing.waveGroup_mem t hx
 
-/-! ### Real fields -/
-
-/-- **The real structure**: real fields are those with `Â(-ξ) = conj Â(ξ)`. -/
+/-- The real structure: real fields are those with `Â(-ξ) = conj Â(ξ)`. -/
 def realStructure : (Fourier.Euclidean.symbolComplex gradCurl).RealStructure (Reflection.neg volume) where
   cj := cjW3
   antilinear := cjW3_smul
@@ -117,8 +98,6 @@ def realStructure : (Fourier.Euclidean.symbolComplex gradCurl).RealStructure (Re
 /-- The conjugation `C u = conj (u ∘ (-·))` of the state space. -/
 abbrev realConj : PiLp 2 Space →L[ℝ] PiLp 2 Space := realStructure.toConj.totalConj
 
-/-- **Thesis Prop 4.17 for real fields**: real TSD data and forcing give a strong solution that
-stays real and TSD. [QuennevilleBelair2015], Prop 4.17 -/
 theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub constraint) (h0r : realConj (U a) = U a)
@@ -127,7 +106,6 @@ theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t :=
   realStructure.toConj.propagates_real reducingSubcomplex hU h0 h0r hF hFr
 
-/-- **Prop 4.17 for real fields, with existence and uniqueness.** [QuennevilleBelair2015], Prop 4.17 -/
 theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ HilbertComplex.totalSub constraint) (hU₀r : realConj U₀ = U₀)
     {F : ℝ → PiLp 2 Space} {a b : ℝ}
@@ -140,15 +118,11 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
         EqOn V U (Icc a b) :=
   realStructure.toConj.existsUnique_mem_real reducingSubcomplex hU₀ hU₀K hU₀r hF hFK hFr
 
-/-! ### Weak derivatives -/
-
 theorem grad_isLinear : Weak.IsLinear (gradCurl.m 0 1) := grad_eq_sum
 
 theorem curl_isLinear : Weak.IsLinear (gradCurl.m 1 2) := curl_eq_sum
 
-/-- **The Fourier `H¹` is the weak `H¹`**: `𝓕 u ∈ D(grad)` with `grad 𝓕 u = 𝓕 G` iff
-`⟪u, grad* A⟫ = ⟪G, A⟫` for every Schwartz matrix field `A`, with `grad* = -div` the formal
-adjoint. -/
+/-- The Fourier `H¹` is the weak `H¹`, tested against Schwartz matrix fields. -/
 theorem mem_domain_grad_iff_weak
     (u : Lp (W3 Vec Mat Mat 0) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3))))
     (G : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
@@ -157,9 +131,7 @@ theorem mem_domain_grad_iff_weak
         ⟪u, (Weak.formalAdjointOp (gradCurl.m 0 1) A).toLp 2⟫_ℂ = ⟪G, A.toLp 2⟫_ℂ :=
   Weak.mem_graph_iff_weak_of_isLinear grad_isLinear (gradCurl.cont 0 1) u G
 
-/-- **The Fourier `H(curl)` is the weak `H(curl)`**: `𝓕 A ∈ D(curl)` with `curl 𝓕 A = 𝓕 B` iff
-`⟪A, curl* φ⟫ = ⟪B, φ⟫` for every Schwartz matrix field `φ` (the row-wise curl is formally
-self-adjoint). -/
+/-- The Fourier `H(curl)` is the weak `H(curl)`, tested against Schwartz matrix fields. -/
 theorem mem_domain_curl_iff_weak
     (A : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3))))
     (B : Lp (W3 Vec Mat Mat 2) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
@@ -168,13 +140,10 @@ theorem mem_domain_curl_iff_weak
         ⟪A, (Weak.formalAdjointOp (gradCurl.m 1 2) φ).toLp 2⟫_ℂ = ⟪B, φ.toLp 2⟫_ℂ :=
   Weak.mem_graph_iff_weak_of_isLinear curl_isLinear (gradCurl.cont 1 2) A B
 
-/-! ### The TSD constraint in physical variables -/
-
 theorem adjoint_grad_eq : (complex.d 0 1)† = Operator.mulOp volume fun x =>
     ContinuousLinearMap.adjoint (gradCurl.m 0 1 (Fourier.Euclidean.scale x)) :=
   (Fourier.Euclidean.symbolComplex gradCurl).adjoint_d 0 1
 
-/-- The kernel of `grad† = div` on the Fourier side: `div_{2πx} u(x) = 0` a.e. -/
 theorem mem_ker_adjoint_grad_iff_ae {u : Space 1} :
     u ∈ ((complex.d 0 1)†).ker ↔
       ∀ᵐ x ∂(volume : Measure (EuclideanSpace ℝ (Fin 3))),
@@ -184,9 +153,6 @@ theorem mem_ker_adjoint_grad_iff_ae {u : Space 1} :
     change ContinuousLinearMap.adjoint (grad _) _ = 0 ↔ _
     rw [adjoint_grad])
 
-/-- **Weakly divergence-free fields**: `𝓕 f ∈ ker grad†` iff `⟪f, ∇φ⟫ = 0` for every Schwartz
-vector field `φ`, with `∇φ = Weak.symbolOp grad φ` the classical gradient
-(`(∇φ)_{ab} = ∂_b φ_a`). -/
 theorem mem_ker_adjoint_grad_iff_weak
     (f : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
     𝓕 f ∈ ((complex.d 0 1)†).ker ↔
@@ -199,10 +165,7 @@ theorem mem_ker_adjoint_grad_iff_weak
         ((gradCurl.cont 0 1).comp Fourier.Euclidean.continuous_scale)
   · rw [ContinuousLinearMap.adjoint_adjoint, Weak.fourier_symbolOp grad_isLinear]
 
-/-- **The constraint space of Prop 4.17 on `ℝ³` is the physical TSD space**: `𝓕 f ∈ L²(TSD)` iff
-`f(x)` is symmetric and trace-free for a.e. `x` and `div f = 0` weakly (`⟪f, ∇φ⟫ = 0` for every
-Schwartz vector field `φ`).
-See [QuennevilleBelair2015], §3.4, §4.10 (the spaces of Prop 4.17). -/
+/-- `𝓕 f ∈ L²(TSD)` iff `f` is a.e. symmetric and trace-free and weakly divergence-free. -/
 theorem fourier_mem_constraint_iff
     (f : Lp (W3 Vec Mat Mat 1) 2 (volume : Measure (EuclideanSpace ℝ (Fin 3)))) :
     𝓕 f ∈ constraint 1 ↔
@@ -217,20 +180,18 @@ theorem fourier_mem_constraint_iff
     Operator.mem_fibreSub]
   exact Filter.eventually_congr (Filter.Eventually.of_forall fun x => mem_tsd_iff_div)
 
-/-! ### No closed range -/
-
 theorem prev_one : ComplexShape.fin3.prev 1 = 0 := ComplexShape.fin3.prev_eq' rfl
 
 theorem prev_two : ComplexShape.fin3.prev 2 = 1 := ComplexShape.fin3.prev_eq' rfl
 
-/-- **The whole-space gradient does not have closed range.** -/
+/-- The whole-space gradient does not have closed range. -/
 theorem not_closedRangeAt_one : ¬ complex.ClosedRangeAt 1 := by
   have h1 : gradCurl.IsHomogeneous (ComplexShape.fin3.prev 1) 1 1 := by
     rw [prev_one]; exact gradCurl_isHomogeneous01
   have h2 : gradCurl.m (ComplexShape.fin3.prev 1) 1 ≠ 0 := by rw [prev_one]; exact grad_ne_zero
   exact Fourier.Euclidean.not_closedRangeAt one_pos h1 h2
 
-/-- **The whole-space row-wise curl does not have closed range.** -/
+/-- The whole-space row-wise curl does not have closed range. -/
 theorem not_closedRangeAt_two : ¬ complex.ClosedRangeAt 2 := by
   have h1 : gradCurl.IsHomogeneous (ComplexShape.fin3.prev 2) 2 1 := by
     rw [prev_two]; exact gradCurl_isHomogeneous12

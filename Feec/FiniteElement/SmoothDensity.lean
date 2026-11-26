@@ -6,29 +6,18 @@ public import Feec.HilbertComplex.Approximation.GraphApprox
 /-!
 # Density of smooth forms on domains star-shaped with respect to a ball
 
-On a bounded open `Ω ⊆ ℝⁿ` star-shaped with respect to a ball `B(x₀, s)`, the smoothed forms
-`smoothForm` of `Feec.FiniteElement.SmoothedInterp` ([AFW2010], §5.5), with dilation factor
-`c → 1` and bump radius `→ 0`, are `C^∞` (`contDiff_smoothForm`), equal to the field smoothers
-`R_{cᵏ} u` in `L²(Ω; Λᵏ)` (`formL2_smoothForm`), which converge strongly
-(`Feec.Domain.exists_norm_smoothField_sub_lt`), and commute with `d`. Hence:
+On a bounded open `Ω ⊆ ℝⁿ` star-shaped with respect to a ball, smooth forms are dense in the graph
+norms of the maximal and the minimal exterior derivative, through the smoothed forms of
+[AFW2010], §5.5.
 
-* **smooth forms are dense in the graph norm** of the maximal `d` (`exists_smooth_near_of_starBall`,
-  dilation away from `x₀`) and of the minimal `d`, by smooth forms vanishing outside `Ω`
-  (`exists_smooth_near_min_of_starBall`, dilation towards `x₀`);
-* **graph-norm density of a family of subcomplexes** `S_N` of `HΛ(Ω)`, resp. `H̊Λ(Ω)`, follows
-  from the approximation of smooth forms with rates `b_N → 0`
-  (`eventually_exists_graph_of_smooth`, `eventually_exists_graph_of_smooth_min`, through
-  `Feec.HilbertComplex.Subcomplex.eventually_exists_graph_of_near`).
+## Main results
 
-They are used for the Freudenthal meshes of the cube (`Feec.Models.Cube.WhitneyApprox`) and for the
-mesh families of star-shaped domains (`Feec.Models.StarShaped.FiniteElement`).
+* `exists_smooth_near_of_starBall`, `exists_smooth_near_min_of_starBall`: density of smooth forms.
+* `eventually_exists_graph_of_smooth` (and `_min`): graph-norm density of subcomplex families.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothing by dilation and mollification)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (density of the finite
-  element spaces)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -44,19 +33,16 @@ open Feec.Domain Feec.Mesh Feec.HilbertComplex Feec.ExteriorFibre
 
 variable {n : ℕ}
 
-/-- `c ↦ cᵏ` is continuous at `1` (the factors `cᵏ` of the field smoothers tend to `1`). -/
 private theorem exists_abs_pow_sub_one_lt (k : ℕ) {η : ℝ} (hη : 0 < η) :
     ∃ δ > 0, ∀ c : ℝ, |c - 1| < δ → |c ^ k - 1| < η := by
   have h := Metric.continuousAt_iff.1 ((continuous_pow k).continuousAt (x := (1 : ℝ))) η hη
   simpa [Real.dist_eq] using h
 
-/-- The smoothed form is `C^∞`. -/
 theorem contDiff_smoothForm {Ω : Set (Fin n → ℝ)} (p : SmoothingParam (Fin n → ℝ))
     (hΩ : MeasurableSet Ω) (k : ℤ) (u : L2F ℝ Ω (formIdx n k)) :
     ContDiff ℝ ∞ (smoothForm p hΩ k u : FormField n) :=
   contDiff_pi.2 fun t => contDiff_formExt (contDiff_smoothCoeff p hΩ k u) t
 
-/-- **The smoothed form is the field smoother** `R_{cᵏ} u` in `L²(Ω; Λᵏ)`. -/
 theorem formL2_smoothForm {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     (hb : Bornology.IsBounded Ω) (p : SmoothingParam (Fin n → ℝ)) (k : ℤ)
     (u : L2F ℝ Ω (formIdx n k)) :
@@ -72,7 +58,7 @@ theorem formL2_smoothForm {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
   rfl
 
 /-- **Smooth forms are dense in the graph norm of the maximal `d`** on every bounded open `Ω`
-star-shaped with respect to a ball `B(x₀, s)` (the smoother with dilation away from `x₀`). -/
+star-shaped with respect to a ball `B(x₀, s)`. -/
 theorem exists_smooth_near_of_starBall {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
     (hb : Bornology.IsBounded Ω) {x₀ : Fin n → ℝ} {s : ℝ} (hs : 0 < s)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (k : ℕ)
@@ -125,7 +111,7 @@ theorem exists_smooth_near_of_starBall {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen 
     exact hc₂ _ hcδ₂
 
 /-- **Smooth `k`-forms vanishing outside `Ω` are dense in the graph norm of the minimal `d`** on
-every bounded open `Ω` star-shaped with respect to a ball (dilation towards the centre). -/
+every bounded open `Ω` star-shaped with respect to a ball. -/
 theorem exists_smooth_near_min_of_starBall {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
     (hb : Bornology.IsBounded Ω) {x₀ : Fin n → ℝ} {s : ℝ} (hs : 0 < s)
     (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) (k : ℕ)
@@ -177,18 +163,14 @@ theorem exists_smooth_near_min_of_starBall {Ω : Set (Fin n → ℝ)} (hΩ : IsO
     rw [show ((k : ℤ) + 1) = ((k + 1 : ℕ) : ℤ) by push_cast; ring, zpow_natCast]
     exact hc₂ _ hcδ₂
 
-/-! ### Graph-norm density of subcomplex families from the approximation of smooth forms -/
-
 section OfSmooth
 
 variable {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {x₀ : Fin n → ℝ}
   {s : ℝ} (hs : 0 < s) (hstar : ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω)
 include hs hstar
 
-/-- **Graph-norm density in `HΛ(Ω)` from the approximation of smooth forms**, on a bounded open
-`Ω` star-shaped with respect to a ball: if every `C^∞` `k`-form `w` is approximated by some
-`v ∈ Vₕᵏ` with `‖w - v‖ ≤ b_N` and `‖dw - dv‖ ≤ b_N`, `b_N → 0`, then every `x ∈ D(d)` is a
-graph-norm limit of the `Vₕᵏ` (smooth forms are dense, `exists_smooth_near_of_starBall`). -/
+/-- **Graph-norm density in `HΛ(Ω)`**, `Ω` star-shaped with respect to a ball: if the `Vₕ`
+approximate every `C^∞` form in the graph norm with rates `b_N → 0`, they approximate `D(d)`. -/
 theorem eventually_exists_graph_of_smooth (S : ℕ → (maximalDeRham hΩ).Subcomplex)
     (happ : ∀ (k : ℕ) (w : FormField n) (hw : ContDiff ℝ ∞ w), (∀ x, IsDeg k (w x)) →
       ∃ b : ℕ → ℝ, Tendsto b atTop (𝓝 0) ∧ ∀ N, ∃ v ∈ (S N).V k,
@@ -220,7 +202,7 @@ theorem eventually_exists_graph_of_smooth (S : ℕ → (maximalDeRham hΩ).Subco
   exact ⟨v, hv, hv1, hv2⟩
 
 /-- **Graph-norm density in `H̊Λ(Ω)` from the approximation of smooth forms vanishing outside
-`Ω`** (`exists_smooth_near_min_of_starBall`), as in `eventually_exists_graph_of_smooth`. -/
+`Ω`**. -/
 theorem eventually_exists_graph_of_smooth_min
     (S : ℕ → (minimalDeRham hΩ).Subcomplex)
     (happ : ∀ (k : ℕ) (w : FormField n) (hw : ContDiff ℝ ∞ w), (∀ x, IsDeg k (w x)) →

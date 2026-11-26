@@ -7,36 +7,19 @@ public import Mathlib.LinearAlgebra.Quotient.Pi
 /-!
 # Vector-valued finite element spaces `Vₕ ⊗ ℝᵐ`
 
-The bottom row of the BGG discretization of [QuennevilleBelair2015], §5.3 (Table 5.1:
-`P₂Λ⁰ ⊗ ℝ³ → P₂⁻Λ¹ ⊗ ℝ³ → P₁Λ² ⊗ ℝ³`) consists of `m`-fold products of scalar-form finite element
-spaces. This file builds them on the Hilbert-complex side and on the element side.
+The `α`-fold product of a Hilbert complex is a Hilbert complex whose cohomology is the product of
+the cohomologies. For an element family on a mesh, the product subcomplexes are the spaces
+`Vₕ ⊗ ℝᵐ`, as in the bottom row of [QuennevilleBelair2015], Table 5.1.
 
-**Products of Hilbert complexes.** For a Hilbert complex `H` and a finite index type `α`, the
-`α`-fold product `H.pi α` (`Feec.HilbertComplex.pi`) has the spaces `L²`-sums
-`PiLp 2 (fun _ : α => W i)` and the componentwise differentials (domain: all components in the
-domain). It is again a Hilbert complex (closed graphs, dense domains), whose cohomology is the
-product of the cohomologies (`piCohomologyEquiv`; `dim Hⁱ(H^α) = #α · dim Hⁱ(H)`,
-`finrank_pi_cohomology`). A subcomplex `S` of `H` gives the product subcomplex `S.pi α`
-(`Subcomplex.pi`), finite-dimensional when `S` is; a commuting map or a cochain projection of `S`
-gives the componentwise one of `S.pi α` (`Subcomplex.CommutingMap.pi`,
-`Subcomplex.CochainProjection.pi`); `norm_piMap_le` bounds the componentwise maps by the bounds of
-the factors.
+## Main definitions
 
-**Finite element spaces `⊗ ℝᵐ`.** For an element family `E` on a conforming mesh `M` of an open
-`Ω ⊆ ℝⁿ`, `LocalElement.tensorSubcomplex E M hΩ m` (resp. `tensorSubcomplexMin`, vanishing
-boundary DOFs) is the product subcomplex of the `m`-fold product of `HΛ(Ω)` (resp. `H̊Λ(Ω)`), with
-spaces `(Vₕᵏ)ᵐ ⊆ L²(Ω; Λᵏ)ᵐ`, finite-dimensional. The componentwise canonical interpolant
-(`LocalElement.tensorInterp`) maps `(C⁰Λᵏ)ᵐ` to the `m`-fold product of global spaces, and
-componentwise gluing (`LocalElement.tensorGlue`) maps it into `L²(Ω; Λᵏ)ᵐ`.
+* `HilbertComplex.pi`, `HilbertComplex.Subcomplex.pi`: the `α`-fold products.
+* `HilbertComplex.piCohomologyEquiv`: `Hⁱ(H^α) ≃ Hⁱ(H)^α`.
+* `LocalElement.tensorSubcomplex`, `LocalElement.tensorSubcomplexMin`: `Vₕ ⊗ ℝᵐ` and `V̊ₕ ⊗ ℝᵐ`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, Table 5.1 (the spaces `P₂Λ⁰ ⊗ V`, `P₂⁻Λ¹ ⊗ V`, `P₁Λ² ⊗ V`)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (subcomplexes, bounded cochain projections), §5.5 (smoothed projections)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
-  (vector-valued finite element spaces)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -52,8 +35,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W) (α : Type*)
 
-/-! ### Componentwise maps on `L²`-sums -/
-
 section PiMap
 
 variable {𝕜' V V' : Type*} [RCLike 𝕜'] [NormedAddCommGroup V] [InnerProductSpace 𝕜' V]
@@ -67,7 +48,6 @@ def piMap (f : V →ₗ[𝕜'] V') : PiLp 2 (fun _ : α => V) →ₗ[𝕜'] PiLp
 @[simp] theorem piMap_apply (f : V →ₗ[𝕜'] V') (x : PiLp 2 (fun _ : α => V)) (a : α) :
     piMap f x a = f (x a) := rfl
 
-/-- **Componentwise bounds**: `‖f v‖ ≤ C ‖v‖` gives `‖piMap f x‖ ≤ C ‖x‖`. -/
 theorem norm_piMap_le [Fintype α] (f : V →ₗ[𝕜'] V') {C : ℝ} (hC0 : 0 ≤ C) (hC : ∀ v, ‖f v‖ ≤ C * ‖v‖)
     (x : PiLp 2 (fun _ : α => V)) : ‖piMap f x‖ ≤ C * ‖x‖ := by
   have h2 : ‖piMap f x‖ ^ 2 ≤ (C * ‖x‖) ^ 2 := by
@@ -78,8 +58,6 @@ theorem norm_piMap_le [Fintype α] (f : V →ₗ[𝕜'] V') {C : ℝ} (hC0 : 0 �
   exact (abs_le_of_sq_le_sq' h2 (mul_nonneg hC0 (norm_nonneg x))).2
 
 end PiMap
-
-/-! ### The product of a Hilbert complex -/
 
 /-- The domain of the componentwise differential: all components in `D(d i j)`. -/
 def piDomain (i j : ι) : Submodule 𝕜 (PiLp 2 (fun _ : α => W i)) :=
@@ -160,8 +138,7 @@ theorem piD_dense {i j : ι} : Dense ((H.piD α i j).domain : Set (PiLp 2 (fun _
 
 variable (H α) [Fintype α]
 
-/-- **The `α`-fold product of a Hilbert complex**: spaces `PiLp 2 (fun _ : α => W i)`,
-componentwise differentials. -/
+/-- The `α`-fold product of a Hilbert complex, with the componentwise differentials. -/
 def pi : HilbertComplex 𝕜 c fun i => PiLp 2 (fun _ : α => W i) where
   d := H.piD α
   shape i j h := by
@@ -192,9 +169,6 @@ variable {H α}
     (H.pi α).d i j x a = H.d i j ⟨(x : PiLp 2 (fun _ : α => W i)) a, mem_piDomain.1 x.2 a⟩ :=
   rfl
 
-/-! ### The cohomology of a product -/
-
-/-- The cycles of the product are the vectors of cycles. -/
 theorem mem_pi_cycles {i : ι} {x : PiLp 2 fun _ : α => W i} :
     x ∈ (H.pi α).cycles i ↔ ∀ a, x a ∈ H.cycles i := by
   simp only [cycles, LinearPMap.mem_ker_iff]
@@ -209,7 +183,6 @@ theorem mem_pi_cycles {i : ι} {x : PiLp 2 fun _ : α => W i} :
     rw [pi_d_apply, PiLp.zero_apply]
     exact (LinearPMap.apply_eq_of_eq rfl _ (y a) (hy a)).trans (h0 a)
 
-/-- The boundaries of the product are the vectors of boundaries. -/
 theorem mem_pi_boundaries {i : ι} {x : PiLp 2 fun _ : α => W i} :
     x ∈ (H.pi α).boundaries i ↔ ∀ a, x a ∈ H.boundaries i := by
   constructor
@@ -251,14 +224,11 @@ instance finiteDimensional_pi_cohomology [DecidableEq α] (i : ι)
     [FiniteDimensional 𝕜 (H.cohomology i)] : FiniteDimensional 𝕜 ((H.pi α).cohomology i) :=
   (piCohomologyEquiv H α i).symm.finiteDimensional
 
-/-- `dim Hⁱ(H^α) = #α · dim Hⁱ(H)`. -/
 theorem finrank_pi_cohomology [DecidableEq α] (i : ι) [FiniteDimensional 𝕜 (H.cohomology i)] :
     Module.finrank 𝕜 ((H.pi α).cohomology i) =
       Fintype.card α * Module.finrank 𝕜 (H.cohomology i) := by
   rw [(piCohomologyEquiv H α i).finrank_eq, Module.finrank_pi_fintype, Finset.sum_const,
     Finset.card_univ, smul_eq_mul]
-
-/-! ### Product subcomplexes -/
 
 namespace Subcomplex
 
@@ -292,8 +262,6 @@ instance finiteDimensional_pi_V [∀ i, FiniteDimensional 𝕜 (S.V i)] (i : ι)
   ext a
   exact congrArg Subtype.val (congrFun hxy a)
 
-/-! ### Commuting maps and cochain projections of products -/
-
 namespace CommutingMap
 
 variable (Q : S.CommutingMap) (α)
@@ -318,8 +286,7 @@ namespace CochainProjection
 
 variable (P : S.CochainProjection) (α)
 
-/-- **The product of a cochain projection** is a cochain projection of the product
-subcomplex. -/
+/-- The componentwise cochain projection of the product subcomplex. -/
 def pi : (S.pi α).CochainProjection where
   π i := piMap (P.π i)
   mem i x := mem_pi_V.2 fun a => P.mem i _
@@ -342,8 +309,6 @@ end Subcomplex
 
 end Feec.HilbertComplex
 
-/-! ### Finite element spaces `⊗ ℝᵐ` -/
-
 namespace Feec.FiniteElement
 
 open Feec.Domain Feec.Mesh Feec.HilbertComplex
@@ -352,14 +317,12 @@ variable {n : ℕ} (E : LocalElement n) (M : SimplicialMesh n)
 
 namespace LocalElement
 
-/-- **The finite element subcomplex `Vₕ ⊗ ℝᵐ`** of the `m`-fold product of `HΛ(Ω)`: the spaces
-`(Vₕᵏ)ᵐ ⊆ L²(Ω; Λᵏ)ᵐ`. -/
+/-- The finite element subcomplex `Vₕ ⊗ ℝᵐ` of the `m`-fold product of `HΛ(Ω)`. -/
 def tensorSubcomplex [NeZero n] (hΩ : IsOpen M.domain) (m : ℕ) :
     (((deRham ℝ n).maximalComplex hΩ).pi (Fin m)).Subcomplex :=
   (E.subcomplex M hΩ).pi (Fin m)
 
-/-- **The finite element subcomplex `V̊ₕ ⊗ ℝᵐ`** (vanishing boundary DOFs) of the `m`-fold
-product of `H̊Λ(Ω)`. -/
+/-- The finite element subcomplex `V̊ₕ ⊗ ℝᵐ` of the `m`-fold product of `H̊Λ(Ω)`. -/
 def tensorSubcomplexMin [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
     (m : ℕ) : (((deRham ℝ n).minimalComplex hΩ).pi (Fin m)).Subcomplex :=

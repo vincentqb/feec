@@ -6,40 +6,13 @@ public import Feec.Models.Cube.ShellExtension
 /-!
 # The Helmholtz decomposition of test fields on the torus, with `H¹` bounds
 
-Let `uₐ` (`a = 0, 1, 2`) be test functions on `Q = (0, ½)³`, periodized to `𝕋³ = ℝ³/ℤ³` (`U`),
-with Fourier coefficients `û(k)` (`uh`). For a finite set of frequencies `F` the truncated
-potential `p_F = Σ_{k ∈ F} p̂(k) e_k`, `p̂(k) = -i k · û(k) / (2π |k|²)` (`Pc`), and the remainder
-`w = u - ∇p_F - û(0)` (`Wc`) satisfy, by Parseval on `𝕋³`:
-
-* `‖p_F‖ ≤ ‖u‖` (`integral_Pc_le`), `Σₐ ‖wₐ‖² ≤ ‖u‖²` (`sum_integral_Wc_le`), `|û(0)| ≤ ‖u‖`;
-* **Gaffney's identity on the torus**: for `k ∈ F`, `ŵ(k)` is the projection of `û(k)` onto
-  `k⊥` (`proj_sq`), and `|k|² |ŵ(k)|² = |k × û(k)|²` (Lagrange's identity `lagrange`), so
-  `‖∇w‖² ≤ ‖curl u‖² + Σ_{k ∉ F} |2πk|² |û(k)|²` (`sum_integral_partialT_Wc_le`); the tail is
-  `≤ ‖u‖²` for a suitable `F` (`exists_tail_le`).
-
-Back on `ℝ³` (`pR`, `wR`, `cR`, real parts of the lifts), on the unit cell `(-¼, ¾]³ ⊇ Q̄`
-(`cell`, where the periodization of `u` is `u`) this is the decomposition
-`u = ∇p + c + w` with `‖p‖, |cₐ|, ‖wₐ‖ ≤ ‖u‖` and `‖∂ⱼ wₐ‖² ≤ ‖curl u‖² + ‖u‖²`
-(**`exists_helmholtz`**). The truncation keeps every function a trigonometric polynomial plus the
-periodized `u`, so all of them are smooth; this is the first step of the regular decomposition
-of `Feec.Models.Cube.RegularDecomposition`.
+For test functions `uₐ` on `Q = (0, ½)³`, periodized to `𝕋³ = ℝ³/ℤ³`, a Fourier truncation gives
+smooth `p`, `w` and a constant `c` with `u = ∇p + c + w` on the cell `(-¼, ¾]³ ⊇ Q̄`,
+`‖p‖, |cₐ|, ‖wₐ‖ ≤ ‖u‖` and `‖∂ⱼ wₐ‖² ≤ ‖curl u‖² + ‖u‖²`.
 
 ## Main results
 
-* `measurePreserving_proj_cell`, `hasSum_sq_mFourierCoeff_of_continuous`, `mFourierCoeff_mFourier`,
-  `mFourierCoeff_tpoly`, `partialT_tpoly`, `integral_norm_sq_tpoly`, `eLpNorm_re_comp_proj_le`.
-* `lagrange`, `proj_sq`; `sum_norm_sq_coeff_Wc_le`, `nk_mul_sum_coeff_Wc_le`, `norm_sq_pco_le`.
-* `integral_Pc_le`, `sum_integral_Wc_le`, **`sum_integral_partialT_Wc_le`**, `exists_tail_le`.
-* `per_proj_of_mem_cell`, `wR_eq`, `Nu_eq`, `Ncurl_eq`, **`exists_helmholtz`**.
-
-## References
-
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], §2
-  (Helmholtz and regular decompositions of `H(curl)`)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §5.4 (Hilbert bases, Parseval)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `exists_helmholtz`: the decomposition with its bounds.
 -/
 
 @[expose] public noncomputable section
@@ -68,7 +41,6 @@ abbrev T3 := UnitAddTorus (Fin 3)
 /-- The unit cell `(-¼, ¾]³`. -/
 def cell : Set (Fin 3 → ℝ) := univ.pi fun _ => Ioc (-1 / 4 : ℝ) (3 / 4)
 
-/-- `proj : ℝ³ → 𝕋³` is measure preserving from the cell `(-¼, ¾]³`. -/
 theorem measurePreserving_proj_cell :
     MeasurePreserving proj (volume.restrict cell) (volume : Measure T3) := by
   have h1 : MeasurePreserving ((↑) : ℝ → UnitAddCircle)
@@ -85,7 +57,6 @@ theorem measurePreserving_proj_cell :
   rw [← Measure.restrict_pi_pi, ← volume_pi] at h
   exact h
 
-/-- **Parseval** for continuous functions on `𝕋³`. -/
 theorem hasSum_sq_mFourierCoeff_of_continuous {f : T3 → ℂ} (hf : Continuous f) :
     HasSum (fun k => ‖mFourierCoeff f k‖ ^ 2) (∫ x, ‖f x‖ ^ 2) := by
   let g : C(T3, ℂ) := ⟨f, hf⟩
@@ -188,7 +159,6 @@ theorem integral_norm_sq_tpoly (a : (Fin 3 → ℤ) → ℂ) (F : Finset (Fin 3 
 
 /-! ### Squared norms through the cell -/
 
-/-- `‖Re (G ∘ proj)‖_{L²(cell)} ≤ ‖G‖_{L²(𝕋³)}`. -/
 theorem eLpNorm_re_comp_proj_le {G : T3 → ℂ} (hG : Continuous G) :
     eLpNorm (fun y => (G (proj y)).re) 2 (volume.restrict cell) ≤
       ENNReal.ofReal (Real.sqrt (∫ x, ‖G x‖ ^ 2)) := by
@@ -216,14 +186,12 @@ def curl3 (κ : Fin 3 → ℝ) (v : Fin 3 → ℂ) : ℝ :=
 theorem curl3_nonneg (κ : Fin 3 → ℝ) (v : Fin 3 → ℂ) : 0 ≤ curl3 κ v := by
   unfold curl3; positivity
 
-/-- **Lagrange's identity** `|κ|² |v|² = |κ · v|² + |κ × v|²`. -/
 theorem lagrange (κ : Fin 3 → ℝ) (v : Fin 3 → ℂ) :
     (∑ a, κ a ^ 2) * ∑ a, ‖v a‖ ^ 2 = ‖∑ a, (κ a : ℂ) * v a‖ ^ 2 + curl3 κ v := by
   simp only [curl3, Fin.sum_univ_three, Complex.sq_norm, Complex.normSq_apply]
   simp
   ring
 
-/-- **The projection onto `κ⊥`**: `|v - κ (κ · v)/|κ|²|² = |v|² - |κ · v|²/|κ|²`. -/
 theorem proj_sq (κ : Fin 3 → ℝ) (v : Fin 3 → ℂ) (hn : (∑ a, κ a ^ 2) ≠ 0) :
     ∑ a, ‖v a - (κ a : ℂ) * ((∑ b, (κ b : ℂ) * v b) / ((∑ b, κ b ^ 2 : ℝ) : ℂ))‖ ^ 2 =
       ∑ a, ‖v a‖ ^ 2 - ‖∑ a, (κ a : ℂ) * v a‖ ^ 2 / ∑ a, κ a ^ 2 := by
@@ -324,8 +292,6 @@ theorem coeff_Wc (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (Fin 
     mFourierCoeff_const, Gc, mFourierCoeff_tpoly]
   rfl
 
-/-- The coefficients of the remainder as a vector: `0` at `k = 0`, the projection of `û(k)` onto
-`k⊥` for `k ∈ F`, `û(k)` otherwise. -/
 theorem coeff_Wc_eq (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (Fin 3 → ℤ))
     (k : Fin 3 → ℤ) (a : Fin 3) : mFourierCoeff (Wc u F a) k =
       if k = 0 then 0 else if k ∈ F then uh u a k - (kv k a : ℂ) * (zk u k / (nk k : ℂ))
@@ -336,7 +302,6 @@ theorem coeff_Wc_eq (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (F
   · simp only [h0, ite_false, sub_zero]
     split_ifs <;> simp [gco]
 
-/-- `Σₐ |ŵₐ(k)|² ≤ Σₐ |ûₐ(k)|²`. -/
 theorem sum_norm_sq_coeff_Wc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a))
     (F : Finset (Fin 3 → ℤ)) (k : Fin 3 → ℤ) :
     ∑ a, ‖mFourierCoeff (Wc u F a) k‖ ^ 2 ≤ ∑ a, ‖uh u a k‖ ^ 2 := by
@@ -356,7 +321,6 @@ theorem sum_norm_sq_coeff_Wc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a))
       linarith
     · simp [hF]
 
-/-- `|k|² Σₐ |ŵₐ(k)|² ≤ |k × û(k)|² + [k ∉ F] |k|² |û(k)|²`. -/
 theorem nk_mul_sum_coeff_Wc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a))
     (F : Finset (Fin 3 → ℤ)) (k : Fin 3 → ℤ) :
     nk k * ∑ a, ‖mFourierCoeff (Wc u F a) k‖ ^ 2 ≤
@@ -379,7 +343,6 @@ theorem nk_mul_sum_coeff_Wc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a))
     · simp only [hF, ite_false]
       linarith
 
-/-- `|p̂(k)|² ≤ Σₐ |ûₐ(k)|²`. -/
 theorem norm_sq_pco_le (k : Fin 3 → ℤ) : ‖pco u k‖ ^ 2 ≤ ∑ a, ‖uh u a k‖ ^ 2 := by
   by_cases h0 : k = 0
   · subst h0; simp only [pco, zk_zero, zero_div, mul_zero, norm_zero]
@@ -486,7 +449,6 @@ theorem hasSum_Ncurl (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) :
     Real.norm_eq_abs, abs_of_pos Real.pi_pos, mul_pow]
   ring
 
-/-- **The `L²` bound of the potential**: `‖p_F‖² ≤ Σₐ ‖uₐ‖²`. -/
 theorem integral_Pc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (Fin 3 → ℤ)) :
     ∫ x, ‖Pc u F x‖ ^ 2 ≤ Nu u := by
   rw [Pc, integral_norm_sq_tpoly]
@@ -494,15 +456,12 @@ theorem integral_Pc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset
         Finset.sum_le_sum fun k _ => norm_sq_pco_le k
     _ ≤ Nu u := sum_le_hasSum F (fun k _ => by positivity) (hasSum_Nu hu)
 
-/-- **The `L²` bound of the remainder**: `Σₐ ‖wₐ‖² ≤ Σₐ ‖uₐ‖²`. -/
 theorem sum_integral_Wc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (Fin 3 → ℤ)) :
     ∑ a, ∫ x, ‖Wc u F a x‖ ^ 2 ≤ Nu u := by
   have h : HasSum (fun k => ∑ a, ‖mFourierCoeff (Wc u F a) k‖ ^ 2) (∑ a, ∫ x, ‖Wc u F a x‖ ^ 2) :=
     hasSum_sum fun a _ => hasSum_sq_mFourierCoeff_of_continuous (isSmooth_Wc hu F a).continuous
   exact hasSum_le (fun k => sum_norm_sq_coeff_Wc_le hu F k) h (hasSum_Nu hu)
 
-/-- **The `H¹` bound of the remainder** (Gaffney on `𝕋³`):
-`‖∇w‖² ≤ ‖curl u‖² + Σ_{k ∉ F} |2πk|² |û(k)|²`. -/
 theorem sum_integral_partialT_Wc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a))
     (F : Finset (Fin 3 → ℤ)) :
     ∑ j, ∑ a, ∫ x, ‖partialT j (Wc u F a) x‖ ^ 2 ≤ Ncurl u + (NT u - ∑ k ∈ F, T4 u k) := by
@@ -526,8 +485,6 @@ theorem sum_integral_partialT_Wc_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)
   · nlinarith
   · nlinarith
 
-/-- **Choice of the truncation**: the tail `Σ_{k ∉ F} |2πk|² |û(k)|²` is at most `Σₐ ‖uₐ‖²`
-for some finite `F`. -/
 theorem exists_tail_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) :
     ∃ F : Finset (Fin 3 → ℤ), NT u - ∑ k ∈ F, T4 u k ≤ Nu u := by
   have hN : 0 ≤ Nu u := (hasSum_Nu hu).nonneg fun k => by positivity
@@ -551,7 +508,6 @@ theorem exists_tail_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) :
     have : NT u = 0 := (hasSum_T4 hu).unique hz
     simp [this, ← hzero]
 
-/-- `|û_a(0)|² ≤ Σₐ ‖uₐ‖²`. -/
 theorem norm_sq_uh_zero_le (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (a : Fin 3) :
     ‖uh u a 0‖ ^ 2 ≤ Nu u := by
   calc ‖uh u a 0‖ ^ 2 ≤ ∑ b, ‖uh u b 0‖ ^ 2 :=
@@ -567,7 +523,6 @@ end Sums
 
 section Lift
 
-/-- On the cell `(-¼, ¾]³` the periodization of a function supported in `Q` is the function. -/
 theorem per_proj_of_mem_cell {Φ : (Fin 3 → ℝ) → ℂ} (hΦ : Domain.IsTest (Q (Fin 3)) Φ)
     {y : Fin 3 → ℝ} (hy : y ∈ cell) : per Φ (proj y) = Φ y := by
   by_cases hQ : y ∈ Q (Fin 3)
@@ -635,20 +590,19 @@ theorem pd_pR (F : Finset (Fin 3 → ℤ)) (a : Fin 3) (y : Fin 3 → ℝ) :
   unfold pR
   rw [pd_re_comp (G := Pc u F) (isSmooth_tpoly _ F), partialT_Pc]
 
-/-- **On the cell**, `w = u - ∇p - c`. -/
 theorem wR_eq (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (Fin 3 → ℤ)) (a : Fin 3)
     {y : Fin 3 → ℝ} (hy : y ∈ cell) : wR u F a y = u a y - partialDeriv a (pR u F) y - cR u a := by
   rw [wR, pd_pR, cR, Wc, U, per_proj_of_mem_cell (isTest_ofReal (hu a)) hy]
   simp
 
-/-- The `L²(Q)` norm of `u`. -/
+/-- The squared `L²(Q)` norm of `u`. -/
 def NuQ (u : Fin 3 → (Fin 3 → ℝ) → ℝ) : ℝ := ∑ a, ∫ y in Q (Fin 3), u a y ^ 2
 
 /-- The component `(j, l)` of `curl u` on `ℝ³`. -/
 def curlR (u : Fin 3 → (Fin 3 → ℝ) → ℝ) (j l : Fin 3) (y : Fin 3 → ℝ) : ℝ :=
   partialDeriv j (u l) y - partialDeriv l (u j) y
 
-/-- The `L²(Q)` norm of `curl u`. -/
+/-- The squared `L²(Q)` norm of `curl u`. -/
 def NcurlQ (u : Fin 3 → (Fin 3 → ℝ) → ℝ) : ℝ :=
   (∫ y in Q (Fin 3), curlR u 0 1 y ^ 2) + (∫ y in Q (Fin 3), curlR u 0 2 y ^ 2) +
     ∫ y in Q (Fin 3), curlR u 1 2 y ^ 2
@@ -691,10 +645,8 @@ theorem eLpNorm_le_sqrt_of {G : T3 → ℂ} (hG : Continuous G) {X : ℝ} (h : �
     eLpNorm (fun y => (G (proj y)).re) 2 (volume.restrict cell) ≤ ENNReal.ofReal (Real.sqrt X) :=
   (eLpNorm_re_comp_proj_le hG).trans (ENNReal.ofReal_le_ofReal (Real.sqrt_le_sqrt h))
 
-/-- **The Helmholtz decomposition of a test field on the torus, with `H¹` bounds**: for test
-functions `uₐ` on `Q`, there are a smooth potential `p`, a constant vector `c` and smooth `wₐ`
-with `w = u - ∇p - c` on the cell `(-¼, ¾]³ ⊇ Q̄`,
-`‖p‖, |cₐ|, ‖wₐ‖ ≤ ‖u‖` and `‖∂ⱼ wₐ‖² ≤ ‖curl u‖² + ‖u‖²` in `L²` of the cell. -/
+/-- **The Helmholtz decomposition of a test field, with `H¹` bounds**: `u = ∇p + c + w` on the
+cell `(-¼, ¾]³ ⊇ Q̄`, with `p`, `w` smooth and bounded in terms of `‖u‖` and `‖curl u‖`. -/
 theorem exists_helmholtz (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) :
     ∃ (p : (Fin 3 → ℝ) → ℝ) (c : Fin 3 → ℝ) (w : Fin 3 → (Fin 3 → ℝ) → ℝ),
       ContDiff ℝ (⊤ : ℕ∞) p ∧ (∀ a, ContDiff ℝ (⊤ : ℕ∞) (w a)) ∧

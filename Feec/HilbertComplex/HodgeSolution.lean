@@ -8,57 +8,21 @@ public import Mathlib.Analysis.InnerProductSpace.Positive
 /-!
 # The solution operator of the Hodge Laplacian
 
-Let `H` be a Hilbert complex and `i → j → k` two consecutive arrows with closed range at `j` and
-`k`. The mixed Hodge Laplacian at `j` is well posed (`Feec.HilbertComplex.existsUnique_mixed`);
-its solution `(σ, u, p)` depends linearly and boundedly on the data `f ∈ Wʲ`. The **solution
-operator** `K = solutionOp : Wʲ → Wʲ`, `f ↦ u`, is the inverse of the Hodge Laplacian on the
-orthogonal complement of the harmonic forms, extended by zero on `ℌʲ`:
-
-* `K f ⊥ ℌʲ`, `K = 0` on `ℌʲ`;
-* `K f ∈ D(d) ∩ D(d†)`, `d K f ∈ D(d†)`, `d† K f ∈ D(d)` and `(d d† + d† d) K f = f - P_ℌ f`;
-  `K f` is the unique such element orthogonal to `ℌʲ` (`eq_solutionOp`);
-* `K` is self-adjoint and positive, `⟪K f, g⟫ = ⟪d† K f, d† K g⟫ + ⟪d K f, d K g⟫`;
-* for any Poincaré constant `c_P ≥ 0` of `d i j` and `d j k`: `‖K f‖ ≤ c_P² ‖f‖`,
-  `‖d K f‖² + ‖d† K f‖² ≤ c_P² ‖f‖²`, and
-  `‖d d† K f‖² + ‖d† d K f‖² ≤ ‖f‖²` (so each is `≤ ‖f‖`);
-* `K` commutes with `d` and `d†`: `d K f = K (d f)` on `D(d)` and `d† K f = K (d† f)` on
-  `D(d†)`, with the solution operators at the neighbouring indices;
-* `K` is compact under the compactness property at `j`;
-* on a finite window, `(Δ x) j = (d d† + d† d) (x j)` for `x ∈ D(Δ)`, and
-  `x = Pi.single j (K f) ∈ D(Δ)` has `(Δ x) j = f - P_ℌ f`.
-
-## Main definitions
-
-* `HilbertComplex.mixedSolution`: the solution map `f ↦ (σ, u, p)` of the mixed problem.
-* `HilbertComplex.solutionOp`: the solution operator `K`; `HilbertComplex.solutionSigma = d† K`.
+For consecutive arrows `i → j → k` of a Hilbert complex with closed range at `j` and `k`, the
+solution operator `K` of the mixed Hodge Laplacian inverts the Hodge Laplacian on `(ℌʲ)ᗮ`, is
+bounded, commutes with `d` and `d†`, and is compact under the compactness property.
 
 ## Main results
 
-* `solutionOp_mem_orthogonal_harmonic`.
-* `hodgeLaplacian_solutionOp`, `eq_solutionOp`: the strong form and uniqueness.
-* `inner_solutionOp_left`.
-* `norm_solutionOp_le`, `norm_sq_solutionSigma_add_norm_sq_d_le`, `norm_solutionSigma_le`,
-  `norm_d_solutionOp_le`, `norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le`,
-  `norm_d_solutionSigma_add_norm_adjoint_d_le`: the a priori bounds of [AFW2010], §3.2.
+* `hodgeLaplacian_solutionOp`, `eq_solutionOp`: `(d d† + d† d) K f = f - P_ℌ f`, uniquely.
+* `norm_solutionOp_le`: `‖K f‖ ≤ c_P² ‖f‖`.
 * `d_solutionOp`, `solutionSigma_eq_solutionOp`: `d K = K d` and `d† K = K d†`.
-* `d_solutionSigma` (`d d† K f = P_𝔅 f`), `solutionSigma_mem_orthogonal_cycles`,
-  `eq_solutionSigma_of_d_eq` (`d† K` inverts `d` from `𝔷ᗮ` onto `𝔅`), `solutionOp_mem_boundaries`,
-  `solutionOp_mem_orthogonal_cycles`, `adjoint_d_solutionOp_of_mem_orthogonal`,
-  `norm_sq_eq_re_inner_solutionOp_d`: `K` on `𝔅` and `𝔷ᗮ` (used by the duality arguments of
-  [AFW2010], §3.5).
-* `isCompactOperator_solutionOp`.
-* `hodgeLaplacian_apply_of_rel`, `single_mem_hodgeLaplacian_domain`,
-  `hodgeLaplacian_apply_of_apply_eq_solutionOp`, `hodgeLaplacian_single_solutionOp`: `K` and the
-  window Hodge Laplacian `Δ = -L²` of `Feec.HilbertComplex.HodgeLaplacian`.
+* `isCompactOperator_solutionOp`: `K` is compact under the compactness property.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.2 (the Hodge Laplacian, its solution operator `K` and the bounds (3.11))
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Thm 4.9, Thm 4.10 (well-posedness
-  of the Hodge Laplacian and the solution operator)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-  (the Hodge Laplacian in mixed form)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -91,7 +55,6 @@ def mixedRHSL (i j : ι) : W j →L[𝕜] (H.MixedSpace i j →L⋆[𝕜] 𝕜) 
 
 variable {i j k : ι}
 
-/-- A common Poincaré constant `c_P ≥ 1` for `d i j` and `d j k`, from closed range at `j`, `k`. -/
 theorem exists_poincare_pair (hij : c.Rel i j) (hjk : c.Rel j k) (hj : H.ClosedRangeAt j)
     (hk : H.ClosedRangeAt k) :
     ∃ cP : ℝ, 1 ≤ cP ∧
@@ -134,7 +97,6 @@ theorem isMixedSolution_mixedSolution (f : W j) :
   mixedForm_eq_mixedRHS_iff.1 (by
     rw [MixedSpace.eta]; exact H.mixedForm_mixedSolution hij hjk hj hk f)
 
-/-- Every solution of the mixed problem is the value of the solution map. -/
 theorem mixedSolution_eq {f : W j} {σ : H.domainSpace i} {u : H.domainSpace j}
     {p : H.harmonic j} (hs : H.IsMixedSolution i j k f σ u p) :
     H.mixedSolution hij hjk hj hk f = MixedSpace.mk σ u p :=
@@ -149,7 +111,7 @@ def solutionOpV : W j →L[𝕜] H.domainSpace j :=
   (WithLp.fstL 2 𝕜 _ _).comp ((WithLp.sndL 2 𝕜 _ _).comp (H.mixedSolution hij hjk hj hk))
 
 /-- **The solution operator `K` of the Hodge Laplacian** at `j`: `K f = u`, where `(σ, u, p)`
-solves the mixed problem with data `f`. See [AFW2010], §3.2; [Arnold2018], Thm 4.10. -/
+solves the mixed problem with data `f`. [AFW2010], §3.2; [Arnold2018], Thm 4.10 -/
 def solutionOp : W j →L[𝕜] W j := (H.domainIncl j).comp (H.solutionOpV hij hjk hj hk)
 
 /-- `d† K`, the `σ` component of the mixed solution, as a map into `Vⁱ`. -/
@@ -162,13 +124,11 @@ def solutionSigma : W j →L[𝕜] W i := (H.domainIncl i).comp (H.solutionSigma
 theorem solutionOp_apply (f : W j) :
     H.solutionOp hij hjk hj hk f = H.domainIncl j (H.solutionOpV hij hjk hj hk f) := rfl
 
-/-- `‖K f‖` is at most the norm of the mixed solution. -/
 theorem norm_solutionOp_le_norm_mixedSolution (f : W j) :
     ‖H.solutionOp hij hjk hj hk f‖ ≤ ‖H.mixedSolution hij hjk hj hk f‖ :=
   (H.norm_domainIncl_le j _).trans
     ((WithLp.norm_fst_le (x := _)).trans (WithLp.norm_snd_le (x := _)))
 
-/-- The mixed solution is `(d† K f, K f, P_ℌ f)`. -/
 theorem harmonic_mixedSolution (f : W j) :
     ((H.mixedSolution hij hjk hj hk f).snd.snd : W j) = (H.harmonic j).starProjection f :=
   ((H.isMixedSolution_mixedSolution hij hjk hj hk f).harmonic_eq hij).symm
@@ -178,7 +138,6 @@ theorem isMixedSolution_solutionOp (f : W j) :
       (H.mixedSolution hij hjk hj hk f).snd.snd :=
   H.isMixedSolution_mixedSolution hij hjk hj hk f
 
-/-- **`K f ⊥ ℌʲ`.** -/
 theorem inner_harmonic_solutionOp (f : W j) {q : W j} (hq : q ∈ H.harmonic j) :
     ⟪q, H.solutionOp hij hjk hj hk f⟫ = 0 :=
   (H.isMixedSolution_solutionOp hij hjk hj hk f).harm q hq
@@ -189,31 +148,25 @@ theorem solutionOp_mem_orthogonal_harmonic (f : W j) :
 
 /-! ### Domains and the strong form -/
 
-/-- `K f ∈ D(d j k)`. -/
 theorem solutionOp_mem_domain (f : W j) : H.solutionOp hij hjk hj hk f ∈ (H.d j k).domain :=
   H.domain_next_le j k (H.domainIncl_mem j _)
 
-/-- `d† K f = σ ∈ D(d i j)`. -/
 theorem solutionSigma_mem_domain (f : W j) :
     H.solutionSigma hij hjk hj hk f ∈ (H.d i j).domain :=
   H.domain_next_le i j (H.domainIncl_mem i _)
 
-/-- `K f ∈ D((d i j)†)`. -/
 theorem solutionOp_mem_adjoint_domain (f : W j) :
     H.solutionOp hij hjk hj hk f ∈ ((H.d i j)†).domain :=
   ((H.isMixedSolution_solutionOp hij hjk hj hk f).mem_adjoint_domain hij).1
 
-/-- **`d† K f = σ`**: the first unknown of the mixed problem is `d† u`. -/
 theorem adjoint_solutionOp (f : W j) (h : H.solutionOp hij hjk hj hk f ∈ ((H.d i j)†).domain) :
     (H.d i j)† ⟨_, h⟩ = H.solutionSigma hij hjk hj hk f :=
   ((H.isMixedSolution_solutionOp hij hjk hj hk f).mem_adjoint_domain hij).2
 
-/-- `d K f ∈ D((d j k)†)`. -/
 theorem d_solutionOp_mem_adjoint_domain (f : W j) :
     H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain :=
   ((H.isMixedSolution_solutionOp hij hjk hj hk f).mem_adjoint_domain_d hjk).1
 
-/-- **`d† d K f = f - P_ℌ f - d σ`.** -/
 theorem adjoint_d_solutionOp (f : W j)
     (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain) :
     (H.d j k)† ⟨_, h⟩ = f - (H.harmonic j).starProjection f -
@@ -222,7 +175,7 @@ theorem adjoint_d_solutionOp (f : W j)
     H.harmonic_mixedSolution]
 
 /-- **The strong form**: `K f ∈ D(d) ∩ D(d†)`, `d K f ∈ D(d†)`, `d† K f ∈ D(d)` and
-`(d d† + d† d) K f = f - P_ℌ f`. See [AFW2010], §3.2; [Arnold2018], Thm 4.10. -/
+`(d d† + d† d) K f = f - P_ℌ f`. [AFW2010], §3.2; [Arnold2018], Thm 4.10 -/
 theorem hodgeLaplacian_solutionOp (f : W j) :
     ∃ (h₁ : H.solutionOp hij hjk hj hk f ∈ (H.d j k).domain)
       (h₂ : H.solutionOp hij hjk hj hk f ∈ ((H.d i j)†).domain)
@@ -277,7 +230,6 @@ theorem eq_solutionOp {f u : W j} (hu : u ∈ (H.harmonic j)ᗮ) (h₁ : u ∈ (
 
 /-! ### Self-adjointness and positivity -/
 
-/-- **The energy identity** `⟪K f, g⟫ = ⟪d† K f, d† K g⟫ + ⟪d K f, d K g⟫`. -/
 theorem inner_solutionOp_left (f g : W j) :
     ⟪H.solutionOp hij hjk hj hk f, g⟫ =
       ⟪H.solutionSigma hij hjk hj hk f, H.solutionSigma hij hjk hj hk g⟫ +
@@ -298,14 +250,12 @@ theorem inner_solutionOp_left (f g : W j) :
   rw [e1', e3', add_zero] at e2
   rw [solutionOp_apply, ← e2]
 
-/-- **`K` is self-adjoint.** -/
 theorem isSymmetric_solutionOp :
     (H.solutionOp hij hjk hj hk : W j →ₗ[𝕜] W j).IsSymmetric := fun f g => by
   change ⟪H.solutionOp hij hjk hj hk f, g⟫ = ⟪f, H.solutionOp hij hjk hj hk g⟫
   rw [← inner_conj_symm f, H.inner_solutionOp_left, H.inner_solutionOp_left, _root_.map_add,
     inner_conj_symm, inner_conj_symm]
 
-/-- `re ⟪K f, f⟫ = ‖d† K f‖² + ‖d K f‖²`. -/
 theorem re_inner_solutionOp_self (f : W j) :
     RCLike.re ⟪H.solutionOp hij hjk hj hk f, f⟫ =
       ‖H.solutionSigma hij hjk hj hk f‖ ^ 2 +
@@ -315,15 +265,12 @@ theorem re_inner_solutionOp_self (f : W j) :
 /-! ### The a priori bounds -/
 
 omit [∀ i, CompleteSpace (W i)] in
-/-- `‖x - P_K x‖ ≤ ‖x - y‖` for `y ∈ K`. -/
 theorem _root_.Submodule.norm_sub_starProjection_le_of_mem {E : Type*} [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] {x y : E}
     (hy : y ∈ K) : ‖x - K.starProjection x‖ ≤ ‖x - y‖ := by
   rw [← dist_eq_norm, ← dist_eq_norm, Submodule.dist_starProjection_eq_infDist]
   exact Metric.infDist_le_dist_of_mem hy
 
-/-- **`‖d d† K f‖² + ‖d† d K f‖² ≤ ‖f‖²`** (no Poincaré constant): `d σ` and `d† d u` are the
-orthogonal `𝔅` and `𝔅*` parts of `f - P_ℌ f`. -/
 theorem norm_sq_d_solutionSigma_add_norm_sq_adjoint_d_le (f : W j)
     (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain) :
     ‖H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))‖ ^ 2 +
@@ -361,7 +308,6 @@ theorem norm_adjoint_d_solutionOp_le (f : W j)
   nlinarith [norm_nonneg f, norm_nonneg ((H.d j k)† ⟨_, h⟩),
     sq_nonneg ‖H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))‖]
 
-/-- `‖d d† K f‖ + ‖d† d K f‖ ≤ 2 ‖f‖`. See [AFW2010], (3.11). -/
 theorem norm_d_solutionSigma_add_norm_adjoint_d_le (f : W j)
     (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) ∈ ((H.d j k)†).domain) :
     ‖H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f))‖ + ‖(H.d j k)† ⟨_, h⟩‖ ≤
@@ -377,7 +323,7 @@ variable {cP : ℝ} (hcP : 0 ≤ cP)
 include hcP hPi hPj
 
 /-- **`‖K f‖ ≤ c_P² ‖f‖`**, with `c_P` a Poincaré constant for `d i j` and `d j k`.
-See [AFW2010], §3.2, (3.11). -/
+[AFW2010], §3.2, (3.11) -/
 theorem norm_solutionOp_le (f : W j) : ‖H.solutionOp hij hjk hj hk f‖ ≤ cP ^ 2 * ‖f‖ := by
   set u := H.solutionOp hij hjk hj hk f
   set σ := H.solutionSigma hij hjk hj hk f
@@ -434,7 +380,6 @@ theorem norm_solutionOp_le (f : W j) : ‖H.solutionOp hij hjk hj hk f‖ ≤ cP
     nlinarith [sq_nonneg cP]
   nlinarith [norm_nonneg u, norm_nonneg f, sq_nonneg cP, mul_nonneg (sq_nonneg cP) (norm_nonneg f)]
 
-/-- **`‖d† K f‖² + ‖d K f‖² ≤ c_P² ‖f‖²`.** See [AFW2010], §3.2, (3.11). -/
 theorem norm_sq_solutionSigma_add_norm_sq_d_le (f : W j) :
     ‖H.solutionSigma hij hjk hj hk f‖ ^ 2 +
         ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖ ^ 2 ≤ cP ^ 2 * ‖f‖ ^ 2 := by
@@ -443,7 +388,6 @@ theorem norm_sq_solutionSigma_add_norm_sq_d_le (f : W j) :
   have h2 := H.norm_solutionOp_le hij hjk hj hk hcP hPi hPj f
   nlinarith [norm_nonneg f]
 
-/-- `‖d† K f‖ ≤ c_P ‖f‖`. -/
 theorem norm_solutionSigma_le (f : W j) :
     ‖H.solutionSigma hij hjk hj hk f‖ ≤ cP * ‖f‖ := by
   have h := H.norm_sq_solutionSigma_add_norm_sq_d_le hij hjk hj hk hcP hPi hPj f
@@ -451,7 +395,6 @@ theorem norm_solutionSigma_le (f : W j) :
     rw [mul_pow]; nlinarith [sq_nonneg ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖]
   exact (abs_le_of_sq_le_sq' this (mul_nonneg hcP (norm_nonneg f))).2
 
-/-- `‖d K f‖ ≤ c_P ‖f‖`. -/
 theorem norm_d_solutionOp_le (f : W j) :
     ‖H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f))‖ ≤ cP * ‖f‖ := by
   have h := H.norm_sq_solutionSigma_add_norm_sq_d_le hij hjk hj hk hcP hPi hPj f
@@ -459,8 +402,6 @@ theorem norm_d_solutionOp_le (f : W j) :
     rw [mul_pow]; nlinarith [sq_nonneg ‖H.solutionSigma hij hjk hj hk f‖]
   exact (abs_le_of_sq_le_sq' this (mul_nonneg hcP (norm_nonneg f))).2
 
-/-- **`‖K (d τ)‖ ≤ c_P ‖τ‖`** on `D(d i j)`: `⟪K d τ, g⟫ = ⟪τ, d† K g⟫` (so `K d` extends to a
-bounded operator `Wⁱ → Wʲ`, the operator `d K` at `i` of [AFW2010], §3.5). -/
 theorem norm_solutionOp_d_le (τ : (H.d i j).domain) :
     ‖H.solutionOp hij hjk hj hk (H.d i j τ)‖ ≤ cP * ‖(τ : W i)‖ := by
   set v := H.solutionOp hij hjk hj hk (H.d i j τ)
@@ -485,7 +426,6 @@ end Poincare
 
 /-! ### Commuting with `d` and `d†` -/
 
-/-- Boundaries are orthogonal to harmonic forms: `P_ℌ b = 0` and `⟪q, b⟫ = 0`. -/
 theorem inner_harmonic_eq_zero_of_mem_boundaries {l : ι} {q b : W l} (hq : q ∈ H.harmonic l)
     (hb : b ∈ H.boundaries l) : ⟪q, b⟫ = 0 :=
   Submodule.inner_left_of_mem_orthogonal hb (H.mem_harmonic_iff.1 hq).2
@@ -495,7 +435,7 @@ theorem mem_orthogonal_harmonic_of_mem_boundaries {l : ι} {b : W l} (hb : b ∈
   (Submodule.mem_orthogonal _ _).2 fun _ hq => H.inner_harmonic_eq_zero_of_mem_boundaries hq hb
 
 /-- **`K` commutes with `d`**: `d K f = K (d f)` for `f ∈ D(d j k)`, where the second `K` is the
-solution operator at `k` (arrows `j → k → l`). See [AFW2010], §3.2. -/
+solution operator at `k` (arrows `j → k → l`). [AFW2010], §3.2 -/
 theorem d_solutionOp {l : ι} (hkl : c.Rel k l) (hl : H.ClosedRangeAt l) {f : W j}
     (hf : f ∈ (H.d j k).domain) :
     H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk f)) =
@@ -528,7 +468,7 @@ theorem d_solutionOp {l : ι} (hkl : c.Rel k l) (hl : H.ClosedRangeAt l) {f : W 
   simp
 
 /-- **`K` commutes with `d†`**: `d† K f = K (d† f)` for `f ∈ D((d i j)†)`, where the second `K`
-is the solution operator at `i` (arrows `h → i → j`). See [AFW2010], §3.2. -/
+is the solution operator at `i` (arrows `h → i → j`). [AFW2010], §3.2 -/
 theorem solutionSigma_eq_solutionOp {h : ι} (hhi : c.Rel h i) (hi : H.ClosedRangeAt i) {f : W j}
     (hf : f ∈ ((H.d i j)†).domain) :
     H.solutionSigma hij hjk hj hk f = H.solutionOp hhi hij hi hj ((H.d i j)† ⟨f, hf⟩) := by
@@ -581,7 +521,6 @@ theorem solutionSigma_eq_solutionOp {h : ι} (hhi : c.Rel h i) (hi : H.ClosedRan
 
 /-! ### `K` on boundaries and on `𝔷ᗮ` -/
 
-/-- Under closed range, a cycle orthogonal to `ℌ` is a boundary. -/
 theorem mem_boundaries_of_mem_cycles {l : ι} (hl : H.ClosedRangeAt l) {z : W l}
     (hz : z ∈ H.cycles l) (ho : z ∈ (H.harmonic l)ᗮ) : z ∈ H.boundaries l := by
   rw [← H.boundaries_sup_harmonic hl] at hz
@@ -592,7 +531,6 @@ theorem mem_boundaries_of_mem_cycles {l : ι} (hl : H.ClosedRangeAt l) {z : W l}
   rw [inner_self_eq_zero.1 h1, add_zero]
   exact hb
 
-/-- Under closed range, `𝔅ᗮ ∩ ℌᗮ = 𝔷ᗮ`. -/
 theorem mem_orthogonal_cycles_of {l : ι} (hl : H.ClosedRangeAt l) {x : W l}
     (hB : x ∈ (H.boundaries l)ᗮ) (hH : x ∈ (H.harmonic l)ᗮ) : x ∈ (H.cycles l)ᗮ := by
   rw [← H.boundaries_sup_harmonic hl]
@@ -601,7 +539,6 @@ theorem mem_orthogonal_cycles_of {l : ι} (hl : H.ClosedRangeAt l) {x : W l}
   rw [inner_add_left, Submodule.inner_right_of_mem_orthogonal hb hB,
     Submodule.inner_right_of_mem_orthogonal hh hH, add_zero]
 
-/-- **The `𝔷ᗮ`-preimage under `d` is unique.** -/
 theorem eq_of_mem_orthogonal_cycles {l m : ι} (hlm : c.Rel l m) {φ ψ : (H.d l m).domain}
     (hφ : (φ : W l) ∈ (H.cycles l)ᗮ) (hψ : (ψ : W l) ∈ (H.cycles l)ᗮ)
     (hd : H.d l m φ = H.d l m ψ) : (φ : W l) = ψ := by
@@ -613,7 +550,6 @@ theorem eq_of_mem_orthogonal_cycles {l m : ι} (hlm : c.Rel l m) {φ ψ : (H.d l
   rw [inner_self_eq_zero] at h0
   exact sub_eq_zero.1 h0
 
-/-- **`d σ = P_𝔅 f`**: `d d† K f` is the projection of `f` onto the (closed) boundaries. -/
 theorem d_solutionSigma (f : W j) :
     H.d i j (H.domainCoord i j (H.solutionSigmaV hij hjk hj hk f)) =
       (H.boundaries j).topologicalClosure.starProjection f := by
@@ -636,7 +572,6 @@ theorem d_solutionSigma (f : W j) :
     change starRingEnd 𝕜 ⟪H.d i j τ, f - _⟫ = 0
     rw [inner_sub_right, ← e, sub_self, _root_.map_zero]
 
-/-- **`σ = d† K f ⊥ 𝔷ⁱ`.** -/
 theorem solutionSigma_mem_orthogonal_cycles (f : W j) :
     H.solutionSigma hij hjk hj hk f ∈ (H.cycles i)ᗮ := by
   refine (Submodule.mem_orthogonal _ _).2 fun z hz => ?_
@@ -646,7 +581,6 @@ theorem solutionSigma_mem_orthogonal_cycles (f : W j) :
     H.d_eq_zero_of_mem_cycles hz, inner_zero_left, sub_zero] at e
   exact e
 
-/-- For `g ∈ 𝔅ʲ`, `d† K g` is the `𝔷ᗮ`-preimage of `g`: every `φ ⊥ 𝔷ⁱ` with `d φ = g` equals it. -/
 theorem eq_solutionSigma_of_d_eq {g : W j} (hg : g ∈ H.boundaries j) {φ : (H.d i j).domain}
     (hφ : (φ : W i) ∈ (H.cycles i)ᗮ) (hd : H.d i j φ = g) :
     (φ : W i) = H.solutionSigma hij hjk hj hk g := by
@@ -657,7 +591,6 @@ theorem eq_solutionSigma_of_d_eq {g : W j} (hg : g ∈ H.boundaries j) {φ : (H.
   rw [hd, H.d_solutionSigma hij hjk hj hk, Submodule.starProjection_eq_self_iff.2]
   rw [hBc]; exact hg
 
-/-- **`K` preserves the boundaries.** -/
 theorem solutionOp_mem_boundaries {g : W j} (hg : g ∈ H.boundaries j) :
     H.solutionOp hij hjk hj hk g ∈ H.boundaries j := by
   have hBc : (H.boundaries j).topologicalClosure = H.boundaries j :=
@@ -678,7 +611,6 @@ theorem solutionOp_mem_boundaries {g : W j} (hg : g ∈ H.boundaries j) :
   rw [H.cycles_eq hjk]
   exact mem_ker_iff.2 ⟨_, rfl, h0⟩
 
-/-- **`d† d K v = v` for `v ⊥ 𝔷ʲ`.** -/
 theorem adjoint_d_solutionOp_of_mem_orthogonal {v : W j} (hv : v ∈ (H.cycles j)ᗮ)
     (h : H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk v)) ∈ ((H.d j k)†).domain) :
     (H.d j k)† ⟨_, h⟩ = v := by
@@ -690,7 +622,6 @@ theorem adjoint_d_solutionOp_of_mem_orthogonal {v : W j} (hv : v ∈ (H.cycles j
     (Submodule.starProjection_apply_eq_zero_iff _).2 hB,
     (Submodule.starProjection_apply_eq_zero_iff _).2 hH, sub_zero, sub_zero]
 
-/-- `⟪v, x⟫ = ⟪d K v, d x⟫` for `v ⊥ 𝔷ʲ` and `x ∈ D(d)`. -/
 theorem inner_eq_inner_d_solutionOp {v : W j} (hv : v ∈ (H.cycles j)ᗮ) (x : (H.d j k).domain) :
     ⟪v, (x : W j)⟫ = ⟪H.d j k (H.domainCoord j k (H.solutionOpV hij hjk hj hk v)), H.d j k x⟫ := by
   have h := H.d_solutionOp_mem_adjoint_domain hij hjk hj hk v
@@ -698,7 +629,6 @@ theorem inner_eq_inner_d_solutionOp {v : W j} (hv : v ∈ (H.cycles j)ᗮ) (x : 
   rw [H.adjoint_d_solutionOp_of_mem_orthogonal hij hjk hj hk hv h] at e
   exact e
 
-/-- **`K` preserves `𝔷ᗮ`.** -/
 theorem solutionOp_mem_orthogonal_cycles {v : W j} (hv : v ∈ (H.cycles j)ᗮ) :
     H.solutionOp hij hjk hj hk v ∈ (H.cycles j)ᗮ := by
   have hBc : (H.boundaries j).topologicalClosure = H.boundaries j :=
@@ -727,7 +657,6 @@ theorem solutionOp_mem_orthogonal_cycles {v : W j} (hv : v ∈ (H.cycles j)ᗮ) 
   rw [← inner_conj_symm]
   exact (congrArg _ h0).trans (_root_.map_zero _)
 
-/-- **`‖φ‖² = re ⟪K (d φ), d φ⟫` for `φ ⊥ 𝔷ⁱ`** (`φ = d† K d φ`). -/
 theorem norm_sq_eq_re_inner_solutionOp_d {φ : (H.d i j).domain} (hφ : (φ : W i) ∈ (H.cycles i)ᗮ) :
     ‖(φ : W i)‖ ^ 2 = RCLike.re ⟪H.solutionOp hij hjk hj hk (H.d i j φ), H.d i j φ⟫ := by
   have hg : H.d i j φ ∈ H.boundaries j := by rw [H.boundaries_eq hij]; exact ⟨_, rfl⟩
@@ -739,8 +668,8 @@ theorem norm_sq_eq_re_inner_solutionOp_d {φ : (H.d i j).domain} (hφ : (φ : W 
 
 /-! ### Compactness -/
 
-/-- **`K` is compact** under the compactness property at `j` (e.g. Rellich). See [AFW2010],
-§3.1.3 and §3.2; [Arnold2018], Thm 4.10. -/
+/-- **`K` is compact** under the compactness property at `j`. [AFW2010], §3.1.3, §3.2;
+[Arnold2018], Thm 4.10 -/
 theorem isCompactOperator_solutionOp (hcp : H.HasCompactPropertyAt j) :
     IsCompactOperator (H.solutionOp hij hjk hj hk) := by
   obtain ⟨cP, hcP, hPi, hPj⟩ := H.exists_poincare_pair hij hjk hj hk
@@ -774,9 +703,6 @@ private theorem apply_mk_sub {E F : Type*} [AddCommGroup E] [Module 𝕜 E] [Add
     (h : a - b ∈ T.domain) : T ⟨a - b, h⟩ = T ⟨a, ha⟩ - T ⟨b, hb⟩ := by
   rw [← T.map_sub]; rfl
 
-/-- **The Hodge Laplacian is `𝐝 𝐝* + 𝐝* 𝐝`**: for `x ∈ D(Δ)`, `x ∈ D(𝐝) ∩ D(𝐝*)`, `𝐝 x ∈ D(𝐝*)`,
-`𝐝* x ∈ D(𝐝)` and `Δ x = 𝐝 𝐝* x + 𝐝* 𝐝 x` (the terms `𝐝 𝐝`, `𝐝* 𝐝*` of `-L²` vanish). See
-[AFW2010], §3.2. -/
 theorem hodgeLaplacian_apply_eq (x : H.hodgeLaplacian.domain) :
     ∃ (h₁ : (x : PiLp 2 W) ∈ H.totalD.domain) (h₂ : (x : PiLp 2 W) ∈ H.dual.totalD.domain)
       (h₃ : (H.totalD ⟨_, h₁⟩ : PiLp 2 W) ∈ H.dual.totalD.domain)
@@ -807,9 +733,6 @@ theorem hodgeLaplacian_apply_eq (x : H.hodgeLaplacian.domain) :
   rw [e1, e2, z1, z2]; abel
 
 include hij hjk in
-/-- **The `j`-th component of the window Hodge Laplacian** `Δ = -L²` is the Hodge Laplacian
-`d d† + d† d` at `j`: for `x ∈ D(Δ)`, `x j ∈ D(d) ∩ D(d†)`, `d x j ∈ D(d†)`, `d† x j ∈ D(d)` and
-`(Δ x) j = d (d† x j) + d† (d x j)`. No closed range is needed. See [AFW2010], §3.2. -/
 theorem hodgeLaplacian_apply_of_rel (x : H.hodgeLaplacian.domain) :
     ∃ (h₁ : (x : PiLp 2 W) j ∈ (H.d j k).domain) (h₂ : (x : PiLp 2 W) j ∈ ((H.d i j)†).domain)
       (h₃ : H.d j k ⟨_, h₁⟩ ∈ ((H.d j k)†).domain)
@@ -832,8 +755,6 @@ theorem hodgeLaplacian_apply_of_rel (x : H.hodgeLaplacian.domain) :
     (congrArg ((H.d j k)†) (Subtype.ext ck))
 
 include hij hjk in
-/-- **`K` inverts the window Hodge Laplacian at `j`**: if `x ∈ D(Δ)` has `j`-th component `K f`,
-then `(Δ x) j = f - P_ℌ f`. See [AFW2010], §3.2. -/
 theorem hodgeLaplacian_apply_of_apply_eq_solutionOp {f : W j} (x : H.hodgeLaplacian.domain)
     (hx : (x : PiLp 2 W) j = H.solutionOp hij hjk hj hk f) :
     (H.hodgeLaplacian x) j = f - (H.harmonic j).starProjection f := by
@@ -846,7 +767,6 @@ theorem hodgeLaplacian_apply_of_apply_eq_solutionOp {f : W j} (x : H.hodgeLaplac
   rfl
 
 include hij hjk in
-/-- `Pi.single j u ∈ D(Δ)` as soon as `u` is in the domain of the Hodge Laplacian at `j`. -/
 theorem single_mem_hodgeLaplacian_domain [DecidableEq ι] {u : W j} (h₁ : u ∈ (H.d j k).domain)
     (h₂ : u ∈ ((H.d i j)†).domain) (h₃ : H.d j k ⟨u, h₁⟩ ∈ ((H.d j k)†).domain)
     (h₄ : ((H.d i j)† ⟨u, h₂⟩ : W i) ∈ (H.d i j).domain) :
@@ -899,8 +819,6 @@ theorem single_mem_hodgeLaplacian_domain [DecidableEq ι] {u : W j} (h₁ : u �
   exact sub_mem ⟨H.totalD_mapsTo _, hy1⟩ ⟨hy2, H.dual.totalD_mapsTo _⟩
 
 include hij hjk in
-/-- **`K = Δ⁻¹` on the window, componentwise**: `x = Pi.single j (K f) ∈ D(Δ)` and
-`(Δ x) j = f - P_ℌ f`. See [AFW2010], §3.2; [Arnold2018], Thm 4.10. -/
 theorem hodgeLaplacian_single_solutionOp [DecidableEq ι] (f : W j) :
     ∃ hx : PiLp.single 2 j (H.solutionOp hij hjk hj hk f) ∈ H.hodgeLaplacian.domain,
       (H.hodgeLaplacian ⟨_, hx⟩) j = f - (H.harmonic j).starProjection f := by

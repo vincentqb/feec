@@ -12,118 +12,25 @@ public import Feec.Evolution.BoundaryLifting
 /-!
 # The fully discrete FEEC theorem
 
-A semidiscrete FEEC discretization `F : DissipFEEC A κ` (discrete Hilbert spaces `Xₕ`, bounded
-dissipative generators `Lₕ`, reading maps `ιₕ`) is made fully discrete by a **time scheme**
-(`DissipFEEC.TimeScheme`, the time schemes `Feec.TimeStepping.TimeScheme` of the `Lₕ`): time steps
-`τₕ > 0` and one-step operators `Pₕ` on `Xₕ`, power bounded by `M(T)` (`‖Pₕⁿ‖ ≤ M(T)` for
-`n τₕ ≤ T`) and consistent of order `p` with constant `K` with the discrete flows,
-`‖Pₕ y - e^{τₕ Lₕ} y‖ ≤ K τₕ^{p+1} ‖Lₕ^{p+1} y‖` (`TimeStepping.IsConsistent`), with `M`, `K`, `p`
-independent of `h`. The fully discrete solution at `tₙ = n τₕ` is `ιₕ Pₕⁿ v` (`TimeScheme.sol`).
-The scheme is any operator family: implicit (A-stable, unconditionally stable) or explicit (stable
-under a CFL condition `τₕ ‖Lₕ‖ ≤ c`, which then enters through `τₕ`).
-
-**The Banach layer is upstream.** Forgetting the inner products, `F` is a Banach FEEC
-discretization with `M = 1` (`DissipFEEC.toBanachFEEC`: the Lumer–Phillips semigroup and the
-flows of the dissipative `Lₕ` are contractions), and its time schemes are those of
-`F.toBanachFEEC`. The rate 3 (semidiscrete rate plus temporal error) and the convergence 4 are
-the fields `rate_iterates` and `converges_iterates` of the fully discrete FEEC theorem on Banach
-spaces (`Feec.TimeStepping.banachFEEC`) for `F.toBanachFEEC`, and the temporal errors of 2 and 7
-are the Banach-space bounds `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le` and
-`Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg` at `‖e^{tLₕ}‖ ≤ 1`; the
-semidiscrete inputs (the rate classes, the cores, `dissipFEEC_rate`, `dissipFEEC_converges`) are
-Hilbert-space results.
+Time schemes for a dissipative FEEC discretization, power bounded and consistent uniformly in `h`:
+the fully discrete solutions `ιₕ Pₕⁿ v` have the semidiscrete error plus a temporal error.
 
 ## Main results
 
-**`dissipFEEC_fullyDiscrete`** (statement `DissipFEEC.TimeScheme.Verdict`, extending the
-semidiscrete `DissipFEEC.Verdict`): for every time scheme `Θ` of `F` and orbit-consistent core `Z`,
-besides the semidiscrete conclusions, at the time levels `tₙ = n τₕ ≤ T`,
-
-1. (**stability**) `‖ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) ‖v‖`, uniformly in `h`;
-2. (**temporal error**) `‖ιₕ e^{tₙ Lₕ} v - ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} v‖`;
-3. (**rate**) for data in a rate class, the error at `tₙ` is the spatial rate of the semidiscrete
-   verdict plus the temporal error:
-   `‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ (C + ‖ιₕ‖ C' tₙ) hᵅ ‖x‖_c + ‖ιₕ‖ ‖pₕ(0) - v‖`
-   `+ ‖ιₕ‖ M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} v‖`;
-4. (**convergence**, Lax–Brenner–Thomée) on the closure of the core, for every family
-   `ιₕ vₕ → x` and `τₕ → 0`, the fully discrete solutions converge to `S(tₙ) x` uniformly over
-   the time levels `tₙ ∈ [0, T]` (no smoothness of `vₕ`: the data are smoothed by time averages,
-   `Feec.TimeStepping.timeAvg`);
-5. (**constraint residual**) for a kept `K`, `dist(ιₕ Pₕⁿ v, K) ≤ ‖S(tₙ) x - ιₕ Pₕⁿ v‖`, so it is
-   bounded by 3 and tends to `0` with 4;
-6. (**rate from static estimates**, `TimeScheme.norm_S_sub_sol_le_of_smooth`) for a scheme
-   consistent along trajectories (`TimeScheme.IsTrajConsistent`, constant `K`) and a rate class
-   whose comparison is smooth of order `p + 1` (`DissipFEEC.Comparison.Smooth`: time derivatives
-   `D j`, the `(p + 1)`-st bounded by `B x` uniformly in `h`),
-   `‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ C hᵅ ‖x‖_c + ‖ιₕ‖ M(T) (‖pₕ(0) - v‖ + tₙ (K τₕᵖ B x + C' hᵅ ‖x‖_c))`.
-   The temporal term of 3, `‖Lₕ^{p+1} v‖`, is not uniform in `h` for the usual initial values
-   (for an elliptic or heat Ritz projection `Lₕ Rₕ ≠ Rₕ A`, and `‖Lₕ‖ → ∞`); here the scheme is
-   tested on the comparison trajectory instead (`norm_p_sub_pow_le`, the discrete Duhamel formula
-   `TimeStepping.norm_sub_le_of_step` with the local errors of `TimeStepping.IsTrajConsistent`).
-   **Ritz projections are smooth** (`DissipFEEC.Ritz.smooth`): `D j = Rₕ ℓ(S(t) Aʲ x)` on data
-   with `Aʲ x` in the lift for `j ≤ p`, `B x = C sup ‖ℓ(S(t) A^{p+1} x)‖`; for the identity lift
-   `B x = C ‖A^{p+1} x‖`, so the fully discrete error is `O(hᵅ + τₕᵖ)` in the graph norm of
-   `D(A^{p+1})` from the static estimates of the Ritz projection alone.
-7. (**rate for every datum, uniform in `h`**, `TimeScheme.norm_S_sub_sol_le_uniform`) for every
-   time scheme (consistency in the sense of `TimeStepping.IsConsistent` suffices) and every datum
-   `x ∈ D(A)` of a rate class, from `v = pₕ(0)`,
-   `‖S(tₙ) x - ιₕ Pₕⁿ pₕ(0)‖ = O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h`. The scheme is tested on the
-   smoothed `A_δ^{p+1} pₕ(0)` (`TimeScheme.norm_exp_sub_pow_le_of_timeAvg`,
-   `‖Lₕ^{p+1} A_δ^{p+1}‖ ≤ (2/δ)^{p+1}`), which is `O(hᵅ + δ ‖A x‖)`-close to `pₕ(0)` because the
-   semidiscrete orbit from `pₕ(0)` is `O(hᵅ)`-close to the exact one
-   (`TimeScheme.norm_S_sub_sol_le_of_timeAvg`); `δ = τₕ^{p/(p+2)}` balances `δ` against
-   `τₕᵖ δ^{-(p+1)}`. The order in `τ` is not sharp: 6 gives `τₕᵖ` for smoother data.
-8. (**forcing**, `TimeScheme.norm_sub_forcedSol_le`) the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ`
-   (`TimeScheme.forcedSol`, `Feec.TimeStepping.forcedIter`) satisfy, for every target `y` and
-   every comparison `wₖ`, `‖y - ιₕ Wₙ‖ ≤ ‖y - ιₕ wₙ‖ + ‖ιₕ‖ M(T) (‖v - w₀‖ + Σ_{k<n} ‖dₖ‖)`,
-   `dₖ = wₖ₊₁ - Pₕ wₖ - gₖ` (the discrete Duhamel formula);
-9. (**inhomogeneous boundary data**, `TimeScheme.norm_sub_lifted_le`) for `A ≤ A_max` and a
-   lifting `G`, the solution with the boundary values of `G` is `G` plus the mild solution with
-   the forcing `f - G' + A_max G` (`Feec.Evolution.IsBoundarySolution.eq_add_mild`), and the
-   lifted iterates `Gₕ,ₙ + ιₕ Wₙ` have error at most `‖G(tₙ) - Gₕ,ₙ‖` plus the error of 8 for
-   the mild solution. The Crank–Nicolson scheme with prescribed boundary DOFs of the thesis has
-   the same structure, a forced Crank–Nicolson scheme of a compression
-   (`Feec.TimeStepping.eq_add_forcedIter_of_isDirichletCNStep`); its identification with a
-   time scheme of a conforming window is open.
-
-   8 and 9 are stability statements against arbitrary comparisons: no consistency bound for a
-   discretized load (e.g. `gₖ ≈ τ Πₕ f(tₖ)`) is proved, so forced problems carry no rate, fully
-   discrete or semidiscrete.
-
-**Schemes** (`DissipFEEC.thetaScheme`, `DissipFEEC.crankNicolson`): the θ-scheme, `θ ≥ 1/2` real,
-`M = 1`, order `1`, `K = θ + 1/2` (implicit Euler `θ = 1`, `K = 3/2`), and Crank–Nicolson with
-`Pₕ = cayley(Lₕ, τₕ/2)` literally (`Feec.TimeStepping.cayley`), `M = 1`, order `2`, `K = 5/12`; both
-unconditionally stable (`TimeStepping.norm_thetaStep_le`); along trajectories
-(`thetaScheme_isTrajConsistent`, `crankNicolson_isTrajConsistent`) the θ-scheme, `θ ≤ 1`, is
-consistent of order `1` with `K = θ + 1/2` and Crank–Nicolson of order `2` with the sharp
-`K = 1/12`. **Discrete constraint propagation**:
-`thetaScheme_pow_mem`, `crankNicolson_pow_mem`: a closed subspace `Kₕ ⊆ Xₕ` with `Lₕ Kₕ ⊆ Kₕ` is
-kept by every iterate. **Energy conservation**: for a skew FEEC discretization,
-`SkewFEEC.norm_crankNicolson_pow_apply`: `‖Pₕⁿ v‖ = ‖v‖`. **The linear systems of
-Crank–Nicolson**: in a basis of `Xₕ`, the iterate `Pₕ v` is the unique solution of the signed
-system `diag(ε) (M + (τₕ/2) K) w = diag(ε) (M - (τₕ/2) K) c(v)` (Gram matrix `M`, stiffness `K`
-of `Lₕ`; `DissipFEEC.crankNicolson_signed_mulVec_iff`), Hermitian for a skew discretization and
-signs adapted to the basis, so MINRES solves it (`SkewFEEC.crankNicolson_signed`,
-`Feec.TimeStepping.BlockMatrix`). **Explicit leapfrog** (a two-step scheme,
-outside `TimeScheme`): `SkewFEEC.norm_S_sub_leapfrog_le` (any first step `u₁`) and
-`SkewFEEC.norm_S_sub_leapfrog_euler_le` (`u₁ = v + τ Lₕ v`): under the CFL condition
-`τ ‖Lₕ‖ ≤ c < 1` the error is the semidiscrete rate plus a second-order temporal error.
+* `dissipFEEC_fullyDiscrete`: the fully discrete FEEC theorem.
+* `DissipFEEC.TimeScheme.norm_S_sub_sol_le_of_smooth`: from `v = pₕ(0)`, `O(hᵅ + τₕᵖ)`.
+* `DissipFEEC.TimeScheme.norm_S_sub_sol_le_uniform`: from `v = pₕ(0)`, `O(hᵅ + τₕ^{p/(p+2)})`.
+* `SkewFEEC.norm_crankNicolson_pow_apply`: energy conservation of Crank–Nicolson.
+* `SkewFEEC.norm_S_sub_leapfrog_le`: explicit leapfrog under a CFL condition.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1 (the
-  Ritz projection of the exact solution as comparison), Ch. 7–9 (fully discrete schemes: spatial
-  plus temporal error)
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 * [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 8 (time discretization of
-  Hodge evolution problems)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
-  (leapfrog: discrete energy and CFL stability)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (Crank–Nicolson for the Einstein–Bianchi system)
-* [C. C. Paige, M. A. Saunders, *Solution of sparse indefinite systems of linear equations*][PaigeSaunders1975]
-  (MINRES)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -143,18 +50,10 @@ namespace DissipFEEC
 
 variable {A : E →ₗ.[𝕜] E} {κ : Type*} (F : DissipFEEC.{u} A κ)
 
-/-- A **time scheme** for the dissipative FEEC discretization `F`: a time scheme
-(`Feec.TimeStepping.TimeScheme`) of its discrete generators, i.e. time steps `τₕ > 0` and one-step
-operators `Pₕ` on the discrete spaces, power bounded on every horizon `[0, T]` by `M T`
-(`‖Pₕⁿ‖ ≤ M T` for `n τₕ ≤ T`, so quasi-contractive schemes, `M T = e^{ωT}`, are admitted) and
-consistent of order `p ≥ 1` with constant `K` with the discrete flows `e^{τₕ Lₕ}`, all uniformly in
-`h`; the same schemes as those of the Banach FEEC discretization `F.toBanachFEEC`.
-[Thomee2006], Ch. 7 -/
+/-- A time scheme of `F`: power bounded one-step operators `Pₕ`, consistent uniformly in `h`. -/
 abbrev TimeScheme := TimeStepping.TimeScheme F.L
 
-/-- **A dissipative FEEC discretization is a Banach FEEC discretization**: forget the inner
-products; the exact flow (Lumer–Phillips) and the discrete flows `e^{tLₕ}` (dissipative `Lₕ`) are
-contractions, so `M = 1`. -/
+/-- A dissipative FEEC discretization as a Banach FEEC discretization, with `M = 1`. -/
 abbrev toBanachFEEC [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
     TimeStepping.BanachFEEC.{u} F.isMDissipative.semigroup κ where
   l := F.l
@@ -171,7 +70,6 @@ abbrev toBanachFEEC [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ �
 @[simp] theorem toBanachFEEC_M [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
     F.toBanachFEEC.M = 1 := rfl
 
-/-- `‖e^{tLₕ}‖ ≤ 1` for `t ≥ 0` (dissipative `Lₕ`). -/
 theorem norm_exp_le_one (h : κ) (t : ℝ) (ht : 0 ≤ t) : ‖exp ((t : 𝕜) • F.L h)‖ ≤ 1 :=
   TimeStepping.norm_exp_le_one (F.dissipative h) ht
 
@@ -181,14 +79,11 @@ variable {F}
 def TimeScheme.sol (Θ : F.TimeScheme) (h : κ) (v : F.X h) (n : ℕ) : E :=
   F.incl h ((Θ.P h ^ n) v)
 
-/-- The time scheme `Θ` is **consistent of order `p` along trajectories** with constant `K`,
-uniformly in `h` (`TimeStepping.IsTrajConsistent`). -/
+/-- `Θ` is consistent of order `p` along trajectories with constant `K`, uniformly in `h`. -/
 abbrev TimeScheme.IsTrajConsistent (Θ : F.TimeScheme) (K : ℝ) : Prop :=
   ∀ h, TimeStepping.IsTrajConsistent (F.L h) (Θ.P h) (Θ.τ h) Θ.p K
 
-/-- A comparison `𝒞` on `[0, T]` is **smooth of order `q`** on the data `Data`: its trajectories
-have right derivatives of every order `< q`, `D j` the `j`-th (`D 0 = pₕ`, `D 1 = pₕ'`), and the
-`q`-th is bounded by `B x` uniformly in `h` and `t ∈ [0, T]`. -/
+/-- A comparison smooth of order `q`: right derivatives `D j`, the `q`-th bounded by `B x`. -/
 structure Comparison.Smooth {T : ℝ} (𝒞 : F.Comparison T) (q : ℕ) where
   /-- the smooth data -/
   Data : Set E
@@ -219,10 +114,6 @@ namespace TimeScheme
 
 variable (Θ : F.TimeScheme)
 
-/-- **1. Stability**: `‖ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) ‖v‖` for `n τₕ ≤ T`. `Θ.sol` is definitionally the
-fully discrete solution `BanachFEEC.TimeScheme.sol` of `F.toBanachFEEC`, and this is its field
-`stable_iterates`; it is proved directly because it holds without completeness of `E`, which
-`F.toBanachFEEC` (the Lumer–Phillips semigroup) needs (likewise `norm_sol_sub_sol_le`). -/
 theorem norm_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖Θ.sol h v n‖ ≤ ‖F.incl h‖ * Θ.M T * ‖v‖ := by
   rw [mul_assoc]
@@ -230,9 +121,6 @@ theorem norm_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * �
   exact ((Θ.P h ^ n).le_opNorm v).trans
     (mul_le_mul_of_nonneg_right (Θ.stable T h n hn) (norm_nonneg _))
 
-/-- The temporal error in `Xₕ` against any smoother datum `w`:
-`‖e^{tₙ Lₕ} v - Pₕⁿ v‖ ≤ (1 + M(T)) ‖v - w‖ + M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} w‖` (the contraction case,
-`M_L = 1`, of `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le`). -/
 theorem norm_exp_sub_pow_le {T : ℝ} (h : κ) (v w : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) v - (Θ.P h ^ n) v‖ ≤
@@ -240,11 +128,6 @@ theorem norm_exp_sub_pow_le {T : ℝ} (h : κ) (v w : F.X h) {n : ℕ}
         Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) w‖ := by
   simpa using TimeStepping.TimeScheme.norm_exp_sub_pow_le Θ (F.norm_exp_le_one h) v w hn
 
-/-- **The temporal error of a slowly varying datum**: if `‖e^{sLₕ} u - u‖ ≤ η` for `s ∈ [0, δ]`,
-then `‖e^{tₙ Lₕ} u - Pₕⁿ u‖ ≤ (1 + M(T)) (p + 1) η + M(T) K tₙ τₕᵖ (2/δ)^{p+1} ‖u‖` for `tₙ ≤ T`:
-`u` is compared with the smoothed `A_δ^{p+1} u` (`TimeStepping.timeAvg`), so no power of `Lₕ`
-enters (the contraction case of `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg`).
-[BrennerThomee1979] -/
 theorem norm_exp_sub_pow_le_of_timeAvg {T δ η : ℝ} (h : κ) (u : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) (hδ : 0 < δ)
     (hη : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • F.L h) u - u‖ ≤ η) :
@@ -257,10 +140,6 @@ theorem norm_exp_sub_pow_le_of_timeAvg {T δ η : ℝ} (h : κ) (u : F.X h) {n :
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **2. The temporal error**: `‖ιₕ e^{tₙ Lₕ} v - ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} v‖`
-for `tₙ ≤ T` (the Banach-space bound `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le` at
-`‖e^{tLₕ}‖ ≤ 1`; the field `temporal_iterates` of `banachFEEC F.toBanachFEEC` when `E` is
-complete, `F.sol` being definitionally `BanachFEEC.sol`). [BrennerThomee1979] -/
 theorem norm_sol_sub_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖F.sol h v (n * Θ.τ h) - Θ.sol h v n‖ ≤
@@ -270,8 +149,6 @@ theorem norm_sol_sub_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ}
   have := Θ.norm_exp_sub_pow_le h v v hn
   simpa [DissipFEEC.group] using this
 
-/-- **3. The fully discrete rate**: the spatial rate of the semidiscrete verdict plus the temporal
-error, at every time level `tₙ ∈ [0, T]`. [Thomee2006], Ch. 7 -/
 theorem norm_S_sub_sol_le {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data) (h : κ)
     (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
     ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
@@ -283,16 +160,6 @@ theorem norm_S_sub_sol_le {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Da
   rw [toBanachFEEC_M, mul_one] at h2
   exact h2.trans (add_le_add h1 le_rfl)
 
-/-- **4. Fully discrete convergence for every datum** (the Lax equivalence theorem in the
-Brenner–Thomée form): on the closure of the core, for every family `ιₕ vₕ → x` and time steps
-`τₕ → 0`, the fully discrete solutions converge to `S(tₙ) x`, uniformly over the time levels
-`tₙ = n τₕ ∈ [0, T]`. No discrete smoothness of `vₕ` is assumed: `vₕ` is compared with the
-smoothed `wₕ = A_δ^{p+1} vₕ` (`TimeStepping.timeAvg`), `‖Lₕ^{p+1} wₕ‖ ≤ (2/δ)^{p+1} ‖vₕ‖`, and
-`‖vₕ - wₕ‖` is small uniformly in `h` because the semidiscrete orbits are uniformly continuous at
-`0` (from the semidiscrete convergence and the stability `‖v‖ ≤ C ‖ιₕ v‖`): the
-Banach-space theorem `BanachFEEC.TimeScheme.converges` (field `converges_iterates` of
-`banachFEEC`) for `F.toBanachFEEC`, with the semidiscrete convergence of `dissipFEEC_converges`.
-[BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h}
     (hv : F.Converges v x) (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∀ n : ℕ, (n : ℝ) * Θ.τ h ∈ Icc 0 T →
@@ -300,16 +167,11 @@ theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v
   (TimeStepping.banachFEEC F.toBanachFEEC).converges_iterates Θ
     (fun T' => dissipFEEC_converges F Z T' hx hv) hτ T hε
 
-/-- **5. The constraint residual** of a kept `K` is at most the fully discrete error from any
-`x ∈ K`. -/
 theorem infDist_sol_le (hK : F.Keeps F.K) {x : E} (hxK : x ∈ F.K) (h : κ) (v : F.X h) (n : ℕ) :
     infDist (Θ.sol h v n) F.K ≤ ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ := by
   rw [norm_sub_rev, ← dist_eq_norm]
   exact infDist_le_dist_of_mem (hK _ (mul_nonneg (Nat.cast_nonneg n) (Θ.τ_pos h).le) x hxK)
 
-/-- **5. The constraint residual tends to `0`**: for a kept `K`, `x ∈ K` in the closure of the
-core, `ιₕ vₕ → x` and `τₕ → 0`, `dist(ιₕ Pₕⁿ vₕ, K) → 0` uniformly over the time levels in
-`[0, T]`. -/
 theorem residual_tendsto (hK : F.Keeps F.K) (Z : F.Core) {x : E} (hxK : x ∈ F.K)
     (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x)
     (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
@@ -318,10 +180,6 @@ theorem residual_tendsto (hK : F.Keeps F.K) (Z : F.Core) {x : E} (hxK : x ∈ F.
   exact (Θ.infDist_sol_le hK hxK h (v h) n).trans_lt (hh n hn)
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **The temporal error along a smooth comparison**: for a scheme consistent of order `p` along
-trajectories with constant `K` and a comparison smooth of order `p + 1` with defect `≤ δ` on
-`[0, T]`, `‖pₕ(tₙ) - Pₕⁿ v‖ ≤ M(T) (‖pₕ(0) - v‖ + tₙ (K τₕᵖ B x + δ))` for `tₙ ≤ T`: no power of
-`Lₕ` enters, only the time derivatives of the comparison. [Thomee2006], Ch. 1 and 7 -/
 theorem norm_p_sub_pow_le {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T : ℝ} {𝒞 : F.Comparison T}
     (Sm : 𝒞.Smooth (Θ.p + 1)) {x : E} (hx : x ∈ Sm.Data) (h : κ) (v : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) {δ : ℝ} (hδ : ∀ t ∈ Icc 0 T, ‖𝒞.defect x h t‖ ≤ δ) :
@@ -357,13 +215,8 @@ theorem norm_p_sub_pow_le {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T : ℝ} {�
   rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
   ring
 
-/-- **6. The fully discrete rate from static estimates**: for a scheme consistent of order `p`
-along trajectories with constant `K` (`thetaScheme_isTrajConsistent`,
-`crankNicolson_isTrajConsistent`) and a rate class whose comparison is smooth of order `p + 1`
-(`Ritz.smooth`), at `tₙ ∈ [0, T]`,
-`‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ C hᵅ ‖x‖_c + ‖ιₕ‖ M(T) (‖pₕ(0) - v‖ + tₙ (K τₕᵖ B x + C' hᵅ ‖x‖_c))`:
-`O(hᵅ + τₕᵖ)` uniformly in `h`, with no bound on `‖Lₕ^{p+1} v‖`. [Thomee2006], Ch. 1 and 7;
-[Wheeler1973] -/
+/-- **The fully discrete rate from static estimates**: for schemes consistent along trajectories and
+smooth comparisons, from `v = pₕ(0)`, the spatial rate plus `O(τₕᵖ)`. [Thomee2006], Ch. 1, 7 -/
 theorem norm_S_sub_sol_le_of_smooth {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T : ℝ}
     (R : F.RateClass T) (Sm : R.toComparison.Smooth (Θ.p + 1)) {x : E} (hx : x ∈ R.Data)
     (hxs : x ∈ Sm.Data) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
@@ -379,22 +232,12 @@ theorem norm_S_sub_sol_le_of_smooth {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T :
       rw [TimeScheme.sol, ← _root_.map_sub, mul_assoc]
       exact ((F.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left h2 (norm_nonneg _))
 
-/-- The consistency bound of a rate class is nonnegative on its data. -/
 theorem _root_.Feec.HilbertComplex.DissipFEEC.RateClass.C'_mul_nonneg {T : ℝ} (R : F.RateClass T)
     (hT : 0 ≤ T) {x : E} (hx : x ∈ R.Data) (h : κ) :
     0 ≤ R.C' * (R.meshSize h ^ R.α * R.classNorm x) := by
   have := (norm_nonneg _).trans (R.consistency x hx h 0 ⟨le_rfl, hT⟩)
   rwa [mul_assoc] at this
 
-/-- **7. The fully discrete rate for every datum of a rate class in `D(A)`, by smoothing**: for
-`0 < δ ≤ T` and `tₙ ∈ [0, T]`, with `e = hᵅ ‖x‖_c`, `C_F` the uniform bound of `F`
-(`DissipFEEC.boundConst`) and `pₕ = pₕ(0)`,
-`‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ (C + ‖ιₕ‖ C' tₙ) e + ‖ιₕ‖ (M(T) ‖pₕ - v‖`
-`+ (1 + M(T)) (p + 1) C_F ((2C + ‖ιₕ‖ C' δ) e + δ ‖A x‖) + M(T) K tₙ τₕᵖ (2/δ)^{p+1} ‖pₕ‖)`.
-The scheme is tested on `A_δ^{p+1} pₕ` (`norm_exp_sub_pow_le_of_timeAvg`); the semidiscrete
-orbit from `pₕ` moves by at most `C_F ((2C + ‖ιₕ‖ C' δ) e + δ ‖A x‖)` on `[0, δ]` because it is
-`O(e)`-close to `S(s) x` and `‖S(s) x - x‖ ≤ s ‖A x‖`. Every term is uniform in `h`: no power
-of `Lₕ` and no smoothness of the comparison enter. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem norm_S_sub_sol_le_of_timeAvg {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data)
     (hxA : x ∈ A.domain) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) {δ : ℝ}
     (hδ : 0 < δ) (hδT : δ ≤ T) :
@@ -454,15 +297,8 @@ theorem norm_S_sub_sol_le_of_timeAvg {T : ℝ} (R : F.RateClass T) {x : E} (hx :
   refine (norm_add_le _ _).trans ?_
   linarith
 
-/-- **7. The fully discrete rate, uniform in `h`, for every datum of a rate class in `D(A)`**:
-`norm_S_sub_sol_le_of_timeAvg` at `δ = τₕ^θ`, `θ = p/(p + 2)`: for `τₕ^θ ≤ T` and
-`tₙ ∈ [0, T]`, with `e = hᵅ ‖x‖_c` and `pₕ = pₕ(0)`,
-`‖S(tₙ) x - ιₕ Pₕⁿ v‖ ≤ (C + ‖ιₕ‖ C' tₙ) e + ‖ιₕ‖ (M(T) ‖pₕ - v‖`
-`+ (1 + M(T)) (p + 1) C_F (2C + ‖ιₕ‖ C' T) e`
-`+ τₕ^θ ((1 + M(T)) (p + 1) C_F ‖A x‖ + M(T) K tₙ 2^{p+1} ‖pₕ‖))`,
-so `O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h` from `v = pₕ(0)` (`‖ιₕ‖ ≤ C_F`, `‖pₕ(0)‖` is bounded
-by `C_F (‖x‖ + C e)`): for every time scheme, with no smoothness beyond `x ∈ D(A)`. The order
-`p/(p + 2)` is not sharp. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
+/-- **The fully discrete rate for every datum of a rate class in `D(A)`**: from `v = pₕ(0)`, the
+error is `O(hᵅ + τₕ^{p/(p+2)})`, uniformly in `h`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem norm_S_sub_sol_le_uniform {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data)
     (hxA : x ∈ A.domain) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T)
     (hτT : Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) ≤ T) :
@@ -504,24 +340,16 @@ theorem norm_S_sub_sol_le_uniform {T : ℝ} (R : F.RateClass T) {x : E} (hx : x 
   rw [e3, hpow]
   nlinarith
 
-/-- The **forced fully discrete solution** `ιₕ Wₙ`: the forced iterates `W₀ = v`,
-`Wₙ₊₁ = Pₕ Wₙ + gₙ` (`TimeStepping.forcedIter`) of the scheme with the load `g`. -/
+/-- The forced fully discrete solution `ιₕ Wₙ`: `W₀ = v`, `Wₙ₊₁ = Pₕ Wₙ + gₙ`. -/
 def forcedSol (h : κ) (v : F.X h) (g : ℕ → F.X h) (n : ℕ) : E :=
   F.incl h (TimeStepping.forcedIter (Θ.P h) v g n)
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- Without load, the forced solution is the fully discrete solution. -/
 @[simp] theorem forcedSol_zero_load (h : κ) (v : F.X h) (n : ℕ) :
     Θ.forcedSol h v 0 n = Θ.sol h v n := by
   simp [forcedSol, sol]
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **8. Forced iterates**: for every target `y` (the exact value at `tₙ`) and every comparison
-sequence `wₖ` in `Xₕ`,
-`‖y - ιₕ Wₙ‖ ≤ ‖y - ιₕ wₙ‖ + ‖ιₕ‖ M(T) (‖v - w₀‖ + Σ_{k<n} ‖wₖ₊₁ - Pₕ wₖ - gₖ‖)` for
-`tₙ ≤ T` (the discrete Duhamel formula, `TimeStepping.norm_forcedIter_sub_le`). This is
-stability only: the load `g` is arbitrary, and no consistency bound ties it to a forcing.
-[Thomee2006], Ch. 8 -/
 theorem norm_sub_forcedSol_le {T : ℝ} (h : κ) (v : F.X h) (g w : ℕ → F.X h) (y : E) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖y - Θ.forcedSol h v g n‖ ≤ ‖y - F.incl h (w n)‖ + ‖F.incl h‖ *
@@ -536,13 +364,6 @@ theorem norm_sub_forcedSol_le {T : ℝ} (h : κ) (v : F.X h) (g w : ℕ → F.X 
         norm_sub_le_norm_sub_add_norm_sub _ _ _
     _ ≤ _ := by gcongr; exact h2.trans (mul_le_mul_of_nonneg_left h1 (norm_nonneg _))
 
-/-- **9. Inhomogeneous boundary data**: for `A ≤ A_max`, a lifting `G` (`G' = DG`,
-`A_max G = AG`) on `[0, T]` and a solution `U` of `U' = A_max U + f` with the boundary values of
-`G` and continuous `f - G' + A_max G`, the lifted iterates `Gₕ,ₙ + ιₕ Wₙ` (any discrete lifting
-`Gₕ,ₙ`, `Wₙ` forced by `g`) satisfy
-`‖U(tₙ) - (Gₕ,ₙ + ιₕ Wₙ)‖ ≤ ‖G(tₙ) - Gₕ,ₙ‖ + (forced error of 8)` for the mild solution
-`U - G = S(·)(U(0) - G(0)) + ∫₀^· S(· - s)(f - G' + A_max G)(s) ds`
-(`Feec.Evolution.IsBoundarySolution.eq_add_mild`). [QuennevilleBelair2015], Ch. 7 -/
 theorem norm_sub_lifted_le {Amax : E →ₗ.[𝕜] E} (hle : A ≤ Amax) {T : ℝ} {G DG AG f U : ℝ → E}
     (hG : Evolution.IsLifting Amax (Icc 0 T) G DG AG)
     (hU : Evolution.IsBoundarySolution Amax A (Icc 0 T) f G U)
@@ -556,47 +377,42 @@ theorem norm_sub_lifted_le {Amax : E →ₗ.[𝕜] E} (hle : A ≤ Amax) {T : �
     hn, add_sub_add_comm]
   exact (norm_add_le _ _).trans (add_le_add le_rfl (Θ.norm_sub_forcedSol_le h v g w _ hn.2))
 
-/-- The conclusions of the fully discrete FEEC theorem (`dissipFEEC_fullyDiscrete`) for the
-time scheme `Θ` and the core `Z`: the semidiscrete verdict, and stability, temporal error, rate,
-convergence and constraint residuals of the iterates `ιₕ Pₕⁿ v`, and their rate along smooth
-comparisons and, uniformly in `h`, for every datum of a rate class in `D(A)`; the error of
-forced iterates and of lifted iterates for inhomogeneous boundary data. -/
+/-- The conclusions of the fully discrete FEEC theorem for the time scheme `Θ` and the core `Z`. -/
 structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
-  /-- the iterates are stable on every horizon `[0, T]` -/
+  /-- stability on every horizon `[0, T]` -/
   stable_iterates {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖Θ.sol h v n‖ ≤ ‖F.incl h‖ * Θ.M T * ‖v‖
-  /-- the temporal error against the semidiscrete solution -/
+  /-- the temporal error -/
   temporal_iterates {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖F.sol h v (n * Θ.τ h) - Θ.sol h v n‖ ≤
       ‖F.incl h‖ * (Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) v‖)
-  /-- the fully discrete rate: spatial rate plus temporal error -/
+  /-- the spatial rate plus the temporal error -/
   rate_iterates {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data) (h : κ) (v : F.X h)
     {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) : ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤
       (R.C + ‖F.incl h‖ * R.C' * (n * Θ.τ h)) * (R.meshSize h ^ R.α * R.classNorm x) +
         ‖F.incl h‖ * ‖R.p x h 0 - v‖ +
         ‖F.incl h‖ * (Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) v‖)
-  /-- convergence over the time levels in `[0, T]` for every convergent family, as `τₕ → 0` -/
+  /-- convergence on the closure of the core as `τₕ → 0` -/
   converges_iterates {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h}
     (hv : F.Converges v x) (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∀ n : ℕ, (n : ℝ) * Θ.τ h ∈ Icc 0 T →
       ‖F.S (n * Θ.τ h) x - Θ.sol h (v h) n‖ < ε
-  /-- the residual of a kept constraint is at most the fully discrete error -/
+  /-- the residual of a kept constraint is at most the error -/
   residual_le_iterates (hK : F.Keeps F.K) {x : E} (hxK : x ∈ F.K) (h : κ) (v : F.X h) (n : ℕ) :
     infDist (Θ.sol h v n) F.K ≤ ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖
-  /-- the residual of a kept constraint tends to `0` over the time levels in `[0, T]` -/
+  /-- the residual of a kept constraint tends to `0` -/
   residual_tendsto_iterates (hK : F.Keeps F.K) {x : E} (hxK : x ∈ F.K)
     (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h} (hv : F.Converges v x)
     (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∀ n : ℕ, (n : ℝ) * Θ.τ h ∈ Icc 0 T → infDist (Θ.sol h (v h) n) F.K < ε
-  /-- the fully discrete rate along a smooth comparison: spatial rate plus `O(τₕᵖ)`, uniformly -/
+  /-- the rate along a smooth comparison -/
   rate_smooth_iterates {K : ℝ} (hΘ : Θ.IsTrajConsistent K) {T : ℝ} (R : F.RateClass T)
     (Sm : R.toComparison.Smooth (Θ.p + 1)) {x : E} (hx : x ∈ R.Data) (hxs : x ∈ Sm.Data) (h : κ)
     (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T) :
     ‖F.S (n * Θ.τ h) x - Θ.sol h v n‖ ≤ R.C * R.meshSize h ^ R.α * R.classNorm x +
       ‖F.incl h‖ * Θ.M T * (‖R.p x h 0 - v‖ +
         n * Θ.τ h * (K * Θ.τ h ^ Θ.p * Sm.B x + R.C' * R.meshSize h ^ R.α * R.classNorm x))
-  /-- the fully discrete rate for every datum of a rate class in `D(A)`: spatial rate plus
-  `O(τₕ^{p/(p+2)})`, uniformly in `h`, for every time scheme -/
+  /-- the rate for every datum of a rate class in `D(A)` -/
   rate_uniform_iterates {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Data)
     (hxA : x ∈ A.domain) (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ∈ Icc 0 T)
     (hτT : Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) ≤ T) :
@@ -607,16 +423,12 @@ structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
             (R.meshSize h ^ R.α * R.classNorm x) +
           Θ.τ h ^ ((Θ.p : ℝ) / (Θ.p + 2)) * ((1 + Θ.M T) * (Θ.p + 1) * F.boundConst *
             ‖genExt A x‖ + Θ.M T * Θ.K * (n * Θ.τ h) * 2 ^ (Θ.p + 1) * ‖R.p x h 0‖))
-  /-- the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ` against every comparison sequence: the comparison
-  error plus the stability constant times the initial and the summed consistency errors
-  (stability only; no rate for a discretized load) -/
+  /-- the error of forced iterates -/
   forced_iterates {T : ℝ} (h : κ) (v : F.X h) (g w : ℕ → F.X h) (y : E) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖y - Θ.forcedSol h v g n‖ ≤ ‖y - F.incl h (w n)‖ + ‖F.incl h‖ *
       (Θ.M T * (‖v - w 0‖ + ∑ k ∈ Finset.range n, ‖w (k + 1) - Θ.P h (w k) - g k‖))
-  /-- inhomogeneous boundary data: the solution is the lifting plus the mild solution with the
-  forcing `f - G' + A_max G`, and the lifted iterates have the lifting error plus the forced
-  error -/
+  /-- the error of lifted iterates for inhomogeneous boundary data -/
   lifted_iterates {Amax : E →ₗ.[𝕜] E} (hle : A ≤ Amax) {T : ℝ} {G DG AG f U : ℝ → E}
     (hG : Evolution.IsLifting Amax (Icc 0 T) G DG AG)
     (hU : Evolution.IsBoundarySolution Amax A (Icc 0 T) f G U)
@@ -629,18 +441,8 @@ structure Verdict (Z : F.Core) : Prop extends toDissip : F.Verdict Z where
 
 end TimeScheme
 
-/-- **The fully discrete FEEC theorem.** For a dissipative FEEC discretization `F` with an
-orbit-consistent core `Z` and a time scheme `Θ` (power bounded by `M(T)` on `[0, T]`, consistent
-of order `p ≥ 1` with constant `K`, uniformly in `h`): the semidiscrete verdict holds, and the
-iterates `ιₕ Pₕⁿ v` are stable, have temporal error `‖ιₕ‖ M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, converge at
-the spatial rate plus the temporal error, converge on the closure of the core for every
-convergent family as `τₕ → 0`, and have constraint residuals bounded by the error and tending to
-`0`; for schemes consistent along trajectories and smooth comparisons, the rate is
-`O(hᵅ + τₕᵖ)` uniformly in `h`, and for every scheme and every datum of a rate class in `D(A)` it
-is `O(hᵅ + τₕ^{p/(p+2)})` uniformly in `h`; forced iterates have the comparison error plus the
-summed consistency defects, and inhomogeneous boundary data reduce to forcing by a lifting.
-[BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018],
-Ch. 8 -/
+/-- **The fully discrete FEEC theorem** `TimeScheme.Verdict` for an orbit-consistent core and a
+time scheme. [BrennerThomee1979]; [Thomee2006], Ch. 7–9; [Arnold2018], Ch. 8 -/
 theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [NormedSpace ℝ E]
     [IsScalarTower ℝ 𝕜 E] (Z : F.Core) (Θ : F.TimeScheme) : Θ.Verdict Z where
   toDissip := dissipFEEC F Z
@@ -663,9 +465,7 @@ theorem _root_.Feec.HilbertComplex.dissipFEEC_fullyDiscrete [CompleteSpace E] [N
 
 variable (F)
 
-/-- **The θ-scheme** (`θ ≥ 1/2` real) as a time scheme: `Pₕ = r_θ(τₕ Lₕ)`, unconditionally
-stable (`M = 1`), order `1` with `K = θ + 1/2`; `θ = 1` is implicit Euler.
-[Thomee2006], Ch. 7 -/
+/-- The θ-scheme `r_θ(τₕ Lₕ)`, `θ ≥ 1/2`: `M = 1`, order `1`, `K = θ + 1/2`. [Thomee2006], Ch. 7 -/
 def thetaScheme (θ : ℝ) (hθ : 1 / 2 ≤ θ) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme where
   τ := τ
   τ_pos := hτ
@@ -679,9 +479,7 @@ def thetaScheme (θ : ℝ) (hθ : 1 / 2 ≤ θ) (τ : κ → ℝ) (hτ : ∀ h, 
   K_nonneg := by linarith
   consistent h := TimeStepping.isConsistent_thetaStep (F.dissipative h) (by linarith) (hτ h)
 
-/-- **Crank–Nicolson** as a time scheme: `Pₕ = cayley(Lₕ, τₕ/2)` (`Feec.TimeStepping.cayley`),
-unconditionally stable (`M = 1`), order `2` with `K = 5/12`. [QuennevilleBelair2015], Ch. 7;
-[Thomee2006], Ch. 7 -/
+/-- Crank–Nicolson `Pₕ = cayley(Lₕ, τₕ/2)`: `M = 1`, order `2`, `K = 5/12`. [Thomee2006], Ch. 7 -/
 def crankNicolson (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme where
   τ := τ
   τ_pos := hτ
@@ -699,8 +497,6 @@ def crankNicolson (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme where
     rw [TimeStepping.cayley_half_eq_thetaStep]
     exact TimeStepping.isConsistent_thetaStep_half (F.dissipative h) (hτ h)
 
-/-- **Discrete constraint propagation for the θ-scheme**: a closed subspace `Kₕ ⊆ Xₕ` with
-`Lₕ Kₕ ⊆ Kₕ` is kept by every iterate `Pₕⁿ`. [QuennevilleBelair2015], Prop 4.18 -/
 theorem thetaScheme_pow_mem {θ : ℝ} (hθ : 1 / 2 ≤ θ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ)
     {Kh : Submodule 𝕜 (F.X h)} (hKc : IsClosed (Kh : Set (F.X h)))
     (hLK : ∀ x ∈ Kh, F.L h x ∈ Kh) {v : F.X h} (hv : v ∈ Kh) (n : ℕ) :
@@ -712,8 +508,6 @@ theorem thetaScheme_pow_mem {θ : ℝ} (hθ : 1 / 2 ≤ θ) {τ : κ → ℝ} (h
     exact TimeStepping.thetaStep_mem_of_mapsTo (F.dissipative h) hKc hLK
       (by rw [RCLike.ofReal_re]; linarith) (hτ h) ih
 
-/-- **Discrete constraint propagation for Crank–Nicolson**: a closed subspace `Kₕ ⊆ Xₕ` with
-`Lₕ Kₕ ⊆ Kₕ` is kept by every iterate. [QuennevilleBelair2015], Prop 4.18 -/
 theorem crankNicolson_pow_mem {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ)
     {Kh : Submodule 𝕜 (F.X h)} (hKc : IsClosed (Kh : Set (F.X h)))
     (hLK : ∀ x ∈ Kh, F.L h x ∈ Kh) {v : F.X h} (hv : v ∈ Kh) (n : ℕ) :
@@ -727,14 +521,10 @@ theorem crankNicolson_pow_mem {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ)
     exact TimeStepping.thetaStep_mem_of_mapsTo (F.dissipative h) hKc hLK
       (by rw [RCLike.ofReal_re]; norm_num) (hτ h) ih
 
-/-- **The θ-scheme is consistent of order `1` along trajectories** (`1/2 ≤ θ ≤ 1`) with constant
-`θ + 1/2`, uniformly in `h`. [Thomee2006], Ch. 1 -/
 theorem thetaScheme_isTrajConsistent {θ : ℝ} (hθ : 1 / 2 ≤ θ) (hθ1 : θ ≤ 1) {τ : κ → ℝ}
     (hτ : ∀ h, 0 < τ h) : (F.thetaScheme θ hθ τ hτ).IsTrajConsistent (θ + 1 / 2) := fun h =>
   TimeStepping.isTrajConsistent_thetaStep (F.dissipative h) (by linarith) hθ1 (hτ h)
 
-/-- **Crank–Nicolson is consistent of order `2` along trajectories** with constant `1/12`,
-uniformly in `h`. [Thomee2006], Ch. 1 -/
 theorem crankNicolson_isTrajConsistent {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) :
     (F.crankNicolson τ hτ).IsTrajConsistent (1 / 12) := fun h => by
   change TimeStepping.IsTrajConsistent _ (TimeStepping.cayley _ (τ h / 2)) _ 2 _
@@ -749,12 +539,7 @@ variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
   {G : Type*} [NormedAddCommGroup G] [NormedSpace 𝕜 G] [NormedSpace ℝ G] [IsScalarTower ℝ 𝕜 G]
   {F} {Λ : F.Lift G}
 
-/-- **A Ritz projection is a smooth comparison**: on data `S` whose iterates `Aʲ x`, `j < q`, are
-data of the lift, the trajectory `pₕ(t) = Rₕ ℓ(S(t) x)` has the right derivatives
-`Rₕ ℓ(S(t) Aʲ x)`, and with `‖Rₕ‖ ≤ C` and `‖ℓ(S(t) A^q x)‖ ≤ B x` on `[0, T]` the `q`-th is
-bounded by `C B x`, uniformly in `h`. For the identity lift (`Lift.ofDomain`), `S = D(A^q)` and
-`B x = ‖A^q x‖` (`S(t)` is a contraction, `norm_S_apply_le`): the temporal error of
-`TimeScheme.norm_S_sub_sol_le_of_smooth` is `K τₕᵖ C ‖A^{p+1} x‖`. [Wheeler1973] -/
+/-- A Ritz projection `pₕ(t) = Rₕ ℓ(S(t) x)` is a smooth comparison. [Wheeler1973] -/
 def Ritz.smooth (𝓡 : F.Ritz Λ) (T : ℝ) (q : ℕ) (S : Set E)
     (hS : ∀ x ∈ S, ∀ j < q, (genExt A)^[j] x ∈ Λ.Data) {C : ℝ} (hC : ∀ h, ‖𝓡.R h‖ ≤ C)
     (B : E → ℝ) (hB : ∀ x ∈ S, ∀ t ∈ Icc 0 T, ‖Λ.lift (F.S t ((genExt A)^[q] x))‖ ≤ B x) :
@@ -778,8 +563,7 @@ end Ritz
 end DissipFEEC
 
 /-- **Energy conservation of fully discrete Crank–Nicolson** for a skew FEEC discretization:
-`‖Pₕⁿ v‖ = ‖v‖` (the Cayley transform of the skew `Lₕ` is unitary, `norm_cayley_pow_apply`).
-[QuennevilleBelair2015], Ch. 7 -/
+`‖Pₕⁿ v‖ = ‖v‖`. [QuennevilleBelair2015], Ch. 7 -/
 theorem SkewFEEC.norm_crankNicolson_pow_apply [CompleteSpace E] {A : E →ₗ.[𝕜] E} {κ : Type*}
     (F : SkewFEEC.{u} A κ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) (v : F.X h) (n : ℕ) :
     ‖((F.crankNicolson τ hτ).P h ^ n) v‖ = ‖v‖ :=
@@ -787,11 +571,6 @@ theorem SkewFEEC.norm_crankNicolson_pow_apply [CompleteSpace E] {A : E →ₗ.[�
     ((F.L h).isSkewAdjoint_toPMap_top_iff.2 (C0Group.adjoint_eq_neg_of_skew (F.skew h))) _ n v
 
 open Matrix in
-/-- **The Crank–Nicolson iterate in a basis**: for a basis `b` of `Xₕ` (finite-dimensional), with
-Gram (mass) matrix `M`, the stiffness `K` of `Lₕ` (`TimeStepping.stiffness`, `M c' = -K c` for
-`ξₕ' = Lₕ ξₕ`) and signs `ε i = ±1`, the signed system
-`diag(ε) (M + (τₕ/2) K) w = diag(ε) (M - (τₕ/2) K) c(v)` has the coefficients of the iterate
-`Pₕ v` of `DissipFEEC.crankNicolson` as its unique solution. [QuennevilleBelair2015], Ch. 7 -/
 theorem DissipFEEC.crankNicolson_signed_mulVec_iff {A : E →ₗ.[𝕜] E} {κ : Type*}
     (F : DissipFEEC.{u} A κ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {n : Type*} [Fintype n]
     [DecidableEq n] (b : Module.Basis n 𝕜 (F.X h)) (ε : n → ℝ) (hε : ∀ i, ε i * ε i = 1)
@@ -811,13 +590,6 @@ theorem DissipFEEC.crankNicolson_signed_mulVec_iff {A : E →ₗ.[𝕜] E} {κ :
   rw [← hw.unique hA.dissipative hs.le hP, LinearEquiv.apply_symm_apply]
 
 open Matrix in
-/-- **MINRES for fully discrete Crank–Nicolson** of a skew FEEC discretization: for a basis `b`
-of `Xₕ` and signs `ε i = ±1` such that basis functions of different signs are orthogonal and
-`Lₕ` couples only basis functions of opposite signs (a basis adapted to the parity of the form
-degree, `Lₕ = dₕ - dₕ*`), the signed matrix `diag(ε) (M + (τₕ/2) K)` is Hermitian and the
-coefficients of the iterate `Pₕ v` are the unique solution of its system
-(`TimeStepping.isHermitian_signed_cn`, `DissipFEEC.crankNicolson_signed_mulVec_iff`).
-[QuennevilleBelair2015], Ch. 7; [PaigeSaunders1975] -/
 theorem SkewFEEC.crankNicolson_signed [CompleteSpace E] {A : E →ₗ.[𝕜] E} {κ : Type*}
     (F : SkewFEEC.{u} A κ) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) {n : Type*} [Fintype n]
     [DecidableEq n] (b : Module.Basis n 𝕜 (F.X h)) (ε : n → ℝ) (hε : ∀ i, ε i * ε i = 1)
@@ -833,10 +605,8 @@ theorem SkewFEEC.crankNicolson_signed [CompleteSpace E] {A : E →ₗ.[𝕜] E} 
   ⟨TimeStepping.isHermitian_signed_cn b (F.skew h) ε hMε hKε _,
     F.toDissipFEEC.crankNicolson_signed_mulVec_iff hτ h b ε hε v⟩
 
-/-- **Explicit leapfrog for a skew FEEC discretization, under the CFL condition**
-`τ ‖Lₕ‖ ≤ c < 1` (on finite element spaces `‖Lₕ‖ ≲ h⁻¹`, so `τ ≲ h`): with `u₀ = v` and any
-first step `u₁`, the error at `tₙ = n τ ∈ [0, T]` is the semidiscrete rate plus
-`‖ιₕ‖ (√(1 + c) ‖u₁ - e^{τ Lₕ} v‖ / √(1 - c) + tₙ τ² ‖Lₕ³ v‖ / (3 (1 - c)))`. [Joly2003] -/
+/-- **Explicit leapfrog** for a skew FEEC discretization under the CFL condition `τ ‖Lₕ‖ ≤ c < 1`:
+the semidiscrete rate plus `O(‖w₁ - e^{τ Lₕ} v‖ + tₙ τ² ‖Lₕ³ v‖)`. [Joly2003] -/
 theorem SkewFEEC.norm_S_sub_leapfrog_le [CompleteSpace E] [NormedSpace ℝ E]
     [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E} {κ : Type*} (F : SkewFEEC.{u} A κ) {T : ℝ}
     (R : F.RateClass T) {x : E} (hx : x ∈ R.Data) (h : κ) (v : F.X h) {τ c : ℝ} (hτ : 0 ≤ τ)
@@ -874,10 +644,6 @@ theorem SkewFEEC.norm_S_sub_leapfrog_le [CompleteSpace E] [NormedSpace ℝ E]
       refine ((F.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left ?_ (norm_nonneg _))
       rwa [norm_sub_rev]
 
-/-- **Leapfrog started by one forward Euler step** `u₁ = v + τ Lₕ v` (the practical start, local
-error `τ²/2 ‖Lₕ² v‖`): under the CFL condition `τ ‖Lₕ‖ ≤ c < 1` the error at `tₙ ∈ [0, T]` is the
-semidiscrete rate plus `‖ιₕ‖ (√(1 + c) τ² ‖Lₕ² v‖ / (2 √(1 - c)) + tₙ τ² ‖Lₕ³ v‖ / (3 (1 - c)))`:
-second order. [Joly2003] -/
 theorem SkewFEEC.norm_S_sub_leapfrog_euler_le [CompleteSpace E] [NormedSpace ℝ E]
     [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E} {κ : Type*} (F : SkewFEEC.{u} A κ) {T : ℝ}
     (R : F.RateClass T) {x : E} (hx : x ∈ R.Data) (h : κ) (v : F.X h) {τ c : ℝ} (hτ : 0 ≤ τ)

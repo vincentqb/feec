@@ -8,69 +8,14 @@ public import Mathlib.MeasureTheory.Measure.Hausdorff
 /-!
 # Pullbacks along bi-Lipschitz maps of `ℝ³`
 
-Let `Φ` be a bi-Lipschitz homeomorphism of `ℝ³` (`BiLipschitz`: a bijection with `Φ` and `Φ⁻¹`
-`K`-Lipschitz) and `U, Ω ⊆ ℝ³` with `Φ(U) = Ω` (`x ∈ U ↔ Φ x ∈ Ω`). The `1`-form pullback carries
-`H̊(curl, Ω)` into `H̊(curl, U)` and the Piola transform carries `H(div, Ω)` into `H(div, U)`, row
-by row on `3 × 3` matrix fields, with the transformation rules of the exterior derivative. These
-are the transport results that move Weber compactness from a cube to a domain star-shaped with
-respect to a ball (`Feec.Models.StarShaped.EigenDense`).
-
-## Lipschitz calculus
-
-* Lipschitz maps of `ℝⁿ` send null sets to null sets (`volume_image_eq_zero_of_lipschitzWith`,
-  `μH[n] = volume`). Hence almost every `x` is *good*: `Φ` is differentiable at `x` and `Φ⁻¹` at
-  `Φ x` (Rademacher, `BiLipschitz.ae_good`), and there `D(Φ⁻¹)(Φ x) DΦ(x) = 1`
-  (`BiLipschitz.lipJac_symm_mul_lipJac`), `1 ≤ 6 K³ |det DΦ(x)|`
-  (`BiLipschitz.one_le_abs_det_lipJac`); everywhere `|det DΦ| ≤ 6 K³`.
-* **Change of variables** (`BiLipschitz.integral_image`, `BiLipschitz.integrableOn_image_iff`,
-  `BiLipschitz.integral_comp`): `∫_Ω g = ∫_U |det DΦ| g ∘ Φ`, from Mathlib's formula for injective
-  maps differentiable on a measurable set, applied to `U ∩ {Φ differentiable}`, whose complement in
-  `U` and its image are null.
-* **Mollification of Lipschitz functions** (`fderiv_molli_eq_integral_lineDeriv`,
-  `abs_fderiv_molli_le`, `ae_tendsto_fderiv_molli`, `eventually_isTest_molli`):
-  `∂ᵥ(f ⋆ ρ_m) = (∂ᵥ f) ⋆ ρ_m` (integration by parts for Lipschitz functions), bounded by the
-  Lipschitz constant, and converging almost everywhere to `∂ᵥ f` (Lebesgue differentiation).
-
-## The pullbacks
-
-* `pull1Fun Φ u = DΦᵀ (u_a ∘ Φ)` (the `1`-form pullback, row by row) and
-  `pull2Fun Φ w = adj(DΦ) (w_a ∘ Φ) = cof(DΦ)ᵀ (w_a ∘ Φ)` (the `2`-form pullback).
-* For smooth `F`, `curl (DFᵀ u ∘ F) = adj(DF) (curl u) ∘ F` (`curl_pullRow`: symmetry of second
-  derivatives and a cofactor identity) and its weak form (`integral_curl_pullRow`). For Lipschitz
-  `Φ` the weak form follows by mollifying `Φ` and dominated convergence
-  (`integral_curl_pullFun`): `D(Φ ⋆ ρ_m) → DΦ` almost everywhere and boundedly.
-* On `L²`: weighted pullbacks `u ↦ Σₖ Mᵢₖ uₖ ∘ Φ` with bounded measurable weights
-  (`BiLipschitz.wpull`), in particular `pull1`, `pull2`, the Jacobian pullback `pullJ`
-  (`f ↦ |det DΦ| f ∘ Φ`), the **Piola transform** `piola` (`|det DΦ| DΦ⁻¹ (u_a ∘ Φ)`) and the
-  **coefficient** `coeff` (`ε = |det DΦ| DΦ⁻¹ DΦ⁻ᵀ ∈ L^∞`, with `DΦ⁻¹ := D(Φ⁻¹) ∘ Φ`).
+For a bi-Lipschitz homeomorphism `Φ` of `ℝ³` with `Φ(U) = Ω`, the `1`-form pullback carries
+`H̊(curl, Ω)` into `H̊(curl, U)` and, for `|U|, |Ω| < ∞`, the Piola transform carries `H(div, Ω)`
+into `H(div, U)`, row by row on `3 × 3` matrix fields.
 
 ## Main results
 
-* **`BiLipschitz.pull1_mem_minimal_curl`**: `Φ^*` maps `D(curl_min(Ω))` into `D(curl_min(U))`
-  and `curl_min (Φ^* u) = Φ^♭ (curl_min u)`. On test fields this is `integral_curl_pullFun`,
-  `Φ^* u` being supported in the compact `Φ⁻¹(supp u) ⊆ U`
-  (`ConstCoeffOp.mem_minimal_of_maximal_of_support_subset`); then graph closure.
-* **`BiLipschitz.piola_mem_maximal_divT`**: if `div u ∈ L²(Ω)` (no boundary condition), then
-  `div (P u) = |det DΦ| (div u) ∘ Φ` in `L²(U)` (`|U|, |Ω| < ∞`, divergence in the form
-  `(gradᵗ)_max`): both sides become integrals over `Ω` against the Lipschitz test functions
-  `φ ∘ Φ⁻¹`, for which the weak divergence still holds (`integral_maximal_divT_lipschitz`).
-* **`BiLipschitz.coeff_pull1`**: `ε Φ^* = P`. **`BiLipschitz.coeff_coercive`**:
-  `‖v‖² / (54 K⁵) ≤ ⟪ε v, v⟫`. **`BiLipschitz.norm_le_norm_pull1`**: `‖u‖ ≤ √(54 K⁵) ‖Φ^* u‖`.
-
-`Φ` is assumed to be a bi-Lipschitz homeomorphism of all of `ℝ³`, as the radial maps of
-star-shaped domains are. No lower bound on `|det DΦ|` is assumed: it follows from the Lipschitz
-inverse.
-
-## References
-
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.8 (Lipschitz functions,
-  Rademacher's theorem), App. C.4 (mollifiers)
-* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
-  Ch. I, §3 (`H(curl)` and `H(div)`)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
-  (pullbacks of differential forms, Piola transforms)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `BiLipschitz.pull1_mem_minimal_curl`: `curl_min (Φ^* u) = Φ^♭ (curl_min u)`.
+* `BiLipschitz.piola_mem_maximal_divT`: `div (P u) = |det DΦ| (div u) ∘ Φ`, `|U|, |Ω| < ∞`.
 -/
 
 @[expose] public noncomputable section
@@ -87,7 +32,6 @@ section Lipschitz
 
 variable {n : ℕ}
 
-/-- **Lipschitz maps of `ℝⁿ` send null sets to null sets** (`μH[n] = volume`). -/
 theorem volume_image_eq_zero_of_lipschitzWith {K : ℝ≥0} {f : (Fin n → ℝ) → (Fin n → ℝ)}
     (hf : LipschitzWith K f) {s : Set (Fin n → ℝ)} (hs : volume s = 0) : volume (f '' s) = 0 := by
   have h := hf.hausdorffMeasure_image_le (d := ((Fintype.card (Fin n) : ℕ) : ℝ))
@@ -121,8 +65,6 @@ theorem abs_lipJac_le {K : ℝ≥0} {Φ : (Fin n → ℝ) → (Fin n → ℝ)} (
         mul_le_mul (norm_fderiv_le_of_lipschitz ℝ hΦ) h1 (norm_nonneg _) K.2
     _ = K := mul_one _
 
-/-- **The chain rule at a point**: if `Ψ ∘ Φ = id`, `Φ` is differentiable at `x` and `Ψ` at
-`Φ x`, then `DΨ(Φ x) DΦ(x) = 1`. -/
 theorem lipJac_mul_lipJac_eq_one {Φ Ψ : (Fin n → ℝ) → (Fin n → ℝ)} (h : ∀ y, Ψ (Φ y) = y)
     {x : Fin n → ℝ} (hΦ : DifferentiableAt ℝ Φ x) (hΨ : DifferentiableAt ℝ Ψ (Φ x)) :
     lipJac Ψ (Φ x) * lipJac Φ x = 1 := by
@@ -146,8 +88,6 @@ section Molli
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [FiniteDimensional ℝ E]
   [MeasureSpace E] [BorelSpace E] [(volume : Measure E).IsAddHaarMeasure]
 
-/-- `∂_v (f ⋆ ρ)(x) = ∫ ∂_v f(t) ρ(x - t) dt` for a Lipschitz `f` (integration by parts,
-`integral_lineDeriv_mul_eq`). -/
 theorem fderiv_molli_eq_integral_lineDeriv {K : ℝ≥0} {f : E → ℝ} (hf : LipschitzWith K f)
     (φ : ContDiffBump (0 : E)) (x v : E) :
     fderiv ℝ (molli φ f) x v = ∫ t, lineDeriv ℝ f t v * φ.normed volume (x - t) := by
@@ -176,7 +116,6 @@ theorem fderiv_molli_eq_integral_lineDeriv {K : ℝ≥0} {f : E → ℝ} (hf : L
   rw [this, h2]
   simp
 
-/-- Translating the bump: `∫ ρ(x - t) dt = 1`. -/
 theorem integral_normed_sub (φ : ContDiffBump (0 : E)) (x : E) :
     ∫ t, φ.normed volume (x - t) = 1 := by
   rw [integral_sub_left_eq_self (fun t => φ.normed volume t) volume x, φ.integral_normed]
@@ -188,7 +127,6 @@ theorem integrable_normed_sub (φ : ContDiffBump (0 : E)) (x : E) :
   exact hc.integrable_of_hasCompactSupport
     (φ.hasCompactSupport_normed.comp_homeomorph (Homeomorph.subLeft x))
 
-/-- **The derivatives of the mollifications of a `K`-Lipschitz function are bounded by `K`.** -/
 theorem abs_fderiv_molli_le {K : ℝ≥0} {f : E → ℝ} (hf : LipschitzWith K f)
     (φ : ContDiffBump (0 : E)) (x v : E) : |fderiv ℝ (molli φ f) x v| ≤ K * ‖v‖ := by
   rw [fderiv_molli_eq_integral_lineDeriv hf, ← Real.norm_eq_abs]
@@ -200,7 +138,6 @@ theorem abs_fderiv_molli_le {K : ℝ≥0} {f : E → ℝ} (hf : LipschitzWith K 
     (Eventually.of_forall hb)).trans_eq ?_
   rw [integral_const_mul, integral_normed_sub, mul_one]
 
-/-- The derivative of the mollification as a convolution of the line derivative. -/
 theorem fderiv_molli_eq_convolution {K : ℝ≥0} {f : E → ℝ} (hf : LipschitzWith K f)
     (φ : ContDiffBump (0 : E)) (x v : E) :
     fderiv ℝ (molli φ f) x v = (φ.normed volume ⋆[ContinuousLinearMap.lsmul ℝ ℝ, volume]
@@ -211,10 +148,6 @@ theorem fderiv_molli_eq_convolution {K : ℝ≥0} {f : E → ℝ} (hf : Lipschit
   simp only [sub_sub_cancel, ContinuousLinearMap.lsmul_apply, smul_eq_mul]
   ring
 
-/-- **The derivatives of the mollifications converge almost everywhere** (Lebesgue
-differentiation for the bounded line derivatives,
-`ae_convolution_tendsto_right_of_locallyIntegrable`):
-`∂_v (f ⋆ ρ_m)(x) → ∂_v f(x)` at almost every `x`. -/
 theorem ae_tendsto_fderiv_molli {K : ℝ≥0} {f : E → ℝ} (hf : LipschitzWith K f) (v : E) :
     ∀ᵐ x, Tendsto (fun m : ℕ => fderiv ℝ (molli (bumpSeq m) f) x v) atTop
       (𝓝 (fderiv ℝ f x v)) := by
@@ -229,13 +162,11 @@ theorem ae_tendsto_fderiv_molli {K : ℝ≥0} {f : E → ℝ} (hf : LipschitzWit
   rw [← hd.lineDeriv_eq_fderiv]
   simpa only [fderiv_molli_eq_convolution hf] using hx
 
-/-- **The mollifications of a continuous function converge pointwise.** -/
 theorem tendsto_molli_of_continuous {f : E → ℝ} (hf : Continuous f) (x : E) :
     Tendsto (fun m : ℕ => molli (bumpSeq m) f x) atTop (𝓝 (f x)) := by
   simp only [molli_eq_normed_convolution]
   exact ContDiffBump.convolution_tendsto_right_of_continuous tendsto_bumpSeq_rOut hf x
 
-/-- The mollification of a bounded function is bounded. -/
 theorem abs_molli_le {f : E → ℝ} {C : ℝ} (hf : ∀ x, |f x| ≤ C) (φ : ContDiffBump (0 : E))
     (x : E) : |molli φ f x| ≤ C := by
   rw [molli_apply, ← Real.norm_eq_abs]
@@ -246,7 +177,6 @@ theorem abs_molli_le {f : E → ℝ} {C : ℝ} (hf : ∀ x, |f x| ≤ C) (φ : C
     (Eventually.of_forall hb)).trans_eq ?_
   rw [integral_const_mul, integral_normed_sub, mul_one]
 
-/-- The support of a mollification lies in the `rOut`-neighbourhood of the support. -/
 theorem support_molli_subset (φ : ContDiffBump (0 : E)) (f : E → ℝ) :
     Function.support (molli φ f) ⊆ Metric.cthickening φ.rOut (tsupport f) := by
   intro x hx
@@ -256,8 +186,6 @@ theorem support_molli_subset (φ : ContDiffBump (0 : E)) (f : E → ℝ) :
   rw [dist_eq_norm, add_sub_cancel_left]
   exact (mem_ball_zero_iff.1 hw).le
 
-/-- **Mollifications of compactly supported Lipschitz functions are eventually test
-functions** on every open set containing the support. -/
 theorem eventually_isTest_molli {K : ℝ≥0} {f : E → ℝ} (hf : LipschitzWith K f)
     (hfs : HasCompactSupport f) {Ω : Set E} (hΩ : IsOpen Ω) (hsub : tsupport f ⊆ Ω) :
     ∀ᶠ m : ℕ in atTop, IsTest Ω (molli (bumpSeq m) f) := by
@@ -343,8 +271,6 @@ theorem fderiv_pullRow (hF : ∀ k, ContDiff ℝ ∞ (F k)) (hu : ∀ k, ContDif
   rw [this]
   ring
 
-/-- **The curl of the pullback is the cofactor pullback of the curl**, pointwise for smooth `F`
-and `u`: `curl (DFᵀ u ∘ F) = adj(DF) (curl u) ∘ F`. -/
 theorem curl_pullRow (hF : ∀ k, ContDiff ℝ ∞ (F k)) (hu : ∀ k, ContDiff ℝ ∞ (u k))
     (m : Fin 3) (x : Fin 3 → ℝ) :
     fderiv ℝ (pullRow F u (m + 2)) x (coordDir (m + 1)) -
@@ -443,8 +369,6 @@ theorem abs_adjugate_le {A : Matrix (Fin 3) (Fin 3) ℝ} {C : ℝ} (hA : ∀ k l
   fin_cases i <;> fin_cases p <;> simp only [neg_add_eq_sub] <;>
     simp <;> exact abs_mul_sub_mul_le (hA _ _) (hA _ _) (hA _ _) (hA _ _)
 
-/-- **The smooth identity in weak form**: for smooth `F` and `u` and a test field `ψ`,
-`∫ (F^* u) · curl ψ = ∫ adj(DF) (curl u) ∘ F · ψ` (Green's formula and `curl_pullRow`). -/
 theorem integral_curl_pullRow {F : Fin 3 → (Fin 3 → ℝ) → ℝ} (hF : ∀ k, ContDiff ℝ ∞ (F k))
     {u : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ} (hu : ∀ j, ContDiff ℝ ∞ (u j))
     {ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ} (hψ : IsTestField (univ : Set (Fin 3 → ℝ)) ψ) :
@@ -463,7 +387,6 @@ theorem integral_curl_pullRow {F : Fin 3 → (Fin 3 → ℝ) → ℝ} (hF : ∀ 
   simp only [curlOp_apply]
   rw [curl_pullRow hF (fun k => hu (a, k)) m x]
 
-/-- Dominated convergence against a continuous compactly supported weight. -/
 theorem tendsto_integral_mul_of_bdd {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     [MeasurableSpace E] [BorelSpace E] {μ : Measure E} [IsFiniteMeasureOnCompacts μ]
     {c : E → ℝ} (hc : Continuous c) (hcs : HasCompactSupport c)
@@ -489,22 +412,16 @@ theorem exists_bound_field {ι : Type*} [Fintype ι] {u : ι → (Fin 3 → ℝ)
   exact (hC j y).trans ((le_abs_self _).trans
     (Finset.single_le_sum (f := fun j => |C j|) (fun j _ => abs_nonneg _) (Finset.mem_univ j)))
 
-/-- The `1`-form pullback of a matrix field along `Φ`, row by row:
-`(Φ^* u)_{ai} = Σ_k ∂ᵢΦ_k · u_{ak} ∘ Φ`, i.e. `DΦᵀ (u_a ∘ Φ)`. -/
+/-- The `1`-form pullback of a matrix field along `Φ`, row by row: `DΦᵀ (u_a ∘ Φ)`. -/
 def pull1Fun (Φ : (Fin 3 → ℝ) → (Fin 3 → ℝ)) (u : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ) :
     Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ :=
   fun j x => ∑ k, lipJac Φ x k j.2 * u (j.1, k) (Φ x)
 
-/-- The `2`-form (cofactor) pullback of a matrix field along `Φ`, row by row:
-`(Φ^♭ w)_{ai} = Σ_p adj(DΦ)_{ip} · w_{ap} ∘ Φ`, i.e. `cof(DΦ)ᵀ (w_a ∘ Φ)`. -/
+/-- The `2`-form pullback of a matrix field along `Φ`, row by row: `cof(DΦ)ᵀ (w_a ∘ Φ)`. -/
 def pull2Fun (Φ : (Fin 3 → ℝ) → (Fin 3 → ℝ)) (w : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ) :
     Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ :=
   fun j x => ∑ p, (lipJac Φ x).adjugate j.2 p * w (j.1, p) (Φ x)
 
-/-- **The weak curl of the pullback of a test field along a Lipschitz map**:
-`∫ (Φ^* u) · curl ψ = ∫ (Φ^♭ curl u) · ψ` for smooth compactly supported `u` and `ψ`
-(mollify `Φ`, use the smooth identity `integral_curl_pullRow`, and pass to the limit by
-dominated convergence: `D(Φ ⋆ ρ_m) → DΦ` almost everywhere and boundedly). -/
 theorem integral_curl_pullFun (hΦ : LipschitzWith K Φ) {u : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ}
     (hu : IsTestField (univ : Set (Fin 3 → ℝ)) u) {ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ}
     (hψ : IsTestField (univ : Set (Fin 3 → ℝ)) ψ) :
@@ -578,12 +495,9 @@ end LipPull
 
 /-! ### Bi-Lipschitz homeomorphisms of `ℝ³` -/
 
-/-- A **bi-Lipschitz homeomorphism** of `ℝ³`: a bijection `Φ` with inverse `Ψ`, both
-`K`-Lipschitz. -/
+/-- A **bi-Lipschitz homeomorphism** of `ℝ³`: a bijection with inverse, both `K`-Lipschitz. -/
 structure BiLipschitz where
-  /-- the map -/
   toFun : (Fin 3 → ℝ) → (Fin 3 → ℝ)
-  /-- the inverse -/
   invFun : (Fin 3 → ℝ) → (Fin 3 → ℝ)
   /-- a common Lipschitz constant -/
   K : ℝ≥0
@@ -631,12 +545,10 @@ theorem volume_preimage_eq_zero {s : Set (Fin 3 → ℝ)} (hs : volume s = 0) :
     volume (Φ ⁻¹' s) = 0 := by
   rw [preimage_eq_image_symm]; exact Φ.symm.volume_image_eq_zero hs
 
-/-- `Φ` maps null sets to null sets and back. -/
 theorem quasiMeasurePreserving : QuasiMeasurePreserving Φ volume volume :=
   ⟨Φ.measurable, Measure.AbsolutelyContinuous.mk fun s _ hs => by
     rw [Measure.map_apply Φ.measurable ‹_›]; exact Φ.volume_preimage_eq_zero hs⟩
 
-/-- Almost every point is good: `Φ` is differentiable at `x` and `Φ⁻¹` at `Φ x`. -/
 theorem ae_good : ∀ᵐ x, DifferentiableAt ℝ Φ x ∧ DifferentiableAt ℝ Φ.symm (Φ x) := by
   have h1 := Φ.lipschitz.ae_differentiableAt (μ := volume)
   have h2 : ∀ᵐ x, DifferentiableAt ℝ Φ.symm (Φ x) :=
@@ -679,11 +591,9 @@ theorem abs_det_le_of_abs_le {A : Matrix (Fin 3) (Fin 3) ℝ} {C : ℝ} (hA : �
         exact abs_sub _ _
     _ ≤ 6 * C ^ 3 := by linarith
 
-/-- The Jacobian bound `JΦ = |det DΦ| ≤ 6 K³`. -/
 theorem abs_det_lipJac_le (x : Fin 3 → ℝ) : |(lipJac Φ x).det| ≤ 6 * (Φ.K : ℝ) ^ 3 :=
   abs_det_le_of_abs_le (Φ.abs_lipJac_le x)
 
-/-- At good points `1 ≤ 6 K³ |det DΦ|`. -/
 theorem one_le_abs_det_lipJac {x : Fin 3 → ℝ} (h : DifferentiableAt ℝ Φ x ∧
     DifferentiableAt ℝ Φ.symm (Φ x)) : 1 ≤ 6 * (Φ.K : ℝ) ^ 3 * |(lipJac Φ x).det| := by
   have e := congrArg Matrix.det (Φ.lipJac_symm_mul_lipJac h)
@@ -730,8 +640,6 @@ theorem hasFDerivWithinAt_goodSet (U : Set (Fin 3 → ℝ)) :
     ∀ x ∈ Φ.goodSet U, HasFDerivWithinAt Φ (fderiv ℝ Φ x) (Φ.goodSet U) x :=
   fun _ hx => hx.2.hasFDerivAt.hasFDerivWithinAt
 
-/-- **Change of variables** along a bi-Lipschitz map (Bochner integral):
-`∫_Ω g = ∫_U |det DΦ| g ∘ Φ` for `Ω = Φ(U)`. -/
 theorem integral_image (hU : MeasurableSet U) {F : Type*} [NormedAddCommGroup F]
     [NormedSpace ℝ F] (g : (Fin 3 → ℝ) → F) :
     ∫ y in Φ '' U, g y = ∫ x in U, |(lipJac Φ x).det| • g (Φ x) := by
@@ -741,7 +649,6 @@ theorem integral_image (hU : MeasurableSet U) {F : Type*} [NormedAddCommGroup F]
     Measure.restrict_congr_set (Φ.goodSet_ae_eq U)]
   simp only [det_lipJac]
 
-/-- **Change of variables for integrability.** -/
 theorem integrableOn_image_iff (hU : MeasurableSet U) {F : Type*} [NormedAddCommGroup F]
     [NormedSpace ℝ F] (g : (Fin 3 → ℝ) → F) :
     IntegrableOn g (Φ '' U) ↔ IntegrableOn (fun x => |(lipJac Φ x).det| • g (Φ x)) U := by
@@ -753,7 +660,6 @@ theorem integrableOn_image_iff (hU : MeasurableSet U) {F : Type*} [NormedAddComm
 
 end BiLipschitz
 
-/-- `‖f‖² = ∫ f²` in real `L²`. -/
 theorem L2.norm_sq_eq_integral {α : Type*} [MeasurableSpace α] {μ : Measure α}
     (f : Lp ℝ 2 μ) : ‖f‖ ^ 2 = ∫ x, (f x) ^ 2 ∂μ := by
   rw [← real_inner_self_eq_norm_sq, MeasureTheory.L2.inner_def]
@@ -774,7 +680,6 @@ namespace BiLipschitz
 
 variable (Φ : BiLipschitz) {U Ω : Set (Fin 3 → ℝ)}
 
-/-- `Φ : (U, dx) → (Ω, dy)` maps null sets to null sets and back. -/
 theorem quasiMeasurePreserving_restrict (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω) :
     QuasiMeasurePreserving Φ (volume.restrict U) (volume.restrict Ω) := by
   refine ⟨Φ.measurable, Measure.AbsolutelyContinuous.mk fun S hS h0 => ?_⟩
@@ -787,7 +692,6 @@ theorem ae_good_restrict (U : Set (Fin 3 → ℝ)) : ∀ᵐ x ∂volume.restrict
     DifferentiableAt ℝ Φ x ∧ DifferentiableAt ℝ Φ.symm (Φ x) :=
   ae_restrict_of_ae Φ.ae_good
 
-/-- **Change of variables** `∫_Ω g = ∫_U |det DΦ| g ∘ Φ` (`Φ(U) = Ω`). -/
 theorem integral_comp (hU : MeasurableSet U) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω) (g : (Fin 3 → ℝ) → ℝ) :
     ∫ y in Ω, g y = ∫ x in U, |(lipJac Φ x).det| * g (Φ x) := by
   rw [← Φ.image_eq hUΩ, Φ.integral_image hU]; rfl
@@ -797,7 +701,6 @@ theorem integrableOn_comp_iff (hU : MeasurableSet U) (hUΩ : ∀ x, x ∈ U ↔ 
     IntegrableOn g Ω ↔ IntegrableOn (fun x => |(lipJac Φ x).det| * g (Φ x)) U := by
   rw [← Φ.image_eq hUΩ, Φ.integrableOn_image_iff hU]; rfl
 
-/-- **Composition with `Φ` is bounded on `L²`**: `f ∘ Φ ∈ L²(U)` for `f ∈ L²(Ω)`. -/
 theorem memLp_comp (hU : MeasurableSet U) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω) {f : (Fin 3 → ℝ) → ℝ}
     (hf : MemLp f 2 (volume.restrict Ω)) : MemLp (fun x => f (Φ x)) 2 (volume.restrict U) := by
   have hm : AEStronglyMeasurable (fun x => f (Φ x)) (volume.restrict U) :=
@@ -828,9 +731,7 @@ variable {ι κ : Type*} [Fintype ι] [Fintype κ]
 
 /-- A matrix weight on `U`: a.e. strongly measurable entries bounded by `C`. -/
 structure Weight (U : Set (Fin 3 → ℝ)) (ι κ : Type*) where
-  /-- the weight -/
   M : (Fin 3 → ℝ) → ι → κ → ℝ
-  /-- the bound -/
   C : ℝ
   C_nonneg : 0 ≤ C
   meas : ∀ i k, AEStronglyMeasurable (fun x => M x i k) (volume.restrict U)
@@ -856,7 +757,6 @@ theorem memLp_wpullFun (hU : MeasurableSet U) (hUΩ : ∀ x, x ∈ U ↔ Φ x �
   exact mul_le_mul_of_nonneg_right (hx i k) (norm_nonneg _)
 
 omit [Fintype ι] in
-/-- The pointwise Cauchy–Schwarz bound for the weighted sum. -/
 theorem sq_wpullFun_le {M : (Fin 3 → ℝ) → ι → κ → ℝ} {C : ℝ} {x : Fin 3 → ℝ}
     (hx : ∀ i k, |M x i k| ≤ C) (u : κ → (Fin 3 → ℝ) → ℝ) (i : ι) :
     Φ.wpullFun M u i x ^ 2 ≤ Fintype.card κ * C ^ 2 * ∑ k, u k (Φ x) ^ 2 := by
@@ -961,8 +861,7 @@ variable (Φ : BiLipschitz) {U Ω : Set (Fin 3 → ℝ)}
 
 /-! #### Weights acting on the rows of matrix fields -/
 
-/-- The weight acting on each row of a matrix field by the matrix `N(x)`:
-`(rowW N)_{(a,i),(b,k)} = δ_{ab} N_{ik}`. -/
+/-- The weight acting on each row of a matrix field by the matrix `N(x)`. -/
 def rowW (N : (Fin 3 → ℝ) → Fin 3 → Fin 3 → ℝ) :
     (Fin 3 → ℝ) → Fin 3 × Fin 3 → Fin 3 × Fin 3 → ℝ :=
   fun x j l => if l.1 = j.1 then N x j.2 l.2 else 0
@@ -1049,7 +948,6 @@ theorem coeFn_wpull_testField (W : Weight U ι κ) (hU : MeasurableSet U)
   rw [h1]
   simp only [wpullFun, h2]
 
-/-- `⟪P φ, ψ⟫_{L²(U)} = Σᵢ ∫ (P φ)ᵢ ψᵢ` over `ℝ³`, for test fields `φ` on `Ω`, `ψ` on `U`. -/
 theorem inner_wpull_testField (W : Weight U ι κ) (hU : MeasurableSet U)
     (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω) {f : κ → (Fin 3 → ℝ) → ℝ} (hf : IsTestField Ω f)
     {ψ : ι → (Fin 3 → ℝ) → ℝ} (hψ : IsTestField U ψ) :
@@ -1070,7 +968,6 @@ theorem inner_wpull_testField (W : Weight U ι κ) (hU : MeasurableSet U)
 local notation "curl3" =>
   (curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) ℝ (Fin 3 × Fin 3) (Fin 3 × Fin 3))
 
-/-- The support of the pullback of a test field lies in the compact `Φ⁻¹(supp u) ⊆ U`. -/
 theorem pullFun_eq_zero_of_notMem {u : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ} {x : Fin 3 → ℝ}
     (hx : x ∉ Φ.symm '' ⋃ j, tsupport (u j)) (j : Fin 3 × Fin 3) : pull1Fun Φ u j x = 0 := by
   refine Finset.sum_eq_zero fun k _ => ?_
@@ -1088,7 +985,6 @@ theorem isCompact_symm_image_tsupport (hU : ∀ x, x ∈ U ↔ Φ x ∈ Ω)
   rw [hU, Φ.apply_symm_apply]
   exact (hu j).tsupport_subset hj
 
-/-- **On test fields, `curl (Φ^* u) = Φ^♭ (curl u)` in `D(curl_min(U))`.** -/
 theorem pull1_testField_mem_minimal (hU : IsOpen U) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω)
     {u : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ} (hu : IsTestField Ω u) :
     (Φ.pull1 hU.measurableSet hUΩ (testField hu),
@@ -1129,9 +1025,7 @@ theorem pull1_testField_mem_minimal (hU : IsOpen U) (hUΩ : ∀ x, x ∈ U ↔ �
   rw [LinearPMap.mem_graph_iff]
   exact ⟨⟨v, hmin⟩, rfl, hmin'.trans hval⟩
 
-/-- **The `1`-form pullback maps `H̊(curl, Ω)` into `H̊(curl, U)` and commutes with `curl`**:
-`curl_min(Φ^* u) = Φ^♭ (curl_min u)` (`Φ` bi-Lipschitz, `Φ(U) = Ω`), by graph closure from test
-fields (`pull1_testField_mem_minimal`). -/
+/-- **`Φ^*` maps `H̊(curl, Ω)` into `H̊(curl, U)`**: `curl_min (Φ^* u) = Φ^♭ (curl_min u)`. -/
 theorem pull1_mem_minimal_curl (hU : IsOpen U) (hΩ : IsOpen Ω) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω)
     (u : ((curl3).minimal Ω).domain) :
     ∃ h : Φ.pull1 hU.measurableSet hUΩ u ∈
@@ -1155,7 +1049,6 @@ theorem pull1_mem_minimal_curl (hU : IsOpen U) (hΩ : IsOpen Ω) (hUΩ : ∀ x, 
 
 end BiLipschitz
 
-/-- If `A B = 1` and `|B_{ik}| ≤ C`, then `|η|² ≤ 9 C² |Aᵀ η|²`. -/
 theorem sum_sq_le_of_mul_eq_one {A B : Matrix (Fin 3) (Fin 3) ℝ} (hAB : A * B = 1) {C : ℝ}
     (hB : ∀ i k, |B i k| ≤ C) (η : Fin 3 → ℝ) :
     ∑ k, η k ^ 2 ≤ 9 * C ^ 2 * ∑ i, (∑ k, A k i * η k) ^ 2 := by
@@ -1183,7 +1076,6 @@ namespace BiLipschitz
 
 variable (Φ : BiLipschitz) {U Ω : Set (Fin 3 → ℝ)}
 
-/-- **The `1`-form pullback is bounded below**: `‖u‖ ≤ c ‖Φ^* u‖` with `c² = 54 K⁵`. -/
 theorem norm_le_norm_pull1 (hU : MeasurableSet U) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω)
     (u : L2F ℝ Ω (Fin 3 × Fin 3)) :
     ‖u‖ ≤ Real.sqrt (6 * (Φ.K : ℝ) ^ 3 * (9 * (Φ.K : ℝ) ^ 2)) * ‖Φ.pull1 hU hUΩ u‖ := by
@@ -1237,7 +1129,6 @@ end BiLipschitz
 local notation "divT" =>
   ConstCoeffOp.formalAdj (gradOp 3 3 : ConstCoeffOp (Fin 3 → ℝ) ℝ (Fin 3) (Fin 3 × Fin 3))
 
-/-- Dominated convergence against an integrable weight. -/
 theorem tendsto_integral_mul_of_integrable {α : Type*} [MeasurableSpace α] {μ : Measure α}
     {g : α → ℝ} (hg : Integrable g μ) {h : ℕ → α → ℝ} {h' : α → ℝ} {B : ℝ}
     (hh : ∀ m, AEStronglyMeasurable (h m) μ) (hB : ∀ m, ∀ᵐ x ∂μ, |h m x| ≤ B)
@@ -1256,9 +1147,6 @@ theorem integrable_L2_of_finite {Ω : Set (Fin 3 → ℝ)} (hfin : volume Ω ≠
   have : IsFiniteMeasure (volume.restrict Ω) := isFiniteMeasure_restrict.2 hfin
   exact (Lp.memLp f).integrable one_le_two
 
-/-- **The weak divergence against Lipschitz test functions**: for `u ∈ D((gradᵗ)_max(Ω))`
-(`|Ω| < ∞`) and compactly supported Lipschitz `χ` with support in `Ω`,
-`Σₐ ∫_Ω (gradᵗ u)ₐ χₐ = Σ_{a,j} ∫_Ω u_{aj} ∂ⱼ χₐ` (mollify `χ`, dominated convergence). -/
 theorem integral_maximal_divT_lipschitz {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω)
     (hfin : volume Ω ≠ ⊤) (u : (ConstCoeffOp.maximal Ω divT).domain)
     {χ : Fin 3 → (Fin 3 → ℝ) → ℝ} {L : ℝ≥0} (hχ : ∀ a, LipschitzWith L (χ a))
@@ -1361,7 +1249,6 @@ theorem wpullFun_wP (u : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ) (j : Fin 3 
 
 variable {ι κ : Type*} [Fintype ι] [Fintype κ]
 
-/-- `⟪P u, ψ⟫_{L²(U)} = Σᵢ ∫_U (P u)ᵢ ψᵢ`. -/
 theorem inner_wpull_testField' (W : Weight U ι κ) (hU : MeasurableSet U)
     (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω) (u : L2F ℝ Ω κ) {ψ : ι → (Fin 3 → ℝ) → ℝ}
     (hψ : IsTestField U ψ) :
@@ -1374,8 +1261,6 @@ theorem inner_wpull_testField' (W : Weight U ι κ) (hU : MeasurableSet U)
   filter_upwards [Φ.coeFn_wpull W hU hUΩ u i] with x hx
   rw [hx]
 
-/-- The chain rule for a smooth `φ` composed with a Lipschitz map at a point of
-differentiability. -/
 theorem fderiv_comp_apply_coordDir {Ψ : (Fin 3 → ℝ) → (Fin 3 → ℝ)} {φ : (Fin 3 → ℝ) → ℝ}
     (hφ : ContDiff ℝ ∞ φ) {y : Fin 3 → ℝ} (hΨ : DifferentiableAt ℝ Ψ y) (k : Fin 3) :
     fderiv ℝ (fun y => φ (Ψ y)) y (coordDir k) =
@@ -1387,12 +1272,7 @@ theorem fderiv_comp_apply_coordDir {Ψ : (Fin 3 → ℝ) → (Fin 3 → ℝ)} {�
   rw [this, map_sum]
   simp [smul_eq_mul]
 
-/-- **The Piola transform maps `H(div, Ω)` into `H(div, U)`**:
-`div (P u) = |det DΦ| (div u) ∘ Φ` (row-wise, in the form `(gradᵗ)_max`), for `Φ` bi-Lipschitz with
-`Φ(U) = Ω`, `|U|, |Ω| < ∞`. Tested against `φ ∈ C_c^∞(U)`, the change of variables turns both
-sides into integrals over `Ω` against the Lipschitz test functions `φ ∘ Φ⁻¹`, where the weak
-divergence still applies (`integral_maximal_divT_lipschitz`); the chain rule
-`∂ⱼ(φ ∘ Φ⁻¹) = Σᵢ ∂ⱼ(Φ⁻¹)ᵢ (∂ᵢ φ) ∘ Φ⁻¹` holds almost everywhere. -/
+/-- **The Piola transform maps `H(div, Ω)` into `H(div, U)`**, for `|U|, |Ω| < ∞`. -/
 theorem piola_mem_maximal_divT (hU : IsOpen U) (hΩ : IsOpen Ω) (hfinU : volume U ≠ ⊤)
     (hfin : volume Ω ≠ ⊤) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω)
     (u : (ConstCoeffOp.maximal Ω divT).domain) :
@@ -1544,13 +1424,10 @@ def wE (U : Set (Fin 3 → ℝ)) : Weight U (Fin 3 × Fin 3) (Fin 3 × Fin 3) :=
                 Φ.K.2
         _ = 3 * (Φ.K : ℝ) ^ 2 := by simp)
 
-/-- **The coefficient** `ε = |det DΦ| DΦ⁻¹ DΦ⁻ᵀ` acting on the rows of matrix fields on `U`:
-bounded, and with `ε Φ^* = P` (the Piola transform). -/
+/-- **The coefficient** `ε = |det DΦ| DΦ⁻¹ DΦ⁻ᵀ` acting on the rows of matrix fields on `U`. -/
 def coeff (hU : MeasurableSet U) : L2F ℝ U (Fin 3 × Fin 3) →L[ℝ] L2F ℝ U (Fin 3 × Fin 3) :=
   refl.wpull (Φ.wE U) hU (fun _ => Iff.rfl)
 
-/-- **`ε Φ^* u = P u`**: the coefficient turns the `1`-form pullback into the Piola transform
-(`|det DΦ| DΦ⁻¹ DΦ⁻ᵀ DΦᵀ = |det DΦ| DΦ⁻¹` at almost every point). -/
 theorem coeff_pull1 (hU : MeasurableSet U) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ Ω)
     (u : L2F ℝ Ω (Fin 3 × Fin 3)) :
     Φ.coeff hU (Φ.pull1 hU hUΩ u) = Φ.piola hU hUΩ u := by
@@ -1591,7 +1468,6 @@ theorem coeff_pull1 (hU : MeasurableSet U) (hUΩ : ∀ x, x ∈ U ↔ Φ x ∈ �
           Finset.sum_congr rfl fun _ _ => by ring
     _ = ∑ m, |A.det| * B j.2 m * (u (j.1, m) : _ → ℝ) (Φ x) := by simp only [key]
 
-/-- The pointwise coercivity `ξᵀ ε ξ = |det A| |Bᵀ ξ|² ≥ |ξ|² / (54 K⁵)` for `B A = 1`. -/
 theorem coercive_pointwise {A B : Matrix (Fin 3) (Fin 3) ℝ} (hBA : B * A = 1) {K : ℝ}
     (hK : 0 < K) (hA : ∀ i k, |A i k| ≤ K) (hd : 1 ≤ 6 * K ^ 3 * |A.det|) (ξ : Fin 3 → ℝ) :
     1 / (6 * K ^ 3 * (9 * K ^ 2)) * ∑ i, ξ i ^ 2 ≤
@@ -1611,7 +1487,6 @@ theorem coercive_pointwise {A B : Matrix (Fin 3) (Fin 3) ℝ} (hBA : B * A = 1) 
         rw [div_le_iff₀ (by positivity)]; linarith
     _ ≤ |A.det| * ∑ l, (∑ i, B i l * ξ i) ^ 2 := mul_le_mul_of_nonneg_right hd' hS
 
-/-- **The coefficient is uniformly coercive**: `‖v‖² / (54 K⁵) ≤ ⟪ε v, v⟫`. -/
 theorem coeff_coercive (hU : MeasurableSet U) (v : L2F ℝ U (Fin 3 × Fin 3)) :
     1 / (6 * (Φ.K : ℝ) ^ 3 * (9 * (Φ.K : ℝ) ^ 2)) * ‖v‖ ^ 2 ≤ ⟪Φ.coeff hU v, v⟫_ℝ := by
   set lam := 1 / (6 * (Φ.K : ℝ) ^ 3 * (9 * (Φ.K : ℝ) ^ 2))

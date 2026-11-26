@@ -5,28 +5,8 @@ public import Feec.Models.Cube.AbsorbingTSD
 /-!
 # Finite speed of propagation for the absorbing problem on the cube
 
-The absorbing semigroup of `Feec.Models.Cube.Absorbing` solves the row-wise Einstein–Bianchi system
-`Ė = -curl B`, `Ḃ = curl E` weakly in `Q` (`IsWeakRowEB`). This system is symmetric hyperbolic of
-unit speed (`isSymmHyperbolic_ebDir`), so the domain-of-dependence theorem of
-`Feec.Domain.FiniteSpeed` applies to the difference of two weak solutions:
-
-* **`absorbingSemigroup_eq_depDomain`**: for every weak solution `W` of the system in `Q` with
-  `W(0) = u₀` — for instance the restriction to `Q` of a solution on `ℝ³` — the absorbing
-  solution `S(t) u₀` equals `W(t)` a.e. on `depDomain Q t`, the points at Euclidean distance
-  `> t` from `ℝ³ \ Q`: the boundary condition is felt only after the boundary is reached.
-* `IsWeakRowEB.ae_eq_zero_depDomain`: every weak solution with zero data vanishes on the domain
-  of dependence (applied to the difference). The statement is non-empty for `t < ¼` only
-  (`depDomain Q t = ∅` for `t ≥ ¼`), and no weak solution other than the absorbing orbits is
-  constructed here.
-
-## References
-
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (symmetric hyperbolic systems,
-  domain of dependence)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (the system)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The absorbing solution coincides with every weak solution in `Q` of the row-wise Einstein–Bianchi
+system with the same data on the domain of dependence (`absorbingSemigroup_eq_depDomain`).
 -/
 
 open scoped InnerProductSpace ContDiff
@@ -40,9 +20,7 @@ open Geometry
 
 /-! ### Weak solutions of the row-wise system -/
 
-/-- `W` is a **weak solution** of `Ė = -curl B`, `Ḃ = curl E` in `Q` on `[0, T]`: continuous,
-with `⟪E(t), Φ⟫ = ⟪E(0), Φ⟫ - ∫₀ᵗ ⟪B, curl Φ⟫` and `⟪B(t), Φ⟫ = ⟪B(0), Φ⟫ + ∫₀ᵗ ⟪E, curl Φ⟫`
-for every test field `Φ` (no boundary condition). -/
+/-- `W` is a **weak solution** of `Ė = -curl B`, `Ḃ = curl E` in `Q` on `[0, T]`. -/
 structure IsWeakRowEB (T : ℝ) (W : ℝ → State) : Prop where
   continuousOn : ContinuousOn W (Icc 0 T)
   fst : ∀ {Φ : Ix → R3 → ℝ} (hΦ : IsTestField (Q (Fin 3)) Φ), ∀ t ∈ Icc 0 T,
@@ -65,7 +43,6 @@ theorem intervalIntegrable_of_continuousOn {g : ℝ → ℝ} {T t : ℝ}
     (hg : ContinuousOn g (Icc 0 T)) (ht : t ∈ Icc 0 T) : IntervalIntegrable g volume 0 t :=
   (hg.mono (Icc_subset_Icc le_rfl ht.2)).intervalIntegrable_of_Icc ht.1
 
-/-- Weak solutions form a vector space: differences. -/
 theorem IsWeakRowEB.sub {T : ℝ} {W W' : ℝ → State} (h : IsWeakRowEB T W)
     (h' : IsWeakRowEB T W') : IsWeakRowEB T (W - W') := by
   have hcs : ∀ (V : ℝ → State), ContinuousOn V (Icc 0 T) → ∀ (z : MQ),
@@ -98,13 +75,11 @@ theorem IsWeakRowEB.sub {T : ℝ} {W W' : ℝ → State} (h : IsWeakRowEB T W)
 /-- The state components `(E, B)`. -/
 abbrev FIdx := Ix ⊕ Ix
 
-/-- `∂_{k+1} X_{m}` with sign: the coefficient of
-`∂ₜ E_{ik} = -∂_{k+1} B_{i,k+2} + ∂_{k+2} B_{i,k+1}`. -/
+/-- The direction of `B_{i,m}` in `∂ₜ E_{ik} = -∂_{k+1} B_{i,k+2} + ∂_{k+2} B_{i,k+1}`. -/
 def rowCurlDir (k m : Fin 3) : R3 :=
   if m = k + 2 then -Pi.single (k + 1) 1 else if m = k + 1 then Pi.single (k + 2) 1 else 0
 
-/-- The coefficients `β j i` of the row-wise system `∂ₜ wⱼ = Σᵢ ∂_{β j i} wᵢ`, `w = (E, B)`:
-`∂ₜ E = -curl B`, `∂ₜ B = curl E`. -/
+/-- The coefficients `β j i` of the row-wise system `∂ₜ wⱼ = Σᵢ ∂_{β j i} wᵢ`, `w = (E, B)`. -/
 def ebDir : FIdx → FIdx → R3
   | .inl a, .inr b => if a.1 = b.1 then rowCurlDir a.2 b.2 else 0
   | .inr b, .inl a => if a.1 = b.1 then rowCurlDir a.2 b.2 else 0
@@ -113,7 +88,6 @@ def ebDir : FIdx → FIdx → R3
 theorem ebDir_symm (j i : FIdx) : ebDir j i = ebDir i j := by
   rcases j with a | b <;> rcases i with a' | b' <;> rfl
 
-/-- Cauchy–Schwarz for the triple product: `(e · (b × x))² ≤ |e|² |x|² |b|²`. -/
 theorem sq_triple_le (e0 e1 e2 b0 b1 b2 x0 x1 x2 : ℝ) :
     (e0 * (b1 * x2 - b2 * x1) + e1 * (b2 * x0 - b0 * x2) + e2 * (b0 * x1 - b1 * x0)) ^ 2 ≤
       (e0 ^ 2 + e1 ^ 2 + e2 ^ 2) * ((x0 ^ 2 + x1 ^ 2 + x2 ^ 2) * (b0 ^ 2 + b1 ^ 2 + b2 ^ 2)) := by
@@ -127,8 +101,7 @@ theorem sq_triple_le (e0 e1 e2 b0 b1 b2 x0 x1 x2 : ℝ) :
         (b0 * x1 - b1 * x0) ^ 2) := h1
     _ ≤ _ := mul_le_mul_of_nonneg_left h2 h3
 
-/-- **The row-wise Einstein–Bianchi system is symmetric hyperbolic of unit speed** for the
-Euclidean norm. -/
+/-- **The row-wise Einstein–Bianchi system is symmetric hyperbolic of unit speed.** -/
 theorem isSymmHyperbolic_ebDir :
     FiniteSpeed.IsSymmHyperbolic (fun j i => euc (ebDir j i)) 1 := by
   refine ⟨fun j i => by rw [ebDir_symm], zero_le_one, fun L w => ?_⟩
@@ -180,7 +153,6 @@ theorem fderiv_rowCurlDir {f : R3 → ℝ} (x : R3) (k m : Fin 3) :
   unfold rowCurlDir
   split_ifs <;> simp [partialDeriv]
 
-/-- The formal adjoint of the system on test fields: `(curl ψ_B, -curl ψ_E)`. -/
 theorem formalAdj_ebDir (ψ : FIdx → R3 → ℝ) (x : R3) :
     (∀ a, (FiniteSpeed.hypOp ebDir).formalAdj.apply ψ (.inl a) x =
       curlM (fun b => ψ (.inr b)) a x) ∧
@@ -196,8 +168,6 @@ theorem formalAdj_ebDir (ψ : FIdx → R3 → ℝ) (x : R3) :
     simp only [Fintype.sum_sum_type, Fintype.sum_prod_type, ebDir]
     fin_cases i <;> fin_cases m <;> simp [curlM, Fin.sum_univ_three, fderiv_rowCurlDir] <;> ring
 
-/-- A function of `[0, T]` that is an integral of a function continuous on `[0, T]` has that
-function as derivative within `[0, T]`. -/
 theorem hasDerivWithinAt_of_eq_add_integral_Icc {f g : ℝ → ℝ} {T : ℝ}
     (hg : ContinuousOn g (Icc 0 T)) (hf : ∀ s ∈ Icc 0 T, f s = f 0 + ∫ σ in (0 : ℝ)..s, g σ) :
     ∀ t ∈ Icc 0 T, HasDerivWithinAt f (g t) (Icc 0 T) t := by
@@ -227,8 +197,6 @@ theorem inner_toField_testField (u : State) {ψ : FIdx → R3 → ℝ}
   rw [L2F.inner_def, L2F.inner_def, L2F.inner_def, Fintype.sum_sum_type]
   rfl
 
-/-- **Weak solutions of the row-wise system are weak solutions of the symmetric hyperbolic system
-`ebDir`** in the sense of `Feec.Domain.FiniteSpeed`. -/
 theorem IsWeakRowEB.isWeakSolution {T : ℝ} {W : ℝ → State} (h : IsWeakRowEB T W) :
     FiniteSpeed.IsWeakSolution ebDir (Q (Fin 3)) T fun s => toField (W s) := by
   refine ⟨continuous_toField.comp_continuousOn h.continuousOn, fun t ht ψ hψ => ?_⟩
@@ -266,8 +234,7 @@ theorem IsWeakRowEB.isWeakSolution {T : ℝ} {W : ℝ → State} (h : IsWeakRowE
 
 /-! ### The domain of dependence -/
 
-/-- **Finite speed for weak solutions of the row-wise system in `Q`**: a weak solution with zero
-data vanishes a.e. on `depDomain Q t`. -/
+/-- **Finite speed**: a weak solution with zero data vanishes a.e. on `depDomain Q t`. -/
 theorem IsWeakRowEB.ae_eq_zero_depDomain {T : ℝ} {W : ℝ → State} (h : IsWeakRowEB T W)
     (h0 : W 0 = 0) {t : ℝ} (ht : t ∈ Icc 0 T) (j : FIdx) :
     ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t), toField (W t) j y = 0 := by
@@ -292,9 +259,8 @@ theorem IsWeakRowEB.ae_eq_zero_depDomain {T : ℝ} {W : ℝ → State} (h : IsWe
     (x := p.1.1) (R := p.1.2) (fun z hz => p.2 z hz) hz ht j
   simpa [s, Metric.ball, one_mul] using this
 
-/-- **The absorbing solution coincides with every weak solution of the system in `Q` with the same
-data on the domain of dependence** — for instance with the restriction to `Q` of a whole-space
-solution: the boundary condition acts only after the boundary is reached. -/
+/-- **The absorbing solution equals every weak solution with the same data**, a.e. on
+`depDomain Q t`. -/
 theorem absorbingSemigroup_eq_depDomain {T : ℝ} {u₀ : State} {W : ℝ → State}
     (hW : IsWeakRowEB T W) (hW0 : W 0 = u₀) {t : ℝ} (ht : t ∈ Icc 0 T) (j : FIdx) :
     ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),

@@ -7,49 +7,9 @@ public import Feec.Domain.DeRham
 /-!
 # The parity extension of `k`-forms on `Q = (0, ½)ⁿ` and the exterior derivative
 
-A real `k`-form `u = Σ_s u_s dx_s` on `Q = (0, ½)ⁿ` (`Feec.Domain.L2F ℝ Q (formIdx n k)`) is
-extended to the torus `𝕋ⁿ = ℝⁿ/ℤⁿ` by the method of images in one of the two parity classes of
-`Feec.Models.Cube.DeRham`: `u_s ∘ R_j = ± ε_j(s) u_s` (`pc`; `-` for the relative class,
-fixed by `-R_j^*`, `+` for the absolute class, fixed by `R_j^*`). On the Fourier side this is the
-real-linear map `Jf rel k : L²(Q; Λᵏ) → ℓ²(ℤⁿ; Λᵏ)`, a scaled isometry
-(`⟪Jf u, Jf v⟫ = 2ⁿ ⟪u, v⟫`, `inner_Jf`) onto the real coefficient sequences of the parity class
-(`RealPar`, `Jf_realPar`, `Jf_Jinvf`).
-
-**The exterior derivative.** If `(u, w)` satisfies Green's identity
-`⟪w, ψ⟫ = ⟪u, dᵗ ψ⟫` against the smooth `(k + 1)`-forms `ψ` with one component (`GreenFor`;
-for the absolute class only those whose normal component vanishes on `∂Q`), then the torus
-symbol `d_ξ = i ξ ∧ ·` maps the coefficients of `Jf u` to those of `Jf w`
-(`coeff_d_of_greenFor`): the pairing of the extension with a character is the pairing on `Q`
-with the folded character (`Feec.Models.Cube.DeRhamIdent.coeff_JR`), whose derivatives are folds
-in the neighbouring parity class. Green's identity holds
-
-* on `D(d_min)` (`H̊Λ(Q)`) against every smooth form (`greenFor_minimal`, relative class), and
-* on `D(d_max)` (`HΛ(Q)`) against smooth forms with vanishing normal trace
-  (`greenFor_maximal`, absolute class): these lie in the minimal domain of `dᵗ` by the cut-off
-  argument (`Feec.Models.Cube.DeRhamIdent.mem_closure_testGraph_of_cutoff`).
-
-## Main definitions
-
-* `pc`, `pcF`, `Jf`, `Jinvf`, `RealPar`, `GreenFor`.
-
-## Main results
-
-* **`inner_Jf`**, `Jinvf_Jf`, `Jf_realPar`, **`Jf_Jinvf`**, `injective_Jf`.
-* `ext_Jf`, `formalAdj_single1_apply`, `greenFor_of_inner`,
-  **`coeff_d_of_greenFor`**.
-* **`greenFor_minimal`**, `mem_closure_formalAdj_single1`, **`greenFor_maximal`**;
-  `coeff_d_minimal`, `coeff_d_maximal`.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (relative and absolute boundary conditions)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6 (the de Rham complex with
-  boundary conditions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the cube by the method of images)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The parity extension `Jf rel k` of real `k`-forms on `Q` to the Fourier side of `𝕋ⁿ` is a scaled
+isometry carrying `d_min` (both classes) and `d_max` (the absolute class `rel = false`) to the torus
+symbol (`coeff_d_minimal`, `coeff_d_maximal`).
 -/
 
 open scoped InnerProductSpace ComplexConjugate ContDiff Topology
@@ -67,8 +27,7 @@ variable {n : ℕ}
 
 /-! ### Parity vectors and index sets -/
 
-/-- The parity vector of the coefficient of `dx_s` in the class `rel`: `u_s ∘ R_j = c_j u_s` with
-`c_j = ± ε_j(s)` (`-` for the relative class). -/
+/-- The parity vector of the coefficient of `dx_s` in the class `rel`, `c_j = ± ε_j(s)`. -/
 def pcF (rel : Bool) (s : Finset (Fin n)) (j : Fin n) : ℂ :=
   DeRham.parSign rel * DeRham.reflSign j s
 
@@ -86,8 +45,6 @@ theorem conj_pc (rel : Bool) {k : ℤ} (s : formIdx n k) (j : Fin n) :
     conj (pc rel s j) = pc rel s j := by
   unfold pc pcF DeRham.parSign DeRham.reflSign; split_ifs <;> simp
 
-/-- **Removing `j` reverses the parity of `x_j`**: `c(s ∖ j) = c(s)` with the sign of `x_j`
-flipped. -/
 theorem update_pcF_erase (rel : Bool) {s : Finset (Fin n)} {j : Fin n} (hj : j ∈ s) :
     Function.update (pcF rel s) j (-pcF rel s j) = pcF rel (s.erase j) := by
   funext i
@@ -99,8 +56,7 @@ theorem update_pcF_erase (rel : Bool) {s : Finset (Fin n)} {j : Fin n} (hj : j �
 
 /-! ### The extension of `k`-forms -/
 
-/-- **The parity extension of real `k`-forms on `Q`**, on the Fourier side of `𝕋ⁿ` (the
-components `formIdx n k` of the forms on `Q` are the index set of `Form ℂ (Fin n) k`). -/
+/-- **The parity extension of real `k`-forms on `Q`**, on the Fourier side of `𝕋ⁿ`. -/
 def Jf (rel : Bool) (k : ℕ) : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)) →L[ℝ]
     Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)) :=
   JR (pc_mul_self rel)
@@ -108,7 +64,6 @@ def Jf (rel : Bool) (k : ℕ) : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)) →L[�
 theorem Jf_apply (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     Jf rel k u = JR (pc_mul_self rel) u := rfl
 
-/-- **The coefficients of `Jf`**: `(Jf u)(m)_t = ∫_Q u_t · fold_{c(t)} e_{-m}`. -/
 theorem coeff_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) :
     (Jf rel k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m t =
@@ -136,8 +91,7 @@ theorem inner_Jf (rel : Bool) (k : ℕ) (u v : L2F ℝ (Q (Fin n)) (formIdx n (k
     Jf_apply, ← MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner,
     inner_JR, Fintype.card_fin]
 
-/-- **The real coefficient sequences of the parity class `rel`**: `x(-m) = conj x(m)` and
-`x(flip_j m)_t = ± ε_j(t) x(m)_t`. -/
+/-- **The real coefficient sequences of the parity class `rel`.** -/
 def RealPar (rel : Bool) (k : ℕ)
     (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))) : Prop :=
   (∀ m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (-m) t =
@@ -169,8 +123,6 @@ abbrev uExt {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (r : Finset (Fin n
     L2 ℝ (Q (Fin n)) :=
   formExt (fun s => (u s : L2 ℝ (Q (Fin n)))) r
 
-/-- **The coefficients of `Jf` on all index sets**: `ext (Jf u (m)) r = ∫_Q u_r · fold_{c(r)}
-e_{-m}` (both sides vanish off the `k`-subsets). -/
 theorem ext_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (m : Fin n → ℤ) (r : Finset (Fin n)) :
     Feec.Fourier.Exterior.ext k ((Jf rel k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m) r =
@@ -205,8 +157,6 @@ theorem formExt_single1 {k : ℤ} (t : formIdx n (k + 1)) (φ : (Fin n → ℝ) 
   · exact absurd (h2 ▸ t.2) h1
   · rfl
 
-/-- **The formal adjoint of `d` on a one-component form**:
-`(dᵗ (φ dx_t))_s = -Σ_{j ∈ t, t ∖ j = s} ε(j, t) ∂_j φ`. -/
 theorem formalAdj_single1_apply {k : ℤ} (t : formIdx n (k + 1)) {φ : (Fin n → ℝ) → ℝ}
     (s : formIdx n k) (y : Fin n → ℝ) :
     (extDerivOp ℝ n k).formalAdj.apply (single1 t φ) s y =
@@ -257,7 +207,6 @@ theorem integrable_real_mul_bdd_Q (f : L2 ℝ (Q (Fin n))) {h : (Fin n → ℝ) 
   exact ((Lp.memLp f).integrable one_le_two).mul_bdd hh.aestronglyMeasurable
     (Filter.Eventually.of_forall hC)
 
-/-- `∫_Q f G = ∫_Q f Re G + i ∫_Q f Im G` for real `f` and bounded continuous complex `G`. -/
 theorem integral_ofReal_mul_eq (f : L2 ℝ (Q (Fin n))) {G : (Fin n → ℝ) → ℂ} (hG : Continuous G)
     {C : ℝ} (hC : ∀ y, ‖G y‖ ≤ C) :
     ∫ y in Q (Fin n), (((f : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) * G y =
@@ -275,7 +224,6 @@ theorem integral_ofReal_mul_eq (f : L2 ℝ (Q (Fin n))) {G : (Fin n → ℝ) →
   rw [e, integral_add h1.ofReal (h2.ofReal.const_mul _), integral_const_mul, integral_complex_ofReal,
     integral_complex_ofReal]
 
-/-- `∑_s [r = s] F(u_s) = F(u_r)` (`u_r = 0` off the `k`-subsets). -/
 theorem sum_ite_eq_uExt {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (r : Finset (Fin n))
     (F : L2 ℝ (Q (Fin n)) → ℝ) (hF : F 0 = 0) :
     ∑ s : formIdx n k, (if r = s.1 then F (u s) else 0) = F (uExt u r) := by
@@ -288,10 +236,9 @@ theorem sum_ite_eq_uExt {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (r : F
     simp only [e, ite_false, Finset.sum_const_zero]
     rw [uExt, formExt, dite_eq_right (by exact_mod_cast h), hF]
 
-/-- **Green's identity of `(u, w)` against the one-component forms `φ dx_t`**, in coordinates:
-`∫_Q w_t φ = -Σ_{j ∈ t} ε(j, t) ∫_Q u_{t ∖ j} ∂_j φ`, for smooth `φ` bounded with bounded first
-derivatives; for the absolute class (`rel = false`) only for `φ` vanishing on the faces normal to
-`t` (vanishing normal trace). -/
+/-- **Green's identity of `(u, w)` against the one-component forms `φ dx_t`**, in coordinates, for
+smooth `φ` bounded with bounded first derivatives, vanishing on the faces normal to `t` if
+`rel = false`. -/
 def GreenFor (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))) : Prop :=
   ∀ (t : formIdx n ((k : ℤ) + 1)) (φ : (Fin n → ℝ) → ℝ), ContDiff ℝ (⊤ : ℕ∞) φ →
@@ -329,8 +276,6 @@ theorem integral_real_mul_fderiv_integrable {k : ℤ} (u : L2F ℝ (Q (Fin n)) (
   integrable_real_mul_bdd_Q (u s)
     ((hφ.continuous_fderiv (by simp)).clm_apply continuous_const) (C := L) fun y => hL j y
 
-/-- **Green's identity from the inner products**: if `⟪w, φ dx_t⟫ = ⟪u, dᵗ (φ dx_t)⟫` for the
-admissible `φ`, then `GreenFor rel k u w`. -/
 theorem greenFor_of_inner {rel : Bool} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))}
     (h : ∀ (t : formIdx n ((k : ℤ) + 1)) (φ : (Fin n → ℝ) → ℝ) (hφ : ContDiff ℝ (⊤ : ℕ∞) φ),
@@ -397,7 +342,6 @@ theorem fderiv_im_comp {F : (Fin n → ℝ) → ℂ} {y : Fin n → ℝ} (hF : D
   rw [show (fun y => (F y).im) = Complex.imCLM ∘ F from rfl, h.fderiv]
   rfl
 
-/-- The derivatives of a folded character: `∂_j fold_c e_{-m} = -2πi m_j fold_{c'} e_{-m}`. -/
 theorem fderiv_fold_mFourier (c : Fin n → ℂ) (m : Fin n → ℤ) (j : Fin n) (y : Fin n → ℝ) :
     fderiv ℝ (fold c (mFourier (-m))) y (Pi.single j 1) =
       2 * Real.pi * Complex.I * (((-m) j : ℤ) : ℂ) *
@@ -414,8 +358,7 @@ theorem update_mul_self {c : Fin n → ℂ} (hc : ∀ j, c j * c j = 1) (j i : F
   · subst h; simp [hc i]
   · rw [Function.update_of_ne h]; exact hc i
 
-/-- **The torus symbol on the extension**: if `(u, w)` satisfies Green's identity `GreenFor`,
-then `d_ξ (Jf u)(m) = (Jf w)(m)` at every frequency `m` (`ξ = 2πm`). -/
+/-- **The torus symbol on the extension**: under `GreenFor`, `d_ξ (Jf u)(m) = (Jf w)(m)`. -/
 theorem coeff_d_of_greenFor {rel : Bool} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     {w : L2F ℝ (Q (Fin n)) (formIdx n ((k : ℤ) + 1))} (h : GreenFor rel k u w)
     (m : Fin n → ℤ) :
@@ -501,8 +444,7 @@ theorem coeff_d_of_greenFor {rel : Bool} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (for
 
 /-! ### Green's identity on `H̊Λ(Q)` and on `HΛ(Q)` -/
 
-/-- **Green's identity on `D(d_min)`** against every smooth form: the boundary term vanishes by
-the boundary condition of `u`. -/
+/-- **Green's identity on `D(d_min)`** against every smooth form. -/
 theorem greenFor_minimal (rel : Bool) (k : ℕ)
     (u : ((extDerivOp ℝ n (k : ℤ)).minimal (Q (Fin n))).domain) :
     GreenFor rel k u ((extDerivOp ℝ n (k : ℤ)).minimal (Q (Fin n)) u) :=
@@ -518,9 +460,6 @@ theorem chi_mul_single1 {k : ℤ} (t : formIdx n (k + 1)) (φ : (Fin n → ℝ) 
   · subst h; simp [single1]
   · simp [single1, h]
 
-/-- **One-component forms with vanishing normal trace lie in `D(dᵗ_min)`**: if `φ = 0` on the
-faces `{y_j ∈ {0, ½}}` for `j ∈ t`, then `(φ dx_t, dᵗ(φ dx_t))` lies in the closure of the graph
-of `dᵗ` on test forms (cut-off argument). -/
 theorem mem_closure_formalAdj_single1 {k : ℤ} (t : formIdx n (k + 1)) {φ : (Fin n → ℝ) → ℝ}
     (hφ : ContDiff ℝ (⊤ : ℕ∞) φ) {M : ℝ} (hM : ∀ y, |φ y| ≤ M) {L : ℝ}
     (hL : ∀ j y, |fderiv ℝ φ y (Pi.single j 1)| ≤ L)
@@ -561,8 +500,7 @@ theorem mem_closure_formalAdj_single1 {k : ℤ} (t : formIdx n (k + 1)) {φ : (F
     have hM00 : 0 ≤ M₀ := (abs_nonneg _).trans (hM₀ 0)
     positivity
 
-/-- **Green's identity on `D(d_max)`** against the smooth forms with vanishing normal trace:
-these lie in `D(dᵗ_min)` (`mem_closure_formalAdj_single1`) and `d_max = (dᵗ_min)†`. -/
+/-- **Green's identity on `D(d_max)`** against the smooth forms with vanishing normal trace. -/
 theorem greenFor_maximal (k : ℕ)
     (u : ((extDerivOp ℝ n (k : ℤ)).maximal (Q (Fin n))).domain) :
     GreenFor false k u ((extDerivOp ℝ n (k : ℤ)).maximal (Q (Fin n)) u) := by
@@ -578,7 +516,6 @@ theorem greenFor_maximal (k : ℕ)
   rw [hx1, hx2] at this
   exact this
 
-/-- **`d_ξ (Jf u) = Jf (d_min u)`** fibrewise, for `u ∈ H̊Λᵏ(Q)` (any class). -/
 theorem coeff_d_minimal (rel : Bool) (k : ℕ)
     (u : ((extDerivOp ℝ n (k : ℤ)).minimal (Q (Fin n))).domain) (m : Fin n → ℤ) :
     (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (Feec.Fourier.Torus.freq m)
@@ -587,7 +524,6 @@ theorem coeff_d_minimal (rel : Bool) (k : ℕ)
         (Fin n → ℤ) → Form ℂ (Fin n) (k + 1)) m :=
   coeff_d_of_greenFor (greenFor_minimal rel k u) m
 
-/-- **`d_ξ (Jf u) = Jf (d_max u)`** fibrewise, for `u ∈ HΛᵏ(Q)` (absolute class). -/
 theorem coeff_d_maximal (k : ℕ) (u : ((extDerivOp ℝ n (k : ℤ)).maximal (Q (Fin n))).domain)
     (m : Fin n → ℤ) :
     (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (Feec.Fourier.Torus.freq m)

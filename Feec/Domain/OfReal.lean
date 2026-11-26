@@ -5,44 +5,13 @@ public import Feec.Domain.RegularDecomposition
 /-!
 # Real-coefficient operators on `𝕜`-valued fields
 
-A constant-coefficient operator with real coefficients `A` acts on `𝕜`-valued fields for every
-`RCLike 𝕜` (`ℝ`, `ℂ`; `ConstCoeffOp.ofReal`, the coefficients cast to `𝕜`; the de Rham complexes
-in vector proxies are of this form, `deRhamVec_ofReal`). Real-linear maps `L : 𝕜₁ → 𝕜₂` (the
-real and imaginary parts, the cast `ℝ → 𝕜`) commute with `A` on smooth fields
-(`ConstCoeffOp.clm_ofReal_apply`), and so with its maximal realizations: a field lies in
-`D(A_max)` over `𝕜` iff its real and imaginary parts lie in `D(A_max)` over `ℝ`
-(`ConstCoeffOp.reCLM_mem_maximal_domain`, `imCLM_mem_maximal_domain`,
-`ofRealCLM_mem_maximal_domain`; `u = re u + i im u`, `L2F.ofRealCLM_re_add_im`, with the
-pointwise maps `L2F.reCLM`, `L2F.imCLM`, `L2F.ofRealCLM` of `Feec.Domain.L2Field`).
-
-Hence the analytic properties of a complex of real-coefficient operators pass from `ℝ` to `𝕜`,
-componentwise:
-
-* **the `H¹`-regular decompositions** (`ConstCoeffComplex.HasRegularDecomposition.ofReal`):
-  decompose the real and imaginary parts;
-* **finite-dimensional cohomology** (`ConstCoeffComplex.finiteDimensional_cohomology_ofReal`):
-  `re`, `im` and the cast are cochain maps and `u = re u + i im u`
-  (`HilbertComplex.finiteDimensional_cohomology_of_sum_smul_eq_id`).
-
-## Main definitions
-
-* `ConstCoeffOp.ofReal`, `ConstCoeffComplex.ofReal`.
+A constant-coefficient operator with real coefficients acts on `𝕜`-valued fields, and the regular
+decompositions and finite-dimensional cohomology of maximal complexes of such operators pass to `𝕜`.
 
 ## Main results
 
-* `ConstCoeffOp.clm_ofReal_apply`, `ConstCoeffOp.formalAdj_ofReal`.
-* **`ConstCoeffOp.ofRealCLM_mem_maximal_domain`**, **`ConstCoeffOp.reCLM_mem_maximal_domain`**,
-  `ConstCoeffOp.imCLM_mem_maximal_domain`; `ofRealCLM_mem_fieldH1`.
-* **`ConstCoeffComplex.HasRegularDecomposition.ofReal`**,
-  **`ConstCoeffComplex.finiteDimensional_cohomology_ofReal`**; `deRhamVec_ofReal`.
-
-## References
-
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (regular decompositions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1 (closed range, harmonic forms and cohomology)
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `ConstCoeffComplex.HasRegularDecomposition.ofReal`: the regular decompositions pass to `𝕜`.
+* `ConstCoeffComplex.finiteDimensional_cohomology_ofReal`: so does finite-dimensional cohomology.
 -/
 
 open MeasureTheory
@@ -78,8 +47,6 @@ theorem formalAdj_ofReal (A : ConstCoeffOp E ℝ ι κ) :
   refine List.map_congr_left fun t _ => ?_
   simp
 
-/-- **Real-linear maps commute with real-coefficient operators**: `L (A f) = A (L ∘ f)` on smooth
-fields, for every `ℝ`-linear `L : 𝕜₁ → 𝕜₂` (the real and imaginary parts, the cast). -/
 theorem clm_ofReal_apply {𝕜₁ 𝕜₂ : Type*} [RCLike 𝕜₁] [RCLike 𝕜₂] [Fintype ι]
     (A : ConstCoeffOp E ℝ ι κ) (L : 𝕜₁ →L[ℝ] 𝕜₂) {f : ι → E → 𝕜₁}
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) (j : κ) (x : E) :
@@ -89,7 +56,6 @@ theorem clm_ofReal_apply {𝕜₁ 𝕜₂ : Type*} [RCLike 𝕜₁] [RCLike 𝕜
   simp only [Function.comp_apply, ← RCLike.real_smul_eq_coe_mul, map_smul,
     iterDeriv_comp_clm L (hf i)]
 
-/-- Complex pairs of real-coefficient operators stay complex pairs on `𝕜`-valued fields. -/
 theorem IsComplexPair.ofReal {μ : Type*} [Fintype ι] [Fintype κ] {A : ConstCoeffOp E ℝ ι κ}
     {B : ConstCoeffOp E ℝ κ μ} (h : A.IsComplexPair B) :
     (A.ofReal 𝕜).IsComplexPair (B.ofReal 𝕜) := by
@@ -120,8 +86,6 @@ namespace ConstCoeffOp
 variable [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] {Ω : Set E} [Fintype ι] [Fintype κ]
 
-/-- **The cast of a real field in `D(A_max)` lies in `D(A_max)` over `𝕜`**, with
-`A_max (ofReal p) = ofReal (A_max p)`: test against `φ = re φ + i im φ`. -/
 theorem ofRealCLM_mem_maximal_domain (hΩ : IsOpen Ω) (A : ConstCoeffOp E ℝ ι κ)
     (p : (A.maximal Ω).domain) :
     ∃ hp : L2F.ofRealCLM 𝕜 (p : L2F ℝ Ω ι) ∈ ((A.ofReal 𝕜).maximal Ω).domain,
@@ -143,8 +107,6 @@ theorem ofRealCLM_mem_maximal_domain (hΩ : IsOpen Ω) (A : ConstCoeffOp E ℝ �
   exact ⟨((A.ofReal 𝕜).mem_maximal_domain_iff hΩ).2 ⟨_, key⟩,
     (A.ofReal 𝕜).maximal_apply_eq hΩ ⟨_, _⟩ key⟩
 
-/-- **The real part of a field in `D(A_max)` over `𝕜` lies in `D(A_max)` over `ℝ`**, with
-`A_max (re u) = re (A_max u)`: test against real test fields. -/
 theorem reCLM_mem_maximal_domain (hΩ : IsOpen Ω) (A : ConstCoeffOp E ℝ ι κ)
     (u : ((A.ofReal 𝕜).maximal Ω).domain) :
     ∃ hu : L2F.reCLM (u : L2F 𝕜 Ω ι) ∈ (A.maximal Ω).domain,
@@ -163,8 +125,6 @@ theorem reCLM_mem_maximal_domain (hΩ : IsOpen Ω) (A : ConstCoeffOp E ℝ ι κ
       (A.ofReal 𝕜).maximal_inner_testField hΩ u]
   exact ⟨(A.mem_maximal_domain_iff hΩ).2 ⟨_, key⟩, A.maximal_apply_eq hΩ ⟨_, _⟩ key⟩
 
-/-- **The imaginary part of a field in `D(A_max)` over `𝕜` lies in `D(A_max)` over `ℝ`**
-(`im u = re (-i u)`). -/
 theorem imCLM_mem_maximal_domain (hΩ : IsOpen Ω) (A : ConstCoeffOp E ℝ ι κ)
     (u : ((A.ofReal 𝕜).maximal Ω).domain) :
     ∃ hu : L2F.imCLM (u : L2F 𝕜 Ω ι) ∈ (A.maximal Ω).domain,
@@ -190,7 +150,6 @@ theorem fieldGradOp_ofReal : (fieldGradOp ℝ n ι).ofReal 𝕜 = fieldGradOp �
   funext ij i
   split_ifs <;> simp
 
-/-- The cast of a real `H¹` field is an `H¹` field. -/
 theorem ofRealCLM_mem_fieldH1 (hΩ : IsOpen Ω) {w : L2F ℝ Ω ι} (hw : w ∈ fieldH1 ℝ Ω ι) :
     L2F.ofRealCLM 𝕜 w ∈ fieldH1 𝕜 Ω ι := by
   rw [fieldH1, ← fieldGradOp_ofReal]
@@ -202,8 +161,7 @@ end FieldH1
 
 namespace ConstCoeffComplex
 
-/-- **The `H¹`-regular decompositions pass from `ℝ` to `𝕜`**: decompose the real and imaginary
-parts, `u = (d p + w) + i (d q + w') = d (p + i q) + (w + i w')`. -/
+/-- **The `H¹`-regular decompositions pass from `ℝ` to `𝕜`.** -/
 theorem HasRegularDecomposition.ofReal {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
     {C : ConstCoeffComplex (Fin n → ℝ) ℝ} {J : ℤ} (h : C.HasRegularDecomposition Ω J) :
     (C.ofReal 𝕜).HasRegularDecomposition Ω J := by
@@ -230,9 +188,7 @@ theorem HasRegularDecomposition.ofReal {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ
 variable [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] {Ω : Set E}
 
-/-- **Finite-dimensional cohomology passes from `ℝ` to `𝕜`**: the real and imaginary parts and
-the cast are cochain maps of the maximal complexes and `u = re u + i im u`
-(`HilbertComplex.finiteDimensional_cohomology_of_sum_smul_eq_id`). -/
+/-- **Finite-dimensional cohomology of the maximal complex passes from `ℝ` to `𝕜`.** -/
 theorem finiteDimensional_cohomology_ofReal (C : ConstCoeffComplex E ℝ) (hΩ : IsOpen Ω) (i : ℤ)
     [FiniteDimensional ℝ ((C.maximalComplex hΩ).cohomology i)] :
     FiniteDimensional 𝕜 (((C.ofReal 𝕜).maximalComplex hΩ).cohomology i) := by
@@ -267,7 +223,6 @@ end ConstCoeffComplex
 
 /-! ### The de Rham complexes in vector proxies -/
 
-/-- The row-wise `grad`, `curl`, `div` have real coefficients. -/
 theorem vecOp_ofReal (m : ℕ) : ∀ k, (vecOp ℝ m k).ofReal 𝕜 = vecOp 𝕜 m k
   | .ofNat (_ + 3) | .negSucc _ => rfl
   | .ofNat 0 | .ofNat 1 | .ofNat 2 => by
@@ -276,7 +231,6 @@ theorem vecOp_ofReal (m : ℕ) : ∀ k, (vecOp ℝ m k).ofReal 𝕜 = vecOp 𝕜
     funext a b
     split_ifs <;> simp
 
-/-- **The de Rham complex with values in `𝕜ᵐ` is the real one acting on `𝕜`-valued fields.** -/
 theorem deRhamVec_ofReal (m : ℕ) : (deRhamVec ℝ m).ofReal 𝕜 = deRhamVec 𝕜 m := by
   simp only [ConstCoeffComplex.ofReal, deRhamVec, vecOp_ofReal]
 

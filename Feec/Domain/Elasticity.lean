@@ -5,50 +5,9 @@ public import Feec.Domain.ConstrainedComplex
 /-!
 # The elasticity complex on an open set of `ℝ³`
 
-The elasticity (Kröner, Calabi) complex
-`𝕜³ --sym grad--> 𝕜^{3×3}_sym --inc--> 𝕜^{3×3}_sym --div--> 𝕜³` on `ℝ³`, with
-`inc σ = curl (curl σ)ᵀ` (row-wise curls, `Feec.Domain.curlOp`), as constant-coefficient
-operators (`symGradOp`, `incOp`, `divSymOp`; `divSymOp = div ∘ sym` is the divergence of
-symmetric fields, `div` on `Sym`), and as a complex of constrained realizations on every open
-`Ω ⊆ ℝ³` (`elasticityComplex`, the middle spaces being `L²(Ω; Sym)`):
-
-* the complex identities `inc ∘ sym grad = 0` (`isComplexPair_symGrad_inc`) and
-  `div ∘ inc = 0` (`isComplexPair_inc_div`, `isComplexPair_inc_divSym`), and the symmetry of
-  `inc` (`incOp_apply_transpose`: `inc (σᵀ) = (inc σ)ᵀ`);
-* the formal adjoints `(sym grad)ᵗ = -div ∘ sym` (`symGradOp_formalAdj_apply`), `incᵗ = inc`
-  (`incOp_formalAdj_apply`) and
-  `divᵗ = -sym grad` (`divSymOp_formalAdj_apply`);
-* the minimal complex `H̊(sym grad) → H̊(inc, Sym) → H̊(div, Sym) → L²` and the maximal complex
-  `H(sym grad) → H(inc, Sym) → H(div, Sym) → L²`, where `H(sym grad) = {u ∈ L² : ε(u) ∈ L²}`
-  (weakly) and `H̊(sym grad)` is the closure of the test fields in its graph norm (these are
-  `H̊¹` and, for regular `Ω`, `H¹` by Korn's inequalities, which are not proved here)
-  (`elasticityComplex.minimalComplex`, `elasticityComplex.maximalComplex`), whose differentials
-  are the realizations of `sym grad`, `inc`, `div`;
-* **self-duality**: the dual of the minimal complex is the maximal complex read backwards with
-  the signs `-div, inc, -sym grad` (`elasticity_dual_minimalComplex_d₀`, …), and vice versa by
-  taking adjoints.
-
-No closed-range statement is made (it needs the regularity of `Ω`).
-
-**As a BGG complex.** The elasticity complex is the output of the BGG construction
-(`Feec.BGG.Data.bgg`, `J = 1`) applied to two copies of the de Rham complex tensored with `ℝ³`,
-`ℝ³ → ℝ³ˣ³ → ℝ³ˣ³ → ℝ³`, linked by `-mskw`, `S u = uᵀ - tr(u) I` and `2 vskw`: the middle two rows
-of [ArnoldHu2021], (32); the construction goes back to [Eastwood2000] (the BGG resolution) and
-[AFW2006], §11. On smooth fields this is formalized in `Feec.Domain.ElasticityBGG`: the diagram
-satisfies the injectivity/surjectivity condition at `J = 1` and its BGG complex is the smooth
-version of `elasticityComplex` (same operators, same constraints). The identification of the `L²`
-realizations is not formalized.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §11 (the elasticity complex)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the elasticity complex as the
-  BGG output of the middle two rows of (32), `J = 1`), (5)
-* [M. Eastwood, *A complex from linear elasticity*][Eastwood2000] (the elasticity complex from the
-  BGG resolution)
-
-Bibliography: [references.bib](../../docs/references.bib)
+The elasticity complex `𝕜³ --sym grad--> Sym --inc--> Sym --div--> 𝕜³`, `inc σ = curl (curl σ)ᵀ`,
+is a complex of constrained realizations on every open `Ω ⊆ ℝ³`; it is self-dual, the dual of the
+minimal complex being the maximal one read backwards with the signs `-div`, `inc`, `-sym grad`.
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate LinearPMap
@@ -110,8 +69,6 @@ theorem incOp_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hf : ∀ 
   funext ik x
   exact matMulField_transposeMat _ ik x
 
-/-- `inc` in coordinates: `(inc f)_{jl} = ∂_{l+1}∂_{j+1} f_{l+2,j+2} - ∂_{l+1}∂_{j+2} f_{l+2,j+1}
-- ∂_{l+2}∂_{j+1} f_{l+1,j+2} + ∂_{l+2}∂_{j+2} f_{l+1,j+1}`. -/
 theorem incOp_apply_eq {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hf : ∀ i, ContDiff ℝ ∞ (f i))
     (j l : Fin 3) (x : Fin 3 → ℝ) :
     (incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply f (j, l) x =
@@ -132,8 +89,6 @@ theorem incOp_apply_eq {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hf : �
   simp only [sub_apply]
   ring
 
-/-- **`inc (fᵀ) = (inc f)ᵀ`** (Schwarz); in particular `inc` maps symmetric fields to symmetric
-fields. -/
 theorem incOp_apply_transpose {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) (j l : Fin 3) :
     (incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply (fun ij => f (ij.2, ij.1)) (l, j) =
@@ -147,7 +102,6 @@ theorem incOp_apply_transpose {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     fderiv_fderiv_comm ((hf (l + 1, j + 1)).of_le (by simp)) (coordDir (l + 2))]
   ring
 
-/-- `sym (inc f) = inc (sym f)`. -/
 theorem matMulField_symMat_incOp {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     matMulField (symMat 3) ((incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply f) =
@@ -164,7 +118,6 @@ theorem matMulField_symMat_incOp {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → �
 
 /-! ## The complex identities -/
 
-/-- **`inc ∘ sym grad = 0`.** -/
 theorem isComplexPair_symGrad_inc :
     (symGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair incOp := by
   intro u hu
@@ -177,14 +130,12 @@ theorem isComplexPair_symGrad_inc :
   funext ij x
   simp [matMulField]
 
-/-- **`div ∘ inc = 0`.** -/
 theorem isComplexPair_inc_div :
     (incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair (divOp 3 3) := by
   intro f hf
   rw [incOp_apply hf]
   exact isComplexPair_curl_div _ fun ik => (curlOp 3).contDiff_apply hf _
 
-/-- **`div ∘ inc = 0`** with the divergence of symmetric fields. -/
 theorem isComplexPair_inc_divSym :
     (incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).IsComplexPair divSymOp := by
   intro f hf
@@ -199,7 +150,6 @@ theorem symGradOp_formalAdj :
       (gradOp 3 3).formalAdj.preComp (symMat 3) := by
   rw [symGradOp, formalAdj_postComp, symMat_conjTranspose (𝕜 := 𝕜)]
 
-/-- `(sym grad)ᵗ = -div ∘ sym`. -/
 theorem symGradOp_formalAdj_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (symGradOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply f =
@@ -208,7 +158,6 @@ theorem symGradOp_formalAdj_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → �
   funext i x
   rw [gradOp_formalAdj_apply, Pi.neg_apply, Pi.neg_apply, divOp_apply]
 
-/-- **`incᵗ = inc`.** -/
 theorem incOp_formalAdj_apply {f : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜}
     (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
     (incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply f = incOp.apply f := by
@@ -226,7 +175,6 @@ theorem divSymOp_formalAdj :
       (divOp 3 3).formalAdj.postComp (symMat 3) := by
   rw [divSymOp, formalAdj_preComp, symMat_conjTranspose (𝕜 := 𝕜)]
 
-/-- **`divᵗ = -sym grad`.** -/
 theorem divSymOp_formalAdj_apply (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (divSymOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).formalAdj.apply f = -symGradOp.apply f := by
   rw [divSymOp_formalAdj, postComp_apply_eq_matMulField, symGradOp_apply, ← matMulField_neg]
@@ -236,8 +184,7 @@ theorem divSymOp_formalAdj_apply (f : Fin 3 → (Fin 3 → ℝ) → 𝕜) :
 
 /-! ## The elasticity complex on an open set -/
 
-/-- The component index types of the elasticity complex (vectors as `Fin 3`, matrices as
-`Fin 3 × Fin 3`). -/
+/-- The component index types of the elasticity complex. -/
 def elasticityIdx : ℤ → Type
   | .ofNat 0 => Fin 3
   | .ofNat 1 => Fin 3 × Fin 3
@@ -290,7 +237,6 @@ def elasticityMat : ∀ k : ℤ, elasticityIdx k → elasticityIdx k → 𝕜
   | .ofNat (_ + 3) => idMat _
   | .negSucc _ => idMat _
 
-/-- `inc` maps symmetric fields to symmetric fields. -/
 theorem incOp_matMapsTo :
     (incOp : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).MatMapsTo (symMat 3) (symMat 3) := fun φ hφ => by
   rw [matMulField_symMat_incOp (contDiff_matMulField _ hφ),
@@ -379,9 +325,7 @@ def elasticityConstCoeffComplex : ConstCoeffComplex (Fin 3 → ℝ) 𝕜 where
   comp := elasticityOp_comp
 
 variable (𝕜) in
-/-- **The elasticity complex on an open `Ω ⊆ ℝ³`**:
-`L²(Ω; 𝕜³) --sym grad--> L²(Ω; Sym) --inc--> L²(Ω; Sym) --div--> L²(Ω; 𝕜³)`, a complex of
-constrained realizations. -/
+/-- **The elasticity complex on an open `Ω ⊆ ℝ³`**, a complex of constrained realizations. -/
 def elasticityComplex {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
     ConstrainedComplex (Fin 3 → ℝ) 𝕜 Ω :=
   ConstrainedComplex.ofMatrices hΩ (elasticityConstCoeffComplex 𝕜) (elasticityMat 𝕜)
@@ -410,11 +354,7 @@ theorem incOp_formalAdj_formalAdj_apply_eq {ψ : Fin 3 × Fin 3 → (Fin 3 → �
       incOp.formalAdj.apply ψ := by
   rw [formalAdj_formalAdj, incOp_formalAdj_apply hψ]
 
-/-! The formal adjoints of `sym grad, inc, div` are `-div, inc, -sym grad`
-(`ConstCoeffOp.negOp`). -/
-
-/-- **Self-duality of the elasticity complex**, degree `0`: `((sym grad)_min)†` is the maximal
-realization of `-div` on symmetric fields. -/
+/-- **Self-duality of the elasticity complex**, degree `0`: `((sym grad)_min)† = (-div)_max`. -/
 theorem elasticity_dual_minimalComplex_d₀ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.dual.d 1 0 =
       divSymOp.negOp.maximalVia (symEmb 𝕜 Ω 3) (freeEmb 𝕜 Ω (Fin 3)) := by
@@ -422,7 +362,6 @@ theorem elasticity_dual_minimalComplex_d₀ :
     (maximalVia_congr _ _ _ fun ψ _ _ _ =>
       testField_congr _ _ (symGradOp_formalAdj_formalAdj_apply_eq ψ))
 
-/-- Self-duality, degree `1`: `(inc_min)† = inc_max`. -/
 theorem elasticity_dual_minimalComplex_d₁ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.dual.d 2 1 =
       ((elasticityComplex 𝕜 hΩ).maximalComplex hΩ).d 1 2 := by
@@ -431,8 +370,6 @@ theorem elasticity_dual_minimalComplex_d₁ :
       (incOp_formalAdj_formalAdj_apply_eq fun i => (hψ i).contDiff)).trans
       ((elasticityComplex 𝕜 hΩ).maximalComplex_d hΩ 1).symm)
 
-/-- Self-duality, degree `2`: `(div_min)†` on symmetric fields is the maximal realization of
-`-sym grad`. -/
 theorem elasticity_dual_minimalComplex_d₂ :
     (elasticityComplex 𝕜 hΩ).minimalComplex.dual.d 3 2 =
       symGradOp.negOp.maximalVia (freeEmb 𝕜 Ω (Fin 3)) (symEmb 𝕜 Ω 3) := by

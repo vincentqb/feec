@@ -6,38 +6,12 @@ public import Feec.ForMathlib.Analysis.HalfLinePowers
 /-!
 # The `√n` stability bound for every A-stable rational scheme
 
-`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le` gives Brenner–Thomée's bound
-`‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for strongly A-stable `r` (`|r(∞)| < 1`). Here it is extended to
-**every A-stable rational scheme**, in particular to those with `|r(∞)| = 1`: Crank–Nicolson
-and the Gauss methods, which are symmetric and never strongly A-stable
-(`RationalScheme.IsSymmetric.not_isStronglyAStable`).
-
-The Hille–Phillips measure `μ_r` (`RationalScheme.hpMeasure`) has `μ̂_r = R(ν̂)` with
-`R = P/Q`, `P(s) = sᴺ n(1 - 1/s)`, `Q(s) = sᴺ d(1 - 1/s)` (`fourier_hpMeasure_eq_div`), and `Q`
-has no zeros on the closed disc `|s - 1/2| ≤ 1/2`, the image of `re z ≤ 0` and `z = ∞`
-(`eval_denPoly_ne_zero`). By compactness, `μ̂_r - r(∞) = O(ν̂)` and `μ̂_r' = O(ν̂²)`
-(**`RationalScheme.exists_decay`**, for every rational scheme), the hypotheses of the power bound
-`Feec.HalfLineAlgebra.variation_pow_le`, which holds whether or not `|r(∞)| < 1`. Hence, for a
-bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space and A-stable `r`,
-**`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)`** (`norm_resolventStep_pow_le_of_isAStable`,
-`C_r = RationalScheme.sqrtConst`) [BrennerThomee1979]; this covers every symmetric scheme,
-A-stable but not strongly A-stable.
-
-The constant `C_r` is not explicit: it comes from the bounds of `R'` and `(R - R(0))/s` on the
-disc; the strongly A-stable bound `RationalScheme.norm_resolventStep_pow_le` keeps the explicit
-`RationalScheme.stabilityConst`. The bound on real Banach spaces
-(`RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable`) and the error bound with
-its `√n` loss (`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`,
-`RationalScheme.IsSymmetric.norm_resolventStep_pow_sub_S_le_of_resolvent`), over `ℝ` or `ℂ`, are
-in `Feec.TimeStepping.RationalHillePhillipsReal`; that error bound is of order `p - 1/2` at fixed
-`nτ`, weaker by `√n` than Brenner–Thomée's smooth-data estimate
-`RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (`Feec.TimeStepping.RationalSharp`), which
-needs no stability bound.
+For every A-stable rational scheme `r` and every bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach
+space, `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)`, through the decay of the Hille–Phillips measure of `r`.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -63,7 +37,6 @@ theorem resolventEval_num_X :
 theorem resolventEval_den_X :
     resolventEval r.den.natDegree (r.den.map (algebraMap ℝ ℂ)) (X : ℂ[X]) = r.denPoly := rfl
 
-/-- `μ̂_r(ξ) = P(s)/Q(s)` at `s = ν̂(ξ)`. -/
 theorem fourier_hpMeasure_eq_div (ξ : ℝ) :
     HalfLineAlgebra.fourier ξ r.hpMeasure =
       r.numPoly.eval (HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent) /
@@ -72,7 +45,6 @@ theorem fourier_hpMeasure_eq_div (ξ : ℝ) :
     resolventEval_num_X, resolventEval_den_X, coe_aeval_eq_eval,
     Ring.inverse_eq_inv', div_eq_mul_inv]
 
-/-- The atom `r(∞) = P(0)/Q(0)`. -/
 theorem fst_hpMeasure_eq_div : r.hpMeasure.fst = r.numPoly.eval 0 / r.denPoly.eval 0 := by
   have h := r.map_hpMeasure (fstHom ℂ HalfLineKernel)
   rw [show fstHom ℂ HalfLineKernel HalfLineAlgebra.resolvent = 0 from rfl,
@@ -81,8 +53,6 @@ theorem fst_hpMeasure_eq_div : r.hpMeasure.fst = r.numPoly.eval 0 / r.denPoly.ev
     Ring.inverse_eq_inv', ← div_eq_mul_inv] at h
   exact h
 
-/-- **`Q` has no zeros in the closed disc `|s - 1/2| ≤ 1/2`**, the image of the closed left
-half-plane `re z ≤ 0` and of `z = ∞` under `s = 1/(1 - z)`. -/
 theorem eval_denPoly_ne_zero {s : ℂ} (hs : ‖s - 1 / 2‖ ≤ 1 / 2) : r.denPoly.eval s ≠ 0 := by
   rcases eq_or_ne s 0 with rfl | hs0
   · exact r.eval_denPoly_zero_ne_zero
@@ -98,10 +68,6 @@ theorem eval_denPoly_ne_zero {s : ℂ} (hs : ‖s - 1 / 2‖ ≤ 1 / 2) : r.denP
     Complex.normSq_apply]
   nlinarith [h2]
 
-/-- **The decay of `μ_r` at high frequencies**: `|μ̂_r(ξ) - r(∞)| ≤ C₁ |ν̂(ξ)|` and
-`|μ̂_r'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²`, for every rational scheme: `μ̂_r = R(ν̂)` with `R = P/Q` analytic
-on the closed disc `|s - 1/2| ≤ 1/2`, so `R(s) - R(0) = s T(s)/(Q(s) Q(0))` and `R'` are bounded
-there, and `ν̂' = -2πi ν̂²`. -/
 theorem exists_decay : ∃ C₁ C₂ : ℝ, ∀ ξ,
     ‖HalfLineAlgebra.fourier ξ r.hpMeasure - r.hpMeasure.fst‖ ≤
         C₁ * ‖HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent‖ ∧
@@ -157,16 +123,15 @@ theorem exists_decay : ∃ C₁ C₂ : ℝ, ∀ ξ,
     rw [e, norm_mul, norm_pow]
     exact mul_le_mul_of_nonneg_right (hC₂ _ hs) (by positivity)
 
-/-- **The constant of the `√n` bound for an A-stable scheme**,
-`HalfLineAlgebra.powerConst C₁ C₂` for the decay constants of `exists_decay`. -/
+/-- The constant `C_r` of the `√n` bound for an A-stable scheme. -/
 def sqrtConst : ℝ :=
   HalfLineAlgebra.powerConst (Classical.choose r.exists_decay)
     (Classical.choose (Classical.choose_spec r.exists_decay))
 
 theorem sqrtConst_nonneg : 0 ≤ r.sqrtConst := HalfLineAlgebra.powerConst_nonneg _ _
 
-/-- **The total variation of `μ_rⁿ` is at most `1 + C √n` for every A-stable `r`**, including
-`|r(∞)| = 1` (`HalfLineAlgebra.variation_pow_le`). [BrennerThomee1979] -/
+/-- **The total variation of `μ_rⁿ` is at most `1 + C_r √n` for every A-stable `r`.**
+[BrennerThomee1979] -/
 theorem variation_hpMeasure_pow_le_sqrtConst {r : RationalScheme} (hr : r.IsAStable) (n : ℕ) :
     (r.hpMeasure ^ n).variation ≤ 1 + r.sqrtConst * √n :=
   have h := Classical.choose_spec (Classical.choose_spec r.exists_decay)
@@ -180,11 +145,8 @@ section Semigroup
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
   (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
 
-/-- **Brenner–Thomée's stability bound for every A-stable rational scheme**
-[BrennerThomee1979]: for `r` A-stable (`|r(iy)| ≤ 1`; `|r(∞)| = 1` allowed, e.g. Crank–Nicolson
-and the Gauss methods) and a bounded semigroup, `‖S(t)‖ ≤ M`, on a complex Banach space,
-`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for all `τ ≥ 0` and `n`, with `C_r` depending only on `r`
-(`RationalScheme.sqrtConst`, not explicit). -/
+/-- **Brenner–Thomée's stability bound for every A-stable rational scheme**: for a bounded semigroup
+`‖S(t)‖ ≤ M` on a complex Banach space, `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)`. [BrennerThomee1979] -/
 theorem norm_resolventStep_pow_le_of_isAStable {r : RationalScheme} (hr : r.IsAStable) {τ : ℝ}
     (hτ : 0 ≤ τ) (n : ℕ) :
     ‖r.resolventStep (G.laplaceResolvent hM τ hτ) ^ n‖ ≤ M * (1 + r.sqrtConst * √n) := by

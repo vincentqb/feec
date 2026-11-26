@@ -6,31 +6,8 @@ public import Feec.Semigroup.Orbit
 /-!
 # Invariant subspaces of a group: the invariant core and reducing subspaces
 
-For a strongly continuous group `G` and a subspace `K`:
-
-* `C0Group.invariantCore G K = ⨅ t, (S t)⁻¹ K`: the largest `G`-invariant subspace of `K`
-  (`le_invariantCore`), closed when `K` is
-  (`isClosed_invariantCore`).
-
-For an isometric group on a Hilbert space with generator `A`:
-
-* **`C0Group.IsIsometric.isReducing_iff_invariant`**: `K` reduces `A` iff `S t K ⊆ K` for every
-  `t ∈ ℝ`. (`⇒`: `P_K S t x` and `S t P_K x` solve the same equation; `⇐`: `Kᗮ` is invariant
-  too, so `P_K` commutes with `S t`.)
-* `IsIsometric.isReducing_invariantCore`: `A` is reduced by `invariantCore G K`, which is the
-  largest reducing subspace of `A` contained in `K` (`IsIsometric.isGreatest_isReducing`).
-* `IsIsometric.apply_mem_invariantCore`, `mem_invariantCore_of_generator_eq_zero` (stationary
-  points), `dense_domain_inter_invariantCore`.
-* `LinearPMap.IsSkewSymmetric.eq_zero_of_hasDerivAt`: the energy argument (a solution of
-  `e' = A e` with `e 0 = 0` vanishes when `A` is skew-symmetric).
-
-## References
-
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.10 (groups of isometries)
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (reducing subspaces)
-
-Bibliography: [references.bib](../../docs/references.bib)
+The invariant core of `K`, its largest subspace invariant under a strongly continuous group; for
+an isometric group, the closed subspaces reducing the generator are exactly the invariant ones.
 -/
 
 open Set Filter Topology LinearPMap
@@ -49,8 +26,7 @@ section NormedSpace
 
 variable [NormedAddCommGroup E] [NormedSpace 𝕜 E] (G : C0Group 𝕜 E)
 
-/-- The **invariant core** of `K`: `{x | S t x ∈ K for all t}`, the largest `G`-invariant
-subspace of `K`. -/
+/-- The **invariant core** `{x | ∀ t, S t x ∈ K}`, the largest `G`-invariant subspace of `K`. -/
 def invariantCore (K : Submodule 𝕜 E) : Submodule 𝕜 E :=
   ⨅ t : ℝ, K.comap (G.S t : E →ₗ[𝕜] E)
 
@@ -62,7 +38,6 @@ theorem mem_invariantCore {x : E} : x ∈ G.invariantCore K ↔ ∀ t, G.S t x �
 theorem invariantCore_le : G.invariantCore K ≤ K := fun x hx => by
   simpa using mem_invariantCore.1 hx 0
 
-/-- The invariant core is invariant. -/
 theorem S_mem_invariantCore {x : E} (hx : x ∈ G.invariantCore K) (s : ℝ) :
     G.S s x ∈ G.invariantCore K :=
   mem_invariantCore.2 fun t => by rw [← map_add_apply]; exact mem_invariantCore.1 hx _
@@ -84,7 +59,6 @@ theorem invariantCore_eq_self_iff : G.invariantCore K = K ↔ ∀ t, K.map (G.S 
   refine ⟨fun h => h ▸ map_invariantCore_le, fun h => le_antisymm invariantCore_le
     (le_invariantCore le_rfl h)⟩
 
-/-- The invariant core of a closed subspace is closed. -/
 theorem isClosed_invariantCore (hK : IsClosed (K : Set E)) :
     IsClosed (G.invariantCore K : Set E) := by
   have e : (G.invariantCore K : Set E) = ⋂ t, (G.S t) ⁻¹' K := by
@@ -109,7 +83,6 @@ instance [CompleteSpace E] [K.HasOrthogonalProjection] :
   have : CompleteSpace (G.invariantCore K) := (isClosed_invariantCore hK).completeSpace_coe
   infer_instance
 
-/-- An isometric group leaving `K` invariant leaves `Kᗮ` invariant. -/
 theorem IsIsometric.S_mem_orthogonal (hG : G.IsIsometric) (hK : ∀ t, ∀ x ∈ K, G.S t x ∈ K)
     (t : ℝ) {y : E} (hy : y ∈ Kᗮ) : G.S t y ∈ Kᗮ := by
   rw [Submodule.mem_orthogonal] at hy ⊢
@@ -119,7 +92,6 @@ theorem IsIsometric.S_mem_orthogonal (hG : G.IsIsometric) (hK : ∀ t, ∀ x ∈
   rw [← h]
   exact hy _ (hK _ u hu)
 
-/-- An isometric group leaving the closed subspace `K` invariant commutes with `P_K`. -/
 theorem IsIsometric.S_starProjection (hG : G.IsIsometric) [K.HasOrthogonalProjection]
     (hK : ∀ t, ∀ x ∈ K, G.S t x ∈ K) (t : ℝ) (x : E) :
     G.S t (K.starProjection x) = K.starProjection (G.S t x) := by
@@ -130,7 +102,6 @@ theorem IsIsometric.S_starProjection (hG : G.IsIsometric) [K.HasOrthogonalProjec
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E]
 
-/-- An invariant closed subspace of an isometric group reduces its generator. -/
 theorem IsIsometric.isReducing_of_invariant (hG : G.IsIsometric) [K.HasOrthogonalProjection]
     (hK : ∀ t, ∀ x ∈ K, G.S t x ∈ K) : G.generator.IsReducing K := by
   have hd : ∀ x : G.generator.domain, HasDerivAt (fun t => G.S t (K.starProjection x))
@@ -177,7 +148,6 @@ section Isometric
 variable [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
   [CompleteSpace E] {G : C0Group 𝕜 E} {K M : Submodule 𝕜 E}
 
-/-- A closed subspace reducing the generator of an isometric group is invariant. -/
 theorem IsIsometric.invariant_of_isReducing (hG : G.IsIsometric) [K.HasOrthogonalProjection]
     (hK : G.generator.IsReducing K) (t : ℝ) : ∀ x ∈ K, G.S t x ∈ K := by
   set A := G.generator
@@ -219,24 +189,20 @@ theorem IsIsometric.isReducing_iff_invariant (hG : G.IsIsometric) [K.HasOrthogon
   rw [map_le_iff_forall]
   exact ⟨fun h t => hG.invariant_of_isReducing h t, hG.isReducing_of_invariant⟩
 
-/-- The invariant core reduces the generator. -/
 theorem IsIsometric.isReducing_invariantCore (hG : G.IsIsometric) [K.HasOrthogonalProjection] :
     G.generator.IsReducing (G.invariantCore K) :=
   hG.isReducing_of_invariant fun t _ hx => S_mem_invariantCore hx t
 
-/-- The invariant core is the largest closed subspace of `K` reducing the generator. -/
 theorem IsIsometric.le_invariantCore_of_isReducing (hG : G.IsIsometric)
     [M.HasOrthogonalProjection] (hMK : M ≤ K) (hM : G.generator.IsReducing M) :
     M ≤ G.invariantCore K :=
   le_invariantCore hMK ((hG.isReducing_iff_invariant).1 hM)
 
-/-- The generator maps `D(A) ∩ invariantCore K` into `invariantCore K`. -/
 theorem IsIsometric.apply_mem_invariantCore (hG : G.IsIsometric) [K.HasOrthogonalProjection]
     (x : G.generator.domain) (hx : (x : E) ∈ G.invariantCore K) :
     G.generator x ∈ G.invariantCore K :=
   hG.isReducing_invariantCore.mapsTo x hx
 
-/-- `D(A) ∩ invariantCore K` is dense in `invariantCore K`. -/
 theorem IsIsometric.mem_closure_domain_inter_invariantCore (hG : G.IsIsometric)
     [K.HasOrthogonalProjection] {k : E} (hk : k ∈ G.invariantCore K) :
     k ∈ closure ((G.generator.domain : Set E) ∩ G.invariantCore K) := by
@@ -254,7 +220,6 @@ section Stationary
 variable [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
   [CompleteSpace E] {G : C0Group 𝕜 E} {K : Submodule 𝕜 E}
 
-/-- A zero of the generator is a stationary point: `S t x = x`. -/
 theorem S_apply_eq_of_generator_eq_zero (x : G.generator.domain) (h0 : G.generator x = 0)
     (t : ℝ) : G.S t x = x := by
   have hd : ∀ s, HasDerivAt (fun s => G.S s x) 0 s := fun s => by
@@ -263,7 +228,6 @@ theorem S_apply_eq_of_generator_eq_zero (x : G.generator.domain) (h0 : G.generat
     (fun s => (hd s).deriv) t 0
   simpa using hc
 
-/-- Stationary points of `K` lie in the invariant core. -/
 theorem mem_invariantCore_of_generator_eq_zero (x : G.generator.domain) (hx : (x : E) ∈ K)
     (h0 : G.generator x = 0) : (x : E) ∈ G.invariantCore K :=
   mem_invariantCore.2 fun t => by rw [S_apply_eq_of_generator_eq_zero x h0]; exact hx

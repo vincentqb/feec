@@ -5,51 +5,19 @@ public import Feec.FiniteElement.InverseEstimate
 /-!
 # Lumped-mass `P₁` finite elements on Freudenthal meshes: the difference stencil
 
-The **`P₁` stiffness form** of a simplicial mesh `M` (`p1Stiffness M u w`) is
-`a(u, w) = Σ_T ∫_T ∇Πₜu · ∇Πₜw`, with `Πₜu = Σⱼ u(pⱼ) λⱼ` the `P₁` interpolant of the nodal
-values on `T` (`p1Interp`, gradient `p1Grad = Σⱼ u(pⱼ) ∇λⱼ`, `p1Interp_sub`), and the **lumped
-mass** (`lumpedMass M x`) is the vertex quadrature `m(x) = Σ_{T ∋ x} |T| / (n + 1)` of `∫ φₓ`
-([Thomee2006], Ch. 15). The **lumped-mass `P₁` Laplacian** is `-m⁻¹ a`.
-
-`p1Stiffness` is defined by elementwise assembly; `Feec.FiniteElement.P1Global` identifies it with
-`∫_Ω ∇u_h · ∇w_h` for the global conforming `P₁` (Whitney `0`-form) functions, and the lumped
-mass with `∫_Ω φₓ`. With `neg_p1Stiffness_div_lumpedMass` the lumped-mass scheme on the
-Freudenthal meshes is exactly the classical `(2n + 1)`-point finite difference scheme.
+The `P₁` stiffness form and the lumped mass define the lumped-mass `P₁` Laplacian ([Thomee2006],
+Ch. 15); on the non-obtuse Freudenthal meshes it is the `(2n + 1)`-point difference Laplacian.
 
 ## Main results
 
-* `p1Stiffness_indicator_nonpos` (Ciarlet–Raviart): if every simplex is **non-obtuse**,
-  `∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k`, the stiffness matrix has nonpositive off-diagonal entries;
-* `baryGrad_freudenthalPoints`: on a Freudenthal simplex `b + h (m + K_σ)` with vertices
-  `vⱼ = Σ_{i<j} e_{σ i}`, `∇λⱼ = h⁻¹ (e_{σ(j-1)} - e_{σ j})`, so (`p1Grad_freudenthalPoints`)
-  `∂ₗ Πₜu = (u(v_{k+1}) - u(v_k)) / h` along the edge `v_k → v_{k+1} = v_k + h eₗ`,
-  `k = σ⁻¹ l`; the element stiffness matrix is `hⁿ⁻² / n!` times the Laplacian of the path
-  `v₀ - v₁ - ⋯ - vₙ` (`baryGrad_dotProduct_freudenthalPoints_nonpos`: **Freudenthal simplices are
-  non-obtuse**, `isNonobtuse_freudenthalMesh`);
-* **`p1Stiffness_freudenthalMesh_eq`**: on the level-`N` Freudenthal mesh of a box (`h = s / N`),
-  `a(u, w) = hⁿ / n! Σ_σ Σₗ Σ_m Dₗu Dₗw` over the path edges `q → q + eₗ` of the simplices
-  `b + h (m + K_σ)`, with the difference quotients `Dₗu(q) = (u(q + eₗ) - u(q)) / h`: each
-  simplex has volume `hⁿ / n!` and couples only the vertices of its path edges; so
-  (**`p1Stiffness_freudenthalMesh`**) for `u` vanishing on the boundary,
-  `a(u, w) = hⁿ Σₗ Σ_{edges q → q + eₗ} Dₗu(q) Dₗw(q)` over the axis edges through the open box,
-  each a path edge of exactly one simplex for each `σ`;
-* **`p1Stiffness_nodalIndicator_eq`**, `lumpedMass_node_eq`: at every lattice node `p`, boundary
-  nodes included, `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻ Dₗw(p - eₗ) - α⁺ Dₗw(p)) / h` with
-  `α±_{σ,l}(p) ∈ {0, 1}` recording whether the path edge `p → p ± eₗ` of the Kuhn simplex `σ`
-  lies in the mesh (`upCount`, `downCount`), and `m(p) = hⁿ C(p) / (n + 1)!`, `C(p)` the number
-  of simplices at `p` (`vertexCount`);
-* `lumpedMass_freudenthalMesh`: `m(x) = hⁿ` at every interior node (`C = (n + 1)!`,
-  `vertexCount_of_mem_interiorNodes`);
-* **`neg_p1Stiffness_div_lumpedMass`**: the lumped-mass `P₁` Laplacian at an interior node `p`
-  (`α± = 1`, `upCount_of_mem_interiorNodes`) is the `(2n + 1)`-point difference Laplacian
-  `-a(φₚ, w) / m(p) = Σₗ (w(p + h eₗ) - 2 w(p) + w(p - h eₗ)) / h²`.
+* `p1Stiffness_indicator_nonpos`: nonpositive off-diagonal stiffness on non-obtuse meshes.
+* `isNonobtuse_freudenthalMesh`: the Freudenthal meshes are non-obtuse.
+* `neg_p1Stiffness_div_lumpedMass`: the `(2n + 1)`-point difference Laplacian at interior nodes.
 
 ## References
 
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (the lumped mass method)
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -66,8 +34,7 @@ variable {n : ℕ}
 
 /-! ### `P₁` interpolation, stiffness and lumped mass on a mesh -/
 
-/-- The gradient `∇Πₜu = Σⱼ u(pⱼ) ∇λⱼ` of the `P₁` interpolant of the nodal values `u` on the
-simplex with vertices `p`, linear in `u`. -/
+/-- The gradient `∇Πₜu = Σⱼ u(pⱼ) ∇λⱼ` of the `P₁` interpolant of `u` on the simplex `p`. -/
 def p1Grad (p : Fin (n + 1) → Fin n → ℝ) : ((Fin n → ℝ) → ℝ) →ₗ[ℝ] Fin n → ℝ :=
   ∑ j, (LinearMap.proj (p j)).smulRight (baryGrad p j)
 
@@ -75,8 +42,7 @@ theorem p1Grad_apply (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) �
     p1Grad p u = ∑ j, u (p j) • baryGrad p j := by
   simp [p1Grad]
 
-/-- The `P₁` interpolant `Πₜu = Σⱼ u(pⱼ) λⱼ` of the nodal values `u` on the simplex `p`, linear
-in `u`. -/
+/-- The `P₁` interpolant `Πₜu = Σⱼ u(pⱼ) λⱼ` of the nodal values `u` on the simplex `p`. -/
 def p1Interp (p : Fin (n + 1) → Fin n → ℝ) : ((Fin n → ℝ) → ℝ) →ₗ[ℝ] (Fin n → ℝ) → ℝ :=
   ∑ j, (LinearMap.proj (p j)).smulRight fun x => baryCoord p x j
 
@@ -84,7 +50,6 @@ theorem p1Interp_apply (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) 
     p1Interp p u x = ∑ j, u (p j) * baryCoord p x j := by
   simp [p1Interp]
 
-/-- `Πₜu` is affine with gradient `p1Grad p u`. -/
 theorem p1Interp_sub (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x y : Fin n → ℝ) :
     p1Interp p u x - p1Interp p u y = p1Grad p u ⬝ᵥ (x - y) := by
   simp only [p1Interp_apply, p1Grad_apply, ← sum_sub_distrib, ← mul_sub, baryCoord_sub, dotProduct,
@@ -92,19 +57,14 @@ theorem p1Interp_sub (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) �
   rw [Finset.sum_comm]
   simp only [mul_assoc]
 
-/-- `Πₜu` interpolates `u` at the vertices. -/
 theorem p1Interp_vertex {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (u : (Fin n → ℝ) → ℝ) (j : Fin (n + 1)) : p1Interp p u (p j) = u (p j) := by
   simp [p1Interp_apply, baryCoord_vertex hp]
 
-/-- **The `P₁` stiffness form** `a(u, w) = Σ_T ∫_T ∇Πₜu · ∇Πₜw` of the mesh `M`, on nodal
-values `u, w : ℝⁿ → ℝ` (only the values at the vertices enter), assembled elementwise; it is
-`⟪d u_h, d w_h⟫_{L²Λ¹(Ω)}` for the global `P₁` functions
-(`Feec.FiniteElement.inner_glue_dPiecewise_p1Global`). -/
+/-- The `P₁` stiffness form `a(u, w) = Σ_T ∫_T ∇Πₜu · ∇Πₜw` of the mesh `M` on nodal values. -/
 def p1Stiffness (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, ∫ _ in T.closedInterior, p1Grad T.points u ⬝ᵥ p1Grad T.points w
 
-/-- The integrands are constant: `a(u, w) = Σ_T |T| ∇Πₜu · ∇Πₜw`. -/
 theorem p1Stiffness_eq (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
     p1Stiffness M u w =
       ∑ T ∈ M.simplices,
@@ -115,7 +75,6 @@ theorem p1Stiffness_comm (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) 
     p1Stiffness M u w = p1Stiffness M w u := by
   simp only [p1Stiffness, dotProduct_comm]
 
-/-- `a(Σᵢ cᵢ uᵢ, w) = Σᵢ cᵢ a(uᵢ, w)`. -/
 theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι) (c : ι → ℝ)
     (u : ι → (Fin n → ℝ) → ℝ) (w : (Fin n → ℝ) → ℝ) :
     p1Stiffness M (∑ i ∈ s, c i • u i) w = ∑ i ∈ s, c i * p1Stiffness M (u i) w := by
@@ -150,8 +109,7 @@ theorem p1Stiffness_const_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → 
     rw [p1Grad_apply, ← smul_sum, sum_baryGrad, smul_zero]
   rw [this, dotProduct_zero, mul_zero]
 
-/-- **The lumped mass** at `x`: the vertex quadrature `Σ_T |T| / (n + 1) · #{j | pⱼ = x}` of
-`∫ φₓ`. -/
+/-- The lumped mass at `x`: the vertex quadrature `Σ_T |T| / (n + 1) · #{j | pⱼ = x}` of `∫ φₓ`. -/
 def lumpedMass (M : SimplicialMesh n) (x : Fin n → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, volume.real T.closedInterior / (n + 1) *
     (#{j | T.points j = x} : ℝ)
@@ -160,7 +118,6 @@ theorem lumpedMass_nonneg (M : SimplicialMesh n) (x : Fin n → ℝ) : 0 ≤ lum
   sum_nonneg fun _ _ => mul_nonneg (div_nonneg measureReal_nonneg (by positivity))
     (Nat.cast_nonneg _)
 
-/-- A point of positive lumped mass is a vertex of the mesh. -/
 theorem exists_mem_vertexSet_of_lumpedMass_pos (M : SimplicialMesh n) {x : Fin n → ℝ}
     (h : 0 < lumpedMass M x) : ∃ T ∈ M.simplices, x ∈ vertexSet T := by
   by_contra! hc
@@ -197,9 +154,8 @@ end nodalFun
 def IsNonobtuse (M : SimplicialMesh n) : Prop :=
   ∀ T ∈ M.simplices, ∀ j k, j ≠ k → baryGrad T.points j ⬝ᵥ baryGrad T.points k ≤ 0
 
-/-- **Non-obtuse meshes have nonpositive off-diagonal stiffness** (Ciarlet–Raviart): if
-`∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k` on every simplex, then `a(φₓ, φ_y) ≤ 0` for `x ≠ y`.
-[CiarletRaviart1973] -/
+/-- Non-obtuse meshes have nonpositive off-diagonal stiffness: `a(φₓ, φ_y) ≤ 0` for `x ≠ y`
+([CiarletRaviart1973]). -/
 theorem p1Stiffness_indicator_nonpos (M : SimplicialMesh n) (hM : IsNonobtuse M)
     {x y : Fin n → ℝ} (hxy : x ≠ y) :
     p1Stiffness M (nodalIndicator x) (nodalIndicator y) ≤ 0 := by
@@ -214,8 +170,7 @@ theorem p1Stiffness_indicator_nonpos (M : SimplicialMesh n) (hM : IsNonobtuse M)
 
 /-! ### The Kuhn simplex and its barycentric gradients -/
 
-/-- `s_k = e_{σ(k-1)}` for `1 ≤ k ≤ n`, `0` for `k = 0` and `k > n`: the step `v_k - v_{k-1}` of
-the Kuhn path. -/
+/-- `s_k = e_{σ(k-1)}` for `1 ≤ k ≤ n`, `0` otherwise: the step `v_k - v_{k-1}` of the Kuhn path. -/
 def kuhnStep (σ : Equiv.Perm (Fin n)) (k : ℕ) : Fin n → ℝ :=
   fun l => if (σ.symm l : ℕ) + 1 = k then 1 else 0
 
@@ -223,7 +178,6 @@ def kuhnStep (σ : Equiv.Perm (Fin n)) (k : ℕ) : Fin n → ℝ :=
 def kuhnMatrixInv (σ : Equiv.Perm (Fin n)) : Matrix (Fin n) (Fin n) ℝ :=
   Matrix.of fun m l => kuhnStep σ (m + 1) l - kuhnStep σ (m + 2) l
 
-/-- `Σₗ (s_k)ₗ fₗ = f_{σ(k-1)}` for `1 ≤ k ≤ n`, and `0` otherwise. -/
 theorem sum_kuhnStep_mul (σ : Equiv.Perm (Fin n)) (k : ℕ) (f : Fin n → ℝ) :
     ∑ l, kuhnStep σ k l * f l = if h : 1 ≤ k ∧ k ≤ n then f (σ ⟨k - 1, by omega⟩) else 0 := by
   rw [← Equiv.sum_comp σ]
@@ -274,8 +228,6 @@ theorem inv_edgeMatrix_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h �
   rw [Matrix.smul_mul, Matrix.mul_smul, smul_smul, inv_mul_cancel₀ hh, one_smul,
     kuhnMatrixInv_mul]
 
-/-- **The barycentric gradients of a Freudenthal simplex**: `∇λⱼ = h⁻¹ (s_j - s_{j+1})`, i.e.
-`∇λ₀ = -h⁻¹ e_{σ 0}`, `∇λⱼ = h⁻¹ (e_{σ(j-1)} - e_{σ j})`, `∇λₙ = h⁻¹ e_{σ(n-1)}`. -/
 theorem baryGrad_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (m : Fin n → ℤ)
     (σ : Equiv.Perm (Fin n)) (j : Fin (n + 1)) :
     baryGrad (freudenthalPoints b h m σ) j = h⁻¹ • (kuhnStep σ j - kuhnStep σ (j + 1)) := by
@@ -294,7 +246,6 @@ theorem baryGrad_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) 
   · funext l
     simp [kuhnMatrixInv, Fin.val_succ]
 
-/-- `∑ⱼ fⱼ [j = a] = f a` over the vertices, with the condition on the values. -/
 theorem sum_ite_val_eq (a : ℕ) (ha : a < n + 1) (f : Fin (n + 1) → ℝ) :
     ∑ j : Fin (n + 1), (if (j : ℕ) = a then f j else 0) = f ⟨a, ha⟩ := by
   rw [Finset.sum_eq_single ⟨a, ha⟩]
@@ -302,9 +253,6 @@ theorem sum_ite_val_eq (a : ℕ) (ha : a < n + 1) (f : Fin (n + 1) → ℝ) :
   · intro c _ hc; rw [ite_eq_right]; intro e; exact hc (Fin.ext e)
   · simp
 
-/-- **The gradient of the `P₁` interpolant on a Freudenthal simplex**:
-`∂ₗ Πₜu = (u(v_{k+1}) - u(v_k)) / h`, `k = σ⁻¹ l`, the difference quotient along the path edge
-`v_k → v_{k+1} = v_k + h eₗ`. -/
 theorem p1Grad_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (m : Fin n → ℤ)
     (σ : Equiv.Perm (Fin n)) (u : (Fin n → ℝ) → ℝ) (l : Fin n) :
     p1Grad (freudenthalPoints b h m σ) u l =
@@ -322,8 +270,6 @@ theorem p1Grad_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (m
     sum_ite_val_eq _ (by omega), sum_ite_val_eq _ (by omega), div_eq_inv_mul]
   rfl
 
-/-- **Freudenthal simplices are non-obtuse**: `∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k` (the element stiffness
-matrix is `hⁿ⁻² / n!` times the Laplacian of the path `v₀ - v₁ - ⋯ - vₙ`). -/
 theorem baryGrad_dotProduct_freudenthalPoints_nonpos (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0)
     (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) {j k : Fin (n + 1)} (hjk : j ≠ k) :
     baryGrad (freudenthalPoints b h m σ) j ⬝ᵥ baryGrad (freudenthalPoints b h m σ) k ≤ 0 := by
@@ -334,7 +280,7 @@ theorem baryGrad_dotProduct_freudenthalPoints_nonpos (b : Fin n → ℝ) {h : �
   simp only [Pi.sub_apply, kuhnStep]
   split_ifs <;> first | (exfalso; omega) | norm_num
 
-/-- **The Freudenthal meshes are non-obtuse** (`baryGrad_dotProduct_freudenthalPoints_nonpos`). -/
+/-- The Freudenthal meshes are non-obtuse. -/
 theorem isNonobtuse_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N] :
     IsNonobtuse (freudenthalMesh b s hs N) := fun T hT j k hjk => by
   obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
@@ -358,7 +304,6 @@ theorem node_injective (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) : Function.I
     mul_eq_mul_left_iff, hh, or_false, Int.cast_inj] at this
   exact this
 
-/-- The nodes of a finite set of lattice points are distinct. -/
 theorem node_injective_subtype (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (S : Finset (Fin n → ℤ)) :
     Function.Injective fun q : S => node b h q :=
   fun _ _ e => Subtype.ext (node_injective b hh e)
@@ -400,7 +345,6 @@ theorem kuhnLattice_mem (σ : Equiv.Perm (Fin n)) (j : Fin (n + 1)) (k : Fin n) 
     kuhnLattice σ j k = 0 ∨ kuhnLattice σ j k = 1 := by
   simp only [kuhnLattice]; split_ifs <;> simp
 
-/-- `v_{k+1} = v_k + e_{σ k}`. -/
 theorem kuhnLattice_succ (σ : Equiv.Perm (Fin n)) (k : Fin n) :
     kuhnLattice σ k.succ = kuhnLattice σ k.castSucc + Pi.single (σ k) 1 := by
   funext i
@@ -426,8 +370,6 @@ def edgeTerm (b : Fin n → ℝ) (h : ℝ) (u w : (Fin n → ℝ) → ℝ) (l : 
   (u (node b h (q + Pi.single l 1)) - u (node b h q)) / h *
     ((w (node b h (q + Pi.single l 1)) - w (node b h q)) / h)
 
-/-- **The element stiffness of a Freudenthal simplex**: `∇Πₜu · ∇Πₜw = Σₗ Dₗu Dₗw` over the `n`
-path edges `v_k → v_k + eₗ` (`k = σ⁻¹ l`); the other edges carry no coupling. -/
 theorem p1Grad_dotProduct_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0)
     (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) (u w : (Fin n → ℝ) → ℝ) :
     p1Grad (freudenthalPoints b h m σ) u ⬝ᵥ p1Grad (freudenthalPoints b h m σ) w =
@@ -448,7 +390,6 @@ theorem freudenthalMesh_simplices (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N 
   rw [mem_freudenthalMesh_simplices, mem_image]
   simp
 
-/-- The vertices of the Freudenthal mesh are lattice nodes. -/
 theorem exists_eq_node_of_mem_vertexSet (b : Fin n → ℝ) {s : ℝ} {hs : 0 < s} {N : ℕ} [NeZero N]
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (freudenthalMesh b s hs N).simplices)
     {y : Fin n → ℝ} (hy : y ∈ vertexSet T) : ∃ q, y = node b (s / N) q := by
@@ -468,7 +409,6 @@ theorem injective_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh : h 
     have := congrFun h1 j; simp only [finLattice, Nat.cast_inj] at this; exact this)
   rw [this, h2]
 
-/-- `|b + h (m + K_σ)| = hⁿ / n!`. -/
 theorem volume_real_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh : 0 < h)
     (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) :
     volume.real (mapEquiv (boxMap b h hh.ne') (freudenthalSimplex m σ)).closedInterior =
@@ -501,7 +441,6 @@ theorem nodalIndicator_node (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (p q : 
 
 /-! ### Counting the simplices at a node -/
 
-/-- The cell `m` with `m + a = q` is unique, and exists iff `0 ≤ q - a < N`. -/
 theorem sum_finLattice_add_ite {N : ℕ} (a q : Fin n → ℤ) :
     ∑ m : Fin n → Fin N, (if finLattice m + a = q then 1 else 0 : ℝ) =
       if ∀ i, 0 ≤ q i - a i ∧ q i - a i < N then 1 else 0 := by
@@ -524,8 +463,7 @@ theorem sum_finLattice_add_ite {N : ℕ} (a q : Fin n → ℤ) :
     simp only [Pi.add_apply, finLattice] at *
     omega
 
-/-- The edge shift `κ_{σ,l} = v_{σ⁻¹ l}`: the path edge of the Kuhn simplex `σ` along `eₗ` is
-`v_{σ⁻¹ l} → v_{σ⁻¹ l} + eₗ`. -/
+/-- The edge shift `κ_{σ,l} = v_{σ⁻¹ l}`, the base of the path edge of `K_σ` along `eₗ`. -/
 def edgeShift (σ : Equiv.Perm (Fin n)) (l : Fin n) : Fin n → ℤ :=
   kuhnLattice σ (σ.symm l).castSucc
 
@@ -540,9 +478,7 @@ def upCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) 
 def downCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) : ℝ :=
   upCount N σ l (p - Pi.single l 1)
 
-/-- `C(p)`: the number of pairs (simplex `m + K_σ` of the level-`N` lattice, vertex index `j`)
-with `m + v_j = p`, i.e. the simplices with vertex `p` (each once, the `vⱼ` being distinct); the
-lumped mass is `m(p) = hⁿ C(p) / (n + 1)!` (`lumpedMass_node_eq`). -/
+/-- `C(p)`: the number of simplices of the level-`N` lattice with vertex `p`. -/
 def vertexCount (N : ℕ) (p : Fin n → ℤ) : ℝ :=
   ∑ σ : Equiv.Perm (Fin n), ∑ j, ∑ m : Fin n → Fin N,
     if finLattice m + kuhnLattice σ j = p then 1 else 0
@@ -564,7 +500,6 @@ theorem upCount_le_one (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ)
     upCount N σ l p ≤ 1 := by
   rw [upCount_eq]; split_ifs <;> norm_num
 
-/-- **Interior directions are symmetric**: for `1 ≤ pₗ < N`, `α⁺_{σ,l}(p) = α⁻_{σ,l}(p)`. -/
 theorem upCount_eq_downCount (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ}
     (h1 : 1 ≤ p l) (h2 : p l < N) : upCount N σ l p = downCount N σ l p := by
   rw [downCount, upCount_eq, upCount_eq]
@@ -588,7 +523,6 @@ theorem upCount_eq_zero (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ
   have := (H l).2
   simp [edgeShift_self, h] at this
 
-/-- At an interior node, every path edge `p → p + eₗ` lies in the mesh. -/
 theorem upCount_of_mem_interiorNodes (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ}
     (hp : p ∈ interiorNodes n N) : upCount N σ l p = 1 := by
   rw [upCount_eq, ite_eq_left]
@@ -596,7 +530,6 @@ theorem upCount_of_mem_interiorNodes (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : 
   have := mem_interiorNodes.1 hp i
   rcases kuhnLattice_mem σ (σ.symm l).castSucc i with h | h <;> rw [edgeShift, h] <;> omega
 
-/-- At an interior node, every path edge `p - eₗ → p` lies in the mesh. -/
 theorem downCount_of_mem_interiorNodes (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ}
     (hp : p ∈ interiorNodes n N) : downCount N σ l p = 1 := by
   have := mem_interiorNodes.1 hp l
@@ -608,7 +541,6 @@ theorem vertexCount_le (p : Fin n → ℤ) : vertexCount N p ≤ (n + 1) * n.fac
           rw [sum_finLattice_add_ite]; split_ifs <;> norm_num
     _ = _ := by simp [Fintype.card_perm]; ring
 
-/-- `C(p) = (n + 1)!` at an interior node. -/
 theorem vertexCount_of_mem_interiorNodes {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) :
     vertexCount N p = (n + 1) * n.factorial := by
   have h1 : ∀ σ : Equiv.Perm (Fin n), ∀ j, ∑ m : Fin n → Fin N,
@@ -619,7 +551,6 @@ theorem vertexCount_of_mem_interiorNodes {p : Fin n → ℤ} (hp : p ∈ interio
     rcases kuhnLattice_mem σ j i with h | h <;> rw [h] <;> omega
   simp [vertexCount, h1, Fintype.card_perm]; ring
 
-/-- Every term `#{m | m + v_j = p}` of `C(p)` is at most `C(p)`. -/
 theorem le_vertexCount (σ : Equiv.Perm (Fin n)) (j : Fin (n + 1)) (p : Fin n → ℤ) :
     ∑ m : Fin n → Fin N, (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ) ≤
       vertexCount N p := by
@@ -651,10 +582,6 @@ end counting
 
 /-! ### The stiffness form as a sum over the axis edges -/
 
-/-- **The `P₁` stiffness form on the Freudenthal mesh as a sum over the path edges**: for any
-nodal values on the level-`N` mesh (`h = s / N`), `a(u, w) = hⁿ / n! Σ_σ Σₗ Σ_m Dₗu(q) Dₗw(q)`
-over the path edges `q → q + eₗ`, `q = m + κ_{σ,l}`, of the simplices `b + h (m + K_σ)`
-(`p1Grad_dotProduct_freudenthalPoints`; `|T| = hⁿ / n!`). -/
 theorem p1Stiffness_freudenthalMesh_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     (u w : (Fin n → ℝ) → ℝ) :
     p1Stiffness (freudenthalMesh b s hs N) u w =
@@ -668,8 +595,7 @@ theorem p1Stiffness_freudenthalMesh_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s
   simp_rw [sum_comm (s := (univ : Finset (Fin n → Fin N))) (t := (univ : Finset (Fin n)))]
   rfl
 
-/-- The base points `q` of the axis edges `q → q + eₗ` through the open box `(0, N)ⁿ` (not in its
-boundary): `qₗ ∈ {0, …, N - 1}`, `qⱼ ∈ {1, …, N - 1}` for `j ≠ l`. -/
+/-- The base points `q` of the axis edges `q → q + eₗ` through the open box `(0, N)ⁿ`. -/
 def edgeBases (n N : ℕ) (l : Fin n) : Finset (Fin n → ℤ) :=
   Fintype.piFinset fun j => if j = l then Ico 0 (N : ℤ) else Ioo 0 (N : ℤ)
 
@@ -678,10 +604,6 @@ def VanishesOnBoundary (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (u : (Fin n → �
   ∀ q : Fin n → ℤ, (∀ j, 0 ≤ q j ∧ q j ≤ (N : ℤ)) → (∃ j, q j = 0 ∨ q j = (N : ℤ)) →
     u (node b h q) = 0
 
-/-- **Each Kuhn simplex reaches every edge through the open box once**: for `u` vanishing on the
-boundary, the sum over the path edges `m + κ_{σ,l} → m + κ_{σ,l} + eₗ` of the cells is the sum
-over the axis edges `q → q + eₗ` of `edgeBases`; the other path edges lie in a boundary face,
-where `Dₗu = 0`. -/
 theorem sum_edgeTerm_edgeShift (b : Fin n → ℝ) (h : ℝ) {N : ℕ} {u : (Fin n → ℝ) → ℝ}
     (hu : VanishesOnBoundary b h N u) (w : (Fin n → ℝ) → ℝ) (σ : Equiv.Perm (Fin n))
     (l : Fin n) :
@@ -728,11 +650,6 @@ theorem sum_edgeTerm_edgeShift (b : Fin n → ℝ) (h : ℝ) {N : ℕ} {u : (Fin
         rw [sum_comm]
         exact sum_congr rfl fun q hq => by rw [← sum_mul, hE q hq, one_mul]
 
-/-- **The `P₁` stiffness form on the Freudenthal mesh** of the box `b + (0, s)ⁿ` at level `N`
-(`h = s / N`): for nodal values `u` vanishing on the boundary,
-`a(u, w) = hⁿ Σₗ Σ_{q → q + eₗ} Dₗu(q) Dₗw(q)` over the axis edges through the open box.
-Every such edge is the path edge of exactly one simplex `b + h (m + K_σ)` for each `σ`
-(`p1Stiffness_freudenthalMesh_eq`, `sum_edgeTerm_edgeShift`). -/
 theorem p1Stiffness_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     {u : (Fin n → ℝ) → ℝ} (hu : VanishesOnBoundary b (s / N) N u) (w : (Fin n → ℝ) → ℝ) :
     p1Stiffness (freudenthalMesh b s hs N) u w =
@@ -747,9 +664,6 @@ theorem p1Stiffness_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (
 def edgeQuot (b : Fin n → ℝ) (h : ℝ) (w : (Fin n → ℝ) → ℝ) (l : Fin n) (q : Fin n → ℤ) : ℝ :=
   (w (node b h (q + Pi.single l 1)) - w (node b h q)) / h / h
 
-/-- **The stiffness row of any node** `p` (boundary nodes included) of the level-`N` Freudenthal
-mesh: `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻_{σ,l}(p) Dₗw(p - eₗ) - α⁺_{σ,l}(p) Dₗw(p)) / h`, the path
-edges at `p` of `p1Stiffness_freudenthalMesh_eq`. -/
 theorem p1Stiffness_nodalIndicator_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     (p : Fin n → ℤ) (w : (Fin n → ℝ) → ℝ) :
     p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator (node b (s / N) p)) w =
@@ -773,8 +687,6 @@ theorem p1Stiffness_nodalIndicator_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s)
   simp_rw [e, sum_sub_distrib, ← sum_mul]
   rfl
 
-/-- **The lumped mass of any node** of the level-`N` Freudenthal mesh:
-`m(p) = hⁿ C(p) / (n + 1)!`. -/
 theorem lumpedMass_node_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     (p : Fin n → ℤ) :
     lumpedMass (freudenthalMesh b s hs N) (node b (s / N) p) =
@@ -789,8 +701,6 @@ theorem lumpedMass_node_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) 
   rw [sum_comm]
   exact sum_congr rfl fun σ _ => sum_comm
 
-/-- **The lumped mass of the Freudenthal mesh**: `m(x) = hⁿ` at every interior node, `(n + 1)!`
-simplices of volume `hⁿ / n!` meeting there (`vertexCount_of_mem_interiorNodes`). -/
 theorem lumpedMass_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) :
     lumpedMass (freudenthalMesh b s hs N) (node b (s / N) p) = (s / N) ^ n := by
@@ -798,9 +708,8 @@ theorem lumpedMass_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N
   have : (n.factorial : ℝ) ≠ 0 := by positivity
   field_simp
 
-/-- **The lumped-mass `P₁` Laplacian on the Freudenthal mesh is the `(2n + 1)`-point difference
-Laplacian**: at every interior node `p` (where `α± = 1`, `upCount_of_mem_interiorNodes`),
-`-a(φₚ, w) / m(p) = Σₗ (w(p + h eₗ) - 2 w(p) + w(p - h eₗ)) / h²`. [Thomee2006], Ch. 15 -/
+/-- At every interior node `p` of the Freudenthal mesh, `-a(φₚ, w) / m(p)` is the `(2n + 1)`-point
+difference Laplacian `Σₗ (w(p + h eₗ) - 2 w(p) + w(p - h eₗ)) / h²` ([Thomee2006], Ch. 15). -/
 theorem neg_p1Stiffness_div_lumpedMass (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) (w : (Fin n → ℝ) → ℝ) :
     -p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator (node b (s / N) p)) w /

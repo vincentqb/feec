@@ -7,46 +7,18 @@ public import Feec.Models.Cube.MirrorWaveRegularity
 /-!
 # The mirror scheme (6.5) as an approximating FEEC discretization
 
-The finite element scheme (6.5) of [QuennevilleBelair2015], §6.3, with mirror boundary conditions
-(`Feec.Models.Cube.MirrorWeakSymmetry.mirrorWave`) computes real forms states
-`(σₕ, uₕ, Mₕ, ρₕ)` on the cube `Q`; the continuous problem is the Hodge wave equation of the
-complex mirror BGG complex `Feec.Models.Cube.MirrorBGG.complexQ` (complex matrix fields), read
-over `ℝ` (`complexQℝ`). The scheme is not a subcomplex discretization: its discrete complex has
-`S₀,ₕ = π¹S⁰ ≠ S⁰` (a variational crime). It is an **approximating FEEC discretization**
-(`Feec.HilbertComplex.ApproxFEEC`):
+The finite element scheme (6.5) of [QuennevilleBelair2015], §6.3 with mirror boundary conditions is
+an approximating FEEC discretization `mirrorFEMApprox` of the mirror BGG complex read over `ℝ`,
+through the isometric reading map `mirrorEmb`.
 
-* `Xₙ` = the hidden-constraint space of (6.5) at level `N`
-  (`Feec.Instances.EinsteinBianchi.FEM.HiddenState`), `Lₙ` = the generator of (6.5) without
-  source (`waveGen`, skew in the energy inner product), so `e^{tLₙ}` is the scheme
-  (`mirrorFEMReal_sol_eq`);
-* `ιₙ` = `mirrorEmb`: the forms state as a real-valued matrix field (rows of `E`, `B` through the
-  Hodge star), isometric; `πₙ = ιₙ*`;
-* complex data: real and imaginary parts each run (6.5)
-  (`mirrorFEMApprox = mirrorFEMReal.complexify mulI`).
+## Main results
 
-The real-part maps `Re` (componentwise `re0`, `rowsW1L`, `reM`, `rowsW2L`) and the embedding
-`Rt = mirrorReEmb` satisfy the **error identity** `norm_sq_sub_mirrorReEmb`:
-`‖y - Rt a - i Rt b‖² = ‖Re y - a‖² + ‖Re(-i y) - b‖²`; for a TSD state `y` the two terms are
-the error quantities of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM` for the data `y` and
-`-i y` (`tsdErr`, `norm_sub_mirrorReEmb_le`, `tsdErr_le_norm_sub_mirrorReEmb`).
-
-**The discrete solutions are the scheme (6.5)** (`mirrorFEMApprox_sol_eq_scheme`): from every
-discrete initial value `(a, b)`, `ι' e^{tL'}(a, b)` is the pair of solutions of (6.5) without source
-from `a` and `b`, read through `Rt`. The TSD data of `D(L²)` (`tsdDatumOf`) are dense in the TSD
-constraint (`topologicalClosure_tsdQℝ_inf_domainSq`); the data of the rate classes are the TSD data
-of `D(L³)` (`mirrorL3Data`, norm `‖ξ₀‖ + ‖Lξ₀‖ + ‖L²ξ₀‖ + ‖L³ξ₀‖`) and those in `H^{2+s}`
-(`mirrorSobData`).
-
-**Faithfulness caveat.** The instance is faithful to `mirrorWave` (the scheme (6.5) of
-`Feec.Models.Cube.MirrorWeakSymmetry`, with `S₀,ₕ = π¹S⁰` for the parity-smoothed cochain
-projections), not to the variant with the canonical interpolant `Π`.
+* `norm_sq_sub_mirrorReEmb`: `‖y - Rt a - i Rt b‖² = ‖Re y - a‖² + ‖Re(-i y) - b‖²`.
+* `mirrorFEMApprox_sol_eq_scheme`: the discrete solutions are those of (6.5) without source.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), (6.4)), §6.3 ((6.5))
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  Thm 3.9, Thm 3.10 (elliptic analogue)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -72,7 +44,6 @@ section ReIm
 
 variable {α : Type*} [MeasurableSpace α] {μ : Measure α}
 
-/-- `f = Re f + i Re(-i f)`. -/
 theorem ofRealL_reL_add_I_smul (f : Lp ℂ 2 μ) :
     ofRealL μ (reL μ f) + Complex.I • ofRealL μ (reL μ (-Complex.I • f)) = f := by
   refine Lp.ext ?_
@@ -109,7 +80,6 @@ theorem reL_I_smul_ofReal_smul_ofRealL (r : ℝ) (g : Lp ℝ 2 μ) :
   rw [h1, h2, Pi.smul_apply, h3, Pi.smul_apply, h4, h5, smul_eq_mul, smul_eq_mul]
   simp
 
-/-- **Real/imaginary Parseval**: `‖f‖² = ‖Re f‖² + ‖Re(-i f)‖²`. -/
 theorem norm_sq_eq_reL (f : Lp ℂ 2 μ) :
     ‖f‖ ^ 2 = ‖reL μ f‖ ^ 2 + ‖reL μ (-Complex.I • f)‖ ^ 2 := by
   conv_lhs => rw [← ofRealL_reL_add_I_smul f]
@@ -201,8 +171,7 @@ theorem reM_I_embM (g : W2) : reM (Complex.I • embM g) = 0 := by
   rw [reM_apply, PiLp.smul_apply, embM_apply, reL_I_smul_ofRealL, map_zero]
   rfl
 
-/-- Real `1`-form rows on the cube as a (real-valued) complex matrix field:
-`E_{ab} = (w_a)_{dx_b}`. -/
+/-- Real `1`-form rows on the cube as a real-valued complex matrix field. -/
 def emb1 : Wv W1 →L[ℝ] MQ :=
   (PiLp.continuousLinearEquiv 2 ℝ
       (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))).symm.toContinuousLinearMap ∘L
@@ -214,8 +183,7 @@ def emb1 : Wv W1 →L[ℝ] MQ :=
 @[simp] theorem emb1_apply (w : Wv W1) (p : Fin 3 × Fin 3) :
     emb1 w p = ofRealL _ (cQ _ (w p.1) (eq1 p.2)) := rfl
 
-/-- Real `2`-form rows on the cube as a (real-valued) complex matrix field (Hodge star):
-`B_{ai} = ± (w_a)_{⋆dxᵢ}` (`matB`). -/
+/-- Real `2`-form rows on the cube as a real-valued complex matrix field (Hodge star). -/
 def emb2 : Wv W2 →L[ℝ] MQ :=
   (PiLp.continuousLinearEquiv 2 ℝ
       (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))).symm.toContinuousLinearMap ∘L
@@ -265,8 +233,6 @@ end Components
 
 /-! ### The error identity of real and imaginary parts -/
 
-/-- **Real and imaginary parts**: for maps `R`, `Rt` with `‖z‖² = ‖R z‖² + ‖R (-i z)‖²`,
-`R (Rt w) = w` and `R (i Rt w) = 0`: `‖z - Rt a - i Rt b‖² = ‖R z - a‖² + ‖R (-i z) - b‖²`. -/
 theorem norm_sq_sub_emb {C E : Type*} [NormedAddCommGroup C] [Module ℂ C] [NormedAddCommGroup E]
     (R : C →+ E) (Rt : E →+ C) (hP : ∀ z, ‖z‖ ^ 2 = ‖R z‖ ^ 2 + ‖R (-Complex.I • z)‖ ^ 2)
     (hQ : ∀ w, R (Rt w) = w) (hR : ∀ w, R (Complex.I • Rt w) = 0) (z : C) (a b : E) :
@@ -280,14 +246,13 @@ theorem norm_sq_sub_emb {C E : Type*} [NormedAddCommGroup C] [Module ℂ C] [Nor
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-/-- Degreewise scalar towers of the mirror state spaces (the real structure is the one of the
-real inner products). -/
+/-- Degreewise scalar towers of the mirror state spaces. -/
 scoped instance instIsScalarTowerSpaceQ : ∀ i, IsScalarTower ℝ ℂ (SpaceQ i)
   | 0 => inferInstanceAs (IsScalarTower ℝ ℂ RQ)
   | 1 => inferInstanceAs (IsScalarTower ℝ ℂ MQ)
   | 2 => inferInstanceAs (IsScalarTower ℝ ℂ W2Q)
 
-/-- Shortcut instances for the finite element spaces (synthesis under binders is expensive). -/
+/-- The real inner product space structure of `TU0`, as a shortcut instance. -/
 scoped instance instIPS_TU0 : InnerProductSpace ℝ TU0 := inferInstance
 scoped instance instIPS_TU1 : InnerProductSpace ℝ TU1 := inferInstance
 scoped instance instIPS_W2 : InnerProductSpace ℝ W2 := inferInstance
@@ -298,7 +263,7 @@ scoped instance instIPS_WvW2 : InnerProductSpace ℝ (Wv W2) := inferInstance
 /-- The real continuous energy space `L²Λ⁰ × (L²Λ¹)³ × L²Λ² × (L²Λ²)³` of the mirror forms model. -/
 abbrev REnergy : Type := EState W0 (Wv W1) W2 (Wv W2)
 
-/-- The slots of a mirror state, as real-linear maps. -/
+/-- The scalar slot of a mirror state, as a real-linear map. -/
 def slot0 : PiLp 2 SpaceQ →L[ℝ] RQ := PiLp.proj (𝕜 := ℝ) 2 SpaceQ 0
 /-- The electric slot. -/
 def slot1 : PiLp 2 SpaceQ →L[ℝ] MQ := PiLp.proj (𝕜 := ℝ) 2 SpaceQ 1
@@ -309,7 +274,7 @@ def slotM : PiLp 2 SpaceQ →L[ℝ] VQ :=
 def slotB : PiLp 2 SpaceQ →L[ℝ] MQ :=
   WithLp.sndL 2 ℝ VQ MQ ∘L (PiLp.proj (𝕜 := ℝ) 2 SpaceQ 2 : PiLp 2 SpaceQ →L[ℝ] W2Q)
 
-/-- **A real forms state as a real-valued mirror state.** -/
+/-- A real forms state as a real-valued mirror state. -/
 def mirrorReEmb : REnergy →L[ℝ] PiLp 2 SpaceQ :=
   (PiLp.continuousLinearEquiv 2 ℝ SpaceQ).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun i => match i with
@@ -364,8 +329,7 @@ theorem norm_sq_rowsW2L_add (B : MQ) :
   rw [norm_sq_eq_reL, PiLp.smul_apply]
 
 set_option maxHeartbeats 1000000 in
-/-- **The error identity**: `‖y - Rt a - i Rt b‖² = ‖Re y - a‖² + ‖Re(-i y) - b‖²` for every
-mirror state `y` and real forms states `a`, `b`. -/
+/-- **The error identity** `‖y - Rt a - i Rt b‖² = ‖Re y - a‖² + ‖Re(-i y) - b‖²`. -/
 theorem norm_sq_sub_mirrorReEmb (y : PiLp 2 SpaceQ) (a b : REnergy) :
     ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ ^ 2 =
       ‖re0 (slot0 y) - a.σ‖ ^ 2 + ‖rowsW1L (slot1 y) - a.u‖ ^ 2 + ‖reM (slotM y) - a.M‖ ^ 2 +
@@ -396,7 +360,6 @@ theorem norm_sq_sub_mirrorReEmb (y : PiLp 2 SpaceQ) (a b : REnergy) :
   rw [norm_sq_spaceQ, h0, h1, hM, h2, e0, e1, eM, e2]
   ring
 
-/-- `‖Rt a + i Rt b‖² = ‖a‖² + ‖b‖²`. -/
 theorem norm_sq_mirrorReEmb_add (a b : REnergy) :
     ‖mirrorReEmb a + Complex.I • mirrorReEmb b‖ ^ 2 = ‖a‖ ^ 2 + ‖b‖ ^ 2 := by
   have h := norm_sq_sub_mirrorReEmb 0 a b
@@ -412,7 +375,6 @@ theorem norm_mirrorReEmb (a : REnergy) : ‖mirrorReEmb a‖ = ‖a‖ := by
   rw [map_zero, smul_zero, add_zero, norm_zero] at h
   exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 (by linarith)
 
-/-- Real states and imaginary states are orthogonal: `⟪Rt a, i Rt b⟫_ℝ = 0`. -/
 theorem inner_mirrorReEmb_I (a b : REnergy) :
     ⟪mirrorReEmb a, Complex.I • mirrorReEmb b⟫_ℝ = 0 := by
   have h := norm_sq_mirrorReEmb_add a b
@@ -455,8 +417,7 @@ theorem norm_mirrorFE (N : ℕ) (v : mirrorHidden hT hB N) : ‖mirrorFE hT hB N
     (norm_mirrorFE3 hT hB N) v.toEState).trans (HiddenState.norm_toEState v)
 
 
-/-- **The reading map of the mirror scheme**: real discrete forms states as real-valued matrix
-fields (rows of `E`, `B` through the Hodge star), isometric. -/
+/-- The reading map of the mirror scheme: real discrete forms states as matrix fields. -/
 def mirrorEmb (N : ℕ) : mirrorHidden hT hB N →L[ℝ] PiLp 2 SpaceQ :=
   mirrorReEmb ∘L mirrorFE hT hB N
 
@@ -479,7 +440,6 @@ theorem adjoint_mirrorEmb_apply (N : ℕ) (v : mirrorHidden hT hB N) :
 
 /-! ### The real mirror complex and the scheme as an approximating FEEC discretization -/
 
-/-- The complex inner products of the mirror state spaces restrict to the real ones. -/
 theorem real_inner_eq_re_inner_spaceQ (i : Fin 3) (x y : SpaceQ i) :
     ⟪x, y⟫_ℝ = RCLike.re ⟪x, y⟫_ℂ := by
   have hC : ∀ v w : ℂ, ⟪v, w⟫_ℝ = RCLike.re ⟪v, w⟫_ℂ := fun v w => by
@@ -498,7 +458,7 @@ theorem real_inner_eq_re_inner_spaceQ (i : Fin 3) (x y : SpaceQ i) :
   · exact hL2F (P := Fin 3 × Fin 3) x y
   · exact hW2 x y
 
-/-- **The real mirror BGG complex**: `complexQ` over `ℝ` (same domains, same wave operator). -/
+/-- The real mirror BGG complex: `complexQ` over `ℝ`. -/
 abbrev complexQℝ : HilbertComplex ℝ ComplexShape.fin3 SpaceQ := complexQ.restrictScalars
 
 theorem wave_complexQℝ : complexQℝ.wave = complexQ.wave.restrictScalars :=
@@ -516,7 +476,6 @@ theorem complexQℝ_wave_apply (x : complexQℝ.wave.domain) :
     complexQℝ.wave x = complexQ.wave ⟨x, mem_complexQℝ_domain.1 x.2⟩ :=
   apply_eq_of_eq_pmap wave_complexQℝ x ⟨x, mem_complexQℝ_domain.1 x.2⟩ rfl
 
-/-- Strong solutions of the complex wave equation are strong solutions of the real one. -/
 theorem isStrongSolution_complexQℝ {I : Set ℝ} {U : ℝ → PiLp 2 SpaceQ}
     (h : Evolution.IsStrongSolution complexQ.wave I 0 U) :
     Evolution.IsStrongSolution complexQℝ.wave I 0 U :=
@@ -526,7 +485,6 @@ theorem isStrongSolution_complexQℝ {I : Set ℝ} {U : ℝ → PiLp 2 SpaceQ}
     rw [wave_complexQℝ]
     exact (LinearPMap.mem_graph_restrictScalars _).2 hv⟩
 
-/-- **The real and the complex wave groups agree** (forward in time). -/
 theorem complexQℝ_waveGroup {t : ℝ} (ht : 0 ≤ t) (x : PiLp 2 SpaceQ) :
     complexQℝ.waveGroup.S t x = complexQ.waveGroup.S t x := by
   have hdom : ∀ y ∈ complexQℝ.wave.domain,
@@ -540,11 +498,9 @@ theorem complexQℝ_waveGroup {t : ℝ} (ht : 0 ≤ t) (x : PiLp 2 SpaceQ) :
   have hc2 : Continuous fun y => complexQ.waveGroup.S t y := (complexQ.waveGroup.S t).continuous
   exact congrFun (hc1.ext_on hd hc2 fun y hy => hdom y hy) x
 
-/-- **The real TSD constraint**. -/
+/-- The real TSD constraint. -/
 abbrev tsdQℝ : Submodule ℝ (PiLp 2 SpaceQ) := totalSub fun i => (tsdQ i).restrictScalars ℝ
 
-/-- **The TSD constraint reduces the real mirror wave operator.** [QuennevilleBelair2015],
-Prop 4.17 (corrected) -/
 theorem isReducing_tsdQℝ : complexQℝ.wave.IsReducing tsdQℝ :=
   (Feec.Models.Cube.MirrorBGG.reducingSubcomplexQ.restrictScalars
     real_inner_eq_re_inner_spaceQ).isReducing_wave
@@ -553,9 +509,7 @@ theorem norm_mirrorEmb_le (N : ℕ) : ‖mirrorEmb hT hB N‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun v =>
     (norm_mirrorEmb hT hB N v).trans_le (one_mul _).ge
 
-/-- **The mirror scheme (6.5) on real fields as an approximating FEEC discretization**:
-`X_N` = the hidden space, `L_N` = the generator of (6.5) without source (`waveGen`), `ι_N` =
-`mirrorEmb`, `π_N = ι_N*`; the instance fields are the `HiddenState` constants. -/
+/-- The mirror scheme (6.5) on real fields as an approximating FEEC discretization. -/
 def mirrorFEMReal : ApproxFEEC complexQℝ ℕ where
   K := tsdQℝ
   isClosed_K := isClosed_totalSub
@@ -603,8 +557,7 @@ theorem adjoint_mirrorEmb_mulI (N : ℕ) (b : mirrorHidden hT hB N) :
     ((ContinuousLinearMap.adjoint_inner_right _ w _).trans (inner_mirrorEmb_mulI hT hB N w b)).trans
       (inner_zero_right w).symm
 
-/-- **The mirror scheme (6.5) for complex data**: real and imaginary parts each run (6.5)
-(`ApproxFEEC.complexify` with `J` = multiplication by `i`). -/
+/-- The mirror scheme (6.5) for complex data: real and imaginary parts each run (6.5). -/
 def mirrorFEMApprox : ApproxFEEC complexQℝ ℕ :=
   (mirrorFEMReal hT hB).complexify mulI mulI_mulI norm_mulI (adjoint_mirrorEmb_mulI hT hB)
     (inner_mirrorEmb_mulI hT hB)
@@ -613,8 +566,6 @@ theorem mirrorFEMApprox_isOrthogonal : ApproxFEEC.IsOrthogonal (mirrorFEMApprox 
   (mirrorFEMReal_isOrthogonal hT hB).complexify mulI mulI_mulI norm_mulI
     (adjoint_mirrorEmb_mulI hT hB) (inner_mirrorEmb_mulI hT hB)
 
-/-- The complexified solution is the real solution of the real part plus `i` times the real
-solution of the imaginary part. -/
 theorem mirrorFEMApprox_sol (N : ℕ) (a b : mirrorHidden hT hB N) (t : ℝ) :
     (mirrorFEMApprox hT hB).sol N (WithLp.toLp 2 (a, b)) t =
       (mirrorFEMReal hT hB).sol N a t + mulI ((mirrorFEMReal hT hB).sol N b t) :=
@@ -626,8 +577,6 @@ abbrev dState (N : ℕ) {T : ℝ} (s : Feec.BGG.DiscreteSolution (mirrorWave hT 
     REnergy :=
   EState.mk ((s.σ t : TU0) : W0) (bIncl1 (s.u t : BU1)) (s.M t : W2) (s.ρ t : Wv W2)
 
-/-- **The real discrete solution of `mirrorFEMReal` is (6.5)**: from the initial state of a
-solution `s` of (6.5) without source, `ιₙ e^{tLₙ} v = Rt(σₕ, uₕ, Mₕ, ρₕ)(t)` on `[0, T]`. -/
 theorem mirrorFEMReal_sol_eq (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
     (s : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T 0) {t : ℝ} (ht : t ∈ Icc 0 T) :
     (mirrorFEMReal hT hB).sol N (DiscreteSolution.hiddenInit hT0 s) t =
@@ -641,16 +590,13 @@ theorem mirrorFEMReal_sol_eq (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
 
 /-! ### The error of a TSD state -/
 
-/-- The four-term error of a real forms state `a` against the real part of a state `y`, the
-quantity of `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM` (with `σ = M = 0`). -/
+/-- The four-term error of a real forms state `a` against the real part of a state `y`. -/
 def tsdErr (y : PiLp 2 SpaceQ) (a : REnergy) : ℝ :=
   √(‖a.σ‖ ^ 2 + ‖rowsW1L (slot1 y) - a.u‖ ^ 2 + ‖a.M‖ ^ 2 + ‖rowsW2L (slotB y) - a.ρ‖ ^ 2)
 
 theorem tsdErr_nonneg (y : PiLp 2 SpaceQ) (a : REnergy) : 0 ≤ tsdErr y a := Real.sqrt_nonneg _
 
 set_option maxHeartbeats 1000000 in
-/-- **The error of a TSD state** `y` against `Rt a + i Rt b`: at most the error of the real part
-plus the error of the imaginary part. -/
 theorem norm_sub_mirrorReEmb_le {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ) (a b : REnergy) :
     ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ ≤ tsdErr y a + tsdErr (-Complex.I • y) b := by
   obtain ⟨h0, -, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hy
@@ -672,8 +618,6 @@ theorem norm_sub_mirrorReEmb_le {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ) (
     (add_nonneg (tsdErr_nonneg _ _) (tsdErr_nonneg _ _)) hsq
 
 set_option maxHeartbeats 1000000 in
-/-- **The error of the real part is at most the full error**: for a TSD state `y`,
-`tsdErr y a ≤ ‖y - Rt a - i Rt b‖` (the converse of `norm_sub_mirrorReEmb_le`). -/
 theorem tsdErr_le_norm_sub_mirrorReEmb {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ)
     (a b : REnergy) : tsdErr y a ≤ ‖y - mirrorReEmb a - Complex.I • mirrorReEmb b‖ := by
   obtain ⟨h0, -, hM, -⟩ := Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hy
@@ -724,8 +668,6 @@ theorem neg_I_smul_mem {x : PiLp 2 SpaceQ} (hx : x ∈ tsdQℝ ⊓ complexQℝ.w
 
 /-! ### The discrete solutions are the scheme (6.5) -/
 
-/-- The TSD data of `D(L²)` are dense in the TSD constraint (`D(L²) ∩ K` is dense in the reducing
-`K`). -/
 theorem topologicalClosure_tsdQℝ_inf_domainSq :
     (tsdQℝ ⊓ complexQℝ.wave.domainSq).topologicalClosure = tsdQℝ := by
   refine le_antisymm ((tsdQℝ ⊓ complexQℝ.wave.domainSq).topologicalClosure_minimal inf_le_left
@@ -735,9 +677,7 @@ theorem topologicalClosure_tsdQℝ_inf_domainSq :
   exact h
 
 set_option maxHeartbeats 4000000 in
-/-- **The discrete solutions of `mirrorFEMApprox` are the scheme (6.5)**: from every discrete
-initial value `(a, b)`, `ι' e^{tL'}(a, b) = Rt(σₕ, uₕ, Mₕ, ρₕ)(t) + i Rt(σₕ', uₕ', Mₕ', ρₕ')(t)` for
-the solutions `s`, `s'` of (6.5) without source with initial states `a`, `b`. -/
+/-- **The discrete solutions of `mirrorFEMApprox` are those of (6.5) without source.** -/
 theorem mirrorFEMApprox_sol_eq_scheme (N : ℕ) {T : ℝ} (hT0 : 0 < T) (a b : mirrorHidden hT hB N) :
     ∃ s s' : Feec.BGG.DiscreteSolution (mirrorWave hT hB N) T 0,
       DiscreteSolution.hiddenInit hT0.le s = a ∧ DiscreteSolution.hiddenInit hT0.le s' = b ∧

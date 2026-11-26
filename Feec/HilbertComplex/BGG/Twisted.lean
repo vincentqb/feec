@@ -7,34 +7,13 @@ public import Mathlib.Analysis.InnerProductSpace.ProdL2
 /-!
 # The twisted Hilbert complex of analytic BGG data of any length
 
-Two Hilbert complexes `(W, d)` and `(W̃, d̃)` on the same complex shape `c`, over `𝕜 = ℝ` or `ℂ`,
-linked by bounded connecting maps `S i j : W̃ⁱ → Wʲ` that map `D(d̃)` into `D(d)` and
-anticommute with the differentials (`d S = -S d̃` on `D(d̃)`), give the **twisted complex**
-
-  `Wⁱ ⊕ W̃ⁱ → Wʲ ⊕ W̃ʲ`,  `(σ, φ) ↦ (dσ - Sφ, d̃φ)`,
-
-a Hilbert complex on `c` with domains `D(d) × D(d̃)`. Its algebraic shadow is
-`Feec.BGG.Data.twist`; for one segment, the BGG complex (5.1) is the subcomplex
-`twist⁻¹(0 × W̃ʲ) → 0 × W̃ʲ → Wᵏ ⊕ W̃ᵏ`.
-
-## Main definitions
-
-* `LinearPMap.prodL2 T₁ T₂`: the direct sum of two partial maps on `WithLp 2` products.
-* `Feec.BGG.HilbertData 𝕜 c W Wt`: analytic BGG data of any length; `HilbertData.ofSucc`: on
-  `ComplexShape.up α` from successive connecting maps.
-* `HilbertData.twistComplex : HilbertComplex 𝕜 c (fun i => WithLp 2 (W i × Wt i))`.
-
-## Main results
-
-* `LinearPMap.IsClosed.prodL2`, `LinearPMap.dense_prodL2_domain`: the direct sum of closed
-  densely defined operators is closed and densely defined.
+Two Hilbert complexes linked by bounded connecting maps `S` with `S D(d̃) ⊆ D(d)` and
+`d S = -S d̃` (`Feec.BGG.HilbertData`) give the twisted Hilbert complex
+`(σ, φ) ↦ (dσ - Sφ, d̃φ)` on `Wⁱ ⊕ W̃ⁱ` (`HilbertData.twistComplex`, [ArnoldHu2021], §5.1).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (the connecting maps `S` and the complex (5.1))
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §5.1, (58)–(59) (the twisted
-  complex of bounded Hilbert complexes)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §5.1
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -78,8 +57,7 @@ def prodL2Graph (T₁ : E₁ →ₗ.[𝕜] F₁) (T₂ : E₂ →ₗ.[𝕜] F₂
     Submodule 𝕜 (WithLp 2 (E₁ × E₂) × WithLp 2 (F₁ × F₂)) :=
   (T₁.graph.prod T₂.graph).comap prodL2Swap
 
-/-- **The direct sum** `T₁ ⊕ T₂ : WithLp 2 (E₁ × E₂) →ₗ.[𝕜] WithLp 2 (F₁ × F₂)`, with domain
-`D(T₁) × D(T₂)`. -/
+/-- The direct sum `T₁ ⊕ T₂` on `WithLp 2` products, with domain `D(T₁) × D(T₂)`. -/
 def prodL2 (T₁ : E₁ →ₗ.[𝕜] F₁) (T₂ : E₂ →ₗ.[𝕜] F₂) :
     WithLp 2 (E₁ × E₂) →ₗ.[𝕜] WithLp 2 (F₁ × F₂) :=
   (prodL2Graph T₁ T₂).toLinearPMap
@@ -117,13 +95,11 @@ theorem prodL2_apply_snd {T₁ : E₁ →ₗ.[𝕜] F₁} {T₂ : E₂ →ₗ.[�
   exact (T₂.mem_graph_iff.1 hm.2 |>.choose_spec.2).symm.trans (congrArg T₂
     (Subtype.ext (T₂.mem_graph_iff.1 hm.2).choose_spec.1))
 
-/-- The direct sum of closed operators is closed. -/
 theorem IsClosed.prodL2 {T₁ : E₁ →ₗ.[𝕜] F₁} {T₂ : E₂ →ₗ.[𝕜] F₂} (h₁ : T₁.IsClosed)
     (h₂ : T₂.IsClosed) : (prodL2 T₁ T₂).IsClosed := by
   rw [LinearPMap.IsClosed, prodL2_graph]
   exact (h₁.prod h₂).preimage continuous_prodL2Swap
 
-/-- The direct sum of densely defined operators is densely defined. -/
 theorem dense_prodL2_domain {T₁ : E₁ →ₗ.[𝕜] F₁} {T₂ : E₂ →ₗ.[𝕜] F₂}
     (h₁ : Dense (T₁.domain : Set E₁)) (h₂ : Dense (T₂.domain : Set E₂)) :
     Dense ((prodL2 T₁ T₂).domain : Set (WithLp 2 (E₁ × E₂))) := by
@@ -133,7 +109,6 @@ theorem dense_prodL2_domain {T₁ : E₁ →ₗ.[𝕜] F₁} {T₂ : E₂ →ₗ
   rw [this]
   exact (h₁.prod h₂).preimage (WithLp.prodContinuousLinearEquiv 2 𝕜 E₁ E₂).toHomeomorph.isOpenMap
 
-/-- `0 ⊕ 0 = 0`. -/
 theorem prodL2_zero : prodL2 (0 : E₁ →ₗ.[𝕜] F₁) (0 : E₂ →ₗ.[𝕜] F₂) = 0 := by
   refine LinearPMap.ext ?_ fun x hx _ => ?_
   · ext x; simp [mem_prodL2_domain, zero_domain]
@@ -152,12 +127,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W Wt :
   [∀ i, NormedAddCommGroup (Wt i)] [∀ i, InnerProductSpace 𝕜 (Wt i)]
   [∀ i, CompleteSpace (Wt i)]
 
-/-- **Analytic BGG data of any length**: two Hilbert complexes `H`, `Ht` on `c` and bounded
-connecting maps `S i j : W̃ⁱ → Wʲ`, zero off the relation, mapping `D(d̃ i j)` into `D(d j k)`
-and anticommuting with the differentials there.
-
-See [QuennevilleBelair2015], §5.1 (one segment, `S₀ : W̃⁰ → W¹` bounded with `S₀Ṽ⁰ ⊆ V¹`);
-[ArnoldHu2021]. -/
+/-- Two Hilbert complexes linked by bounded maps `S` with `S D(d̃) ⊆ D(d)` and `d S = -S d̃`. -/
 structure HilbertData (𝕜 : Type*) [RCLike 𝕜] {ι : Type*} (c : ComplexShape ι)
     (W Wt : ι → Type*) [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)]
     [∀ i, CompleteSpace (W i)] [∀ i, NormedAddCommGroup (Wt i)]
@@ -221,12 +191,7 @@ theorem twistD_eq_zero {i j : ι} (h : ¬ c.Rel i j) : D.twistD i j = 0 := by
   exact LinearPMap.ext rfl fun x hx _ => by
     rw [LinearPMap.vadd_apply]; simp
 
-/-- **The twisted Hilbert complex** of analytic BGG data of any length:
-`(σ, φ) ↦ (dσ - Sφ, d̃φ)` on `Wⁱ ⊕ W̃ⁱ`, with domains `D(d) × D(d̃)`. Closedness comes from
-`d ⊕ d̃` closed and `S` bounded; `dd = 0` from `d d = 0`, `d̃ d̃ = 0` and `d S = -S d̃`.
-[QuennevilleBelair2015], §5.1
-
-See [QuennevilleBelair2015], §5.1; cf. [ArnoldHu2021]. -/
+/-- The twisted Hilbert complex `(σ, φ) ↦ (dσ - Sφ, d̃φ)` on `Wⁱ ⊕ W̃ⁱ`. [ArnoldHu2021], §5.1 -/
 def twistComplex : HilbertComplex 𝕜 c (fun i => WithLp 2 (W i × Wt i)) where
   d := D.twistD
   shape i j h := D.twistD_eq_zero h
@@ -285,8 +250,7 @@ variable {U Ut : α → Type*} [∀ i, NormedAddCommGroup (U i)] [∀ i, InnerPr
   [∀ i, CompleteSpace (U i)] [∀ i, NormedAddCommGroup (Ut i)] [∀ i, InnerProductSpace 𝕜 (Ut i)]
   [∀ i, CompleteSpace (Ut i)]
 
-/-- **Analytic BGG data on `ComplexShape.up α`** from two Hilbert complexes and successive bounded
-connecting maps `S i : W̃ⁱ → Wⁱ⁺¹` with `S D(d̃) ⊆ D(d)` and `d S = -S d̃`. -/
+/-- Analytic BGG data on `ComplexShape.up α` from successive connecting maps `S i : W̃ⁱ → Wⁱ⁺¹`. -/
 def ofSucc (H : HilbertComplex 𝕜 (ComplexShape.up α) U)
     (Ht : HilbertComplex 𝕜 (ComplexShape.up α) Ut) (S : ∀ i, Ut i →L[𝕜] U (i + 1))
     (mapsTo : ∀ i (φ : (Ht.d i (i + 1)).domain), S i φ ∈ (H.d (i + 1) (i + 1 + 1)).domain)

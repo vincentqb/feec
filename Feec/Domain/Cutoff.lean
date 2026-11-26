@@ -7,17 +7,8 @@ public import Mathlib.Topology.Algebra.Support
 /-!
 # Smooth cut-offs
 
-The smooth transition `χ = Real.smoothTransition` (`χ = 0` on `(-∞, 0]`, `χ = 1` on `[1, ∞)`,
-smooth and monotone) and its derivative `dχ = χ'`, which is nonnegative, continuous, supported in
-`[0, 1]` and bounded (`exists_abs_dχ_le`). These are the building blocks of the cone weights of
-finite speed of propagation (`Feec.Domain.FiniteSpeed`) and of the radial cut-offs of the
-ball counterexample (`Feec.Counterexamples.BallSymTSD`).
-
-## References
-
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §7.3.2 (cut-offs in energy estimates)
-
-Bibliography: [references.bib](../../docs/references.bib)
+The derivative `dχ` of the smooth transition `χ = Real.smoothTransition` is nonnegative,
+continuous, supported in `[0, 1]` and bounded.
 -/
 
 @[expose] public noncomputable section

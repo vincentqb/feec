@@ -6,43 +6,20 @@ public import Feec.Models.Cube.FiniteElementMethod
 /-!
 # The smoothed-projection estimates on the Freudenthal meshes of the cube
 
-**The estimates `FEM.SmoothingEstimates` and `FEM.SmoothingEstimatesMin` hold**
-(`FEM.smoothingEstimates_pMax`, `FEM.smoothingEstimatesMin_pMin`; as bare existence statements
-`FEM.smoothingEstimates_exists`, `FEM.smoothingEstimatesMin_exists`): for the parameters
-`pMax γ` (dilation factor `1 - γ h_N` about the centre of `Q = (0, ½)ⁿ`) and `pMin γ` (factor
-`1 + γ h_N`), with bump radii `γ h_N / 64 < γ h_N / 32`, `h_N = 1 / (2 (N + 1))` and `γ` small
-depending only on `n`, the smoothed canonical interpolants `Q_N = Π_h R_N` of the Whitney
-complexes of the level-`(N + 1)` Freudenthal meshes (with vanishing boundary DOFs for `pMin`) are
-bounded in `L²` uniformly in `N` and satisfy `‖v - Q_N v‖ ≤ ½ ‖v‖` on the Whitney spaces
-([AFW2010], §5.5; [ChristiansenWinther2008]). All the consequences proved under these estimates in
-`Feec.Models.Cube.FiniteElementMethod` therefore hold unconditionally for these parameters, for
-instance uniformly bounded cochain projections (`exists_uniform_cochainProjection`,
-`exists_uniform_cochainProjectionMin`).
+For the smoothing parameters `FEM.pMax γ` and `FEM.pMin γ` with `γ` small, the smoothed
+interpolants of the Whitney complexes of the Freudenthal meshes of `Q = (0, ½)ⁿ` are bounded in
+`L²` uniformly in `N` and close to the identity ([AFW2010], §5.5; [ChristiansenWinther2008]).
 
-**The proof is the star-shaped one** (`Feec.Models.StarShaped.Smoothing`): `Q` is star-shaped
-with respect to the ball `B((¼, …, ¼), ¼)` and contained in the closed ball of radius `R = ¼`
-about its centre, and the Freudenthal meshes are uniformly shape regular and quasi-uniform
-(`meshData`: every simplex is `h_N (m + K_σ)`, a homothetic copy of one of the `n!` Kuhn simplices,
-[Freudenthal1942], [Kuhn1960]). An admissible parameter at scale `γ` (`IsAdm`: centre of the cube,
-`|c - 1| = γ h_N`, the bump radii above) is admissible at scale `γ h_N / 4` with bump ratio
-`σ = 1 / 8 = s₀ / (8 R)` in the star-shaped theory (`IsAdm.starShaped`), which gives the uniform
-bound and the closeness for every `γ ≤ γ₀` (`exists_gamma₀`, `smoothingEstimates_pMax_forall`,
-`smoothingEstimatesMin_pMin_forall`).
+## Main results
 
-The file also keeps the geometry of the Freudenthal meshes used by the other cube families: the
-Kuhn simplices `cubeSimplex`, the separation of lattice points (`isSep_latticePoint_add_sum`,
-`isSep_inv_smul_sum`), bounded overlap with the constant `6ⁿ n!`
-(`card_filter_mem_cthickening_le`, `sum_locMass_le`), and the boundary facets of the cube meshes
-(`exists_boundaryFacet_of_lower`, `exists_boundaryFacet_of_upper`, `coord_eq_zero_of_near`,
-`coord_eq_half_of_near`).
+* `FEM.smoothingEstimates_pMax_forall`, `FEM.smoothingEstimatesMin_pMin_forall`: the estimates.
+* `FEM.exists_uniform_cochainProjection`: uniformly bounded cochain projections onto `whitney n N`.
+* `FEM.exists_uniform_cochainProjectionMin`: the same onto `whitneyMin n N`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections: the estimates for `ε ≈ h`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
-* [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -59,8 +36,7 @@ variable {n : ℕ}
 
 /-! ### Separated points of the lattice -/
 
-/-- A point is **`θ`-separated** if its coordinates and their differences are integers or at
-distance at least `θ` from every integer. -/
+/-- `x` is `θ`-separated: its coordinates and differences are integers or `θ`-far from them. -/
 def IsSep (θ : ℝ) (x : Fin n → ℝ) : Prop :=
   (∀ l (z : ℤ), x l = z ∨ θ ≤ |x l - z|) ∧ (∀ l l' (z : ℤ), x l - x l' = z ∨ θ ≤ |x l - x l' - z|)
 
@@ -130,7 +106,6 @@ theorem apply_latticePoint_add_sum (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n))
   simp only [Pi.add_apply, latticePoint_apply, Finset.sum_apply, Pi.smul_apply, smul_eq_mul,
     kuhnVertex, mul_ite, mul_one, mul_zero, Finset.sum_ite, Finset.sum_const_zero, add_zero]
 
-/-- **Points of a face with weights `≥ θ` are `θ`-separated** (in lattice coordinates). -/
 theorem isSep_latticePoint_add_sum {θ : ℝ} (hθ0 : 0 ≤ θ) (hθ : θ ≤ 1 / 2) (m : Fin n → ℤ)
     (σ : Equiv.Perm (Fin n)) {k : ℕ} (j : Fin (k + 1) → Fin (n + 1)) {μ : Fin (k + 1) → ℝ}
     (hμ : ∀ a, θ ≤ μ a) (hμ1 : ∑ a, μ a = 1) :
@@ -161,7 +136,6 @@ theorem isSep_latticePoint_add_sum {θ : ℝ} (hθ0 : 0 ≤ θ) (hθ : θ ≤ 1 
       change (m l : ℝ) + ∑ a ∈ J l, μ a - ((m l' : ℝ) + ∑ a ∈ J l', μ a) = _
       linarith
 
-/-- **A separated point near a Freudenthal simplex lies in it.** -/
 theorem mem_freudenthalSet_of_isSep {θ : ℝ} {x y : Fin n → ℝ} (hx : IsSep θ x)
     {m : Fin n → ℤ} {σ : Equiv.Perm (Fin n)} (hy : y ∈ freudenthalSet m σ)
     (hxy : ∀ l, |x l - y l| < θ / 2) : x ∈ freudenthalSet m σ := by
@@ -241,7 +215,6 @@ theorem cubeSimplex_points (N : ℕ) (m : Fin n → Fin (N + 1)) (σ : Equiv.Per
     (cubeSimplex N m σ).points j = hN N • (latticePoint (finLattice m) + kuhnVertex σ j) := by
   simp [cubeSimplex]
 
-/-- `h_N (m + K_σ) = t + h_N K_σ`, `t = h_N m`. -/
 theorem cubeSimplex_eq (N : ℕ) (m : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)) :
     cubeSimplex N m σ = mapEquiv (boxMap (hN N • latticePoint (finLattice m)) (hN N)
       (hN_ne_zero N)) (kuhnSimplex σ) := by
@@ -259,7 +232,6 @@ theorem mem_closedInterior_cubeSimplex {N : ℕ} {m : Fin n → Fin (N + 1)}
   · intro hx
     exact ⟨(hN N)⁻¹ • x, hx, by simp [smul_smul, hN_ne_zero N]⟩
 
-/-- The simplices have sup-norm diameter `≤ h_N`. -/
 theorem norm_sub_le_of_mem_cubeSimplex {N : ℕ} {m : Fin n → Fin (N + 1)}
     {σ : Equiv.Perm (Fin n)} {x y : Fin n → ℝ} (hx : x ∈ (cubeSimplex N m σ).closedInterior)
     (hy : y ∈ (cubeSimplex N m σ).closedInterior) : ‖x - y‖ ≤ hN N := by
@@ -275,7 +247,6 @@ theorem norm_sub_le_of_mem_cubeSimplex {N : ℕ} {m : Fin n → Fin (N + 1)}
   rw [← smul_sub, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 h.le)] at key
   rwa [inv_mul_le_iff₀ h, mul_one] at key
 
-/-- The simplices of the level-`(N + 1)` mesh have diameter `h_N` (`n ≠ 0`). -/
 theorem diam_eq_hN [NeZero n] {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) : diam T = hN N := by
   obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
@@ -284,9 +255,6 @@ theorem diam_eq_hN [NeZero n] {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) 
 /-! ### Bounded overlap -/
 
 open Classical in
-/-- **Bounded overlap**: a point lies in the `2 h_N`-neighbourhoods of at most `6ⁿ n!` simplices
-of the level-`(N + 1)` mesh (`Feec.FiniteElement.card_filter_mem_cthickening_le` with the shape
-constants `max n 2, 1` and `q = 1`). -/
 theorem card_filter_mem_cthickening_le (N : ℕ) (t : Fin n → ℝ) :
     ((mesh n N).simplices.filter fun T : Affine.Simplex ℝ (Fin n → ℝ) n =>
       t ∈ Metric.cthickening (2 * hN N) T.closedInterior).card ≤ 6 ^ n * n.factorial := by
@@ -311,15 +279,12 @@ theorem card_filter_mem_cthickening_le (N : ℕ) (t : Fin n → ℝ) :
   exact_mod_cast h.trans_eq e
 
 open Classical in
-/-- **Bounded overlap of the neighbourhoods**, integrated. -/
 theorem sum_integral_cthickening_le (N : ℕ) {f : (Fin n → ℝ) → ℝ} (hf : Integrable f)
     (hf0 : ∀ x, 0 ≤ f x) :
     ∑ T ∈ (mesh n N).simplices, ∫ x in Metric.cthickening (2 * hN N) T.closedInterior, f x ≤
       (6 ^ n * n.factorial : ℕ) * ∫ x, f x :=
   sum_integral_le_of_card_le _ _ (fun _ => Metric.isClosed_cthickening.measurableSet)
     (fun x => by exact_mod_cast card_filter_mem_cthickening_le N x) hf hf0
-
-/-! ### Face integrals on the mesh simplices -/
 
 /-! ### The cube and the smoothing parameters -/
 
@@ -336,8 +301,7 @@ theorem norm_sub_center_le {x : Fin n → ℝ} (hx : x ∈ closure (cubeDomain n
   rw [Real.norm_eq_abs, Pi.sub_apply, center, abs_le]
   constructor <;> linarith [this.1, this.2]
 
-/-- **The smoothing parameters** of the maximal family on the level-`(N + 1)` mesh: dilation
-factor `1 - γ h_N` about the centre, bump radii `γ h_N / 64 < γ h_N / 32`. -/
+/-- The maximal-family smoothing parameters, with dilation factor `1 - γ h_N` about the centre. -/
 def pMax (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ) : SmoothingParam (Fin n → ℝ) where
   center := center n
   factor := 1 - γ * hN N
@@ -359,8 +323,7 @@ theorem pMax_isMaximal (N : ℕ) : (pMax (n := n) γ hγ hγ1 N).IsMaximal (cent
     change γ * hN N / 32 < 1 / 4 * (1 - (1 - γ * hN N)) / 4
     have := hN_pos N; nlinarith
 
-/-- **The smoothing parameters** of the minimal family on the level-`(N + 1)` mesh: dilation
-factor `1 + γ h_N` towards the centre, bump radii `γ h_N / 64 < γ h_N / 32`. -/
+/-- The minimal-family smoothing parameters, with dilation factor `1 + γ h_N` towards the centre. -/
 def pMin (γ : ℝ) (hγ : 0 < γ) (N : ℕ) : SmoothingParam (Fin n → ℝ) where
   center := center n
   factor := 1 + γ * hN N
@@ -379,8 +342,7 @@ theorem pMin_isMinimal (N : ℕ) : (pMin (n := n) γ hγ N).IsMinimal (center n)
     change γ * hN N / 32 < 1 / 4 * (1 + γ * hN N - 1) / 2
     have := hN_pos N; nlinarith
 
-/-- **Admissible smoothing parameters** at scale `γ` on the level-`(N + 1)` mesh: centre of the
-cube, `|c - 1| = γ h_N`, bump radii `γ h_N / 64 < γ h_N / 32` (both families). -/
+/-- Admissible smoothing parameters at scale `γ`: centred at the cube, `|c - 1| = γ h_N`. -/
 structure IsAdm (γ : ℝ) (N : ℕ) (p : SmoothingParam (Fin n → ℝ)) : Prop where
   center_eq : p.center = center n
   abs_factor_sub_one : |p.factor - 1| = γ * hN N
@@ -428,7 +390,6 @@ theorem factor_le_two (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) : p.factor ≤ 2 := 
 theorem pow_factor_le (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (k : ℕ) : p.factor ^ k ≤ 2 ^ k :=
   pow_le_pow_left₀ p.factor_pos.le (hp.factor_le_two hγ1) k
 
-/-- `|1 - cᵏ| ≤ k 2ᵏ γ h_N`. -/
 theorem abs_one_sub_pow_le (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (k : ℕ) :
     |1 - p.factor ^ k| ≤ k * 2 ^ k * (γ * hN N) := by
   have hg : p.factor ^ k - 1 = (∑ i ∈ Finset.range k, p.factor ^ i) * (p.factor - 1) :=
@@ -441,7 +402,6 @@ theorem abs_one_sub_pow_le (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (k : ℕ) :
           (pow_le_pow_right₀ (by norm_num) (Finset.mem_range.1 hi).le)
     _ = k * 2 ^ k := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
 
-/-- The dilated point is within `γ h_N / 4` of the original point on `cl Q`. -/
 theorem norm_dil_sub_le (hp : IsAdm γ N p) {x : Fin n → ℝ} (hx : x ∈ closure (cubeDomain n)) :
     ‖(p.center + p.factor • (x - p.center)) - x‖ ≤ γ * hN N / 4 := by
   rw [hp.center_eq]
@@ -471,7 +431,6 @@ theorem volume_real_kuhnSet_le (σ : Equiv.Perm (Fin n)) : volume.real (kuhnSet 
   rw [Measure.real]
   exact ENNReal.toReal_le_of_le_ofReal zero_le_one (by simpa using h1)
 
-/-- `∫_T f ≤ h_Nⁿ sup_T f` for `0 ≤ f` on the mesh simplices. -/
 theorem integral_cubeSimplex_le {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n))
     {f : (Fin n → ℝ) → ℝ} (hf : Continuous f) {A : ℝ}
     (hA : ∀ x ∈ (cubeSimplex N m σ).closedInterior, f x ≤ A) (hf0 : ∀ x, 0 ≤ f x) :
@@ -502,7 +461,6 @@ theorem integral_cubeSimplex_le {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equi
 
 /-! ### The uniform `L²` bound -/
 
-/-- **Bounded overlap of the local masses**: `Σ_T m_T(x) ≤ 6ⁿ n! ‖x‖²`. -/
 theorem sum_locMass_le (N : ℕ) {k : ℤ} (x : L2F ℝ (mesh n N).domain (formIdx n k)) :
     ∑ T ∈ (mesh n N).simplices, locMass (2 * hN N) x T ≤ (6 ^ n * n.factorial : ℕ) * ‖x‖ ^ 2 := by
   set F : (Fin n → ℝ) → ℝ := fun t => ∑ s : formIdx n k,
@@ -518,7 +476,6 @@ theorem sum_locMass_le (N : ℕ) {k : ℤ} (x : L2F ℝ (mesh n N).domain (formI
   rw [integral_finsetSum _ fun s _ => integrable_sq_indicator hΩ _, PiLp.norm_sq_eq_of_L2]
   simp_rw [integral_sq_indicator hΩ]
 
-/-- `Σₛ ‖zₛ‖²_{L²(T)} ≤ 2ⁿ hⁿ K²` on a simplex of the cube mesh when `|z| ≤ K` there. -/
 theorem sum_integral_sq_le_of_abs_le {N k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {z : FormField n} (hzc : Continuous z) {K : ℝ}
     (hzb : ∀ y ∈ T.closedInterior, ∀ s, |z y s| ≤ K) :
@@ -536,8 +493,6 @@ theorem sum_integral_sq_le_of_abs_le {N k : ℕ} {T : Affine.Simplex ℝ (Fin n 
     _ ≤ 2 ^ n * (hN N ^ n * K ^ 2) :=
         mul_le_mul_of_nonneg_right (card_formIdx_le _) (by positivity)
 
-/-- **The smoothed field near a simplex is bounded by the local mass**:
-`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` at every point `y ∈ cl Q` within `h_N` of `T`. -/
 theorem IsAdm.abs_smoothForm_le_locMass_of_near {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
     (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (x : L2F ℝ (mesh n N).domain (formIdx n k))
     (T : Affine.Simplex ℝ (Fin n → ℝ) n) {y z : Fin n → ℝ} (hyc : y ∈ closure (cubeDomain n))
@@ -570,8 +525,6 @@ theorem IsAdm.abs_smoothForm_le_locMass_of_near {N k : ℕ} {p : SmoothingParam 
         add_le_add (add_le_add h2 (by rw [dist_eq_norm]; exact h1)) hyz
     _ ≤ 2 * hN N := by nlinarith
 
-/-- **The `L²` norm of a glued field by local masses** (any element family on the cube meshes):
-`‖glue u‖² ≤ K 6ⁿ n! ‖x‖²` when `Σₛ ‖(u_T)ₛ‖²_{L²(T)} ≤ K m_T(x)` for every simplex. -/
 theorem norm_sq_glue_le_locMass (E : LocalElement n) {N k : ℕ}
     (x : L2F ℝ (mesh n N).domain (formIdx n k)) (u : E.Piecewise (mesh n N) k) {K : ℝ}
     (hK : 0 ≤ K) (hloc : ∀ T (hT : T ∈ (mesh n N).simplices), ∑ s : formIdx n k,
@@ -589,8 +542,6 @@ theorem interior_closedInterior_subset_cubeDomain {N : ℕ} {T : Affine.Simplex 
   simp only [interior_Icc] at h
   exact h
 
-/-- **The local mass controls the local fields** of the simplices inside the neighbourhood (any
-element family). -/
 theorem sum_integral_sq_le_locMass (E : LocalElement n) {N k : ℕ} (u : E.Piecewise (mesh n N) k)
     (T' : (mesh n N).simplices) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hsub : (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior ⊆
@@ -601,8 +552,6 @@ theorem sum_integral_sq_le_locMass (E : LocalElement n) {N k : ℕ} (u : E.Piece
   sum_integral_sq_le_of_subset E (isOpen_mesh_domain n N).measurableSet
     (fun _ hT => by rw [mesh_domain]; exact interior_closedInterior_subset_cubeDomain hT) u T' hsub
 
-/-- **Samples of the smoother near a point of the closed cube**: a point `t` in the support of the
-bump at the dilated point of `x ∈ cl Q` has `‖x - t‖ < γ h / 2`. -/
 theorem IsAdm.norm_sub_lt {N : ℕ} {p : SmoothingParam (Fin n → ℝ)} (hp : IsAdm γ N p)
     {x t : Fin n → ℝ} (hxc : x ∈ closure (cubeDomain n))
     (hdist : dist t (p.center + p.factor • (x - p.center)) < p.bump.rOut) :
@@ -620,7 +569,6 @@ theorem IsAdm.norm_sub_lt {N : ℕ} {p : SmoothingParam (Fin n → ℝ)} (hp : I
 
 /-! ### Assembly: the smoothing estimates -/
 
-/-- Estimates of a commuting map transport along an equality of domains. -/
 theorem commutingMapOfEq_estimates {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩ' : IsOpen Ω') {S : ((deRham ℝ n).maximalComplex hΩ).Subcomplex} (Q : S.CommutingMap)
     {C θ : ℝ} (hb : ∀ i x, ‖Q.Q i x‖ ≤ C * ‖x‖)
@@ -636,8 +584,6 @@ theorem one_le_cov : (1 : ℝ) ≤ 2 ^ n * ((6 ^ n * n.factorial : ℕ) : ℝ) :
     exact_mod_cast Nat.one_le_iff_ne_zero.2 (by positivity)
   nlinarith
 
-/-- **The maximal family samples only inside `Ω`**: every sample `t` of the smoother at a point
-`x` of `Ω̄` lies in `Ω`. -/
 theorem pMax_samples_mem (N : ℕ) :
     ∀ x ∈ closure (mesh n N).domain, ∀ t, dist t ((pMax (n := n) γ hγ hγ1 N).center +
       (pMax (n := n) γ hγ hγ1 N).factor • (x - (pMax (n := n) γ hγ hγ1 N).center)) <
@@ -657,7 +603,6 @@ def coordHyperplane (i : Fin n) (c : ℝ) : AffineSubspace ℝ (Fin n → ℝ) w
     simp only [Set.mem_ofPred_eq] at h₁ h₂ h₃ ⊢
     simp [h₁, h₂, h₃]
 
-/-- A simplex of `ℝⁿ` does not lie in a coordinate hyperplane. -/
 theorem not_closedInterior_subset_coordHyperplane (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (i : Fin n) (c : ℝ) : ¬ T.closedInterior ⊆ {y | y i = c} := by
   intro hsub
@@ -679,8 +624,6 @@ theorem not_closedInterior_subset_coordHyperplane (T : Affine.Simplex ℝ (Fin n
     mul_one] at h1 h2
   linarith
 
-/-- **A facet in a coordinate hyperplane bounding all the vertices is not an interior facet**:
-the apexes of the two cofaces would lie strictly on opposite sides. -/
 theorem not_isInteriorFacet_of_coord {M : SimplicialMesh n} {F : Finset (Fin n → ℝ)}
     (i : Fin n) (c ε : ℝ) (hε : ε ≠ 0)
     (hV : ∀ T ∈ M.simplices, ∀ v ∈ vertexSet T, 0 ≤ ε * (v i - c))
@@ -769,7 +712,6 @@ theorem cubeSimplex_points_apply (N : ℕ) (m : Fin n → Fin (N + 1)) (σ : Equ
     (cubeSimplex N m σ).points j i = hN N * ((m i : ℕ) + kuhnVertex σ j i) := by
   rw [cubeSimplex_points]; simp [finLattice]
 
-/-- **A face in the lower face `{yᵢ = 0}` of the cube lies in a boundary facet in that face**. -/
 theorem exists_boundaryFacet_of_lower {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n))
     (i : Fin n) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet (cubeSimplex N m σ))
     (hg0 : ∀ v ∈ g, v i = 0) (hgne : g.Nonempty) :
@@ -843,7 +785,6 @@ theorem exists_boundaryFacet_of_lower {N : ℕ} (m : Fin n → Fin (N + 1)) (σ 
       omega
     · rw [← hsame j hjp]; exact points_mem_vertexSet _ _
 
-/-- **A face in the upper face `{yᵢ = ½}` of the cube lies in a boundary facet in that face**. -/
 theorem exists_boundaryFacet_of_upper {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n))
     (i : Fin n) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet (cubeSimplex N m σ))
     (hg0 : ∀ v ∈ g, v i = 1 / 2) (hgne : g.Nonempty) :
@@ -917,8 +858,6 @@ theorem exists_boundaryFacet_of_upper {N : ℕ} (m : Fin n → Fin (N + 1)) (σ 
       omega
     · rw [← hsame j hjp]; exact points_mem_vertexSet _ _
 
-/-- **Separation of convex combinations of the vertices of a mesh simplex**: if all weights are
-`≥ θ`, the rescaled point `h_N⁻¹ Σₐ μₐ qₐ` is `θ`-separated (`IsSep`). -/
 theorem isSep_inv_smul_sum {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {m : ℕ} {q : Fin (m + 1) → Fin n → ℝ}
     (hqT : ∀ a, q a ∈ vertexSet T) {θ : ℝ} (hθ0 : 0 < θ) (hθ : θ ≤ 1 / 2)
@@ -955,8 +894,6 @@ theorem eq_of_sum_smul_apply_eq {k : ℕ} {μ : Fin (k + 1) → ℝ} (hμ : ∀ 
   · exact absurd h' (hμ a).ne'
   · linarith
 
-/-- **A good point near `{y_i = 0}`**: a convex combination of vertices of a mesh simplex with
-weights `≥ θ` and `i`-th coordinate `< θ h_N / 2` has all its vertices in `{y_i = 0}`. -/
 theorem coord_eq_zero_of_near {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {m : ℕ} {q : Fin (m + 1) → Fin n → ℝ}
     (hqT : ∀ a, q a ∈ vertexSet T) {θ : ℝ} (hθ0 : 0 < θ) (hθ : θ ≤ 1 / 2)
@@ -985,7 +922,6 @@ theorem coord_eq_zero_of_near {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) 
   refine eq_of_sum_smul_apply_eq hμp hμ1 (fun b => ?_) hx0 a
   have := (apply_mem_Icc_of_mem_vertexSet hT (hqT b) i).1; linarith
 
-/-- **A good point near `{y_i = ½}`**: the upper analogue of `coord_eq_zero_of_near`. -/
 theorem coord_eq_half_of_near {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {m : ℕ} {q : Fin (m + 1) → Fin n → ℝ}
     (hqT : ∀ a, q a ∈ vertexSet T) {θ : ℝ} (hθ0 : 0 < θ) (hθ : θ ≤ 1 / 2)
@@ -1025,8 +961,6 @@ theorem coord_eq_half_of_near {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) 
   simp only [Pi.neg_apply, neg_inj] at h1
   exact h1
 
-/-- Estimates of a commuting map into a subcomplex of the minimal complex transport along an
-equality of domains. -/
 theorem commutingMapOfEqMin_estimates {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩ' : IsOpen Ω') {S : ((deRham ℝ n).minimalComplex hΩ).Subcomplex} (Q : S.CommutingMap)
     {C θ : ℝ} (hb : ∀ i x, ‖Q.Q i x‖ ≤ C * ‖x‖)
@@ -1043,8 +977,6 @@ variable [NeZero n]
 theorem meshSize_mesh (N : ℕ) : (mesh n N).meshSize = hN N :=
   (mesh n N).meshSize_eq ⟨_, mem_freudenthalMesh_simplices.2 ⟨0, 1, rfl⟩⟩ fun _ hT => diam_eq_hN hT
 
-/-- **The Freudenthal meshes of the cube are uniformly shape regular and quasi-uniform**, with the
-constants `max n 2`, `1` of `Feec.Mesh.isShapeRegular_freudenthalMesh` and `q = 1`. -/
 theorem meshData (N : ℕ) : StarShaped.MeshData (mesh n N) ((max n 2 : ℕ) : ℝ) 1 1 where
   shape T hT := by
     have := isShapeRegular_freudenthalMesh (0 : Fin n → ℝ) (1 / 2) (by norm_num) T ⟨N, hT⟩
@@ -1052,8 +984,6 @@ theorem meshData (N : ℕ) : StarShaped.MeshData (mesh n N) ((max n 2 : ℕ) : �
   quasi T hT := by rw [one_mul, meshSize_mesh, diam_eq_hN hT]
   meshSize_pos := by rw [meshSize_mesh]; exact hN_pos N
 
-/-- Admissible parameters at scale `γ` on the cube are admissible at scale `γ h_N / 4` for the
-star-shaped theory, with centre `center n`, `R = 1 / 4` and bump ratio `σ = 1 / 8`. -/
 theorem IsAdm.starShaped {N : ℕ} {p : SmoothingParam (Fin n → ℝ)} (hp : IsAdm γ N p) :
     StarShaped.IsAdm (center n) (1 / 4) (1 / 8) (γ / 4) (mesh n N).meshSize p where
   center_eq := hp.center_eq
@@ -1062,13 +992,6 @@ theorem IsAdm.starShaped {N : ℕ} {p : SmoothingParam (Fin n → ℝ)} (hp : Is
   rOut_eq := by rw [hp.rOut_eq, meshSize_mesh]; ring
 
 variable (n) in
-/-- **The smoothed-projection estimates on the cube, for all small `γ`**: the cube with its
-Freudenthal meshes is an instance of the estimates on shape-regular meshes of star-shaped
-domains (`StarShaped.exists_gamma`, `StarShaped.exists_norm_smoothedInterp_le`; `meshData`,
-`IsAdm.starShaped`). There is `γ₀ ∈ (0, ½]`, depending only on `n`, such that for every
-`γ ∈ (0, γ₀]` the smoothed interpolants `Q_N` of admissible parameters at scale `γ` are bounded in
-`L²` uniformly in `N`, with `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ` for the maximal family and on `V̊ₕ`
-for the minimal family. -/
 theorem exists_gamma₀ :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ γ, 0 < γ → γ ≤ γ₀ → ∃ C, 0 ≤ C ∧
       ∀ (N k : ℕ) (p : SmoothingParam (Fin n → ℝ)), IsAdm γ N p →
@@ -1115,9 +1038,6 @@ theorem exists_gamma₀ :
       (StarShaped.sampleOK_of_isMinimal hM one_pos hC hstar (by norm_num) hpA (by norm_num) hRx
         (by norm_num) hγ4 hθ hu)
 
-/-- **The smoothing estimates from estimates on the mesh**: a uniform `L²` bound of the smoothed
-interpolants and `‖v - Q_N v‖ ≤ ½ ‖v‖` on the global Whitney fields give
-`SmoothingEstimates n p (max C ½)`. -/
 theorem smoothingEstimates_of {p : ℕ → SmoothingParam (Fin n → ℝ)}
     (hp : ∀ N, (p N).IsMaximal (center n) (1 / 4)) {C : ℝ}
     (hb : ∀ N (k : ℕ) x, ‖(whitneyElement n).smoothedInterp (mesh n N) (p N)
@@ -1143,8 +1063,6 @@ theorem smoothingEstimates_of {p : ℕ → SmoothingParam (Fin n → ℝ)}
       · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   exact ⟨hp, le_max_right _ _, fun N => (hest N).1, fun N => (hest N).2⟩
 
-/-- **The smoothing estimates with vanishing boundary DOFs from estimates on the mesh**
-(`smoothingEstimates_of` for `V̊ₕ`). -/
 theorem smoothingEstimatesMin_of {p : ℕ → SmoothingParam (Fin n → ℝ)}
     (hp : ∀ N, (p N).IsMinimal (center n) (1 / 4)) {C : ℝ}
     (hb : ∀ N (k : ℕ) x, ‖(whitneyElement n).smoothedInterp (mesh n N) (p N)
@@ -1171,10 +1089,7 @@ theorem smoothingEstimatesMin_of {p : ℕ → SmoothingParam (Fin n → ℝ)}
       · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   exact ⟨hp, le_max_right _ _, fun N => (hest N).1, fun N => (hest N).2⟩
 
-/-- **The Whitney smoothing estimates for all small `γ`** ([AFW2010], §5.5;
-[ChristiansenWinther2008]): for every `γ ∈ (0, γ₀]`, `γ₀` depending only on `n`, the parameters
-`pMax γ` (dilation factor `1 - γ h_N` about the centre, bump radii `γ h_N / 64 < γ h_N / 32`)
-satisfy `FEM.SmoothingEstimates`. -/
+/-- **`pMax γ` satisfies `FEM.SmoothingEstimates` for every small `γ`** ([AFW2010], §5.5). -/
 theorem smoothingEstimates_pMax_forall :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
       ∃ C, SmoothingEstimates n (pMax γ hγ hγ1) C := by
@@ -1185,9 +1100,7 @@ theorem smoothingEstimates_pMax_forall :
     (fun N k => (h N k _ (pMax_isAdm N)).1)
     (fun N k => (h N k _ (pMax_isAdm N)).2.1 (pMax_isMaximal N))⟩
 
-/-- **The Whitney smoothing estimates with vanishing boundary DOFs for all small `γ`**: as
-`smoothingEstimates_pMax_forall`, for the parameters `pMin γ` (dilation factor `1 + γ h_N` towards
-the centre). -/
+/-- **`pMin γ` satisfies `FEM.SmoothingEstimatesMin` for every small `γ`.** -/
 theorem smoothingEstimatesMin_pMin_forall :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ), γ ≤ γ₀ →
       ∃ C, SmoothingEstimatesMin n (pMin γ hγ) C := by
@@ -1198,48 +1111,27 @@ theorem smoothingEstimatesMin_pMin_forall :
     (fun N k => (h N k _ (pMin_isAdm N)).1)
     (fun N k => (h N k _ (pMin_isAdm N)).2.2 (pMin_isMinimal N))⟩
 
-/-- **The smoothed-projection estimates hold on the Freudenthal meshes of the cube**
-([AFW2010], §5.5; [ChristiansenWinther2008]): for the parameters `pMax γ` (dilation factor
-`1 - γ h_N` about the centre, bump radii `γ h_N / 64 < γ h_N / 32`) with `γ` small depending only on
-`n`, the smoothed interpolants `Q_N = Π_h R_N` are bounded in `L²` uniformly in `N`, and
-`‖v - Q_N v‖ ≤ ½ ‖v‖` on the Whitney spaces. -/
 theorem smoothingEstimates_pMax :
     ∃ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1) (C : ℝ), SmoothingEstimates n (pMax γ hγ hγ1) C := by
   obtain ⟨γ₀, hγ₀, hγ₀2, h⟩ := smoothingEstimates_pMax_forall (n := n)
   exact ⟨γ₀, hγ₀, by linarith, h γ₀ hγ₀ (by linarith) le_rfl⟩
 
-/-- **The smoothed-projection estimates with vanishing boundary DOFs hold on the Freudenthal
-meshes of the cube** ([AFW2010], §5.5; [ChristiansenWinther2008]): for the parameters `pMin γ`
-(dilation factor `1 + γ h_N` towards the centre, bump radii `γ h_N / 64 < γ h_N / 32`) with `γ`
-small depending only on `n`, the smoothed interpolants `Q̊_N = Π_h R_N` of the Whitney complexes
-with vanishing boundary DOFs are bounded in `L²` uniformly in `N`, and `‖v - Q̊_N v‖ ≤ ½ ‖v‖`
-on `V̊ₕ`. The samples of the smoother outside `Q` only meet faces lying in boundary facets, where
-the DOFs of `V̊ₕ` vanish (`StarShaped.sampleOK_of_isMinimal`). -/
 theorem smoothingEstimatesMin_pMin :
     ∃ (γ : ℝ) (hγ : 0 < γ) (C : ℝ), SmoothingEstimatesMin n (pMin γ hγ) C := by
   obtain ⟨γ₀, hγ₀, -, h⟩ := smoothingEstimatesMin_pMin_forall (n := n)
   exact ⟨γ₀, hγ₀, h γ₀ hγ₀ le_rfl⟩
 
-/-- **The smoothed-projection estimates hold on the Freudenthal meshes of the cube**, as an
-existence statement over the parameters (`smoothingEstimates_pMax` with the parameters `pMax γ`
-made explicit). -/
 theorem smoothingEstimates_exists :
     ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ), SmoothingEstimates n p C := by
   obtain ⟨γ, hγ, hγ1, C, h⟩ := smoothingEstimates_pMax (n := n)
   exact ⟨_, C, h⟩
 
-/-- **The smoothed-projection estimates with vanishing boundary DOFs hold on the Freudenthal
-meshes of the cube**, as an existence statement over the parameters
-(`smoothingEstimatesMin_pMin` with the parameters `pMin γ` made explicit). -/
 theorem smoothingEstimatesMin_exists :
     ∃ (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ), SmoothingEstimatesMin n p C := by
   obtain ⟨γ, hγ, C, h⟩ := smoothingEstimatesMin_pMin (n := n)
   exact ⟨_, C, h⟩
 
-/-- **Uniformly bounded cochain projections onto the Whitney complexes of the cube**
-(unconditionally): there is `C` such that for every `N` the Whitney complex of the
-level-`(N + 1)` Freudenthal mesh carries a cochain projection bounded by `C` in `L²` and in the
-graph norms ([AFW2010], §5.5). -/
+/-- **Uniformly bounded cochain projections onto the Whitney complexes** ([AFW2010], §5.5). -/
 theorem exists_uniform_cochainProjection :
     ∃ C : ℝ, ∀ N, ∃ π : (whitney n N).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
@@ -1247,8 +1139,7 @@ theorem exists_uniform_cochainProjection :
   exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, fun i j =>
     (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)⟩⟩
 
-/-- **Uniformly bounded cochain projections onto the Whitney complexes with vanishing boundary
-DOFs** (unconditionally), in `L²` and in the graph norms of `H̊Λ(Q)`. -/
+/-- **Uniformly bounded cochain projections onto the Whitney complexes with vanishing DOFs.** -/
 theorem exists_uniform_cochainProjectionMin :
     ∃ C : ℝ, ∀ N, ∃ π : (whitneyMin n N).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by

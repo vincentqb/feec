@@ -5,49 +5,8 @@ public import Feec.Models.Cube.DeRhamIdentTrunc
 /-!
 # `HΛ((0, ½)ⁿ)` and `H̊Λ((0, ½)ⁿ)` are the parity classes of the torus de Rham complex
 
-On `Q = (0, ½)ⁿ` the parity extension `Jf rel k` (`Feec.Models.Cube.DeRhamIdent.Jf`) identifies
-the de Rham complexes of `Feec.Domain.DeRham` with the two parity classes of the torus de Rham
-complex `Feec.Models.Cube.DeRham`, in every dimension `n` and degree `k`, as Hilbert complexes:
-
-* **the minimal complex** `H̊Λ(Q)` (vanishing tangential trace) is the compression of the real
-  torus complex along the extension in the **relative** class (`HQmin_eq_compress`);
-* **the maximal complex** `HΛ(Q)` (no boundary condition) is the compression along the extension
-  in the **absolute** class (`HQmax_eq_compress`).
-
-Both inclusions are proved: the extension maps the domains on `Q` into the torus domains and
-intertwines `d` (`mapsTo_comm_min`, `mapsTo_comm_max`), and a form whose extension lies in the torus
-domain lies in the domain on `Q` (`mem_domain_of_J_min`, `mem_domain_of_J_max`, the trace part).
-Inner products are multiplied by `2ⁿ` (`inner_J`); the range is the real parity class
-(`range_J`), a reducing subcomplex of the real torus complex (`reducing_range`), the fixed vectors
-of the reflections `± R_j^*` together with the conjugation (`realInvolutions`), and the parity
-classes of `Feec.Models.Cube.DeRham` (complex coefficients) are exactly the complexifications of the
-forms on `Q` (`mem_parity_fixed_iff`). Here the complexes are the windows `Λ⁰ → ⋯ → Λⁿ`
-(`HQmin`, `HQmax`, `RT`); the consequences on the `ℤ`-indexed complexes (Poincaré inequality,
-compactness, harmonic forms) are in `Feec.Models.Cube.DeRhamIdentPoincare`, and their statements on
-`Feec.Models.Cube.FEM.complex` and `Feec.Models.Cube.FEM.complexMin` in
-`Feec.Models.Cube.DeRhamIdentFEM`.
-
-## Main definitions
-
-* `RT n`: the torus de Rham window over `ℝ`; `cnj`, `refl`, `realInvolutions`, `realAction`.
-* `HQmin n`, `HQmax n`: the windows of `H̊Λ(Q)` and `HΛ(Q)`; `J rel`.
-
-## Main results
-
-* `mem_realFixed_iff`, **`range_J`**, **`inner_J`**, **`reducing_range`**.
-* **`mapsTo_comm_min`**, **`mem_domain_of_J_min`**, **`HQmin_eq_compress`**.
-* **`mapsTo_comm_max`**, **`mem_domain_of_J_max`**, **`HQmax_eq_compress`**.
-* **`mem_parity_fixed_iff`**: the spaces of the parity model `Feec.Models.Cube.DeRham.complex` are
-  the complexifications `J u + i J v` of the forms on `Q`; `mem_realFixed_iff_cnj`.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (relative and absolute boundary conditions)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the cube by compression of the torus)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The parity extension identifies `H̊Λ(Q)` and `HΛ(Q)` with the compressions of the real torus de Rham
+window along its relative and absolute classes (`HQmin_eq_compress`, `HQmax_eq_compress`).
 -/
 
 open scoped InnerProductSpace ComplexConjugate Topology
@@ -123,14 +82,12 @@ theorem refl_cnj (rel : Bool) (j : Fin n) (i : Fin (Fintype.card (Fin n) + 1)) (
   · simp [DeRham.parSign]; split_ifs <;> simp
   · congr 1; simp [DeRham.reflSign]; split_ifs <;> simp
 
-/-- The real unitaries of the real parity model: the conjugation (`none`) and the reflections
-(`some j`). -/
+/-- The real unitaries of the real parity model: the conjugation and the reflections. -/
 def realR (rel : Bool) : Option (Fin n) → ∀ i, TW n i ≃ₗᵢ[ℝ] TW n i
   | none => cnj
   | some j => refl rel j
 
-/-- **The reflections `± R_j^*` together with the real structure**, as commuting real unitary
-involutions of the real torus window. -/
+/-- **The reflections `± R_j^*` and the real structure**, as commuting real unitary involutions. -/
 def realInvolutions (rel : Bool) : (RT n).Involutions (Option (Fin n)) where
   R := realR rel
   invol k i u := by
@@ -160,8 +117,6 @@ instance (rel : Bool) (i : Fin (Fintype.card (Fin n) + 1)) :
     CompleteSpace ((realAction (n := n) rel).fixed i) :=
   ((realAction rel).isClosed_fixed i).completeSpace_coe
 
-/-- **The real parity class, coefficientwise**: the fixed vectors are the sequences with real
-entries and the parities of `rel` (`RealPar`). -/
 theorem mem_realFixed_iff {rel : Bool} {i : Fin (Fintype.card (Fin n) + 1)} {u : TW n i} :
     u ∈ (realAction rel).fixed i ↔ RealPar rel i u := by
   rw [(realInvolutions rel).mem_fixed_toAction]
@@ -244,14 +199,12 @@ instance (rel : Bool) (a : Fin (Fintype.card (Fin n) + 1)) :
     (LinearMap.range (J rel a : WQ n a →ₗ[ℝ] TW n a)).HasOrthogonalProjection := by
   rw [range_J]; infer_instance
 
-/-- **The ranges of the extension form a reducing subcomplex** of the real torus window. -/
 theorem reducing_range (rel : Bool) :
     (RT n).ReducingSubcomplex fun a => LinearMap.range (J rel a : WQ n a →ₗ[ℝ] TW n a) := by
   have h := (realAction (n := n) rel).reducingSubcomplex_fixed
   refine ⟨fun a b => ?_⟩
   convert h.reduces a b using 1 <;> exact range_J _ _
 
-/-- The torus differential is the multiplier by the de Rham symbol. -/
 theorem RT_d_apply {a b : Fin (Fintype.card (Fin n) + 1)} (x : ((RT n).d a b).domain)
     (m : Fin n → ℤ) :
     ((RT n).d a b x : (Fin n → ℤ) → Form ℂ (Fin n) b) m =
@@ -259,7 +212,6 @@ theorem RT_d_apply {a b : Fin (Fintype.card (Fin n) + 1)} (x : ((RT n).d a b).do
         ((x : TW n a) m) :=
   Fourier.coeFn_d_count (Torus.DeRham.windowSymbol (Fin n)) (i := a) (j := b) ⟨x.1, x.2⟩ m
 
-/-- A sequence mapped pointwise by the symbol onto an `ℓ²` sequence is in the torus domain. -/
 theorem mem_RT_domain_of_pointwise {a b : Fin (Fintype.card (Fin n) + 1)} {x : TW n a}
     {y : TW n b}
     (h : ∀ m, (Feec.Fourier.Exterior.deRham (Fin n)).m a b (Feec.Fourier.Torus.freq m)
@@ -277,19 +229,16 @@ theorem RT_d_zero {a b : Fin (Fintype.card (Fin n) + 1)}
     (h : ¬ (ComplexShape.window (Fintype.card (Fin n) + 1)).Rel a b) : (RT n).d a b = 0 :=
   (RT n).shape a b h
 
-/-- The differential of `H̊Λ(Q)` between consecutive degrees. -/
 theorem HQmin_d_succ (a : Fin (Fintype.card (Fin n) + 1))
     (hb : (a : ℕ) + 1 < Fintype.card (Fin n) + 1) :
     (HQmin n).d a ⟨(a : ℕ) + 1, hb⟩ = (extDerivOp ℝ n ((a : ℕ) : ℤ)).minimal (Q (Fin n)) :=
   (Feec.Domain.deRham ℝ n).minimalComplex_d isOpen_Q ((a : ℕ) : ℤ)
 
-/-- The differential of `HΛ(Q)` between consecutive degrees. -/
 theorem HQmax_d_succ (a : Fin (Fintype.card (Fin n) + 1))
     (hb : (a : ℕ) + 1 < Fintype.card (Fin n) + 1) :
     (HQmax n).d a ⟨(a : ℕ) + 1, hb⟩ = (extDerivOp ℝ n ((a : ℕ) : ℤ)).maximal (Q (Fin n)) :=
   (Feec.Domain.deRham ℝ n).maximalComplex_d isOpen_Q ((a : ℕ) : ℤ)
 
-/-- **The extension maps `H̊Λ(Q)` into the torus domains and intertwines `d`** (relative class). -/
 theorem mapsTo_comm_min (a b : Fin (Fintype.card (Fin n) + 1)) (x : ((HQmin n).d a b).domain) :
     ∃ h : J true a x ∈ ((RT n).d a b).domain,
       (RT n).d a b ⟨_, h⟩ = J true b ((HQmin n).d a b x) := by
@@ -309,7 +258,6 @@ theorem mapsTo_comm_min (a b : Fin (Fintype.card (Fin n) + 1)) (x : ((HQmin n).d
     rw [LinearPMap.apply_eq_zero_of_eq_zero h0,
       LinearPMap.apply_eq_zero_of_eq_zero ((HQmin n).shape a b hab), _root_.map_zero]
 
-/-- **The extension maps `HΛ(Q)` into the torus domains and intertwines `d`** (absolute class). -/
 theorem mapsTo_comm_max (a b : Fin (Fintype.card (Fin n) + 1)) (x : ((HQmax n).d a b).domain) :
     ∃ h : J false a x ∈ ((RT n).d a b).domain,
       (RT n).d a b ⟨_, h⟩ = J false b ((HQmax n).d a b x) := by
@@ -329,8 +277,6 @@ theorem mapsTo_comm_max (a b : Fin (Fintype.card (Fin n) + 1)) (x : ((HQmax n).d
     rw [LinearPMap.apply_eq_zero_of_eq_zero h0,
       LinearPMap.apply_eq_zero_of_eq_zero ((HQmax n).shape a b hab), _root_.map_zero]
 
-/-- **The trace part, relative class**: a form whose extension lies in the torus domain lies in
-`H̊Λ(Q)`. -/
 theorem mem_domain_of_J_min (a b : Fin (Fintype.card (Fin n) + 1)) (x : WQ n a)
     (h : J true a x ∈ ((RT n).d a b).domain) : x ∈ ((HQmin n).d a b).domain := by
   by_cases hab : (ComplexShape.window (Fintype.card (Fin n) + 1)).Rel a b
@@ -342,8 +288,6 @@ theorem mem_domain_of_J_min (a b : Fin (Fintype.card (Fin n) + 1)) (x : WQ n a)
       fun m => (RT_d_apply ⟨_, h⟩ m).symm).1
   · rw [(HQmin n).shape a b hab]; exact Submodule.mem_top
 
-/-- **The trace part, absolute class**: a form whose extension lies in the torus domain lies in
-`HΛ(Q)`. -/
 theorem mem_domain_of_J_max (a b : Fin (Fintype.card (Fin n) + 1)) (x : WQ n a)
     (h : J false a x ∈ ((RT n).d a b).domain) : x ∈ ((HQmax n).d a b).domain := by
   by_cases hab : (ComplexShape.window (Fintype.card (Fin n) + 1)).Rel a b
@@ -357,8 +301,7 @@ theorem mem_domain_of_J_max (a b : Fin (Fintype.card (Fin n) + 1)) (x : WQ n a)
 
 theorem two_pow_pos : (0 : ℝ) < 2 ^ n := by positivity
 
-/-- **`H̊Λ(Q)` is the compression of the real torus de Rham complex along the parity extension in
-the relative class** (vanishing tangential traces). -/
+/-- **`H̊Λ(Q)` is the compression of the real torus window along the relative extension.** -/
 theorem HQmin_eq_compress :
     HQmin n = (RT n).compress (J true) two_pow_pos (inner_J true) (reducing_range true) := by
   refine Feec.HilbertComplex.ext_d (funext fun a => funext fun b => ?_)
@@ -369,8 +312,7 @@ theorem HQmin_eq_compress :
     change J true b _ = J true b _
     rw [Feec.HilbertComplex.J_compress_d, ← (mapsTo_comm_min a b ⟨x, hx⟩).2]
 
-/-- **`HΛ(Q)` is the compression of the real torus de Rham complex along the parity extension in
-the absolute class** (no boundary condition). -/
+/-- **`HΛ(Q)` is the compression of the real torus de Rham window along the absolute extension.** -/
 theorem HQmax_eq_compress :
     HQmax n = (RT n).compress (J false) two_pow_pos (inner_J false) (reducing_range false) := by
   refine Feec.HilbertComplex.ext_d (funext fun a => funext fun b => ?_)
@@ -385,8 +327,6 @@ theorem mem_action_fixed_iff_refl {rel : Bool} {a : Fin (Fintype.card (Fin n) + 
     x ∈ (DeRham.action (Fin n) rel).fixed a ↔ ∀ j, refl rel j a x = x :=
   (DeRham.symmetries (Fin n) rel).toInvolutions.mem_fixed_toAction
 
-/-- The real parity class is the conjugation-fixed part of the parity class of
-`Feec.Models.Cube.DeRham`. -/
 theorem mem_realFixed_iff_cnj {rel : Bool} {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a} :
     x ∈ (realAction rel).fixed a ↔ cnj a x = x ∧ x ∈ (DeRham.action (Fin n) rel).fixed a := by
   rw [(realInvolutions rel).mem_fixed_toAction, mem_action_fixed_iff_refl]
@@ -406,10 +346,7 @@ theorem cnj_smul (a : Fin (Fintype.card (Fin n) + 1)) (c : ℂ) (x : TW n a) :
 theorem cnj_cnj (a : Fin (Fintype.card (Fin n) + 1)) (x : TW n a) : cnj a (cnj a x) = x :=
   Torus.DeRham.windowReal.toConj.invol a x
 
-/-- **The parity model of `Feec.Models.Cube.DeRham` is the complexification**: the `a`-forms of
-the parity class `rel` (`Feec.Models.Cube.DeRham.action`, the spaces of
-`Feec.Models.Cube.DeRham.complex (Fin n) rel`) are exactly `J u + i J v` for real forms `u, v` on
-`Q` (`H̊Λ(Q)` for the relative class, `HΛ(Q)` for the absolute class). -/
+/-- **The parity classes are the complexifications** `J u + i J v` of the real forms on `Q`. -/
 theorem mem_parity_fixed_iff {rel : Bool} {a : Fin (Fintype.card (Fin n) + 1)} {x : TW n a} :
     x ∈ (DeRham.action (Fin n) rel).fixed a ↔
       ∃ u v : WQ n a, x = J rel a u + Complex.I • J rel a v := by

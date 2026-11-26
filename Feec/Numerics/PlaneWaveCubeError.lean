@@ -7,47 +7,13 @@ public import Feec.Domain.Affine
 /-!
 # Convergence of the Ch. 7 plane-wave run, on `(0, ½)³` and on the unit cube of `fem4gr`
 
-The plane-wave test of [QuennevilleBelair2015], Ch. 7 (`Feec.Numerics.PlaneWaveCube`) with the
-Crank–Nicolson Whitney scheme with Dirichlet DOFs (`Feec.Models.Cube.InhomogeneousError`), for
-every amplitude `A₊`, `Aₓ` and frequency `ω`.
-
-## On `Q = (0, ½)³`
-
-* `planeWaveSmooth`: the plane wave has bounded derivatives on every `[0, T] × cl Q`, with the
-  bound `pwBound A₊ Aₓ ω = (|A₊| + |Aₓ|) (1 + |ω|)³` (`WholeSpaceTSD.Smooth`).
-* **`planeWave_cn_error_le`**: the iterates from the interpolated plane wave with the interpolated
-  boundary data satisfy `‖u_M − U(t_M)‖ ≤ C (|A₊| + |Aₓ|) (1 + |ω|)³ (1 + T) (h_N + Δt²)`, and so
-  do the five monitors.
-
-## Dilation to the unit cube `(0, 1)³`
-
-`fem4gr` runs on `(0, 1)³`. With `dil u = u(·/2)` (`Feec.Domain.pullF` along `x ↦ x/2`):
-
-* `inner_dil`: `⟪dil u, dil v⟫ = 8 ⟪u, v⟫`; `complexU_eq`, `complexUMin_eq`: `HΛ((0, 1)³)` and
-  `H̊Λ((0, 1)³)` are the transports of `HΛ(Q)`, `H̊Λ(Q)` with chain-rule factor `½`
-  (`Feec.Domain.ConstCoeffComplex.maximalComplex_pull`), so `d (dil u) = ½ dil (d u)`.
-* `whitneyU`, `whitneyUMin`: the Whitney spaces of the unit cube, defined as the dilations of
-  those of `Q`, are subcomplexes of `HΛ((0, 1)³)` and `H̊Λ((0, 1)³)`; `unitRow`, `unitInterior3`.
-  That they coincide with the spaces assembled directly on the mesh `freudenthalMesh 0 1` is not
-  formalized here: it follows from the affine invariance of the Whitney element
-  (`Feec.Models.Parallelepiped.fieldPull_mem_whitney_cast`), the Freudenthal meshes of `(0, 1)³`
-  being the images of those of `(0, ½)³` under `x ↦ 2x`.
-* **`isDirichletCNStep_dilRow3_iff`**: a Crank–Nicolson step with parameter `s` on the unit cube
-  is a step with parameter `s / 2` on `Q`; with `s = Δt / 2`, the unit-cube scheme with step `Δt` is the scheme on `Q` with step
-  `Δt / 2` (the system is invariant under `(t, x) ↦ (2t, 2x)`; the time steps of Table 7.1 are
-  `Feec.Numerics.CrankNicolson.dt`).
-* **Transported results**: the error `unit_cn_error_le`
-  (`‖u_M − U(t_M)‖_{L²(0,1)³} ≤ √8 C L (1 + T) (h_N + (Δt/2)²)` for
-  `U(t, x) = V(t/2, x/2)`) and the monitors `unit_cn_monitors_le`.
-* **The `fem4gr` run**: the unit-cube plane wave with frequency `ω` is the dilation of the plane
-  wave on `Q` with frequency `2ω` (`dilAmb3_exactField_planeWave`), so
-  `unit_planeWave_cn_error_le` gives `‖u_M − U_ω(t_M)‖_{L²(0,1)³}` and the five monitors
-  `≤ √8 C (|A₊| + |Aₓ|) (1 + 2|ω|)³ (1 + T_U / 2) (h_N + (Δt/2)²)` for `M Δt ≤ T_U`.
+The Crank–Nicolson Whitney scheme with Dirichlet DOFs converges at rate `O(h + Δt²)` for the
+plane-wave test of [QuennevilleBelair2015], Ch. 7, on `(0, ½)³` and, by dilation, on `(0, 1)³`.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (the plane-wave test, Table 7.1)
+  Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -96,7 +62,6 @@ theorem curlM_planeWave_fun (P : Matrix (Fin 3) (Fin 3) ℝ) (w t : ℝ) (ik : I
       fun y => w * Real.cos (w * (y 2 - t)) * curlZ P ik.1 ik.2 := by
   funext y; exact curlM_planeWave P w t ik y
 
-/-- Every entry of the plane-wave amplitudes is bounded by `|A₊| + |Aₓ|`. -/
 theorem abs_amplitudeE_le (Ap Ax : ℝ) (a b : Fin 3) : |amplitudeE Ap Ax a b| ≤ |Ap| + |Ax| := by
   have := abs_nonneg Ap; have := abs_nonneg Ax
   fin_cases a <;> fin_cases b <;> simp [amplitudeE] <;> linarith
@@ -204,8 +169,7 @@ theorem norm_smul_projZ_sub_le (a b : ℝ) : ‖a • projZ - b • projZ‖ ≤
   have e : a • projZ - b • projZ = (a - b) • projZ := (sub_smul a b projZ).symm
   rw [e]; exact norm_smul_projZ_le _
 
-/-- **The plane wave of Ch. 7 has bounded derivatives on every `[0, T] × cl Q`**, with the
-bound `pwBound A₊ Aₓ ω = (|A₊| + |Aₓ|) (1 + |ω|)³`. -/
+/-- The plane wave of Ch. 7 has derivatives bounded by `pwBound A₊ Aₓ ω` on `[0, T] × cl Q`. -/
 def planeWaveSmooth (Ap Ax w T : ℝ) : (planeWaveTSD Ap Ax w).Smooth T (pwBound Ap Ax w) where
   E₂ t ij x := -(w * w * Real.sin (w * (x 2 - t))) * amplitudeE Ap Ax ij.1 ij.2
   E₃ t ij x := w * w * w * Real.cos (w * (x 2 - t)) * amplitudeE Ap Ax ij.1 ij.2
@@ -294,12 +258,8 @@ def planeWaveSmooth (Ap Ax w T : ℝ) : (planeWaveTSD Ap Ax w).Smooth T (pwBound
 def planeWaveRows (Ap Ax w T : ℝ) : Fin 3 → RowSolution T (pwBound Ap Ax w) :=
   fun r => (planeWaveSmooth Ap Ax w T).row (pwBound_nonneg Ap Ax w) r
 
-/-- **The Ch. 7 plane-wave run converges at rate `O(h + Δt²)`** (on the cube `(0, ½)³` of the
-Freudenthal meshes; every `A₊`, `Aₓ`, `ω`, `T`): the Crank–Nicolson Whitney iterates `uₙ`
-started from the canonical interpolant of the plane wave, with the boundary DOFs of the
-interpolated plane wave prescribed at every step (`fem4gr`'s `DirichletBC` data), satisfy
-`‖u_M − U(t_M)‖ ≤ C (|A₊| + |Aₓ|) (1 + |ω|)³ (1 + T) (h_N + Δt²)` for `M Δt ≤ T`, and so do the
-five constraint monitors of `u_M`; `C = cnConst`. -/
+/-- **The Ch. 7 plane-wave run converges at rate `O(h + Δt²)` on `(0, ½)³`**, with its monitors:
+`‖u_M − U(t_M)‖ ≤ C (|A₊| + |Aₓ|) (1 + |ω|)³ (1 + T) (h_N + Δt²)` for `0 < Δt`, `M Δt ≤ T`. -/
 theorem planeWave_cn_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) {M : ℕ}
     (hM : (M : ℝ) * Δt ≤ T) {u : ℕ → DState3 (whitneyRow N)}
     (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior3 N)
@@ -319,7 +279,7 @@ theorem planeWave_cn_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt : 0 
 
 end Feec.Numerics.PlaneWaveCube
 
-/-! ## Dilation to the unit cube `(0, 1)³` of `fem4gr` -/
+/-! ## Dilation to the unit cube `(0, 1)³` -/
 
 namespace Feec.Numerics.PlaneWaveCube
 
@@ -338,8 +298,7 @@ theorem preimage_unitCube : aff (1 / 2 : ℝ) (0 : Fin 3 → ℝ) ⁻¹' cubeDom
 theorem jac_half : jac (E := Fin 3 → ℝ) (1 / 2 : ℝ) = 1 / 8 := by
   rw [jac, Module.finrank_fin_fun]; norm_num
 
-/-- **The dilation** `u ↦ u(·/2)`, `L²((0, ½)³; Λᵏ) ≃ L²((0, 1)³; Λᵏ)` (componentwise pull-back
-along `x ↦ x/2`, the inverse of `x ↦ 2x`). -/
+/-- The dilation `u ↦ u(·/2)`, `L²((0, ½)³; Λᵏ) ≃ L²((0, 1)³; Λᵏ)`. -/
 def dil (k : ℤ) :
     L2F ℝ (cubeDomain 3) (formIdx 3 k) ≃L[ℝ] L2F ℝ unitCube (formIdx 3 k) :=
   pullF (𝕜 := ℝ) half_ne_zero' (0 : Fin 3 → ℝ) (isOpen_cubeDomain 3).measurableSet
@@ -412,9 +371,7 @@ def dilL (k : ℤ) : L2F ℝ (cubeDomain 3) ((deRham ℝ 3).ι k) →ₗ[ℝ]
 @[simp] theorem dilL_apply (k : ℤ) (x : L2F ℝ (cubeDomain 3) ((deRham ℝ 3).ι k)) :
     dilL k x = dil k x := rfl
 
-/-- **The Whitney spaces of the unit cube**: the dilations `Vₕ(0, 1)³ = {u(·/2) : u ∈ Vₕ(0, ½)³}`
-of the Whitney spaces of the level-`(N + 1)` Freudenthal mesh of `(0, ½)³`, a subcomplex of
-`HΛ((0, 1)³)`. -/
+/-- The Whitney spaces of the unit cube: the dilations of those of `(0, ½)³`, a subcomplex. -/
 def whitneyU (N : ℕ) : complexU.Subcomplex where
   V k := ((whitney 3 N).V k).map (dilL k)
   le_domain i j := by
@@ -428,8 +385,7 @@ def whitneyU (N : ℕ) : complexU.Subcomplex where
       Submodule.smul_mem _ _ ((whitney 3 N).mapsTo i j x hx), ?_⟩
     exact ((dil j).map_smul _ _).trans key.symm
 
-/-- The unit-cube Whitney spaces with vanishing boundary DOFs (dilations of `V̊ₕ`), a subcomplex
-of `H̊Λ((0, 1)³)`. -/
+/-- The unit-cube Whitney spaces with vanishing boundary DOFs, a subcomplex of `H̊Λ((0, 1)³)`. -/
 def whitneyUMin (N : ℕ) : complexUMin.Subcomplex where
   V k := ((whitneyMin 3 N).V k).map (dilL k)
   le_domain i j := by
@@ -465,10 +421,6 @@ end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
 open Feec.FiniteElement HilbertComplex
 
-/-- **Conjugacy of Dirichlet Crank–Nicolson steps under a scaled isometry**: if
-`⟪Φ x, Φ y⟫ = c ⟪x, y⟫` (`c > 0`), `⟪A' Φ x, Φ y⟫ = c κ ⟪A x, y⟫` and `Φ V₀ = V₀'`, then a step
-with parameter `s` for `(V₀', A')` from `Φ`-images is exactly a step with parameter `κ s` for
-`(V₀, A)`. -/
 theorem isDirichletCNStep_conj_iff {V V' : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     [NormedAddCommGroup V'] [InnerProductSpace ℝ V'] (Φ : V ≃ₗ[ℝ] V') {c κ : ℝ} (hc : 0 < c)
     (hΦ : ∀ x y, ⟪Φ x, Φ y⟫ = c * ⟪x, y⟫) {A : V →ₗ[ℝ] V} {A' : V' →ₗ[ℝ] V'}
@@ -553,7 +505,6 @@ theorem κU_smul_d (N : ℕ) (i j : Fin 3) (x : (whitneyRow N).V i) :
   · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using h), map_zero, smul_zero,
       smul_zero]
 
-/-- **`d` scales by `½` under the dilation**: `𝐝ₕ (u(·/2)) = ½ (𝐝ₕ u)(·/2)`. -/
 theorem discreteD_dilRow (N : ℕ) (x : DState (whitneyRow N)) :
     discreteD (unitRow N) (dilRow N x) = (1 / 2 : ℝ) • dilRow N (discreteD (whitneyRow N) x) := by
   refine PiLp.ext fun j => Subtype.ext ?_
@@ -617,9 +568,7 @@ theorem mem_dilRow3_iff (N : ℕ) (u : DState3 (whitneyRow N)) :
   forall_congr' fun r => mem_dilRow_iff N (u r)
 
 /-- **The scheme on the unit cube with step `Δt` is the scheme on `(0, ½)³` with step `Δt / 2`**:
-a Dirichlet Crank–Nicolson step with parameter `s` on the dilated Whitney spaces of `(0, 1)³`
-(inner products `×8`, `d` `×½`) is exactly a step with parameter `s / 2` on the Whitney spaces of
-`(0, ½)³`. -/
+a Dirichlet CN step with parameter `s` on the dilated spaces is one with parameter `s / 2`. -/
 theorem isDirichletCNStep_dilRow3_iff (N : ℕ) (s : ℝ) (f g' u u' : DState3 (whitneyRow N)) :
     TimeStepping.IsDirichletCNStep (unitInterior3 N) (discreteWave3 (unitRow N)) s
         (dilRow3 N f) (dilRow3 N g') (dilRow3 N u) (dilRow3 N u') ↔
@@ -683,14 +632,6 @@ theorem norm_conj_sub {V V' X X' : Type*} [AddCommGroup V] [Module ℝ V] [AddCo
   conv_lhs => rw [← Φ.apply_symm_apply u]
   rw [hcomm, ← map_sub, hΨ]
 
-/-- **`O(h + Δt²)` convergence of the scheme on the unit cube `(0, 1)³` of `fem4gr`** (the
-dilation `x ↦ 2x` of `whitney_cn_error_le`): let `V = (V_r)_r` be a smooth solution of (4.14) on
-`[0, T] × cl (0, ½)³` and `U(t, x) = V(t/2, x/2)` the corresponding solution on
-`[0, 2T] × cl (0, 1)³` (the system is invariant under `(t, x) ↦ (2t, 2x)`). The Crank–Nicolson
-iterates `uₙ` on the dilated Whitney spaces of `(0, 1)³` with step `Δt`, started from the
-(dilated) interpolant of `U(0)` and with the boundary DOFs of the interpolants of `U(tₙ)`, satisfy
-for `M Δt ≤ 2T`: `‖u_M − U(t_M)‖_{L²(0,1)³} ≤ √8 C L (1 + T) (h_N + (Δt / 2)²)` (the `L²` norm
-scales by `√8 = 2^{3/2}`, the step by `½`). -/
 theorem unit_cn_error_le {T L : ℝ} (X : Fin 3 → RowSolution T L) (hL0 : 0 ≤ L) (N : ℕ)
     {Δt : ℝ} (hΔt : 0 < Δt) {M : ℕ} (hM : (M : ℝ) * (Δt / 2) ≤ T)
     {u : ℕ → DState3 (unitRow N)}
@@ -825,7 +766,6 @@ end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
 open Feec.FiniteElement HilbertComplex
 
-/-- The unit-cube iterates are the dilations of half-cube iterates with step `Δt / 2`. -/
 theorem unit_half_iterates {T L : ℝ} (X : Fin 3 → RowSolution T L) (N : ℕ) {Δt : ℝ} {M : ℕ}
     {u : ℕ → DState3 (unitRow N)}
     (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (unitInterior3 N) (discreteWave3 (unitRow N))
@@ -859,10 +799,6 @@ theorem norm_monitorsU_eq (N : ℕ) (u : DState3 (unitRow N)) :
   · conv_lhs => rw [hu]
     exact norm_sigmaPartU N _
 
-/-- **The `fem4gr` monitors on the unit cube are `O(h + Δt²)` for TSD exact solutions**: in the
-setting of `unit_cn_error_le`, if the solution is TSD at `t_M / 2` (half-cube time), the skew and
-trace parts of `E`, `B` and `σ` of the unit-cube discrete solution `u_M` are at most
-`√8 C L (1 + T) (h_N + (Δt / 2)²)`. -/
 theorem unit_cn_monitors_le {T L : ℝ} (X : Fin 3 → RowSolution T L) (hL0 : 0 ≤ L) (N : ℕ)
     {Δt : ℝ} (hΔt : 0 < Δt) {M : ℕ} (hM : (M : ℝ) * (Δt / 2) ≤ T)
     {u : ℕ → DState3 (unitRow N)}
@@ -895,8 +831,6 @@ end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
 open Feec.FiniteElement HilbertComplex
 
-/-- **The dilation of the `L²` class of a continuous form**:
-`(w|_{(0,½)³})(·/2) = (w(·/2))|_{(0,1)³}`. -/
 theorem dil_formL2Q (k : ℤ) {w : FormField 3} (hw : Continuous w) :
     dil k (formL2Q k w hw) = formL2 isOpen_unitCube.measurableSet isBounded_unitCube k
       ⟨fun x => w ((1 / 2 : ℝ) • x), hw.comp (continuous_const_smul _)⟩ := by
@@ -913,8 +847,7 @@ theorem dil_formL2Q (k : ℤ) {w : FormField 3} (hw : Continuous w) :
   rw [pull_apply, h1, h2, h3]
   simp [aff]
 
-/-- **The plane wave of Ch. 7 on the unit cube** `(0, 1)³` at time `t`, as three rows of
-`L²((0, 1)³)` forms `(0, E_r, B_r)`. -/
+/-- The plane wave of Ch. 7 on the unit cube at time `t`, as three rows of `L²((0, 1)³)` forms. -/
 def unitPlaneWave (Ap Ax w t : ℝ) : PiLp 2 fun _ : Fin 3 => RowSpaceU :=
   WithLp.toLp 2 fun r => WithLp.toLp 2 fun i =>
     formL2 isOpen_unitCube.measurableSet isBounded_unitCube _
@@ -942,8 +875,6 @@ theorem rowForms_planeWave_half (Ap Ax w t : ℝ) (r i : Fin 3) (x : Fin 3 → �
         ((1 / 2 : ℝ) • x) s = twoForm (fun j y => planeWave (amplitudeB Ap Ax) w t y r j) x s
     simp only [twoForm, e]
 
-/-- **The unit-cube plane wave with frequency `ω` is the dilation of the `(0, ½)³` plane wave with
-frequency `2ω`**: `U_ω(t, x) = V_{2ω}(t/2, x/2)`. -/
 theorem dilAmb3_exactField_planeWave (Ap Ax w T t : ℝ) :
     dilAmb3 (exactField (planeWaveRows Ap Ax (2 * w) T) (t / 2)) = unitPlaneWave Ap Ax w t := by
   refine PiLp.ext fun r => PiLp.ext fun i => ?_
@@ -955,12 +886,9 @@ end Feec.Numerics.PlaneWaveCube
 namespace Feec.Numerics.PlaneWaveCube
 open Feec.FiniteElement HilbertComplex
 
-/-- **The Ch. 7 plane-wave run of `fem4gr` on the unit cube converges at rate `O(h + Δt²)`**
-(every `A₊`, `Aₓ`, `ω`): the Crank–Nicolson iterates `uₙ` with step `Δt` on the Whitney spaces
-of `(0, 1)³` (dilations of those of `(0, ½)³`), from the interpolated plane wave and with the
-interpolated boundary data, satisfy for `M Δt ≤ T_U`
-`‖u_M − U_ω(t_M)‖_{L²(0,1)³} ≤ √8 C (|A₊| + |Aₓ|) (1 + 2|ω|)³ (1 + T_U / 2) (h_N + (Δt / 2)²)`,
-and so do the five constraint monitors of `u_M`. -/
+/-- **The Ch. 7 run on the unit cube converges at rate `O(h + Δt²)`**, with its monitors:
+`‖u_M − U_ω(t_M)‖ ≤ √8 C (|A₊| + |Aₓ|) (1 + 2|ω|)³ (1 + T) (h_N + (Δt / 2)²)` for `0 < Δt`,
+`M Δt ≤ 2T`. -/
 theorem unit_planeWave_cn_error_le (Ap Ax w T : ℝ) (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) {M : ℕ}
     (hM : (M : ℝ) * Δt ≤ 2 * T) {u : ℕ → DState3 (unitRow N)}
     (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (unitInterior3 N) (discreteWave3 (unitRow N))

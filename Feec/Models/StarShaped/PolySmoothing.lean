@@ -6,78 +6,19 @@ public import Feec.FiniteElement.PolySmoothingBasic
 /-!
 # Smoothed projections for the higher-order families on star-shaped domains
 
-Let `Ω ⊆ ℝⁿ` be a bounded domain star-shaped with respect to a ball (`StarDomain`) and `M` a
-conforming simplicial mesh of `Ω` that is shape regular and quasi-uniform (`MeshData`). For every
-admissible sequence `S` (`Feec.FiniteElement.PolySeq`: `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in degree `k`,
-including the mixed rows such as `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`), the glued spaces
-`Vₕ(S, M) ⊆ HΛ(Ω)` and `V̊ₕ(S, M) ⊆ H̊Λ(Ω)` (vanishing boundary DOFs) carry uniformly bounded
-smoothed cochain projections. This generalizes the Whitney theory of
-`Feec.Models.StarShaped.FiniteElement` to all orders, and the higher-order theory of the
-Freudenthal meshes of the cube (`Feec.Models.Cube.PolySmoothingEstimates`) to general meshes.
+On a bounded domain star-shaped with respect to a ball with a shape-regular, quasi-uniform mesh,
+the complexes of every admissible sequence, with and without vanishing boundary DOFs, carry
+uniformly bounded smoothed cochain projections.
 
-**Local tools on shape-regular simplices** (`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T`,
-`c h_Tⁿ ≤ |det B_T|`):
-* *Coefficients of the moments*: the DOF `ℓ_{g,i}(ω) = ∫_{T̂_m} Σₛ ω(F_q ξ)ₛ cₛ(ξ) dξ`
-  (`Feec.FiniteElement.PolySeq.dof_eq_integral`) has `Σₛ |cₛ| ≤ D h_Tᵏ` (`PolyCoeffBound`,
-  `exists_polyCoeffBound`), hence `|ℓ_{g,i}(ω)| ≤ D h_Tᵏ sup_T |ω|` (`abs_polyDof_le`).
-* *DOF estimate* (`PolyDofBound`, `exists_polyDofBound`): `h_Tᵏ sup_T ‖z‖ ≤ B max |ℓ_{g,i}(z)|`
-  on `P(T)ᵏ`. It is `Feec.FiniteElement.exists_dof_bound_of_le_polySpace` for the unisolvent DOFs
-  of the reference simplex (`PolySeq.isUnisolvent_dof`), transported along the reference map
-  `F_T` (`refPull`): the lexicographic parametrizations of `ĝ` and of `F_T(ĝ)` differ by a
-  vertex permutation `π`, so a moment of `F_T^* z` is `sign π` times a moment of `z` against the
-  reparametrized test form `A_{π⁻¹}^* ηᵢ` (`abs_dof_refPull_le`, from
-  `Feec.FiniteElement.vertexMoment_comp_perm`), which is a combination of the DOFs of
-  `F_T(ĝ)` with coefficients bounded uniformly in `π` (`permConst`, `abs_vertexMoment_le_of_dof`).
-* *Interpolation error* of the canonical interpolant `Π_T` of `S` (the moment DOFs on the faces
-  of `T`; [Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7): for `P_sΛᵏ ⊆ P(T)ᵏ`,
-  `sup_T ‖w - Π_T w‖ ≤ (1 + B D) h_T^{s+1} sup_T ‖D^{s+1} w‖` (`norm_sub_polyLocalInterp_le`).
-  The proof is the Bramble–Hilbert argument (Taylor polynomial `exists_polySpace_near_diam`
-  reproduced by `Π_T`, stability of `Π_T` from the two bounds above); the reference transport
-  enters through the DOF estimate.
-* *Inverse estimates* (`exists_polyInvBound`, from
-  `Feec.FiniteElement.exists_inverse_bound_of_le_polySpace`), in terms of the mesh size on a
-  quasi-uniform mesh (`InvBoundV`, `invBoundV_of`), and the mesh-level DOF estimate
-  `abs_le_of_abs_polyDof_le`.
+## Main results
 
-**The smoothed-projection estimates** ([AFW2010], §5.5; [ChristiansenWinther2008]), for the
-smoothers `pMax`, `pMin` of `Feec.Models.StarShaped.FiniteElement` at scale `γ h`:
-* *uniform `L²` bound* of `Q = Π_h R` (`sum_integral_sq_polyInterp_le`,
-  `exists_norm_polySmoothedInterp_le`): Jensen's inequality for the mollifier, the DOF stability,
-  the DOF estimate and bounded overlap (`sum_locMass_le`);
-* *closeness* `‖v - Q v‖ ≤ ½ ‖v‖` on `Vₕ` and `V̊ₕ` (`exists_polyGamma`): the DOF integrand of
-  `v - Q v` at points of a face `g` (any dimension, lexicographic parametrization) with
-  barycentric weights `≥ θ` is `O(γ)`, since every simplex sampled by the smoother contains `g`
-  (`PolyGeomOK`, from the geometric lemma `StarGeom.subset_vertexSet_of_segments`), where the
-  traces of the local fields agree (`PolySeq.pullback_eq_of_mem_globalSpace`),
-  and samples outside `Ω` are controlled by `PolySampleOK`; the boundary layer of the reference
-  face has measure `O(θ)` (`sqrt_mul_abs_polyIntegrand_le`, `sqrt_mul_abs_polyDof_err_le`,
-  `sum_integral_sq_sub_polyInterp_le`, `norm_sq_sub_polySmoothedInterp_le`). Both conditions hold
-  for both families (`polyGeomOK_of_isMaximal`, `polyGeomOK_of_isMinimal`,
-  `polySampleOK_of_isMaximal`; `polySampleOK_of_isMinimal` from
-  `StarGeom.exists_isBoundaryFacet_of_near`: the DOFs of all subfaces of a boundary facet vanish
-  on `V̊ₕ`);
-* hence **uniformly bounded cochain projections** onto `Vₕ(S, M)` and `V̊ₕ(S, M)`, in `L²` and in
-  every graph norm, with constants depending only on `n, S, C, c, q, s₀, R` (chosen after `s₀`
-  and `R`; the mathematical dependence through `s₀ / R` alone is not formalized)
-  (`exists_uniform_polyCochainProjection`, `exists_uniform_polyCochainProjectionMin`; on a mesh
-  family, with the complexes `MeshFamily.poly`, `MeshFamily.polyMin`:
-  `MeshFamily.exists_uniform_polyProj`, `MeshFamily.exists_uniform_polyProjMin`).
-
-Everything in this file is proved with no hypothesis beyond the geometry (star-shapedness with
-respect to a ball, shape regularity, quasi-uniformity). The finite element theorems built on it
-are in `Feec.Models.StarShaped.PolyFiniteElement`.
+* `exists_polyDofBound`, `exists_polyInvBound`: the DOF and the inverse estimates.
+* `exists_uniform_polyCochainProjection`: uniformly bounded smoothed cochain projections.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §4.5–4.6 (the moment degrees of freedom)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1–3.2
-  (shape-regular families, inverse inequalities), Thm 3.1.4 (interpolation error)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -99,8 +40,6 @@ section Local
 
 variable (S : PolySeq)
 
-/-- The edge vectors of the lexicographic parametrization of a face of `T` are bounded by
-`h_T`. -/
 theorem abs_simplexMatrix_lexEnum_le_diam {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) {m : ℕ} (hg : #g = m + 1) (i : Fin n)
     (l : Fin m) : |simplexMatrix (lexEnum g m) i l| ≤ diam T := by
@@ -113,9 +52,7 @@ theorem abs_simplexMatrix_lexEnum_le_diam {T : Affine.Simplex ℝ (Fin n → ℝ
   have h := norm_le_pi_norm (lexEnum g m l.succ - lexEnum g m 0) i
   rwa [Real.norm_eq_abs, Pi.sub_apply] at h
 
-/-- **The coefficient fields of the degrees of freedom are `O(h_Tᵏ)`** on every simplex, with one
-constant: `Σₛ |cₛ(ξ)| ≤ D h_Tᵏ` for the moment `ℓ_{g,i}(ψ) = ∫_{T̂_m} Σₛ ψ(F_q ξ)ₛ cₛ(ξ) dξ`
-(`Feec.FiniteElement.PolySeq.dof_eq_integral`) of a face `g` of `T`. -/
+/-- The coefficient fields of the moment DOFs on the faces of a simplex `T` are `O(h_Tᵏ)`. -/
 def PolyCoeffBound (n k : ℕ) (D : ℝ) : Prop :=
   ∀ {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)}, g ⊆ vertexSet T →
     ∀ (i : S.DofIdx g k), ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
@@ -127,8 +64,6 @@ theorem exists_polyCoeffBound (k : ℕ) : ∃ D, 0 ≤ D ∧ PolyCoeffBound S n 
   exact ⟨D, hD0, fun {T g} hgT i => hD hgT i (diam_nonneg T)
     (abs_simplexMatrix_lexEnum_le_diam hgT (Nat.succ_pred_eq_of_pos (card_pos.2 i.2)).symm)⟩
 
-/-- **Stability of the degrees of freedom in the sup norm** on any simplex:
-`|ℓ_{g,i}(ψ)| ≤ D h_Tᵏ sup_T |ψ|`. -/
 theorem abs_polyDof_le {k : ℕ} {D : ℝ} (hD : PolyCoeffBound S n k D)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T)
     (i : S.DofIdx g k) (ψ : contForms n) {B : ℝ} (hB0 : 0 ≤ B)
@@ -136,10 +71,7 @@ theorem abs_polyDof_le {k : ℕ} {D : ℝ} (hD : PolyCoeffBound S n k D)
     |S.dof g k i ψ| ≤ D * diam T ^ k * B :=
   S.abs_dof_le_of_coeff_le hgT i ψ (hD hgT i) hB0 hB
 
-/-! #### The degrees of freedom under the reference map -/
-
-/-- The test form `ηᵢ` reparametrized by a vertex permutation `π` of the reference `m`-simplex:
-`A_{π⁻¹}^* ηᵢ`. -/
+/-- The test form `ηᵢ` reparametrized by a vertex permutation `π`, `A_{π⁻¹}^* ηᵢ`. -/
 def permTest (k m : ℕ) (π : Equiv.Perm (Fin (m + 1)))
     (i : Fin (Module.finrank ℝ (S.test k m))) : FormField m :=
   affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹ : Equiv.Perm (Fin (m + 1)))))
@@ -149,8 +81,7 @@ theorem permTest_mem (k m : ℕ) (π : Equiv.Perm (Fin (m + 1)))
     (i : Fin (Module.finrank ℝ (S.test k m))) : permTest S k m π i ∈ S.test k m :=
   S.affinePullback_mem_test _ _ k (S.testBasis k m i).2
 
-/-- The size of the reparametrized test forms in the basis of the test forms, summed over all
-permutations and basis elements. -/
+/-- The size of the reparametrized test forms in the basis of the test forms. -/
 def permConst (k m : ℕ) : ℝ :=
   ∑ π : Equiv.Perm (Fin (m + 1)), ∑ i, ∑ l,
     |(S.testBasis k m).repr ⟨permTest S k m π i, permTest_mem S k m π i⟩ l|
@@ -159,9 +90,6 @@ theorem permConst_nonneg (k m : ℕ) : 0 ≤ permConst S k m :=
   Finset.sum_nonneg fun _ _ => Finset.sum_nonneg fun _ _ =>
     Finset.sum_nonneg fun _ _ => abs_nonneg _
 
-/-- **A moment against a test form is controlled by the degrees of freedom of the face**:
-`|∫ F_q^* ψ_k ∧ η| ≤ (Σₗ |ηₗ|) max_i |ℓ_{g,i}(ψ)|` with `ηₗ` the coordinates of `η` in the
-basis of the test forms. -/
 theorem abs_vertexMoment_le_of_dof {g : Finset (Fin n → ℝ)} {m : ℕ} (hg : #g = m + 1) {k : ℕ}
     {η : FormField m} (hη : η ∈ S.test k m) (ψ : contForms n) {D' : ℝ}
     (hD : ∀ i : S.DofIdx g k, |S.dof g k i ψ| ≤ D') :
@@ -177,10 +105,6 @@ theorem abs_vertexMoment_le_of_dof {g : Finset (Fin n → ℝ)} {m : ℕ} (hg : 
   rw [abs_mul]
   exact mul_le_mul_of_nonneg_left (hD ⟨l, hne⟩) (abs_nonneg _)
 
-/-- **The degrees of freedom of the reference pullback** `F_T^* z` on a face `ĝ` are
-controlled by the degrees of freedom of `z` on the face `F_T(ĝ)` of `T`: the two lexicographic
-parametrizations differ by a vertex permutation `π`, the moment changes by `sign π` and the test
-form by `A_{π⁻¹}^*` (`Feec.FiniteElement.vertexMoment_comp_perm`). -/
 theorem abs_dof_refPull_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {g : Finset (Fin n → ℝ)}
     {k : ℕ} (i : S.DofIdx g k) {z : FormField n} (hz : Continuous z) {D' : ℝ}
     (hD : ∀ i' : S.DofIdx (g.image T.refMap) k,
@@ -232,8 +156,7 @@ theorem abs_dof_refPull_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {g : Finse
   rw [he, abs_mul, hsign, one_mul]
   exact h1.trans (mul_le_mul_of_nonneg_right h2 hD0)
 
-/-- **The DOF estimate on shape-regular simplices** for an admissible sequence: if the degrees of
-freedom of `z ∈ P(T)ᵏ` on the faces of `T` are bounded by `D'`, then `h_Tᵏ sup_T ‖z‖ ≤ B D'`. -/
+/-- The DOF estimate on shape-regular simplices: `h_Tᵏ sup_T ‖z‖ ≤ B D'` if the DOFs are `≤ D'`. -/
 def PolyDofBound (n k : ℕ) (C c B : ℝ) : Prop :=
   ∀ {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular Sset C c → ∀ T ∈ Sset,
     0 < diam T → ∀ {z : FormField n} (hz : z ∈ S.space n k) {D' : ℝ}, 0 ≤ D' →
@@ -241,9 +164,7 @@ def PolyDofBound (n k : ℕ) (C c B : ℝ) : Prop :=
         |S.dof g k i ⟨z, S.space_le_contForms n k hz⟩| ≤ D') →
       ∀ x ∈ T.closedInterior, diam T ^ k * ‖z x‖ ≤ B * D'
 
-/-- **The DOF estimate on shape-regular simplices**, from the unisolvence of the degrees of freedom
-on the reference simplex (`Feec.FiniteElement.exists_dof_bound_of_le_polySpace`) and the
-naturality of the moments under `F_T` (`abs_dof_refPull_le`). -/
+/-- The DOF estimate on shape-regular simplices holds with some constant `B ≥ 0`. -/
 theorem exists_polyDofBound (k : ℕ) (C c : ℝ) : ∃ B, 0 ≤ B ∧ PolyDofBound S n k C c B := by
   classical
   set J := Σ g : (vertexSet (Mesh.refSimplex n)).powerset, S.DofIdx (g : Finset (Fin n → ℝ)) k
@@ -286,9 +207,6 @@ section MeshTools
 
 variable (S : PolySeq)
 
-/-- **The DOF estimate on a quasi-uniform shape-regular mesh**: if the degrees of freedom of
-`z ∈ P(T)ᵏ` on the faces of a mesh simplex `T` are bounded by `hᵏ D''` (`h` the mesh size), then
-`|z(x)ₛ| ≤ B D'' / qᵏ` on `T`. -/
 theorem abs_le_of_abs_polyDof_le {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
     (hq : 0 < q) {k : ℕ} {B : ℝ} (hB : PolyDofBound S n k C c B)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices) {z : FormField n}
@@ -312,8 +230,7 @@ theorem abs_le_of_abs_polyDof_le {M : SimplicialMesh n} {C c q : ℝ} (hM : Mesh
     _ ≤ B * (M.meshSize ^ k * D'') := h1
     _ = M.meshSize ^ k * (B * D'') := by ring
 
-/-- The local inverse estimates on all simplices of `M` for the fields of `V`, coefficientwise and
-in terms of the mesh size. -/
+/-- The local inverse estimates on all simplices of `M` for the fields of `V`. -/
 def InvBoundV (M : SimplicialMesh n) (V : Submodule ℝ (FormField n)) (A : ℝ) : Prop :=
   ∀ T ∈ M.simplices, ∀ z ∈ V,
     (∀ x ∈ T.closedInterior, ∀ s, √M.meshSize ^ n * |z x s| ≤
@@ -322,8 +239,6 @@ def InvBoundV (M : SimplicialMesh n) (V : Submodule ℝ (FormField n)) (A : ℝ)
       √M.meshSize ^ n * M.meshSize * |z x s - z x' s| ≤
         A * ‖x - x'‖ * √(∑ s, ∫ x in T.closedInterior, (z x s) ^ 2))
 
-/-- **Inverse estimates on the mesh in terms of the mesh size**, from the shape-regular local
-inverse estimates and quasi-uniformity: `A' = A q^{-n/2} q⁻¹`. -/
 theorem invBoundV_of {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q) (hq : 0 < q)
     {V : Submodule ℝ (FormField n)} {A : ℝ} (hA0 : 0 ≤ A)
     (hA : ∀ {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular Sset C c →
@@ -375,8 +290,7 @@ theorem invBoundV_of {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q
       _ ≤ A * ‖x - x'‖ * √F := this
       _ = ‖x - x'‖ * A * √F := by ring
 
-/-- **Inverse estimates on shape-regular simplices** for the spaces of an admissible sequence
-(`Feec.FiniteElement.exists_inverse_bound_of_le_polySpace`). -/
+/-- Inverse estimates on shape-regular simplices for the spaces of an admissible sequence. -/
 theorem exists_polyInvBound (k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (hc : 0 < c) :
     ∃ A, 0 ≤ A ∧ ∀ {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular Sset C c →
       ∀ T ∈ Sset, 0 < diam T → ∀ u ∈ S.space n k,
@@ -396,8 +310,6 @@ section Bound
 
 variable (S : PolySeq) {x₀ : Fin n → ℝ} {R σ γ : ℝ}
 
-/-- **The local `L²` bound of `Q = Π_h R`** for an admissible sequence on a simplex of a
-quasi-uniform shape-regular mesh: `‖Q x‖²_{L²(T)} ≲ (2 / (γ σ))ⁿ m_T(x)`. -/
 theorem sum_integral_sq_polyInterp_le {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
     (hq : 0 < q) [NeZero n] {k : ℕ} {B D : ℝ} (hB : PolyDofBound S n k C c B)
     (hD0 : 0 ≤ D) (hD : PolyCoeffBound S n k D)
@@ -452,9 +364,6 @@ theorem sum_integral_sq_polyInterp_le {M : SimplicialMesh n} {C c q : ℝ} (hM :
     _ = 2 ^ n * (B * D * 2 ^ k / q ^ k) ^ 2 * (2 / (γ * σ)) ^ n * L := by
         rw [show 2 * h * (1 / (γ * h * σ)) = 2 / (γ * σ) by field_simp]
 
-/-- **The uniform `L²` bound of the smoothed interpolants** `Q = Π_h R` of an admissible sequence
-on quasi-uniform shape-regular meshes, for every admissible parameter at scale `γ h` (either
-family): `‖Q x‖ ≤ K ‖x‖`, with `K` depending only on `n, S, C, c, q, γ, σ`. -/
 theorem exists_norm_polySmoothedInterp_le [NeZero n] {C c q : ℝ} (hc : 0 < c) (hq : 0 < q)
     (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hσ : 0 < σ) (hσ1 : σ ≤ 1) :
     ∃ K, 0 ≤ K ∧ ∀ (M : SimplicialMesh n), MeshData M C c q → ∀ (hΩ : MeasurableSet M.domain),
@@ -482,9 +391,7 @@ section Close
 
 variable (S : PolySeq) {x₀ : Fin n → ℝ} {R σ γ : ℝ}
 
-/-- **The geometric condition of the smoother for the faces of all dimensions** (lexicographic
-parametrizations): at points of a face `g` with barycentric weights `≥ θ`, every simplex whose
-interior contains a sample of the smoother contains `g`. -/
+/-- The geometric condition: near the points of a face `g`, every sampled simplex contains `g`. -/
 def PolyGeomOK (M : SimplicialMesh n) (p : SmoothingParam (Fin n → ℝ)) (θ : ℝ) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) → ∀ {m : ℕ}, #g = m + 1 →
@@ -494,10 +401,7 @@ def PolyGeomOK (M : SimplicialMesh n) (p : SmoothingParam (Fin n → ℝ)) (θ :
         t ∈ interior (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior →
         g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n)
 
-/-- **The sampling condition for an admissible sequence**: a sample of the smoother outside `Ω`
-near a point of a face `g` with barycentric weights `≥ θ` forces the degrees of freedom of the
-subfaces of `g` to vanish (vacuous for the maximal family; for the minimal family the vanishing
-of the boundary DOFs of `V̊ₕ`). -/
+/-- The sampling condition: samples outside `Ω` near a face `g` force its subface DOFs to vanish. -/
 def PolySampleOK {M : SimplicialMesh n} {k : ℕ} (p : SmoothingParam (Fin n → ℝ)) (θ : ℝ)
     (u : (polyElement n S).Piecewise M k) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
@@ -508,13 +412,6 @@ def PolySampleOK {M : SimplicialMesh n} {k : ℕ} (p : SmoothingParam (Fin n →
         ∀ g' ⊆ g, ∀ i : S.DofIdx g' k, (polyElement n S).localDof T k g' i (u T) = 0
 
 open Classical in
-/-- **The pointwise estimate of the DOF integrand of `v - Q v`** (`v ∈ Vₕ`) for an admissible
-sequence on a quasi-uniform shape-regular mesh: at `x = F_q(ξ)` (`q` the lexicographic
-parametrization of a face `g` of `T`) and for any coefficient vector `c` that only sees the trace
-on `g`, `h^{n/2} |Σₛ (v_T - R v)(x)ₛ cₛ| ≤ (Σₛ |cₛ|) A m_T(v)^{1/2} 2^{k+1} · (1 or 2 (k + 1) γ)`,
-with the factor `2 (k + 1) γ` when all barycentric coordinates of `ξ` are `≥ θ`: then every
-simplex sampled by the smoother inside `Ω` contains `g` (`PolyGeomOK`), where the traces of the
-local fields agree, and samples outside `Ω` are controlled by `PolySampleOK`. -/
 theorem sqrt_mul_abs_polyIntegrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A : ℝ}
     (hA0 : 0 ≤ A) (hA : InvBoundV M (S.space n k) A) {p : SmoothingParam (Fin n → ℝ)}
@@ -600,9 +497,6 @@ theorem sqrt_mul_abs_polyIntegrand_le {M : SimplicialMesh n} (hΩ : MeasurableSe
     rw [hc _ _ (PolyKind.isDeg_of_mem_space huT x) (fun s _ => rfl) hpb]
     simp
 
-/-- **The DOF error of `Q` on `Vₕ`** for an admissible sequence: for a face `g` of `T` and a degree
-of freedom `i` of `g`,
-`h^{n/2} |ℓ_{g,i}(v_T - R v)| ≤ 2 (n + 1) D 2^{k+1} A (γ + θ) hᵏ m_T(v)^{1/2}`. -/
 theorem sqrt_mul_abs_polyDof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A D : ℝ}
     (hA0 : 0 ≤ A) (hA : InvBoundV M (S.space n k) A) (hD0 : 0 ≤ D)
@@ -679,8 +573,6 @@ theorem sqrt_mul_abs_polyDof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet 
         mul_le_mul_of_nonneg_left (by nlinarith) hc0
     _ = _ := by simp only [c, Mc]; ring
 
-/-- **The local `L²` error of `Q` on `Vₕ`** for an admissible sequence:
-`‖v - Q v‖²_{L²(T)} ≲ (γ + θ)² m_T(v)`. -/
 theorem sum_integral_sq_sub_polyInterp_le {M : SimplicialMesh n} [NeZero n] {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A B D : ℝ}
@@ -754,8 +646,6 @@ theorem sum_integral_sq_sub_polyInterp_le {M : SimplicialMesh n} [NeZero n] {C c
         field_simp
     _ = 4 ^ n * (B * C₁ * (γ + θ) / q ^ k) ^ 2 * L := by rw [Real.sq_sqrt hL0]
 
-/-- **`Q` is close to the identity on `Vₕ`** for an admissible sequence:
-`‖v - Q v‖² ≤ 4ⁿ (B C₁ (γ + θ) / qᵏ)² 6ⁿ n! / (c qⁿ) ‖v‖²`, `C₁ = 2 (n + 1) D 2^{k+1} A`. -/
 theorem norm_sq_sub_polySmoothedInterp_le {M : SimplicialMesh n} [NeZero n] {C c q : ℝ}
     (hM : MeshData M C c q) (hc : 0 < c) (hq : 0 < q) (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A B D : ℝ}
@@ -791,8 +681,6 @@ section Families
 
 variable (S : PolySeq) {x₀ : Fin n → ℝ} {s₀ R σ γ : ℝ}
 
-/-- Points of a face with barycentric weights `≥ θ` (lexicographic parametrization) are face
-points. -/
 theorem isFacePoint_lexEnum {M : SimplicialMesh n} {m : ℕ} {g : Finset (Fin n → ℝ)}
     (hg : #g = m + 1) {θ : ℝ} {ξ : Fin m → ℝ} (hξ : ξ ∉ nearBdry m θ) :
     StarGeom.IsFacePoint M g θ (simplexMap (lexEnum g m) ξ) := by
@@ -801,7 +689,6 @@ theorem isFacePoint_lexEnum {M : SimplicialMesh n} {m : ℕ} {g : Finset (Fin n 
     (fun a => ?_) (sum_refBary ξ)
   by_contra hlt; push Not at hlt; exact hξ ⟨a, hlt⟩
 
-/-- **The geometric condition for the maximal family**, for the faces of all dimensions. -/
 theorem polyGeomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
     (hs₀ : 0 < s₀) {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀)
@@ -812,8 +699,6 @@ theorem polyGeomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
   exact subset_vertexSet_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx hσ1 hγ hθ hgT
     (isFacePoint_lexEnum hg hξb) (simplexMap_lexEnum_mem hgT hg hξ) ht htT'
 
-/-- **The geometric condition for the minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`), for
-the faces of all dimensions. -/
 theorem polyGeomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
     (hs₀ : 0 < s₀) (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
@@ -826,8 +711,6 @@ theorem polyGeomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
   exact subset_vertexSet_of_isMinimal hM hq hC hstar hs₀ hint hp hpA hR hRx hσ1 hσ hγ hγh hθ hgT
     (isFacePoint_lexEnum hg hξb) (simplexMap_lexEnum_mem hgT hg hξ) ht htT'
 
-/-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
-field. -/
 theorem polySampleOK_of_isMaximal {M : SimplicialMesh n} (hstar : StarBall M.domain x₀ s₀)
     {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀) {θ : ℝ} {k : ℕ}
     (u : (polyElement n S).Piecewise M k) : PolySampleOK S p θ u := by
@@ -839,10 +722,6 @@ theorem polySampleOK_of_isMaximal {M : SimplicialMesh n} (hstar : StarBall M.dom
   rw [← hp.center_eq] at this
   exact htΩ (this (Metric.mem_closedBall.2 ht.le))
 
-/-- **The minimal family satisfies the sampling condition on `V̊ₕ`**: a sample outside `Ω` near a
-point of a face with weights `≥ θ` forces the face into a boundary facet
-(`StarGeom.exists_isBoundaryFacet_of_near`), where the degrees of freedom of all its subfaces
-vanish for the fields of `V̊ₕ`. -/
 theorem polySampleOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
     (hs₀ : 0 < s₀) {p : SmoothingParam (Fin n → ℝ)}
@@ -879,10 +758,6 @@ section Estimates
 variable (S : PolySeq) {x₀ : Fin n → ℝ}
 
 variable (n) in
-/-- **The smoothing scale** `γ₀` and the threshold factor `K₀` for an admissible sequence,
-depending only on `n, S, C, c, q`: for every `γ ∈ (0, γ₀]` and every admissible parameter at scale
-`γ h` (either family) satisfying the geometric and sampling conditions at threshold `θ = K₀ γ`,
-`‖v - Q v‖ ≤ ½ ‖v‖` on `Vₕ`. -/
 theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (hq : 0 < q) :
     ∃ γ₀ K₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 4 ∧ 2 * (n * ((n + 1) * C)) / q < K₀ ∧
       ∀ γ, 0 < γ → γ ≤ γ₀ →
@@ -953,14 +828,8 @@ theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (h
         mul_le_mul_of_nonneg_right hq1 (sq_nonneg _)
     _ = (1 / 2 * ‖(polyElement n S).glue M k u‖) ^ 2 := by ring
 
-/-- **Uniformly bounded smoothed cochain projections onto the complexes of an admissible sequence
-on quasi-uniform shape-regular meshes of a domain star-shaped with respect to a ball**
-([AFW2010], §5.5; [ChristiansenWinther2008]): there is `K`, depending only on `n`, `S`, the
-shape-regularity and quasi-uniformity constants, `s₀` and `R` (mathematically only on the ratio
-`s₀ / R`, which is not formalized here), such that every such mesh
-`M` of `Ω` (star-shaped with respect to `B(x₀, s₀)`, `cl Ω ⊆ B̄(x₀, R)`) carries a cochain
-projection onto `Vₕ(S, M) ⊆ HΛ(Ω)` (`P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in degree `k`) bounded by `K` in
-`L²` and in every graph norm. -/
+/-- Uniformly bounded smoothed cochain projections onto the complexes of an admissible sequence on
+quasi-uniform shape-regular meshes. [AFW2010], §5.5; [ChristiansenWinther2008] -/
 theorem exists_uniform_polyCochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c)
     (hq : 0 < q) {s₀ R : ℝ} (hs₀ : 0 < s₀) (hR : 0 < R) :
     ∃ K : ℝ, 1 ≤ K ∧ ∀ (M : SimplicialMesh n), MeshData M C c q → ∀ (hΩo : IsOpen M.domain),
@@ -1010,10 +879,6 @@ theorem exists_uniform_polyCochainProjection [NeZero n] {C c q : ℝ} (hC : 0 �
       (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
   exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
-/-- **Uniformly bounded smoothed cochain projections onto the complexes of an admissible sequence
-with vanishing boundary DOFs** `V̊ₕ(S, M) ⊆ H̊Λ(Ω)` on quasi-uniform shape-regular meshes of a
-domain star-shaped with respect to a ball. The samples of the minimal-family smoother outside `Ω`
-only meet faces lying in boundary facets (`StarGeom.exists_isBoundaryFacet_of_near`). -/
 theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
     (hc : 0 < c) (hq : 0 < q) {s₀ R : ℝ} (hs₀ : 0 < s₀) (hR : 0 < R) :
     ∃ K : ℝ, 1 ≤ K ∧ ∀ (M : SimplicialMesh n), MeshData M C c q → ∀ (hΩo : IsOpen M.domain),

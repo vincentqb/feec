@@ -8,24 +8,17 @@ public import Feec.FiniteElement.SmoothedInterp
 # Pointwise and local estimates of the smoother on simplicial meshes
 
 The mesh-independent ingredients of the smoothed-projection estimates ([AFW2010], §5.5;
-[ChristiansenWinther2008]) for the smoother `smoothForm` of
-`Feec.FiniteElement.SmoothedInterp`, on any conforming simplicial mesh: the local mass
-`locMass r x T` of `x` on the `r`-neighbourhood of `T`; Jensen's inequality for the mollifier and
-the pointwise bound of the smoothed form by the local mass (`sq_integral_mul_normed_le`,
-`abs_smoothForm_le`); the Whitney DOFs as face integrals and their
-agreement on shared faces (`simplexIntegral_globalInterp`, `simplexIntegral_eq_of_mem_globalSpace`,
-`sum_mul_minor_eq`); the boundary layer `nearBdry` of the reference simplex and its measure
-(`volume_real_nearBdry_le`, `mul_abs_integral_refSimplex_le`); glued fields almost everywhere
-(`ae_glue_eq_local`, `sum_integral_sq_le_of_subset`, `ae_extField_glue_eq`); and the pointwise
-estimate of a face integrand of `v - R v` as a mollified average
-(`sum_sub_smoothForm_mul_eq`, `sqrt_mul_abs_sum_sub_smoothForm_le`). They are used by the
-estimates on shape-regular meshes of star-shaped domains (`Feec.Models.StarShaped.Smoothing`) and
-on the cube (`Feec.Models.Cube.SmoothingEstimates`, `Feec.Models.Cube.ParitySmoothingEstimates`).
+[ChristiansenWinther2008]) for the smoother `smoothForm` on a simplicial mesh.
+
+## Main results
+
+* `abs_smoothForm_le`: the pointwise bound of the smoothed form by the `L²` mass on a ball.
+* `volume_real_nearBdry_le`: the boundary layer of the reference simplex has volume `≤ (k + 1) θ`.
+* `sqrt_mul_abs_sum_sub_smoothForm_le`: the pointwise estimate of a face integrand of `v - R v`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -40,8 +33,6 @@ namespace Feec.FiniteElement
 open Feec.Domain Feec.Mesh Feec.HilbertComplex ExteriorFibre
 
 variable {n : ℕ}
-
-/-! ### Local masses -/
 
 /-- The `L²` mass of `x` on the `r`-neighbourhood of `T`. -/
 def locMass {Ω : Set (Fin n → ℝ)} {k : ℤ} (r : ℝ) (x : L2F ℝ Ω (formIdx n k))
@@ -66,8 +57,6 @@ theorem integral_sq_indicator {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω
     funext t; by_cases ht : t ∈ Ω <;> simp [ht]
   rw [e, integral_indicator hΩ]
 
-/-! ### The smoother at a point -/
-
 section Smoother
 
 variable (φ : ContDiffBump (0 : Fin n → ℝ))
@@ -79,7 +68,6 @@ theorem isTest_normed_comp_sub (y : Fin n → ℝ) :
 theorem integral_normed_comp_sub (y : Fin n → ℝ) : ∫ t, φ.normed volume (y - t) = 1 := by
   rw [integral_sub_left_eq_self (fun t => φ.normed volume t) volume y, φ.integral_normed]
 
-/-- **Jensen's inequality for the mollifier**: `(∫ f ρ(y - ·))² ≤ ∫ f² ρ(y - ·)`. -/
 theorem sq_integral_mul_normed_le {f : (Fin n → ℝ) → ℝ} (hf : LocallyIntegrable f volume)
     (hf2 : LocallyIntegrable (fun t => f t ^ 2) volume) (y : Fin n → ℝ) :
     (∫ t, f t * φ.normed volume (y - t)) ^ 2 ≤ ∫ t, f t ^ 2 * φ.normed volume (y - t) := by
@@ -105,8 +93,6 @@ theorem sq_integral_mul_normed_le {f : (Fin n → ℝ) → ℝ} (hf : LocallyInt
   change a ^ 2 ≤ ∫ t, f t ^ 2 * g t
   nlinarith
 
-/-- The mollified square is controlled by the mass on the ball of radius `rOut`:
-`∫ f² ρ(y - ·) ≤ |B(0, rIn)|⁻¹ ∫_{B̄(y, rOut)} f²`. -/
 theorem integral_sq_mul_normed_le {f : (Fin n → ℝ) → ℝ}
     (hf2 : Integrable (fun t => f t ^ 2) volume) (y : Fin n → ℝ) :
     ∫ t, f t ^ 2 * φ.normed volume (y - t) ≤
@@ -136,8 +122,6 @@ theorem normed_eq_zero_of_le {y t : Fin n → ℝ} (h : φ.rOut ≤ dist t y) :
   exact not_lt.2 h
 
 end Smoother
-
-/-! ### The smoothed form at a point -/
 
 theorem smoothForm_apply_eq {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     (p : SmoothingParam (Fin n → ℝ)) (k : ℕ) (x : L2F ℝ Ω (formIdx n k)) (y : Fin n → ℝ)
@@ -185,8 +169,6 @@ theorem abs_smoothForm_le {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     exact mul_nonneg (pow_nonneg p.factor_pos.le k) (Real.sqrt_nonneg _)
 
 
-/-! ### Local estimates on the mesh simplices -/
-
 theorem simplexIntegral_localDof {M : SimplicialMesh n} {k : ℕ} (T : M.simplices)
     {g : Finset (Fin n → ℝ)} (hg : g.card = k + 1) (z : (whitneyElement n).space T k) :
     (whitneyElement n).localDof T k g ⟨(), hg⟩ z =
@@ -219,8 +201,6 @@ theorem volume_real_closedBall_zero {r : ℝ} (hr : 0 ≤ r) :
   rw [Measure.real, Real.volume_pi_closedBall _ hr, Fintype.card_fin,
     ENNReal.toReal_ofReal (by positivity)]
 
-/-- **The `L²` norm of a glued field by local integrals** (any element family and mesh):
-`‖glue d‖² ≤ Σ_T f(T)` when `Σₛ ‖(d_T)ₛ‖²_{L²(T)} ≤ f(T)` for every simplex. -/
 theorem norm_sq_glue_le (E : LocalElement n) (M : SimplicialMesh n) {k : ℕ} (d : E.Piecewise M k)
     (f : Affine.Simplex ℝ (Fin n → ℝ) n → ℝ)
     (hd : ∀ T (hT : T ∈ M.simplices), ∑ s : formIdx n k, ∫ y in T.closedInterior,
@@ -246,8 +226,6 @@ theorem subsingleton_L2F_of_lt {Ω : Set (Fin n → ℝ)} {k : ℕ} (hk : n < k)
   have h2 : #s.1 ≤ n := by simpa using Finset.card_le_univ s.1
   omega
 
-/-- A bound `‖y‖² ≤ K_k ‖x‖²` in the degrees `k ≤ n` gives `‖y‖ ≤ (Σ_{k ≤ n} K_k)^{1/2} ‖x‖` in
-every degree (`L²(Ω; Λᵏ) = 0` for `k > n`). -/
 theorem norm_le_sqrt_sum_of_sq_le {K : ℕ → ℝ} (hK : ∀ k, 0 ≤ K k) {Ω : Set (Fin n → ℝ)} {k : ℕ}
     {x y : L2F ℝ Ω (formIdx n k)} (h : k ≤ n → ‖y‖ ^ 2 ≤ K k * ‖x‖ ^ 2) :
     ‖y‖ ≤ √(∑ k ∈ Finset.range (n + 1), K k) * ‖x‖ := by
@@ -261,10 +239,6 @@ theorem norm_le_sqrt_sum_of_sq_le {K : ℕ → ℝ} (hK : ∀ k, 0 ≤ K k) {Ω 
   exact (h hk).trans (mul_le_mul_of_nonneg_right (Finset.single_le_sum (fun k _ => hK k)
     (Finset.mem_range.2 (by omega))) (sq_nonneg _))
 
-/-! ### Ingredients of the closeness estimate -/
-
-/-- **The trace of a trimmed linear form on a `k`-face is constant**:
-`Σₛ u(F x̂)ₛ minorₛ = k! ∫_q u`. -/
 theorem sum_mul_minor_eq {k : ℕ} {u : FormField n} (hu : u ∈ p1MinusForms n k)
     (q : Fin (k + 1) → Fin n → ℝ) (x : Fin k → ℝ) :
     ∑ s, u (simplexMap q x) s * wedgeProd (simplexMatrix q) s univ =
@@ -272,7 +246,6 @@ theorem sum_mul_minor_eq {k : ℕ} {u : FormField n} (hu : u ∈ p1MinusForms n 
   rw [← affinePullback_univ_eq_of_mem_p1MinusForms hu q x, affinePullback_apply, pullback_apply]
   rfl
 
-/-- **DOFs of global Whitney fields agree on shared faces.** -/
 theorem simplexIntegral_eq_of_mem_globalSpace {M : SimplicialMesh n} {k : ℕ}
     {u : (whitneyElement n).Piecewise M k} (hu : u ∈ (whitneyElement n).globalSpace M k)
     (T T' : M.simplices) {g : Finset (Fin n → ℝ)}
@@ -291,8 +264,6 @@ theorem integral_closedInterior_eq_interior (T : Affine.Simplex ℝ (Fin n → �
   (setIntegral_congr_set (interior_ae_eq_of_null_frontier (μ := volume)
     (s := T.closedInterior) (Convex.addHaar_frontier volume (convex_closedInterior T)))).symm
 
-/-! ### The set of points of a reference simplex near its boundary -/
-
 /-- The points of `ℝᵏ` with a barycentric coordinate `< θ`. -/
 def nearBdry (k : ℕ) (θ : ℝ) : Set (Fin k → ℝ) := {x | ∃ a, refBary x a < θ}
 
@@ -302,7 +273,6 @@ theorem isOpen_nearBdry (k : ℕ) (θ : ℝ) : IsOpen (nearBdry k θ) := by
   rw [this]
   exact isOpen_iUnion fun a => isOpen_Iio.preimage (continuous_refBary_apply a)
 
-/-- A coordinate slab of the reference simplex has volume at most its width. -/
 theorem volume_slab_le {k : ℕ} (θ : ℝ) (j : Fin k) :
     volume (FiniteElement.refSimplex k ∩ {x | x j < θ}) ≤ ENNReal.ofReal θ := by
   classical
@@ -351,7 +321,7 @@ theorem volume_nearBdry_apply_le {k : ℕ} {θ : ℝ} (hθ1 : θ ≤ 1) (a : Fin
   · simpa using volume_slab_le θ j
 
 /-- **The boundary layer of the reference simplex is small**:
-`|{x̂ ∈ T̂_k : some λ̂ₐ(x̂) < θ}| ≤ (k + 1) θ`. -/
+`|{x̂ ∈ T̂_k : some λ̂ₐ(x̂) < θ}| ≤ (k + 1) θ` for `0 ≤ θ ≤ 1`. -/
 theorem volume_real_nearBdry_le {k : ℕ} {θ : ℝ} (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ 1) :
     volume.real (FiniteElement.refSimplex k ∩ nearBdry k θ) ≤ (k + 1) * θ := by
   have e : FiniteElement.refSimplex k ∩ nearBdry k θ =
@@ -377,8 +347,6 @@ theorem volume_real_refSimplex_le_one (m : ℕ) :
   exact_mod_cast Nat.one_le_iff_ne_zero.2 (Nat.factorial_ne_zero m)
 
 open Classical in
-/-- **Integration of a face-integrand bound**: if `H |F(ξ)| ≤ c` near `∂Δ` (barycentric weight
-`< θ`) and `≤ c ε` elsewhere, then `H |∫_Δ F| ≤ c (ε + (m + 1) θ)`. -/
 theorem mul_abs_integral_refSimplex_le {m : ℕ} {F : (Fin m → ℝ) → ℝ} (hF : Continuous F)
     {H c ε θ : ℝ} (hH : 0 ≤ H) (hc : 0 ≤ c) (hε : 0 ≤ ε) (hθ0 : 0 ≤ θ) (hθ1 : θ ≤ 1)
     (hpt : ∀ ξ ∈ FiniteElement.refSimplex m,
@@ -421,10 +389,6 @@ theorem mul_abs_integral_refSimplex_le {m : ℕ} {F : (Fin m → ℝ) → ℝ} (
         nlinarith
 
 
-/-! ### Glued fields almost everywhere -/
-
-/-- **A glued field almost everywhere** (any element family): a.e. point of `Ω` lies in the
-interior of a simplex `T'`, where the field is the local field of `T'`. -/
 theorem ae_glue_eq_local (E : LocalElement n) {M : SimplicialMesh n} {k : ℕ} (u : E.Piecewise M k)
     (hΩ : MeasurableSet M.domain) :
     ∀ᵐ t ∂volume, t ∈ M.domain → ∃ T' : M.simplices,
@@ -448,8 +412,6 @@ theorem ae_glue_eq_local (E : LocalElement n) {M : SimplicialMesh n} {k : ℕ} (
   change E.extendPW M u T' t s.1 = _
   rw [E.extendPW_of_mem M u hT']
 
-/-- **The local fields are controlled by the glued field** on any set containing their simplex
-(any element family and mesh with `interior T ⊆ Ω` for every simplex `T`). -/
 theorem sum_integral_sq_le_of_subset (E : LocalElement n) {M : SimplicialMesh n}
     (hΩ : MeasurableSet M.domain) (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
     {k : ℕ} (u : E.Piecewise M k) (T' : M.simplices) {K : Set (Fin n → ℝ)}
@@ -483,9 +445,6 @@ theorem sum_integral_sq_le_of_subset (E : LocalElement n) {M : SimplicialMesh n}
     (Eventually.of_forall fun _ => sq_nonneg _)
     (Eventually.of_forall fun y hy => hsub (interior_subset hy))
 
-/-! ### Mollified differences -/
-
-/-- `|∫ g G| ≤ β` for a probability density `g` and `|G| ≤ β` a.e. on `{g ≠ 0}`. -/
 theorem abs_integral_mul_le_of_ae {g G : (Fin n → ℝ) → ℝ} (hg0 : ∀ t, 0 ≤ g t)
     (hgi : Integrable g) (hg1 : ∫ t, g t = 1) (hG : Integrable fun t => g t * G t) {β : ℝ}
     (hb : ∀ᵐ t ∂volume, g t ≠ 0 → |G t| ≤ β) : |∫ t, g t * G t| ≤ β := by
@@ -534,9 +493,6 @@ theorem integrable_extField_mul {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet 
   · have : ∀ t, extField v t s = 0 := fun t => by simp [extField, formExt, hs]
     simp [this]
 
-/-- **The face integrand of `u - R v` as a mollified average**: for any fibre form `a` and
-coefficients `m`, `Σₛ (aₛ - (R v)(x)ₛ) mₛ = ∫ ρ(x̂ - t) Σₛ (aₛ - cᵏ v̄(t)ₛ) mₛ dt`, `x̂` the dilated
-point. -/
 theorem sum_sub_smoothForm_mul_eq {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     (p : SmoothingParam (Fin n → ℝ)) (k : ℕ) (v : L2F ℝ Ω (formIdx n k))
     (a m : Finset (Fin n) → ℝ) (x : Fin n → ℝ) :
@@ -562,8 +518,6 @@ theorem sum_sub_smoothForm_mul_eq {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSe
   ring
 
 
-/-- **The zero extension of a glued field almost everywhere** (any element family): a.e. point
-of `Ω` lies in the interior of a simplex `T'` whose local field is the zero extension there. -/
 theorem ae_extField_glue_eq (E : LocalElement n) {M : SimplicialMesh n} {k : ℕ}
     (u : E.Piecewise M k) (hΩ : MeasurableSet M.domain) :
     ∀ᵐ t ∂volume, t ∈ M.domain → ∃ T' : M.simplices,
@@ -577,7 +531,6 @@ theorem ae_extField_glue_eq (E : LocalElement n) {M : SimplicialMesh n} {k : ℕ
   · have : extField (E.glue M k u) t s = 0 := by simp [extField, formExt, hs']
     rw [this, E.isDeg_of_mem (u T').2 t s (fun h' => hs' (by rw [h']))]
 
-/-- `H |Σₛ fₛ cₛ| ≤ K Σₛ |cₛ|` when `H |fₛ| ≤ K` for every `s`. -/
 theorem mul_abs_sum_mul_le {H K : ℝ} (hH : 0 ≤ H) {f c : Finset (Fin n) → ℝ}
     (hf : ∀ s, H * |f s| ≤ K) : H * |∑ s, f s * c s| ≤ K * ∑ s, |c s| := by
   calc H * |∑ s, f s * c s| ≤ H * ∑ s, |f s| * |c s| :=
@@ -590,13 +543,7 @@ theorem mul_abs_sum_mul_le {H K : ℝ} (hH : 0 ≤ H) {f c : Finset (Fin n) → 
     _ = K * ∑ s, |c s| := by rw [Finset.mul_sum]
 
 open Classical in
-/-- **The pointwise estimate of a face integrand of `v - R v`**, for any element family and mesh:
-at a point `x` with dilated point `x̂`, if the local field `a` at `x` and, a.e. near `x̂` inside
-`Ω`, a local field `w` representing `v` obey the inverse estimates `H |·| ≤ A √L`, then
-`H |Σₛ (aₛ - (R v)(x)ₛ) cₛ| ≤ (Σₛ |cₛ|) A √L 2^{k+1} · (1 or (k + 1) ε)`. The factor `(k + 1) ε`
-holds when (`¬ b`) the traces agree (`Σₛ aₛ cₛ = Σₛ w(x)ₛ cₛ`), the displacement costs
-`H |w(x)ₛ - w(t)ₛ| ≤ ε A √L`, the dilation defect is `|1 - cᵏ| ≤ k 2ᵏ ε`, and samples outside
-`Ω` force `Σₛ aₛ cₛ = 0`. -/
+/-- **The pointwise estimate of a face integrand of `v - R v`.** -/
 theorem sqrt_mul_abs_sum_sub_smoothForm_le {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω)
     (p : SmoothingParam (Fin n → ℝ)) {k : ℕ} (v : L2F ℝ Ω (formIdx n k)) (x : Fin n → ℝ)
     (a c : Finset (Fin n) → ℝ) {H A L ε : ℝ} (b : Prop) (hH : 0 < H) (hA0 : 0 ≤ A)
@@ -697,8 +644,6 @@ theorem sqrt_mul_abs_sum_sub_smoothForm_le {Ω : Set (Fin n → ℝ)} (hΩ : Mea
   rw [le_div_iff₀ hH, mul_comm] at hmain
   exact hmain
 
-/-- **Choice of the smoothing scale** `γ`: small against the constants of the local
-estimates. -/
 theorem sq_le_quarter {S K x : ℝ} (hS : 0 ≤ S) (hK : 1 ≤ K) (hx0 : 0 ≤ x) (hx : x ≤ S) :
     K * (x * (1 / (2 * (1 + S * K)))) ^ 2 ≤ 1 / 4 := by
   have hpos : 0 < 1 + S * K := by nlinarith

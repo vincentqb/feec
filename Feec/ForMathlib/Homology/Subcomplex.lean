@@ -12,44 +12,13 @@ public import Mathlib.LinearAlgebra.FiniteDimensional.Lemmas
 # Subcomplexes and quotient complexes of complexes of modules
 
 A family of submodules `P i ⊆ Kⁱ` stable under the differentials of a complex `K` of `R`-modules
-gives the subcomplex `K.sub P` and the quotient complex `K.quo P`, and the short exact sequence
-`0 → K.sub P → K → K.quo P → 0`. Its long exact sequence in homology shows that **removing an
-exact piece does not change the homology**: the inclusion is a quasi-isomorphism when the
-quotient is acyclic, the projection when the subcomplex is. This is the homological step of the
-BGG construction ([ArnoldHu2021], §5.2: the twisted complex splits off an exact subcomplex).
-
-## Main definitions
-
-* `HomologicalComplex.sub K P hP`, `HomologicalComplex.quo K P hP`: the subcomplex and the
-  quotient complex, with `subι : K.sub P hP ⟶ K` and `quoπ : K ⟶ K.quo P hP`.
-* `HomologicalComplex.subQuo K P hP`: the short exact sequence `0 → K.sub P → K → K.quo P → 0`.
-* `HomologicalComplex.Represents K i H`: `H` represents the cohomology of `K` at `i`,
-  `N(dⁱ) = R(dⁱ⁻¹) ⊕ H`.
-
-## Main results
-
-* `CategoryTheory.ShortComplex.ShortExact.quasiIso_f`, `…quasiIso_g`: in a short exact sequence
-  of complexes in an abelian category, `f` is a quasi-isomorphism if the third complex is
-  acyclic, `g` if the first is.
-* `HomologicalComplex.quo_acyclic`, `HomologicalComplex.sub_acyclic`: elementwise criteria.
-* `HomologicalComplex.quasiIso_subι`, `HomologicalComplex.quasiIso_quoπ`.
-* `HomologicalComplex.homologyπ_eq_zero_iff_moduleCat`,
-  `HomologicalComplex.exists_homologyπ_cyclesMk_moduleCat`: homology classes of complexes of
-  modules, elementwise; `HomologicalComplex.exists_homology_linearMap`: after a zero space, a map
-  one-to-one on the cycles embeds the homology.
-* `CategoryTheory.ShortComplex.ShortExact.finiteDimensional_homology₂`, `…finrank_homology₂_le`:
-  over a field, `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes,
-  with equality iff `H(X₁) → H(X₂)` is injective and `H(X₂) → H(X₃)` surjective
-  (`…finrank_homology₂_eq_iff`).
-* `HomologicalComplex.Represents.map`: a quasi-isomorphism carries cohomology representatives to
-  cohomology representatives ([ArnoldHu2021], Corollary 1).
-* `HomologicalComplex.represents_ker_of_subsingleton`: after a zero space the cohomology is
-  represented by the cycles.
+gives the subcomplex `K.sub P`, the quotient complex `K.quo P` and the short exact sequence
+`0 → K.sub P → K → K.quo P → 0`; the inclusion is a quasi-isomorphism when the quotient is
+acyclic, and the projection when the subcomplex is ([ArnoldHu2021], §5.2).
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §5.2 (removing an exact
-  subcomplex), Corollary 1 (cohomology representatives)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -65,8 +34,6 @@ namespace CategoryTheory.ShortComplex.ShortExact
 variable {C ι : Type*} [Category* C] [Abelian C] {c : ComplexShape ι}
   {S : ShortComplex (HomologicalComplex C c)}
 
-/-- In a short exact sequence `0 → X₁ → X₂ → X₃ → 0` of complexes with `X₃` acyclic,
-`X₁ → X₂` is a quasi-isomorphism. -/
 theorem quasiIso_f (hS : S.ShortExact) (h₃ : S.X₃.Acyclic) : _root_.QuasiIso S.f := by
   rw [_root_.quasiIso_iff]
   intro j
@@ -81,8 +48,6 @@ theorem quasiIso_f (hS : S.ShortExact) (h₃ : S.X₃.Acyclic) : _root_.QuasiIso
     (hS.homology_exact₂ j).epi_f ((h₃ j).isZero_homology.eq_of_tgt _ _)
   exact isIso_of_mono_of_epi _
 
-/-- In a short exact sequence `0 → X₁ → X₂ → X₃ → 0` of complexes with `X₁` acyclic,
-`X₂ → X₃` is a quasi-isomorphism. -/
 theorem quasiIso_g (hS : S.ShortExact) (h₁ : S.X₁.Acyclic) : _root_.QuasiIso S.g := by
   rw [_root_.quasiIso_iff]
   intro i
@@ -105,7 +70,7 @@ variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
   (K : HomologicalComplex (ModuleCat.{v} R) c) (P : ∀ i, Submodule R (K.X i))
   (hP : ∀ i j, ∀ x ∈ P i, K.d i j x ∈ P j)
 
-/-- **The subcomplex** of a family of submodules stable under the differentials. -/
+/-- The subcomplex of a family of submodules stable under the differentials. -/
 def sub : HomologicalComplex (ModuleCat.{v} R) c where
   X i := ModuleCat.of R (P i)
   d i j := ModuleCat.ofHom ((K.d i j).hom.restrict (hP i j))
@@ -119,7 +84,7 @@ def sub : HomologicalComplex (ModuleCat.{v} R) c where
 theorem sub_d_hom (i j : ι) :
     ((K.sub P hP).d i j).hom = (K.d i j).hom.restrict (hP i j) := rfl
 
-/-- **The quotient complex** by a family of submodules stable under the differentials. -/
+/-- The quotient complex by a family of submodules stable under the differentials. -/
 def quo : HomologicalComplex (ModuleCat.{v} R) c where
   X i := ModuleCat.of R (K.X i ⧸ P i)
   d i j := ModuleCat.ofHom ((P i).mapQ (P j) (K.d i j).hom (hP i j))
@@ -160,14 +125,12 @@ theorem subQuo_shortExact : (K.subQuo P hP).ShortExact :=
       mono_f := (ModuleCat.mono_iff_injective _).2 Subtype.val_injective
       epi_g := (ModuleCat.epi_iff_surjective _).2 (Submodule.mkQ_surjective _) }
 
-/-- Exactness of a complex of modules at `j`, elementwise. -/
 theorem exactAt_iff_of_modules (L : HomologicalComplex (ModuleCat.{v} R) c) (j : ι) :
     L.ExactAt j ↔ ∀ x : L.X j, L.d j (c.next j) x = 0 → ∃ y : L.X (c.prev j),
       L.d (c.prev j) j y = x := by
   rw [L.exactAt_iff' (c.prev j) j (c.next j) rfl rfl, ShortComplex.moduleCat_exact_iff]
   rfl
 
-/-- **The quotient complex is acyclic** when every `x` with `d x ∈ P` is a boundary modulo `P`. -/
 theorem quo_acyclic (h : ∀ i (x : K.X i), K.d i (c.next i) x ∈ P (c.next i) →
     ∃ y : K.X (c.prev i), x - K.d (c.prev i) i y ∈ P i) : (K.quo P hP).Acyclic := by
   intro i
@@ -178,7 +141,6 @@ theorem quo_acyclic (h : ∀ i (x : K.X i), K.d i (c.next i) x ∈ P (c.next i) 
   exact ⟨Submodule.Quotient.mk y, (Submodule.Quotient.eq _).2 (by
     rw [← neg_mem_iff, neg_sub]; exact hy)⟩
 
-/-- **The subcomplex is acyclic** when every cycle in `P` is the boundary of an element of `P`. -/
 theorem sub_acyclic (h : ∀ i, ∀ x ∈ P i, K.d i (c.next i) x = 0 →
     ∃ y ∈ P (c.prev i), K.d (c.prev i) i y = x) : (K.sub P hP).Acyclic := by
   intro i
@@ -187,24 +149,19 @@ theorem sub_acyclic (h : ∀ i, ∀ x ∈ P i, K.d i (c.next i) x = 0 →
   obtain ⟨y, hy, hyx⟩ := h i x x.2 (congrArg Subtype.val hx)
   exact ⟨⟨y, hy⟩, Subtype.ext hyx⟩
 
-/-- The inclusion of a subcomplex with acyclic quotient is a quasi-isomorphism. -/
 theorem quasiIso_subι (h : (K.quo P hP).Acyclic) : QuasiIso (K.subι P hP) :=
   (K.subQuo_shortExact P hP).quasiIso_f h
 
-/-- The projection onto the quotient by an acyclic subcomplex is a quasi-isomorphism. -/
 theorem quasiIso_quoπ (h : (K.sub P hP).Acyclic) : QuasiIso (K.quoπ P hP) :=
   (K.subQuo_shortExact P hP).quasiIso_g h
 
 end HomologicalComplex
-
-/-! ### Homology classes of complexes of modules -/
 
 namespace HomologicalComplex
 
 variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
   (K : HomologicalComplex (ModuleCat.{v} R) c)
 
-/-- A cycle has zero homology class iff it is a boundary. -/
 theorem homologyπ_eq_zero_iff_moduleCat {i j : ι} (hij : c.prev j = i) (z : K.cycles j) :
     K.homologyπ j z = 0 ↔ ∃ y : K.X i, K.d i j y = K.iCycles j z := by
   have hex := ShortComplex.exact_of_g_is_cokernel
@@ -220,7 +177,6 @@ theorem homologyπ_eq_zero_iff_moduleCat {i j : ι} (hij : c.prev j = i) (z : K.
     obtain rfl : K.toCycles i j y = z := hi (by rw [← ModuleCat.comp_apply, K.toCycles_i, hy])
     rw [← ModuleCat.comp_apply, K.toCycles_comp_homologyπ]; rfl
 
-/-- Every homology class is the class of a cycle. -/
 theorem exists_homologyπ_cyclesMk_moduleCat {i j : ι} (hij : c.next i = j) (x : K.homology i) :
     ∃ (y : K.X i) (hy : K.d i j y = 0), K.homologyπ i (K.cyclesMk y j hij hy) = x := by
   obtain ⟨z, rfl⟩ := (ModuleCat.epi_iff_surjective (K.homologyπ i)).1 inferInstance x
@@ -229,9 +185,6 @@ theorem exists_homologyπ_cyclesMk_moduleCat {i j : ι} (hij : c.next i = j) (x 
   · congr 1
     exact (ModuleCat.mono_iff_injective (K.iCycles i)).1 inferInstance (K.i_cyclesMk _ j hij _)
 
-/-- **The homology after a zero space, elementwise**: if `K.X h` is zero (`h` the index before
-`i`), a linear map `g` on `K.X i` that is one-to-one on the cycles induces a linear injection of
-`Hⁱ` with range `g N(dⁱ)`, the class of a cycle `z` going to `g z`. -/
 theorem exists_homology_linearMap {h i k : ι} (hh : c.prev i = h) (hk : c.next i = k)
     [Subsingleton (K.X h)] {F : Type*} [AddCommGroup F] [Module R F] (g : K.X i →ₗ[R] F)
     (hg : ∀ x, K.d i k x = 0 → g x = 0 → x = 0) :
@@ -265,8 +218,6 @@ theorem exists_homology_linearMap {h i k : ι} (hh : c.prev i = h) (hk : c.next 
 
 end HomologicalComplex
 
-/-! ### Finite-dimensional homology in a short exact sequence -/
-
 namespace CategoryTheory.ShortComplex.ShortExact
 
 open Module
@@ -274,9 +225,6 @@ open Module
 variable {K : Type u} [Field K] {ι : Type*} {c : ComplexShape ι}
   {S : ShortComplex (HomologicalComplex (ModuleCat.{v} K) c)}
 
-/-- In a short exact sequence `0 → X₁ → X₂ → X₃ → 0` of complexes of vector spaces, the homology
-of `X₂` at `i` is finite-dimensional when those of `X₁` and `X₃` are: `H(X₁) → H(X₂) → H(X₃)`
-is exact. -/
 theorem finiteDimensional_homology₂ (hS : S.ShortExact) (i : ι)
     [FiniteDimensional K (S.X₁.homology i)] [FiniteDimensional K (S.X₃.homology i)] :
     FiniteDimensional K (S.X₂.homology i) := by
@@ -288,7 +236,6 @@ theorem finiteDimensional_homology₂ (hS : S.ShortExact) (i : ι)
     g.quotKerEquivRange.symm.finiteDimensional
   exact Module.Finite.of_submodule_quotient (LinearMap.ker g)
 
-/-- `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes of vector spaces. -/
 theorem finrank_homology₂_le (hS : S.ShortExact) (i : ι)
     [FiniteDimensional K (S.X₁.homology i)] [FiniteDimensional K (S.X₃.homology i)] :
     finrank K (S.X₂.homology i) ≤ finrank K (S.X₁.homology i) + finrank K (S.X₃.homology i) := by
@@ -301,8 +248,6 @@ theorem finrank_homology₂_le (hS : S.ShortExact) (i : ι)
   have := LinearMap.finrank_range_add_finrank_ker g
   omega
 
-/-- **Equality in `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)`** holds iff `H(X₁) → H(X₂)` is injective
-and `H(X₂) → H(X₃)` surjective, i.e. iff both adjacent connecting maps vanish. -/
 theorem finrank_homology₂_eq_iff (hS : S.ShortExact) (i : ι)
     [FiniteDimensional K (S.X₁.homology i)] [FiniteDimensional K (S.X₃.homology i)] :
     finrank K (S.X₂.homology i) = finrank K (S.X₁.homology i) + finrank K (S.X₃.homology i) ↔
@@ -327,22 +272,17 @@ theorem finrank_homology₂_eq_iff (hS : S.ShortExact) (i : ι)
 
 end CategoryTheory.ShortComplex.ShortExact
 
-/-! ### Cohomology representatives -/
-
 namespace HomologicalComplex
 
 variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
   {K L : HomologicalComplex (ModuleCat.{v} R) c}
 
 variable (K) in
-/-- **`H` represents the cohomology of `K` at `i`**: the cycles are the direct sum of the boundaries
-and `H`, `N(dⁱ) = R(dⁱ⁻¹) ⊕ H`. -/
+/-- `H` represents the cohomology of `K` at `i`: `N(dⁱ) = R(dⁱ⁻¹) ⊕ H`. -/
 structure Represents (i : ι) (H : Submodule R (K.X i)) : Prop where
   sup_eq : LinearMap.range (K.d (c.prev i) i).hom ⊔ H = LinearMap.ker (K.d i (c.next i)).hom
   disjoint : Disjoint (LinearMap.range (K.d (c.prev i) i).hom) H
 
-/-- **After a zero space the cohomology is represented by the cycles**: if `Kⁱ⁻¹ = 0`, then `N(dⁱ)`
-represents the cohomology of `K` at `i`. -/
 theorem represents_ker_of_subsingleton {i : ι} (h : Subsingleton (K.X (c.prev i))) :
     K.Represents i (LinearMap.ker (K.d i (c.next i)).hom) := by
   have hr : LinearMap.range (K.d (c.prev i) i).hom = ⊥ := by
@@ -356,7 +296,6 @@ theorem d_f_eq_zero (f : K ⟶ L) {i j : ι} {x : K.X i} (hx : K.d i j x = 0) :
     L.d i j (f.f i x) = 0 := by
   rw [← ModuleCat.comp_apply, f.comm, ModuleCat.comp_apply, hx, map_zero]
 
-/-- The class of a cycle `x` is mapped by `f` to the class of `f x`. -/
 theorem homologyMap_homologyπ_cyclesMk (f : K ⟶ L) {i j : ι} (hj : c.next i = j) (x : K.X i)
     (hx : K.d i j x = 0) :
     homologyMap f i (K.homologyπ i (K.cyclesMk x j hj hx)) =
@@ -367,8 +306,8 @@ theorem homologyMap_homologyπ_cyclesMk (f : K ⟶ L) {i j : ι} (hj : c.next i 
   rw [← ModuleCat.comp_apply, cyclesMap_i, ModuleCat.comp_apply]
   exact (congrArg (f.f i) (K.i_cyclesMk x j hj hx)).trans (L.i_cyclesMk _ j hj _).symm
 
-/-- **A quasi-isomorphism maps cohomology representatives to cohomology representatives**: if
-`N(dⁱ) = R(dⁱ⁻¹) ⊕ H` in `K`, then `N(dⁱ) = R(dⁱ⁻¹) ⊕ f(H)` in `L`. -/
+/-- A quasi-isomorphism carries cohomology representatives to cohomology representatives
+([ArnoldHu2021], Corollary 1). -/
 theorem Represents.map (f : K ⟶ L) {i : ι} [QuasiIsoAt f i] {H : Submodule R (K.X i)}
     (h : K.Represents i H) : L.Represents i (H.map (f.f i).hom) := by
   have hb : Function.Bijective (homologyMap f i) := by

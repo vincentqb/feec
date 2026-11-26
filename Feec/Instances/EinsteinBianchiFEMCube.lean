@@ -7,36 +7,17 @@ public import Feec.Instances.EinsteinBianchi
 /-!
 # The thesis' scheme (6.5) on the cube as an approximating FEEC discretization
 
-The finite element scheme (6.5) of [QuennevilleBelair2015], §6.3, with the elements of Table 6.1
-and the thesis' boundary conditions (`Feec.Models.Cube.WeakSymmetry.cubeWave`) is an
-**approximating FEEC discretization** (`Feec.HilbertComplex.ApproxFEEC`) of the matrix model
-`Feec.EinsteinBianchi.MatrixModel.matrixComplex` (the BGG complex (5.1) on `Q` with the thesis'
-boundary conditions), with the TSD constraint
-`Feec.Instances.EinsteinBianchi.thesisTSD = {0} × L²(TSD) × ({0} × L²(TSD))`:
+The finite element scheme (6.5) of [QuennevilleBelair2015], §6.3, with the elements of Table 6.1,
+is an approximating FEEC discretization `standardCubeApprox` of the matrix model with the TSD
+constraint `thesisTSD`, through the isometric reading map `cubeEmb`.
 
-* `Xₙ` = the hidden-constraint space of (6.5) (`HiddenState (cubeWave hT hB N)`), `Lₙ` = the
-  generator of (6.5) without source (`waveGen`);
-* `ιₙ` = `cubeEmb`: the discrete forms state `(σₕ, uₕ, Mₕ, ρₕ)` read in the forms model (energy
-  vector `(−σ, u, M, ρ)` inverted, `vecInv`; `Γ̄ = L²Λ⁰` by
-  `Feec.EinsteinBianchi.MatrixModel.Γbar_eq_top`) and transported to the matrix model
-  (`totalE`); isometric, `πₙ = ιₙ*`.
+## Main results
 
-The discrete solutions are the scheme (6.5) without source (`standardCube_sol_eq_scheme`). The
-core is the elliptic core `standardCubeEllCore` (`Feec.Instances.EinsteinBianchiFEMCubeEll`). The
-constraint does not reduce `L` (`Feec.Instances.EinsteinBianchi.not_isReducing_thesisTSD`), and by
-the converse part of the approximating FEEC theorem the residuals of the discrete solutions from
-the TSD datum `(0, 0, (0, β))` tend to a positive limit (`standardCube_residual_not_mem`).
-
-**Faithfulness caveat.** The instance is faithful to `cubeWave` (the scheme (6.5) of
-`Feec.Models.Cube.WeakSymmetry`, `S₀,ₕ = π¹S⁰` for the smoothed projections), not to the variant
-with the canonical interpolant `Π`.
+* `standardCube_sol_eq_scheme`: the discrete solutions are those of (6.5) without source.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 4.17, §6.3 ((6.5), Table 6.1)
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  Thm 3.9, Thm 3.10 (elliptic analogue)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -59,7 +40,7 @@ open Feec.HilbertComplex Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM
 /-- The real forms energy space `L²Λ⁰ × (L²Λ¹)³ × L²Λ² × (L²Λ²)³` of the cube. -/
 abbrev CEnergy : Type := EState W0 (Wv W1) W2 (Wv W2)
 
-/-- Shortcut instances (synthesis is expensive). -/
+/-- The real inner product space structure of `W0`, as a shortcut instance. -/
 scoped instance instIPS_W0c : InnerProductSpace ℝ W0 := inferInstance
 scoped instance instIPS_WvW1c : InnerProductSpace ℝ (Wv W1) := inferInstance
 
@@ -69,7 +50,7 @@ scoped instance instIPS_WvW1c : InnerProductSpace ℝ (Wv W1) := inferInstance
 abbrev gammaTop : bggHilb.Γbar ≃ₗᵢ[ℝ] W0 :=
   LinearIsometryEquiv.ofTop (E := W0) bggHilb.Γbar Γbar_eq_top
 
-/-- **The inverse of the energy vector** `vecL`: `(a, u, M, ρ) ↦ (-a, u, (M, ρ))`. -/
+/-- The inverse `(a, u, M, ρ) ↦ (-a, u, (M, ρ))` of the energy vector `vecL`. -/
 def vecInv : CEnergy →L[ℝ] WS :=
   (PiLp.continuousLinearEquiv 2 ℝ
       (ShortHilbertComplex.W3 bggHilb.Γbar (Wv W1)
@@ -99,7 +80,6 @@ theorem norm_sq_WS (x : WS) :
     Fin.sum_univ_three (fun i => ‖x i‖ ^ 2)
   linarith
 
-/-- The energy vector is isometric. -/
 theorem norm_vecL (x : WS) : ‖vecL x‖ = ‖x‖ := by
   have h := EState.norm_sq (show CEnergy from vecL x)
   have q0 : ‖EState.σ (show CEnergy from vecL x)‖ ^ 2 = ‖comp0 x‖ ^ 2 :=
@@ -114,7 +94,6 @@ theorem norm_vecL (x : WS) : ‖vecL x‖ = ‖x‖ := by
 theorem norm_vecInv (z : CEnergy) : ‖vecInv z‖ = ‖z‖ :=
   (norm_vecL (vecInv z)).symm.trans (congrArg norm (vecL_vecInv z))
 
-/-- `‖y - totalE (vecInv z)‖ = ‖vecL (totalE⁻¹ y) - z‖`. -/
 theorem norm_sub_totalE_vecInv (y : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))) (z : CEnergy) :
     ‖y - totalE (vecInv z)‖ = ‖vecL (totalE.symm y) - z‖ := by
@@ -132,7 +111,7 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-/-- Shortcut instances for the finite element spaces (synthesis under binders is expensive). -/
+/-- The real inner product space structure of `U0`, as a shortcut instance. -/
 scoped instance instIPS_U0 : InnerProductSpace ℝ U0 := inferInstance
 scoped instance instIPS_U1 : InnerProductSpace ℝ U1 := inferInstance
 scoped instance instIPS_WvU0 : InnerProductSpace ℝ (Wv U0) := inferInstance
@@ -140,7 +119,7 @@ scoped instance instIPS_WvU1 : InnerProductSpace ℝ (Wv U1) := inferInstance
 scoped instance instIPS_W2' : InnerProductSpace ℝ W2 := inferInstance
 scoped instance instIPS_WvW2' : InnerProductSpace ℝ (Wv W2) := inferInstance
 
-/-- The hidden space of the thesis' scheme (6.5) at level `N`. -/
+/-- The hidden space of the scheme (6.5) on the cube at level `N`. -/
 abbrev cubeHidden (N : ℕ) := HiddenState (cubeWave hT hB N)
 
 /-- The discrete forms state as a continuous forms state (isometric). -/
@@ -166,8 +145,7 @@ theorem norm_cubeFE (N : ℕ) (v : cubeHidden hT hB N) : ‖cubeFE hT hB N v‖ 
   (EState.norm_mapL (norm_cubeFE0 hT hB N) (norm_cubeFE1 hT hB N) (norm_cubeFE2 hT hB N)
     (norm_cubeFE3 hT hB N) v.toEState).trans (HiddenState.norm_toEState v)
 
-/-- **The reading map of the thesis' scheme**: the discrete forms state read in the matrix model,
-isometric. -/
+/-- The reading map of the scheme on the cube, into the matrix model. -/
 def cubeEmb (N : ℕ) : cubeHidden hT hB N →L[ℝ] PiLp 2 (ShortHilbertComplex.W3
     (L2 ℝ (cubeDomain 3)) (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3))) :=
   totalE.toContinuousLinearEquiv.toContinuousLinearMap ∘L vecInv ∘L cubeFE hT hB N
@@ -194,7 +172,6 @@ theorem norm_cubeEmb_le (N : ℕ) : ‖cubeEmb hT hB N‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun v =>
     (norm_cubeEmb hT hB N v).trans_le (one_mul _).ge
 
-/-- The matrix-model orbit read in the forms model is the forms-model orbit. -/
 theorem totalE_symm_waveGroup (t : ℝ) (x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))) :
     totalE.symm (matrixComplex.waveGroup.S t x) = formsComplex.waveGroup.S t (totalE.symm x) := by
@@ -204,11 +181,9 @@ theorem totalE_symm_waveGroup (t : ℝ) (x : PiLp 2 (ShortHilbertComplex.W3 (L2 
     (congrArg (matrixComplex.waveGroup.S t) (totalE.apply_symm_apply x).symm).trans h.symm
   exact (congrArg totalE.symm h').trans (totalE.symm_apply_apply _)
 
-/-! ### The thesis' scheme as an approximating FEEC discretization -/
+/-! ### The scheme as an approximating FEEC discretization -/
 
-/-- **The thesis' scheme (6.5) on the cube as an approximating FEEC discretization** of the matrix
-model with the TSD constraint `thesisTSD`: `X_N` = the hidden space, `L_N` = the generator of (6.5)
-without source, `ι_N` = `cubeEmb`, `π_N = ι_N*`. -/
+/-- The scheme (6.5) on the cube as an approximating FEEC discretization of the matrix model. -/
 def standardCubeApprox : ApproxFEEC matrixComplex ℕ where
   K := thesisTSD
   isClosed_K := isClosed_thesisTSD
@@ -239,9 +214,6 @@ abbrev cState (N : ℕ) {T : ℝ} {g : ℝ → (cubeFEM hT hB N).Vt1h}
   EState.mk ((s.σ t : U0) : W0) (incl1 (s.u t : Wv U1)) (s.M t : W2) (s.ρ t : Wv W2)
 
 set_option maxHeartbeats 400000 in
-/-- **The discrete solution of `standardCubeApprox` is (6.5)**: from the initial state of a
-solution `s` of (6.5) without source, `ιₙ e^{tLₙ} v` is the energy vector of `s` read in the
-matrix model, on `[0, T]`. -/
 theorem standardCube_sol_eq (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
     (s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T 0) {t : ℝ} (ht : t ∈ Icc 0 T) :
     (standardCubeApprox hT hB).sol N (DiscreteSolution.hiddenInit hT0 s) t =
@@ -253,9 +225,7 @@ theorem standardCube_sol_eq (N : ℕ) {T : ℝ} (hT0 : 0 ≤ T)
       (cubeWave_S0_surjective hT hB N) hT0 s t ht))
 
 set_option maxHeartbeats 2000000 in
-/-- **The discrete solutions of `standardCubeApprox` are the scheme (6.5)**: every discrete
-initial value is the initial state of a solution of (6.5) without source, whose energy vector,
-read in the matrix model, is the discrete solution. -/
+/-- **The discrete solutions of `standardCubeApprox` are the solutions of (6.5) without source.** -/
 theorem standardCube_sol_eq_scheme (N : ℕ) {T : ℝ} (hT0 : 0 < T) (v : cubeHidden hT hB N) :
     ∃ s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T 0,
       DiscreteSolution.hiddenInit hT0.le s = v ∧

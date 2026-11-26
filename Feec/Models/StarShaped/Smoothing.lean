@@ -5,44 +5,19 @@ public import Feec.FiniteElement.SmoothingBasic
 /-!
 # Smoothed projections on shape-regular meshes of star-shaped domains
 
-Let `Ω ⊆ ℝⁿ` be a bounded open domain star-shaped with respect to every point of a ball
-`B(x₀, s₀)` (`StarBall`), with `cl Ω ⊆ B̄(x₀, R)`, and `M` a conforming simplicial mesh of `Ω`
-that is **shape regular** (`‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T`, `c h_Tⁿ ≤ |det B_T|`) and
-**quasi-uniform** (`q h ≤ h_T`) (`MeshData`). The smoothed interpolants `Q = Π_h R` of the
-Whitney complex of `M` satisfy the estimates of [AFW2010], §5.5 and [ChristiansenWinther2008],
-with constants depending only on `n, C, c, q` and the ratio of the bump radii to `γ h`.
+On a bounded domain star-shaped with respect to a ball (`StarBall`), the smoothed interpolants of
+the Whitney complexes of shape-regular, quasi-uniform meshes (`MeshData`) give uniformly bounded
+cochain projections onto `Vₕ ⊆ HΛ(Ω)` and `V̊ₕ ⊆ H̊Λ(Ω)`.
 
-The smoothing parameters at scale `γ h` (`IsAdm`): centre `x₀`, dilation factor `c` with
-`|c - 1| = γ h / R` (`pMax`: `1 - γ h / R`; `pMin`: `1 + γ h / R`), bump radii `γ h σ / 2 < γ h σ`,
-with `σ ≤ s₀ / (8 R)` for the minimal family (`sigmaOf`).
+## Main results
 
-* **Uniform bound** (`exists_norm_smoothedInterp_le`): the local DOF estimate on shape-regular
-  simplices (`Feec.FiniteElement.exists_dof_bound_p1MinusForms`), Jensen's inequality for the
-  mollifier (`abs_smoothForm_le`) and bounded overlap by volume (`sum_locMass_le`).
-* **Closeness on `Vₕ`** (`exists_gamma`, for every `γ ≤ γ₀` with the threshold `θ = K₀ γ`): at
-  points of a face `g` with barycentric weights `≥ θ` every simplex sampled by the smoother
-  contains `g` (`GeomOK`; `subset_vertexSet_of_isMaximal`, `subset_vertexSet_of_isMinimal`, from
-  the geometric lemma `StarGeom.subset_vertexSet_of_segments` along the paths of
-  `path_of_isMaximal`, `path_of_isMinimal`), the traces agree there, and the error
-  is the dilation defect and the displacement `O(γ h)` against the shape-regular inverse
-  estimates (`InvBoundM`, `sqrt_mul_abs_integrand_le`, `sqrt_mul_abs_dof_err_le`,
-  `norm_sq_sub_smoothedInterp_le`). Samples outside `Ω` (`SampleOK`) do not occur for the maximal
-  family (`sampleOK_of_isMaximal`); for the minimal family they force the face into a boundary
-  facet (`sampleOK_of_isMinimal`, from the pseudo-manifold property
-  `StarGeom.exists_isBoundaryFacet_of_mem_frontier`), where the DOFs of `V̊ₕ` vanish.
-* Hence **uniformly bounded cochain projections** onto `Vₕ ⊆ HΛ(Ω)` and `V̊ₕ ⊆ H̊Λ(Ω)`, in `L²`
-  and every graph norm (`exists_uniform_cochainProjection`, `exists_uniform_cochainProjectionMin`).
-
-The Freudenthal meshes of the cube are an instance (`Feec.Models.Cube.SmoothingEstimates`); the
-finite element theory on star-shaped domains is in `Feec.Models.StarShaped.FiniteElement`.
+* `exists_norm_smoothedInterp_le`: the uniform `L²` bound of the smoothed interpolants.
+* `exists_uniform_cochainProjection`: uniformly bounded smoothed cochain projections.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-  (shape-regular and quasi-uniform families)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -72,8 +47,6 @@ theorem StarBall.dil_mem (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) {x :
   closedBall_dil_subset_of_starBall hstar hc2 hc1 (r := 0) (by nlinarith) hx
     (Metric.mem_closedBall_self le_rfl)
 
-/-- Strict star-shapedness with respect to `x₀`: `x₀ + t (x - x₀) ∈ Ω` for `x ∈ cl Ω`,
-`0 ≤ t < 1`. -/
 theorem StarBall.strict (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) {x : Fin n → ℝ}
     (hx : x ∈ closure Ω) {t : ℝ} (ht0 : 0 ≤ t) (ht1 : t < 1) : x₀ + t • (x - x₀) ∈ Ω := by
   rcases le_or_gt (1 / 2) t with h | h
@@ -85,7 +58,6 @@ theorem StarBall.strict (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) {x : 
     rw [show (2 : ℝ) * t * (1 / 2) = t by ring]
     module
 
-/-- The dilation segment `[x, x₀ + c (x - x₀)]`, `½ ≤ c ≤ 1`, lies in `cl Ω`. -/
 theorem StarBall.segment_dil_subset (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀)
     {x : Fin n → ℝ} (hx : x ∈ closure Ω) {c : ℝ} (hc2 : 1 / 2 ≤ c) (hc1 : c ≤ 1) :
     segment ℝ x (x₀ + c • (x - x₀)) ⊆ closure Ω := by
@@ -98,7 +70,6 @@ theorem StarBall.segment_dil_subset (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 <
   · exact subset_closure (hstar.dil_mem hs₀ hx (by nlinarith) hlt)
   · rw [heq, one_smul, add_sub_cancel]; exact hx
 
-/-- **`Ω = int cl Ω`** for `Ω` open and star-shaped with respect to a ball. -/
 theorem StarBall.interior_closure_subset (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) :
     interior (closure Ω) ⊆ Ω := by
   intro p hp
@@ -124,15 +95,14 @@ end Geometry
 
 section Params
 
-/-- **Admissible smoothing parameters** at scale `γ h`: centre `x₀`, `|c - 1| = γ h / R`, bump
-radii `γ h σ / 2 < γ h σ`. -/
+/-- Admissible smoothing parameters at scale `γ h`: centre `x₀` and `|c - 1| = γ h / R`. -/
 structure IsAdm (x₀ : Fin n → ℝ) (R σ γ h : ℝ) (p : SmoothingParam (Fin n → ℝ)) : Prop where
   center_eq : p.center = x₀
   abs_factor_sub_one : |p.factor - 1| = γ * h / R
   rIn_eq : p.bump.rIn = γ * h * σ / 2
   rOut_eq : p.bump.rOut = γ * h * σ
 
-/-- The parameters of the **maximal family**: dilation factor `1 - γ h / R` about `x₀`. -/
+/-- The parameters of the maximal family: dilation factor `1 - γ h / R` about `x₀`. -/
 def pMax (x₀ : Fin n → ℝ) (R σ γ h : ℝ) (hpos : 0 < γ * h * σ) (hhalf : γ * h / R ≤ 1 / 2) :
     SmoothingParam (Fin n → ℝ) where
   center := x₀
@@ -140,7 +110,7 @@ def pMax (x₀ : Fin n → ℝ) (R σ γ h : ℝ) (hpos : 0 < γ * h * σ) (hhal
   half_le_factor := by linarith
   bump := ⟨γ * h * σ / 2, γ * h * σ, by positivity, by linarith⟩
 
-/-- The parameters of the **minimal family**: dilation factor `1 + γ h / R` towards `x₀`. -/
+/-- The parameters of the minimal family: dilation factor `1 + γ h / R` about `x₀`. -/
 def pMin (x₀ : Fin n → ℝ) (R σ γ h : ℝ) (hpos : 0 < γ * h * σ) (hnn : 0 ≤ γ * h / R) :
     SmoothingParam (Fin n → ℝ) where
   center := x₀
@@ -221,7 +191,6 @@ theorem pow_factor_le (hp : IsAdm x₀ R σ γ h p) (hγh : γ * h / R ≤ 1) (k
     p.factor ^ k ≤ 2 ^ k :=
   pow_le_pow_left₀ p.factor_pos.le (hp.factor_le_two hγh) k
 
-/-- `|1 - cᵏ| ≤ k 2ᵏ γ h / R`. -/
 theorem abs_one_sub_pow_le (hp : IsAdm x₀ R σ γ h p) (hR : 0 < R) (hγh : γ * h / R ≤ 1)
     (k : ℕ) : |1 - p.factor ^ k| ≤ k * 2 ^ k * (γ * h / R) := by
   have hg : p.factor ^ k - 1 = (∑ i ∈ Finset.range k, p.factor ^ i) * (p.factor - 1) :=
@@ -234,7 +203,6 @@ theorem abs_one_sub_pow_le (hp : IsAdm x₀ R σ γ h p) (hR : 0 < R) (hγh : γ
           (pow_le_pow_right₀ (by norm_num) (Finset.mem_range.1 hi).le)
     _ = k * 2 ^ k := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]
 
-/-- The dilated point is within `γ h` of `x` for `‖x - x₀‖ ≤ R`. -/
 theorem norm_dil_sub_le (hp : IsAdm x₀ R σ γ h p) (hR : 0 < R) {x : Fin n → ℝ}
     (hx : ‖x - x₀‖ ≤ R) :
     ‖(p.center + p.factor • (x - p.center)) - x‖ ≤ γ * h := by
@@ -246,7 +214,6 @@ theorem norm_dil_sub_le (hp : IsAdm x₀ R σ γ h p) (hR : 0 < R) {x : Fin n �
         mul_le_mul_of_nonneg_left hx (div_nonneg (hp.gh_nonneg hR) hR.le)
     _ = γ * h := by field_simp
 
-/-- Samples of the smoother at `x` are within `2 γ h` of `x` (for `σ ≤ 1`). -/
 theorem norm_sub_le_of_dist_le (hp : IsAdm x₀ R σ γ h p) (hR : 0 < R) (hσ1 : σ ≤ 1)
     {x : Fin n → ℝ} (hx : ‖x - x₀‖ ≤ R) {t : Fin n → ℝ}
     (ht : dist t (p.center + p.factor • (x - p.center)) ≤ p.bump.rOut) :
@@ -264,8 +231,6 @@ theorem norm_sub_le_of_dist_le (hp : IsAdm x₀ R σ γ h p) (hR : 0 < R) (hσ1 
 
 end IsAdm
 
-/-- A simplex of `M` through a point within `2 γ h ≤ h` of `x ∈ T` lies in the
-`2h`-neighbourhood of `T`. -/
 theorem closedInterior_subset_cthickening {M : SimplicialMesh n} {γ : ℝ}
     (hh : 0 < M.meshSize) (hγ2 : γ ≤ 1 / 2) {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
     {x t : Fin n → ℝ}
@@ -293,8 +258,6 @@ section Paths
 variable {Ω : Set (Fin n → ℝ)} {x₀ : Fin n → ℝ} {s₀ R σ γ h : ℝ}
   {p : SmoothingParam (Fin n → ℝ)}
 
-/-- **Maximal family**: a sample `t` of the smoother at `x ∈ cl Ω` is joined to `x` in `cl Ω` by
-the segments `[x, x̂]`, `[x̂, t]`, `x̂ = x₀ + c (x - x₀)`. -/
 theorem path_of_isMaximal (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) (hp : p.IsMaximal x₀ s₀)
     {x : Fin n → ℝ} (hx : x ∈ closure Ω) {t : Fin n → ℝ}
     (ht : dist t (p.center + p.factor • (x - p.center)) < p.bump.rOut) :
@@ -307,9 +270,6 @@ theorem path_of_isMaximal (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) (hp
   refine ((convex_closedBall _ _).segment_subset (Metric.mem_closedBall_self
     p.bump.rOut_pos.le) (Metric.mem_closedBall.2 ht.le)).trans (hball.trans subset_closure)
 
-/-- **Minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`): a sample `t ∈ Ω` of the smoother at
-`x ∈ cl Ω` is joined to `x` in `cl Ω` by the segments `[x, tt]`, `[tt, t]`,
-`tt = x₀ + c⁻¹ (t - x₀)`, with `‖tt - x‖ ≤ rOut`. -/
 theorem path_of_isMinimal (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) (hR : 0 < R)
     (hp : p.IsMinimal x₀ s₀) (hpA : IsAdm x₀ R σ γ h p) (hγh : γ * h / R < 1)
     (hσ : σ ≤ s₀ / (8 * R)) {x : Fin n → ℝ} {t : Fin n → ℝ} (htΩ : t ∈ Ω)
@@ -363,7 +323,6 @@ theorem path_of_isMinimal (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) (hR
     exact ((convex_segment x₀ t).segment_subset htt (right_mem_segment ℝ x₀ t)).trans
       (hseg.trans subset_closure)
 
-/-- Points of a segment between two points of a closed ball lie in the ball. -/
 theorem norm_sub_le_of_mem_segment {x a b q : Fin n → ℝ} {r : ℝ} (ha : ‖a - x‖ ≤ r)
     (hb : ‖b - x‖ ≤ r) (hq : q ∈ segment ℝ a b) : ‖q - x‖ ≤ r := by
   have := (convex_closedBall x r).segment_subset (by rwa [Metric.mem_closedBall, dist_eq_norm])
@@ -386,7 +345,6 @@ structure MeshData (M : SimplicialMesh n) (C c q : ℝ) : Prop where
 def covConst (n : ℕ) (c q : ℝ) : ℝ := 6 ^ n * n.factorial / (c * q ^ n)
 
 open Classical in
-/-- **Bounded overlap of the local masses**: `Σ_T m_T(x) ≤ 6ⁿ n! / (c qⁿ) ‖x‖²`. -/
 theorem sum_locMass_le {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q) (hc : 0 < c)
     (hq : 0 < q) (hΩ : MeasurableSet M.domain) {k : ℤ} (x : L2F ℝ M.domain (formIdx n k)) :
     ∑ T ∈ M.simplices, locMass (2 * M.meshSize) x T ≤ covConst n c q * ‖x‖ ^ 2 := by
@@ -416,8 +374,6 @@ theorem sum_locMass_le {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c
 
 variable {x₀ : Fin n → ℝ} {R σ γ : ℝ}
 
-/-- **The smoothed field on a simplex is bounded by the local mass**:
-`|R x (y)ₛ| ≤ 2ᵏ ((γ h σ)⁻ⁿ m_T(x))^{1/2}` on `T`. -/
 theorem IsAdm.abs_smoothForm_le_locMass {M : SimplicialMesh n} {p : SmoothingParam (Fin n → ℝ)}
     (hp : IsAdm x₀ R σ γ M.meshSize p) (hh : 0 < M.meshSize) (hR : 0 < R)
     (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hσ : 0 < σ)
@@ -444,7 +400,6 @@ theorem IsAdm.abs_smoothForm_le_locMass {M : SimplicialMesh n} {p : SmoothingPar
   rw [dist_eq_norm]
   nlinarith
 
-/-- `Σₛ ‖zₛ‖²_{L²(T)} ≤ 2ⁿ (2h)ⁿ K²` on a simplex of `M` when `|z| ≤ K` there. -/
 theorem sum_integral_sq_le_of_abs_le {M : SimplicialMesh n} {k : ℕ}
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices) {z : FormField n}
     (hzc : Continuous z) {K : ℝ} (hzb : ∀ y ∈ T.closedInterior, ∀ s, |z y s| ≤ K) :
@@ -464,8 +419,6 @@ theorem sum_integral_sq_le_of_abs_le {M : SimplicialMesh n} {k : ℕ}
         mul_le_mul_of_nonneg_right (card_formIdx_le _)
           (mul_nonneg (pow_nonneg (by linarith [diam_nonneg T]) n) (sq_nonneg _))
 
-/-- **The `L²` norm of a glued field by local masses** (any element family on a quasi-uniform
-shape-regular mesh): `‖glue u‖² ≤ K covConst ‖x‖²` when `Σₛ ‖(u_T)ₛ‖²_{L²(T)} ≤ K m_T(x)`. -/
 theorem norm_sq_glue_le_locMass (E : LocalElement n) {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hc : 0 < c) (hq : 0 < q) (hΩ : MeasurableSet M.domain) {k : ℕ}
     (x : L2F ℝ M.domain (formIdx n k)) (u : E.Piecewise M k) {K : ℝ} (hK : 0 ≤ K)
@@ -476,8 +429,6 @@ theorem norm_sq_glue_le_locMass (E : LocalElement n) {M : SimplicialMesh n} {C c
   rw [← Finset.mul_sum]
   exact mul_le_mul_of_nonneg_left (sum_locMass_le hM hc hq hΩ x) hK
 
-/-- **The local `L²` bound of `Q = Π_h R`** on a simplex of a quasi-uniform shape-regular mesh:
-`‖Q x‖²_{L²(T)} ≲ (2 / (γ σ))ⁿ m_T(x)`. -/
 theorem sum_integral_sq_interp_le {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
     [NeZero n] {k : ℕ} {B : ℝ}
     (hB : ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
@@ -526,10 +477,8 @@ theorem sum_integral_sq_interp_le {M : SimplicialMesh n} {C c q : ℝ} (hM : Mes
     _ = 2 ^ n * (B * 2 ^ n * 2 ^ k) ^ 2 * (2 / (γ * σ)) ^ n * L := by
         rw [show 2 * h * (1 / (γ * h * σ)) = 2 / (γ * σ) by field_simp]
 
-/-- **The uniform `L²` bound of the smoothed interpolants** `Q = Π_h R` on quasi-uniform
-shape-regular meshes of a domain star-shaped with respect to a ball, for every admissible
-parameter at scale `γ h` (either family): `‖Q x‖ ≤ K ‖x‖`, with `K` depending only on
-`n, C, c, q, γ, σ`. -/
+/-- The smoothed interpolants on quasi-uniform shape-regular meshes with `cl Ω ⊆ B̄(x₀, R)` are
+bounded in `L²`, uniformly in the mesh. -/
 theorem exists_norm_smoothedInterp_le [NeZero n] {C c q : ℝ} (hc : 0 < c) (hq : 0 < q)
     (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hσ : 0 < σ) (hσ1 : σ ≤ 1) :
     ∃ K, 0 ≤ K ∧ ∀ (M : SimplicialMesh n), MeshData M C c q → ∀ (hΩ : MeasurableSet M.domain),
@@ -580,8 +529,6 @@ theorem MeshData.diam_pos {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M 
     0 < diam T :=
   lt_of_lt_of_le (mul_pos hq hM.meshSize_pos) (hM.quasi T hT)
 
-/-- **Inverse estimates on the mesh in terms of the mesh size**, from the shape-regular local
-inverse estimates and quasi-uniformity: `A' = A q^{-n/2} q⁻¹`. -/
 theorem invBoundM_of {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q) (hq : 0 < q)
     {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
     (hA : ∀ {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}, IsShapeRegular S C c →
@@ -630,8 +577,7 @@ theorem invBoundM_of {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q
 
 variable {x₀ : Fin n → ℝ} {R σ γ : ℝ}
 
-/-- The geometric condition of the smoother: at points of a `k`-face `g` with barycentric
-weights `≥ θ`, every simplex whose interior contains a sample contains `g`. -/
+/-- The geometric condition: near the points of a face `g`, every sampled simplex contains `g`. -/
 def GeomOK (M : SimplicialMesh n) (p : SmoothingParam (Fin n → ℝ)) (θ : ℝ) (k : ℕ) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) → g.card = k + 1 →
@@ -641,9 +587,7 @@ def GeomOK (M : SimplicialMesh n) (p : SmoothingParam (Fin n → ℝ)) (θ : ℝ
         t ∈ interior (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior →
         g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n)
 
-/-- The sampling condition: a sample outside `Ω` at points of a `k`-face `g` with weights `≥ θ`
-forces the face integral to vanish (vacuous for the maximal family; for the minimal family it is
-the vanishing of the boundary DOFs of `V̊ₕ`). -/
+/-- The sampling condition: samples outside `Ω` near a `k`-face `g` force its integral to vanish. -/
 def SampleOK {M : SimplicialMesh n} {k : ℕ} (p : SmoothingParam (Fin n → ℝ)) (θ : ℝ)
     (u : (whitneyElement n).Piecewise M k) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
@@ -655,10 +599,6 @@ def SampleOK {M : SimplicialMesh n} {k : ℕ} (p : SmoothingParam (Fin n → ℝ
           ((u T : (whitneyElement n).space T k) : FormField n) = 0
 
 open Classical in
-/-- **The pointwise estimate of the face integrand of `v - Q v`** (`v ∈ Vₕ`) on a quasi-uniform
-shape-regular mesh: at `x = F_g(ξ)`,
-`h^{n/2} |Σₛ (v_T - R v)(x)ₛ minorₛ| ≤ (Σₛ |minorₛ|) A m_T(v)^{1/2} 2^{k+1} · (1 or 2 (k + 1) γ)`,
-with the factor `2 (k + 1) γ` when all barycentric coordinates of `ξ` are `≥ θ`. -/
 theorem sqrt_mul_abs_integrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A : ℝ}
     (hA0 : 0 ≤ A) (hA : InvBoundM M k A) {p : SmoothingParam (Fin n → ℝ)}
@@ -734,8 +674,6 @@ theorem sqrt_mul_abs_integrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.
     change ↑k.factorial * simplexIntegral q uT = 0
     rw [hs T g hgT hg ξ hξ hbad t hdist htΩ, mul_zero]
 
-/-- **The DOF error of `Q` on `Vₕ`**: for a `k`-face `g` of `T`,
-`h^{n/2} |∫_g (v_T - R v)| ≤ 2 (k + 1) 2ⁿ k! 2^{k+1} A (γ + θ) hᵏ m_T(v)^{1/2}`. -/
 theorem sqrt_mul_abs_dof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A : ℝ}
     (hA0 : 0 ≤ A) (hA : InvBoundM M k A) {p : SmoothingParam (Fin n → ℝ)}
@@ -791,7 +729,6 @@ theorem sqrt_mul_abs_dof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.do
         c * ((k + 1) * (2 * γ)) + 2 * (c * ((k + 1) * θ)) := by linarith
     _ = _ := by simp only [c]; ring
 
-/-- **The local `L²` error of `Q` on `Vₕ`**: `‖v - Q v‖²_{L²(T)} ≲ (γ + θ)² m_T(v)`. -/
 theorem sum_integral_sq_sub_interp_le {M : SimplicialMesh n} [NeZero n] {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A B : ℝ}
@@ -868,8 +805,6 @@ theorem sum_integral_sq_sub_interp_le {M : SimplicialMesh n} [NeZero n] {C c q :
         field_simp
     _ = 4 ^ n * (B * C₁ * (γ + θ) / q ^ k) ^ 2 * L := by rw [Real.sq_sqrt hL0]
 
-/-- **`Q` is close to the identity on `Vₕ`**:
-`‖v - Q v‖² ≤ 4ⁿ (B C₁ (γ + θ) / qᵏ)² 6ⁿ n! / (c qⁿ) ‖v‖²`. -/
 theorem norm_sq_sub_smoothedInterp_le {M : SimplicialMesh n} [NeZero n] {C c q : ℝ}
     (hM : MeshData M C c q) (hc : 0 < c) (hq : 0 < q) (hΩ : MeasurableSet M.domain)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {k : ℕ} {A B : ℝ}
@@ -909,8 +844,6 @@ section Families
 
 variable {x₀ : Fin n → ℝ} {s₀ R σ γ : ℝ}
 
-/-- The barycentric coordinates of a quasi-uniform shape-regular mesh are Lipschitz with constant
-`n (n + 1) C / (q h)`. -/
 theorem coordLip_of {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q) (hq : 0 < q)
     (hC : 0 ≤ C) : StarGeom.CoordLip M (n * ((n + 1) * (C / (q * M.meshSize)))) := by
   intro T hT i y y'
@@ -937,9 +870,6 @@ theorem coord_near {M : SimplicialMesh n} {C q : ℝ} (hq : 0 < q) (hC : 0 ≤ C
   refine lt_of_le_of_lt (mul_le_mul_of_nonneg_left hy (by positivity)) (lt_of_eq_of_lt ?_ hθ)
   field_simp
 
-/-- **Faces through the samples of the maximal family**: if `x ∈ T` is a point of a face `g` of
-`T` with barycentric weights `≥ θ`, every simplex whose interior contains a sample of the smoother
-at `x` contains `g`. -/
 theorem subset_vertexSet_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
     (hs₀ : 0 < s₀) {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀)
@@ -966,9 +896,6 @@ theorem subset_vertexSet_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q :
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hxx hŷ hy)) h2
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hŷ ht' hy)) T'.2 htT'
 
-/-- **Faces through the samples of the minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`): if
-`x ∈ T` is a point of a face `g` of `T` with barycentric weights `≥ θ`, every simplex whose
-interior contains a sample of the smoother at `x` contains `g`. -/
 theorem subset_vertexSet_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
     (hs₀ : 0 < s₀) (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
@@ -998,7 +925,6 @@ theorem subset_vertexSet_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q :
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hxx htt hy)) h2
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment htt ht' hy)) T'.2 htT'
 
-/-- **The geometric condition for the maximal family.** -/
 theorem geomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
     (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀) (hs₀ : 0 < s₀)
     {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀)
@@ -1009,7 +935,6 @@ theorem geomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM 
   exact subset_vertexSet_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx hσ1 hγ hθ hgT
     (isFacePoint_of_notMem_nearBdry hg hξb) (simplexMap_faceEnum_mem hgT hg hξ) ht htT'
 
-/-- **The geometric condition for the minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`). -/
 theorem geomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
     (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀) (hs₀ : 0 < s₀)
     (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
@@ -1022,8 +947,6 @@ theorem geomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM 
   exact subset_vertexSet_of_isMinimal hM hq hC hstar hs₀ hint hp hpA hR hRx hσ1 hσ hγ hγh hθ hgT
     (isFacePoint_of_notMem_nearBdry hg hξb) (simplexMap_faceEnum_mem hgT hg hξ) ht htT'
 
-/-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
-field. -/
 theorem sampleOK_of_isMaximal {M : SimplicialMesh n} (hstar : StarBall M.domain x₀ s₀)
     {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀) {θ : ℝ} {k : ℕ}
     (u : (whitneyElement n).Piecewise M k) : SampleOK p θ u := by
@@ -1035,9 +958,6 @@ theorem sampleOK_of_isMaximal {M : SimplicialMesh n} (hstar : StarBall M.domain 
   rw [← hp.center_eq] at this
   exact htΩ (this (Metric.mem_closedBall.2 ht.le))
 
-/-- **The minimal family satisfies the sampling condition on `V̊ₕ`**: a sample outside `Ω` near a
-point of a face with weights `≥ θ` forces the face into a boundary facet
-(`StarGeom.exists_isBoundaryFacet_of_near`), where the DOFs of `V̊ₕ` vanish. -/
 theorem sampleOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
     (hs₀ : 0 < s₀) {p : SmoothingParam (Fin n → ℝ)}
@@ -1074,9 +994,6 @@ section Estimates
 variable {x₀ : Fin n → ℝ}
 
 variable (n) in
-/-- **The smoothing scale** `γ₀` and the threshold factor `K₀`, depending only on `n, C, c, q`:
-for every `γ ∈ (0, γ₀]` and every admissible parameter at scale `γ h` (either family) satisfying
-the geometric and sampling conditions at threshold `θ = K₀ γ`, `‖v - Q v‖ ≤ ½ ‖v‖` on `Vₕ`. -/
 theorem exists_gamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (hq : 0 < q) :
     ∃ γ₀ K₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 4 ∧ 2 * (n * ((n + 1) * C)) / q < K₀ ∧
       ∀ γ, 0 < γ → γ ≤ γ₀ →
@@ -1174,12 +1091,8 @@ theorem sigmaOf_le (s₀ R : ℝ) : sigmaOf s₀ R ≤ s₀ / (8 * R) := min_le_
 theorem sigmaOf_lt {s₀ R : ℝ} (hs₀ : 0 < s₀) (hR : 0 < R) : sigmaOf s₀ R < s₀ / (4 * R) :=
   (sigmaOf_le s₀ R).trans_lt (div_lt_div_of_pos_left hs₀ (by positivity) (by linarith))
 
-/-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes of
-quasi-uniform shape-regular meshes of a domain star-shaped with respect to a ball**
-([AFW2010], §5.5; [ChristiansenWinther2008]): there is `K`, depending only on `n`, the
-shape-regularity and quasi-uniformity constants and the ratio `s₀ / R`, such that every such
-mesh `M` of `Ω` (star-shaped with respect to `B(x₀, s₀)`, `cl Ω ⊆ B̄(x₀, R)`) carries a cochain
-projection onto its Whitney complex `Vₕ ⊆ HΛ(Ω)` bounded by `K` in `L²` and in every graph norm. -/
+/-- Uniformly bounded smoothed cochain projections onto the Whitney complexes of quasi-uniform
+shape-regular meshes, in `L²` and every graph norm. [AFW2010], §5.5; [ChristiansenWinther2008] -/
 theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c)
     (hq : 0 < q) {s₀ R : ℝ} (hs₀ : 0 < s₀) (hR : 0 < R) :
     ∃ K : ℝ, 1 ≤ K ∧ ∀ (M : SimplicialMesh n), MeshData M C c q → ∀ (hΩo : IsOpen M.domain),
@@ -1228,11 +1141,6 @@ theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
       (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
   exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
-/-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes with vanishing
-boundary DOFs** `V̊ₕ ⊆ H̊Λ(Ω)` of quasi-uniform shape-regular meshes of a domain star-shaped
-with respect to a ball. The samples of the minimal-family smoother outside `Ω` only meet faces
-lying in boundary facets (`StarGeom.exists_isBoundaryFacet_of_near`, from the pseudo-manifold
-property `StarGeom.exists_isBoundaryFacet_of_mem_frontier`). -/
 theorem exists_uniform_cochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c)
     (hq : 0 < q) {s₀ R : ℝ} (hs₀ : 0 < s₀) (hR : 0 < R) :
     ∃ K : ℝ, 1 ≤ K ∧ ∀ (M : SimplicialMesh n), MeshData M C c q → ∀ (hΩo : IsOpen M.domain),

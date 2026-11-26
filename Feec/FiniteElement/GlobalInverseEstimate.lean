@@ -8,45 +8,18 @@ public import Feec.FiniteElement.PolyInterpolation
 /-!
 # The global inverse estimate `‖d v‖ ≤ C h⁻¹ ‖v‖` on shape-regular, quasi-uniform meshes
 
-The local inverse estimates of `Feec.FiniteElement.ShapeRegularInverse` bound the Lipschitz
-constant of a polynomial form on a shape-regular simplex `T` by its `L²(T)` norm,
-`h_T^{n/2} h_T |u(x)ₛ - u(x')ₛ| ≤ A |x - x'| ‖u‖_{L²(T)}`. A Lipschitz constant bounds the
-derivative at interior points (`norm_fderiv_le_of_lip'`), hence `|(du)ₛ| ≤ n Lip(u)` on `T`, and
-`|T| ≤ (2 h_T)ⁿ` turns this into the **local inverse estimate for `d`**
-`h_T ‖du‖_{L²(T)} ≤ 2ⁿ n A ‖u‖_{L²(T)}` (`diam_sq_mul_formL2Sq_extDeriv_le`).
-
-The `L²` norm of a glued piecewise field is the sum of the local norms when the open elements lie
-in the domain (`LocalElement.norm_sq_glue`, from `inner_pieceL2`), and the exterior derivative of
-a glued field of the global space is the glued elementwise derivative
-(`LocalElement.glue_mem_maximal`). Summing the local estimates gives the **global inverse estimate**
-`h ‖d v‖_{L²(Ω)} ≤ 2ⁿ n A ‖v‖_{L²(Ω)}` for every piecewise field on a mesh whose simplices all
-have `h ≤ h_T` (quasi-uniformity, `h = q max_T h_T`) and satisfy the local estimate with one
-constant `A` (`LocalElement.mul_norm_glue_dPiecewise_le`). With the local estimates of shape
-regularity, for the spaces of every admissible sequence (`PolySeq.exists_mul_norm_d_le`) and for
-the Whitney forms (`exists_mul_norm_glue_dPiecewise_le_whitney`) the constant depends only on
-`n`, the polynomial spaces and the shape-regularity constants ([Ciarlet2002], §3.2;
-[BrennerScott2008], §4.5).
+On shape-regular meshes with `h ≤ h_T`, `h ‖d v‖ ≤ K ‖v‖` on the glued spaces of every admissible
+sequence and of the Whitney forms ([Ciarlet2002], §3.2; [BrennerScott2008], §4.5).
 
 ## Main results
 
-* `diam_sq_mul_formL2Sq_extDeriv_le`: `h_T² ‖du‖²_{L²(T)} ≤ (2ⁿ n A)² ‖u‖²_{L²(T)}` from the
-  local Lipschitz bound with constant `A`.
-* `LocalElement.norm_sq_glue`: `‖glue u‖² = Σ_T ‖u_T‖²_{L²(T)}`.
-* `LocalElement.mul_norm_glue_dPiecewise_le`: `h ‖glue (d u)‖ ≤ 2ⁿ n A ‖glue u‖`.
-* **`PolySeq.exists_mul_norm_d_le`**: for an admissible sequence `S`, a degree `k` and
-  shape-regularity constants `C, c`, one constant `K` such that on every mesh of an open `Ω`
-  whose open simplices lie in `Ω`, shape regular with `C, c` and with `h ≤ h_T` for all `T`, every
-  `v ∈ Vₕᵏ` satisfies `h ‖d_max v‖ ≤ K ‖v‖`.
-* `exists_mul_norm_glue_dPiecewise_le_whitney`: the same for the Whitney forms `P₁⁻Λᵏ`.
+* `PolySeq.exists_mul_norm_d_le`: the global inverse estimate on the finite element subcomplex.
+* `exists_mul_norm_glue_dPiecewise_le_whitney`: the global inverse estimate for the Whitney forms.
 
 ## References
 
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.2 (inverse
-  inequalities)
-* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
-  §4.5 (inverse estimates)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.2
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008], §4.5
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -64,8 +37,6 @@ variable {n : ℕ}
 
 /-! ### The local inverse estimate for `d` -/
 
-/-- A Lipschitz bound `|u(x)ₛ - u(x')ₛ| ≤ K |x - x'|` on `T` bounds `|(du)(x)ₛ| ≤ n K` at the
-interior points of `T`. -/
 theorem abs_extDeriv_le_of_lipschitz {T : Affine.Simplex ℝ (Fin n → ℝ) n} {u : FormField n}
     {K : ℝ} (hK : 0 ≤ K)
     (hlip : ∀ x ∈ T.closedInterior, ∀ x' ∈ T.closedInterior, ∀ s, |u x s - u x' s| ≤ K * ‖x - x'‖)
@@ -95,10 +66,6 @@ theorem abs_extDeriv_le_of_lipschitz {T : Affine.Simplex ℝ (Fin n → ℝ) n} 
         gcongr
         exact_mod_cast (card_le_univ s).trans (by simp)
 
-/-- **The local inverse estimate for `d`**: if a form field `u` (with continuous `du`) satisfies
-the local Lipschitz bound `h_T^{n/2} h_T |u(x)ₛ - u(x')ₛ| ≤ A |x - x'| ‖u‖_{L²(T)}` on `T`
-(`exists_inverse_bound_of_le_polySpace`, `exists_inverse_bound_p1MinusForms`), then
-`h_T² ‖du‖²_{L²(T)} ≤ (2ⁿ n A)² ‖u‖²_{L²(T)}`. -/
 theorem diam_sq_mul_formL2Sq_extDeriv_le {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hh : 0 < diam T) {u : FormField n} (hdu : Continuous (extDeriv u)) {A : ℝ} (hA : 0 ≤ A)
     (hlip : ∀ x ∈ T.closedInterior, ∀ x' ∈ T.closedInterior, ∀ s,
@@ -155,8 +122,6 @@ namespace LocalElement
 
 variable (E : LocalElement n) (M : SimplicialMesh n)
 
-/-- **The `L²` norm of a glued field** is the sum of the local norms, when the open simplices
-lie in the domain: `‖glue u‖² = Σ_T ‖u_T‖²_{L²(T)}`. -/
 theorem norm_sq_glue (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) {j : ℤ}
     (hj : 0 ≤ j) (u : E.Piecewise M j.toNat) :
     ‖E.glue M j u‖ ^ 2 = ∑ T ∈ M.simplices, formL2Sq T.closedInterior (E.extendPW M u T) := by
@@ -171,9 +136,6 @@ theorem norm_sq_glue (hint : ∀ T ∈ M.simplices, interior T.closedInterior �
     fun x => ?_)
   simp [formComp, sq]
 
-/-- **The global inverse estimate for `d`, abstractly**: on a mesh whose open simplices lie in the
-domain and have `h ≤ h_T`, if every local space `P(T)ᵏ` satisfies the local Lipschitz bound with
-constant `A`, then `h ‖glue (d u)‖ ≤ 2ⁿ n A ‖glue u‖` for every piecewise field `u`. -/
 theorem mul_norm_glue_dPiecewise_le (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
     {k : ℕ} {A h : ℝ} (hA : 0 ≤ A) (hh : 0 < h) (hdiam : ∀ T ∈ M.simplices, h ≤ diam T)
     (hloc : ∀ T ∈ M.simplices, ∀ u ∈ E.space T k, ∀ x ∈ T.closedInterior,
@@ -205,11 +167,6 @@ end LocalElement
 
 /-! ### Instances: admissible sequences and Whitney forms -/
 
-/-- **The global inverse estimate for an admissible sequence** ([Ciarlet2002], §3.2;
-[BrennerScott2008], §4.5): for every degree `k` and shape-regularity constants `C, c` there is
-`K` such that on every mesh of an open `Ω` whose open simplices lie in `Ω`, shape regular with
-constants `C, c`, and with `h ≤ h_T` for every simplex `T` (quasi-uniformity), every piecewise
-field `u` of the spaces of `S` satisfies `h ‖glue (d u)‖ ≤ K ‖glue u‖`. -/
 theorem PolySeq.exists_mul_norm_glue_dPiecewise_le (S : PolySeq) (k : ℕ) {C c : ℝ}
     (hC : 0 ≤ C) (hc : 0 < c) :
     ∃ K, 0 ≤ K ∧ ∀ (M : SimplicialMesh n),
@@ -229,8 +186,8 @@ theorem PolySeq.exists_mul_norm_glue_dPiecewise_le (S : PolySeq) (k : ℕ) {C c 
   rw [← Real.norm_eq_abs, ← Pi.sub_apply]
   exact norm_le_pi_norm (w x - w x') s
 
-/-- **The global inverse estimate for the Whitney forms `P₁⁻Λᵏ`**: as
-`PolySeq.exists_mul_norm_glue_dPiecewise_le`, for the Whitney element. -/
+/-- The global inverse estimate for the Whitney forms: `h ‖glue (d u)‖ ≤ K ‖glue u‖` on every mesh,
+shape regular with constants `C, c`, whose open simplices lie in its domain and have `h ≤ h_T`. -/
 theorem exists_mul_norm_glue_dPiecewise_le_whitney (k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (hc : 0 < c) :
     ∃ K, 0 ≤ K ∧ ∀ (M : SimplicialMesh n),
       (∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) →
@@ -245,9 +202,8 @@ theorem exists_mul_norm_glue_dPiecewise_le_whitney (k : ℕ) {C c : ℝ} (hC : 0
   exact (hloc hS T hT (hh.trans_le (hdiam T hT)) w (whitneySpace_le_p1MinusForms _ k hw)).2 x hx
     x' hx' s
 
-/-- **The global inverse estimate on the finite element subcomplex** of an admissible sequence:
-`h ‖d_max v‖ ≤ K ‖v‖` for every `v ∈ Vₕᵏ`, under the hypotheses of
-`PolySeq.exists_mul_norm_glue_dPiecewise_le`. -/
+/-- The global inverse estimate on the subcomplex of an admissible sequence: `h ‖d_max v‖ ≤ K ‖v‖`
+on every shape-regular mesh of an open domain whose open simplices lie in it and have `h ≤ h_T`. -/
 theorem PolySeq.exists_mul_norm_d_le [NeZero n] (S : PolySeq) (k : ℕ) {C c : ℝ} (hC : 0 ≤ C)
     (hc : 0 < c) :
     ∃ K, 0 ≤ K ∧ ∀ (M : SimplicialMesh n) (hΩ : IsOpen M.domain),

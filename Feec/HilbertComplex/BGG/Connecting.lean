@@ -5,29 +5,13 @@ public import Feec.HilbertComplex.BGG.Derived
 /-!
 # The connecting map of the twisted complex is induced by `S`
 
-The twisted complex `T` of BGG data is an extension `0 → V → T → Ṽ → 0` of the bottom row by the
-top row (`Feec.BGG.Data.twistShortComplex_shortExact`). Its connecting map in cohomology
-`Hⁱ(Ṽ) → Hʲ(V)` is induced by `-S`: `δ[φ] = [-Sφ]` (`Data.δ_twistShortComplex`). It vanishes
-iff `S` maps the cycles of `Ṽⁱ` into the boundaries of `Vʲ`, `Sⁱ N(d̃ⁱ) ⊆ R(dⁱ)`
-(`Data.InducesZero`, `Data.δ_eq_zero_iff`), so by the long exact sequence, over a field,
-**`dim Hⁱ(T) = dim Hⁱ(V) + dim Hⁱ(Ṽ)` iff `Sⁱ⁻¹` and `Sⁱ` induce the zero maps on cohomology**
-(`Data.finrank_twistComplex_homology_eq_iff`), and the same for the derived complexes
-(`Data.finrank_derived_homology_eq_iff`): the equality criterion (27) of [ArnoldHu2021],
-Theorem 6.
-
-## Main results
-
-* `Data.δ_twistShortComplex`: `δ[φ] = [-Sφ]`.
-* `Data.δ_eq_zero_iff`, `Data.injective_homologyMap_rowTopι_iff`,
-  `Data.surjective_homologyMap_rowBotπ_iff`; `Data.inducesZero_of_isZero_rowBot`,
-  `Data.inducesZero_of_isZero_rowTop`.
-* `Data.finrank_twistComplex_homology_eq_iff`, `Data.finrank_derived_homology_eq_iff`,
-  `Data.finrank_derived_homology_eq_add` (where a row has no cohomology at each connecting map).
+The connecting map of `0 → V → T → Ṽ → 0` is induced by `-S`, so over a field, for
+finite-dimensional `Hⁱ(V)` and `Hⁱ(Ṽ)`, `dim Hⁱ(T) = dim Hⁱ(V) + dim Hⁱ(Ṽ)` iff `S` induces zero
+on cohomology, and likewise for the derived complexes ([ArnoldHu2021], Theorem 6, (27)).
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], Theorem 6 ((27): equality
-  in the dimension bound) and §5.1 (the twisted complex and the sum complex)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], Theorem 6, §5.1
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -44,7 +28,7 @@ variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι} {V Vt : ι →
   [∀ i, AddCommGroup (V i)] [∀ i, Module R (V i)] [∀ i, AddCommGroup (Vt i)]
   [∀ i, Module R (Vt i)] (D : Data R c V Vt)
 
-/-- **`S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)`**: `S N(d̃) ⊆ R(d)`. [ArnoldHu2021], (27) -/
+/-- `S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)`: `S N(d̃) ⊆ R(d)`. [ArnoldHu2021], (27) -/
 def InducesZero (i j : ι) : Prop :=
   ∀ φ : Vt i, D.dt i j φ = 0 → D.S i j φ ∈ LinearMap.range (D.d i j)
 
@@ -52,7 +36,7 @@ theorem d_neg_S_eq_zero {i j : ι} (k : ι) {φ : Vt i} (hφ : D.dt i j φ = 0) 
     D.d j k (-D.S i j φ) = 0 := by
   rw [map_neg, D.anticomm, hφ, map_zero, neg_neg]
 
-/-- **The connecting map of `0 → V → T → Ṽ → 0` is induced by `-S`**: `δ[φ] = [-Sφ]`.
+/-- The connecting map of `0 → V → T → Ṽ → 0` is induced by `-S`: `δ[φ] = [-Sφ]`.
 [ArnoldHu2021], §5.1 -/
 theorem δ_twistShortComplex {i j : ι} (hij : c.Rel i j) (φ : Vt i) (hφ : D.dt i j φ = 0)
     (k : ι) (hk : c.next j = k) :
@@ -63,7 +47,6 @@ theorem δ_twistShortComplex {i j : ι} (hij : c.Rel i j) (φ : Vt i) (hφ : D.d
     (by change ((-D.S i j φ, (0 : Vt j)) : V j × Vt j) = (D.d i j 0 - D.S i j φ, D.dt i j φ)
         rw [hφ]; simp) k hk
 
-/-- **The connecting map vanishes iff `S` induces the zero map on cohomology.** -/
 theorem δ_eq_zero_iff {i j : ι} (hij : c.Rel i j) :
     D.twistShortComplex_shortExact.δ i j hij = 0 ↔ D.InducesZero i j := by
   have hp : c.prev j = i := c.prev_eq' hij
@@ -84,7 +67,6 @@ theorem δ_eq_zero_iff {i j : ι} (hij : c.Rel i j) :
     exact ⟨(-y : V i), (map_neg _ _).trans ((congrArg Neg.neg hy).trans
       (D.rowTop.i_cyclesMk _ _ rfl _).symm)⟩
 
-/-- `Hʲ(V) → Hʲ(T)` is injective iff `S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)`. -/
 theorem injective_homologyMap_rowTopι_iff {i j : ι} (hij : c.Rel i j) :
     Function.Injective (HomologicalComplex.homologyMap D.rowTopι j) ↔ D.InducesZero i j := by
   have he : LinearMap.range (D.twistShortComplex_shortExact.δ i j hij).hom =
@@ -94,7 +76,6 @@ theorem injective_homologyMap_rowTopι_iff {i j : ι} (hij : c.Rel i j) :
     ← LinearMap.range_eq_bot, he]
   exact LinearMap.ker_eq_bot.symm
 
-/-- `Hⁱ(T) → Hⁱ(Ṽ)` is surjective iff `S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)`. -/
 theorem surjective_homologyMap_rowBotπ_iff {i j : ι} (hij : c.Rel i j) :
     Function.Surjective (HomologicalComplex.homologyMap D.rowBotπ i) ↔ D.InducesZero i j := by
   have he : LinearMap.range (HomologicalComplex.homologyMap D.rowBotπ i).hom =
@@ -104,12 +85,10 @@ theorem surjective_homologyMap_rowBotπ_iff {i j : ι} (hij : c.Rel i j) :
     ← LinearMap.ker_eq_top, ← he]
   exact LinearMap.range_eq_top.symm
 
-/-- `S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)` when `Hⁱ(Ṽ) = 0`. -/
 theorem inducesZero_of_isZero_rowBot {i j : ι} (hij : c.Rel i j)
     (h : IsZero (D.rowBot.homology i)) : D.InducesZero i j :=
   (D.δ_eq_zero_iff hij).1 (h.eq_of_src _ _)
 
-/-- `S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)` when `Hʲ(V) = 0`. -/
 theorem inducesZero_of_isZero_rowTop {i j : ι} (hij : c.Rel i j)
     (h : IsZero (D.rowTop.homology j)) : D.InducesZero i j :=
   (D.δ_eq_zero_iff hij).1 (h.eq_of_tgt _ _)
@@ -124,8 +103,8 @@ include hhi hij
 
 open Module
 
-/-- **`dim Hⁱ(T) = dim Hⁱ(V) + dim Hⁱ(Ṽ)` iff `S` induces the zero maps `Hʰ(Ṽ) → Hⁱ(V)` and
-`Hⁱ(Ṽ) → Hʲ(V)`.** [ArnoldHu2021], §5.1 -/
+/-- `dim Hⁱ(T) = dim Hⁱ(V) + dim Hⁱ(Ṽ)` iff `S` induces the zero maps `Hʰ(Ṽ) → Hⁱ(V)` and
+`Hⁱ(Ṽ) → Hʲ(V)`. -/
 theorem finrank_twistComplex_homology_eq_iff :
     finrank K (D.twistComplex.homology i) =
         finrank K (D.rowTop.homology i) + finrank K (D.rowBot.homology i) ↔
@@ -140,7 +119,7 @@ theorem finrank_twistComplex_homology_eq_iff :
 variable {D} {E F : ι → Prop} (hEF : D.Eliminates E F)
 include hEF
 
-/-- **Equality in the dimension bound of the derived complex** iff `S` induces the zero maps on
+/-- Equality holds in the dimension bound of the derived complex iff `S` induces the zero maps on
 cohomology at `h → i` and `i → j`. [ArnoldHu2021], Theorem 6, (27) -/
 theorem finrank_derived_homology_eq_iff :
     finrank K ((D.derived E F).homology i) =
@@ -149,10 +128,8 @@ theorem finrank_derived_homology_eq_iff :
   rw [(D.derivedHomologyIso hEF i).toLinearEquiv.finrank_eq]
   exact D.finrank_twistComplex_homology_eq_iff hhi hij
 
-/-- **Equality in the dimension bound where a row has no cohomology at each connecting map**: if
-`Hʰ(Ṽ) = 0` or `Hⁱ(V) = 0`, and `Hⁱ(Ṽ) = 0` or `Hʲ(V) = 0`, then `S` induces the zero maps on
-cohomology at `h → i` and `i → j`, and `dim Hⁱ = dim Hⁱ(V) + dim Hⁱ(Ṽ)`.
-[ArnoldHu2021], Theorem 6, (27) -/
+/-- If `Hʰ(Ṽ) = 0` or `Hⁱ(V) = 0`, and `Hⁱ(Ṽ) = 0` or `Hʲ(V) = 0`, then the derived complex has
+`dim Hⁱ = dim Hⁱ(V) + dim Hⁱ(Ṽ)`. -/
 theorem finrank_derived_homology_eq_add
     (h₁ : IsZero (D.rowBot.homology h) ∨ IsZero (D.rowTop.homology i))
     (h₂ : IsZero (D.rowBot.homology i) ∨ IsZero (D.rowTop.homology j)) :

@@ -7,51 +7,14 @@ public import Feec.ForMathlib.Algebra.GeomSum
 /-!
 # Brenner–Thomée's smooth-data error estimate on Banach spaces
 
-Let `r` be an A-stable rational scheme (`|r(iy)| ≤ 1`, no poles in `re z ≤ 0`) of order `p`, and
-`S` a bounded strongly continuous semigroup, `‖S(t)‖ ≤ M`, on a complex Banach space, with
-generator `A`. **Brenner–Thomée's smooth-data estimate**
-(`RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`):
-
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M nτ τᵖ ‖A^{p+1} x‖`  for `x ∈ D(A^{p+1})`, `τ > 0`, every `n`,
-
-with `C = RationalScheme.sharpConst r p` depending only on `r` and `p`; at fixed `T = nτ`, order
-`p`. This is the smooth-data case `s = p + 1` of Brenner and Thomée's estimate
-`‖e^{-tA} x - rⁿ(tA/n) x‖ ≤ C M t^s/n^{sp/(p+1)} ‖Aˢ x‖` for `s ∈ ((p+1)/2, p+1]` (`-A` the
-generator, `t = nτ`; at `s = p + 1`, `t^{p+1}/nᵖ = nτ τᵖ`), as stated
-in [GomilkoTomilov2024], Thm 1.1(ii), after [BrennerThomee1979] (Thms 1 and 4 there, per
-[GomilkoTomilov2024]; the paper itself was not consulted), for every A-stable `r`, `|r(∞)| = 1`
-included (Crank–Nicolson, the Gauss methods), and without the `√n` loss of the stability bound
-`‖r(τA)ⁿ‖ ≤ M (1 + C √n)` (`RationalScheme.norm_resolventStep_pow_le_of_isAStable`), which the
-proof does not use. On real or complex Banach spaces, by complexification:
-`RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`
-(`Feec.TimeStepping.RationalHillePhillipsReal`). Less smooth data (`s < p + 1`; below
-`s = (p+1)/2` the rate of [GomilkoTomilov2024], Thm 1.1(ii), is `n^{1/2-s}`, with a factor
-`log (n+1)` at `s = (p+1)/2`) are not formalized. [HershKato1979] obtain `O(τᵖ)` for
-`x ∈ D(A^{p+2})`, one power of `A` more (per its abstract).
-
-The proof is the Hille–Phillips calculus extended by translations: with `μ = μ_r` the measure of
-`r` (`RationalScheme.hpMeasure`) and the **consistency kernel** `h = μ_ρ - eₚ`
-(`RationalScheme.consistencyKernel`; `ρ` the remainder, `eₚ` the Taylor kernel), which has no atom
-(`fst_hpMeasure_remainder`),
-
-* `r(τA) x - S(τ) x = τ^{p+1} Φ(h) A^{p+1} x` (`resolventStep_sub_S_apply`), from the expansion
-  `r = Tₚ + z^{p+1} ρ` and Taylor's formula for the semigroup with integral remainder;
-* `r(τA)ⁿ - S(τ)ⁿ = Σ_{j<n} r(τA)ʲ (r(τA) - S(τ)) S(τ)^{n-1-j}`, and point masses act as the
-  semigroup, so `r(τA)ⁿ x - S(nτ) x = τ^{p+1} Φ(kₙ) A^{p+1} x` with Brenner–Thomée's error kernel
-  `kₙ = Σ_{j<n} δ_{n-1-j} ⋆ μʲ ⋆ h` (`resolventStep_pow_sub_S_apply`);
-* `‖kₙ‖₁ ≤ C n` (`Feec.HalfLineAlgebra.integral_norm_errorKernel_le`): `z^{p+1} ĥ = r(z) - e^z`
-  and `|r(z)| ≤ 1` on the imaginary axis, by Carlson's inequality and Plancherel's theorem on the
-  geometric sum `kₙ(· + n)̂ = e^{-z} ĥ Σ_{j<n} (e^{-z} r(z))ʲ`. Brenner and Thomée apply Carlson's
-  inequality locally on a partition of unity ([GomilkoTomilov2024], §1.1); here one global Carlson
-  estimate around `t = n` suffices.
+For A-stable `r` of order `p` and a bounded semigroup on a complex Banach space,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M nτ τᵖ ‖A^{p+1} x‖`, with `C` depending only on `r` and `p`.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [A. Gomilko, Y. Tomilov, *Rational Approximation of Operator Semigroups via the B-Calculus*][GomilkoTomilov2024],
   Thm 1.1
-* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
-* [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -68,7 +31,6 @@ namespace RationalScheme
 
 variable (r : RationalScheme)
 
-/-- **The expansion `r(z) = Tₚ(z) + z^{p+1} ρ(z)`** off the poles, for `r` of order `p`. -/
 theorem eval_eq_add {p : ℕ} (hp : r.HasOrder p) {z : ℂ} (hz : z.re ≤ 0) :
     r.eval z = ∑ j ∈ range (p + 1), z ^ j / j.factorial + z ^ (p + 1) * (r.remainder p).eval z := by
   have hd := r.aeval_den_ne_zero z hz
@@ -79,7 +41,6 @@ theorem eval_eq_add {p : ℕ} (hp : r.HasOrder p) {z : ℂ} (hz : z.re ≤ 0) :
   rw [eval, eval, h, hT, show (r.remainder p).den = r.den from rfl]
   field_simp
 
-/-- **The remainder has no atom**: `ρ(∞) = 0`, since `deg (n - d Tₚ) ≤ N + p`. -/
 theorem fst_hpMeasure_remainder {p : ℕ} (hp : r.HasOrder p) :
     (r.remainder p).hpMeasure.fst = 0 := by
   rw [fst_hpMeasure]
@@ -91,8 +52,7 @@ theorem fst_hpMeasure_remainder {p : ℕ} (hp : r.HasOrder p) :
   rw [show (r.remainder p).den = r.den from rfl, ← hc]
   simp
 
-/-- **The consistency kernel** `h = μ_ρ - eₚ`: `r(τA) - S(τ) = τ^{p+1} Φ(h) A^{p+1}` on
-`D(A^{p+1})` and `z^{p+1} ĥ = r(z) - e^z`. -/
+/-- The consistency kernel `h = μ_ρ - eₚ`: the measure of the remainder minus the Taylor kernel. -/
 def consistencyKernel (p : ℕ) : HalfLineKernel :=
   (r.remainder p).hpMeasure.snd - HalfLineKernel.taylor p
 
@@ -112,8 +72,7 @@ theorem symb_pow_mul_fourier_consistencyKernel {p : ℕ} (hp : r.HasOrder p) (ξ
     show -(2 * Real.pi * ξ * Complex.I) = GeomSum.symb ξ from rfl, r.eval_eq_add hp hz]
   ring
 
-/-- **Brenner–Thomée's constant of the smooth-data estimate**: the constant of
-`Feec.HalfLineAlgebra.integral_norm_errorKernel_le` for `μ_r` and the consistency kernel. -/
+/-- The constant `C` of the smooth-data estimate. -/
 def sharpConst (p : ℕ) : ℝ :=
   HalfLineAlgebra.errorConst r.hpMeasure (r.consistencyKernel p) p
 
@@ -125,7 +84,6 @@ theorem integral_norm_errorKernel_le {r : RationalScheme} (hr : r.IsAStable) {p 
   HalfLineAlgebra.integral_norm_errorKernel_le _ (norm_fourier_hpMeasure_le hr) _
     (r.symb_pow_mul_fourier_consistencyKernel hp) n
 
-/-- The constant of the smooth-data estimate is nonnegative (`‖k₁‖₁ ≤ C`). -/
 theorem sharpConst_nonneg {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
     0 ≤ r.sharpConst p := by
   have h := integral_norm_errorKernel_le hr hp 1
@@ -139,8 +97,6 @@ section Semigroup
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
   (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
 
-/-- **The consistency identity** `r(τA) x - S(τ) x = τ^{p+1} Φ_τ(h) A^{p+1} x` on `D(A^{p+1})`
-(a chain `u`), `Φ_τ` the calculus of `S(τ ·)` and `h` the consistency kernel. -/
 theorem resolventStep_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {u : ℕ → E}
     (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
     r.resolventStep (G.laplaceResolvent hM τ hτ.le) (u 0) - G.S τ (u 0) =
@@ -164,9 +120,6 @@ theorem resolventStep_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ 
   rw [add_sub_add_left_eq_sub]
   rfl
 
-/-- **The error as the calculus of Brenner–Thomée's error kernel**:
-`r(τA)ⁿ x - S(nτ) x = τ^{p+1} Φ_τ(kₙ) A^{p+1} x` on `D(A^{p+1})`, with
-`kₙ = Σ_{j<n} δ_{n-1-j} ⋆ μ_rʲ ⋆ h` (`Feec.HalfLineAlgebra.errorKernel`). -/
 theorem resolventStep_pow_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ)
     {u : ℕ → E} (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
     (r.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) - G.S (n * τ) (u 0) =
@@ -213,16 +166,8 @@ theorem resolventStep_pow_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (
   rw [map_sum, _root_.sum_apply]
   rfl
 
-/-- **Brenner–Thomée's smooth-data error estimate on Banach spaces**: for an A-stable rational
-scheme `r` of order `p`, a bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space with
-generator `A`, `τ > 0`, every `n` and `x ∈ D(A^{p+1})` (a chain `u` in the graph of `A`),
-
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M nτ τᵖ ‖A^{p+1} x‖`,
-
-`C = sharpConst r p` depending only on `r` and `p`; `r(τA) = P(R) Q(R)⁻¹` through the resolvent
-`R = (1 - τA)⁻¹` (`C0Semigroup.laplaceResolvent`); over `ℝ` or `ℂ` and for every such `R`,
-`norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`. [BrennerThomee1979];
-[GomilkoTomilov2024], Thm 1.1(ii) -/
+/-- **Brenner–Thomée's smooth-data estimate** ([GomilkoTomilov2024], Thm 1.1(ii)): for A-stable
+`r` of order `p`, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M nτ τᵖ ‖A^{p+1} x‖` with `C = sharpConst r p`. -/
 theorem norm_resolventStep_pow_sub_S_le_sharp {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E}
     (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :

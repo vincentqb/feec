@@ -15,60 +15,20 @@ public import Mathlib.MeasureTheory.Function.LocallyIntegrable
 /-!
 # Degrees of freedom of `Q_r⁻Λᵏ`: unisolvence, traces and the commuting interpolant
 
-The degrees of freedom of the tensor-product family `Q_r⁻Λᵏ` on the cube `[0, 1]ⁿ`
-([ArnoldBoffiBonizzoni2015], §5; [ArnoldAwanou2014], §2) are the moments
-
-  `ω ↦ ∫_g tr_g ω ∧ η`, `η ∈ Q_{r-1}⁻Λ^{m-k}(g)`,
-
-over the faces `g` of dimension `m ≥ k`. We index them like the monomial basis `x^α dx_s` of
-`Q_b⁻Λᵏ` (`Feec.Koszul.cubeFormMinus`, degrees `b_j` in each direction): the degree of freedom
-`(s, α)` lives on the face `dofFace f s α`, where a direction `j ∉ s` with `α_j ∈ {0, 1}` is
-fixed at the endpoint `x_j = α_j`, against the test monomial `x^β dx_{G ∖ s}` (`dofTest`). On
-monomials it is a tensor product of one-dimensional degrees of freedom (`cubeDof_apply`): in each
-direction, the endpoint values and the moments against `P_{r-2}` on `P_rΛ⁰(I)`, the moments
-against `P_{r-1}` on `P_{r-1}Λ¹(I)`. Unisolvence thus reduces to the one-dimensional case and the
-invertibility of Kronecker products.
-
-Everything is stated on a face `f : d → Option ℝ` of the cube (`f j = some c`: the direction `j`
-is fixed at `x_j = c`; `f = fun _ => none`: the cube itself) and a degree `b` on it
-(`IsFaceDeg f b`: `b_j ≥ 1` free, `b_j = 0` fixed), the space being `cubeFormMinus ℝ b k`; for
-`b ≥ 1` the face space is `faceDeg b f` (`isFaceDeg_faceDeg`). This gives the trace
-determination for free.
-
-## Main definitions
-
-* `Feec.FiniteElement.Cube.unitIntegral`: `∫_{[0,1]^d}` on polynomials (`unitIntegral_eq_integral`);
-* `Feec.FiniteElement.Cube.cubeMoment g η ω = ∫_g tr_g ω ∧ η`;
-* `Feec.FiniteElement.Cube.edgeDof`, `tensorDof`: the one-dimensional degrees of
-  freedom and their tensor products;
-* `Feec.FiniteElement.Cube.momentDof f s α`, `Feec.FiniteElement.Cube.CubeDofIdx b k`,
-  `Feec.FiniteElement.Cube.cubeDof f i`: the degrees of freedom of `Q_b⁻Λᵏ(f)`, indexed like the
-  monomial basis;
-* `Feec.FiniteElement.Cube.IsFaceDeg f b`: `b` is a degree on the face `f`;
-* `Feec.FiniteElement.Cube.cubeInterp f b k hfb`: the canonical interpolant onto `Q_b⁻Λᵏ(f)`.
+The moment degrees of freedom of `Q_r⁻Λᵏ` on the cube and its faces are unisolvent and determine
+the traces, and the canonical interpolant commutes with `d` ([ArnoldBoffiBonizzoni2015], §5;
+[ArnoldAwanou2014], §2).
 
 ## Main results
 
-* `eq_zero_of_moments_eq_zero`, `eq_zero_of_endpoints_moments_eq_zero`, `edgeDof_injective`:
-  one-dimensional unisolvence; `eq_zero_of_kronecker`: Kronecker products of invertible matrices
-  are invertible;
-* `momentDof_apply`: the degrees of freedom are tensor products of one-dimensional ones;
-  `dofTest_mem_cubeFormMinus`: the test forms lie in `Q_{b-1}⁻Λ^{m-k}` of their face;
-* `card_cubeDofIdx`, `isUnisolvent_cubeDof`: **unisolvence of the degrees of freedom of
-  `Q_b⁻Λᵏ(f)`**, for all `n`, `k` and degrees `b`, on the cube and on each of its faces
-  ([ArnoldBoffiBonizzoni2015], §5);
-* `cubeTrace_eq_zero_of_cubeDof_eq_zero`: **the degrees of freedom of the faces of `f` determine
-  the trace on `f`**;
-* `cubeDof_extDeriv_mem_span`: **Stokes compatibility**, `ℓ ∘ d` is a combination of
-  degrees of freedom (one-dimensional integration by parts, `edgeDof_pderiv`), hence
-  `cubeInterp_extDeriv`: **the canonical interpolant commutes with `d`**.
+* `Cube.isUnisolvent_cubeDof`: unisolvence on every face.
+* `Cube.cubeTrace_eq_zero_of_cubeDof_eq_zero`: the degrees of freedom determine the traces.
+* `Cube.cubeInterp_extDeriv`: the canonical interpolant commutes with `d`.
 
 ## References
 
-* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
-  §5 (degrees of freedom, unisolvence and the commuting projection of `Q_r⁻Λᵏ`)
-* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014],
-  §2 (the tensor-product construction)
+* [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015]
+* [D. N. Arnold, G. Awanou, *Finite element differential forms on cubical meshes*][ArnoldAwanou2014]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -85,7 +45,6 @@ section OneDim
 
 open Polynomial
 
-/-- The moments of `P = Σ_γ v_γ x^γ`: `∫₀¹ xⁱ P = Σ_γ v_γ / (γ + i + 1)`. -/
 theorem integral_pow_mul_sum {n : ℕ} (v : Fin n → ℝ) (i : ℕ) :
     ∫ x in (0 : ℝ)..1, x ^ i * (∑ γ : Fin n, C (v γ) * X ^ (γ : ℕ)).eval x =
       ∑ γ : Fin n, v γ * ((γ + i + 1 : ℕ) : ℝ)⁻¹ := by
@@ -98,7 +57,6 @@ theorem integral_pow_mul_sum {n : ℕ} (v : Fin n → ℝ) (i : ℕ) :
   push_cast
   ring
 
-/-- `∫₀¹ w p² = 0` with `w > 0` on `(0, 1)`, `w ≥ 0` on `[0, 1]`, forces `p = 0`. -/
 theorem eq_zero_of_integral_mul_sq_eq_zero {w p : ℝ[X]}
     (hw0 : ∀ x ∈ Set.Icc (0 : ℝ) 1, 0 ≤ w.eval x) (hw : ∀ x ∈ Set.Ioo (0 : ℝ) 1, 0 < w.eval x)
     (h : ∫ x in (0 : ℝ)..1, w.eval x * p.eval x ^ 2 = 0) : p = 0 := by
@@ -127,8 +85,6 @@ theorem coeff_sum_C_mul_X_pow {n : ℕ} (v : Fin n → ℝ) (γ : Fin n) :
     rw [coeff_C_mul_X_pow, ite_eq_right (fun h' => h (Fin.ext h'.symm))]) (by simp)]
   simp
 
-/-- **Unisolvence of the moments on `P_{n-1}(I)`**: `∫₀¹ xⁱ P = 0` for `i < n` forces `P = 0`
-(the Hilbert matrix `1/(γ + i + 1)` is invertible). -/
 theorem eq_zero_of_moments_eq_zero {n : ℕ} {v : Fin n → ℝ}
     (h : ∀ i : Fin n, ∑ γ : Fin n, v γ * ((γ + i + 1 : ℕ) : ℝ)⁻¹ = 0) : v = 0 := by
   set P := ∑ γ : Fin n, C (v γ) * X ^ (γ : ℕ)
@@ -151,8 +107,6 @@ theorem eq_zero_of_moments_eq_zero {n : ℕ} {v : Fin n → ℝ}
   rw [← coeff_sum_C_mul_X_pow v γ]
   exact (congrArg (coeff · γ) hP).trans (coeff_zero _)
 
-/-- **Unisolvence of the endpoint values and moments on `P_r(I)`**: `P(0) = P(1) = 0` and
-`∫₀¹ xⁱ P = 0` for `i < r - 1` force `P = 0` (`P = x (x - 1) g` with `∫₀¹ x (1 - x) g² = 0`). -/
 theorem eq_zero_of_endpoints_moments_eq_zero {r : ℕ} {v : Fin (r + 1) → ℝ}
     (h0 : ∑ γ : Fin (r + 1), v γ * 0 ^ (γ : ℕ) = 0) (h1 : ∑ γ : Fin (r + 1), v γ = 0)
     (h : ∀ i < r - 1, ∑ γ : Fin (r + 1), v γ * ((γ + i + 1 : ℕ) : ℝ)⁻¹ = 0) : v = 0 := by
@@ -205,13 +159,7 @@ theorem eq_zero_of_endpoints_moments_eq_zero {r : ℕ} {v : Fin (r + 1) → ℝ}
   change P.coeff γ = 0
   rw [hfac, hg, mul_zero, coeff_zero]
 
-/-- The one-dimensional degrees of freedom of `Q_r⁻Λ` evaluated on `x^γ`, in a direction where
-the face is `c` (`none`: the interval `[0, 1]`; `some a`: the point `x = a`) and the form does
-(`e = true`) or does not (`e = false`) contain `dx`:
-* on a point `a`: the value `a^γ`;
-* on the interval, with `dx` (`P_{r-1}Λ¹(I)`): the moments `∫₀¹ x^{γ + i} = 1/(γ + i + 1)`;
-* on the interval, without `dx` (`P_rΛ⁰(I)`): the endpoint values `0^γ`, `1` (`i = 0, 1`) and
-  the moments `1/(γ + i - 1)` against `x^{i-2}` (`i ≥ 2`). -/
+/-- The one-dimensional degrees of freedom on `x^γ`: point values, endpoint values, moments. -/
 def edgeDof : Option ℝ → Bool → ℕ → ℕ → ℝ
   | some a, _, _, γ => a ^ γ
   | none, true, i, γ => ((γ + i + 1 : ℕ) : ℝ)⁻¹
@@ -219,9 +167,6 @@ def edgeDof : Option ℝ → Bool → ℕ → ℕ → ℝ
   | none, false, 1, _ => 1
   | none, false, i + 2, γ => ((γ + i + 1 : ℕ) : ℝ)⁻¹
 
-/-- **One-dimensional unisolvence**: the `n = b + 1 - [e]` degrees of freedom `edgeDof c e`
-are unisolvent on the polynomials of degree `< n` (`b ≥ 1` on the interval, `b = 0` on a
-point). -/
 theorem edgeDof_injective (c : Option ℝ) (e : Bool) {b n : ℕ} (hb : c = none → 1 ≤ b)
     (hc : c ≠ none → b = 0) (hn : n = b + 1 - if e then 1 else 0) :
     Function.Injective (Matrix.of fun i γ : Fin n => edgeDof c e i γ).mulVec := by
@@ -265,9 +210,6 @@ end OneDim
 
 /-! ### Tensor products of unisolvent families -/
 
-/-- **Unisolvence of tensor products**: if the square matrices `Mⱼ` are invertible, so is their
-Kronecker product `(∏ⱼ Mⱼ(aⱼ, γⱼ))_{a, γ}` (its inverse is the Kronecker product of the
-inverses). -/
 theorem eq_zero_of_kronecker {ι K : Type*} [Fintype ι] [DecidableEq ι] [Field K] {n : ι → ℕ}
     (M : ∀ j, Fin (n j) → Fin (n j) → K) (hM : ∀ j, Function.Injective (Matrix.of (M j)).mulVec)
     {q : (∀ j, Fin (n j)) → K} (h : ∀ a : ∀ j, Fin (n j), ∑ γ, (∏ j, M j (a j) (γ j)) * q γ = 0) :
@@ -310,7 +252,6 @@ theorem unitIntegral_monomial (γ : d →₀ ℕ) (c : ℝ) :
   rw [show monomial γ c = c • (basisMonomials d ℝ) γ by simp [smul_monomial], map_smul,
     unitIntegral, Module.Basis.constr_basis, smul_eq_mul]
 
-/-- **`unitIntegral` is the integral over the unit cube** `[0, 1]^d`. -/
 theorem unitIntegral_eq_integral (p : MvPolynomial d ℝ) :
     unitIntegral p = ∫ x in Set.univ.pi fun _ : d => Set.Icc (0 : ℝ) 1, eval x p := by
   induction p using MvPolynomial.induction_on' with
@@ -344,9 +285,7 @@ omit [LinearOrder d] in
 @[simp] theorem mem_freeSet {g : d → Option ℝ} {j : d} : j ∈ freeSet g ↔ (g j).isNone := by
   simp [freeSet]
 
-/-- The moment `ω ↦ ∫_g tr_g ω ∧ η` on the plane `g`: the integral over `[0, 1]^d` of the top
-coefficient `(tr_g ω ∧ η)_G` along the free directions `G` (for `η` a form on `g`, this is the
-integral over the face `g ∩ [0, 1]^d`). -/
+/-- The moment `ω ↦ ∫_g tr_g ω ∧ η` on the plane `g`. -/
 def cubeMoment (g : d → Option ℝ) (η : PolyForm ℝ d) : PolyForm ℝ d →ₗ[ℝ] ℝ where
   toFun ω := unitIntegral (wedgeForm (cubeTrace g ω) η (freeSet g))
   map_add' ω ω' := by rw [cubeTrace_add, wedgeForm_add_left, Pi.add_apply, map_add]
@@ -355,18 +294,15 @@ def cubeMoment (g : d → Option ℝ) (η : PolyForm ℝ d) : PolyForm ℝ d →
       funext s; simp [smul_eq_C_mul], wedgeForm_smul_left, Pi.smul_apply, smul_eq_mul,
       ← smul_eq_C_mul, map_smul, RingHom.id_apply]
 
-/-- The face of the degree of freedom `(s, α)` on the face `f`: in a free direction `j ∉ s` of `f`
-with `α_j ∈ {0, 1}`, the endpoint `x_j = α_j`; otherwise as `f`. -/
+/-- The face of the degree of freedom `(s, α)` on the face `f`. -/
 def dofFace (f : d → Option ℝ) (s : Finset d) (α : d →₀ ℕ) : d → Option ℝ := fun j =>
   (f j).or (if j ∈ s ∨ 2 ≤ α j then none else some (α j : ℝ))
 
-/-- The exponent `β` of the test form `x^β dx_{G ∖ s}` of the degree of freedom `(s, α)`:
-`β_j = α_j` for `j ∈ s`, `α_j - 2` otherwise. -/
+/-- The exponent `β` of the test form `x^β dx_{G ∖ s}` of the degree of freedom `(s, α)`. -/
 def dofTest (s : Finset d) (α : d →₀ ℕ) : d →₀ ℕ :=
   Finsupp.equivFunOnFinite.symm fun j => if j ∈ s then α j else α j - 2
 
-/-- The moment of index `(s, α)` on the face `f`: `ω ↦ ∫_g tr_g ω ∧ x^β dx_{G ∖ s}` on the face
-`g = dofFace f s α ⊆ f` (free directions `G`, `β = dofTest s α`). -/
+/-- The moment `ω ↦ ∫_g tr_g ω ∧ x^β dx_{G ∖ s}` of index `(s, α)` on its face `g ⊆ f`. -/
 def momentDof (f : d → Option ℝ) (s : Finset d) (α : d →₀ ℕ) : PolyForm ℝ d →ₗ[ℝ] ℝ :=
   cubeMoment (dofFace f s α)
     (Pi.single (freeSet (dofFace f s α) \ s) (monomial (dofTest s α) 1))
@@ -374,16 +310,12 @@ def momentDof (f : d → Option ℝ) (s : Finset d) (α : d →₀ ℕ) : PolyFo
 /-- The indices `(s, α)` of the monomial basis `x^α dx_s` of `Q_b⁻Λᵏ`. -/
 abbrev CubeDofIdx (b : d → ℕ) (k : ℕ) := Σ s : {s : Finset d // #s = k}, cubeSupport b s.1
 
-/-- **The degrees of freedom of `Q_b⁻Λᵏ(f)`** ([ArnoldBoffiBonizzoni2015], §5), indexed like
-the monomial basis: the moments `ω ↦ ∫_g tr_g ω ∧ x^β dx_{G ∖ s}` on the faces
-`g = dofFace f s α ⊆ f`. On each face `g` of dimension `m ≥ k` the test forms are monomials of
-`Q_{b-1}⁻Λ^{m-k}(g)` (`dofTest_mem_cubeFormMinus`). -/
+/-- The degrees of freedom of `Q_b⁻Λᵏ(f)` ([ArnoldBoffiBonizzoni2015], §5). -/
 abbrev cubeDof (f : d → Option ℝ) {b : d → ℕ} {k : ℕ} (i : CubeDofIdx b k) :
     PolyForm ℝ d →ₗ[ℝ] ℝ :=
   momentDof f i.1.1 i.2.1
 
-/-- `b` is a degree on the face `f`: `b_j ≥ 1` in the free directions and `b_j = 0` in the fixed
-ones (`Q_b⁻Λᵏ` is then the space of the face). -/
+/-- `b` is a degree on `f`: `b_j ≥ 1` in the free directions, `b_j = 0` in the fixed ones. -/
 structure IsFaceDeg (f : d → Option ℝ) (b : d → ℕ) : Prop where
   one_le : ∀ j, f j = none → 1 ≤ b j
   eq_zero : ∀ j, f j ≠ none → b j = 0
@@ -410,7 +342,6 @@ theorem tensorDof_monomial (f : d → Option ℝ) (s : Finset d) (α γ : d →�
 variable {b : d → ℕ} {f : d → Option ℝ} {k : ℕ} {s : Finset d} {α : d →₀ ℕ}
 
 omit [Fintype d] in
-/-- The directions of `dx_s` are free directions of the face of `(s, α)`. -/
 theorem dofFace_eq_none (hf : ∀ j, f j ≠ none → b j = 0) (hα : α ∈ cubeSupport b s) {j : d}
     (hj : j ∈ s) : dofFace f s α j = none := by
   have := hα j
@@ -425,8 +356,6 @@ theorem subset_freeSet (hf : ∀ j, f j ≠ none → b j = 0) (hα : α ∈ cube
     s ⊆ freeSet (dofFace f s α) :=
   fun j hj => by simp [dofFace_eq_none hf hα hj]
 
-/-- The test form `x^β dx_{G ∖ s}` of the degree of freedom `(s, α)` of `Q_b⁻Λᵏ(f)` is a
-monomial of `Q_{b-1}⁻Λ^{m-k}(g)` on its face `g` (`m = #G` the dimension of `g`). -/
 theorem dofTest_mem_cubeFormMinus (hf : ∀ j, f j ≠ none → b j = 0) (hα : α ∈ cubeSupport b s)
     (hs : #s = k) :
     (Pi.single (freeSet (dofFace f s α) \ s) (monomial (dofTest s α) 1) : PolyForm ℝ d) ∈
@@ -456,8 +385,6 @@ theorem dofTest_mem_cubeFormMinus (hf : ∀ j, f j ≠ none → b j = 0) (hα : 
         simp_all
     · rw [Pi.single_eq_of_ne ht]; exact Submodule.zero_mem _
 
-/-- On the face of `(s, α)` against `x^β`, the moment of a coefficient is the tensor product
-of the one-dimensional degrees of freedom. -/
 theorem unitIntegral_faceSubst_mul (hf : ∀ j, f j ≠ none → b j = 0) (hα : α ∈ cubeSupport b s)
     (p : MvPolynomial d ℝ) :
     unitIntegral (faceSubst (dofFace f s α) p * monomial (dofTest s α) 1) = tensorDof f s α p := by
@@ -485,8 +412,6 @@ theorem unitIntegral_faceSubst_mul (hf : ∀ j, f j ≠ none → b j = 0) (hα :
           · simp [hjs, h, hfj, edgeDof]
   exact LinearMap.congr_fun this p
 
-/-- **The degrees of freedom are tensor products of one-dimensional ones**:
-`ℓ_{s,α}(ω) = ±(⊗ⱼ edgeDof)(ω_s)`. -/
 theorem momentDof_apply (hf : ∀ j, f j ≠ none → b j = 0) (hα : α ∈ cubeSupport b s)
     (ω : PolyForm ℝ d) :
     momentDof f s α ω =
@@ -511,7 +436,6 @@ open MvPolynomial Koszul ExteriorFibre
 variable {d : Type*} [LinearOrder d] [Fintype d] {b : d → ℕ} {f : d → Option ℝ} {k : ℕ}
   {s : Finset d}
 
-/-- A polynomial supported on `cubeSupport b s` is the sum of its monomials. -/
 theorem sum_monomial_coeff {R : Type*} [CommRing R] {b : d → ℕ} {p : MvPolynomial d R}
     (hp : p ∈ restrictSupport R (cubeSupport b s)) :
     ∑ γ : cubeSupport b s, monomial γ.1 (p.coeff γ.1) = p := by
@@ -527,8 +451,6 @@ theorem sum_monomial_coeff {R : Type*} [CommRing R] {b : d → ℕ} {p : MvPolyn
     · refine ite_eq_right fun h => hm ?_
       rw [← h]; exact γ.2
 
-/-- **Unisolvence on a coefficient**: a polynomial supported on `cubeSupport b s` on which all
-the tensor-product degrees of freedom of the face `f` vanish is zero. -/
 theorem eq_zero_of_tensorDof_eq_zero (hfb : IsFaceDeg f b) {p : MvPolynomial d ℝ}
     (hp : p ∈ restrictSupport ℝ (cubeSupport b s))
     (h : ∀ α ∈ cubeSupport b s, tensorDof f s α p = 0) : p = 0 := by
@@ -549,7 +471,6 @@ theorem eq_zero_of_tensorDof_eq_zero (hfb : IsFaceDeg f b) {p : MvPolynomial d �
   simp only [Equiv.symm_apply_apply, Pi.zero_apply] at this
   rw [this, monomial_zero]
 
-/-- **The degrees of freedom of `Q_b⁻Λᵏ(f)` vanish only on `0`**. [ArnoldBoffiBonizzoni2015], §5 -/
 theorem eq_zero_of_cubeDof_eq_zero (hfb : IsFaceDeg f b) {ω : PolyForm ℝ d}
     (hω : ω ∈ cubeFormMinus ℝ b k) (h : ∀ i : CubeDofIdx b k, cubeDof f i ω = 0) : ω = 0 := by
   funext s
@@ -569,16 +490,12 @@ theorem card_cubeDofIdx (b : d → ℕ) (k : ℕ) :
     (fun s => by simp [mem_powersetCard])
     (fun s => ∏ j, (b j + 1 - if j ∈ s then 1 else 0))).symm
 
-/-- **Unisolvence of the degrees of freedom of `Q_b⁻Λᵏ(f)`**, for every face `f` of the cube and
-every degree `b` on `f` (`b_j ≥ 1` free, `b_j = 0` fixed), in any dimension and form degree: in
-particular `Q_r⁻Λᵏ` (`r ≥ 1`) on the cube (`isFaceDeg_none`) and on each of its faces
-(`isFaceDeg_faceDeg`). [ArnoldBoffiBonizzoni2015], §5 -/
+/-- The degrees of freedom of `Q_b⁻Λᵏ(f)` are unisolvent ([ArnoldBoffiBonizzoni2015], §5). -/
 theorem isUnisolvent_cubeDof (hfb : IsFaceDeg f b) (k : ℕ) :
     IsUnisolvent fun i : CubeDofIdx b k => cubeDof f i ∘ₗ (cubeFormMinus ℝ b k).subtype := by
   rw [isUnisolvent_iff_forall_eq_zero _ (card_cubeDofIdx b k).symm]
   exact fun ω h => Subtype.ext (eq_zero_of_cubeDof_eq_zero hfb ω.2 h)
 
-/-- The moments on the faces of `f` only see the trace on `f`. -/
 theorem momentDof_cubeTrace (f : d → Option ℝ) (s : Finset d) (α : d →₀ ℕ) (ω : PolyForm ℝ d) :
     momentDof f s α (cubeTrace f ω) = momentDof f s α ω := by
   simp only [momentDof, cubeMoment, LinearMap.coe_mk, AddHom.coe_mk, cubeTrace_cubeTrace]
@@ -587,8 +504,7 @@ theorem momentDof_cubeTrace (f : d → Option ℝ) (s : Finset d) (α : d →₀
   simp only [dofFace]
   cases f j <;> rfl
 
-/-- **Trace determination**: the degrees of freedom of the faces of `f` determine the trace of
-`ω ∈ Q_b⁻Λᵏ` on `f` (`b ≥ 1`). [ArnoldBoffiBonizzoni2015], §5 -/
+/-- The DOFs of the faces of `f` determine the trace on `f` ([ArnoldBoffiBonizzoni2015], §5). -/
 theorem cubeTrace_eq_zero_of_cubeDof_eq_zero (hb : ∀ j, 1 ≤ b j) {ω : PolyForm ℝ d}
     (hω : ω ∈ cubeFormMinus ℝ b k) (h : ∀ i : CubeDofIdx (faceDeg b f) k, cubeDof f i ω = 0) :
     cubeTrace f ω = 0 :=
@@ -603,8 +519,6 @@ section Commuting
 
 open MvPolynomial Koszul ExteriorFibre
 
-/-- **One-dimensional integration by parts**: `∫₀¹ xⁱ p' = p(1) - 0ⁱ p(0) - i ∫₀¹ x^{i-1} p`, on
-`p = x^γ`, in terms of the degrees of freedom. -/
 theorem edgeDof_pderiv (i γ : ℕ) :
     (γ : ℝ) * edgeDof none true i (γ - 1) = edgeDof none false 1 γ -
       0 ^ i * edgeDof none false 0 γ - i * edgeDof none false (i + 1) γ := by
@@ -623,8 +537,6 @@ theorem edgeDof_pderiv (i γ : ℕ) :
 
 variable {d : Type*} [LinearOrder d] [Fintype d] {f : d → Option ℝ} {b : d → ℕ} {k : ℕ}
 
-/-- The degrees of freedom composed with `∂ⱼ` (`j ∈ s` free): the tensor product of the
-integration by parts in the direction `j` with the identity in the others. -/
 theorem tensorDof_pderiv {s : Finset d} {α : d →₀ ℕ} {j : d} (hj : j ∈ s) (hf : f j = none)
     (p : MvPolynomial d ℝ) :
     tensorDof f s α (pderiv j p) = tensorDof f (s.erase j) (α.update j 1) p -
@@ -658,8 +570,6 @@ theorem tensorDof_pderiv {s : Finset d} {α : d →₀ ℕ} {j : d} (hj : j ∈ 
       linear_combination P * this
   exact LinearMap.congr_fun this p
 
-/-- **Stokes compatibility**: each degree of freedom of `Q_b⁻Λ^{k+1}(f)` composed with `d` is a
-linear combination of degrees of freedom of `Q_b⁻Λᵏ(f)`. -/
 theorem cubeDof_extDeriv_mem_span (hf : ∀ j, f j ≠ none → b j = 0)
     (i : CubeDofIdx b (k + 1)) :
     cubeDof f i ∘ₗ extDerivₗ ℝ d ∈
@@ -701,7 +611,7 @@ theorem cubeDof_extDeriv_mem_span (hf : ∀ j, f j ≠ none → b j = 0)
   exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨_, rfl⟩)
 
 variable (f b k) in
-/-- **The canonical interpolant** `Π : PolyForm → Q_b⁻Λᵏ(f)`, `ℓ_i(Π ω) = ℓ_i(ω)`. -/
+/-- The canonical interpolant `Π : PolyForm → Q_b⁻Λᵏ(f)`, `ℓ_i(Π ω) = ℓ_i(ω)`. -/
 def cubeInterp (hfb : IsFaceDeg f b) : PolyForm ℝ d →ₗ[ℝ] cubeFormMinus ℝ b k :=
   interp (isUnisolvent_cubeDof hfb k) fun i => cubeDof f i
 
@@ -709,14 +619,12 @@ theorem cubeDof_cubeInterp (hfb : IsFaceDeg f b) (ω : PolyForm ℝ d) (i : Cube
     cubeDof f i (cubeInterp f b k hfb ω) = cubeDof f i ω :=
   dof_interp (isUnisolvent_cubeDof hfb k) (fun i => cubeDof f i) ω i
 
-/-- `Π` is a projection onto `Q_b⁻Λᵏ(f)`. -/
 theorem cubeInterp_of_mem (hfb : IsFaceDeg f b) {ω : PolyForm ℝ d}
     (hω : ω ∈ cubeFormMinus ℝ b k) : (cubeInterp f b k hfb ω : PolyForm ℝ d) = ω :=
   congrArg Subtype.val (interp_incl (isUnisolvent_cubeDof hfb k) (fun i => cubeDof f i)
     (cubeFormMinus ℝ b k).subtype (fun _ => rfl) ⟨ω, hω⟩)
 
-/-- **The commuting property** `Π d = d Π` of the canonical interpolants of `Q_b⁻Λ(f)`.
-[ArnoldBoffiBonizzoni2015], §5 -/
+/-- `Π d = d Π` for the canonical interpolants of `Q_b⁻Λ(f)` ([ArnoldBoffiBonizzoni2015], §5). -/
 theorem cubeInterp_extDeriv (hfb : IsFaceDeg f b) (ω : PolyForm ℝ d) :
     (cubeInterp f b (k + 1) hfb (extDeriv ω) : PolyForm ℝ d) =
       extDeriv (cubeInterp f b k hfb ω : PolyForm ℝ d) :=

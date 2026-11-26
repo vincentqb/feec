@@ -9,54 +9,9 @@ public import Feec.Fourier.Weak
 /-!
 # Fourier multipliers on `𝕋ᵈ` are weak derivatives
 
-The torus model of a constant-coefficient complex (`Feec.Fourier.Torus.complex`) defines its
-Sobolev spaces as domains of multiplication operators on the Fourier coefficients. This file
-identifies them with the weak-derivative spaces of `L²(𝕋ᵈ)`, in any dimension and for every
-first-order constant-coefficient operator between fields with values in `ℂᴾ` and `ℂ^Q`, with the
-honest definition of weak derivative: the test functions are **all** smooth functions on `𝕋ᵈ`
-(not only trigonometric polynomials). It is the periodic counterpart of `Feec.Fourier.Weak`.
-
-## Definitions
-
-* `proj : ℝᵈ → 𝕋ᵈ`, the covering map. `IsSmooth φ`: the `ℤᵈ`-periodic lift `φ ∘ proj` is `C^∞`.
-  `partialT c φ x = d/dt φ(x + t e_c)|_{t=0}`, the translation `t e_c` taken in `𝕋ᵈ`
-  (`partialT_eq_deriv`); on smooth `φ` it is the classical partial derivative of the lift
-  (`partialT_proj`).
-* `IsWeakFO α f g` (`g = Σ_{c,p} α_{cp} ∂_c f_p` weakly): `∫ Σ α_{cp} f_p ∂_c φ = -∫ g φ` for every
-  smooth `φ` (the bilinear pairing of distributions). `HasWeakPartial j f g` is the scalar case
-  `g = ∂_j f`.
-* `IsWeak m f g` for a first-order symbol `m` (`Feec.Fourier.Weak.IsLinear`, `m ξ = Σ ξ_c m(e_c)`):
-  `g = D f` weakly, `D = -i Σ_c m(e_c) ∂_c` the operator with symbol `m`.
-
-The measure on `𝕋ᵈ` is the normalized Haar measure of `Feec.Fourier.Torus.fieldFourier`.
-
-## Main results
-
-* Integration by parts on `𝕋ᵈ`: `integral_partialT_eq_zero`, `mFourierCoeff_partialT`
-  (`(∂_c φ)^(k) = 2πi k_c φ̂(k)`), `integral_mul_partialT`; the characters are test functions
-  (`isSmooth_mFourier`); Parseval pairing `hasSum_pairing`.
-* `isWeakFO_iff`: Fourier characterization of weak first-order operators. Scalar case:
-  `hasWeakPartial_iff`, `HasWeakPartial.unique`, **`exists_hasWeakPartial_iff`** (`f` has a weak
-  `∂_j f ∈ L²` iff `Σ_k |2πk_j|² |f̂(k)|² < ∞`), `summable_norm_freq_iff` (scalar `H¹`),
-  `hasWeakPartial_toL2` (consistency with the classical derivative).
-* Fields: **`isWeak_iff`** (`(D f)^(k) = m(2πk) f̂(k)`), `IsWeak.unique`,
-  **`mem_graph_iff_isWeak`**: the graph of the Fourier multiplier `m(2πk)` is the weak graph of
-  `D`; `fieldFourier_mem_mulDomain_iff`; `memLp_norm_freq_smul_iff` (`H¹` of fields).
-* Real fields: `mFourierCoeff_star`, `star_eq_self_iff`, **`fieldFourier_fixed_iff`** (a field is
-  real iff its coefficients are fixed by `u ↦ conj u(-k)`), `IsWeak.star_eq_self` (an operator
-  with a real symbol maps real fields to real fields).
-* Trigonometric polynomials: **`eq_zero_of_ae_eq_zero_of_finite`**: a trigonometric polynomial
-  vanishing a.e. on a nonempty open set of `𝕋ᵈ` is zero (analytic continuation of its lift).
-
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.1 (weak derivatives)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the periodic complex)
-* Mathlib, `Mathlib.Analysis.Fourier.AddCircleMulti`
-
-Bibliography: [references.bib](../../docs/references.bib)
+The domains of the multiplication operators of the torus model are the weak-derivative spaces of
+`L²(𝕋ᵈ)`, tested against all smooth functions, for every first-order constant-coefficient operator
+between fields with values in `ℂᴾ` and `ℂ^Q`.
 -/
 
 @[expose] public noncomputable section
@@ -66,7 +21,7 @@ open MeasureTheory Complex Set Filter
 
 namespace Feec.Fourier.TorusWeak
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.Torus.fieldFourier`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 /-- The local Haar measure on `ℝ/ℤ` is an additive Haar measure. -/
@@ -92,7 +47,6 @@ omit [Fintype d] in
 theorem proj_zero : proj (0 : d → ℝ) = 0 := by funext i; simp [proj]
 
 omit [Fintype d] in
-/-- `proj` is an open quotient map (product of the quotient maps `ℝ → ℝ/ℤ`). -/
 theorem isOpenQuotientMap_proj : IsOpenQuotientMap (proj (d := d)) :=
   IsOpenQuotientMap.piMap fun _ => QuotientAddGroup.isOpenQuotientMap_mk
 
@@ -101,12 +55,10 @@ theorem proj_surjective : Function.Surjective (proj (d := d)) :=
   isOpenQuotientMap_proj.surjective
 
 omit [Fintype d] in
-/-- A function on `𝕋ᵈ` is continuous if its periodic lift is. -/
 theorem continuous_of_comp_proj {E : Type*} [TopologicalSpace E] {φ : UnitAddTorus d → E}
     (h : Continuous (φ ∘ proj)) : Continuous φ :=
   isOpenQuotientMap_proj.isQuotientMap.continuous_iff.2 h
 
-/-- Continuous functions on the compact torus are integrable. -/
 theorem integrable_of_continuous {φ : UnitAddTorus d → ℂ} (h : Continuous φ) : Integrable φ :=
   h.integrable_of_hasCompactSupport (HasCompactSupport.of_compactSpace φ)
 
@@ -122,7 +74,6 @@ def partialT (c : d) (φ : UnitAddTorus d → ℂ) (x : UnitAddTorus d) : ℂ :=
   deriv (fun t : ℝ => φ (x + proj (Pi.single c t))) 0
 
 omit [Fintype d] in
-/-- The covering map of a coordinate vector: `proj (t e_c) = t e_c` in `𝕋ᵈ`. -/
 theorem proj_single (c : d) (t : ℝ) : proj (Pi.single c t) = Pi.single c (t : UnitAddCircle) := by
   funext i
   by_cases h : i = c
@@ -130,7 +81,6 @@ theorem proj_single (c : d) (t : ℝ) : proj (Pi.single c t) = Pi.single c (t : 
   · simp [proj, h]
 
 omit [Fintype d] in
-/-- `∂_c φ (x) = d/dt φ(x + t e_c)|_{t=0}`, the translation `t e_c` taken in `𝕋ᵈ`. -/
 theorem partialT_eq_deriv (c : d) (φ : UnitAddTorus d → ℂ) (x : UnitAddTorus d) :
     partialT c φ x = deriv (fun t : ℝ => φ (x + Pi.single c (t : UnitAddCircle))) 0 := by
   simp only [partialT, proj_single]
@@ -138,7 +88,6 @@ theorem partialT_eq_deriv (c : d) (φ : UnitAddTorus d → ℂ) (x : UnitAddToru
 /-- Smooth functions on `𝕋ᵈ`: those whose `ℤᵈ`-periodic lift to `ℝᵈ` is `C^∞`. -/
 def IsSmooth (φ : UnitAddTorus d → ℂ) : Prop := ContDiff ℝ (⊤ : ℕ∞) (φ ∘ proj)
 
-/-- Chain rule along `t ↦ proj (y + t e_c)`. -/
 theorem hasDerivAt_lift {φ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ (φ ∘ proj)) (c : d)
     (y : d → ℝ) (s : ℝ) :
     HasDerivAt (fun t : ℝ => φ (proj y + proj (Pi.single c t)))
@@ -152,7 +101,6 @@ theorem hasDerivAt_lift {φ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ 
   funext t
   simp [Function.comp, ← proj_add, single_eq_smul c t]
 
-/-- For a differentiable lift, `∂_c φ (proj y)` is the classical partial derivative of the lift. -/
 theorem partialT_proj {φ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ (φ ∘ proj)) (c : d)
     (y : d → ℝ) : partialT c φ (proj y) = fderiv ℝ (φ ∘ proj) y (Pi.single c 1) := by
   unfold partialT
@@ -175,8 +123,6 @@ theorem continuous_partialT {φ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 
   rw [this]
   exact (hφ.continuous_fderiv one_ne_zero).clm_apply continuous_const
 
-/-- `∫_{𝕋ᵈ} ∂_c φ = 0` for `C¹` lifts: differentiate the translation invariance of Haar measure
-under the integral sign. -/
 theorem integral_partialT_eq_zero {φ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj))
     (c : d) : ∫ x, partialT c φ x = 0 := by
   have hd : Differentiable ℝ (φ ∘ proj) := hφ.differentiable one_ne_zero
@@ -201,7 +147,6 @@ theorem integral_partialT_eq_zero {φ : UnitAddTorus d → ℂ} (hφ : ContDiff 
   have := key.2.unique (hasDerivAt_const _ _)
   simpa [proj_zero] using this
 
-/-- Product rule for `∂_c`. -/
 theorem partialT_mul {φ ψ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ (φ ∘ proj))
     (hψ : Differentiable ℝ (ψ ∘ proj)) (c : d) (x : UnitAddTorus d) :
     partialT c (fun x => φ x * ψ x) x = partialT c φ x * ψ x + φ x * partialT c ψ x := by
@@ -210,7 +155,6 @@ theorem partialT_mul {φ ψ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ 
   unfold partialT at this ⊢
   exact this
 
-/-- **Integration by parts on `𝕋ᵈ`**: `∫ ψ ∂_c φ = -∫ (∂_c ψ) φ` (no boundary terms). -/
 theorem integral_mul_partialT {φ ψ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj))
     (hψ : ContDiff ℝ 1 (ψ ∘ proj)) (c : d) :
     ∫ x, ψ x * partialT c φ x = -∫ x, partialT c ψ x * φ x := by
@@ -225,7 +169,6 @@ theorem integral_mul_partialT {φ ψ : UnitAddTorus d → ℂ} (hφ : ContDiff �
   linear_combination h0
 
 omit [DecidableEq d] in
-/-- The characters in coordinates: `e_n(proj y) = exp(2πi n·y)`. -/
 theorem mFourier_proj (n : d → ℤ) (y : d → ℝ) :
     UnitAddTorus.mFourier n (proj y) = cexp (2 * Real.pi * I * ∑ i, (n i : ℂ) * (y i : ℂ)) := by
   simp only [UnitAddTorus.mFourier, ContinuousMap.coe_mk, proj, fourier_coe_apply,
@@ -239,7 +182,6 @@ theorem mFourier_comp_proj (n : d → ℤ) :
   funext (mFourier_proj n)
 
 omit [DecidableEq d] in
-/-- The characters `e_n` are smooth test functions. -/
 theorem isSmooth_mFourier (n : d → ℤ) : IsSmooth (UnitAddTorus.mFourier n) := by
   unfold IsSmooth
   rw [mFourier_comp_proj]
@@ -248,7 +190,6 @@ theorem isSmooth_mFourier (n : d → ℤ) : IsSmooth (UnitAddTorus.mFourier n) :
   exact Complex.ofRealCLM.contDiff.comp
     (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : d => ℝ) i).contDiff
 
-/-- `∂_c e_n = 2πi n_c e_n`. -/
 theorem partialT_mFourier (n : d → ℤ) (c : d) (x : UnitAddTorus d) :
     partialT c (UnitAddTorus.mFourier n) x =
       2 * Real.pi * I * n c * UnitAddTorus.mFourier n x := by
@@ -273,7 +214,6 @@ theorem partialT_mFourier (n : d → ℤ) (c : d) (x : UnitAddTorus d) :
   rw [h.deriv]; simp; ring
 
 open UnitAddTorus in
-/-- **Integration by parts on `𝕋ᵈ`**: `(∂_c φ)^(k) = 2πi k_c φ̂(k)` for `C¹` functions. -/
 theorem mFourierCoeff_partialT {φ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj)) (c : d)
     (k : d → ℤ) :
     mFourierCoeff (partialT c φ) k = 2 * Real.pi * I * k c * mFourierCoeff φ k := by
@@ -298,7 +238,6 @@ theorem mFourierCoeff_partialT {φ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ
   linear_combination h0
 
 omit [DecidableEq d] in
-/-- `L²` functions times continuous functions are integrable on `𝕋ᵈ`. -/
 theorem integrable_mul_continuous (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
     {ψ : UnitAddTorus d → ℂ} (hψ : Continuous ψ) : Integrable (fun x => f x * ψ x) :=
   ((Lp.memLp f).integrable one_le_two).mul_bdd hψ.aestronglyMeasurable
@@ -306,7 +245,6 @@ theorem integrable_mul_continuous (f : Lp ℂ 2 (volume : Measure (UnitAddTorus 
 
 omit [DecidableEq d] in
 open UnitAddTorus in
-/-- **Parseval pairing** (no complex conjugation): `∫ f ψ = Σ_k ψ̂(-k) f̂(k)`. -/
 theorem hasSum_pairing (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) {ψ : UnitAddTorus d → ℂ}
     (hψ : Continuous ψ) :
     HasSum (fun k => mFourierCoeff ψ (-k) * mFourierCoeff f k) (∫ x, f x * ψ x) := by
@@ -340,8 +278,7 @@ section FirstOrder
 
 variable {P : Type*} [Fintype P]
 
-/-- **Weak constant-coefficient first-order operators** on components: `g = Σ_{c,p} α_{cp} ∂_c f_p`
-weakly if `∫ Σ_{c,p} α_{cp} f_p ∂_c φ = -∫ g φ` for every smooth `φ` on `𝕋ᵈ`. -/
+/-- `g = Σ_{c,p} α_{cp} ∂_c f_p` weakly: `∫ Σ α_{cp} f_p ∂_c φ = -∫ g φ` for every smooth `φ`. -/
 def IsWeakFO (α : d → P → ℂ) (f : P → Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
     (g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) : Prop :=
   ∀ φ : UnitAddTorus d → ℂ, IsSmooth φ →
@@ -359,8 +296,6 @@ theorem integral_sum_fo (α : d → P → ℂ) (f : P → Lp ℂ 2 (volume : Mea
   exact Finset.sum_congr rfl fun p _ => integral_const_mul _ _
 
 open UnitAddTorus in
-/-- **Fourier characterization of weak first-order operators**: `g = Σ α_{cp} ∂_c f_p` weakly
-iff `ĝ(k) = Σ α_{cp} 2πi k_c f̂_p(k)` for all `k ∈ ℤᵈ`. -/
 theorem isWeakFO_iff (α : d → P → ℂ) (f : P → Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
     (g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     IsWeakFO α f g ↔ ∀ k, mFourierCoeff g k =
@@ -406,7 +341,7 @@ section Scalar
 
 open UnitAddTorus
 
-/-- The `L²` function with prescribed Fourier coefficients `a ∈ ℓ²(ℤᵈ)` (inverse Fourier). -/
+/-- The `L²` function with prescribed Fourier coefficients `a ∈ ℓ²(ℤᵈ)`. -/
 def ofCoeff (a : lp (fun _ : d → ℤ => ℂ) 2) : Lp ℂ 2 (volume : Measure (UnitAddTorus d)) :=
   mFourierBasis.repr.symm a
 
@@ -416,7 +351,6 @@ omit [DecidableEq d] in
   rw [ofCoeff, ← mFourierBasis_repr, LinearIsometryEquiv.apply_symm_apply]
 
 omit [DecidableEq d] in
-/-- `L²` functions are determined by their Fourier coefficients. -/
 theorem eq_of_mFourierCoeff_eq {f g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
     (h : ∀ k, mFourierCoeff (f : UnitAddTorus d → ℂ) k = mFourierCoeff (g : UnitAddTorus d → ℂ) k) :
     f = g := by
@@ -424,8 +358,7 @@ theorem eq_of_mFourierCoeff_eq {f g : Lp ℂ 2 (volume : Measure (UnitAddTorus d
   ext k
   rw [mFourierBasis_repr, mFourierBasis_repr, h]
 
-/-- **Weak partial derivative** on `𝕋ᵈ`: `g = ∂_j f` in `L²` if `∫ f ∂_j φ = -∫ g φ` for every
-smooth `φ`. -/
+/-- The weak partial derivative: `g = ∂_j f` if `∫ f ∂_j φ = -∫ g φ` for every smooth `φ`. -/
 def HasWeakPartial (j : d) (f g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) : Prop :=
   ∀ φ : UnitAddTorus d → ℂ, IsSmooth φ → ∫ x, f x * partialT j φ x = -∫ x, g x * φ x
 
@@ -435,8 +368,6 @@ theorem hasWeakPartial_iff_isWeakFO (j : d) (f g : Lp ℂ 2 (volume : Measure (U
   unfold HasWeakPartial IsWeakFO
   simp [ite_mul]
 
-/-- **Fourier characterization of the weak partial derivative**:
-`g = ∂_j f` weakly iff `ĝ(k) = 2πi k_j f̂(k)` for all `k`. -/
 theorem hasWeakPartial_iff (j : d) (f g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     HasWeakPartial j f g ↔ ∀ k, mFourierCoeff (g : UnitAddTorus d → ℂ) k =
       2 * Real.pi * I * k j * mFourierCoeff (f : UnitAddTorus d → ℂ) k := by
@@ -456,8 +387,7 @@ theorem norm_sq_freq_mul (j : d) (k : d → ℤ) (z : ℂ) :
   rw [show (2 * Real.pi * I * k j : ℂ) = ((2 * Real.pi * k j : ℝ) : ℂ) * I by push_cast; ring,
     norm_mul, Complex.norm_I, mul_one, Complex.norm_real, Real.norm_eq_abs, sq_abs]
 
-/-- **Weak `∂_j`-differentiability in `L²` is the Fourier-weight condition**:
-`f` has a weak derivative `∂_j f ∈ L²` iff `Σ_k |2π k_j|² |f̂(k)|² < ∞`. -/
+/-- `f` has a weak derivative `∂_j f ∈ L²` iff `Σ_k |2π k_j|² |f̂(k)|² < ∞`. -/
 theorem exists_hasWeakPartial_iff (j : d) (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     (∃ g, HasWeakPartial j f g) ↔
       Summable fun k : d → ℤ =>
@@ -489,8 +419,6 @@ theorem toL2_ae_eq {φ : UnitAddTorus d → ℂ} (hφ : Continuous φ) :
     (toL2 hφ : UnitAddTorus d → ℂ) =ᵐ[volume] φ :=
   ContinuousMap.coeFn_toLp (p := 2) (𝕜 := ℂ) (μ := volume) (⟨φ, hφ⟩ : C(UnitAddTorus d, ℂ))
 
-/-- **The weak derivative extends the classical one**: for a `C¹` function `φ` on `𝕋ᵈ`, the
-classical partial derivative `∂_j φ` is the weak partial derivative. -/
 theorem hasWeakPartial_toL2 {φ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 (φ ∘ proj)) (j : d) :
     HasWeakPartial j (toL2 (continuous_of_comp_proj hφ.continuous))
       (toL2 (continuous_partialT hφ j)) :=
@@ -498,7 +426,6 @@ theorem hasWeakPartial_toL2 {φ : UnitAddTorus d → ℂ} (hφ : ContDiff ℝ 1 
     rw [mFourierCoeff_toL2, mFourierCoeff_toL2, mFourierCoeff_partialT hφ]
 
 omit [DecidableEq d] in
-/-- Fourier coefficients of the complex conjugate: `(f̄)^(k) = conj f̂(-k)`. -/
 theorem mFourierCoeff_star (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) (k : d → ℤ) :
     mFourierCoeff ((star f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) : UnitAddTorus d → ℂ) k =
       (starRingEnd ℂ) (mFourierCoeff (f : UnitAddTorus d → ℂ) (-k)) := by
@@ -509,7 +436,6 @@ theorem mFourierCoeff_star (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) (k
   simp [mFourier_neg, smul_eq_mul]
 
 omit [DecidableEq d] in
-/-- An `L²` function is real-valued (`f̄ = f`) iff `f̂(-k) = conj f̂(k)` for all `k`. -/
 theorem star_eq_self_iff (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     star f = f ↔ ∀ k, mFourierCoeff (f : UnitAddTorus d → ℂ) (-k) =
       (starRingEnd ℂ) (mFourierCoeff (f : UnitAddTorus d → ℂ) k) := by
@@ -523,7 +449,6 @@ theorem star_eq_self_iff (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     rw [neg_neg] at this
     rw [mFourierCoeff_star, this]
 
-/-- A finite double sum of nonnegative sequences is summable iff each one is. -/
 theorem summable_sum_sum_iff {α P Q : Type*} [Fintype P] [Fintype Q] {F : α → P → Q → ℝ}
     (hF : ∀ k p q, 0 ≤ F k p q) :
     (Summable fun k => ∑ p, ∑ q, F k p q) ↔ ∀ p q, Summable fun k => F k p q := by
@@ -538,8 +463,6 @@ theorem summable_sum_sum_iff {α P Q : Type*} [Fintype P] [Fintype Q] {F : α �
   · intro h
     exact summable_sum fun p _ => summable_sum fun q _ => h p q
 
-/-- **Scalar `H¹(𝕋ᵈ)` is the weak-`H¹` space**: `Σ_k |ξ_k|² |f̂(k)|² < ∞` (`ξ_k = 2πk`) iff `f`
-has all weak first partial derivatives in `L²`. -/
 theorem summable_norm_freq_iff (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     (Summable fun k : d → ℤ =>
         ‖Torus.freq k‖ ^ 2 * ‖mFourierCoeff (f : UnitAddTorus d → ℂ) k‖ ^ 2) ↔
@@ -560,7 +483,6 @@ section TrigPoly
 open UnitAddTorus
 
 omit [DecidableEq d] in
-/-- An `ℓ²` sequence with finite support is a finite sum of single modes. -/
 theorem eq_sum_single_of_finite {f : lp (fun _ : d → ℤ => ℂ) 2} (S : Finset (d → ℤ))
     (hS : ∀ k ∉ S, f k = 0) : f = ∑ k ∈ S, lp.single 2 k (f k) := by
   ext j
@@ -583,7 +505,6 @@ def trigPoly (f : lp (fun _ : d → ℤ => ℂ) 2) (S : Finset (d → ℤ)) : C(
   ∑ k ∈ S, f k • mFourier k
 
 omit [DecidableEq d] in
-/-- A finitely supported coefficient sequence is the `L²` class of its trigonometric polynomial. -/
 theorem ofCoeff_eq_toLp {f : lp (fun _ : d → ℤ => ℂ) 2} (S : Finset (d → ℤ))
     (hS : ∀ k ∉ S, f k = 0) : ofCoeff f = (trigPoly f S).toLp 2 volume ℂ := by
   classical
@@ -595,7 +516,6 @@ theorem ofCoeff_eq_toLp {f : lp (fun _ : d → ℤ => ℂ) 2} (S : Finset (d →
   rw [this, map_smul, HilbertBasis.repr_symm_single, coe_mFourierBasis, map_smul]
 
 omit [DecidableEq d] in
-/-- The lift of a trigonometric polynomial to `ℝᵈ` is real-analytic. -/
 theorem analyticOnNhd_trigPoly_proj (f : lp (fun _ : d → ℤ => ℂ) 2) (S : Finset (d → ℤ)) :
     AnalyticOnNhd ℝ (fun y => trigPoly f S (proj y)) univ := by
   intro y _
@@ -617,8 +537,6 @@ theorem analyticOnNhd_trigPoly_proj (f : lp (fun _ : d → ℤ => ℂ) 2) (S : F
     (g := cexp) hc hl
 
 omit [DecidableEq d] in
-/-- **A trigonometric polynomial vanishing a.e. on a nonempty open set of `𝕋ᵈ` is zero**: it is
-continuous, so it vanishes on the open set, and its lift to `ℝᵈ` is real-analytic. -/
 theorem eq_zero_of_ae_eq_zero_of_finite {f : lp (fun _ : d → ℤ => ℂ) 2} (S : Finset (d → ℤ))
     (hS : ∀ k ∉ S, f k = 0) {U : Set (UnitAddTorus d)} (hU : IsOpen U) (hne : U.Nonempty)
     (hf : (ofCoeff f : UnitAddTorus d → ℂ) =ᵐ[volume.restrict U] 0) : f = 0 := by
@@ -657,8 +575,7 @@ open UnitAddTorus
 variable {P Q : Type*} [Fintype P] [Fintype Q] [DecidableEq P]
 
 variable (d P) in
-/-- `L²` fields on `𝕋ᵈ` with values in `ℂᴾ`, componentwise (the physical side of
-`Feec.Fourier.Torus.fieldFourier`). -/
+/-- `L²` fields on `𝕋ᵈ` with values in `ℂᴾ`, componentwise. -/
 abbrev Field := PiLp 2 fun _ : P => Lp ℂ 2 (volume : Measure (UnitAddTorus d))
 
 /-- The Fourier coefficients of a field. -/
@@ -670,10 +587,7 @@ theorem coeff_apply (f : Field d P) (k : d → ℤ) (p : P) :
     coeff f k p = mFourierCoeff (f p : UnitAddTorus d → ℂ) k :=
   Torus.fieldFourier_apply f k p
 
-/-- **Weak constant-coefficient first-order operators on fields**: `g = D f` weakly, with
-`D = -i Σ_c m(e_c) ∂_c` the operator whose symbol is the first-order symbol `m`
-(`Feec.Fourier.Weak.IsLinear`): for every output component `q`,
-`g_q = Σ_{c,p} (-i m(e_c)_{qp}) ∂_c f_p` in the sense of distributions on `𝕋ᵈ`. -/
+/-- `g = D f` weakly, for the first-order operator `D = -i Σ_c m(e_c) ∂_c` with symbol `m`. -/
 def IsWeak (m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q)
     (f : Field d P) (g : Field d Q) : Prop :=
   ∀ q, IsWeakFO (fun c p => -I * m (EuclideanSpace.single c 1) (EuclideanSpace.single p 1) q)
@@ -688,8 +602,6 @@ theorem apply_eq_sum (L : EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q) (
   conv_lhs => rw [hv]
   simp [map_sum, map_smul]
 
-/-- **Fourier characterization of weak first-order operators**: `g = D f` weakly iff
-`ĝ(k) = m(2πk) f̂(k)` for every `k ∈ ℤᵈ`. -/
 theorem isWeak_iff {m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q}
     (hm : Weak.IsLinear m) (f : Field d P) (g : Field d Q) :
     IsWeak m f g ↔ ∀ k, coeff g k = m (Torus.freq k) (coeff f k) := by
@@ -724,9 +636,7 @@ theorem IsWeak.unique {m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[�
     change coeff g₁ k = coeff g₂ k
     rw [(isWeak_iff hm f g₁).1 h₁ k, (isWeak_iff hm f g₂).1 h₂ k]
 
-/-- **The torus Fourier multiplier of a first-order symbol is its weak realization**: the
-coefficients of `f` lie in the domain of the multiplier `m(2πk)`, with image the coefficients of
-`g`, iff `g = D f` weakly. -/
+/-- For a first-order symbol `m`, the graph of the multiplier `m(2πk)` is the weak graph of `D`. -/
 theorem mem_graph_iff_isWeak
     {m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q}
     (hm : Weak.IsLinear m) (f : Field d P) (g : Field d Q) :
@@ -750,8 +660,6 @@ theorem mem_graph_iff_isWeak
     rw [Operator.coeFn_mulOp_count]
     exact (hg k).symm
 
-/-- **The Fourier domain of a first-order operator on `𝕋ᵈ` is its weak domain**: the
-coefficients of `f` lie in `D(m(2πk))` iff `D f ∈ L²` exists weakly. -/
 theorem mem_mulDomain_iff_exists_isWeak
     {m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q}
     (hm : Weak.IsLinear m) (f : Field d P) :
@@ -766,8 +674,6 @@ theorem mem_mulDomain_iff_exists_isWeak
     exact ((mem_graph_iff_isWeak hm f g).2 hg).1
 
 omit [DecidableEq P] in
-/-- **`H¹(𝕋ᵈ; ℂᴾ)` is the weak-`H¹` space**: `|ξ_k| f̂(k) ∈ ℓ²` iff every component of `f` has
-every weak first partial derivative in `L²`. -/
 theorem memLp_norm_freq_smul_iff (f : Field d P) :
     MemLp (fun k => ((‖Torus.freq k‖ : ℝ) : ℂ) • coeff f k) 2 Measure.count ↔
       ∀ p c, ∃ g, HasWeakPartial c (f p) g := by
@@ -794,8 +700,6 @@ theorem coeFn_conjLp_count (u : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Mea
   Measure.ae_count_iff.1 (coeFn_conjLp _ _ u) k
 
 omit [DecidableEq d] [DecidableEq P] in
-/-- **Real fields**: the coefficients of `f` are fixed by the reflection-conjugation
-`u ↦ conj u(-k)` iff every component of `f` is real-valued. -/
 theorem fieldFourier_fixed_iff (f : Field d P) :
     conjLp (E := EuclideanSpace ℂ P) Reflection.count_neg entryConj (Torus.fieldFourier d P f) =
       Torus.fieldFourier d P f ↔
@@ -814,8 +718,6 @@ theorem fieldFourier_fixed_iff (f : Field d P) :
     change (starRingEnd ℂ) (coeff f (-k) p) = coeff f k p
     rw [coeff_apply, coeff_apply, h p k, RCLike.conj_conj]
 
-/-- **Operators with real symbols preserve real fields**: if `m(-ξ) (conj v) = conj (m ξ v)` and
-`g = D f` weakly with `f` real, then `g` is real. -/
 theorem IsWeak.star_eq_self
     {m : EuclideanSpace ℝ d → EuclideanSpace ℂ P →L[ℂ] EuclideanSpace ℂ Q}
     (hm : Weak.IsLinear m) (hreal : ∀ ξ v, m (-ξ) (entryConj v) = entryConj (m ξ v))

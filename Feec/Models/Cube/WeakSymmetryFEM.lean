@@ -7,78 +7,22 @@ public import Feec.HilbertComplex.BGG.WeakConsistency
 /-!
 # The finite element method of Table 5.1 for the BGG complex with weak symmetries on the cube
 
-The discretization of the BGG data (4.16) on `Q = (0, ½)³` (the segment
-`Feec.Models.Cube.WeakSymmetry.bggSegment` of `Feec.Models.Cube.WeakSymmetryComplex`) by the
-elements of Table 5.1 of [QuennevilleBelair2015], §5.3, on the level-`(N + 1)` Freudenthal meshes,
-with the thesis' boundary conditions (vanishing boundary DOFs in every row):
-
-* top row `P₁Λ̊⁰ → P₁⁻Λ̊¹ → P₁⁻Λ̊²` (`FEM.polyMin 3 PolySeq.lowestOrder N`),
-* bottom row `P₂Λ̊⁰ ⊗ ℝ³ → P₂⁻Λ̊¹ ⊗ ℝ³ → P₁Λ̊² ⊗ ℝ³`
-  (componentwise `FEM.polyMin 3 PolySeq.lagrangeP2 N`),
-
-as a `Feec.BGG.Discrete bggSegment` (`cubeFEM`), with **the smoothed cochain projections**
-`π = J⁻¹ Π_h R` ([AFW2010], §5.5; [ChristiansenWinther2008]) of **one common smoother** for both
-rows (`FEM.tableRows_uniform_cochainProjection`). The method uses `S₀,ₕ = π¹S⁰`, `S₁,ₕ = π²S¹`:
-the canonical projections of the thesis are not bounded on `L²`, so `Discrete.Bounded` fails for
-them; on the discrete spaces both choices are defined, and Props 5.7–5.9 for the canonical maps
-are in `Feec.Models.Cube.WeakSymmetryEstimates`.
+The discretization `cubeFEM` of the BGG data (4.16) on `Q = (0, ½)³` by the elements of
+[QuennevilleBelair2015], Table 5.1, with `S₀,ₕ = π¹S⁰` and `S₁,ₕ = π²S¹` for the smoothed cochain
+projections ([AFW2010], §5.5; [ChristiansenWinther2008]) of one common smoother for both rows.
 
 ## Main results
 
-* `cubeFEM_compatible`: **the surjectivity hypothesis (5.4)** `π¹S⁰π̃⁰ = π¹S⁰`
-  (`Feec.BGG.Discrete.Compatible`), from `R S⁰ = c S⁰ R̃` (`smoothForm_wsL2`) and the corrected
-  Prop 5.7 `Π¹S⁰Π̃⁰ = Π¹S⁰` on smooth fields (`PolySeq.bggS0h_tensorInterp`): the top-row
-  smoothed interpolant of `S⁰y` only sees the bottom-row smoothed interpolants of `y`
-  (`smoothedInterp_wsL2_zero_eq`). This discharges the hypothesis `hA` of
-  `Subcomplex.CommutingMap.toCochainProjection_comp_toCochainProjection` on the cube.
-* `cubeFEM_bounded`: `Discrete.Bounded (2C)` with `C` independent of `N`.
-* `cubeFEM_happ0`: **Prop 5.9(1) for `π¹`**: `‖(I − π¹)S⁰ψ‖ ≤ C_app h ‖ψ‖_V` on `Ṽₕ⁰`, from
-  `(I − π¹)S⁰ψ = (I − π¹)(I − Π¹)S⁰ψ` and Prop 5.9(1) for the canonical `Π¹`
-  (`norm_sub_glue_bggS0h_le`, transported to vanishing boundary DOFs, `exists_sub_wsL2_le_mesh`).
-* `cubeFEMReg`: **regular potentials** (`Feec.BGG.Discrete.RegularPotential`) with
-  `X_reg = (H̊Λ⁰(Q)³)³` (row-wise `H̊¹` potentials, from the regularity hypothesis with its constant
-  `C_R`) and the `H̊¹` approximation of the smoothed projections
-  (`FEM.PolySmoothingEstimatesMin.norm_sub_proj_le_grad`).
-* The weak-consistency lemma is used in the form
-  `Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound`, with `S¹u ∈ D(d¹*)` as a
-  functional bound (in the `W`-normed model `V¹ = H̊Λ¹(Q)` is not complete, so `d¹*S¹u ∈ L²` has no
-  representative in `V¹`).
-* `cubeFEM_rate_tr`: **Thm 5.5 on the cube with the elements of Table 5.1**,
-  `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for exact solutions with `σ, φ, u`
-  `C²` up to `∂Q` with vanishing tangential traces (`FEM.IsCsFormTr 0`, bound `L`; no condition on
-  the normal components) and `‖λ‖ ≤ L`, `K` independent of `N`. The class of `S¹u` is derived
-  (`exists_isCsFormTr_segS1`: the tangential trace of `dxₐ ∧ uₐ` vanishes with that of `uₐ`),
-  and `IsCsFormTr.norm_le` (sup bound) and `IsCsFormTr.abs_inner_D1_le` (Green's formula on
-  `D(d_min)`) supply `‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`; `cubeFEM_rate_tr_of_bounds` takes
-  these as hypotheses. The interpolation errors (`cubeFEM_err_P0_tr`, …) come from
-  `IsCsFormTr.exists_mem_polyMin_le`.
-* `cubeFEM_rate`, `cubeFEM_rate_C2`: the same rates for flat data (`IsCsFormMin 0`: `C²` forms
-  vanishing outside `Q`), through `IsCsFormMin.isCsFormTr`.
-* `isSaddle_jW_domain_eqs`, `cubeFEM_rate_isSaddle_tr`, `cubeFEM_rate_isSaddle`: the solution of
-  Prop 5.2 (`bggHilb.IsSaddle`, graph spaces) with multiplier in `L²Λ¹(Q)` solves the domain form
-  of (5.3), so the rate applies to it.
-* `cubeFEM_existsUnique`: unique discrete solvability (thesis Prop 5.4).
-* `cubeFEM_ne_bot`: the discrete spaces are nonzero for all large `N`;
-  `exists_manufactured_solution`, `manufacturedU_ne_zero`: a nontrivial smooth exact solution
-  (`u` = first row `dᵗ(f dx₀ ∧ dx₁)`, `f` a bump in `Q`, `σ = φ = λ = 0`);
-  `exists_coupled_manufactured_solution`: a smooth exact solution with all four unknowns nonzero
-  (`λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ`, `uₐ = −g dxₐ`, `g` the bump).
-
-The regularity hypothesis (`CurlPotential`, the regular decomposition of [Hiptmair2002],
-Lemma 2.4, [HiptmairXu2007], §3) enters only through its constant `C_R` (`hCR`); it is proved
-(`curlPotential`, `curlPotentialConst` in `Feec.Models.Cube.RegularDecomposition`).
+* `cubeFEM_compatible`, `cubeFEM_bounded`: (5.4) and uniform bounds of the projections.
+* `cubeFEM_happ0`: Prop 5.9(1) (adapted), `‖(I − π¹)S⁰ψ‖ ≤ C h ‖ψ‖_V` on `Ṽₕ⁰`.
+* `cubeFEM_existsUnique`: Prop 5.4 (adapted), unique solvability under `CurlPotential`.
+* `cubeFEM_rate_tr`: Thm 5.5 (adapted), the `O(h)` rate for `IsCsFormTr` data under `CurlPotential`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, (5.4), (5.7), Table 5.1, Props 5.4, 5.7–5.9, Thm 5.5
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
-  §3 (regular decomposition)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -87,8 +31,6 @@ open scoped InnerProductSpace RealInnerProductSpace ContDiff
 open MeasureTheory Set Filter
 
 @[expose] public noncomputable section
-
-/-! ### Weak consistency against a functional bound -/
 
 namespace Feec.Models.Cube.WeakSymmetry
 
@@ -134,14 +76,12 @@ theorem D1_mem_V (x : U1) (hx : (x : W1) ∈ S'.V 1) : D1 x ∈ S'.V 2 := by
   have h := S'.mapsTo 1 2 x hx
   rwa [d12_apply] at h
 
-/-- `d π = π d` in degree `0`. -/
 theorem D0_π (P : S'.CochainProjection) (x : U0) :
     D0 ⟨P.π 0 x, mem_D0_of_mem_V (P.mem 0 x)⟩ = P.π 1 (D0 x) := by
   have h := P.comm 0 1 ⟨x, mem_dom01 x.2⟩
   rw [d01_apply, d01_apply] at h
   exact h
 
-/-- `d π = π d` in degree `1`. -/
 theorem D1_π (P : S'.CochainProjection) (x : U1) :
     D1 ⟨P.π 1 x, mem_D1_of_mem_V (P.mem 1 x)⟩ = P.π 2 (D1 x) := by
   have h := P.comm 1 2 ⟨x, mem_dom12 x.2⟩
@@ -182,9 +122,7 @@ def projU1 (P : S'.CochainProjection) : U1 →ₗ[ℝ] U1 :=
 
 variable (ST SB : (complexMin 3).Subcomplex)
 
-/-- **The discretization of the BGG data (4.16) on the cube** by a pair of subcomplexes `ST`
-(top row) and `SB` (bottom row, componentwise) of `H̊Λ(Q)`, with cochain projections `PT`, `PB`
-(componentwise on the bottom row). -/
+/-- **The discretization of (4.16)** by subcomplexes `ST`, `SB` of `H̊Λ(Q)` with projections. -/
 def bggDiscrete (PT : ST.CochainProjection) (PB : SB.CochainProjection) :
     Feec.BGG.Discrete bggSegment where
   V0h := (ST.V 0).comap D0.domain.subtype
@@ -225,8 +163,6 @@ variable {ST SB}
 theorem norm_sq_wv {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] (x : Wv V) :
     ‖x‖ ^ 2 = ∑ a, ‖x a‖ ^ 2 := PiLp.norm_sq_eq_of_L2 _ x
 
-/-- **Uniform bounds of the discrete projections** from graph-norm bounds of `PT`, `PB` in degree
-`1 → 2` and `L²` bounds in degree `2`. -/
 theorem bggDiscrete_bounded {PT : ST.CochainProjection} {PB : SB.CochainProjection} {C : ℝ}
     (hC0 : 0 ≤ C) (hT : ∀ x, ‖PT.π 2 x‖ ≤ C * ‖x‖) (hTg : PT.IsGraphBounded 1 2 C)
     (hBg : PB.IsGraphBounded 1 2 C) : (bggDiscrete ST SB PT PB).Bounded C where
@@ -300,15 +236,12 @@ def smoothVec (y : PiLp 2 (fun _ : Fin 3 => L2F ℝ M.domain (formIdx 3 0))) :
     Fin 3 → contForms 3 :=
   fun a => Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ ((0 : ℕ) : ℤ) (y a))
 
-/-- `R S⁰ y = c S⁰ R̃ y` on continuous forms. -/
 theorem smoothForm_wsL2_zero (y : PiLp 2 (fun _ : Fin 3 => L2F ℝ M.domain (formIdx 3 0))) :
     Submodule.inclusion c1Forms_le_contForms
         (smoothForm p hΩ (((0 : ℕ) : ℤ) + 1) (wsL2 (Ω := M.domain) ((0 : ℕ) : ℤ) y)) =
       p.factor • coordWedgeC (smoothVec M p hΩ y) :=
   Subtype.ext (smoothForm_wsL2 p hΩ 0 y)
 
-/-- **The smoothed interpolant of `S⁰ y`** is `c Π¹ S⁰ Π̃⁰ R̃ y`: it only depends on the
-canonical interpolants `Π̃⁰ R̃ yₐ` of the bottom row (corrected Prop 5.7). -/
 theorem smoothedInterp_wsL2_zero (y : PiLp 2 (fun _ : Fin 3 => L2F ℝ M.domain (formIdx 3 0))) :
     (polyElement 3 lowestOrder).smoothedInterp M p hΩ (((0 : ℕ) : ℤ) + 1)
         (wsL2 (Ω := M.domain) ((0 : ℕ) : ℤ) y) =
@@ -322,9 +255,6 @@ theorem smoothedInterp_wsL2_zero (y : PiLp 2 (fun _ : Fin 3 => L2F ℝ M.domain 
           (polyElement 3 lowestOrder).Piecewise M 1) = _
   rw [smoothForm_wsL2_zero, map_smul, bggS0h_tensorInterp]
 
-/-- **Compatibility of the smoothed interpolants (mesh level)**: if the bottom-row smoothed
-interpolants of `y`, `y'` agree componentwise, so do the top-row smoothed interpolants of
-`S⁰ y`, `S⁰ y'`. -/
 theorem smoothedInterp_wsL2_zero_eq (hM : IsOpen M.domain)
     {y y' : PiLp 2 (fun _ : Fin 3 => L2F ℝ M.domain (formIdx 3 0))}
     (h : ∀ a, (polyElement 3 lagrangeP2).smoothedInterp M p hΩ ((0 : ℕ) : ℤ) (y a) =
@@ -340,7 +270,6 @@ theorem smoothedInterp_wsL2_zero_eq (hM : IsOpen M.domain)
     exact Subtype.ext ((polyElement 3 lagrangeP2).glue_injective M hM 0 (h a))
   rw [ht]
 
-/-- The mesh-level compatibility, transported along `M.domain = Θ`. -/
 theorem commutingMapOfEqMin_wsL2_zero_eq (hM : IsOpen M.domain) (hb : Bornology.IsBounded M.domain)
     {x₀ : Fin 3 → ℝ} {s₀ : ℝ}
     (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
@@ -374,8 +303,6 @@ abbrev wsZero {Ω : Set (Fin 3 → ℝ)} :
     PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0)) →L[ℝ] L2F ℝ Ω (formIdx 3 1) :=
   wsL2 (Ω := Ω) 0
 
-/-- **Prop 5.9(1) with vanishing boundary DOFs (mesh level)**: for `ψ ∈ P₂Λ̊⁰ ⊗ ℝ³` there is
-`w ∈ P₁⁻Λ̊¹` (the canonical `Π¹S⁰ψ`) with `‖S⁰ψ − w‖ ≤ C h ‖∇ψ‖`, `C` independent of `N`. -/
 theorem exists_sub_wsL2_le_mesh : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (ψ : PiLp 2 (fun _ : Fin 3 => L2F ℝ (mesh 3 N).domain (formIdx 3 0)))
     (_ : ∀ a, ψ a ∈ (polyElement 3 lagrangeP2).V₀ (mesh 3 N) 0)
@@ -420,7 +347,6 @@ theorem exists_sub_wsL2_le_mesh : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
   rw [hd', hψe]
   exact hC N u'
 
-/-- `Prop 5.9(1)` transported to a domain `Θ = (mesh 3 N).domain`. -/
 theorem exists_sub_wsL2_le_of_eq {C : ℝ} (N : ℕ)
     (hC : ∀ (ψ : PiLp 2 (fun _ : Fin 3 => L2F ℝ (mesh 3 N).domain (formIdx 3 0)))
       (_ : ∀ a, ψ a ∈ (polyElement 3 lagrangeP2).V₀ (mesh 3 N) 0)
@@ -450,7 +376,7 @@ end ApproxWsZero
 
 section H1Coeff
 
-/-- `f ↦ f` as a `0`-form (the linear `coeffForm`). -/
+/-- The linear map `f ↦ f` from functions to `0`-forms. -/
 def coeffFormₗ : L2 ℝ (cubeDomain 3) →ₗ[ℝ] W0 where
   toFun f := coeffForm f
   map_add' _ _ := rfl
@@ -472,7 +398,6 @@ theorem norm_le_sum_wv {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ
     exact Finset.sum_sq_le_sq_sum_of_nonneg fun a _ => norm_nonneg _
   exact le_of_pow_le_pow_left₀ two_ne_zero (Finset.sum_nonneg fun _ _ => norm_nonneg _) h
 
-/-- Finite combinations of `H̊¹` coefficients with coefficients of size `≤ 1`. -/
 theorem H1c_sum {ι : Type*} (s : Finset ι) (c : ι → ℝ) (hc : ∀ i, |c i| ≤ 1)
     (f : ι → L2 ℝ (cubeDomain 3)) (hf : ∀ i, f i ∈ H1c) {B : ℝ}
     (hB : ∀ i, ‖gradc ⟨f i, hf i⟩‖ ≤ B) :
@@ -501,8 +426,6 @@ theorem coeffForm_apply_empty (z : W0) (h : ((∅ : Finset (Fin 3)).card : ℤ) 
   rw [this]
   rfl
 
-/-- **The components of `S⁰ψ`, `ψ ∈ H̊Λ⁰(Q)³`, are `H̊¹(Q)` coefficients** with gradient bounded by
-the graph norm of `ψ` (`(S⁰ψ)_{{j}} = ψⱼ`). -/
 theorem wsZero_apply_mem_H1c (ψ : Vt0) (s : formIdx 3 1) :
     ∃ h : wsZero (ιt0 ψ) s ∈ H1c, ‖gradc ⟨_, h⟩‖ ≤ ‖ψ‖ := by
   obtain ⟨t, ht⟩ := s
@@ -535,8 +458,7 @@ def rp : Vt0 →ₗ[ℝ] Wv U0 := piMap graphDomₗ
 
 theorem incl0_rp (ψ : Vt0) : incl0 (rp ψ) = ιt0 ψ := PiLp.ext fun _ => rfl
 
-/-- **The regular potentials** `y = (yₐ)ₐ ∈ (H̊Λ⁰(Q)³)³ ↦ (S⁰ yₐ)ₐ ∈ H̊Λ¹(Q)³`: the matrix fields
-with rows in `H̊¹(Q; ℝ³)`. -/
+/-- **The regular potentials** `(yₐ)ₐ ↦ (S⁰ yₐ)ₐ`: matrix fields with rows in `H̊¹(Q; ℝ³)`. -/
 def regR : Wv Vt0 →ₗ[ℝ] Wv U1 := piMap (segS0 ∘ₗ rp)
 
 theorem coe_regR (y : Wv Vt0) (a : Fin 3) : ((regR y a : U1) : W1) = wsZero (ιt0 (y a)) := by
@@ -558,7 +480,6 @@ theorem norm_regR_le (y : Wv Vt0) : ‖regR y‖ ≤ 1 * ‖y‖ := by
     exact norm_wsL2_zero_incl0_sq_le (rp ψ)
   exact h3.trans h2
 
-/-- The components of `S¹ (S⁰ yₐ)ₐ` are `H̊¹(Q)` coefficients. -/
 theorem segS1_regR_mem_H1c (y : Wv Vt0) (t : formIdx 3 2) :
     ∃ h : segS1 (regR y) t ∈ H1c,
       ‖gradc ⟨_, h⟩‖ ≤ (Fintype.card (Fin 3 × formIdx 3 1) : ℝ) * ‖y‖ := by
@@ -618,7 +539,7 @@ theorem bggDt1_eq (u : Vt1) : bggDt1 u = bggSegment.dt1 (rp1 u) :=
   PiLp.ext fun a => (D1.apply_graphDom (u a)).symm
 theorem bggDt1_toGraphVec1 (v : Wv U1) : bggDt1 (toGraphVec1 v) = bggSegment.dt1 v := rfl
 
-/-! The fields of `bggHilb` (stated once, to rewrite with them instead of unfolding). -/
+/-! ### The fields of `bggHilb` -/
 
 theorem bggHilb_ι1 : bggHilb.ι1 = D1.graphFst := rfl
 theorem bggHilb_ι0 : bggHilb.ι0 = D0.graphFst := rfl
@@ -630,7 +551,6 @@ theorem bggHilb_S1 : bggHilb.S1 = bggS1 := rfl
 theorem bggHilb_dt1 : bggHilb.dt1 = bggDt1 := rfl
 
 set_option maxHeartbeats 4000000 in
-/-- The first equation of (5.3) in the domain model, from `IsSaddle` with multiplier `jW λ`. -/
 theorem isSaddle_jW_first_eq {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {l : W1}
     (hs : bggHilb.IsSaddle f x (bggHilb.jW l)) (τ : U0) (ψ : Wv U0) :
     ⟪graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x), τ⟫ - ⟪rp1 (Feec.BGG.pu V0 Vt0 Vt1 x),
@@ -656,11 +576,6 @@ theorem isSaddle_jW_first_eq {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {l : W1}
   linarith
 
 set_option maxHeartbeats 4000000 in
-/-- **The solution of Prop 5.2 solves the domain form of (5.3)** whenever its multiplier lies in
-`W¹ = L²Λ¹(Q)` (`l = jW λ`; Prop 5.2 itself only gives `l ∈ W̌¹`): the components `σ`, `φ`, `u`
-of the graph-space solution, as points of the domains `H̊Λ⁰(Q)`, `H̊Λ⁰(Q)³`, `H̊Λ¹(Q)³`, satisfy the
-three equations of (5.3) in the form used by `Feec.BGG.Discrete.error_estimate_of_weakConsistency`
-(and `cubeFEM_rate`), with `λ` and the datum `F v = ⟪f, v⟫`. -/
 theorem isSaddle_jW_domain_eqs {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {l : W1}
     (hs : bggHilb.IsSaddle f x (bggHilb.jW l)) :
     (∀ τ ψ, ⟪graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x), τ⟫ - ⟪rp1 (Feec.BGG.pu V0 Vt0 Vt1 x),
@@ -708,7 +623,6 @@ theorem measureUnivNNReal_cube_le : measureUnivNNReal (volume.restrict (cubeDoma
   rw [Measure.restrict_apply_univ]
   simpa using ENNReal.toNNReal_mono ENNReal.one_ne_top h
 
-/-- An `L²(Q)` function bounded by `B` a.e. has norm `≤ B` (`|Q| ≤ 1`). -/
 theorem norm_L2_le_of_bound {f : L2 ℝ (cubeDomain 3)} {B : ℝ} (hB : 0 ≤ B)
     (h : ∀ᵐ x ∂(volume.restrict (cubeDomain 3)), ‖f x‖ ≤ B) : ‖f‖ ≤ B := by
   refine (Lp.norm_le_of_ae_bound hB h).trans ?_
@@ -721,7 +635,6 @@ theorem norm_L2_le_of_bound {f : L2 ℝ (cubeDomain 3)} {B : ℝ} (hB : 0 ≤ B)
         exact_mod_cast h1
     _ = B := one_mul B
 
-/-- A field in `L²(Q; ℝ^ι)` with components bounded by `B` a.e. has norm `≤ #ι B`. -/
 theorem norm_L2F_le_of_bound {ι : Type*} [Fintype ι] (z : L2F ℝ (cubeDomain 3) ι) {B : ℝ}
     (hB : 0 ≤ B) (h : ∀ s, ∀ᵐ x ∂(volume.restrict (cubeDomain 3)), ‖z s x‖ ≤ B) :
     ‖z‖ ≤ Fintype.card ι * B := by
@@ -742,7 +655,6 @@ theorem norm_eq_zero_of_neg {j : ℤ} (hj : j < 0) (x : L2F ℝ (cubeDomain 3) (
   obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
   exact norm_eq_zero_negSucc k x
 
-/-- **`L²` bound from the sup bound**: `‖x‖ ≤ #(formIdx) L` for `IsCsFormTr s j L x` (`|Q| ≤ 1`). -/
 theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.norm_le {s : ℕ} {j : ℤ} {L : ℝ}
     {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)} (hx : IsCsFormTr s j L x) (hL0 : 0 ≤ L) :
     ‖x‖ ≤ Fintype.card (formIdx 3 j) * L := by
@@ -764,10 +676,6 @@ theorem norm_coordDir_le (j : Fin 3) : ‖(coordDir j : Fin 3 → ℝ)‖ ≤ 1 
 theorem abs_sgn (j : Fin 3) (s : Finset (Fin 3)) : |(ExteriorFibre.sgn j s : ℝ)| = 1 := by
   simp [ExteriorFibre.sgn]
 
-/-- **`S¹u ∈ D(d¹*)` for `C²` fields by Green's formula**: if `x ∈ L²(Q; Λ²)` is the class of a
-`C²` `2`-form with `‖Dw‖ ≤ L` on `cl Q` (no boundary condition), then
-`|⟪x, d w⟫| ≤ 9 L ‖w‖` for `w ∈ H̊Λ¹(Q)`: `⟪x, d w⟫ = ⟪δx, w⟫` on `D(d_min)` (by density of the
-test forms, `minimal_green`) and `|δx| ≤ 3L`. -/
 theorem _root_.Feec.Models.Cube.FEM.IsCsForm.abs_inner_D1_le {L : ℝ} {x : W2}
     (hx : IsCsForm 0 2 L x) (hL0 : 0 ≤ L)
     (w : U1) : |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ := by
@@ -828,7 +736,6 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsForm.abs_inner_D1_le {L : ℝ} {x : W2}
   rw [mul_comm]
   exact mul_le_mul_of_nonneg_right hnorm (norm_nonneg _)
 
-/-- The Green bound for the class `IsCsFormTr` (which carries no condition used by it). -/
 theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.abs_inner_D1_le {L : ℝ} {x : W2}
     (hx : IsCsFormTr 0 2 L x) (hL0 : 0 ≤ L) (w : U1) :
     |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ :=
@@ -859,8 +766,6 @@ theorem isTest_manufacturedBump : IsTest (cubeDomain 3) (manufacturedBump : (Fin
   ⟨manufacturedBump.contDiff, manufacturedBump.hasCompactSupport, by
     rw [manufacturedBump.tsupport_eq]; exact closedBall_manufacturedCenter_subset⟩
 
-/-- **The bump has a nonzero partial derivative `∂₀` at some point of `Q`** (mean value theorem
-on the segment from the centre, where it is `1`, to a point where it vanishes). -/
 theorem exists_fderiv_manufacturedBump_ne_zero : ∃ y ∈ cubeDomain 3,
     fderiv ℝ (manufacturedBump : (Fin 3 → ℝ) → ℝ) y (coordDir 0) ≠ 0 := by
   set g : ℝ → ℝ := fun t => manufacturedBump (manufacturedCenter + t • (coordDir 0 : Fin 3 → ℝ))
@@ -902,18 +807,16 @@ theorem isTestField_manufacturedβ : IsTestField (cubeDomain 3) manufacturedβ :
   · exact isTest_manufacturedBump
   · exact IsTest.zero
 
-/-- The divergence-free `1`-form `χ = dᵗβ` (minus the codifferential of `β`). -/
+/-- The divergence-free `1`-form `χ = dᵗβ`. -/
 def manufacturedχ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ :=
   (extDerivOp ℝ 3 1).formalAdj.apply manufacturedβ
 
 theorem isTestField_manufacturedχ : IsTestField (cubeDomain 3) manufacturedχ :=
   (extDerivOp ℝ 3 1).formalAdj.isTestField_apply isTestField_manufacturedβ
 
-/-- `dᵗχ = dᵗdᵗβ = 0`: `χ` is divergence free. -/
 theorem formalAdj_apply_manufacturedχ : (extDerivOp ℝ 3 0).formalAdj.apply manufacturedχ = 0 :=
   isComplexPair_formalAdj_extDerivOp 0 manufacturedβ fun t => (isTestField_manufacturedβ t).contDiff
 
-/-- `χ_{1} = −∂₀ f`. -/
 theorem manufacturedχ_one (y : Fin 3 → ℝ) :
     manufacturedχ ⟨{1}, by simp⟩ y =
       -fderiv ℝ (manufacturedBump : (Fin 3 → ℝ) → ℝ) y (coordDir 0) := by
@@ -935,7 +838,6 @@ theorem manufacturedχ_ne_zero : ∃ y ∈ cubeDomain 3, manufacturedχ ⟨{1}, 
   obtain ⟨y, hy, hne⟩ := exists_fderiv_manufacturedBump_ne_zero
   exact ⟨y, hy, by rw [manufacturedχ_one]; exact neg_ne_zero.2 hne⟩
 
-/-- **A test field is a `C²` form vanishing outside `Q`** (`IsCsFormMin 0`, for some bound). -/
 theorem exists_isCsFormMin_testField {k : ℕ} {χ : formIdx 3 k → (Fin 3 → ℝ) → ℝ}
     (hχ : IsTestField (cubeDomain 3) χ) : ∃ L, 0 ≤ L ∧ IsCsFormMin 0 k L (testField hχ) := by
   have hw : ContDiff ℝ ∞ (toFormField χ) := contDiff_toFormField fun r => (hχ r).contDiff
@@ -966,11 +868,9 @@ def manufacturedU0 : U1 :=
   ⟨testField isTestField_manufacturedχ,
     (extDerivOp ℝ 3 1).testField_mem_minimal_domain (isOpen_cubeDomain 3) isTestField_manufacturedχ⟩
 
-/-- **The manufactured `u`**: the matrix field with first row `χ = dᵗ(f dx₀ ∧ dx₁)` and the other
-rows zero (row-wise divergence free, smooth, compactly supported in `Q`). -/
+/-- **The manufactured `u`**: first row `χ = dᵗ(f dx₀ ∧ dx₁)`, other rows zero. -/
 def manufacturedU : Wv U1 := WithLp.toLp 2 (Pi.single 0 manufacturedU0)
 
-/-- A test field with a component nonzero at a point of `Q` is nonzero in `L²`. -/
 theorem testField_ne_zero {ι : Type*} {φ : ι → (Fin 3 → ℝ) → ℝ}
     (hφ : IsTestField (cubeDomain 3) φ) {i : ι} {y : Fin 3 → ℝ} (hy : y ∈ cubeDomain 3)
     (hne : φ i y ≠ 0) : testField hφ ≠ 0 := by
@@ -1003,7 +903,6 @@ theorem manufacturedU_ne_zero : manufacturedU ≠ 0 := by
   rw [Pi.single_eq_same] at this
   exact manufacturedχ_ne_zero_L2 this
 
-/-- `⟪χ, d ψ⟫ = 0` for `ψ ∈ H̊Λ⁰(Q)` (`dᵗχ = 0`, Green's formula on `D(d_min)`). -/
 theorem inner_manufacturedχ_D0 (x : U0) : ⟪testField isTestField_manufacturedχ, D0 x⟫ = 0 := by
   have hψs : ∀ r, ContDiff ℝ 1 (manufacturedχ r) := fun r =>
     contDiff_infty.1 (isTestField_manufacturedχ r).contDiff 1
@@ -1056,7 +955,6 @@ theorem incl1_manufacturedU :
     refine (testField_zero (ι := formIdx 3 1)).symm.trans (testField_congr _ _ ?_)
     rw [manufacturedφ, Pi.single_eq_of_ne ha]
 
-/-- `S¹ manufacturedU` is a test field. -/
 theorem segS1_manufacturedU :
     bggSegment.S1 manufacturedU = testField (isTestField_wsFields isTestField_manufacturedφ) := by
   change wsL2 (Ω := cubeDomain 3) 1 (incl1 manufacturedU) = _
@@ -1101,11 +999,6 @@ theorem manufactured_u (a : Fin 3) {L Lu L1 : ℝ}
       rw [this, ZeroMemClass.coe_zero]
     rw [e]; exact h1.mono hL1
 
-/-- **A nontrivial smooth solution of (5.3) on the cube (manufactured data)**: `σ = 0`, `φ = 0`,
-`λ = 0` and `u = manufacturedU ≠ 0` (row-wise divergence free, smooth, compactly supported in
-`Q`), with the datum `F = manufacturedDatum`, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`, satisfy the
-continuous system and the `C²`
-hypotheses of `cubeFEM_rate_C2` for some `L`. -/
 theorem exists_manufactured_solution : ∃ L, 0 ≤ L ∧
     IsCsFormMin 0 0 L ((0 : U0) : W0) ∧ (∀ a, IsCsFormMin 0 0 L (((0 : Wv U0) a : U0) : W0)) ∧
     (∀ a, IsCsFormMin 0 1 L ((manufacturedU a : U1) : W1)) ∧ IsCsFormMin 0 1 L (0 : W1) ∧
@@ -1144,7 +1037,6 @@ def coordWedgeCLM (a : Fin 3) : (Finset (Fin 3) → ℝ) →L[ℝ] (Finset (Fin 
     ((coordWedgeSumₗ : (Fin 3 → Finset (Fin 3) → ℝ) →ₗ[ℝ] _) ∘ₗ
       LinearMap.single ℝ (fun _ : Fin 3 => Finset (Fin 3) → ℝ) a)
 
-/-- `S v = Σₐ dxₐ ∧ vₐ` as a sum of fibre maps. -/
 theorem coordWedgeField_eq_sum (v : Fin 3 → FormField 3) :
     coordWedgeField v = ∑ a, (coordWedgeCLM a) ∘ v a := by
   funext x
@@ -1154,7 +1046,6 @@ theorem coordWedgeField_eq_sum (v : Fin 3 → FormField 3) :
   refine Finset.sum_congr rfl fun b _ => ?_
   rfl
 
-/-- Derivative bounds for `S v` from those of the `vₐ`. -/
 theorem norm_iteratedFDeriv_coordWedgeField_le_sum {v : Fin 3 → FormField 3} {m : ℕ}
     (hv : ∀ a, ContDiff ℝ m (v a)) {L : ℝ} {i : ℕ} (hi : i ≤ m) {y : Fin 3 → ℝ}
     (h : ∀ a, ‖iteratedFDeriv ℝ i (v a) y‖ ≤ L) :
@@ -1166,7 +1057,6 @@ theorem norm_iteratedFDeriv_coordWedgeField_le_sum {v : Fin 3 → FormField 3} {
   exact ((coordWedgeCLM a).norm_iteratedFDeriv_comp_left (hv a).contDiffAt hi').trans
     (mul_le_mul_of_nonneg_left (h a) (norm_nonneg _))
 
-/-- `S` preserves vanishing tangential traces: for `j ∉ t`, `j ∉ t ∖ {l}`. -/
 theorem isTangentialZero_coordWedgeField {v : Fin 3 → FormField 3}
     (hv : ∀ a, IsTangentialZero (v a)) : IsTangentialZero (coordWedgeField v) := by
   intro y hy j t hjt hyj
@@ -1174,12 +1064,6 @@ theorem isTangentialZero_coordWedgeField {v : Fin 3 → FormField 3}
   refine Finset.sum_eq_zero fun i _ => Finset.sum_eq_zero fun l hl => ?_
   rw [hv i y hy j (t.erase l) (fun h' => hjt (Finset.mem_of_mem_erase h')) hyj, mul_zero]
 
-/-- **`S¹u` inherits the class of `u`**: if every component `uₐ` is a `C²` `1`-form with vanishing
-tangential traces and bound `L` (`IsCsFormTr 0`), then `S¹u = Σₐ dxₐ ∧ uₐ` is a `C²` `2`-form with
-vanishing tangential traces and bound `c L`, with `c` universal: the tangential trace of
-`dxₐ ∧ uₐ` on a face vanishes with that of `uₐ` (`isTangentialZero_coordWedgeField`),
-`d(S¹u) = −Σₐ dxₐ ∧ duₐ` (`extDeriv_coordWedgeField_eq`), and the derivatives are bounded through
-the fibre maps (`norm_iteratedFDeriv_coordWedgeField_le_sum`). -/
 theorem exists_isCsFormTr_segS1 : ∃ c : ℝ, 1 ≤ c ∧ ∀ (u : Wv U1) {L : ℝ}, 0 ≤ L →
     (∀ a, IsCsFormTr 0 1 L (u a : W1)) → IsCsFormTr 0 2 (c * L) (bggSegment.S1 u) := by
   have hc0 : 0 ≤ ∑ a, ‖coordWedgeCLM a‖ := Finset.sum_nonneg fun a _ => norm_nonneg _
@@ -1243,7 +1127,6 @@ section ProjError
 
 variable {S' : (complexMin 3).Subcomplex}
 
-/-- Interpolation of a `C²` scalar field vanishing on `∂Q` (degree `0`), in the graph norm. -/
 theorem exists_approx_zero_tr {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (σ : U0)
     (hσ : IsCsFormTr 0 0 L (σ : W0)) :
     ∃ v, ∃ hv : v ∈ (polyMin 3 S N).V 0,
@@ -1256,7 +1139,6 @@ theorem exists_approx_zero_tr {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) 
   rw [d01_apply] at h
   simpa using h
 
-/-- Interpolation of a `C²` `1`-form with vanishing tangential traces, in the graph norm. -/
 theorem exists_approx_one_tr {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (u : U1)
     (hu : IsCsFormTr 0 1 L (u : W1)) :
     ∃ v, ∃ hv : v ∈ (polyMin 3 S N).V 1,
@@ -1272,7 +1154,6 @@ theorem exists_approx_one_tr {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (
 
 
 
-/-- Graph-norm error of a cochain projection in degree `0` from an approximation. -/
 theorem graphSq_projU0_sub_le (P : S'.CochainProjection) {C : ℝ}
     (hP1 : ∀ x, ‖P.π 1 x‖ ≤ 2 * C * ‖x‖) (hP0 : ∀ x, ‖P.π 0 x‖ ≤ 2 * C * ‖x‖) (σ : U0)
     {v : W0} (hv : v ∈ S'.V 0) {B : ℝ} (h1 : ‖(σ : W0) - v‖ ≤ B)
@@ -1302,7 +1183,6 @@ theorem graphSq_projU0_sub_le (P : S'.CochainProjection) {C : ℝ}
   have := pow_le_pow_left₀ (norm_nonneg _) a2 2
   linarith
 
-/-- Graph-norm error of a cochain projection in degree `1` from an approximation. -/
 theorem graphSq_projU1_sub_le (P : S'.CochainProjection) {C : ℝ}
     (hP2 : ∀ x, ‖P.π 2 x‖ ≤ 2 * C * ‖x‖) (hP1 : ∀ x, ‖P.π 1 x‖ ≤ 2 * C * ‖x‖) (u : U1)
     {v : W1} (hv : v ∈ S'.V 1) {B : ℝ} (h1 : ‖(u : W1) - v‖ ≤ B)
@@ -1341,8 +1221,6 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-/-- **The smoothed projections of the two rows satisfy (5.4)**: `π¹ S⁰ π̃⁰ = π¹ S⁰` (common
-smoother `p`; `π̃⁰` componentwise). -/
 theorem proj_wsL2_piMap_proj (N : ℕ) (x : PiLp 2 (fun _ : Fin 3 => W0)) :
     (hT.proj N).π 1 (wsL2 (Ω := cubeDomain 3) 0 (piMap ((hB.proj N).π 0) x)) =
       (hT.proj N).π 1 (wsL2 (Ω := cubeDomain 3) 0 x) := by
@@ -1361,9 +1239,7 @@ theorem proj_wsL2_piMap_proj (N : ℕ) (x : PiLp 2 (fun _ : Fin 3 => W0)) :
       (polySmoothedMin 3 PolySeq.lagrangeP2 N (p N) (hB.isMinimal N)).mem 0 (x a)⟩
   exact h
 
-/-- **The discretization of Table 5.1** on the level-`(N + 1)` mesh: top row `P₁Λ̊⁰ → P₁⁻Λ̊¹ →
-P₁⁻Λ̊²`, bottom row `P₂Λ̊⁰ ⊗ ℝ³ → P₂⁻Λ̊¹ ⊗ ℝ³ → P₁Λ̊² ⊗ ℝ³` (vanishing boundary DOFs), with the
-smoothed projections `π = J⁻¹ Π_h R` of one common smoother. -/
+/-- **The discretization of Table 5.1** on the level-`(N + 1)` mesh, with smoothed projections. -/
 def cubeFEM (N : ℕ) : Feec.BGG.Discrete bggSegment :=
   bggDiscrete (polyMin 3 PolySeq.lowestOrder N) (polyMin 3 PolySeq.lagrangeP2 N) (hT.proj N)
     (hB.proj N)
@@ -1383,11 +1259,7 @@ theorem cubeFEM_bounded (N : ℕ) : (cubeFEM hT hB N).Bounded (2 * C) :=
     ((hT.proj N).isGraphBounded_of_norm_le (hT.norm_proj_le N 1) (hT.norm_proj_le N 2))
     ((hB.proj N).isGraphBounded_of_norm_le (hB.norm_proj_le N 1) (hB.norm_proj_le N 2))
 
-/-- **Consistency of `S₀,ₕ = π¹S⁰`** ([QuennevilleBelair2015], Prop 5.9(1), transferred to the
-smoothed projection): `‖(I − π¹)S⁰ψ‖ ≤ C_app h ‖ψ‖_V` on `Ṽₕ⁰ = P₂Λ̊⁰ ⊗ ℝ³`, since
-`(I − π¹)S⁰ψ = (I − π¹)(S⁰ψ − Π¹S⁰ψ)` (`π¹` fixes `Π¹S⁰ψ ∈ P₁⁻Λ̊¹`), so it is at most
-`(1 + 2C) ‖(I − Π¹)S⁰ψ‖ ≤ (1 + 2C) C h ‖∇ψ‖`. The hypothesis `happ0` of
-`Feec.BGG.Discrete.error_estimate`. -/
+/-- **Consistency of `S₀,ₕ = π¹S⁰`** ([QuennevilleBelair2015], Prop 5.9(1) (adapted)). -/
 theorem cubeFEM_happ0 : ∃ Capp, 0 ≤ Capp ∧ ∀ N, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
     ‖bggSegment.S0 ψ - (cubeFEM hT hB N).S0h ψ‖ ^ 2 ≤
       (Capp * meshSize N) ^ 2 * Feec.BGG.graphSq bggSegment.dt0 ψ := by
@@ -1448,10 +1320,7 @@ theorem sum_norm_d01_le_two {x : W2} (hy : ∀ s, coeffForm (x s) ∈ ((complexM
         exact hB s (mem_D0_domain (hy s))
     _ = _ := by rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
 
-/-- **Regular potentials for the discretization of Table 5.1**, from the regularity hypothesis
-`curl H̊(curl) = curl S⁰ H̊¹(Q; ℝ³)` (with its constant `C_R`) and the `H̊¹` approximation of the
-smoothed projections (`PolySmoothingEstimatesMin.norm_sub_proj_le_grad`): `X_reg = (H̊Λ⁰(Q)³)³`
-(rows in `H̊¹`, graph norm), `R y = (S⁰ yₐ)ₐ`. -/
+/-- **Regular potentials for Table 5.1**: `X_reg = (H̊Λ⁰(Q)³)³`, `R y = (S⁰ yₐ)ₐ`. -/
 def cubeFEMReg (N : ℕ) {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖)
     {Capp : ℝ} (hCapp : regConst C ≤ Capp) :
@@ -1537,8 +1406,6 @@ def cubeFEMReg (N : ℕ) {CR : ℝ} (hCR0 : 0 ≤ CR)
             linarith
           gcongr
 
-/-- **The continuous constants of Prop 5.3 on the cube** for a regularity constant `C_R`
-(the form of `bggStability` with `C_R` given). -/
 theorem bggStability_of {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     Feec.BGG.Stability bggSegment (2 * Real.pi)⁻¹ CR (Real.sqrt 2) :=
@@ -1560,7 +1427,6 @@ instance cubeWave_fdt1 (N : ℕ) : FiniteDimensional ℝ (cubeFEM hT hB N).Vt1h 
   haveI := finiteDimensional_comap ((polyMin 3 PolySeq.lagrangeP2 N).V 1) D1.domain
   finiteDimensional_tsub _
 
-/-- `‖S₁,ₕ w‖² ≤ 8 C² ‖w‖²` for the discretization of Table 5.1. -/
 theorem norm_cubeFEM_S1h_sq_le (N : ℕ) (w : Wv U1) :
     ‖(cubeFEM hT hB N).S1h w‖ ^ 2 ≤ 8 * C ^ 2 * ‖w‖ ^ 2 := by
   have h1 : ‖(cubeFEM hT hB N).S1h w‖ ≤ 2 * C * ‖segS1 w‖ := hT.norm_proj_le N 2 (segS1 w)
@@ -1569,7 +1435,6 @@ theorem norm_cubeFEM_S1h_sq_le (N : ℕ) (w : Wv U1) :
   have h3 := pow_le_pow_left₀ (norm_nonneg _) h1 2
   nlinarith [mul_le_mul_of_nonneg_left h2 (sq_nonneg (2 * C))]
 
-/-- `gnSq ≤ (1 + 8C²) graphSq` for the discretization of Table 5.1. -/
 theorem cubeFEM_gnSq_le (N : ℕ) (w : Wv U1) :
     (cubeFEM hT hB N).gnSq w ≤ (1 + 8 * C ^ 2) * Feec.BGG.graphSq bggSegment.dt1 w := by
   have h := norm_cubeFEM_S1h_sq_le hT hB N w
@@ -1653,11 +1518,6 @@ theorem cubeFEM_err_S1_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
 
 
 set_option maxHeartbeats 1000000 in
-/-- **The rate of `cubeFEM_rate` from the projection errors**: for constants `A₀, …, A₃ ≥ 0`
-there is `K` such that `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K δ)²` for every solution of
-(5.3) whose projection errors are `≤ Aᵢ δ²` at a level `δ ≥ h_N L` (e.g. the conclusions of
-`cubeFEM_err_P0_tr`, `cubeFEM_err_Pt0_tr`, `cubeFEM_err_gnSq_tr`, `cubeFEM_err_S1_tr` with
-`δ = L h_N`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`. -/
 theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖)
     {A0 A1 A2 A3 : ℝ} (hA0 : 0 ≤ A0) (hA1 : 0 ≤ A1) (hA2 : 0 ≤ A2) (hA3 : 0 ≤ A3) :
@@ -1780,14 +1640,6 @@ theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
         ring
 
 set_option maxHeartbeats 1000000 in
-/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate**: under the regularity
-hypothesis (`curl H̊(curl) = curl S⁰H̊¹(Q;ℝ³)` with constant `C_R`), for every `N` and every
-solution `(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` up to
-`∂Q` with vanishing tangential traces (`IsCsFormTr 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and
-`|⟪S¹u, d w⟫| ≤ L ‖w‖`
-(`S¹u ∈ D(d¹*)`), every discrete solution of the method (5.6), i.e. (5.7) with `S_h = πS` in place
-of the canonical `Π¹_h S⁰`, `Π²_h S¹`, satisfies
-`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`. -/
 theorem cubeFEM_rate_tr_of_bounds {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
@@ -1827,16 +1679,8 @@ theorem cubeFEM_rate_tr_of_bounds {CR : ℝ} (hCR0 : 0 ≤ CR)
     hσh hφh huh h1 h2 h3).trans_eq (by ring)
 
 set_option maxHeartbeats 1000000 in
-/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions
-with vanishing tangential traces** (thesis' boundary conditions, no flatness): the form of
-`cubeFEM_rate_tr_of_bounds` where the hypotheses on `σ, φ, u` are `C²` regularity up to
-`∂Q`: if `σ`, `φ` and `u` are `C²` forms whose tangential components vanish on `∂Q`, with
-values and first derivatives bounded by `L` on `cl Q` (`IsCsFormTr 0`), and the multiplier
-`λ ∈ L²` (no boundary condition, no smoothness) has
-`‖λ‖ ≤ L`, then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`; the class of `S¹u`
-(`exists_isCsFormTr_segS1`), its `L²` bound
-and the regularity `S¹u ∈ D(d¹*)` are derived (`IsCsFormTr.norm_le`,
-`IsCsFormTr.abs_inner_D1_le`). -/
+/-- **[QuennevilleBelair2015], Thm 5.5 (adapted)**: given a constant `C_R` of `CurlPotential`, the
+error is `K L h_N` for `σ`, `φ`, `u` in `IsCsFormTr 0` and `‖λ‖ ≤ L`. -/
 theorem cubeFEM_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
@@ -1894,10 +1738,6 @@ theorem cubeFEM_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
   refine hb.trans (le_of_eq ?_)
   ring
 
-/-- **The rate for the solution of Prop 5.2** (`bggHilb.IsSaddle`, `bgg_existsUnique_isSaddle`):
-`cubeFEM_rate_tr` applied to the graph-space solution `(x, jW λ)` of (5.3) with right-hand side `f`
-and multiplier in `W¹` (`λ ∈ L²Λ¹(Q)`), through `isSaddle_jW_domain_eqs`; the discrete datum is
-`F v = ⟪f, v⟫`. -/
 theorem cubeFEM_rate_isSaddle_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {lam : W1} {L : ℝ},
@@ -1927,12 +1767,6 @@ theorem cubeFEM_rate_isSaddle_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
 
 
 set_option maxHeartbeats 1000000 in
-/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for flat data**: the
-form of `cubeFEM_rate_tr_of_bounds` for solutions whose components and `S¹u` are `C²` and vanish
-outside `Q` (`IsCsFormMin 0`, bound `L`; every such form is `IsCsFormTr 0` with the same bound,
-`IsCsFormMin.isCsFormTr`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`: every discrete solution
-of the method (5.6) satisfies `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K`
-independent of `N`. -/
 theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
@@ -1964,11 +1798,6 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       hSu.isCsFormTr⟩
 
 set_option maxHeartbeats 1000000 in
-/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for flat `C²`
-solutions**: if `σ`, `φ`, `u` and `S¹u` are `C²` forms vanishing outside `Q` with first
-derivatives bounded by `L` (`IsCsFormMin 0`) and the multiplier `λ ∈ L²` has `‖λ‖ ≤ L`, then
-`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`. This is `cubeFEM_rate_tr`
-(`IsCsFormMin.isCsFormTr`), which needs no hypothesis on `S¹u`. -/
 theorem cubeFEM_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
@@ -1998,10 +1827,6 @@ theorem cubeFEM_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
     hK N hL0 c1 c2 c3 hσ.isCsFormTr (fun a => (hφ a).isCsFormTr) (fun a => (hu a).isCsFormTr)
       hlam⟩
 
-/-- **The rate for the solution of Prop 5.2** (`bggHilb.IsSaddle`, `bgg_existsUnique_isSaddle`):
-`cubeFEM_rate_C2` applied to the graph-space solution `(x, jW λ)` of (5.3) with right-hand side `f`
-and multiplier in `W¹` (`λ ∈ L²Λ¹(Q)`), through `isSaddle_jW_domain_eqs`; the discrete datum is
-`F v = ⟪f, v⟫`. -/
 theorem cubeFEM_rate_isSaddle {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {lam : W1} {L : ℝ},
@@ -2030,9 +1855,8 @@ theorem cubeFEM_rate_isSaddle {CR : ℝ} (hCR0 : 0 ≤ CR)
   have e := isSaddle_jW_domain_eqs hs
   exact hK N hL0 e.1 e.2.1 e.2.2 hσ hφ hu hlam hSu hσh hφh huh h1 h2 h3
 
-/-- **Thesis Prop 5.4 for Table 5.1**: for every `N` and every datum `F` the discrete system
-(5.6) (thesis (5.7) with `S_h = πS`) has exactly one solution (under the regularity hypothesis,
-through its constant `C_R`). -/
+/-- **[QuennevilleBelair2015], Prop 5.4 (adapted), for Table 5.1**: given a constant `C_R` of
+`CurlPotential`, the discrete system (5.6) is uniquely solvable. -/
 theorem cubeFEM_existsUnique {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) (N : ℕ)
     (F : Wv U1 →ₗ[ℝ] ℝ) :
@@ -2059,7 +1883,6 @@ theorem mem_tsub_single {V : Type*} [NormedAddCommGroup V] [InnerProductSpace �
   · subst ha; simpa using hv
   · simp [Pi.single_eq_of_ne ha]
 
-/-- If `‖x − y_N‖ ≤ K h_N` and `x ≠ 0`, then `y_N ≠ 0` for large `N`. -/
 theorem eventually_ne_zero_of_le {E : Type*} [NormedAddCommGroup E] {x : E} (hx : x ≠ 0)
     {y : ℕ → E} {A B : ℝ} (h : ∀ N, ‖x - y N‖ ≤ A * meshSize N * B) :
     ∀ᶠ N in atTop, y N ≠ 0 := by
@@ -2070,14 +1893,12 @@ theorem eventually_ne_zero_of_le {E : Type*} [NormedAddCommGroup E] {x : E} (hx 
   rw [hy, sub_zero] at this
   linarith
 
-/-- The coefficients of a test field lie in `H̊¹(Q)`. -/
 theorem coeffForm_testField_mem {k : ℕ} {χ : formIdx 3 k → (Fin 3 → ℝ) → ℝ}
     (hχ : IsTestField (cubeDomain 3) χ) (s : formIdx 3 k) :
     coeffForm (testField hχ s) ∈ ((complexMin 3).d 0 1).domain :=
   mem_dom01 ((extDerivOp ℝ 3 0).testField_mem_minimal_domain (isOpen_cubeDomain 3)
     (φ := fun _ : formIdx 3 0 => χ s) fun _ => hχ s)
 
-/-- The scalar bump as a test `0`-form. -/
 theorem isTestField_bump0 : IsTestField (cubeDomain 3)
     (fun _ : formIdx 3 0 => (manufacturedBump : (Fin 3 → ℝ) → ℝ)) := fun _ =>
   isTest_manufacturedBump
@@ -2088,9 +1909,6 @@ theorem bump0_ne_zero : testField isTestField_bump0 ≠ 0 :=
     (by rw [manufacturedBump.one_of_mem_closedBall
       (Metric.mem_closedBall_self manufacturedBump.rIn_pos.le)]; norm_num)
 
-/-- **The discrete spaces of Table 5.1 are nonzero** for all large `N` (unconditionally): the
-smoothed projections of fixed nonzero test fields are nonzero for `h_N` small, by the `H̊¹`
-approximation. -/
 theorem cubeFEM_ne_bot : ∀ᶠ N in atTop, (cubeFEM hT hB N).V0h ≠ ⊥ ∧ (cubeFEM hT hB N).V1h ≠ ⊥ ∧
     (cubeFEM hT hB N).Vt0h ≠ ⊥ ∧ (cubeFEM hT hB N).Vt1h ≠ ⊥ := by
   set x0 := testField isTestField_bump0
@@ -2141,7 +1959,6 @@ theorem coupledLam_apply (a : Fin 3) (y : Fin 3 → ℝ) :
     formExt_of_card coupledG (by simp)]
   simp [ExteriorFibre.sgn, Finset.filter_singleton]
 
-/-- `dᵗuₐ = ∂ₐ g = λₐ`. -/
 theorem formalAdj_coupledU (a : Fin 3) (r : formIdx 3 0) (y : Fin 3 → ℝ) :
     (extDerivOp ℝ 3 0).formalAdj.apply (coupledU a) r y = coupledLam ⟨{a}, by simp⟩ y := by
   have hr : r.1 = ∅ := Finset.card_eq_zero.1 (by exact_mod_cast r.2)
@@ -2178,7 +1995,6 @@ theorem isTestField_coupledPhiFn (a : Fin 3) : IsTestField (cubeDomain 3) (coupl
   fun _ =>
   (extDerivOp ℝ 3 0).isTestField_apply isTestField_coupledSigFn _
 
-/-- The `0`-form `λₐ` (`dᵗuₐ = λₐ`). -/
 theorem isTestField_coupledLamRow (a : Fin 3) : IsTestField (cubeDomain 3)
     (fun _ : formIdx 3 0 => coupledLam ⟨{a}, by simp⟩) := fun _ => isTestField_coupledLam _
 
@@ -2195,7 +2011,6 @@ theorem mem_D1_testField {φ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ} (hφ : I
     testField hφ ∈ D1.domain :=
   (extDerivOp ℝ 3 1).testField_mem_minimal_domain (isOpen_cubeDomain 3) hφ
 
-/-- **Green's formula on `D(d⁰_min)`** against a test `1`-form. -/
 theorem inner_D0_testField (x : U0) {ψ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ}
     (hψ : IsTestField (cubeDomain 3) ψ) :
     ⟪D0 x, testField hψ⟫ =
@@ -2234,7 +2049,6 @@ theorem formIdx_zero_eq (r : formIdx 3 0) : r = ⟨∅, by simp⟩ :=
 theorem inner_W0_eq (x y : W0) : ⟪x, y⟫ = ⟪x ⟨∅, by simp⟩, y ⟨∅, by simp⟩⟫ := by
   rw [L2F.inner_def, Fintype.sum_eq_single ⟨∅, by simp⟩ fun r hr => absurd (formIdx_zero_eq r) hr]
 
-/-- `⟪λ, S⁰ψ⟫ = Σₐ ⟪λₐ, ψₐ⟫`. -/
 theorem inner_coupledMult_S0 (ψ : Wv U0) :
     ⟪coupledMult, wsL2 (Ω := cubeDomain 3) 0 (incl0 ψ)⟫ =
       ∑ a, ⟪coupledMult ⟨{a}, by simp⟩, (incl0 ψ) a ⟨∅, by simp⟩⟫ := by
@@ -2252,7 +2066,6 @@ theorem inner_coupledu_dt0 (ψ : Wv U0) :
     real_inner_comm]
   rfl
 
-/-- `⟪σ, τ⟫ = ⟪λ, dτ⟫` (`σ = dᵗλ`, Green's formula). -/
 theorem inner_coupledσ (τ : U0) : ⟪coupledσ, τ⟫ = ⟪coupledMult, D0 τ⟫ := by
   rw [Submodule.coe_inner, real_inner_comm (D0 τ) coupledMult]
   unfold coupledMult
@@ -2323,10 +2136,6 @@ theorem coupledu_ne_zero : coupledu ≠ 0 := by
     (Metric.mem_closedBall_self manufacturedBump.rIn_pos.le)]
   norm_num
 
-/-- **A coupled nontrivial smooth solution of (5.3) on the cube (manufactured data)**:
-`g` the bump, `λ = dg`, `σ = dᵗλ`, `φₐ = ∂ₐσ` and `uₐ = −g dxₐ`, all nonzero, compactly supported
-in `Q`, satisfy the continuous system with the datum `F = coupledDatum` and the hypotheses of
-`cubeFEM_rate_C2` for some `L`. -/
 theorem exists_coupled_manufactured_solution : ∃ L, 0 ≤ L ∧
     coupledσ ≠ 0 ∧ coupledφ ≠ 0 ∧ coupledu ≠ 0 ∧ coupledMult ≠ 0 ∧
     (∀ τ ψ, ⟪coupledσ, τ⟫ - ⟪coupledu, bggSegment.dt0 ψ⟫ -

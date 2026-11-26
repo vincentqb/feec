@@ -8,70 +8,18 @@ open Feec.Models.Cube.Geometry (openCube closedCube)
 /-!
 # The heat equation with natural boundary conditions in the maximum norm
 
-The heat equation `uₜ = Δu` on the cube `Q = b + (0, s)ⁿ` with the natural (Neumann) boundary
-condition `∂_ν u = 0`, discretized by lumped-mass `P₁` elements on the Freudenthal mesh of level
-`N + 1` (`h = s / (N + 1)`) with **all** nodes `{0, …, N + 1}ⁿ` as unknowns
-(`MaxNormNeumann.Space N`): `(Lₕ U)(p) = -a(φₚ, U_h) / m(p)` (`neumannLaplacian`), the stiffness
-form and lumped mass of `Feec.FiniteElement.LumpedMass`.
+Lumped-mass `P₁` elements on the Freudenthal meshes of `Q = b + (0, s)ⁿ`, all nodes as unknowns, for
+the heat equation with `∂_ν u = 0`: a maximum principle and, by a barrier, first-order errors.
 
 ## Main results
 
-**`MaxNormNeumann.maxNormNeumann`** (statement `MaxNormNeumann.Verdict`):
-
-1. (**the discrete maximum principle**, `isSubMarkovGenerator`) only the non-obtuseness of the
-   Freudenthal simplices enters: `Lₕ` has nonnegative off-diagonal entries and `Lₕ 𝟙 = 0`
-   (`neumannLaplacian_apply_one`, the constants lie in the `P₁` space), so `e^{tLₕ}` is positive and
-   contractive in the maximum norm;
-2. (**the stencil at every node**, `neumannLaplacian_interp`) `(Lₕ Iₕ u)(p) = (n + 1) S_u(p) / C(p)`
-   with `C(p)` the number of (simplex, vertex position) pairs at `p` and
-   `S_u(p) = Σ_σ Σₗ (α⁺ D⁺ₗu - α⁻ D⁻ₗu)`, `α±_{σ,l}(p) ∈ {0, 1}` recording whether the path edge
-   `p → p ± eₗ` of the Kuhn simplex `σ` lies in the mesh; along a coordinate interior to the cube
-   `α⁺ = α⁻` (`Feec.FiniteElement.upCount_eq_downCount`);
-3. (**consistency**) `O(h²)` at the interior nodes (`abs_laplacian_sub_interior_le`, the
-   `(2n + 1)`-point stencil), and `O(1)` at the boundary nodes for `∂_ν u = 0`:
-   `|Δu(p) - (Lₕ Iₕ u)(p)| ≤ n B₂ (1 + (n + 1)!)` (`abs_laplacian_sub_boundary_le`);
-4. (**the barrier**, `neumannLaplacian_interp_chi_boundary`) for `χ = |x - c|²` and
-   `s / h ≥ K_n = 2 (1 + 2n · n!)`, `Lₕ χ ≤ -s / (2 h n!)` at every boundary node, and
-   `Lₕ χ = 2n` at the interior nodes;
-5. (**the semidiscrete error**, `norm_interp_sub_exp_le`) for every classical solution
-   (`NeumannSolution`: `C⁴` on `ℝⁿ`, `uₜ = Δu` on `Q̄`, `∂_ν u = 0`, `|∂ᵢ²u| ≤ B₂`,
-   `|∂ᵢ⁴u| ≤ B₄` on `Q̄`),
-   `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`,
-   `G = n B₂ (1 + (n + 1)!)`: **first order** in the maximum norm at the nodes, by the comparison
-   principle `IsSubMarkovGenerator.abs_apply_le_of_barrier` (positivity of `e^{tLₕ}` and the
-   barrier `κ χ`, `κ = 2 n! h G / s`, `NeumannSolution.exists_barrier`);
-6. the verdict of the Banach layer for the family (`StableFamily.Verdict`, `M = 1`);
-7. (**backward Euler**, `norm_interp_sub_res_pow_le`) with `|uₜₜ| ≤ Bₜ` on `Q̄`,
-   `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ Bₜ + n B₄ h² / 12)`
-   `+ K_n G h (kτ / s + s)`: `O(τ + h)`, by the same barrier and the discrete comparison
-   principle `IsSubMarkovGenerator.abs_apply_le_of_barrier_step` (positivity of `(1 - τLₕ)⁻¹`);
-8. (**every A-stable rational scheme**, `norm_interp_sub_step_pow_le`) Brenner–Thomée's stability
-   bound `1 + C'_r √k` and, for `r` of order `p`, the semidiscrete error plus
-   `C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞` (`StableFamily.norm_sub_step_pow_le_norm_sub_exp_add`);
-9. (**the finite element function on `Q̄`**, `abs_sub_p1Interp_nodal_le`, from
-   `MaxNormHeat.abs_sub_p1Interp_le_of_nodes`) `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D₂ h² / 2`
-   on every simplex, so 5, 7 and 8 bound the errors in `L^∞(Q)` (the simplices cover `Q̄`,
-   `MaxNormHeat.exists_simplex_mem`).
-
-The meshes with all their nodes are a family of non-obtuse meshes in which every vertex is a node
-(`MaxNormNeumann.meshes`); the general estimates of `Feec.FiniteElement.NonobtuseMeshes.maxNormHeat`
-apply to it, but with the `O(1)` boundary consistency of 3 they give only an `O(1)` error, and the
-barrier of 4 is what gives `O(h)`.
-The proved order in `h` is `O(h)`; `O(h²)` is not proved. The boundary consistency is only bounded:
-at nodes with two or more coordinates on the boundary the edge weights `Σ_σ α±` are not those of
-the reflected interior stencil (the Freudenthal mesh is not reflection symmetric), and the nodal
-consistency error does not tend to `0` there (in the plane, at the corner `b`,
-`(Lₕ Iₕ u)(b) → (3/4) Δu(b)` for smooth `u` with `∂_ν u = 0`: a hand computation, not
-formalized). `cosSolution`
-(`e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)`) is a nonzero classical solution with `|uₜₜ| ≤ λ²` and
-`|∂ᵢ∂ₖ u| ≤ (π/s)²` (`maxNormNeumann_nonvacuous`).
+* `MaxNormNeumann.maxNormNeumann`: the maximum principle, consistency and the errors.
+* `MaxNormNeumann.norm_interp_sub_exp_le`: the semidiscrete error `O(h)`.
 
 ## References
 
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-  (the lumped mass method)
-* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -115,7 +63,6 @@ theorem edgeShift_boundaryPerm {p : Fin n → ℤ} {l i : Fin n} (hi : i ≠ l) 
     have : f l < f i := by simp [f, hi, hp]
     simp [not_lt.2 (Fin.le_def.1 (lt_of _ _ this).le)]
 
-/-- At a node of the lower face `pₗ = 0`, the edge `p → p + eₗ` lies in a simplex. -/
 theorem upCount_boundaryPerm {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1) {l : Fin n}
     (hl : p l = 0) : upCount (N + 1) (boundaryPerm N p l) l p = 1 := by
   rw [upCount_eq, ite_eq_left_iff]
@@ -128,7 +75,6 @@ theorem upCount_boundaryPerm {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i 
     · rw [(edgeShift_boundaryPerm hi).1 hN]; omega
     · rw [(edgeShift_boundaryPerm hi).2 hN]; omega
 
-/-- At a node of the upper face `pₗ = N + 1`, the edge `p - eₗ → p` lies in a simplex. -/
 theorem downCount_boundaryPerm {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1) {l : Fin n}
     (hl : p l = N + 1) : downCount (N + 1) (boundaryPerm N p l) l p = 1 := by
   rw [downCount, upCount_eq, ite_eq_left_iff]
@@ -164,8 +110,7 @@ theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Nodes n N) :
     nodal b s U (node b (meshSize s N) q) = U q :=
   nodalFun_apply (node_injective_subtype b (meshSize_pos hs N).ne' _) U q
 
-/-- **The Freudenthal meshes with all their nodes**, a family of non-obtuse meshes
-(`Feec.FiniteElement.NonobtuseMeshes`) in which every vertex is a node. -/
+/-- **The Freudenthal meshes with all their nodes**, a family of non-obtuse meshes. -/
 abbrev meshes (b : Fin n → ℝ) (hs : 0 < s) : NonobtuseMeshes n ℕ where
   mesh N := freudenthalMesh b s hs (N + 1)
   Node N := Nodes n N
@@ -173,9 +118,7 @@ abbrev meshes (b : Fin n → ℝ) (hs : 0 < s) : NonobtuseMeshes n ℕ where
   injective N := node_injective_subtype b (meshSize_pos hs N).ne' _
   isNonobtuse N := isNonobtuse_freudenthalMesh b hs (N + 1)
 
-/-- **The lumped-mass `P₁` Laplacian with natural (Neumann) boundary conditions** on the
-level-`(N + 1)` Freudenthal mesh of `b + (0, s)ⁿ`: `(Lₕ U)(p) = -a(φₚ, U_h) / m(p)` at every node,
-boundary nodes included (`Feec.FiniteElement.lumpedLaplacianOn` on all nodes). -/
+/-- **The lumped-mass `P₁` Laplacian with natural boundary conditions**, at every node. -/
 def neumannLaplacian (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) : Space n N →L[ℝ] Space n N :=
   (meshes b hs).L N
 
@@ -188,23 +131,18 @@ theorem neumannLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) 
         (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) :=
   lumpedLaplacianOn_apply _ _ U p
 
-/-- **Conservation**: `Lₕ 𝟙 = 0`, every vertex of the mesh being a node
-(`Feec.FiniteElement.lumpedLaplacianOn_apply_one`). -/
 theorem neumannLaplacian_apply_one (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     neumannLaplacian b hs N (fun _ => 1) = 0 :=
   lumpedLaplacianOn_apply_one (node_injective_subtype b (meshSize_pos hs N).ne' _) fun T hT j => by
     obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
     exact ⟨⟨q, mem_closedNodes.2 hq⟩, e.symm⟩
 
-/-- **The discrete maximum principle for the Neumann problem**: the Freudenthal meshes are
-non-obtuse, so `Lₕ` is a sub-Markov (indeed Markov, `Lₕ 𝟙 = 0`) generator and `e^{tLₕ}` is
-positive and contractive in the maximum norm. [CiarletRaviart1973] -/
+/-- **The discrete maximum principle for the Neumann problem** ([CiarletRaviart1973]). -/
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     IsSubMarkovGenerator (neumannLaplacian b hs N) :=
   (meshes b hs).isSubMarkovGenerator N
 
-/-- **The maximum-norm Neumann family**: the lumped-mass Neumann Laplacians of the levels
-`N + 1`, a uniformly stable family with `M = 1` (`isSubMarkovGenerator`). -/
+/-- **The maximum-norm Neumann family**, uniformly stable with `M = 1`. -/
 abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
   (meshes b hs).family
 
@@ -219,13 +157,11 @@ abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
 def interp (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Space n N :=
   fun p => u (node b (meshSize s N) p)
 
-/-- The stencil sum `Σ_σ Σₗ (α⁺_{σ,l}(p) D⁺ₗw(p) - α⁻_{σ,l}(p) D⁻ₗw(p))`, `D±` the one-sided
-second-order difference quotients. -/
+/-- The stencil sum `Σ_σ Σₗ (α⁺_{σ,l}(p) D⁺ₗw(p) - α⁻_{σ,l}(p) D⁻ₗw(p))`. -/
 def stencilSum (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (w : (Fin n → ℝ) → ℝ) (p : Fin n → ℤ) : ℝ :=
   ∑ σ : Equiv.Perm (Fin n), ∑ l, (upCount (N + 1) σ l p * edgeQuot b (meshSize s N) w l p -
     downCount (N + 1) σ l p * edgeQuot b (meshSize s N) w l (p - Pi.single l 1))
 
-/-- **The Neumann stencil at any node**: `(Lₕ Iₕ u)(p) = (n + 1) S_u(p) / C(p)`. -/
 theorem neumannLaplacian_interp (hs : 0 < s) (u : (Fin n → ℝ) → ℝ) (p : Nodes n N) :
     neumannLaplacian b hs N (interp b s N u) p =
       (n + 1) * stencilSum b s N u p / vertexCount (N + 1) (p : Fin n → ℤ) := by
@@ -269,7 +205,6 @@ theorem chi_le (b : Fin n → ℝ) {s : ℝ} {x : Fin n → ℝ} (hx : x ∈ clo
         nlinarith [this.1, this.2]
     _ = _ := by simp; ring
 
-/-- The stencil terms of the barrier: `α⁺ (2yₗ/h + 1) - α⁻ (2yₗ/h - 1)`, `yₗ = xₗ - cₗ`. -/
 theorem stencilTerm_chi (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
     upCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l p -
         downCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l (p - Pi.single l 1) =
@@ -290,8 +225,6 @@ theorem stencilTerm_chi (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : 
   rw [d1, d2]
   field_simp
 
-/-- Every stencil term of the barrier is at most `2`; at a boundary coordinate it is
-`α± (1 - s/h) ≤ 0`. -/
 theorem stencilTerm_chi_le (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ}
     (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1) :
     upCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l p -
@@ -332,7 +265,6 @@ theorem stencilTerm_chi_le (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) {p
     rw [ite_eq_right_iff.2 (by rintro ⟨-, h | h⟩ <;> omega)]
     nlinarith
 
-/-- `Lₕ Iₕ u` at an interior node is the `(2n + 1)`-point difference Laplacian. -/
 theorem neumannLaplacian_interp_interior (hs : 0 < s) (u : (Fin n → ℝ) → ℝ) {p : Nodes n N}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
     neumannLaplacian b hs N (interp b s N u) p = ∑ l,
@@ -349,7 +281,6 @@ theorem neumannLaplacian_interp_interior (hs : 0 < s) (u : (Fin n → ℝ) → �
     rw [e, nodal_node hs (q := ⟨q, mem_closedNodes.2 hq⟩)]
     rfl
 
-/-- `L χ = 2n` at the interior nodes (the difference Laplacian is exact on quadratics). -/
 theorem neumannLaplacian_interp_chi_interior (hs : 0 < s) {p : Nodes n N}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
     neumannLaplacian b hs N (interp b s N (chi b s)) p = 2 * n := by
@@ -374,8 +305,7 @@ theorem one_le_vertexCount_of_boundary {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p 
   · rw [← upCount_boundaryPerm hp hl]; exact upCount_le_vertexCount _ _ _
   · rw [← downCount_boundaryPerm hp hl]; exact downCount_le_vertexCount _ _ _
 
-/-- **The barrier at the boundary nodes**: for `s / h ≥ K_n`, `L χ ≤ -s / (2 h n!)` at every node
-with a coordinate on the boundary. -/
+/-- **The barrier at the boundary nodes**: `L χ ≤ -s / (2 h n!)` there, for `s / h ≥ K_n`. -/
 theorem neumannLaplacian_interp_chi_boundary (hs : 0 < s) (p : Nodes n N) {l₀ : Fin n}
     (hl₀ : (p : Fin n → ℤ) l₀ = 0 ∨ (p : Fin n → ℤ) l₀ = N + 1)
     (hK : layerConst n ≤ s / meshSize s N) :
@@ -415,9 +345,8 @@ theorem neumannLaplacian_interp_chi_boundary (hs : 0 < s) (p : Nodes n N) {l₀ 
 
 /-! ### Classical solutions of the Neumann problem -/
 
-/-- A **classical solution of the heat equation with natural boundary conditions**
-`uₜ = Δu` on `[0, T] × Q̄`, `∂_ν u = 0` on `∂Q`: `C⁴` on `ℝⁿ` at each time, with the bounds
-`|∂ᵢ²u| ≤ B₂` and `|∂ᵢ⁴u| ≤ B₄` on `Q̄`. -/
+/-- A **classical solution of the heat equation with Neumann conditions** on `[0, T] × Q̄`,
+`C⁴` in space. -/
 structure NeumannSolution (b : Fin n → ℝ) (s T : ℝ) where
   /-- the solution -/
   u : ℝ → (Fin n → ℝ) → ℝ
@@ -437,12 +366,10 @@ structure NeumannSolution (b : Fin n → ℝ) (s T : ℝ) where
   B₄ : ℝ
   bound₄ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] (u t) x| ≤ B₄
 
-/-- Every node lies in the closed cube. -/
 theorem node_mem_closedCube (hs : 0 < s) (p : Nodes n N) :
     node b (meshSize s N) p ∈ closedCube b s :=
   (node_mem_closedCube_iff hs).2 (mem_closedNodes.1 p.2)
 
-/-- The stencil terms of a function with `∂_ν u = 0` are bounded by `max |∂ₗ²u|`. -/
 theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 2 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |partialDeriv i (partialDeriv i u) x| ≤ B)
     (hneu : ∀ x ∈ closedCube b s, ∀ i, x i = b i ∨ x i = b i + s → partialDeriv i u x = 0)
@@ -516,7 +443,6 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
           mul_le_mul hu1 (div_le_div_of_nonneg_right hD hh2.le) (by positivity) zero_le_one
       _ = B := by rw [one_mul, mul_div_assoc, div_self hh2.ne', mul_one]
 
-/-- A node is interior or has a coordinate on a face. -/
 theorem interior_or_boundary (p : Nodes n N) :
     (p : Fin n → ℤ) ∈ interiorNodes n (N + 1) ∨
       ∃ l, (p : Fin n → ℤ) l = 0 ∨ (p : Fin n → ℤ) l = N + 1 := by
@@ -531,9 +457,6 @@ theorem interior_or_boundary (p : Nodes n N) :
     · have := hl h1; omega
     · omega
 
-/-- **Consistency at the boundary nodes is `O(1)`**: for `u ∈ C²` with `∂_ν u = 0` and
-`|∂ᵢ²u| ≤ B` on `Q̄`, `|Δu(p) - (Lₕ Iₕ u)(p)| ≤ n B (1 + (n + 1)!)` at every node with a
-coordinate on a face. -/
 theorem abs_laplacian_sub_boundary_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 2 u)
     {B : ℝ} (hB : ∀ x ∈ closedCube b s, ∀ i, |partialDeriv i (partialDeriv i u) x| ≤ B)
     (hneu : ∀ x ∈ closedCube b s, ∀ i, x i = b i ∨ x i = b i + s → partialDeriv i u x = 0)
@@ -567,8 +490,6 @@ theorem abs_laplacian_sub_boundary_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     _ ≤ n * B + (n + 1).factorial * n * B := add_le_add hΔ hL
     _ = _ := by ring
 
-/-- **Consistency at the interior nodes is `O(h²)`**: `|Δu(p) - (Lₕ Iₕ u)(p)| ≤ n B h² / 12`
-for `u ∈ C⁴` with `|∂ᵢ⁴u| ≤ B` on `Q̄`. -/
 theorem abs_laplacian_sub_interior_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u)
     {B : ℝ} (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B) {p : Nodes n N}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
@@ -594,11 +515,6 @@ def NeumannSolution.boundaryDefect {T : ℝ} (S : NeumannSolution b s T) : ℝ :
 instance (n N : ℕ) : Nonempty (Nodes n N) :=
   ⟨⟨0, mem_closedNodes.2 fun _ => by simp only [Pi.zero_apply]; omega⟩⟩
 
-/-- **The barrier of the boundary layer**: there are `ψ ≥ 0` and `A` with
-`|Iₕ uₜ - Lₕ Iₕ u| ≤ A - Lₕ ψ` at every node on `[0, T]` (`O(h²)` in the interior, `O(1)` at the
-boundary nodes) and `ψ + t A ≤ t n B₄ h² / 12 + K_n G h (t / s + s)` for `t ≥ 0`: `ψ = κ χ`,
-`κ = 2 n! h G / s`, for `s / h ≥ K_n` (`Lₕ χ ≤ -s / (2 h n!)` at the boundary nodes), `ψ = 0`
-otherwise. -/
 theorem NeumannSolution.exists_barrier {T : ℝ} (S : NeumannSolution b s T) (hs : 0 < s)
     (hT : 0 ≤ T) (N : ℕ) :
     ∃ ψ : Space n N, ∃ A : ℝ, 0 ≤ ψ ∧
@@ -684,12 +600,8 @@ theorem NeumannSolution.exists_barrier {T : ℝ} (S : NeumannSolution b s T) (hs
       simp only [Pi.zero_apply, zero_add]
       nlinarith
 
-/-- **The semidiscrete error of the Neumann problem in the maximum norm at the nodes**: for every
-classical solution and `t ∈ [0, T]`,
-`‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`:
-`O(h)` uniformly in the mesh, from `O(h²)` consistency at the interior nodes and `O(1)`
-consistency at the boundary nodes, through the barrier `χ = |x - c|²` (`Lₕ χ ≤ -s / (2 h n!)` at
-the boundary nodes, `NeumannSolution.exists_barrier`) and the maximum principle. -/
+/-- **The semidiscrete error of the Neumann problem in the maximum norm at the nodes**:
+`‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`. -/
 theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T) (N : ℕ)
     {t : ℝ} (ht : t ∈ Icc 0 T) (v : Space n N) :
     ‖interp b s N (S.u t) - exp (t • neumannLaplacian b hs N) v‖ ≤
@@ -713,11 +625,6 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T
   rw [Real.norm_eq_abs]
   linarith [hb t ht.1 p]
 
-/-- **Backward Euler for the Neumann problem in the maximum norm at the nodes**: if moreover
-`uₜ` has time derivative `u₂` with `|u₂| ≤ Bₜ` on `Q̄`, then for `kτ ≤ T`
-`‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ Bₜ + n B₄ h² / 12)`
-`+ K_n G h (kτ / s + s)`: `O(τ + h)`, unconditionally, by the same barrier and the discrete
-comparison principle (`IsSubMarkovGenerator.abs_apply_le_of_barrier_step`). -/
 theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T)
     {u₂ : ℝ → (Fin n → ℝ) → ℝ} {Bₜ : ℝ}
     (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
@@ -779,9 +686,6 @@ theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b
   show |E k p| ≤ _
   linarith
 
-/-- **Every A-stable rational scheme for the Neumann problem in the maximum norm at the nodes**:
-for `r` of order `p` (Crank–Nicolson, the Gauss and Radau methods), the semidiscrete error plus
-Brenner–Thomée's smooth-data term `C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞`. -/
 theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T)
     {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (N : ℕ) {τ : ℝ}
     (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) :
@@ -794,9 +698,6 @@ theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution 
   simp only [mul_one, RCLike.ofReal_real_eq_id, id_eq, meshes_L] at this
   linarith [norm_interp_sub_exp_le hs S N ⟨by positivity, hk⟩ v]
 
-/-- **The finite element function in the maximum norm on `Q̄`** (Neumann): for `u ∈ C²` with
-`|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and nodal values `U`, at every point `x` of every simplex `K` of the mesh,
-`|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D h² / 2` (`MaxNormHeat.abs_sub_p1Interp_le_of_nodes`). -/
 theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
     (hu : ContDiff ℝ 2 u) {D : ℝ}
     (hD : ∀ x ∈ closedCube b s, ∀ i k, |partialDeriv k (partialDeriv i u) x| ≤ D) (U : Space n N)
@@ -814,9 +715,7 @@ theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) �
 /-- The shifted centre `b - s/2`: `sin(a(y - (bᵢ - s/2))) = cos(a(y - bᵢ))`, `a = π/s`. -/
 def cosCentre (b : Fin n → ℝ) (s : ℝ) : Fin n → ℝ := b - (s / 2) • fun _ => 1
 
-/-- **The first Neumann eigenmode** `u(t, x) = e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)`, `λ = n π²/s²`
-(written `∏ᵢ sin(π(xᵢ - bᵢ + s/2)/s)`): a classical solution of the Neumann problem on every
-`[0, T] × Q̄` with `B₂ = (π/s)²`, `B₄ = (π/s)⁴`. -/
+/-- **The first Neumann eigenmode** `u(t, x) = e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)`, `λ = n π²/s²`. -/
 def cosSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : NeumannSolution b s T where
   u := (sineSolution (cosCentre b s) hs T).u
   u₁ := (sineSolution (cosCentre b s) hs T).u₁
@@ -844,7 +743,6 @@ def cosSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : NeumannSolution b s
   B₄ := sineFreq s ^ 4
   bound₄ t ht x _ i := abs_iterate_partialDeriv_sineMode_le (cosCentre b s) ht.1 x i
 
-/-- The first Neumann eigenmode is `1` at the corner `b` at `t = 0`. -/
 theorem cosSolution_u_zero_corner (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     (cosSolution b hs T).u 0 b = 1 := by
   simp only [cosSolution, sineSolution, sineDeriv, sineFreq, cosCentre, mul_zero, Real.exp_zero,
@@ -950,9 +848,8 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
         r.sharpConst p * (k * τ) * τ ^ p * ‖(neumannLaplacian b hs N ^ (p + 1)) v‖ +
         feDefect (s := s) (n := n) D₂ N
 
-/-- **The heat equation with natural boundary conditions in the maximum norm** (lumped-mass `P₁`
-elements on the Freudenthal meshes of the cube `b + (0, s)ⁿ`, all nodes): see `Verdict`.
-[CiarletRaviart1973]; [Thomee2006], Ch. 15 -/
+/-- **The heat equation with natural boundary conditions in the maximum norm**: `Verdict` on the
+cube `b + (0, s)ⁿ` ([CiarletRaviart1973]; [Thomee2006], Ch. 15). -/
 theorem maxNormNeumann (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   maximumPrinciple := isSubMarkovGenerator b hs
   conservation := neumannLaplacian_apply_one b hs
@@ -977,9 +874,7 @@ theorem maxNormNeumann (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
     (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt) _ hK
       hx).trans (add_le_add (norm_interp_sub_step_pow_le hs S hr hp N hτ hk v) le_rfl)
 
-/-- **The Neumann verdict is not vacuous**: the first Neumann eigenmode `cosSolution` is a
-classical solution on every `[0, T] × Q̄`, nonzero at `t = 0`, with `uₜₜ = λ² u`, `|uₜₜ| ≤ λ²`
-and `|∂ᵢ∂ₖ u| ≤ (π/s)²`; so the backward Euler and finite element clauses apply to it. -/
+/-- **The Neumann verdict is not vacuous**: some nonzero classical solution has bounded `uₜₜ`. -/
 theorem maxNormNeumann_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     Verdict b hs ∧ ∃ S : NeumannSolution b s T, S.u 0 ≠ 0 ∧
       (∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (Bₜ : ℝ),

@@ -6,40 +6,18 @@ public import Feec.Models.Torus.BGG
 /-!
 # The BGG complex (5.1) on the cube with mirror boundary conditions
 
-The method of Thesis Ch. 6 solves the linearized Einstein–Bianchi system through the Hodge wave
-equation of the BGG complex (5.1), `grad grad → (S₁, curl)`, imposing the symmetry of `E` weakly
-through a multiplier `M`. On the torus the constraint `{0} × L²(TSD) × ({0} × L²(TSD))` reduces
-the complex (`Feec.Models.Torus.BGG.reducingSubcomplex`). The torus complex carries the mirror
-symmetries: `u` even, `E` with the tensor parities, the multiplier with the pseudo-vector parities
-`M(R_k x) = -D_k M(x)` (forced by `S₁ (D M D) = -D S₁ M`, `axialL_sgn`), `B` with the
-pseudo-tensor parities (`MirrorBGG.symmetries`). The constraint is invariant, so it descends to
-
-* the **parity model** `MirrorBGG.complex` (the fixed complex);
-* the **cube `Q = (0, ½)³`** `MirrorBGG.complexQ`: `L²(Q) → L²(Q; ℂ³ˣ³) → L²(Q; ℂ³) × L²(Q; ℂ³ˣ³)`,
-  the compression of the torus complex along the mirror extensions, whose second operator is
-  `u ↦ (S₁ u, curl u)` with `S₁ = 2 vskw` pointwise and `curl` the mirror curl of Prop 4.17
-  (`MirrorBGG.complexQ_d₁_eq`).
-
-TSD data give solutions with `σ ≡ 0`, `u` TSD (the weakly imposed symmetry holds strongly),
-`M ≡ 0` and `B` TSD, in particular symmetric (`MirrorBGG.mem_tsdQ_iff`,
-`MirrorBGG.tsd_of_mem_tsdQ`). This is the repair of the Ch. 6 claim; with the boundary conditions
-of Thesis §6.3 it fails on every bounded domain (`Feec.Counterexamples.BoundedBGG`).
+The BGG complex `grad grad → (S₁, curl)` with mirror boundary conditions on `Q = (0, ½)³`: the TSD
+constraint reduces it, and TSD data and forcing give solutions with `σ ≡ 0`, `M ≡ 0` and `u`, `B`
+TSD.
 
 ## Main results
 
-* **`MirrorBGG.reducingSubcomplex`**, `MirrorBGG.propagates`, `MirrorBGG.existsUnique_mem`,
-  `MirrorBGG.invariantCore_eq`, `MirrorBGG.exists_nonstationary` (parity model).
-* **`MirrorBGG.reducingSubcomplexQ`**, `MirrorBGG.propagatesQ`, `MirrorBGG.existsUnique_memQ`,
-  `MirrorBGG.invariantCore_eqQ`, `MirrorBGG.exists_nonstationaryQ`, `MirrorBGG.mem_tsdQ_iff`,
-  `MirrorBGG.tsd_of_mem_tsdQ`, `MirrorBGG.complexQ_d₁_eq`.
+* `MirrorBGG.reducingSubcomplexQ`, `MirrorBGG.propagatesQ`: TSD reduces the complex and propagates.
+* `MirrorBGG.tsd_of_mem_tsdQ`: constrained states have `σ = 0`, `M = 0`, and `u`, `B` TSD.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 5 (§5.1), Ch. 6 (§6.1, §6.3)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
-  (weak symmetry)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -66,8 +44,6 @@ open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 theorem conj_cPV (a k : Fin 3) : (starRingEnd ℂ) (cPV a k) = cPV a k := by
   simp [cPV, conj_sgn]
 
-/-- **`S₁ (D_k M D_k) = -D_k S₁ M`**: the axial vector of a reflected matrix is the reflected
-pseudo-vector. -/
 theorem axialL_sgn (k : Fin 3) (M : Mat) :
     axialL (sgnCLM (Fin 3 × Fin 3) (fun p => cE p k) M) =
       sgnCLM (Fin 3) (fun a => cPV a k) (axialL M) := by
@@ -118,7 +94,7 @@ def fib (k : Fin 3) : ∀ i : Fin 3, W3 ℂ Mat VM i →L[ℂ] W3 ℂ Mat VM i
   | 1 => sgnCLM (Fin 3 × Fin 3) fun p => cE p k
   | 2 => vmR k
 
-/-- **The mirror reflections of the torus BGG complex (5.1)**, as fibre symmetries. -/
+/-- **The mirror reflections of the torus BGG complex**, as fibre symmetries. -/
 def symmetries : (Fourier.Torus.symbolComplex bggFamily).Symmetries (Fin 3) where
   R := flipRefl
   ρ := fib
@@ -151,7 +127,7 @@ def symmetries : (Fourier.Torus.symbolComplex bggFamily).Symmetries (Fin 3) wher
 abbrev action : Models.Torus.BGG.complex.Action (Multiplicative (Fin 3 → ZMod 2)) :=
   symmetries.toAction
 
-/-- **The mirror cube BGG complex (5.1)** (parity model). -/
+/-- **The mirror cube BGG complex** (parity model). -/
 abbrev complex := action.fixedComplex
 
 theorem mem_fixed_iff {i : Fin 3} {x : Models.Torus.BGG.Space i} :
@@ -169,7 +145,6 @@ theorem mem_fixed_one {u : Models.Torus.BGG.Space 1} :
     u ∈ action.fixed 1 ↔ u ∈ fieldParity cE :=
   mem_fixed_iff.trans (mem_fieldParity_iff_symLp cE_sq).symm
 
-/-- The reflection of a sequence of pairs acts componentwise. -/
 theorem prodLp_symm_symLp_vmR (k : Fin 3)
     (u : Lp VM 2 (Measure.count : Measure (Fin 3 → ℤ))) :
     prodLp.symm (symLp (flipRefl k) (vmR k) u) =
@@ -216,8 +191,6 @@ theorem symLp_vmR_eq_iff (k : Fin 3) (u : Lp VM 2 (Measure.count : Measure (Fin 
   · rintro ⟨h1, h2⟩
     exact (WithLp.ext_iff _).2 (Prod.ext h1 h2)
 
-/-- The fixed fields of the third slot: the multiplier with the pseudo-vector parities `cPV`, the
-magnetic field with the pseudo-tensor parities `cB`. -/
 theorem mem_fixed_two {u : Models.Torus.BGG.Space 2} :
     u ∈ action.fixed 2 ↔
       (prodLp.symm u).fst ∈ fieldParity cPV ∧ (prodLp.symm u).snd ∈ fieldParity cB := by
@@ -252,21 +225,15 @@ theorem act_mem_constraint (g : Multiplicative (Fin 3 → ZMod 2)) (i : Fin 3)
 abbrev constraint (i : Fin 3) : Submodule ℂ (action.fixed i) :=
   (Models.Torus.BGG.constraint i).comap (action.fixed i).subtype
 
-/-- **The TSD constraint reduces the mirror cube BGG complex.**
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
 theorem reducingSubcomplex : complex.ReducingSubcomplex constraint :=
   action.reducingSubcomplex_comap_fixed Models.Torus.BGG.reducingSubcomplex act_mem_constraint
 
-/-- **The Ch. 6 method on the mirror cube keeps TSD data TSD** (parity model).
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
 theorem propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => action.fixed i}
     (hU : Evolution.IsStrongSolution complex.wave (Icc a b) F U)
     (h0 : U a ∈ totalSub constraint) (hF : ∀ t ∈ Icc a b, F t ∈ totalSub constraint) :
     ∀ t ∈ Icc a b, U t ∈ totalSub constraint :=
   reducingSubcomplex.propagates hU h0 hF
 
-/-- The Ch. 6 system on the mirror cube with existence and uniqueness (parity model).
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
 theorem existsUnique_mem {U₀ : PiLp 2 fun i => action.fixed i} (hU₀ : U₀ ∈ complex.wave.domain)
     (hU₀K : U₀ ∈ totalSub constraint) {F : ℝ → PiLp 2 fun i => action.fixed i} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complex.wave a b F)
@@ -277,8 +244,6 @@ theorem existsUnique_mem {U₀ : PiLp 2 fun i => action.fixed i} (hU₀ : U₀ �
         EqOn V U (Icc a b) :=
   reducingSubcomplex.existsUnique_mem hU₀ hU₀K hF hFK
 
-/-- `K* = K` for the Ch. 6 system on the mirror cube (parity model).
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
 theorem invariantCore_eq :
     complex.waveGroup.invariantCore (totalSub constraint) = totalSub constraint :=
   reducingSubcomplex.invariantCore_eq
@@ -321,7 +286,6 @@ theorem bgg_cosE_apply :
   rw [coe_cosE]
   simp [cosCoeff]
 
-/-- **`(S₁, curl) E₀ ≠ 0`**: its curl component at the frequency `k0` is `curl M0 ≠ 0`. -/
 theorem bgg_cosE_ne : Models.Torus.BGG.complex.d 1 2 ⟨cosE, cosE_mem_domain⟩ ≠ 0 := by
   intro h
   apply curl_M0_ne
@@ -350,8 +314,6 @@ theorem cosState_mem_constraint (i : Fin 3) : cosState i ∈ Models.Torus.BGG.co
   · change cosState 1 ∈ _; rw [cosState_one]; exact cosE_mem_constraint'
   · change cosState 2 ∈ _; rw [cosState_two]; exact Submodule.zero_mem _
 
-/-- **A non-stationary TSD datum for the Ch. 6 system on the mirror cube** (parity model).
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
 theorem exists_nonstationary :
     ∃ y ∈ complex.wave.domain, y ∈ totalSub constraint ∧ y ∉ complex.waveGroup.stationary := by
   obtain ⟨h1, h2⟩ := action.reducingSubcomplex_fixed.not_mem_stationary
@@ -370,7 +332,6 @@ theorem axialLp_apply (v : Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ))) (
     (axialLp v : (Fin 3 → ℤ) → Vec) n = axialL ((v : (Fin 3 → ℤ) → Mat) n) :=
   Measure.ae_count_iff.1 (axialL.coeFn_compLpL (p := 2) (μ := Measure.count) v) n
 
-/-- **`(S₁, curl)` on the torus**: `D((S₁, curl)) ⊆ H(curl)` and `(S₁, curl) u = (S₁ u, curl u)`. -/
 theorem torus_d₁_eq (v : Models.Torus.BGG.Space 1)
     (hv : v ∈ (Models.Torus.BGG.complex.d 1 2).domain) :
     ∃ h : v ∈ (Models.Torus.GradCurl.complex.d 1 2).domain,
@@ -406,8 +367,7 @@ abbrev SpaceQ (i : Fin 3) : Type := W3 RQ MQ W2Q i
 /-- The mirror extension of tensors, `L²(Q; ℂ³ˣ³) → ℓ²(ℤ³; ℂ³ˣ³)`. -/
 abbrev J₁ : MQ →L[ℂ] Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ)) := extF (c := cE) cE_sq
 
-/-- The mirror extension of pairs (pseudo-vector, pseudo-tensor),
-`L²(Q; ℂ³) × L²(Q; ℂ³ˣ³) → ℓ²(ℤ³; ℂ³ × ℂ³ˣ³)`. -/
+/-- The mirror extension of pairs (pseudo-vector, pseudo-tensor). -/
 def J₂ : W2Q →L[ℂ] Lp VM 2 (Measure.count : Measure (Fin 3 → ℤ)) :=
   pairLp (extF (c := cPV) cPV_sq) (extF (c := cB) cB_sq)
 
@@ -417,8 +377,7 @@ theorem prodLp_symm_J₂ (w : W2Q) :
         extF (c := cB) cB_sq (WithLp.ofLp w).2) := by
   rw [J₂, pairLp_apply, LinearIsometryEquiv.symm_apply_apply]
 
-/-- **The mirror extensions** of the BGG complex on `Q`: `u` even in every variable, `E` with the
-tensor parities, `(M, B)` with the pseudo-vector and pseudo-tensor parities. -/
+/-- **The mirror extensions** of the BGG complex on `Q`. -/
 def J : ∀ i : Fin 3, SpaceQ i →L[ℂ] Models.Torus.BGG.Space i
   | 0 => J₀
   | 1 => J₁
@@ -468,9 +427,7 @@ theorem reducingSubcomplex_range :
   convert action.reducingSubcomplex_fixed using 1
   exact funext range_J
 
-/-- **The BGG complex (5.1) of genuine fields on `Q` with mirror boundary conditions**:
-`L²(Q) --grad grad--> L²(Q; ℂ³ˣ³) --(S₁, curl)--> L²(Q; ℂ³) × L²(Q; ℂ³ˣ³)`, the compression of the
-torus complex along the mirror extensions. -/
+/-- **The BGG complex of genuine fields on `Q` with mirror boundary conditions.** -/
 abbrev complexQ : HilbertComplex ℂ ComplexShape.fin3 SpaceQ :=
   Models.Torus.BGG.complex.compress J eight_pos inner_J reducingSubcomplex_range
 
@@ -504,7 +461,6 @@ theorem cPV_eq_cE {a b c : Fin 3} (h : leviCivita3 ℂ a b c ≠ 0) : cPV a = cE
   fin_cases a <;> fin_cases b <;> fin_cases c <;> fin_cases k <;>
     simp_all [leviCivita3_apply, cPV, cE, sgn]
 
-/-- The mirror extension intertwines `S₁`: pseudo-vector parities on the axial vector. -/
 theorem extF_axialQ (u : MQ) : extF (c := cPV) cPV_sq (axialQ u) = axialLp (J₁ u) := by
   refine Lp.ext_count fun n => ?_
   ext a
@@ -516,8 +472,8 @@ theorem extF_axialQ (u : MQ) : extF (c := cPV) cPV_sq (axialQ u) = axialLp (J₁
   · rw [hε, zero_mul, zero_mul]
   · rw [extL2_congr (cPV_eq_cE hε) (cPV_sq a) (cE_sq (b, c))]
 
-/-- **`d₁ u = (S₁ u, curl u)`**: the pointwise skew part `S₁ = 2 vskw` and the mirror curl of
-Prop 4.17 (the weak curl on `Q`, `Feec.Models.Cube.Mirror.d₁_le_maximal`). -/
+/-- **`d₁ u = (S₁ u, curl u)`**, with `S₁ = 2 vskw` and `curl` the differential of
+`Mirror.complexQ`. -/
 theorem complexQ_d₁_eq (u : (complexQ.d 1 2).domain) :
     ∃ h : (u.1 : MQ) ∈ (Mirror.complexQ.d 1 2).domain,
       (complexQ.d 1 2 u : W2Q) =
@@ -548,12 +504,8 @@ theorem mem_tsdQ_zero {σ : RQ} : σ ∈ tsdQ 0 ↔ σ = 0 := by
     ⟨fun h => extS_injective cU_sq (h.trans (_root_.map_zero _).symm),
     fun h => h ▸ _root_.map_zero _⟩
 
-/-- The electric slot of the constraint is the electric constraint of the mirror complex of
-Prop 4.17. -/
 theorem mem_tsdQ_one {u : MQ} : u ∈ tsdQ 1 ↔ u ∈ Mirror.tsdQ 1 := Iff.rfl
 
-/-- **The third slot of the constraint**: `(M, B) ∈ tsdQ 2` iff `M = 0` and `B` lies in the
-magnetic constraint of the mirror complex of Prop 4.17. -/
 theorem mem_tsdQ_two {w : W2Q} :
     w ∈ tsdQ 2 ↔ (WithLp.ofLp w).1 = 0 ∧ (WithLp.ofLp w).2 ∈ Mirror.tsdQ 2 := by
   refine (Models.Torus.BGG.mem_constraint_two_iff (ρ := J₂ w)).trans ?_
@@ -571,8 +523,6 @@ theorem mem_tsdQ_two {w : W2Q} :
   · exact ⟨fun h => Operator.mem_fibreSub.2 (Measure.ae_count_iff.2 h),
       fun h => Measure.ae_count_iff.1 (Operator.mem_fibreSub.1 h)⟩
 
-/-- **The constraint on `Q`**: `σ = 0`, `u` in the electric constraint, `M = 0`, and `B` in the
-magnetic constraint of the mirror complex of Prop 4.17. -/
 theorem mem_tsdQ_iff {x : PiLp 2 SpaceQ} :
     x ∈ totalSub tsdQ ↔ (x 0 : RQ) = 0 ∧ (x 1 : MQ) ∈ Mirror.tsdQ 1 ∧
       (WithLp.ofLp (x 2 : W2Q)).1 = 0 ∧ (WithLp.ofLp (x 2 : W2Q)).2 ∈ Mirror.tsdQ 2 := by
@@ -583,9 +533,8 @@ theorem mem_tsdQ_iff {x : PiLp 2 SpaceQ} :
   · exact h1
   · exact mem_tsdQ_two.2 h2
 
-/-- **Constrained states consist of TSD fields**: in a state of the constraint, `σ = 0`, the
-multiplier vanishes, and `u` and `B` are symmetric, trace-free and weakly divergence-free on `Q`.
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
+/-- **Constrained states consist of TSD fields**: `σ = 0`, `M = 0`, and `u`, `B` symmetric,
+trace-free and weakly divergence-free ([QuennevilleBelair2015], Ch. 6 (adapted)). -/
 theorem tsd_of_mem_tsdQ {x : PiLp 2 SpaceQ} (hx : x ∈ totalSub tsdQ) :
     (x 0 : RQ) = 0 ∧ (WithLp.ofLp (x 2 : W2Q)).1 = 0 ∧
       ((∀ i j, (show MQ from x 1) (i, j) = (show MQ from x 1) (j, i)) ∧
@@ -611,23 +560,21 @@ theorem exists_J_eq_starProjection (i : Fin 3) (x : SpaceQ i) :
   obtain ⟨y, hy⟩ := h
   exact ⟨y, hy⟩
 
-/-- **TSD reduces the BGG complex on `Q`.**
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
+/-- **TSD reduces the BGG complex on `Q`** ([QuennevilleBelair2015], Ch. 6 (adapted)). -/
 theorem reducingSubcomplexQ : complexQ.ReducingSubcomplex tsdQ :=
   embeddingQ.reducingSubcomplex_comap Models.Torus.BGG.reducingSubcomplex
     exists_J_eq_starProjection
 
-/-- **The Ch. 6 method on `Q` with mirror boundary conditions keeps TSD data TSD**: strong
-solutions of the BGG Hodge wave equation with data and forcing in the constraint stay there, so
-`σ ≡ 0`, `u` is TSD, the multiplier vanishes and `B` is TSD (`tsd_of_mem_tsdQ`).
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
+/-- **TSD data and forcing give TSD solutions on `Q` with mirror boundary conditions**
+([QuennevilleBelair2015], Ch. 6 (adapted)). -/
 theorem propagatesQ {a b : ℝ} {F U : ℝ → PiLp 2 SpaceQ}
     (hU : Evolution.IsStrongSolution complexQ.wave (Icc a b) F U) (h0 : U a ∈ totalSub tsdQ)
     (hF : ∀ t ∈ Icc a b, F t ∈ totalSub tsdQ) : ∀ t ∈ Icc a b, U t ∈ totalSub tsdQ :=
   reducingSubcomplexQ.propagates hU h0 hF
 
-/-- The Ch. 6 system on `Q` with existence and uniqueness.
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
+/-- **Existence and uniqueness of TSD solutions**: for TSD data in `D(L)` and admissible TSD
+forcing, a classical solution, unique among strong solutions, that stays TSD
+([QuennevilleBelair2015], Ch. 6 (adapted)). -/
 theorem existsUnique_memQ {U₀ : PiLp 2 SpaceQ} (hU₀ : U₀ ∈ complexQ.wave.domain)
     (hU₀S : U₀ ∈ totalSub tsdQ) {F : ℝ → PiLp 2 SpaceQ} {a b : ℝ}
     (hF : Evolution.ForcingClass.admissible complexQ.wave a b F)
@@ -638,8 +585,6 @@ theorem existsUnique_memQ {U₀ : PiLp 2 SpaceQ} (hU₀ : U₀ ∈ complexQ.wave
         EqOn V U (Icc a b) :=
   reducingSubcomplexQ.existsUnique_mem hU₀ hU₀S hF hFS
 
-/-- `K* = K` for the Ch. 6 system on `Q`.
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
 theorem invariantCore_eqQ : complexQ.waveGroup.invariantCore (totalSub tsdQ) = totalSub tsdQ :=
   reducingSubcomplexQ.invariantCore_eq
 
@@ -666,8 +611,6 @@ theorem totalJ_cosStateQ : HilbertComplex.totalJ J cosStateQ = cosState := by
   · change J 2 (cosStateQ 2) = cosState 2
     rw [cosStateQ_two, _root_.map_zero, cosState_two]
 
-/-- **A non-stationary TSD datum for the Ch. 6 system on `Q`**.
-See [QuennevilleBelair2015], Ch. 6 (corrected). -/
 theorem exists_nonstationaryQ :
     ∃ y ∈ complexQ.wave.domain, y ∈ totalSub tsdQ ∧ y ∉ complexQ.waveGroup.stationary := by
   have hd : HilbertComplex.totalJ J cosStateQ ∈ Models.Torus.BGG.complex.wave.domain :=

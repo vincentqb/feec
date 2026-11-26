@@ -6,36 +6,9 @@ public import Mathlib.Analysis.InnerProductSpace.PiL2
 /-!
 # Finite windows of Hilbert complexes and the total differential
 
-A Hilbert complex on a finite index type has a Hilbert total space `PiLp 2 W` (no summability
-bookkeeping, unlike `lp` over all of `ℤ`) and a total differential `𝐝 = ∑ d i j` on it.
-
-## Main definitions
-
-* `ComplexShape.window n`: the non-wrapping shape `0 → 1 → ⋯ → n - 1` on `Fin n`
-  (`ComplexShape.up (Fin n)` wraps `n - 1 → 0`); `ComplexShape.fin3 = window 3`.
-* `HilbertComplex.restrict`: pull a complex back along a map of index types that reflects the
-  relation; `HilbertComplex.window H a n`: the truncation of a complex on `ComplexShape.up α`
-  (`α = ℕ, ℤ`) to the indices `a, a + 1, …, a + n - 1`. At the two ends the differentials
-  leaving the window are dropped, so the adjoints of the window are those of the truncated
-  complex, not restrictions of the adjoints of `H`.
-* `HilbertComplex.totalDomain`, `HilbertComplex.totalD`: the total differential on `PiLp 2 W`,
-  `(𝐝 x) j = ∑ i, d i j (x i)`, with domain `{x | ∀ i j, x i ∈ D(d i j)}`.
-
-## Main results
-
-* `HilbertComplex.adjoint_totalD`: `𝐝† = 𝐝*`, the total differential of the dual complex.
-* `HilbertComplex.dense_totalDomain`, `HilbertComplex.isClosed_totalD`,
-  `HilbertComplex.totalD_mapsTo`, `HilbertComplex.totalD_comp_totalD`: `𝐝` is a closed densely
-  defined operator with `𝐝 𝐝 = 0`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.4 (the total space `W = W⁰ × W¹ × W²` of the Hodge wave operator)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], §2 (the operator `D = d + d*` of a
-  Hilbert complex)
-
-Bibliography: [references.bib](../../docs/references.bib)
+Windows of Hilbert complexes on `ComplexShape.up α`, and the total differential `𝐝 = ∑ d i j` of a
+Hilbert complex on a finite index type: a closed densely defined operator on `PiLp 2 W` with
+`𝐝 𝐝 = 0` and `𝐝† = 𝐝*`.
 -/
 
 open scoped InnerProductSpace
@@ -78,8 +51,7 @@ section Window
 variable {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α] {V : α → Type*}
   [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
 
-/-- The window `V a → V (a + 1) → ⋯ → V (a + n - 1)` of a complex on `ComplexShape.up α`
-(`α = ℕ, ℤ`), as a complex on `ComplexShape.window n`. -/
+/-- The window `V a → ⋯ → V (a + n - 1)` of a complex on `ComplexShape.up α`. -/
 def window (H : HilbertComplex 𝕜 (ComplexShape.up α) V) (a : α) (n : ℕ) :
     HilbertComplex 𝕜 (ComplexShape.window n) (fun i : Fin n => V (a + i)) :=
   H.restrict (fun i : Fin n => a + (i : α)) fun i j h => by
@@ -108,7 +80,6 @@ theorem mem_totalDomain {x : PiLp 2 W} : x ∈ H.totalDomain ↔ ∀ i j, x i �
 def totalCoord (i j : ι) : H.totalDomain →ₗ[𝕜] (H.d i j).domain :=
   LinearMap.codRestrict _ ((PiLp.projₗ 2 W i).comp H.totalDomain.subtype) fun x => x.2 i j
 
-/-- Every `x i` lies in the domain of the unique nonzero differential leaving `i`. -/
 theorem iInter_domain (i : ι) :
     (⋂ j, ((H.d i j).domain : Set (W i))) = (H.d i (c.next i)).domain := by
   refine Subset.antisymm (iInter_subset _ _) (subset_iInter fun j => ?_)
@@ -124,7 +95,6 @@ theorem dense_totalDomain : Dense (H.totalDomain : Set (PiLp 2 W)) := by
   ext x
   simp [mem_totalDomain, PiLp.homeomorph]
 
-/-- `PiLp.single i v` lies in the total domain when `v ∈ D(d i (c.next i))`. -/
 theorem single_mem_totalDomain [DecidableEq ι] (i : ι) {v : W i}
     (hv : v ∈ (H.d i (c.next i)).domain) : PiLp.single 2 i v ∈ H.totalDomain := by
   intro i' j
@@ -136,7 +106,6 @@ theorem single_mem_totalDomain [DecidableEq ι] (i : ι) {v : W i}
     · rw [H.domain_eq_top_of_not_rel fun h => hj (c.next_eq' h).symm]; exact Submodule.mem_top
   · simp only [PiLp.single_eq_of_ne (p := 2) hi]; exact Submodule.zero_mem _
 
-/-- A partial map sends a domain point equal to `0` to `0`. -/
 theorem _root_.LinearPMap.apply_mk_eq_zero {R E F : Type*} [Ring R] [AddCommGroup E]
     [Module R E] [AddCommGroup F] [Module R F] (T : E →ₗ.[R] F) {x : E} (hx : x ∈ T.domain)
     (h : x = 0) : T ⟨x, hx⟩ = 0 := by
@@ -156,13 +125,11 @@ theorem totalD_apply (x : H.totalD.domain) (j : ι) :
   rw [LinearMap.sum_apply]
   rfl
 
-/-- `(𝐝 x) j ∈ D(d j k)`. -/
 theorem totalD_mapsTo (x : H.totalD.domain) : (H.totalD x : PiLp 2 W) ∈ H.totalD.domain := by
   intro j k
   rw [totalD_apply]
   exact Submodule.sum_mem _ fun i _ => H.mapsTo i j k _
 
-/-- `𝐝 𝐝 = 0`. -/
 theorem totalD_comp_totalD (x : H.totalD.domain) : H.totalD ⟨_, H.totalD_mapsTo x⟩ = 0 := by
   refine PiLp.ext fun k => ?_
   rw [totalD_apply]
@@ -185,7 +152,6 @@ theorem inner_totalD_dual (x : H.totalD.domain) (y : H.dual.totalD.domain) :
   exact (inner_conj_symm _ _).symm.trans
     ((congrArg (starRingEnd 𝕜) this.symm).trans (inner_conj_symm _ _))
 
-/-- Testing `𝐝 (single i v)` against `y` only sees the component `c.next i`. -/
 theorem inner_totalD_single [DecidableEq ι] (y : PiLp 2 W) (i : ι) (v : W i)
     (hv : PiLp.single 2 i v ∈ H.totalDomain) :
     ⟪y, H.totalD ⟨_, hv⟩⟫_𝕜 = ⟪y (c.next i), H.d i (c.next i) ⟨v, by
@@ -199,8 +165,7 @@ theorem inner_totalD_single [DecidableEq ι] (y : PiLp 2 W) (i : ι) (v : W i)
   · rw [totalD_apply, Finset.sum_eq_single i (fun i' _ hi' => hz i' _ hi' _) (by simp)]
     congr 2; exact Subtype.ext (by simp)
 
-/-- `𝐝† = 𝐝*`: the adjoint of the total differential is the total differential of the dual
-complex, `(𝐝† y) i = ∑ j, (d i j)† (y j)`. -/
+/-- `𝐝† = 𝐝*`, the total differential of the dual complex. -/
 theorem adjoint_totalD : H.totalD† = H.dual.totalD := by
   classical
   have hle : H.dual.totalD ≤ H.totalD† :=
@@ -223,7 +188,6 @@ theorem adjoint_totalD : H.totalD† = H.dual.totalD := by
 theorem dual_dual_totalD : H.dual.dual.totalD = H.totalD := by
   rw [H.dual_dual]
 
-/-- The total differential is closed: `𝐝 = (𝐝*)†`. -/
 theorem isClosed_totalD : H.totalD.IsClosed := by
   have h := H.dual.adjoint_totalD
   rw [dual_dual_totalD] at h

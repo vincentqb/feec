@@ -5,39 +5,18 @@ public import Feec.FiniteElement.PolyComplex
 /-!
 # Global spaces with vanishing degrees of freedom on part of the boundary
 
-For an element family `E` (`Feec.FiniteElement.LocalElement`) on a mesh `M` and a set `Γ` of
-facets (typically some boundary facets, e.g. those on the mirror faces of a cube), the global
-space `Λ_{h,Γ}ᵏ(M)` (`LocalElement.globalSpacePartial`) consists of the global fields whose
-degrees of freedom vanish on every face contained in a facet of `Γ`. This interpolates between
-`Λ_hᵏ(M)` (`Γ = ∅`, `globalSpacePartial_empty`) and `Λ̊_hᵏ(M)` (`Γ` = all boundary facets,
-`globalSpacePartial_boundary`). At the algebraic (assembly) level:
+For a set `Γ` of facets, the global fields whose degrees of freedom vanish on the faces in a facet
+of `Γ` form a cochain complex: `Λ_hᵏ(M)` for `Γ = ∅`, `Λ̊_hᵏ(M)` for the boundary facets.
 
-* `d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ}ᵏ⁺¹` (`dPiecewise_mem_globalSpacePartial`), from Stokes compatibility of
-  the degrees of freedom, so the spaces form a cochain complex (`dGlobalPartial`);
-* the degrees of freedom of the faces not contained in a facet of `Γ` are a linear isomorphism
-  `Λ_{h,Γ}ᵏ(M) ≃ ℝ^{free DOFs}` (`partialDofEquiv`), so
-  `dim Λ_{h,Γ}ᵏ(M) = #{DOFs of faces not in a facet of Γ}` (`finrank_globalSpacePartial`), and
-  the same for the glued spaces in `L²(Ω; Λᵏ)` (`finrank_VPartial`);
-* for the families of an admissible sequence, the dimension is
-  `Σ_{m ≤ n} #{m-faces not in a facet of Γ} · dim(test forms on m-faces)`
-  (`PolySeq.finrank_globalSpacePartial`).
-* with boundary conditions in the degrees `k < j` only (`LocalElement.bcFacets`; `j = 2` in `ℝ³`
-  is the pattern `V̊ₕ⁰ → V̊ₕ¹ → Vₕ²` of [QuennevilleBelair2015], §6.3) the spaces are again closed
-  under `d` (`LocalElement.dPiecewise_mem_globalSpacePartial_bcFacets`),
-  contain `Λ̊_hᵏ` (`LocalElement.finrank_V₀_le_finrank_VPartial`), and for the second row of
-  Table 6.1 they are nonzero on every Freudenthal mesh of `(0, ½)³`
-  (`PolySeq.lagrangeP2_VPartial_bcFacets_ne_bot`).
+## Main results
 
-The conformity `V_{h,Γ} ⊆ D(d)` for the `L²` de Rham complex with boundary conditions on `Γ` is
-not treated here.
+* `LocalElement.dPiecewise_mem_globalSpacePartial`: `d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ}ᵏ⁺¹`.
+* `LocalElement.finrank_globalSpacePartial`: `dim Λ_{h,Γ}ᵏ(M) = #{free DOFs}`.
+* `PolySeq.lagrangeP2_VPartial_bcFacets_ne_bot`: nonzero spaces for [QuennevilleBelair2015], §6.3.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §5 (assembly from degrees of freedom)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.3, Table 6.1
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -56,8 +35,7 @@ namespace LocalElement
 
 variable (E : LocalElement n) (M : SimplicialMesh n) (Γ : Set (Finset (Fin n → ℝ)))
 
-/-- **The global space with vanishing degrees of freedom on `Γ`**: global fields whose degrees of
-freedom vanish on every face contained in a facet (vertex set) of `Γ`. -/
+/-- The global fields whose degrees of freedom vanish on the faces contained in a facet of `Γ`. -/
 def globalSpacePartial (k : ℕ) : Submodule ℝ (E.Piecewise M k) :=
   E.globalSpace M k ⊓
     { carrier := {u | ∀ T : M.simplices, ∀ g, g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) →
@@ -71,17 +49,13 @@ def globalSpacePartial (k : ℕ) : Submodule ℝ (E.Piecewise M k) :=
 theorem globalSpacePartial_le (k : ℕ) : E.globalSpacePartial M Γ k ≤ E.globalSpace M k :=
   inf_le_left
 
-/-- `Λ_{h,Γ}ᵏ` decreases with `Γ`. -/
 theorem globalSpacePartial_anti {Γ Γ' : Set (Finset (Fin n → ℝ))} (h : Γ ⊆ Γ') (k : ℕ) :
     E.globalSpacePartial M Γ' k ≤ E.globalSpacePartial M Γ k := fun _ hu =>
   ⟨hu.1, fun T g hg ⟨F, hF, hgF⟩ i => hu.2 T g hg ⟨F, h hF, hgF⟩ i⟩
 
-/-- `Γ = ∅`: no boundary condition. -/
 theorem globalSpacePartial_empty (k : ℕ) : E.globalSpacePartial M ∅ k = E.globalSpace M k :=
   le_antisymm (E.globalSpacePartial_le M ∅ k) fun _ hu => ⟨hu, fun _ _ _ ⟨_, hF, _⟩ => hF.elim⟩
 
-/-- `Γ` = all boundary facets: the space `Λ̊_hᵏ(M)` with vanishing boundary degrees of
-freedom. -/
 theorem globalSpacePartial_boundary (k : ℕ) :
     E.globalSpacePartial M {F | M.IsBoundaryFacet F} k = E.globalSpace₀ M k := by
   refine le_antisymm (fun u hu => ⟨hu.1, fun T F hF hFT g hg i =>
@@ -90,8 +64,7 @@ theorem globalSpacePartial_boundary (k : ℕ) :
   rw [hu.1 T ⟨T', hT'⟩ g hg (hgF.trans hFT') i]
   exact hu.2 ⟨T', hT'⟩ F hF hFT' g hgF i
 
-/-- **`d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ}ᵏ⁺¹`**: the degrees of freedom of `du` on a face `g ⊆ F ∈ Γ` are
-combinations of those of `u` on the subfaces of `g`, which vanish. -/
+/-- **`d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ}ᵏ⁺¹`**. -/
 theorem dPiecewise_mem_globalSpacePartial {k : ℕ} {u : E.Piecewise M k}
     (hu : u ∈ E.globalSpacePartial M Γ k) :
     E.dPiecewise M k u ∈ E.globalSpacePartial M Γ (k + 1) := by
@@ -116,7 +89,6 @@ abbrev FreeDofIdx (k : ℕ) := {p : E.GlobalDofIdx M k // ¬ E.IsDofOn M Γ p}
 
 instance (k : ℕ) : Fintype (E.FreeDofIdx M Γ k) := Fintype.ofFinite _
 
-/-- `u ∈ Λ_{h,Γ}ᵏ(M)` iff the global DOFs of `u` on `Γ` vanish. -/
 theorem mem_globalSpacePartial_iff {k : ℕ} (u : E.globalSpace M k) :
     (u : E.Piecewise M k) ∈ E.globalSpacePartial M Γ k ↔
       ∀ p, E.IsDofOn M Γ p → E.globalDof M k u p = 0 := by
@@ -167,7 +139,6 @@ theorem finrank_globalSpacePartial (k : ℕ) :
 def VPartial (k : ℤ) : Submodule ℝ (L2F ℝ M.domain (formIdx n k)) :=
   LinearMap.range (E.glue M k ∘ₗ (E.globalSpacePartial M Γ k.toNat).subtype)
 
-/-- **`dim V_{h,Γ}ᵏ = #{free DOFs}`** (the gluing is injective). -/
 theorem finrank_VPartial (hΩ : IsOpen M.domain) (k : ℕ) :
     Module.finrank ℝ (E.VPartial M Γ k) = Fintype.card (E.FreeDofIdx M Γ k) := by
   have hinj : Function.Injective
@@ -197,8 +168,6 @@ theorem mem_freeFaces {g : Finset (Fin n → ℝ)} :
   classical
   unfold freeFaces; exact mem_filter
 
-/-- **`dim Λ_{h,Γ}ᵏ(M) = Σ_{m ≤ n} #{m-faces not in a facet of Γ} · dim(test forms)`** for the
-families of an admissible sequence. -/
 theorem finrank_globalSpacePartial (k : ℕ) :
     Module.finrank ℝ ((polyElement n S).globalSpacePartial M Γ k) =
       ∑ m ∈ range (n + 1), {g | g ∈ M.faces m ∧ ¬ ∃ F ∈ Γ, g ⊆ F}.ncard *
@@ -225,21 +194,16 @@ theorem finrank_globalSpacePartial (k : ℕ) :
 
 end PolySeq
 
-/-! ### Boundary conditions in the low degrees only -/
-
 namespace LocalElement
 
 variable (E : LocalElement n) (M : SimplicialMesh n)
 
-/-- **`d Λ_{h,Γ}ᵏ ⊆ Λ_{h,Γ'}ᵏ⁺¹` for `Γ' ⊆ Γ`**: dropping boundary conditions in the next degree
-keeps the complex property. -/
 theorem dPiecewise_mem_globalSpacePartial_of_subset {Γ Γ' : Set (Finset (Fin n → ℝ))}
     (h : Γ' ⊆ Γ) {k : ℕ} {u : E.Piecewise M k} (hu : u ∈ E.globalSpacePartial M Γ k) :
     E.dPiecewise M k u ∈ E.globalSpacePartial M Γ' (k + 1) :=
   E.globalSpacePartial_anti M h (k + 1) (E.dPiecewise_mem_globalSpacePartial M Γ hu)
 
-/-- The facets carrying boundary conditions in degree `k` when these are imposed in the degrees
-`k < j` only: all boundary facets for `k < j`, none for `k ≥ j`. -/
+/-- The boundary facets in degree `k` if `k < j`, and no facet otherwise. -/
 def bcFacets (j k : ℕ) : Set (Finset (Fin n → ℝ)) :=
   if k < j then {F | M.IsBoundaryFacet F} else ∅
 
@@ -256,22 +220,16 @@ theorem bcFacets_subset (j k : ℕ) : bcFacets M j k ⊆ {F | M.IsBoundaryFacet 
   · exact le_rfl
   · exact Set.empty_subset _
 
-/-- **The complex with boundary conditions in the degrees `< j`** is closed under `d`:
-`d Λ_{h,bc}ᵏ ⊆ Λ_{h,bc}ᵏ⁺¹`. With `j = 2` in `ℝ³` this is the pattern
-`V̊ₕ⁰ → V̊ₕ¹ → Vₕ²` of [QuennevilleBelair2015], §6.3 (boundary conditions on the `0`- and
-`1`-forms only). -/
 theorem dPiecewise_mem_globalSpacePartial_bcFacets (j : ℕ) {k : ℕ} {u : E.Piecewise M k}
     (hu : u ∈ E.globalSpacePartial M (bcFacets M j k) k) :
     E.dPiecewise M k u ∈ E.globalSpacePartial M (bcFacets M j (k + 1)) (k + 1) :=
   E.dPiecewise_mem_globalSpacePartial_of_subset M (bcFacets_succ_subset M j k) hu
 
-/-- `Λ̊_hᵏ(M) ⊆ Λ_{h,Γ}ᵏ(M)` for every set `Γ` of boundary facets. -/
 theorem globalSpace₀_le_globalSpacePartial {Γ : Set (Finset (Fin n → ℝ))}
     (hΓ : Γ ⊆ {F | M.IsBoundaryFacet F}) (k : ℕ) :
     E.globalSpace₀ M k ≤ E.globalSpacePartial M Γ k :=
   (E.globalSpacePartial_boundary M k).symm.le.trans (E.globalSpacePartial_anti M hΓ k)
 
-/-- **`dim V̊ₕᵏ ≤ dim V_{h,Γ}ᵏ`** for every set `Γ` of boundary facets. -/
 theorem finrank_V₀_le_finrank_VPartial (hΩ : IsOpen M.domain) {Γ : Set (Finset (Fin n → ℝ))}
     (hΓ : Γ ⊆ {F | M.IsBoundaryFacet F}) (k : ℕ) :
     Module.finrank ℝ (E.V₀ M k) ≤ Module.finrank ℝ (E.VPartial M Γ k) := by
@@ -283,10 +241,8 @@ end LocalElement
 
 namespace PolySeq
 
-/-- **The Ch. 6 spaces of the second row of Table 6.1 are nonzero**: on the level-`(N+1)`
-Freudenthal mesh of `(0, ½)³`, the spaces `V̊ₕ⁰ = P̊₂Λ⁰`, `V̊ₕ¹ = P̊₂⁻Λ¹` (boundary conditions)
-and `Vₕ² = P₁Λ²`, `Vₕ³ = P₀Λ³` (no boundary conditions) of [QuennevilleBelair2015], §6.3, are
-nonzero, for every `N`. -/
+/-- **The spaces of the second row of Table 6.1 are nonzero** on the level-`(N+1)` Freudenthal
+mesh of `(0, ½)³`. [QuennevilleBelair2015], §6.3 -/
 theorem lagrangeP2_VPartial_bcFacets_ne_bot (N k : ℕ) (hk : k ≤ 3) :
     (polyElement 3 lagrangeP2).VPartial (freudenthalMesh 0 (1 / 2) (by norm_num) (N + 1))
       (LocalElement.bcFacets (freudenthalMesh 0 (1 / 2) (by norm_num) (N + 1)) 2 k) k ≠ ⊥ := by

@@ -7,23 +7,8 @@ public import Feec.ForMathlib.Analysis.NormedComplexification
 /-!
 # The complexification of a strongly continuous semigroup
 
-For a strongly continuous semigroup `G` on a normed space `E` over `𝕜 = ℝ` or `ℂ`, the operators
-`S(t)_ℂ` form a strongly continuous semigroup `C0Semigroup.complexification G` on the
-complexification `E_ℂ` (`NormedComplexification`, Taylor norm), with `‖S(t)_ℂ‖ = ‖S(t)‖`.
-Its generator acts componentwise: if `(p, q)` is in its graph, so are `(re p, re q)` and
-`(im p, im q)` in the graph of the generator `A` of `G`
-(`C0Semigroup.mem_graph_of_mem_graph_complexification`), and `(x, y)` in the graph of `A` gives
-`(x + i 0, y + i 0)` in its graph (`C0Semigroup.mk_mem_graph_complexification`). Hence an
-operator `R` with `R (x - τ A x) = x` on `D(A)` has a complexification with the same property
-(`C0Semigroup.map_apply_sub_smul`). This brings the complex points of the spectrum, through the
-complex Hille–Yosida estimates, to real Banach spaces.
-
-## References
-
-* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §II.1
-
-Bibliography: [references.bib](../../docs/references.bib)
+The operators `S(t)_ℂ` form a strongly continuous semigroup on the complexification, with
+`‖S(t)_ℂ‖ = ‖S(t)‖` and a generator that acts componentwise.
 -/
 
 open Set Complexification
@@ -62,8 +47,6 @@ theorem mem_graph_of_mem_graph_complexification {p q : NormedComplexification �
   exact ⟨LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, dre⟩, G.generator_apply_eq dre⟩,
     LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, dim⟩, G.generator_apply_eq dim⟩⟩
 
-/-- Conversely, `(x, y)` in the graph of the generator gives `(x + i 0, y + i 0)` in the graph of
-the generator of the complexification. -/
 theorem mk_mem_graph_complexification {x y : E} (h : (x, y) ∈ G.generator.graph) :
     (Complexification.mk x 0, Complexification.mk y 0) ∈
       G.complexification.generator.graph := by
@@ -77,8 +60,6 @@ theorem mk_mem_graph_complexification {x y : E} (h : (x, y) ∈ G.generator.grap
       (G.hasDerivWithinAt_generator ⟨x, hx⟩)
   exact LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, d⟩, G.complexification.generator_apply_eq d⟩
 
-/-- An operator `R` with `R (x - τ y) = x` on the graph of the generator has a complexification
-with the same property for the complexified semigroup. -/
 theorem map_apply_sub_smul {R : E →L[𝕜] E} {τ : ℝ}
     (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x)
     {p q : NormedComplexification 𝕜 E} (h : (p, q) ∈ G.complexification.generator.graph) :

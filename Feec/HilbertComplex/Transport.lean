@@ -5,41 +5,10 @@ public import Feec.HilbertComplex.Reducing
 /-!
 # Transport between Hilbert complexes: scaled embeddings
 
-A **scaled embedding** `H → H'` of Hilbert complexes on the same shape is a family of bounded
-maps `J i : W i → W' i` with `⟪J x, J y⟫ = s_i ⟪x, y⟫` (`s_i > 0`) that carries each
-differential to a nonzero multiple of the other (`d' J = κ_{ij} J d`, the chain-rule factors)
-and reflects domains (`J x ∈ D(d') → x ∈ D(d)`). One structure covers:
-
-* **compression** onto a reducing subcomplex (`ReducingSubcomplex.toHilbertComplex`, with the
-  inclusion `ReducingSubcomplex.toScaledEmbedding`): restriction to a box, to the fixed vectors
-  of a symmetry group (`Feec.HilbertComplex.Equivariant`), to a constraint subspace;
-* **transport** along scaled isomorphisms with rescaled differentials
-  (`HilbertComplex.transport e κ`): unitary maps
-  (`κ = 1`, `s = 1`), rescaling of the differentials (`e = 1`), and pull-back along an affine
-  change of variables (`e` the composition operator, `s = |det|⁻¹`, `κ` the chain-rule factors);
-* composition (`ScaledEmbedding.comp`) and the identity (`ScaledEmbedding.refl`).
-
-## Main results
-
-* `LinearPMap.IsReducingPair.part`: the part `K → L` of `T : E → F` in a reducing pair, closed
-  (`isClosed_part`), densely defined (`dense_part_domain`), with `adjoint_part`:
-  `(T|_K)† = (T†)|_L`.
-* `ReducingSubcomplex.toHilbertComplex`, `ReducingSubcomplex.wave_toHilbertComplex`: the
-  inclusion of the compressed complex intertwines the wave operators, hence the wave groups
-  (`ReducingSubcomplex.waveGroup_toHilbertComplex`).
-* **`ScaledEmbedding.reducingSubcomplex_comap`**: if `S'` is a reducing subcomplex of `H'` whose
-  projections preserve the ranges of `J`, then `J⁻¹ S'` is a reducing subcomplex of `H`
-  (`ScaledEmbedding.starProjection_comap`: `J P_{J⁻¹ S'} = P_{S'} J`);
-  `ScaledEmbedding.invariantCore_eq`: then `J⁻¹ S'` is its own invariant core.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17 on the cube, by compression of the torus)
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6 (parts of operators in
-  reducing subspaces)
-
-Bibliography: [references.bib](../../docs/references.bib)
+Scaled embeddings of Hilbert complexes, bounded maps `J i` with `⟪J x, J y⟫ = s_i ⟪x, y⟫` carrying
+each differential to a nonzero multiple of the other: compressions onto reducing subcomplexes,
+transports along scaled isomorphisms and compressions along scaled isometries. Reducing
+subcomplexes whose projections preserve the ranges of `J` pull back along them.
 -/
 
 open scoped InnerProductSpace
@@ -53,12 +22,10 @@ namespace Submodule
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
-/-- A subspace with an orthogonal projection is closed. -/
 theorem isClosed_of_hasOrthogonalProjection (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
     IsClosed (K : Set E) := by
   rw [← Submodule.orthogonal_orthogonal K]; exact Submodule.isClosed_orthogonal _
 
-/-- A subspace of a Hilbert space with an orthogonal projection is complete. -/
 theorem completeSpace_of_hasOrthogonalProjection [CompleteSpace E] (K : Submodule 𝕜 E)
     [K.HasOrthogonalProjection] : CompleteSpace K :=
   (K.isClosed_of_hasOrthogonalProjection).completeSpace_coe
@@ -104,7 +71,6 @@ theorem IsReducingPair.mem_part_graph_iff {p : K × L} :
     rw [← show T y = (p.2 : F) from hy2]
     exact apply_congr' _ _ _ hy1'.symm
 
-/-- The part of a closed operator is closed. -/
 theorem IsReducingPair.isClosed_part (hc : T.IsClosed) : h.part.IsClosed := by
   have e : (h.part.graph : Set (K × L)) =
       (fun p : K × L => ((p.1 : E), (p.2 : F))) ⁻¹' (T.graph : Set (E × F)) := by
@@ -114,7 +80,6 @@ theorem IsReducingPair.isClosed_part (hc : T.IsClosed) : h.part.IsClosed := by
   exact hc.preimage ((continuous_subtype_val.comp continuous_fst).prodMk
     (continuous_subtype_val.comp continuous_snd))
 
-/-- The part of a densely defined operator is densely defined. -/
 theorem IsReducingPair.dense_part_domain (hd : Dense (T.domain : Set E)) :
     Dense (h.part.domain : Set K) := by
   have hd' : Dense ((K.orthogonalProjectionOnto) '' (T.domain : Set E)) :=
@@ -154,7 +119,6 @@ theorem IsReducingPair.adjoint_part [CompleteSpace E] [CompleteSpace K]
   simp only [Submodule.coe_inner] at hadj
   convert hadj using 2 <;> rfl
 
-/-- The part of a partial map equal to `0` is `0`. -/
 theorem IsReducingPair.part_eq_zero (hT : T = 0) : h.part = 0 := by
   refine LinearPMap.ext ?_ fun x y hxy => ?_
   · ext x
@@ -177,8 +141,7 @@ namespace ReducingSubcomplex
 
 variable {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, CompleteSpace (S i)]
 
-/-- **Compression**: a reducing subcomplex is a Hilbert complex, with differentials the parts
-`d i j|_{S i} : S i → S j`. -/
+/-- **Compression**: a reducing subcomplex as a Hilbert complex, with the parts of `d`. -/
 def toHilbertComplex (h : H.ReducingSubcomplex S) : HilbertComplex 𝕜 c fun i => S i where
   d i j := (h.reduces i j).part
   shape i j hij := (h.reduces i j).part_eq_zero (H.shape i j hij)
@@ -187,7 +150,6 @@ def toHilbertComplex (h : H.ReducingSubcomplex S) : HilbertComplex 𝕜 c fun i 
   mapsTo i j k x := H.mapsTo i j k ⟨_, x.2⟩
   d_comp_d i j k x := Subtype.ext (H.d_comp_d i j k ⟨_, x.2⟩)
 
-/-- The dual of the compressed complex is the compression of the dual complex. -/
 theorem dual_toHilbertComplex_d (h : H.ReducingSubcomplex S) (i j : ι) :
     h.toHilbertComplex.dual.d i j = h.dual.toHilbertComplex.d i j :=
   (h.reduces j i).adjoint_part (H.dense j i)
@@ -205,7 +167,6 @@ omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (S i)] in
 theorem totalIncl_apply (x : PiLp 2 fun i => S i) (i : ι) :
     totalIncl S x i = (x i : W i) := rfl
 
-/-- **The inclusion of the compressed complex intertwines the wave operators.** -/
 theorem wave_toHilbertComplex (h : H.ReducingSubcomplex S) :
     Intertwines ((totalIncl S).toContinuousLinearMap) h.toHilbertComplex.wave H.wave := by
   have hdual : ∀ i j, h.toHilbertComplex.dual.d i j = h.dual.toHilbertComplex.d i j :=
@@ -225,8 +186,6 @@ theorem wave_toHilbertComplex (h : H.ReducingSubcomplex S) :
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- **The wave group of the compressed complex is the restriction of the wave group**:
-`ι e^{tL_S} = e^{tL} ι`. -/
 theorem waveGroup_toHilbertComplex (h : H.ReducingSubcomplex S) (t : ℝ)
     (x : PiLp 2 fun i => S i) :
     totalIncl S (h.toHilbertComplex.waveGroup.S t x) = H.waveGroup.S t (totalIncl S x) := by
@@ -241,9 +200,7 @@ end ReducingSubcomplex
 variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
   [∀ i, CompleteSpace (W' i)]
 
-/-- A **scaled embedding** `H → H'` of Hilbert complexes on the same shape: bounded maps
-`J i : W i → W' i` with `⟪J x, J y⟫ = s_i ⟪x, y⟫`, `s_i > 0`, carrying `d` to a nonzero multiple
-of `d'` (`d' (J x) = κ_{ij} • J (d x)`, the chain-rule factors) and reflecting domains. -/
+/-- A scaled embedding `H → H'`: maps `J i` scaling inner products, with `d' J = κ • J d`. -/
 structure ScaledEmbedding (H : HilbertComplex 𝕜 c W) (H' : HilbertComplex 𝕜 c W') where
   /-- the embedding -/
   J : ∀ i, W i →L[𝕜] W' i
@@ -282,8 +239,6 @@ instance comap_hasOrthogonalProjection (i : ι) (S' : Submodule 𝕜 (W' i))
   have : CompleteSpace (S'.comap (E.J i : W i →ₗ[𝕜] W' i)) := hc.completeSpace_coe
   infer_instance
 
-/-- **The projection onto `J⁻¹ S'`**: if `P_{S'}` maps the range of `J` into itself, then
-`J P_{J⁻¹ S'} = P_{S'} J`. -/
 theorem starProjection_comap {i : ι} (S' : Submodule 𝕜 (W' i)) [S'.HasOrthogonalProjection]
     (hS : ∀ x, ∃ y, E.J i y = S'.starProjection (E.J i x)) (x : W i) :
     E.J i ((S'.comap (E.J i : W i →ₗ[𝕜] W' i)).starProjection x) = S'.starProjection (E.J i x) := by
@@ -301,10 +256,8 @@ theorem starProjection_comap {i : ι} (S' : Submodule 𝕜 (W' i)) [S'.HasOrthog
     exact (mul_eq_zero.1 this).resolve_left (RCLike.ofReal_ne_zero.2 (E.scale_pos i).ne')
   rw [e, hv]
 
-/-- **Reducing subcomplexes pull back along scaled embeddings**: if `S'` is a reducing subcomplex
-of `H'` whose projections preserve the ranges of `J`, then `J⁻¹ S'` is a reducing subcomplex of
-`H`. This transfers constraint propagation from a model complex (the torus, `ℝⁿ`) to its
-compressions, restrictions and rescalings. [QuennevilleBelair2015], Prop 4.17 -/
+/-- **Reducing subcomplexes pull back along scaled embeddings**: if `S'` reduces `H'` and its
+projections preserve the ranges of `J`, then `J⁻¹ S'` reduces `H`. -/
 theorem reducingSubcomplex_comap {S' : ∀ i, Submodule 𝕜 (W' i)}
     [∀ i, (S' i).HasOrthogonalProjection] (hS' : H'.ReducingSubcomplex S')
     (hS : ∀ i x, ∃ y, E.J i y = (S' i).starProjection (E.J i x)) :
@@ -327,8 +280,6 @@ theorem reducingSubcomplex_comap {S' : ∀ i, Submodule 𝕜 (W' i)}
 
 variable [Fintype ι] [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-/-- Under the hypotheses of `reducingSubcomplex_comap`, `J⁻¹ S'` is its own invariant core for
-the wave group of `H` (Thesis Prop 4.17, the corrected maximal constraint `K* = K`). -/
 theorem invariantCore_eq {S' : ∀ i, Submodule 𝕜 (W' i)} [∀ i, (S' i).HasOrthogonalProjection]
     (hS' : H'.ReducingSubcomplex S') (hS : ∀ i x, ∃ y, E.J i y = (S' i).starProjection (E.J i x)) :
     H.waveGroup.invariantCore (totalSub fun i => (S' i).comap (E.J i : W i →ₗ[𝕜] W' i)) =
@@ -466,10 +417,7 @@ theorem transportD_eq_zero {i j : ι} (h : H.d i j = 0) : transportD H e κ i j 
 
 variable (H e κ)
 
-/-- **Transport of a Hilbert complex** along continuous linear isomorphisms `e i : W i ≃ W' i`
-with the differentials rescaled by nonzero `κ i j`: `d' = κ • e ∘ d ∘ e⁻¹`. Covers unitary
-transport (`HilbertComplex.map`), rescaling (`HilbertComplex.smul`), and pull-back along an affine
-change of variables. -/
+/-- **Transport** along isomorphisms `e i`, with rescaled differentials `d' = κ • e ∘ d ∘ e⁻¹`. -/
 def transport (hκ : ∀ i j, κ i j ≠ 0) : HilbertComplex 𝕜 c W' where
   d := transportD H e κ
   shape i j hij := transportD_eq_zero (H.shape i j hij)
@@ -519,8 +467,6 @@ variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerPro
 
 variable {e : ∀ i, W i ≃L[𝕜] W' i} {κ : ι → ι → 𝕜} {s : ℝ}
 
-/-- **Adjoints of transported differentials** along uniformly scaled isometries
-(`⟪e x, e y⟫ = s ⟪x, y⟫` for all spaces): `(κ e d e⁻¹)† = conj κ · e d† e⁻¹`. -/
 theorem adjoint_transportD (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) {i j : ι} (hκ : κ i j ≠ 0) :
     (transportD H e κ i j)† = transportD H.dual e (fun a b => conj (κ b a)) j i := by
@@ -568,8 +514,6 @@ omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] [Fintype ι] in
 theorem totalMap_apply (e : ∀ i, W i ≃L[𝕜] W' i) (x : PiLp 2 W) (i : ι) :
     totalMap e x i = e i (x i) := rfl
 
-/-- **Transport along uniformly scaled isometries intertwines the wave operators**
-(`κ = 1`): `L' (e x) = e (L x)`. -/
 theorem wave_transport (hs : 0 < s)
     (he : ∀ i (x y : W i), ⟪e i x, e i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) :
     Intertwines (totalMap e) H.wave (H.transport e (fun _ _ => 1) fun _ _ => one_ne_zero).wave := by
@@ -611,7 +555,6 @@ variable {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerPro
   [∀ i, CompleteSpace (W' i)] {J : ∀ i, W' i →L[𝕜] W i} {s : ℝ}
 
 omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)] in
-/-- A scaled isometry multiplies norms by `√s`. -/
 theorem norm_apply_of_inner (hs : 0 < s) (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (i : ι) (x : W' i) : ‖J i x‖ = Real.sqrt s * ‖x‖ := by
   have h := hJ i x x
@@ -650,7 +593,6 @@ theorem J_rangeEquiv_symm (hs : 0 < s)
   rw [← coe_rangeEquiv hs hJ, ContinuousLinearEquiv.apply_symm_apply]
 
 omit [∀ (i : ι), CompleteSpace (W i)] [∀ (i : ι), CompleteSpace (W' i)] in
-/-- The inverse of `rangeEquiv` scales inner products by `s⁻¹`. -/
 theorem inner_rangeEquiv_symm (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜) (i : ι)
     (a b : LinearMap.range (J i : W' i →ₗ[𝕜] W i)) :
@@ -666,9 +608,7 @@ instance (i : ι) : CompleteSpace (LinearMap.range (J i : W' i →ₗ[𝕜] W i)
 
 variable (H J)
 
-/-- **The compression of `H` along scaled isometric embeddings** `J i : W' i → W i`
-(`⟪J x, J y⟫ = s ⟪x, y⟫`) whose ranges form a reducing subcomplex: the reducing subcomplex
-`R(J)` transported to `W'`, so that `d' = J⁻¹ d J` on `{x | J x ∈ D(d)}`. -/
+/-- **The compression of `H`** along scaled isometric embeddings `J i` whose ranges reduce `H`. -/
 def compress (hs : 0 < s) (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) : HilbertComplex 𝕜 c W' :=
   hR.toHilbertComplex.transport (fun i => (rangeEquiv hs hJ i).symm) (fun _ _ => 1)
@@ -684,7 +624,6 @@ theorem mem_compress_domain_iff (hs : 0 < s)
   rw [ContinuousLinearEquiv.symm_symm, LinearPMap.IsReducingPair.mem_part_domain]
   rfl
 
-/-- **`J d' = d J`**: the compressed differentials are `J⁻¹ d J`. -/
 theorem J_compress_d (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) {i j : ι}
@@ -696,7 +635,6 @@ theorem J_compress_d (hs : 0 < s)
   rw [one_smul, J_rangeEquiv_symm, LinearPMap.IsReducingPair.part_apply]
   rfl
 
-/-- **The adjoints of the compressed complex are the compressions of the adjoints.** -/
 theorem adjoint_compress_d (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) (i j : ι) :
@@ -719,7 +657,6 @@ theorem mem_adjoint_compress_iff (hs : 0 < s)
   rw [adjoint_compress_d]
   exact mem_compress_domain_iff hs hJ hR.dual
 
-/-- **`J d'† = d† J`.** -/
 theorem J_adjoint_compress_d (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) {i j : ι}
@@ -731,8 +668,7 @@ theorem J_adjoint_compress_d (hs : 0 < s)
   rw [apply_eq_of_eq (adjoint_compress_d hs hJ hR i j) y ⟨_, hy⟩ rfl]
   exact J_compress_d hs hJ hR.dual ⟨_, hy⟩
 
-/-- **A compression is a scaled embedding** into the original complex (scale `s`, chain-rule
-factors `1`). -/
+/-- A compression is a scaled embedding into the original complex. -/
 def ScaledEmbedding.ofCompress (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) :
@@ -759,7 +695,6 @@ omit [∀ i, CompleteSpace (W i)] [∀ i, CompleteSpace (W' i)]
   [∀ i, (LinearMap.range (J i : W' i →ₗ[𝕜] W i)).HasOrthogonalProjection] [Fintype ι] in
 theorem totalJ_apply (x : PiLp 2 W') (i : ι) : totalJ J x i = J i (x i) := rfl
 
-/-- **The compression intertwines the wave operators**: `J L' = L J`. -/
 theorem wave_compress (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) :
@@ -777,8 +712,6 @@ theorem wave_compress (hs : 0 < s)
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
   [∀ i, NormedSpace ℝ (W' i)] [∀ i, IsScalarTower ℝ 𝕜 (W' i)]
 
-/-- **The wave group of a compression is the restriction of the wave group**:
-`J e^{tL'} = e^{tL} J`. -/
 theorem waveGroup_compress (hs : 0 < s)
     (hJ : ∀ i (x y : W' i), ⟪J i x, J i y⟫_𝕜 = (s : 𝕜) * ⟪x, y⟫_𝕜)
     (hR : H.ReducingSubcomplex fun i => LinearMap.range (J i : W' i →ₗ[𝕜] W i)) (t : ℝ) (x : PiLp 2 W') :

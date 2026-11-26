@@ -5,40 +5,12 @@ public import Feec.Semigroup.DissipativeInvariance
 /-!
 # Boundary-dissipative realizations: impedance triples
 
-First-order systems `E' = -c* P + (boundary)`, `P' = c E` with an absorbing (impedance) boundary
-condition — Maxwell's equations with the Silver–Müller condition `n × E + B_τ = 0`, the row-wise
-Einstein–Bianchi system, acoustics with a radiation condition — have generators that are
-m-dissipative but not skew-adjoint. Their m-dissipativity follows from one abstract structure,
-which avoids any trace theory beyond what defines the energy space.
-
-An **impedance triple** (`Feec.ImpedanceTriple`) consists of Hilbert spaces `V`, `H₁`, `H₂`, `Y`
-and bounded maps `ι : V → H₁` (the field), `c : V → H₂` (its differential, e.g. the curl) and
-`γ : V → Y` (its boundary trace), such that
-`⟪v, w⟫_V = ⟪ι v, ι w⟫ + ⟪c v, c w⟫ + ⟪γ v, γ w⟫`, `ι` is injective and `ι V` is dense. On
-`X = H₁ ⊕₂ H₂` the operator `A = ImpedanceTriple.op` has domain the pairs `(E, P)` with
-`E = ι v` for some `v ∈ V` such that `v' ↦ -⟪P, c v'⟫ - ⟪γ v, γ v'⟫` is represented by some
-`w ∈ H₁` on `ι V`, and `A (E, P) = (w, c v)`. For a smooth `P` the identity
-`⟪w, ι v'⟫ = -⟪P, c v'⟫ - ⟪γ v, γ v'⟫` says `w = -c* P` in the interior together with the
-**natural boundary condition** coupling the boundary values of `P` with `γ v`; in the Maxwell case
-it is `n × B = E_τ`, i.e. the absorbing condition `n × E + B_τ = 0`.
-
-## Main results
-
-* `ImpedanceTriple.op` and `mem_graph_op_iff`: the operator and its graph.
-* **`ImpedanceTriple.re_inner_op`**: the energy flux `re ⟪A u, u⟫ = -‖γ v‖²` (the boundary
-  dissipation).
-* **`ImpedanceTriple.isMDissipative_op`**: `A` is m-dissipative. Surjectivity of `1 - A` is the
-  Riesz representation of `v' ↦ ⟪f, ι v'⟫ - ⟪g, c v'⟫` on `V` (the energy space carries the
-  boundary term in its inner product; this is the Lax–Milgram step of the impedance problem).
-* **`ImpedanceTriple.norm_sq_semigroup`**: the semigroup radiates: for `u₀ ∈ D(A)`,
-  `‖S(t) u₀‖² = ‖u₀‖² - 2 ∫₀ᵗ ‖γ v(s)‖² ds`, the energy lost being the outgoing flux.
+An impedance triple: an energy space with a field map, a differential and a boundary trace; for
+complete spaces its operator is m-dissipative, and its semigroup loses energy through the trace.
 
 ## References
 
-* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], §4.6 (the impedance
-  problem), §1.4 (the Silver–Müller condition)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.4 (Lumer–Phillips)
+* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], §4.6
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -56,9 +28,8 @@ variable (𝕜 : Type*) [RCLike 𝕜] (V H₁ H₂ Y : Type*)
   [NormedAddCommGroup H₂] [InnerProductSpace 𝕜 H₂]
   [NormedAddCommGroup Y] [InnerProductSpace 𝕜 Y]
 
-/-- An **impedance triple**: an energy space `V` with a field map `ι : V → H₁`, a differential
-`c : V → H₂` and a boundary trace `γ : V → Y`, whose inner product is the sum of the three, with
-`ι` injective and of dense range. [Monk2003], §4.6 -/
+/-- An impedance triple `ι`, `c`, `γ`, with `⟪·, ·⟫_V` the sum of theirs and `ι` injective with
+dense range. [Monk2003], §4.6 -/
 structure ImpedanceTriple where
   /-- the field -/
   ι : V →L[𝕜] H₁
@@ -105,8 +76,6 @@ def graph : Submodule 𝕜 (WithLp 2 (H₁ × H₂) × WithLp 2 (H₁ × H₂)) 
         inner_smul_left, _root_.map_smul, hv3 v']
       ring
 
-/-- The witness of a graph point is unique, and a graph point with zero first component is zero:
-`ι` is injective and `ι V` is dense. -/
 theorem graph_snd_eq_zero (p : WithLp 2 (H₁ × H₂) × WithLp 2 (H₁ × H₂)) (hp : p ∈ T.graph)
     (h0 : p.1 = 0) : p.2 = 0 := by
   obtain ⟨v, hv1, hv2, hv3⟩ := hp
@@ -178,8 +147,6 @@ theorem re_inner_op (u : T.op.domain) :
 theorem isDissipative_op : T.op.IsDissipative := fun u => by
   rw [T.re_inner_op u]; exact neg_nonpos.2 (sq_nonneg _)
 
-/-- **`1 - A` is onto**: for `(f, g)`, the Riesz representative `v` of `v' ↦ ⟪f, ι v'⟫ - ⟪g, c v'⟫`
-in `V` gives the solution `(ι v, g + c v)`. -/
 theorem surjective_one_sub [CompleteSpace V] (y : WithLp 2 (H₁ × H₂)) :
     ∃ u : T.op.domain, ((1 : ℝ) : 𝕜) • (u : WithLp 2 (H₁ × H₂)) - T.op u = y := by
   set f := y.fst
@@ -207,8 +174,7 @@ theorem surjective_one_sub [CompleteSpace V] (y : WithLp 2 (H₁ × H₂)) :
   · change ((1 : ℝ) : 𝕜) • (g + T.c v) - T.c v = g
     simp
 
-/-- **The impedance operator is m-dissipative**, hence (Lumer–Phillips) generates a contraction
-semigroup. -/
+/-- **The impedance operator is m-dissipative.** -/
 theorem isMDissipative_op [CompleteSpace V] [CompleteSpace H₁] [CompleteSpace H₂] :
     T.op.IsMDissipative :=
   ⟨T.isDissipative_op, 1, one_pos, T.surjective_one_sub⟩
@@ -226,9 +192,8 @@ theorem traceExt_of_mem {u : WithLp 2 (H₁ × H₂)} (h : u ∈ T.op.domain) :
     T.traceExt u = T.trace ⟨u, h⟩ := by
   unfold traceExt; simp [h]
 
-/-- **The semigroup radiates**: for `u₀ ∈ D(A)` and `t ≥ 0`,
-`‖S(t) u₀‖² = ‖u₀‖² - 2 ∫₀ᵗ ‖γ v(s)‖² ds`, where `γ v(s)` is the boundary trace of `S(s) u₀`:
-the energy lost is the outgoing boundary flux. -/
+/-- **The semigroup radiates**: `‖S(t) u₀‖² = ‖u₀‖² - 2 ∫₀ᵗ ‖γ v(s)‖² ds` for `u₀ ∈ D(A)`, `t ≥ 0`,
+with `γ v(s)` the boundary trace of `S(s) u₀`. -/
 theorem norm_sq_semigroup (u₀ : T.op.domain) {t : ℝ} (ht : 0 ≤ t) :
     ‖T.isMDissipative_op.semigroup.S t u₀‖ ^ 2 = ‖(u₀ : WithLp 2 (H₁ × H₂))‖ ^ 2 -
       2 * ∫ s in (0 : ℝ)..t, ‖T.traceExt (T.isMDissipative_op.semigroup.S s u₀)‖ ^ 2 := by

@@ -7,51 +7,19 @@ public import Feec.HilbertComplex.Approximation.ApproxComplexCrime
 /-!
 # The scheme (6.5) through the complex-level front end
 
-The source-free scheme (6.3)/(6.5) of [QuennevilleBelair2015], §6.2–6.3, written on the
-hidden-constraint space with the skew generator `Lₕ = waveGen`
-(`Feec.Instances.EinsteinBianchiFEMGenerator`), is the Hodge wave operator of a **discrete
-differential space**: `Lₕ = 𝐝ₕ - 𝐝ₕ*` (`waveGen_eq_diffWave`) for the discrete BGG differential
-`𝐝ₕ (σ, u, M, ρ) = (0, -d̃ Φ(σ, 0), S₁,ₕ u, d̃ u)` (`diffGen`; `𝐝ₕ 𝐝ₕ = 0`, `diffGen_diffGen`, from
-`S₁,ₕ d̃ = -d S₀,ₕ`, `S₀,ₕ Φ(σ, 0) = dσ`, `d d = 0` and `d̃ d̃ = 0`). Its first differential uses
-`S₀,ₕ = π¹S⁰`, which differs from `S⁰` in general; the reading maps of (6.5) are not shown to be
-cochain maps, and (6.5) is not formalized as an instance of
-`Feec.HilbertComplex.ApproxFEEC.ofComplex`. It is the **crime front** of the approximating FEEC
-theorem, `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime`, of the family of discrete differential
-spaces of its **elliptic core**, through `Feec.HilbertComplex.ApproxComplexCrime.ofGalerkinCore`:
-the elliptic projection (6.4) of the exact solution is a Galerkin projection,
-`(1 - Lₕ) Πₕ(t) = ιₕ* (1 - L) ξ(t)` (`mEll_galerkin`, `cEll_galerkin`, from `inner_ellDefect` and
-the identification of the continuous forms state with the read state), so it is the approximant of
-the consistent-approximation hypothesis (residual `0`), and its convergence is the Strang bound of
-(6.4) with the weak consistency constants `K₀`, `K₁`
-(`Feec.Instances.EinsteinBianchi.FEM.norm_sub_ellTraj_le`). The cochain defect of (6.5) is absorbed
-by the Galerkin identity; it is computed in `Feec.Instances.EinsteinBianchiFEMDefect` (`O(h)` for
-the thesis' boundary conditions, `0` on TSD states for mirror boundary conditions).
+The source-free scheme (6.3)/(6.5) of [QuennevilleBelair2015], §6.2–6.3 has the generator
+`Lₕ = 𝐝ₕ - 𝐝ₕ*` of a discrete differential space; it is the crime front of the discrete
+differential spaces of its elliptic core, for both boundary conditions.
 
-* **Mirror boundary conditions** (`mirrorComplex`, on `complexQℝ`, constraint `tsdQℝ`): the
-  discrete solutions are those of `mirrorFEMApprox` (`mirrorComplex_sol`, the scheme (6.5)); the
-  closure of the core is `tsdQℝ`; the rate classes of the complex-level rate constructor
-  `Feec.HilbertComplex.galerkinRateClass_of_isOrthogonal` (the reading maps are orthogonal;
-  `mirrorComplexRate`, `mirrorComplexRateSobolev`: `O(h)`
-  for TSD data of `D(L³)` and `O(hˢ)` for TSD data in `H^{2+s}`, `0 ≤ s ≤ 1`).
-* **The thesis' boundary conditions** (`standardCubeComplex`, on `matrixComplex`, constraint
-  `thesisTSD`): the discrete solutions are those of `standardCubeApprox`
-  (`standardCubeComplex_sol`); the core is dense.
-* **Exactly preserved discrete constraints** (`hiddenGauss`): with `𝐝ₕ` identified, the discrete
-  Gauss (divergence) constraint `σₕ = 0`, `uₕ ⊥ d̃ Φ(Vₕ⁰, 0)` (the degree-`0` component of
-  `𝐝ₕ* x` vanishes), a discrete analogue of part of the TSD constraint, is invariant under
-  `Lₕ` (`waveGen_mem_hiddenGauss`), hence preserved exactly by the discrete solutions of both
-  instances (`mirrorFEM_preserves_hiddenGauss` on real and imaginary parts,
-  `standardCube_preserves_hiddenGauss`). For the thesis' boundary conditions the discrete constraint
-  is preserved exactly while the limit leaves `thesisTSD`. Neither `ιₕ(hiddenGauss) ⊆ tsdQℝ` nor
-  `ιₕ(hiddenGauss) ⊆ thesisTSD` is shown, so the residual-`0` clause of the complex-level theorem
-  is not used, and how `hiddenGauss`, read in `W`, sits relative to `thesisTSD` is not formalized.
+## Main results
+
+* `diffGen_diffGen`, `waveGen_eq_diffWave`: `𝐝ₕ 𝐝ₕ = 0` and `Lₕ = 𝐝ₕ - 𝐝ₕ*`.
+* `mEll_galerkin`, `cEll_galerkin`: the elliptic projection (6.4) is a Galerkin projection.
+* `mirrorFEM_preserves_hiddenGauss`: the discrete Gauss constraint is preserved exactly.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.2 ((6.3), (6.4)), §6.3 ((6.5))
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (§3.3, Thm 3.10)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -80,8 +48,7 @@ variable {P0 P1 P2 Pt0 Pt1 Pt2 : Type*}
   [FiniteDimensional ℝ P1] [FiniteDimensional ℝ Pt0] [FiniteDimensional ℝ Pt1]
   (hdinj : Function.Injective D.dt0) (hS : Function.Surjective D.S0)
 
-/-- **The discrete BGG differential** on energy states:
-`(σ, u, M, ρ) ↦ (0, -d̃ Φ(σ, 0), S₁ u, d̃ u)`, the "upper triangular" part of `waveOp`. -/
+/-- The discrete BGG differential `(σ, u, M, ρ) ↦ (0, -d̃ Φ(σ, 0), S₁ u, d̃ u)` on energy states. -/
 def diffOp : EState P0 Pt1 P2 Pt2 →ₗ[ℝ] EState P0 Pt1 P2 Pt2 where
   toFun x := EState.mk 0 (-D.dt0 (phi0 D hdinj hS x.σ)) (D.S1 x.u) (D.dt1 x.u)
   map_add' x y := by
@@ -97,17 +64,13 @@ def diffOp : EState P0 Pt1 P2 Pt2 →ₗ[ℝ] EState P0 Pt1 P2 Pt2 where
 @[simp] theorem diffOp_M (x : EState P0 Pt1 P2 Pt2) : (diffOp D hdinj hS x).M = D.S1 x.u := rfl
 @[simp] theorem diffOp_ρ (x : EState P0 Pt1 P2 Pt2) : (diffOp D hdinj hS x).ρ = D.dt1 x.u := rfl
 
-/-- `diffOp` maps into the hidden space: `d̃ Φ(σ, 0) ⊥ d̃ (ker S₀,ₕ)`. -/
 theorem diffOp_mem_hiddenSpace (x : EState P0 Pt1 P2 Pt2) :
     diffOp D hdinj hS x ∈ hiddenSpace D := fun ψ hψ => by
   rw [diffOp_u, inner_neg_left, inner_phiMap hdinj hS _ hψ, inner_zero_left, neg_zero]
 
 /-! #### The discrete Gauss constraint -/
 
-/-- **The discrete Gauss (divergence) constraint** of the hidden space: `σ = 0` and
-`u ⊥ d̃ Φ(Vₕ⁰, 0)` (the degree-`0` component of `𝐝ₕ* x` vanishes:
-`⟪x, 𝐝ₕ (τ, 0, 0, 0)⟫ = -⟪u, d̃ Φ(τ, 0)⟫`). A discrete analogue of part of the TSD constraint;
-that its image under the reading map lies in the continuous constraint is not shown. -/
+/-- The discrete Gauss constraint `σ = 0`, `u ⊥ d̃ Φ(Vₕ⁰, 0)` of the hidden space. -/
 def hiddenGauss : Submodule ℝ (HiddenState D) where
   carrier := {x | x.toEState.σ = 0 ∧ ∀ τ : P0, ⟪x.toEState.u, D.dt0 (phiMap D hdinj hS (τ, 0))⟫ = 0}
   add_mem' {x y} hx hy := ⟨by rw [HiddenState.toEState_add, EState.σ_add, hx.1, hy.1, add_zero],
@@ -120,7 +83,7 @@ def hiddenGauss : Submodule ℝ (HiddenState D) where
 
 variable [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt2]
 
-/-- **The discrete differential `𝐝ₕ`** on the hidden space. -/
+/-- The discrete differential `𝐝ₕ` on the hidden space. -/
 def diffGen : HiddenState D →L[ℝ] HiddenState D :=
   LinearMap.toContinuousLinearMap
     ((diffOp D hdinj hS).restrict (p := hiddenSpace D) (q := hiddenSpace D)
@@ -130,14 +93,12 @@ theorem diffGen_toEState (x : HiddenState D) :
     (diffGen D hdinj hS x).toEState = diffOp D hdinj hS x.toEState := rfl
 
 omit [FiniteDimensional ℝ P0] [FiniteDimensional ℝ P2] [FiniteDimensional ℝ Pt2] in
-/-- `S₁,ₕ d̃ Φ(σ, 0) = 0` (`S₁ d̃ = -d S₀`, `S₀ Φ(σ, 0) = dσ`, `d d = 0`). -/
 theorem S1_dt0_phiMap (σ : P0) : D.S1 (D.dt0 (phiMap D hdinj hS (σ, 0))) = 0 := by
   have h := D.anticomm (phiMap D hdinj hS (σ, 0))
   rw [S0_phiMap hdinj hS, D.d1_d0] at h
   exact neg_eq_zero.1 h.symm
 
-/-- **`𝐝ₕ 𝐝ₕ = 0`**: the hidden space with `𝐝ₕ` is a discrete differential space (from
-`S₁,ₕ d̃ Φ(σ, 0) = 0` and `d̃ d̃ = 0`). -/
+/-- **`𝐝ₕ 𝐝ₕ = 0`**: the hidden space with `𝐝ₕ` is a discrete differential space. -/
 theorem diffGen_diffGen (x : HiddenState D) : diffGen D hdinj hS (diffGen D hdinj hS x) = 0 := by
   refine HiddenState.toEState_injective ?_
   rw [diffGen_toEState, diffGen_toEState, HiddenState.toEState_zero]
@@ -155,8 +116,7 @@ theorem inner_diffGen (x y : HiddenState D) :
   rw [← HiddenState.inner_toEState, diffGen_toEState, EState.inner_def, diffOp_σ, diffOp_u,
     diffOp_M, diffOp_ρ, inner_zero_left, zero_add, inner_neg_left]
 
-/-- **The generator of (6.5) is the Hodge wave operator of `𝐝ₕ`**: `Lₕ = 𝐝ₕ - 𝐝ₕ*` on the
-hidden space. -/
+/-- **The generator of (6.5) is the Hodge wave operator `𝐝ₕ - 𝐝ₕ*`.** -/
 theorem waveGen_eq_diffWave : waveGen D hdinj hS = diffWave (diffGen D hdinj hS) := by
   refine ContinuousLinearMap.ext fun x => ext_inner_right ℝ fun y => ?_
   rw [inner_diffWave, inner_diffGen, real_inner_comm (diffGen D hdinj hS y) x, inner_diffGen,
@@ -165,9 +125,7 @@ theorem waveGen_eq_diffWave : waveGen D hdinj hS = diffWave (diffGen D hdinj hS)
     real_inner_comm x.toEState.ρ (D.dt1 _)]
   ring
 
-/-- **The discrete Gauss constraint is invariant under the generator of (6.5)**: on it,
-`(Lₕ x)_σ = d* λ(u) = 0` (`⟪λ(u), dτ⟫ = ⟪u, d̃ Φ(τ, 0)⟫`), and `(Lₕ x)_u = -S₁* M - d̃* ρ` is
-orthogonal to `d̃ Φ(τ, 0)` (`S₁ d̃ Φ(τ, 0) = 0`, `d̃ d̃ = 0`). -/
+/-- **The discrete Gauss constraint is invariant under the generator of (6.5).** -/
 theorem waveGen_mem_hiddenGauss {x : HiddenState D} (hx : x ∈ hiddenGauss D hdinj hS) :
     waveGen D hdinj hS x ∈ hiddenGauss D hdinj hS := by
   obtain ⟨h0, h1⟩ := hx
@@ -209,8 +167,6 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
 set_option maxHeartbeats 400000 in
-/-- **The difference `‖y - Rt a‖² - tsdErr(y, a)²` does not depend on `a`** for a TSD state `y`
-(it is the energy of the imaginary part). -/
 theorem norm_sq_sub_mirrorReEmb_sub_tsdErr {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ)
     (a a' : REnergy) :
     ‖y - mirrorReEmb a‖ ^ 2 - tsdErr y a ^ 2 = ‖y - mirrorReEmb a'‖ ^ 2 - tsdErr y a' ^ 2 := by
@@ -227,8 +183,6 @@ theorem norm_sq_sub_mirrorReEmb_sub_tsdErr {y : PiLp 2 SpaceQ} (hy : y ∈ total
       ‖rowsW2L (slotB y) - a'.ρ‖ ^ 2 := Real.sq_sqrt (by positivity)
   linarith
 
-/-- **Polarization**: if `‖a - c‖² - ‖b - d‖²` is the same at `(c, d)` and at `(0, 0)` and
-`‖c‖ = ‖d‖`, then `⟪a, c⟫ = ⟪b, d⟫`. -/
 theorem real_inner_eq_of_norm {E E' : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [NormedAddCommGroup E'] [InnerProductSpace ℝ E'] {a c : E} {b d : E'} (hcd : ‖c‖ = ‖d‖)
     (h : ‖a - c‖ ^ 2 - ‖b - d‖ ^ 2 = ‖a‖ ^ 2 - ‖b‖ ^ 2) : ⟪a, c⟫_ℝ = ⟪b, d⟫_ℝ := by
@@ -244,8 +198,6 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
     Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
 
 set_option maxHeartbeats 1000000 in
-/-- The four-term error of a discrete energy state against the time derivative of a TSD solution
-is its energy error against `ξ'` (the time-derivative analogue of `tsdErr_eq`). -/
 theorem tsdErr_eq' (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
     (p : EState (mirrorFEM hT hB N).V0h (mirrorFEM hT hB N).Vt1h (mirrorFEM hT hB N).W2h
       (mirrorFEM hT hB N).Wt2h) :
@@ -273,7 +225,6 @@ theorem tsdErr_eq' (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
   exact congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg₂ (· + ·) (congrArg (· ^ 2) e1.symm)
     (congrArg (· ^ 2) e2.symm)) (congrArg (· ^ 2) e3.symm)) (congrArg (· ^ 2) e4.symm)
 
-/-- At `a' = 0`: `‖y - Rt a‖² - tsdErr(y, a)² = ‖y‖² - tsdErr(y, 0)²`. -/
 theorem norm_sq_sub_mirrorReEmb_sub_tsdErr_zero {y : PiLp 2 SpaceQ} (hy : y ∈ totalSub tsdQ)
     (a : REnergy) :
     ‖y - mirrorReEmb a‖ ^ 2 - tsdErr y a ^ 2 = ‖y‖ ^ 2 - tsdErr y 0 ^ 2 := by
@@ -282,7 +233,6 @@ theorem norm_sq_sub_mirrorReEmb_sub_tsdErr_zero {y : PiLp 2 SpaceQ} (hy : y ∈ 
 
 include hT hB in
 set_option maxHeartbeats 2000000 in
-/-- `tsdErr(U(t), 0) = ‖ξ(t)‖`. -/
 theorem tsdErr_zero_eq (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     tsdErr (Dd.U t) 0 = ‖exState (Dd.exactWave T) t‖ := by
   have h := tsdErr_eq hT hB N Dd ht 0
@@ -300,8 +250,6 @@ theorem tsdErr_zero_eq (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T
 
 include hT hB in
 set_option maxHeartbeats 400000 in
-/-- **The continuous forms state of a TSD solution, tested with a hidden state, is its pairing
-with the read state**: `⟪ξ(t), v⟫ = ⟪U(t), ι v⟫_ℝ` (polarization of `tsdErr_eq`). -/
 theorem inner_exState_coeH_mirror (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
     (v : mirrorHidden hT hB N) :
     ⟪exState (Dd.exactWave T) t, coeH (mirrorFEM hT hB N) v.toEState⟫ =
@@ -322,7 +270,6 @@ theorem inner_exState_coeH_mirror (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t 
 
 include hT hB in
 set_option maxHeartbeats 2000000 in
-/-- `tsdErr(U'(t), 0) = ‖ξ'(t)‖`. -/
 theorem tsdErr_zero_eq' (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     tsdErr (Dd.V t) 0 = ‖exState' (Dd.exactWave T) t‖ := by
   have h := tsdErr_eq' hT hB N Dd ht 0
@@ -340,7 +287,6 @@ theorem tsdErr_zero_eq' (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 
 
 include hT hB in
 set_option maxHeartbeats 400000 in
-/-- The same for the time derivative: `⟪ξ'(t), v⟫ = ⟪U'(t), ι v⟫_ℝ`. -/
 theorem inner_exState'_coeH_mirror (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
     (v : mirrorHidden hT hB N) :
     ⟪exState' (Dd.exactWave T) t, coeH (mirrorFEM hT hB N) v.toEState⟫ =
@@ -360,9 +306,7 @@ theorem inner_exState'_coeH_mirror (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t
   exact key.symm.trans (congrArg (fun z => ⟪Dd.V t, z⟫_ℝ) (mirrorEmb_apply hT hB N v).symm)
 
 set_option maxHeartbeats 1000000 in
-/-- **The elliptic projection (6.4) of a TSD solution is a Galerkin projection**:
-`(1 - Lₕ) Πₕ(t) = ιₕ* (U(t) - U'(t))` on `[0, T]` (`inner_ellDefect` and the identification of the
-continuous forms state). -/
+/-- **The elliptic projection (6.4) of a TSD solution is a Galerkin projection.** -/
 theorem mEll_galerkin (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     mEll hT hB N Dd T t - waveGen (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N) (mEll hT hB N Dd T t) =
@@ -401,7 +345,6 @@ theorem mEll_galerkin (N : ℕ) (Dd : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T)
   have iV := inner_exState'_coeH_mirror hT hB N Dd ht' v
   linarith
 
-/-- The real hidden spaces are finite-dimensional. -/
 theorem mirrorFEMReal_finiteDimensional :
     ∀ N, FiniteDimensional ℝ ((mirrorFEMReal hT hB).X N) :=
   fun N => HiddenState.instFiniteDimensional (mirrorWave hT hB N)
@@ -420,8 +363,7 @@ theorem mirrorFEMReal_L_eq (N : ℕ) :
     (mirrorFEMReal hT hB).L N = diffWave (mirrorDiffGen hT hB N) :=
   waveGen_eq_diffWave _ _ _
 
-/-- **The discrete differential of the mirror scheme on complex data**: `𝐝ₕ ⊕ 𝐝ₕ` on real and
-imaginary parts. -/
+/-- The discrete differential `𝐝ₕ ⊕ 𝐝ₕ` of the mirror scheme on complex data. -/
 def mirrorD (N : ℕ) : (mirrorFEMApprox hT hB).X N →L[ℝ] (mirrorFEMApprox hT hB).X N :=
   (mirrorFEMReal hT hB).complexifyD mulI mulI_mulI norm_mulI (adjoint_mirrorEmb_mulI hT hB)
     (inner_mirrorEmb_mulI hT hB) (mirrorDiffGen hT hB) N
@@ -431,7 +373,6 @@ theorem mirrorD_D (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) :
   (mirrorFEMReal hT hB).complexifyD_D mulI mulI_mulI norm_mulI (adjoint_mirrorEmb_mulI hT hB)
     (inner_mirrorEmb_mulI hT hB) (mirrorDiffGen hT hB) (fun _ v => diffGen_diffGen _ _ _ v) N v
 
-/-- **The generator of the mirror scheme is the Hodge wave operator of `𝐝ₕ ⊕ 𝐝ₕ`.** -/
 theorem mirrorFEMApprox_L_eq (N : ℕ) :
     (mirrorFEMApprox hT hB).L N = diffWave (mirrorD hT hB N) :=
   (mirrorFEMReal hT hB).complexify_L_eq_diffWave mulI mulI_mulI norm_mulI
@@ -448,9 +389,6 @@ theorem complexQℝ_waveGroup_eq_V {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData
   exact complexQℝ_waveGroup ht _
 
 set_option maxHeartbeats 400000 in
-/-- **The Galerkin identity of the elliptic core of the mirror scheme**: real and imaginary parts
-of the comparison are the elliptic projections (6.4) of the TSD solutions from `ξ₀` and `-iξ₀`,
-and `(1 - Lₕ) pₕ(t) = ιₕ* (e^{tL} ξ₀ - e^{tL} L ξ₀)`. -/
 theorem mirrorEllCore_galerkin : ∀ T, ∀ x ∈ (mirrorEllCore hT hB).Data, ∀ N, ∀ t ∈ Ico 0 T,
     ((mirrorEllCore hT hB).cmp T).p x N t -
         (mirrorFEMApprox hT hB).L N (((mirrorEllCore hT hB).cmp T).p x N t) =
@@ -488,7 +426,6 @@ theorem mirrorEllCore_galerkin : ∀ T, ∀ x ∈ (mirrorEllCore hT hB).Data, �
     N _ _ _ (g1.trans (congrArg (mirrorEmb hT hB N).adjoint e))
     (g2.trans ((congrArg (mirrorEmb hT hB N).adjoint e2).trans (map_neg _ _)))
 
-/-- **The orbit of `L ξ₀` stays in the closure of the core** (`tsdQℝ`). -/
 theorem mirrorEllCore_orbit_closure : ∀ x ∈ (mirrorEllCore hT hB).Data, ∀ t : ℝ, 0 ≤ t →
     complexQℝ.waveGroup.S t (waveExt complexQℝ x) ∈
       (mirrorEllCore hT hB).Data.topologicalClosure := by
@@ -498,11 +435,7 @@ theorem mirrorEllCore_orbit_closure : ∀ x ∈ (mirrorEllCore hT hB).Data, ∀ 
   rw [← complexQℝ_waveGroup_eq_V hx ht] at h
   exact h
 
-/-- **The mirror scheme (6.5) as an approximating family of discrete differential spaces**
-(`ApproxComplexCrime.ofGalerkinCore`): the hidden spaces with `𝐝ₕ ⊕ 𝐝ₕ`, the reading map of
-`mirrorFEMApprox`, the elliptic core, the TSD constraint. Its crime front
-`ApproxFEEC.ofComplexCrime (mirrorComplex)` is the discretization of the scheme (6.5) with mirror
-boundary conditions. -/
+/-- The mirror scheme (6.5) as an approximating family of discrete differential spaces. -/
 def mirrorComplex : ApproxComplexCrime complexQℝ ℕ :=
   ApproxComplexCrime.ofGalerkinCore (mirrorFEMApprox hT hB)
     (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
@@ -511,7 +444,6 @@ def mirrorComplex : ApproxComplexCrime complexQℝ ℕ :=
     (mirrorFEMApprox_L_eq hT hB) (mirrorEllCore hT hB)
     (fun _ hx => hx.2) (mirrorEllCore_galerkin hT hB) (mirrorEllCore_orbit_closure hT hB)
 
-/-- The discrete solutions of `ofComplexCrime (mirrorComplex)` are those of `mirrorFEMApprox`. -/
 theorem mirrorComplex_sol (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) (t : ℝ) :
     (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).sol N v t =
       (mirrorFEMApprox hT hB).sol N v t :=
@@ -519,9 +451,7 @@ theorem mirrorComplex_sol (N : ℕ) (v : (mirrorFEMApprox hT hB).X N) (t : ℝ) 
     _ _ N v t
 
 set_option maxHeartbeats 1000000 in
-/-- **The discrete Gauss constraint is preserved exactly by the discrete solutions of the mirror
-scheme**, on real and imaginary parts (`hiddenGauss ⊕ hiddenGauss`: `σₕ = 0`, `uₕ ⊥ d̃ Φ(Vₕ⁰, 0)`;
-item 3 of `approxFEEC_ofComplexCrime`). -/
+/-- **The discrete Gauss constraint is preserved exactly by the mirror scheme.** -/
 theorem mirrorFEM_preserves_hiddenGauss (N : ℕ) {v : (mirrorFEMApprox hT hB).X N}
     (hv : v ∈ prodSub (hiddenGauss (mirrorWave hT hB N) (mirrorWave_dt0_injective hT hB N)
       (mirrorWave_S0_surjective hT hB N))) (t : ℝ) :
@@ -537,16 +467,11 @@ theorem mirrorFEM_preserves_hiddenGauss (N : ℕ) {v : (mirrorFEMApprox hT hB).X
 
 /-! #### Rates of the mirror scheme through the complex-level front end -/
 
-/-- **The approximation error of the derivative of one real part** is the projection error of the
-time derivative. -/
 theorem tsdErr_mEll' (N : ℕ) (D : TSDDatum) {T t : ℝ} (ht : t ∈ Icc 0 T) :
     tsdErr (D.V t) (mirrorFE hT hB N (mEll' hT hB N D T t)) = ellErr' hT hB N D T t :=
   tsdErr_eq' hT hB N D (T := T + 1) ⟨ht.1, by linarith [ht.2]⟩ (mEll' hT hB N D T t).toEState
 
 set_option maxHeartbeats 1000000 in
-/-- **The approximation error of the derivative of the elliptic comparison**:
-`‖e^{tL} L ξ₀ - ιₕ pₕ'(t)‖` is at most the projection errors of the time derivatives of the real and
-imaginary parts. -/
 theorem norm_sub_mirrorEllCmp_p'_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mirrorEllData) (N : ℕ)
     {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖complexQℝ.waveGroup.S t (waveExt complexQℝ x) - (mirrorFEMApprox hT hB).incl N
@@ -582,10 +507,7 @@ theorem norm_sub_mirrorEllCmp_p'_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mi
     (congrArg₂ (· - ·) hyV e).trans (sub_add_eq_sub_sub _ _ _)
   exact (congrArg norm hz).trans_le (key.trans_eq (congrArg₂ (· + ·) h1 h2))
 
-/-- **The `O(h)` rate class of the mirror scheme through the complex-level front end**
-(`galerkinRateClass_of_isOrthogonal` of `mirrorComplex`): TSD data of `D(L³)`, class norm
-`‖ξ₀‖_{L³}`, order `1` in `h_N`, with `Cₐ = 4K` (`K = mirrorEllK`) from the Strang bound of (6.4)
-for the state and its time derivative (`ellErr_le_sobolev`). -/
+/-- The `O(h)` rate class of the mirror scheme: TSD data of `D(L³)`, with `Cₐ = 4 mirrorEllK`. -/
 def mirrorComplexRate (T : ℝ) :
     (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).RateClass T :=
   galerkinRateClass_of_isOrthogonal (hfd := mirrorFEMApprox_finiteDimensional hT hB)
@@ -606,8 +528,7 @@ def mirrorComplexRate (T : ℝ) :
       · nlinarith [e1.1, e2.1]
       · nlinarith [e1.2, e2.2]
 
-/-- **The `O(hˢ)` rate class of the mirror scheme through the complex-level front end**: TSD data
-in `H^{2+s}`, `0 ≤ s ≤ 1`, class norm `‖ξ₀‖_{2+s}`, `Cₐ = 6K`. -/
+/-- The `O(hˢ)` rate class of the mirror scheme: TSD data of `D(L²)` in `H^{2+s}`, `0 ≤ s ≤ 1`. -/
 def mirrorComplexRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).RateClass T :=
   galerkinRateClass_of_isOrthogonal (hfd := mirrorFEMApprox_finiteDimensional hT hB)
@@ -632,7 +553,7 @@ def mirrorComplexRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
 
 end Mirror
 
-/-! ### The thesis' boundary conditions -/
+/-! ### The boundary conditions of [QuennevilleBelair2015], §6.3 -/
 
 section Cube
 
@@ -649,9 +570,6 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 4000000 in
-/-- **The energy error of a hidden state against the classical solution is its error through
-the reading map**: `‖e^{tL} x - ι v‖ = ‖ξ(t) - v‖` for every hidden `v` (as
-`norm_sub_cubeEmb_cEll`, for an arbitrary state). -/
 theorem norm_sub_cubeEmb_eq (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     {T t : ℝ} (ht' : t ∈ Icc 0 (T + 1)) (v : cubeHidden hT hB N) :
@@ -670,8 +588,6 @@ theorem norm_sub_cubeEmb_eq (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 �
   with_reducible_and_instances exact h4
 
 set_option maxHeartbeats 400000 in
-/-- **The continuous forms state, tested with a hidden state, is the pairing of the exact state
-with the read state**: `⟪ξ(t), v⟫ = ⟪e^{tL} x, ι v⟫` (polarization of `norm_sub_cubeEmb_eq`). -/
 theorem inner_exState_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     {T t : ℝ} (ht' : t ∈ Icc 0 (T + 1)) (v : cubeHidden hT hB N) :
@@ -692,8 +608,6 @@ theorem inner_exState_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L
   have a0 := congrArg (· ^ 2) h0'
   exact (real_inner_eq_of_norm hn (by linarith)).symm
 
-/-- **The same for the time derivative** (uniqueness of one-sided derivatives of
-`t ↦ ⟪ξ(t), v⟫ = ⟪e^{tL} x, ι v⟫`): `⟪ξ'(t), v⟫ = ⟪e^{tL} L x, ι v⟫` on `[0, T + 1)`. -/
 theorem inner_exState'_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     {T t : ℝ} (ht : t ∈ Ico 0 (T + 1)) (v : cubeHidden hT hB N) :
@@ -723,8 +637,7 @@ theorem inner_exState'_coeH_cube (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (
   exact (real_inner_comm _ _).trans (this.symm.trans (real_inner_comm _ _))
 
 set_option maxHeartbeats 400000 in
-/-- **The elliptic projection (6.4) of the classical solution is a Galerkin projection** (thesis'
-boundary conditions): `(1 - Lₕ) Πₕ(t) = ιₕ* (e^{tL} x - e^{tL} L x)` on `[0, T]`. -/
+/-- **The elliptic projection (6.4) on the cube is a Galerkin projection.** -/
 theorem cEll_galerkin (N : ℕ) {x : PiLp 2 (ShortHilbertComplex.W3 (L2 ℝ (cubeDomain 3))
     (L2F ℝ (cubeDomain 3) Ix) (W2B ℝ (cubeDomain 3)))} (hx : x ∈ matrixComplex.wave.domainSq)
     {T t : ℝ} (ht : t ∈ Icc 0 T) :
@@ -773,7 +686,7 @@ instance standardCubeApprox_finiteDimensional (N : ℕ) :
     FiniteDimensional ℝ ((standardCubeApprox hT hB).X N) :=
   HiddenState.instFiniteDimensional (cubeWave hT hB N)
 
-/-- The discrete differential `𝐝ₕ` of the thesis' scheme. -/
+/-- The discrete differential `𝐝ₕ` of the scheme on the cube. -/
 abbrev cubeD (N : ℕ) : (standardCubeApprox hT hB).X N →L[ℝ] (standardCubeApprox hT hB).X N :=
   diffGen (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N) (cubeWave_S0_surjective hT hB N)
 
@@ -781,13 +694,11 @@ theorem cubeD_D (N : ℕ) (v : (standardCubeApprox hT hB).X N) :
     cubeD hT hB N (cubeD hT hB N v) = 0 :=
   diffGen_diffGen _ _ _ v
 
-/-- **The generator of the thesis' scheme is the Hodge wave operator of `𝐝ₕ`.** -/
 theorem standardCubeApprox_L_eq (N : ℕ) :
     (standardCubeApprox hT hB).L N = diffWave (cubeD hT hB N) :=
   waveGen_eq_diffWave _ _ _
 
 set_option maxHeartbeats 2000000 in
-/-- **The Galerkin identity of the elliptic core of the thesis' scheme.** -/
 theorem standardCubeEllCore_galerkin : ∀ T, ∀ x ∈ (standardCubeEllCore hT hB).Data, ∀ N,
     ∀ t ∈ Ico 0 T, ((standardCubeEllCore hT hB).cmp T).p x N t -
         (standardCubeApprox hT hB).L N (((standardCubeEllCore hT hB).cmp T).p x N t) =
@@ -804,9 +715,7 @@ theorem standardCubeEllCore_closure :
     (standardCubeEllCore hT hB).Data.topologicalClosure = ⊤ :=
   Submodule.dense_iff_topologicalClosure_eq_top.1 (dense_standardCubeEllCore hT hB)
 
-/-- **The thesis' scheme (6.5) as an approximating family of discrete differential spaces**
-(`ApproxComplexCrime.ofGalerkinCore`): the hidden spaces with `𝐝ₕ`, the reading map `cubeEmb`, the
-dense elliptic core, the TSD constraint `thesisTSD`. -/
+/-- The scheme (6.5) on the cube as an approximating family of discrete differential spaces. -/
 def standardCubeComplex : ApproxComplexCrime matrixComplex ℕ :=
   ApproxComplexCrime.ofGalerkinCore (standardCubeApprox hT hB)
     (hfd := standardCubeApprox_finiteDimensional hT hB) (cubeD hT hB) (cubeD_D hT hB)
@@ -817,8 +726,6 @@ def standardCubeComplex : ApproxComplexCrime matrixComplex ℕ :=
     le_rfl (standardCubeEllCore_galerkin hT hB)
     (fun _ _ _ _ => by rw [standardCubeEllCore_closure]; trivial)
 
-/-- The discrete solutions of `ofComplexCrime (standardCubeComplex)` are those of
-`standardCubeApprox`. -/
 theorem standardCubeComplex_sol (N : ℕ) (v : (standardCubeApprox hT hB).X N) (t : ℝ) :
     (ApproxFEEC.ofComplexCrime (standardCubeComplex hT hB)).sol N v t =
       (standardCubeApprox hT hB).sol N v t :=
@@ -828,9 +735,7 @@ theorem standardCubeComplex_sol (N : ℕ) (v : (standardCubeApprox hT hB).X N) (
 /-! #### The discrete Gauss constraint is preserved exactly -/
 
 set_option maxHeartbeats 1000000 in
-/-- **The discrete Gauss constraint is preserved exactly by the discrete solutions of the thesis'
-scheme** (`hiddenGauss`: `σₕ = 0`, `uₕ ⊥ d̃ Φ(Vₕ⁰, 0)`, invariant under `Lₕ = 𝐝ₕ - 𝐝ₕ*`; item 3 of
-`approxFEEC_ofComplexCrime`), although the exact solutions leave `thesisTSD`. -/
+/-- **The discrete Gauss constraint is preserved exactly by the scheme on the cube.** -/
 theorem standardCube_preserves_hiddenGauss (N : ℕ) {v : (standardCubeApprox hT hB).X N}
     (hv : v ∈ hiddenGauss (cubeWave hT hB N) (cubeWave_dt0_injective hT hB N)
       (cubeWave_S0_surjective hT hB N)) (t : ℝ) :

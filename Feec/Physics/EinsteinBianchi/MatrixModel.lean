@@ -8,60 +8,14 @@ public import Feec.HilbertComplex.Transport
 /-!
 # The forms model of Ch. 6 on the cube is the matrix model
 
-[QuennevilleBelair2015], §6.3 poses the Einstein–Bianchi system with weak symmetries on
-`Q = (0, ½)³` in two equivalent languages. The forms model (`Feec.Models.Cube.WeakSymmetry`,
-`bggHilb`, the data `Feec.EinsteinBianchi.WaveFEM.cubeWaveData` of (6.1)/(6.2)) uses rows of
-differential forms: `σ ∈ H̊Λ⁰(Q)`, `u ∈ H̊Λ¹(Q)³`, `M ∈ L²Λ²(Q)`, `ρ ∈ L²Λ²(Q)³`. The matrix model
-(`Feec.Models.BoundedDomain.bggComplex`) uses scalar, matrix and vector fields:
-`σ ∈ H̊²(Q)`, `E ∈ H̊(curl, Q; ℝ³ˣ³)`, `(M, B) ∈ L²(Q; ℝ³) × L²(Q; ℝ³ˣ³)`, with the operators
-`grad grad` and `(S₁, curl)`, `S₁ = 2 vskw`. This file proves that the two are unitarily
-equivalent as Hilbert complexes, so that their Hodge wave equations, wave groups, and
-strong/classical solutions correspond.
-
-## The dictionary
-
-* `rowsEquiv : (L²Λ¹)³ ≃ L²(Q; ℝ³ˣ³)`, `u ↦ E`, `E_{ab} = (uₐ)_{{b}}` (the `dx_b`-coefficient
-  of the row `uₐ`);
-* `starEquiv : L²Λ² ≃ L²(Q; ℝ³)`, the Hodge-star proxy of `Feec.Koszul.Proxy3.vec2`:
-  `w ↦ (w_{12}, −w_{02}, w_{01})`, i.e. `(⋆w)_k = (−1)^k w_{{k}ᶜ}`; `rows2Equiv` is its row-wise
-  version `(L²Λ²)³ ≃ L²(Q; ℝ³ˣ³)`, and `topEquiv = starEquiv × rows2Equiv`;
-* `zeroEquiv : Γ̄ ≃ L²(Q)`: `Γ̄` (the first space of `bggHilb.toShort`, the closure of `π₁Γ`) is
-  all of `L²Λ⁰` (`Γbar_eq_top`, from `Γ ≅ H̊²(Q)` and the density of `H̊²`), read as scalars.
-
-## Main results
-
-* `extDerivOp_one_apply_idx2`: on smooth `1`-forms `⋆ d = curl` (the vector proxy of `d`);
-* **`mem_curlMin_graph_iff`**: `(rowsEquiv u, rows2Equiv w)` is in the graph of the minimal
-  row-wise curl iff every `(uₐ, wₐ)` is in the graph of `d_min` on `1`-forms. The minimal
-  realizations correspond because the test forms correspond (`rowsEquiv`, `rows2Equiv` map test
-  forms onto test matrix fields and `⋆ d = curl` on them; closures of products are products of
-  closures). In particular `rowsEquiv` maps `H̊Λ¹(Q)³` onto `H̊(curl, Q; ℝ³ˣ³)`
-  (`mem_curlMin_domain_iff`);
-* **`skwL_rowsEquiv`**: `S₁ (rowsEquiv u) = ⋆ (S¹ u)` (`S¹ = Σᵢ dxᵢ ∧ ·` is `2 vskw`);
-* `mem_hessMin_graph_iff` (from `Feec.EinsteinBianchi.WaveFEM.gamma_equiv_hessMin`) and
-  `mem_bggComplex_d₁_graph_iff'`: the two differentials of the forms complex are carried to
-  `grad grad` and `(S₁, curl)`;
-* **`matrixComplex_eq_map`**: the Hilbert complex of `bggComplex` on `Q` *is* the unitary
-  transport (`Feec.HilbertComplex.map`) of the forms complex `bggHilb.toHilbertComplex` along
-  `totalEquiv = (zeroEquiv, rowsEquiv, topEquiv)`;
-* **`wave_intertwines`**, `wave_intertwines_symm`: the total
-  isometry `totalE` intertwines the Hodge wave operators both ways; **`waveGroup_conj`**:
-  `e (e^{tL} x) = e^{tL'} (e x)`;
-* **`isStrongSolution_iff`**: `U` is a strong solution of the forms-model Hodge wave equation iff
-  `e ∘ U` is one of the matrix model.
-
-Generic facts on unitary transport of Hilbert complexes used here (`map_map_symm`, `wave_map`,
-`waveGroup_map_of_eq`) and on intertwined evolution equations (`Evolution.IsStrongSolution.map`)
-are proved at the start of the file.
+The forms model and the matrix model `Feec.Models.BoundedDomain.bggComplex` of the
+Einstein–Bianchi system with weak symmetries on `Q = (0, ½)³` ([QuennevilleBelair2015], §6.3)
+are unitarily equivalent Hilbert complexes (`matrixComplex_eq_map`), so that their Hodge wave
+operators, wave groups and strong solutions correspond.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.1 ((6.1)), §6.3, Table 6.1, (5.1)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3 (vector proxies in three dimensions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
-  (`S₁ = 2 vskw`)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -71,8 +25,6 @@ open Set Filter Topology MeasureTheory
 
 @[expose] public noncomputable section
 
-/-! ### Unitary transport: generalities -/
-
 namespace Feec.HilbertComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W W' : ι → Type*}
@@ -80,14 +32,12 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W W' :
   [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)] [∀ i, CompleteSpace (W' i)]
 
 omit [∀ i, CompleteSpace (W' i)] in
-/-- The graph of a unitarily transported differential. -/
 theorem mem_transportD_one_graph_iff {H : HilbertComplex 𝕜 c W} {e : ∀ i, W i ≃L[𝕜] W' i}
     {i j : ι} {p : W' i × W' j} :
     p ∈ (transportD H e (fun _ _ => 1) i j).graph ↔
       ((e i).symm p.1, (e j).symm p.2) ∈ (H.d i j).graph := by
   rw [mem_transportD_graph_iff one_ne_zero, inv_one, one_smul]
 
-/-- **Unitary transport is invertible**: transporting `H.map u` back along `u⁻¹` gives `H`. -/
 theorem map_map_symm (H : HilbertComplex 𝕜 c W) (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) :
     (H.map u).map (fun i => (u i).symm) = H := by
   refine ext_d (funext fun i => funext fun j => LinearPMap.eq_of_eq_graph
@@ -111,22 +61,18 @@ theorem totalMap_eq_totalIso (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) :
     totalMap (fun i => (u i).toContinuousLinearEquiv) =
       ((totalIso u).toContinuousLinearEquiv : PiLp 2 W →L[𝕜] PiLp 2 W') := rfl
 
-/-- **Unitary transport intertwines the wave operators**: `L' (u x) = u (L x)`
-(`wave_transport` with `s = 1`). -/
 theorem wave_map (H : HilbertComplex 𝕜 c W) (u : ∀ i, W i ≃ₗᵢ[𝕜] W' i) :
     LinearPMap.Intertwines ((totalIso u).toContinuousLinearEquiv : PiLp 2 W →L[𝕜] PiLp 2 W')
       H.wave (H.map u).wave := by
   rw [← totalMap_eq_totalIso]
   exact wave_transport (s := 1) one_pos fun i x y => by simp
 
-/-- `wave_map` for a complex given as a transport. -/
 theorem wave_map_of_eq {H : HilbertComplex 𝕜 c W} {H' : HilbertComplex 𝕜 c W'}
     {u : ∀ i, W i ≃ₗᵢ[𝕜] W' i} (hH : H' = H.map u) :
     LinearPMap.Intertwines ((totalIso u).toContinuousLinearEquiv : PiLp 2 W →L[𝕜] PiLp 2 W')
       H.wave H'.wave := by
   subst hH; exact wave_map H u
 
-/-- The inverse of `wave_map_of_eq`: `u⁻¹` intertwines `L'` with `L`. -/
 theorem wave_map_symm_of_eq {H : HilbertComplex 𝕜 c W} {H' : HilbertComplex 𝕜 c W'}
     {u : ∀ i, W i ≃ₗᵢ[𝕜] W' i} (hH : H' = H.map u) :
     LinearPMap.Intertwines ((totalIso u).symm.toContinuousLinearEquiv : PiLp 2 W' →L[𝕜] PiLp 2 W)
@@ -144,7 +90,6 @@ variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W W' : ι → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
   [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace ℝ (W' i)] [∀ i, CompleteSpace (W' i)]
 
-/-- **Unitary transport conjugates the wave groups**: `u (e^{tL} x) = e^{tL'} (u x)`. -/
 theorem waveGroup_map_of_eq {H : HilbertComplex ℝ c W} {H' : HilbertComplex ℝ c W'}
     {u : ∀ i, W i ≃ₗᵢ[ℝ] W' i} (hH : H' = H.map u) (t : ℝ) (x : PiLp 2 W) :
     totalIso u (H.waveGroup.S t x) = H'.waveGroup.S t (totalIso u x) := by
@@ -160,8 +105,6 @@ variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
   [NormedAddCommGroup F] [InnerProductSpace ℝ F] {A : E →ₗ.[ℝ] E} {B : F →ₗ.[ℝ] F}
   {J : E →L[ℝ] F} {I : Set ℝ} {G U : ℝ → E}
 
-/-- **Strong solutions are carried by intertwining maps**: if `J` intertwines `A` with `B` and
-`U' = A U + G` strongly on `I`, then `(J U)' = B (J U) + J G`. -/
 theorem IsStrongSolution.map (hJ : LinearPMap.Intertwines J A B)
     (hU : IsStrongSolution A I G U) : IsStrongSolution B I (fun t => J (G t)) (fun t => J (U t)) :=
   IsStrongSolution.of_deriv fun t ht => by
@@ -174,7 +117,6 @@ theorem IsStrongSolution.map (hJ : LinearPMap.Intertwines J A B)
       rw [map_add] at this
       exact this
 
-/-- Classical solutions are carried by intertwining maps. -/
 theorem IsClassicalSolution.map (hJ : LinearPMap.Intertwines J A B)
     (hU : IsClassicalSolution A I G U) :
     IsClassicalSolution B I (fun t => J (G t)) (fun t => J (U t)) := by
@@ -192,8 +134,6 @@ namespace Feec.EinsteinBianchi.MatrixModel
 
 open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry Feec.Models.BoundedDomain Feec.EinsteinBianchi.WaveFEM
-
-/-! ### Index dictionaries -/
 
 /-- `j ↦ {j}`: the coordinate `1`-forms. -/
 def idx1 : Fin 3 ≃ formIdx 3 1 :=
@@ -264,8 +204,7 @@ def starLin : W2 ≃ₗ[ℝ] L2F ℝ (cubeDomain 3) (Fin 3) where
     refine PiLp.ext fun k => ?_
     simp [sgn2_smul_sgn2_smul]
 
-/-- **The Hodge-star proxy** `L²Λ²(Q) ≃ L²(Q; ℝ³)`, `w ↦ (w_{12}, −w_{02}, w_{01})`
-(`Feec.Koszul.Proxy3.vec2`): `(⋆w)_k = sgn2 k · w_{{k}ᶜ}`. -/
+/-- The Hodge-star proxy `L²Λ²(Q) ≃ L²(Q; ℝ³)`, `w ↦ (w_{12}, −w_{02}, w_{01})`. -/
 def starEquiv : W2 ≃ₗᵢ[ℝ] L2F ℝ (cubeDomain 3) (Fin 3) :=
   starLin.isometryOfInner fun u v => by
     change ∑ k : Fin 3, ⟪sgn2 k • u (idx2 k), sgn2 k • v (idx2 k)⟫ = ∑ t, ⟪u t, v t⟫
@@ -292,8 +231,7 @@ def rows2Lin : Wv W2 ≃ₗ[ℝ] L2F ℝ (cubeDomain 3) Ix where
     refine PiLp.ext fun ak => ?_
     simp [sgn2_smul_sgn2_smul]
 
-/-- **The rows dictionary for `2`-forms** `(L²Λ²(Q))³ ≃ L²(Q; ℝ³ˣ³)`: the Hodge star row by
-row, `B_{ak} = (⋆ wₐ)_k`. -/
+/-- The rows dictionary `(L²Λ²(Q))³ ≃ L²(Q; ℝ³ˣ³)`: the Hodge star row by row. -/
 def rows2Equiv : Wv W2 ≃ₗᵢ[ℝ] L2F ℝ (cubeDomain 3) Ix :=
   rows2Lin.isometryOfInner fun u v => by
     change ∑ ak : Ix, ⟪sgn2 ak.2 • u ak.1 (idx2 ak.2), sgn2 ak.2 • v ak.1 (idx2 ak.2)⟫ =
@@ -371,8 +309,6 @@ theorem extDerivOp_one_apply_idx2_two (φ : formIdx 3 1 → R3 → ℝ) (x : R3)
   simp only [sgn2]
   norm_num
 
-/-- **`⋆ d = curl` on `1`-forms** (`Feec.Koszul.Proxy3.vec2_extDeriv` for fields):
-`(⋆ dφ)_k = ∂_{k+1} φ_{{k+2}} − ∂_{k+2} φ_{{k+1}}`, indices mod 3. -/
 theorem extDerivOp_one_apply_idx2 (φ : formIdx 3 1 → R3 → ℝ) (k : Fin 3) (x : R3) :
     sgn2 k * (extDerivOp ℝ 3 1).apply φ (idx2 k) x =
       fderiv ℝ (φ (idx1 (k + 2))) x (coordDir (k + 1)) -
@@ -393,7 +329,6 @@ def matField (ψ : Fin 3 → formIdx 3 1 → R3 → ℝ) : Ix → R3 → ℝ :=
 theorem rowForm_matField (ψ : Fin 3 → formIdx 3 1 → R3 → ℝ) (a : Fin 3) :
     rowForm (matField ψ) a = ψ a := funext fun t => by simp [rowForm, matField]
 
-/-- **The row-wise curl is `⋆ d` row by row**. -/
 theorem curlOp_apply_eq (Φ : Ix → R3 → ℝ) (a k : Fin 3) (x : R3) :
     (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).apply Φ (a, k) x =
       sgn2 k * (extDerivOp ℝ 3 1).apply (rowForm Φ a) (idx2 k) x := by
@@ -458,12 +393,6 @@ theorem graph_curlMin : (curlMin.graph : Set (L2F ℝ (cubeDomain 3) Ix × L2F �
       Set (L2F ℝ (cubeDomain 3) Ix × L2F ℝ (cubeDomain 3) Ix)) := by
   rw [(curlOp 3).minimal_graph (isOpen_cubeDomain 3), Submodule.topologicalClosure_coe]
 
-/-- **The minimal realizations correspond**: `(rowsEquiv u, rows2Equiv w)` lies in the graph of
-the minimal row-wise curl iff every row `(uₐ, wₐ)` lies in the graph of `d_min` on `1`-forms
-(`H̊(curl, Q; ℝ³ˣ³) = H̊Λ¹(Q)³` with `curl E = ⋆ d u` row by row). The test forms correspond
-(`rowsEquiv_symm_testField`, `rows2Equiv_symm_testField_curl`, `rowsEquiv_testField`,
-`rows2Equiv_testField`), and the closure of a product of test graphs is the product of their
-closures. -/
 theorem mem_curlMin_graph_iff {u : Wv W1} {w : Wv W2} :
     (rowsEquiv u, rows2Equiv w) ∈ curlMin.graph ↔ ∀ a, (u a, w a) ∈ D1.graph := by
   constructor
@@ -519,7 +448,6 @@ theorem mem_curlMin_graph_iff {u : Wv W1} {w : Wv W2} :
     have e2 : (WithLp.toLp 2 fun a => w a : Wv W2) = w := rfl
     simpa only [e1, e2] using hm
 
-/-- **`rowsEquiv` maps `H̊Λ¹(Q)³` onto `H̊(curl, Q; ℝ³ˣ³)`**. -/
 theorem mem_curlMin_domain_iff {u : Wv W1} :
     rowsEquiv u ∈ curlMin.domain ↔ ∀ a, u a ∈ D1.domain := by
   constructor
@@ -541,7 +469,6 @@ theorem wsCoeff_one_idx2 (k i j : Fin 3) :
   fin_cases k <;> fin_cases i <;> fin_cases j <;>
     simp (config := { decide := true }) [ExteriorFibre.sgn, sgn2]
 
-/-- `(S¹u)_{{k}ᶜ} = sgn2 k · (u_{k+1, k+2} − u_{k+2, k+1})`. -/
 theorem wsL2_one_apply_idx2 (u : Wv W1) (k : Fin 3) :
     wsL2 (Ω := cubeDomain 3) 1 u (idx2 k) =
       sgn2 k • (u (k + 1) (idx1 (k + 2)) - u (k + 2) (idx1 (k + 1))) := by
@@ -550,8 +477,6 @@ theorem wsL2_one_apply_idx2 (u : Wv W1) (k : Fin 3) :
   simp only [wsCoeff_one_idx2]
   fin_cases k <;> simp [Fin.sum_univ_three, sgn2] <;> abel
 
-/-- **`S¹` is `S₁ = 2 vskw` in the matrix model**: `S₁ (rowsEquiv u) = ⋆ (S¹ u)` for
-`u ∈ (L²Λ¹)³`, `S¹ u = Σₐ dxₐ ∧ uₐ`. -/
 theorem skwL_rowsEquiv (u : Wv W1) :
     skwL ℝ (cubeDomain 3) (rowsEquiv u) = starEquiv (wsL2 (Ω := cubeDomain 3) 1 u) := by
   refine PiLp.ext fun k => ?_
@@ -578,7 +503,6 @@ def scalarEquiv : W0 ≃ₗᵢ[ℝ] L2 ℝ (cubeDomain 3) :=
     change ⟪σ idx0, τ idx0⟫ = ∑ t, ⟪σ t, τ t⟫
     rw [Finset.sum_eq_single idx0 (fun t _ ht => absurd (formIdx_zero_eq t) ht) (by simp)]
 
-/-- A pair `(σ, φ)` of the segment's `Γ` gives a pair of `bggHilb.Γ` (graph spaces). -/
 theorem mem_hilbΓ_of_mem_segΓ {x : U0 × Wv U0} (hx : x ∈ bggSegment.Γ) :
     (D0.toGraphSpace x.1, toGraphVec0 x.2) ∈ bggHilb.Γ := by
   rw [Feec.BGG.Hilb.mem_Γ]
@@ -588,7 +512,6 @@ theorem mem_hilbΓ_of_mem_segΓ {x : U0 × Wv U0} (hx : x ∈ bggSegment.Γ) :
   rw [graphFst_bggD0, graphFst_bggS0, ιt0_toGraphVec0, LinearPMap.graphSnd_toGraphSpace]
   exact congrArg Subtype.val h
 
-/-- A pair of `bggHilb.Γ` gives a pair of the segment's `Γ`. -/
 theorem mem_segΓ_of_mem_hilbΓ {y : V0 × Vt0} (hy : y ∈ bggHilb.Γ) :
     (D0.graphDom y.1, rp y.2) ∈ bggSegment.Γ := by
   rw [bggSegment.mem_Γ]
@@ -597,8 +520,6 @@ theorem mem_segΓ_of_mem_hilbΓ {y : V0 × Vt0} (hy : y ∈ bggHilb.Γ) :
   change D0 (D0.graphDom y.1) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp y.2))
   rw [LinearPMap.apply_graphDom, ← graphFst_bggD0, h, graphFst_bggS0, incl0_rp]
 
-/-- **`Γ̄ = L²Λ⁰(Q)`**: `π₁Γ ⊇ H̊²(Q)` (`gamma_equiv_hessMin`), which is dense in `L²(Q)`
-(`dense_hessMin_domain`). -/
 theorem Γbar_eq_top : bggHilb.Γbar = ⊤ := by
   have hsub : (scalarEquiv.symm '' ((hessMin ℝ (isOpen_cubeDomain 3)).domain :
       Set (L2 ℝ (cubeDomain 3)))) ⊆
@@ -616,7 +537,7 @@ theorem Γbar_eq_top : bggHilb.Γbar = ⊤ := by
   rw [Feec.BGG.Hilb.Γbar, ← Submodule.dense_iff_topologicalClosure_eq_top]
   exact hd.mono hsub
 
-/-- **The first dictionary** `Γ̄ ≃ L²(Q)`: `Γ̄ = L²Λ⁰(Q)` (`Γbar_eq_top`), read as scalars. -/
+/-- The first dictionary `Γ̄ ≃ L²(Q)`: `Γ̄ = L²Λ⁰(Q)`, read as scalars. -/
 def zeroEquiv : bggHilb.Γbar ≃ₗᵢ[ℝ] L2 ℝ (cubeDomain 3) :=
   (LinearIsometryEquiv.ofTop (E := W0) bggHilb.Γbar Γbar_eq_top).trans scalarEquiv
 
@@ -636,9 +557,6 @@ theorem rowsEquiv_ιt1_bggDt0 (φ : Vt0) : rowsEquiv (ιt1 (bggDt0 φ)) = hessOf
   rfl
 
 set_option maxHeartbeats 2000000 in
-/-- **The first differential is the Hessian**: `(v, H)` is in the graph of `grad grad` on
-`H̊²(Q)` iff `(zeroEquiv⁻¹ v, rowsEquiv⁻¹ H)` is in the graph of `(0 d̃) : Γ̄ → (L²Λ¹)³`
-(`gamma_equiv_hessMin`). -/
 theorem mem_hessMin_graph_iff {v : L2 ℝ (cubeDomain 3)} {H : L2F ℝ (cubeDomain 3) Ix} :
     (v, H) ∈ (hessMin ℝ (isOpen_cubeDomain 3)).graph ↔
       (zeroEquiv.symm v, rowsEquiv.symm H) ∈ bggHilb.D0Γ.graph := by
@@ -695,9 +613,6 @@ theorem ιt1_ofRows (U : Wv W1) (h : ∀ a, U a ∈ D1.domain) : ιt1 (ofRows U 
   PiLp.ext fun _ => rfl
 
 set_option maxHeartbeats 2000000 in
-/-- **The second differential is `(S₁, curl)`**: `(E, w)` is in the graph of the second operator
-of `bggComplex` on `Q` iff `(rowsEquiv⁻¹ E, topEquiv⁻¹ w)` is in the graph of
-`(S¹, d̃) : (L²Λ¹)³ ⊇ H̊Λ¹(Q)³ → L²Λ² × (L²Λ²)³` (`mem_curlMin_graph_iff`, `skwL_rowsEquiv`). -/
 theorem mem_bggComplex_d₁_graph_iff' {E : L2F ℝ (cubeDomain 3) Ix} {w : W2B ℝ (cubeDomain 3)} :
     (E, w) ∈ (bggComplex ℝ (isOpen_cubeDomain 3)).d₁.graph ↔
       (rowsEquiv.symm E, topEquiv.symm w) ∈ bggHilb.D1L.graph := by
@@ -750,8 +665,7 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 /-- The forms-model Hilbert complex `Γ̄ → (L²Λ¹)³ → L²Λ² × (L²Λ²)³` of (5.1) on the cube. -/
 abbrev formsComplex := bggHilb.toHilbertComplex bggHilb_hyps bggS0_injective
 
-/-- The matrix-model Hilbert complex `L²(Q) ⊇ H̊²(Q) → H̊(curl, Q; ℝ³ˣ³) → L²(Q; ℝ³) × L²(Q; ℝ³ˣ³)`
-(`Feec.Models.BoundedDomain.bggComplex` on `Q`). -/
+/-- The matrix-model Hilbert complex of `Feec.Models.BoundedDomain.bggComplex` on `Q`. -/
 abbrev matrixComplex := (bggComplex ℝ (isOpen_cubeDomain 3)).toHilbertComplex
 
 /-- **The total dictionary**: `(zeroEquiv, rowsEquiv, topEquiv)`, degreewise. -/
@@ -778,10 +692,8 @@ theorem matrixComplex_d12 : matrixComplex.d 1 2 =
   rw [HilbertComplex.mem_transportD_one_graph_iff]
   exact mem_bggComplex_d₁_graph_iff'
 
-/-- **The matrix model is the transport of the forms model**: the Hilbert complex of
-`bggComplex` on `Q` equals the transport of `bggHilb.toHilbertComplex` along `totalEquiv`
-(`d' = e ∘ d ∘ e⁻¹`): `grad grad = e₁ (0 d̃) e₀⁻¹` (`mem_hessMin_graph_iff`) and
-`(S₁, curl) = e₂ (S¹, d̃) e₁⁻¹` (`mem_bggComplex_d₁_graph_iff'`). -/
+/-- The matrix model is the transport of the forms model: the Hilbert complex of `bggComplex` on
+`Q` equals the transport of `bggHilb.toHilbertComplex` along `totalEquiv`. -/
 theorem matrixComplex_eq_map : matrixComplex = formsComplex.map totalEquiv := by
   refine HilbertComplex.ext_d (funext fun i => funext fun j => ?_)
   change matrixComplex.d i j = HilbertComplex.transportD formsComplex totalCLE (fun _ _ => 1) i j
@@ -796,19 +708,14 @@ theorem matrixComplex_eq_map : matrixComplex = formsComplex.map totalEquiv := by
   · exact (HilbertComplex.transportD_eq_zero rfl).symm
   · exact (HilbertComplex.transportD_eq_zero rfl).symm
 
-/-- **The total unitary** `e = (zeroEquiv, rowsEquiv, topEquiv)` from the forms model to the
-matrix model. -/
+/-- The total unitary `(zeroEquiv, rowsEquiv, topEquiv)` from the forms to the matrix model. -/
 abbrev totalE := HilbertComplex.totalIso totalEquiv
 
-/-- **The wave operators are conjugate**: `e` intertwines the Hodge wave operator `L` of the forms
-model with that of the matrix model (`e D(L) ⊆ D(L')`, `L' e = e L`). -/
 theorem wave_intertwines :
     LinearPMap.Intertwines (totalE.toContinuousLinearEquiv : _ →L[ℝ] _) formsComplex.wave
       matrixComplex.wave :=
   HilbertComplex.wave_map_of_eq matrixComplex_eq_map
 
-/-- The inverse intertwining: `e⁻¹` intertwines the matrix-model wave operator with the forms
-model one (`map_map_symm`). -/
 theorem wave_intertwines_symm :
     LinearPMap.Intertwines (totalE.symm.toContinuousLinearEquiv : _ →L[ℝ] _) matrixComplex.wave
       formsComplex.wave :=

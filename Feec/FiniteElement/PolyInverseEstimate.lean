@@ -6,74 +6,21 @@ public import Feec.FiniteElement.InverseEstimate
 /-!
 # Inverse, DOF-scaling and kernel estimates for polynomial forms on homothetic simplices
 
-The higher-order analogue of `Feec.FiniteElement.InverseEstimate` (which treats the affine fields
-`P₁⁻Λᵏ`). Let `V ≤ P_rΛᵏ(ℝⁿ)` be a space of `k`-form fields with polynomial coefficients of degree
-`≤ r` (`polySpace n r k`, or the trimmed `polyMinusSpace n r k`, `polyMinusSpace_le_polySpace`),
-and `K` a nondegenerate reference `n`-simplex. Everything is a finite-dimensional norm comparison
-(`exists_norm_le_mul_weight_mul_norm`: a pointwise bounded family of linear maps on a
-finite-dimensional space is bounded by any injective linear map, from
-`exists_abs_le_mul_norm_of_finite`; `exists_norm_le_mul_norm_of_ker_le`: `‖L v‖ ≤ C ‖D v‖` if
-`ker D ≤ ker L`), followed by transport through the homothety `H y = t + h y`
-(`affinePullback_scalarMat`: `H^* u = hᵏ u ∘ H` on `k`-forms;
-`integral_closedInterior_mapEquiv_boxMap`: `∫_T f = hⁿ ∫_K f ∘ H`, `T = t + h K`;
-`partialDeriv_affinePullback_scalarMat`: `∂ⱼ (H^* u) = h^{k+1} (∂ⱼ u) ∘ H`). Squared `L²`
-norms are written `formL2Sq S u = Σ_s ∫_S u_s²` and `formGradL2Sq S u = Σⱼ Σ_s ∫_S (∂ⱼ u_s)²`.
+For polynomial forms `V ≤ P_rΛᵏ` stable under homotheties, inverse estimates, the `ℓ²`-scaling
+of the degrees of freedom and a kernel lemma hold on `T = t + h K`, uniformly in `h` and `t`.
 
-**On the reference simplex** (any compact convex `S` with nonempty interior):
-* `exists_norm_le_sqrt_formL2Sq`: `sup_S ‖u‖ ≤ A ‖u‖_{L²(S)}` and
-  `Lip_S(u) ≤ A ‖u‖_{L²(S)}`;
-* `exists_norm_le_sum_abs_dof`: `sup_S ‖u‖ ≤ B Σⱼ |ℓⱼ(u)|` for any unisolvent family of linear
-  functionals `ℓⱼ` on `V`;
-* `exists_formL2Sq_equiv_sum_sq_dof`: `‖u‖²_{L²(S)} ≍ Σⱼ ℓⱼ(u)²`;
-* `exists_formL2Sq_le_formGradL2Sq` (**kernel lemma**): if `L : V → W` is linear and vanishes on
-  the constant fields of `V`, then `‖L v‖_{L²(S)} ≤ C ‖Dv‖_{L²(S)}`. The kernel
-  of `v ↦ Dv|_S` on polynomial fields is the constants (`eq_const_of_gradEmbed_eq_zero`: a
-  polynomial vanishing on a nonempty open set vanishes, `eq_zero_of_eval_eq_zero_of_isOpen`).
+## Main results
 
-**On `T = t + h K`**, `h > 0`, with constants depending only on `K`, `V` and the DOFs
-(`V` stable under homotheties, true for `P_rΛᵏ` and `P_r⁻Λᵏ` by affine invariance):
-* `exists_local_inverse_bound_of_le_polySpace`: `h^{n/2} sup_T ‖u‖ ≲ ‖u‖_{L²(T)}` and
-  `h^{n/2} h Lip_T(u) ≲ ‖u‖_{L²(T)}`;
-* `exists_local_dof_bound_of_le_polySpace`: `hᵏ sup_T ‖u‖ ≲ Σⱼ |ℓⱼ(H^* u)|`;
-* `exists_local_formL2Sq_equiv_of_le_polySpace`: the **`ℓ²`-scaling of the DOFs**
-  `‖u‖²_{L²(T)} ≍ h^{n-2k} Σⱼ ℓⱼ(H^* u)²` (stated without negative powers:
-  `h^{2k} ‖u‖²_{L²(T)} ≤ C hⁿ Σⱼ ℓⱼ(H^* u)²` and conversely);
-* `exists_local_kernel_bound`: `‖w‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}` whenever `H^* w = L(H^* u)`
-  (homothetic conjugates `L_T` of a kernel-lemma map `L`, e.g. `u - Π_T u`).
-
-**Moment DOFs.** For every moment `ω ↦ ∫_{T̂_m} (F^* ω ∧ η)_{univ}` along an affine
-parametrization `F` of a face (`faceMoment p e η` for every vertex map `e`, hence every ordering
-of the vertices), the moment on the corresponding face of `T = t + h K` is the moment of `H^* ω`
-on `K` (`faceMoment_mapEquiv_boxMap`; for a general affine image, `faceMoment_affine`,
-`faceTrace_affine`). So the abstract estimates apply to every moment DOF family that is
-unisolvent on `K`, whatever the face parametrization. For the DOFs of
-`Feec.FiniteElement.LocalDof` (`localDof`, on the faces of `K` in the vertex order of `K`):
-`exists_local_formL2Sq_equiv_polySpace`, with the moments `∫_f tr_f u ∧ ηᵢ` on the faces of `T`
-itself.
-
-**Vector-valued fields.** All statements are per field with constants independent of the field,
-so for finitely many components `(u_c)_c` (e.g. `P_rΛᵏ ⊗ ℝ^N`) they hold componentwise and
-summing them over the components gives the vector-valued versions.
-
-These are the inverse and scaling tools behind the smoothed projections of [AFW2010], §5.5
-([ChristiansenWinther2008]) for the higher-order families, and the corrected forms of the norm
-equivalences of [QuennevilleBelair2015], Prop 5.8 (whose global `ℓ¹` sums of DOFs are not
-uniformly equivalent to the `L²` norm; the local `ℓ²` scaling above, summed over the simplices,
-is) and of the scaling argument of [QuennevilleBelair2015], Prop 5.9(1). On meshes whose
-simplices are homothetic copies of finitely many reference simplices (Freudenthal–Kuhn meshes)
-the constants are uniform without a shape-regularity argument.
+* `exists_local_inverse_bound_of_le_polySpace`: `h^{n/2} sup_T ‖u‖ ≲ ‖u‖_{L²(T)}`.
+* `exists_local_dof_bound_of_le_polySpace`: `hᵏ sup_T ‖u‖ ≲ Σⱼ |ℓⱼ(H^* u)|`.
+* `exists_local_formL2Sq_equiv_of_le_polySpace`: `‖u‖²_{L²(T)} ≍ h^{n-2k} Σⱼ ℓⱼ(H^* u)²`.
+* `exists_local_kernel_bound`: the kernel lemma on `T = t + h K`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (inverse estimates for the smoothed projection)
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §4.5–4.6 (the moment degrees of freedom)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.2 (inverse
-  inequalities)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Props 5.8–5.9
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -88,13 +35,6 @@ open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
 
-/-! ### Uniform bounds on finite-dimensional spaces -/
-
-/-- **Uniform boundedness in finite dimension**: a family `φⱼ` of linear maps on a
-finite-dimensional space `V` that is pointwise bounded relative to weights `wⱼ ≥ 0`
-(`‖φⱼ v‖ ≤ M_v wⱼ`) is uniformly bounded by any injective linear map `ι` into a normed space:
-`‖φⱼ v‖ ≤ A wⱼ ‖ι v‖`. Proof: expand `v` in a basis and bound the coordinates by
-`exists_abs_le_mul_norm_of_finite`. -/
 theorem exists_norm_le_mul_weight_mul_norm {V E F J : Type*} [AddCommGroup V] [Module ℝ V]
     [FiniteDimensional ℝ V] [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
     [NormedSpace ℝ F] (ι : V →ₗ[ℝ] E) (hι : Function.Injective ι) (φ : J → V →ₗ[ℝ] F)
@@ -123,7 +63,6 @@ theorem exists_norm_le_mul_weight_mul_norm {V E F J : Type*} [AddCommGroup V] [M
         rw [Finset.mul_sum, Finset.sum_mul, Finset.sum_mul]
         exact Finset.sum_congr rfl fun i _ => by ring
 
-/-- Unweighted form of `exists_norm_le_mul_weight_mul_norm`. -/
 theorem exists_norm_le_mul_norm_of_bounded {V E F J : Type*} [AddCommGroup V] [Module ℝ V]
     [FiniteDimensional ℝ V] [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
     [NormedSpace ℝ F] (ι : V →ₗ[ℝ] E) (hι : Function.Injective ι) (φ : J → V →ₗ[ℝ] F)
@@ -133,8 +72,6 @@ theorem exists_norm_le_mul_norm_of_bounded {V E F J : Type*} [AddCommGroup V] [M
     (fun _ => zero_le_one) fun v => by simpa using hφ v
   exact ⟨A, hA0, fun v j => by simpa using hA v j⟩
 
-/-- **Factorization through a kernel in finite dimension**: if `ker D ≤ ker L` for linear maps
-`D`, `L` on a finite-dimensional space into normed spaces, then `‖L v‖ ≤ C ‖D v‖`. -/
 theorem exists_norm_le_mul_norm_of_ker_le {V E F : Type*} [AddCommGroup V] [Module ℝ V]
     [FiniteDimensional ℝ V] [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
     [NormedSpace ℝ F] (D : V →ₗ[ℝ] E) (L : V →ₗ[ℝ] F) (h : LinearMap.ker D ≤ LinearMap.ker L) :
@@ -154,14 +91,9 @@ theorem exists_norm_le_mul_norm_of_ker_le {V E F : Type*} [AddCommGroup V] [Modu
   rw [← hL']
   exact Lc.le_opNorm _
 
-/-! ### `L²` norms of form fields -/
-
-/-- The squared `L²(S)` norm `Σ_s ∫_S u_s²` of a form field (coefficients in the basis
-`dx_s`). -/
+/-- The squared `L²(S)` norm `Σ_s ∫_S u_s²` of a form field. -/
 def formL2Sq (S : Set (Fin n → ℝ)) (u : FormField n) : ℝ := ∑ s, ∫ x in S, (u x s) ^ 2
 
-/-- For `k`-forms, the coefficients of degree `k` carry the whole `L²(S)` norm:
-`Σ_{#s = k} ∫_S u_s² = ‖u‖²_{L²(S)}`. -/
 theorem sum_formIdx_integral_sq {k : ℕ} {j : ℤ} (hkj : (k : ℤ) = j) {S : Set (Fin n → ℝ)}
     {u : FormField n} (hu : ∀ x, IsDeg k (u x)) :
     ∑ s : Feec.Domain.formIdx n j, ∫ x in S, (u x s.1) ^ 2 = formL2Sq S u := by
@@ -173,8 +105,7 @@ theorem sum_formIdx_integral_sq {k : ℕ} {j : ℤ} (hkj : (k : ℤ) = j) {S : S
   have hk : #s ≠ k := fun h => hs (by simp [h])
   simp [hu _ s hk]
 
-/-- The squared `L²(S)` norm `Σ_j Σ_s ∫_S (∂_j u_s)²` of the first derivatives of a form
-field. -/
+/-- The squared `L²(S)` norm `Σ_j Σ_s ∫_S (∂_j u_s)²` of the first derivatives of a form field. -/
 def formGradL2Sq (S : Set (Fin n → ℝ)) (u : FormField n) : ℝ :=
   ∑ j, ∑ s, ∫ x in S, (partialDeriv j (fun y => u y s) x) ^ 2
 
@@ -223,8 +154,6 @@ theorem norm_l2EmbedOf (V : Submodule ℝ (FormField n)) (hV : V ≤ contForms n
     ‖l2EmbedOf V hV hS v‖ = √(formL2Sq S v) := by
   rw [← norm_sq_l2EmbedOf V hV hS v, Real.sqrt_sq (norm_nonneg _)]
 
-/-- The `L²(S)` map is injective on a space of continuous fields that vanish as soon as they
-vanish on a nonempty open set, if `S` has nonempty interior. -/
 theorem l2EmbedOf_injective (V : Submodule ℝ (FormField n)) (hV : V ≤ contForms n)
     (hV0 : ∀ v ∈ V, ∀ U : Set (Fin n → ℝ), IsOpen U → U.Nonempty → (∀ y ∈ U, v y = 0) → v = 0)
     {S : Set (Fin n → ℝ)} (hS : IsCompact S) (hSi : (interior S).Nonempty) :
@@ -245,9 +174,6 @@ theorem l2EmbedOf_injective (V : Submodule ℝ (FormField n)) (hV : V ≤ contFo
       continuousOn_const hy
   exact Subtype.ext (hV0 v v.2 _ isOpen_interior hSi fun y hy => funext fun s => hs s y hy)
 
-/-! ### Polynomial form fields -/
-
-/-- A polynomial vanishing on a nonempty open set vanishes. -/
 theorem eq_zero_of_eval_eq_zero_of_isOpen {q : MvPolynomial (Fin n) ℝ} {U : Set (Fin n → ℝ)}
     (hU : IsOpen U) {y₀ : Fin n → ℝ} (hy₀ : y₀ ∈ U) (h : ∀ y ∈ U, MvPolynomial.eval y q = 0) :
     q = 0 := by
@@ -271,7 +197,6 @@ theorem isDeg_of_mem_polySpace {r k : ℕ} {u : FormField n} (hu : u ∈ polySpa
 theorem polySpace_le_contForms (r k : ℕ) : polySpace n r k ≤ contForms n :=
   fun _ hu => (polySpace_le_c1 hu).continuous
 
-/-- A polynomial form field vanishing on a nonempty open set vanishes. -/
 theorem eq_zero_of_mem_polySpace_of_eqOn {r k : ℕ} {u : FormField n} (hu : u ∈ polySpace n r k)
     {U : Set (Fin n → ℝ)} (hU : IsOpen U) (hne : U.Nonempty) (h : ∀ y ∈ U, u y = 0) : u = 0 := by
   obtain ⟨Ω, -, rfl⟩ := hu
@@ -290,11 +215,6 @@ theorem affinePullback_mem_polyMinusSpace_scalarMat {r k : ℕ} (h : ℝ) (t : F
     {u : FormField n} (hu : u ∈ polyMinusSpace n r k) :
     affinePullback (scalarMat n h) t u ∈ polyMinusSpace n r k :=
   affinePullback_mem_polyMinusSpace _ _ hu
-
-/-! ### Reference estimates on a fixed compact set
-
-`V` is any space of polynomial `k`-form fields of degree `≤ r` (`V ≤ P_rΛᵏ(ℝⁿ)`), e.g.
-`P_rΛᵏ` itself or `P_r⁻Λᵏ` (`polyMinusSpace_le_polySpace`). -/
 
 section Reference
 
@@ -320,10 +240,6 @@ def evalₗ (V : Submodule ℝ (FormField n)) (x : Fin n → ℝ) : V →ₗ[ℝ
 @[simp] theorem evalₗ_apply (V : Submodule ℝ (FormField n)) (x : Fin n → ℝ) (v : V) :
     evalₗ V x v = (v : FormField n) x := rfl
 
-/-- **Reference inverse estimates** for polynomial forms: on a compact convex `S` with nonempty
-interior (e.g. a nondegenerate simplex `K`), every `u ∈ V ≤ P_rΛᵏ` satisfies
-`sup_S ‖u‖ ≤ A ‖u‖_{L²(S)}` and `Lip_S(u) ≤ A ‖u‖_{L²(S)}`, with `A` depending only on `S`
-and `V`. -/
 theorem exists_norm_le_sqrt_formL2Sq (hV : V ≤ polySpace n r k) {S : Set (Fin n → ℝ)}
     (hS : IsCompact S) (hSi : (interior S).Nonempty) (hSc : Convex ℝ S) :
     ∃ A, 0 ≤ A ∧ ∀ u ∈ V, (∀ x ∈ S, ‖u x‖ ≤ A * √(formL2Sq S u)) ∧
@@ -359,8 +275,6 @@ theorem exists_norm_le_sqrt_formL2Sq (hV : V ≤ polySpace n r k) {S : Set (Fin 
     gcongr
     exact le_max_right _ _
 
-/-- **Reference DOF estimate**: for a unisolvent family of linear functionals `ℓⱼ` on `V`
-(`LinearMap.pi ℓ` injective), `sup_S ‖u‖ ≤ B Σⱼ |ℓⱼ(u)|` on a compact `S`. -/
 theorem exists_norm_le_sum_abs_dof (hV : V ≤ polySpace n r k) {S : Set (Fin n → ℝ)}
     (hS : IsCompact S) {J : Type*} [Fintype J] (ℓ : J → V →ₗ[ℝ] ℝ)
     (hℓ : Function.Injective (LinearMap.pi ℓ)) :
@@ -385,8 +299,6 @@ theorem sq_norm_pi_le_sum_sq {J : Type*} [Fintype J] (c : J → ℝ) : ‖c‖ ^
   calc ‖c‖ ^ 2 ≤ √(∑ j, c j ^ 2) ^ 2 := pow_le_pow_left₀ (norm_nonneg _) h 2
     _ = _ := Real.sq_sqrt (Finset.sum_nonneg fun _ _ => sq_nonneg _)
 
-/-- **Reference `ℓ²`-equivalence of the DOFs**: for a unisolvent family `ℓⱼ` on `V`, the squared
-`L²(S)` norm and `Σⱼ ℓⱼ(u)²` are equivalent on `V` (`S` compact with nonempty interior). -/
 theorem exists_formL2Sq_equiv_sum_sq_dof (hV : V ≤ polySpace n r k) {S : Set (Fin n → ℝ)}
     (hS : IsCompact S) (hSi : (interior S).Nonempty) {J : Type*} [Fintype J]
     (ℓ : J → V →ₗ[ℝ] ℝ) (hℓ : Function.Injective (LinearMap.pi ℓ)) :
@@ -418,8 +330,6 @@ theorem exists_formL2Sq_equiv_sum_sq_dof (hV : V ≤ polySpace n r k) {S : Set (
 
 end Reference
 
-/-! ### Pullback by a homothety -/
-
 section Homothety
 
 theorem affinePullback_scalarMat_apply_of_isDeg {k : ℕ} {h : ℝ} {t : Fin n → ℝ}
@@ -427,8 +337,6 @@ theorem affinePullback_scalarMat_apply_of_isDeg {k : ℕ} {h : ℝ} {t : Fin n �
     affinePullback (scalarMat n h) t u y = h ^ k • u (t + h • y) := by
   rw [affinePullback_scalarMat h t hu y, add_comm]
 
-/-- `‖H^* u‖²_{L²(S)} = h^{2k - n} ‖u‖²_{L²(H S)}` for a `k`-form, a measurable set `S` and the
-homothety `H y = t + h y`. -/
 theorem formL2Sq_image_affinePullback_scalarMat {S : Set (Fin n → ℝ)} (hS : MeasurableSet S)
     {k : ℕ} {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n} (hu : ∀ x, IsDeg k (u x)) :
     h ^ n * formL2Sq S (affinePullback (scalarMat n h) t u) =
@@ -437,7 +345,6 @@ theorem formL2Sq_image_affinePullback_scalarMat {S : Set (Fin n → ℝ)} (hS : 
     setIntegral_image_add_smul hS t hh, mul_pow, integral_const_mul, Finset.mul_sum]
   exact Finset.sum_congr rfl fun s _ => by ring
 
-/-- `‖H^* u‖²_{L²(K)} = h^{2k - n} ‖u‖²_{L²(T)}` for a `k`-form and `T = t + h K`. -/
 theorem formL2Sq_affinePullback_scalarMat (K : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n} (hu : ∀ x, IsDeg k (u x)) :
     h ^ n * formL2Sq K.closedInterior (affinePullback (scalarMat n h) t u) =
@@ -445,8 +352,6 @@ theorem formL2Sq_affinePullback_scalarMat (K : Affine.Simplex ℝ (Fin n → ℝ
   rw [closedInterior_mapEquiv_boxMap]
   exact formL2Sq_image_affinePullback_scalarMat K.isClosed_closedInterior.measurableSet hh t hu
 
-/-- Chain rule for the pullback of a `k`-form by `y ↦ t + h y`:
-`∂ⱼ (H^* u)_s (y) = h^{k+1} (∂ⱼ u_s)(t + h y)`. -/
 theorem partialDeriv_affinePullback_scalarMat {k : ℕ} {h : ℝ} {t : Fin n → ℝ}
     {u : FormField n} (hu : ∀ x, IsDeg k (u x)) (hd : Differentiable ℝ u) (j : Fin n)
     (s : Finset (Fin n)) (y : Fin n → ℝ) :
@@ -465,8 +370,6 @@ theorem partialDeriv_affinePullback_scalarMat {k : ℕ} {h : ℝ} {t : Fin n →
     smul_eq_mul, pow_succ]
   ring
 
-/-- `‖D H^* u‖²_{L²(K)} = h^{2k + 2 - n} ‖D u‖²_{L²(T)}` for a differentiable `k`-form and
-`T = t + h K`. -/
 theorem formGradL2Sq_affinePullback_scalarMat (K : Affine.Simplex ℝ (Fin n → ℝ) n) {k : ℕ}
     {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n} (hu : ∀ x, IsDeg k (u x))
     (hd : Differentiable ℝ u) :
@@ -488,11 +391,6 @@ theorem mem_mapEquiv_boxMap {K : Affine.Simplex ℝ (Fin n → ℝ) n} {h : ℝ}
 
 variable {r k : ℕ} {V : Submodule ℝ (FormField n)}
 
-/-- **Local inverse estimates on homothetic copies** of a compact convex reference set `S` with
-nonempty interior (a simplex, a cube) for polynomial forms: for `T = t + h S` and
-`u ∈ V ≤ P_rΛᵏ` (`V` stable under homotheties), `h^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and
-`h^{n/2} h Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with `A` depending only on `S` and `V` ([Ciarlet2002], §3.2;
-[AFW2010], §5.5). -/
 theorem exists_inverse_bound_image_of_le_polySpace (hV : V ≤ polySpace n r k)
     (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)
     {S : Set (Fin n → ℝ)} (hS : IsCompact S) (hSi : (interior S).Nonempty) (hSc : Convex ℝ S) :
@@ -537,10 +435,8 @@ theorem exists_inverse_bound_image_of_le_polySpace (hV : V ≤ polySpace n r k)
       _ = A * (h * ‖y - y'‖) * (√h ^ n * √(formL2Sq S v)) := by ring
       _ = h ^ k * (A * (h * ‖y - y'‖) * √(formL2Sq T u)) := by rw [hkey]; ring
 
-/-- **Local inverse estimates on homothetic simplices** for polynomial forms: for `T = t + h K`
-and `u ∈ V ≤ P_rΛᵏ` (`V` stable under homotheties),
-`h^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h^{n/2} h Lip_T(u) ≤ A ‖u‖_{L²(T)}`, with `A`
-depending only on `K` and `V` ([Ciarlet2002], §3.2; [AFW2010], §5.5). -/
+/-- **Local inverse estimates on homothetic simplices**: for `u ∈ V ≤ P_rΛᵏ` on `T = t + h K`,
+`h^{n/2} sup_T ‖u‖ ≤ A ‖u‖_{L²(T)}` and `h^{n/2} h Lip_T(u) ≤ A ‖u‖_{L²(T)}`. [Ciarlet2002], §3.2 -/
 theorem exists_local_inverse_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
     (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)
     (K : Affine.Simplex ℝ (Fin n → ℝ) n) :
@@ -557,10 +453,8 @@ theorem exists_local_inverse_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
   simp only [closedInterior_mapEquiv_boxMap]
   exact hA hh t u hu
 
-/-- **Local DOF estimate on homothetic simplices**: for a unisolvent family `ℓⱼ` on `V` (the
-DOFs on `K`) and `T = t + h K`, `hᵏ sup_T ‖u‖ ≤ B Σⱼ |ℓⱼ(H^* u)|`, `H y = t + h y`, with `B`
-depending only on `K` and `ℓ`. For moment DOFs, `ℓⱼ(H^* u)` is the corresponding moment of `u`
-on `T` (`faceMoment_mapEquiv_boxMap`). -/
+/-- **Local DOF estimate on homothetic simplices**: for a unisolvent family `ℓⱼ` on `V`,
+`hᵏ sup_T ‖u‖ ≤ B Σⱼ |ℓⱼ(H^* u)|` on `T = t + h K`, `H y = t + h y`. -/
 theorem exists_local_dof_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
     (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)
     (K : Affine.Simplex ℝ (Fin n → ℝ) n) {J : Type*} [Fintype J] (ℓ : J → V →ₗ[ℝ] ℝ)
@@ -576,11 +470,8 @@ theorem exists_local_dof_bound_of_le_polySpace (hV : V ≤ polySpace n r k)
   rwa [affinePullback_scalarMat_apply_of_isDeg (isDeg_of_mem_polySpace (hV hu)), norm_smul,
     Real.norm_of_nonneg (pow_nonneg hh.le k)] at h1
 
-/-- **`ℓ²`-scaling of the DOFs on homothetic simplices** (the corrected tool behind
-[QuennevilleBelair2015], Prop 5.8): for a unisolvent family `ℓⱼ` on `V` and `T = t + h K`,
-`‖u‖²_{L²(T)} ≍ h^{n - 2k} Σⱼ ℓⱼ(H^* u)²`, i.e.
-`h^{2k} ‖u‖²_{L²(T)} ≤ C hⁿ Σⱼ ℓⱼ(H^* u)²` and `hⁿ Σⱼ ℓⱼ(H^* u)² ≤ C h^{2k} ‖u‖²_{L²(T)}`,
-with `C` depending only on `K` and `ℓ`. -/
+/-- **`ℓ²`-scaling of the DOFs on homothetic simplices**: for a unisolvent family `ℓⱼ` on `V`,
+`‖u‖²_{L²(T)} ≍ h^{n - 2k} Σⱼ ℓⱼ(H^* u)²`. [QuennevilleBelair2015], Prop 5.8 (adapted) -/
 theorem exists_local_formL2Sq_equiv_of_le_polySpace (hV : V ≤ polySpace n r k)
     (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)
     (K : Affine.Simplex ℝ (Fin n → ℝ) n) {J : Type*} [Fintype J] (ℓ : J → V →ₗ[ℝ] ℝ)
@@ -608,12 +499,8 @@ theorem exists_local_formL2Sq_equiv_of_le_polySpace (hV : V ≤ polySpace n r k)
 
 end Homothety
 
-/-! ### Moment degrees of freedom under affine maps -/
-
 section Moments
 
-/-- **Traces under affine maps**: the trace on the face `G ∘ p ∘ e` of the affine image
-`G ∘ p` (`G y = A y + a`) is the trace of `G^* ω` on the face `p ∘ e`. -/
 theorem faceTrace_affine {m : ℕ} (A : Fin n → Fin n → ℝ) (a : Fin n → ℝ)
     (p : Fin (n + 1) → Fin n → ℝ) (e : Fin (m + 1) → Fin (n + 1)) (ω : FormField n) :
     faceTrace (fun i => affine A a (p i)) e ω = faceTrace p e (affinePullback A a ω) := by
@@ -621,8 +508,6 @@ theorem faceTrace_affine {m : ℕ} (A : Fin n → Fin n → ℝ) (a : Fin n → 
   have h : ((fun i => affine A a (p i)) ∘ e) = fun i => affine A a ((p ∘ e) i) := rfl
   rw [h, simplexMatrix_comp_affine]
 
-/-- **Moments under affine maps**: `∫_{G(f)} tr ω ∧ η = ∫_f tr (G^* ω) ∧ η`, for every face
-(every vertex map `e`, hence every ordering of the vertices) and every test form `η`. -/
 theorem faceMoment_affine {m : ℕ} (A : Fin n → Fin n → ℝ) (a : Fin n → ℝ)
     (p : Fin (n + 1) → Fin n → ℝ) (e : Fin (m + 1) → Fin (n + 1)) (η : FormField m)
     (ω : FormField n) :
@@ -635,8 +520,6 @@ theorem points_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n) (t : F
   funext i
   rw [mapEquiv_points, boxMap_apply, affine_scalarMat, add_comm]
 
-/-- **Moments on `T = t + h K`**: every moment on a face of `T` is the moment of `H^* ω` on the
-corresponding face of `K` (`H y = t + h y`). -/
 theorem faceMoment_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n) (t : Fin n → ℝ)
     {h : ℝ} (hh : h ≠ 0) {m : ℕ} (e : Fin (m + 1) → Fin (n + 1)) (η : FormField m)
     (ω : FormField n) :
@@ -646,14 +529,11 @@ theorem faceMoment_mapEquiv_boxMap (K : Affine.Simplex ℝ (Fin n → ℝ) n) (t
 
 end Moments
 
-/-! ### The moment DOFs of `P_rΛᵏ` and `P_r⁻Λᵏ` on homothetic simplices -/
-
 section LocalDof
 
 variable {r k : ℕ}
 
-/-- The DOFs `ω ↦ ∫_f tr_f ω ∧ ηᵢ` of `P_rΛᵏ(K)` ([AFW2006], §4.5), as functionals on
-`P_rΛᵏ(ℝⁿ) = P_rΛᵏ(K)`. -/
+/-- The DOFs `ω ↦ ∫_f tr_f ω ∧ ηᵢ` of `P_rΛᵏ(K)`, as functionals on `P_rΛᵏ(ℝⁿ)`. [AFW2006], §4.5 -/
 def polyDofOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) (r k : ℕ)
     (i : Σ f : Face n, DofIndex r k f) : polySpace n r k →ₗ[ℝ] ℝ :=
   localDof K.points r k i ∘ₗ
@@ -677,8 +557,6 @@ theorem injective_pi_polyDofOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) (hr : 
     congrFun huv i
   exact (LinearEquiv.ofEq _ _ _).injective h
 
-/-- **`ℓ²`-scaling of the DOFs of `P_rΛᵏ` on `T = t + h K`** (the corrected form of
-[QuennevilleBelair2015], Prop 5.8): `‖u‖²_{L²(T)} ≍ h^{n - 2k} Σᵢ ℓᵢᵀ(u)²`. -/
 theorem exists_local_formL2Sq_equiv_polySpace (K : Affine.Simplex ℝ (Fin n → ℝ) n)
     (hr : 1 ≤ r) (hk : k ≤ n) :
     ∃ C, 0 ≤ C ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {u : FormField n},
@@ -705,8 +583,6 @@ theorem exists_local_formL2Sq_equiv_polySpace (K : Affine.Simplex ℝ (Fin n →
   exact hC hh t u hu
 
 end LocalDof
-
-/-! ### The kernel lemma -/
 
 section Kernel
 
@@ -763,8 +639,6 @@ theorem norm_gradEmbed (hV : V ≤ polySpace n r k) {S : Set (Fin n → ℝ)} (h
     (continuous_partialDeriv_coeff_of_mem_polySpace (hV v.2) p.1 p.2)).toLp _ y) * _ = _
   rw [RCLike.conj_to_real, hy, sq]
 
-/-- A field of `V ≤ P_rΛᵏ` whose first derivatives vanish in `L²(S)` (`S` with nonempty
-interior) is constant. -/
 theorem eq_const_of_gradEmbed_eq_zero (hV : V ≤ polySpace n r k) {S : Set (Fin n → ℝ)}
     (hS : IsCompact S) (hSi : (interior S).Nonempty) {v : V} (hv : gradEmbed hV hS v = 0)
     (x : Fin n → ℝ) : (v : FormField n) x = (v : FormField n) 0 := by
@@ -794,10 +668,6 @@ theorem eq_const_of_gradEmbed_eq_zero (hV : V ≤ polySpace n r k) {S : Set (Fin
   rw [← hΩ, partialDeriv_coeff_evalForm]
   simp [hpd]
 
-/-- **The kernel lemma on a reference set** (behind [QuennevilleBelair2015], Prop 5.9(1); the
-finite-dimensional form of the Bramble–Hilbert argument): if `L : V → W` is linear
-(`V, W` spaces of polynomial forms) and vanishes on the constant fields of `V`, then
-`‖L v‖_{L²(S)} ≤ C ‖Dv‖_{L²(S)}` (`S` compact with nonempty interior). -/
 theorem exists_formL2Sq_le_formGradL2Sq {r' k' : ℕ} {W : Submodule ℝ (FormField n)}
     (hV : V ≤ polySpace n r k) (hW : W ≤ polySpace n r' k') (L : V →ₗ[ℝ] W)
     (hL : ∀ v : V, (∀ x, (v : FormField n) x = (v : FormField n) 0) → L v = 0)
@@ -812,12 +682,8 @@ theorem exists_formL2Sq_le_formGradL2Sq {r' k' : ℕ} {W : Submodule ℝ (FormFi
   have h := hC v
   rwa [LinearMap.comp_apply, norm_l2EmbedOf, norm_gradEmbed] at h
 
-/-- **The kernel lemma on homothetic simplices** (behind [QuennevilleBelair2015], Prop 5.9(1)):
-let `L : V → W` (`V, W ≤ P Λᵏ` polynomial `k`-forms, `V` stable under homotheties) vanish on
-the constant fields of `V`. For `T = t + h K` and `u ∈ V`, any `k`-form `w` with
-`H^* w = L(H^* u)` (`H y = t + h y`; e.g. `w = L_T u` for the homothetic conjugate `L_T`, such as
-`u - Π_T u` for local projections `Π_T` reproducing constants) satisfies
-`‖w‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}`, `C` depending only on `K` and `L`. -/
+/-- **The kernel lemma on `T = t + h K`**: `‖w‖_{L²(T)} ≤ C h ‖Du‖_{L²(T)}` if `H^* w = L(H^* u)`
+for a linear `L` vanishing on the constants. [QuennevilleBelair2015], Prop 5.9(1) (adapted) -/
 theorem exists_local_kernel_bound {r' : ℕ} {W : Submodule ℝ (FormField n)}
     (hV : V ≤ polySpace n r k)
     (hVH : ∀ (h : ℝ) (t : Fin n → ℝ), ∀ u ∈ V, affinePullback (scalarMat n h) t u ∈ V)

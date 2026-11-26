@@ -5,51 +5,17 @@ public import Feec.FiniteElement.FormBGG
 /-!
 # The elasticity diagram of differential forms on `ℝ³`
 
-On an open `Ω ⊆ ℝ³`, the elasticity diagram stacks `HΛ(Ω) ⊗ ℝ³` over itself (`vecRow 3 hΩ`),
-linked by **`(S μ)_b = dx_{b+2} ∧ μ_{b+1} − dx_{b+1} ∧ μ_{b+2}`** (indices mod `3`, `crossL2`): in
-vector proxies (rows; a `1`-form `Σ_c u_c dx_c` the vector `u`, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` with
-`⋆dxᵢ = dx_{i+1} ∧ dx_{i+2}` the vector `w`, a `3`-form `f dx₀ ∧ dx₁ ∧ dx₂` the scalar `f`),
-`(S⁰ ψ) w = ψ × w`, `S¹ u = uᵀ − tr(u) I`, `(S² u)_b = u_{b+1,b+2} − u_{b+2,b+1}`, the maps of the
-elasticity diagram of `Feec.Domain.elasticityMaximalData` ([ArnoldHu2021], §4.1). With the adjoint
-`(Sᵀ w)_i = ι_{i+1} w_{i+2} − ι_{i+2} w_{i+1}` (`crossAdj`), the Cartan identity
-`ι_c (dx_{c'} ∧ ·) + dx_{c'} ∧ ι_c = δ_{cc'}` (`Feec.FiniteElement.ιL2_dxL2_add_dxL2_ιL2`) and the
-Euler identities give the two Gram identities
-
-* `Sᵀ S = (1 − k) + D Dᵀ` on vector `(k + 1)`-forms, `D` the div–div map (`crossAdj_crossL2`),
-  and `Sᵀ S = 2` on vector `0`-forms (`crossAdj_crossL2_zero`);
-* `S Sᵀ = k + Wᵀ W` on vector `(k + 1)`-forms, `W` the Hessian map `Σₐ dxₐ ∧ ·`
-  (`crossL2_crossAdj`).
-
-So `S` is bounded below in the degrees `0` (`‖S μ‖² = 2 ‖μ‖²`) and `1` (`‖S μ‖² = ‖μ‖² + ‖Dᵀμ‖²`),
-and has the `H¹`-preserving right inverses `½ Sᵀ` in degree `2` (`W = 0` on `3`-forms) and
-`Sᵀ (1 − ¼ Wᵀ W)` in degree `1` (`(Wᵀ W)² = 3 Wᵀ W`, `W Wᵀ = 3` on `3`-forms): the hypotheses of the
-analytic BGG theorem at `J = 1`, the regular decompositions of the diagram following from those of
-the rows (`elasticityFormData_antilipschitz`, `elasticityFormData_regularDecomposition`).
-
-`S` twice is minus the div–div map after the Hessian map, `S^{k+1} S^k = −D W`
-(`crossL2_crossL2`), so `S¹ S⁰ ψ` is closed for the gradients `ψ` of the Hessian diagram, on which
-`d̃⁰` is unbounded: **`S¹` is not onto between the `L²` domains** on every nonempty open `Ω`
-(`elasticityFormData_exists_forall_S_ne`), as `S⁰` and `Sⁿ⁻¹` of the Hessian and div–div
-diagrams (`Feec.FiniteElement.hessianFormData_exists_forall_S_ne`,
-`Feec.FiniteElement.divDivFormData_exists_forall_S_ne`).
-
-## Main definitions
-
-* `crossL2`, `crossAdj`, `elasticityFormData`.
+The elasticity diagram of [ArnoldHu2021], §4.1 stacks `HΛ(Ω) ⊗ ℝ³` over itself, `Ω ⊆ ℝ³` open; its
+regular decompositions follow from those of `HΛ(Ω)`, and `S¹` is not onto between the `L²` domains.
 
 ## Main results
 
-* `inner_crossL2`, `crossAdj_crossL2`, `crossAdj_crossL2_zero`, `crossL2_crossAdj`.
-* `elasticityFormData_antilipschitz`, **`elasticityFormData_regularDecomposition`**.
-* `crossL2_crossL2`, `elasticityFormData_exists_lt_norm`,
-  **`elasticityFormData_exists_forall_S_ne`**.
+* `elasticityFormData_regularDecomposition`: the regular decompositions of the diagram.
+* `elasticityFormData_exists_forall_S_ne`: `S¹` is not onto between the `L²` domains.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the elasticity diagram),
-  §2 (regular decompositions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (exterior algebra), §11 (the elasticity complex from two de Rham complexes)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -80,8 +46,7 @@ theorem sum_fin3 {M : Type*} [AddCommMonoid M] (f : Fin 3 → M) (i : Fin 3) :
 
 /-! ### The elasticity map and its adjoint -/
 
-/-- **The elasticity connecting map** on `L²(Ω; Λᵏ ⊗ ℝ³)`,
-`(S μ)_b = dx_{b+2} ∧ μ_{b+1} − dx_{b+1} ∧ μ_{b+2}`. -/
+/-- The elasticity connecting map `(S μ)_b = dx_{b+2} ∧ μ_{b+1} − dx_{b+1} ∧ μ_{b+2}`. -/
 def crossL2 (k : ℤ) : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k)) →L[ℝ]
     PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (k + 1))) :=
   (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin 3 =>
@@ -109,7 +74,6 @@ def crossAdj (k : ℤ) : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (k + 1))
     (i : Fin 3) : crossAdj k w i = ιL2 k (i + 1) (w (i + 2)) - ιL2 k (i + 2) (w (i + 1)) :=
   rfl
 
-/-- `⟪S μ, w⟫ = ⟪μ, Sᵀ w⟫`. -/
 theorem inner_crossL2 (k : ℤ) (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k)))
     (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (k + 1)))) :
     ⟪crossL2 k μ, w⟫_ℝ = ⟪μ, crossAdj k w⟫_ℝ := by
@@ -118,7 +82,6 @@ theorem inner_crossL2 (k : ℤ) (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formI
     inner_sub_left, inner_sub_right, inner_dxL2]
   ring
 
-/-- `⟪D φ, w⟫ = ⟪φ, Dᵀ w⟫` for the div–div map. -/
 theorem inner_dxVecL2 {n : ℕ} {Ω : Set (Fin n → ℝ)} (k : ℤ) (φ : L2F ℝ Ω (formIdx n k))
     (w : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1)))) :
     ⟪dxVecL2 k φ, w⟫_ℝ = ⟪φ, dxVecAdj k w⟫_ℝ := by
@@ -127,7 +90,6 @@ theorem inner_dxVecL2 {n : ℕ} {Ω : Set (Fin n → ℝ)} (k : ℤ) (φ : L2F �
 
 /-! ### The Gram identities -/
 
-/-- **`Sᵀ S = (1 − k) + D Dᵀ`** on vector `(k + 1)`-forms (`D` the div–div map). -/
 theorem crossAdj_crossL2 (k : ℤ) (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (k + 1)))) :
     crossAdj (k + 1) (crossL2 (k + 1) μ) = ((1 : ℝ) - k) • μ + dxVecL2 k (dxVecAdj k μ) := by
   refine PiLp.ext fun i => ?_
@@ -140,8 +102,6 @@ theorem crossAdj_crossL2 (k : ℤ) (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (fo
   rw [sum_fin3 _ i, map_add, map_add]
   linear_combination (norm := module) -hE
 
-/-- **`Sᵀ S = 2`** on vector `0`-forms (`S⁰` is `√2` times an isometry; `ι_c (dx_{c'} ∧ φ) =
-δ_{cc'} φ` on `0`-forms, `Feec.FiniteElement.ιL2_dxL2_zero`). -/
 theorem crossAdj_crossL2_zero (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0))) :
     crossAdj 0 (crossL2 0 μ) = (2 : ℝ) • μ := by
   refine PiLp.ext fun i => ?_
@@ -151,7 +111,6 @@ theorem crossAdj_crossL2_zero (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx
     ιL2_dxL2_zero, n1, n2, ite_true, ite_false]
   module
 
-/-- **`S Sᵀ = k + Wᵀ W`** on vector `(k + 1)`-forms (`W v = Σₐ dxₐ ∧ vₐ` the Hessian map). -/
 theorem crossL2_crossAdj (k : ℤ) (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (k + 1)))) :
     crossL2 k (crossAdj k w) = (k : ℝ) • w + wsL2Adj (k + 1) (wsL2 (k + 1) w) := by
   refine PiLp.ext fun b => ?_
@@ -171,10 +130,6 @@ theorem crossL2_crossAdj (k : ℤ) (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (for
 
 /-! ### The elasticity diagram -/
 
-/-- **The elasticity map twice is minus the div–div map after the Hessian map**:
-`S^{k+1} S^k = -D W` on `L²(Ω; Λᵏ ⊗ ℝ³)`, `W v = Σₐ dxₐ ∧ vₐ` (`wsL2`) and
-`(D w)_b = dx_b ∧ w` (`dxVecL2`):
-`(S S v)_b = dx_{b+2} ∧ dx_b ∧ v_{b+2} + dx_{b+1} ∧ dx_b ∧ v_{b+1}`. -/
 theorem crossL2_crossL2 (k : ℤ) (v : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k))) :
     crossL2 (k + 1) (crossL2 k v) = -dxVecL2 (k + 1) (wsL2 k v) := by
   refine PiLp.ext fun b => ?_
@@ -188,8 +143,7 @@ theorem crossL2_crossL2 (k : ℤ) (v : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (form
 variable (hΩ : IsOpen Ω)
 include hΩ
 
-/-- **The elasticity diagram of forms** on `Ω ⊆ ℝ³`: `HΛ(Ω) ⊗ ℝ³` over itself, linked by
-`(S μ)_b = dx_{b+2} ∧ μ_{b+1} − dx_{b+1} ∧ μ_{b+2}` ([ArnoldHu2021], §4.1). -/
+/-- The elasticity diagram of forms, `HΛ(Ω) ⊗ ℝ³` over itself ([ArnoldHu2021], §4.1). -/
 def elasticityFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ)
     (fun k => PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k)))
     (fun k => PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k))) :=
@@ -215,7 +169,6 @@ def elasticityFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ)
     (Y := fun k => PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k))) (fun k => crossL2 k) k
 
 omit hΩ in
-/-- `‖S μ‖² = ‖μ‖² + ‖Dᵀ μ‖² ≥ ‖μ‖²` on vector `1`-forms. -/
 theorem norm_le_norm_crossL2_one (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (0 + 1)))) :
     ‖μ‖ ≤ ‖crossL2 (0 + 1) μ‖ := by
   have h := crossAdj_crossL2 0 μ
@@ -228,8 +181,6 @@ theorem norm_le_norm_crossL2_one (μ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (form
   rw [hsq]
   nlinarith [sq_nonneg ‖dxVecAdj 0 μ‖]
 
-/-- **`S` is bounded below up to `1`** in the elasticity diagram (`Sᵀ S = 2` on vector `0`-forms,
-`‖S μ‖ ≥ ‖μ‖` on vector `1`-forms). -/
 theorem elasticityFormData_antilipschitz :
     ∀ i ≤ 1, ∃ K, AntilipschitzWith K ((elasticityFormData hΩ).S i (i + 1)) := by
   intro i hi
@@ -245,7 +196,6 @@ theorem elasticityFormData_antilipschitz :
       rw [NNReal.coe_one, one_mul]
       exact norm_le_norm_crossL2_one μ⟩
 
-/-- `Sᵀ` maps vectors of `H¹` fields to vectors of `H¹` fields. -/
 theorem crossAdj_mem_fieldH1 (k : ℤ) {w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (k + 1)))}
     (hw : ∀ b, w b ∈ fieldH1 ℝ Ω (formIdx 3 (k + 1))) (i : Fin 3) :
     crossAdj k w i ∈ fieldH1 ℝ Ω (formIdx 3 k) := by
@@ -253,7 +203,6 @@ theorem crossAdj_mem_fieldH1 (k : ℤ) {w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω 
   exact Submodule.sub_mem _ (wsL2Adj_mem_fieldH1 hΩ k (hw _) _) (wsL2Adj_mem_fieldH1 hΩ k (hw _) _)
 
 omit hΩ in
-/-- **The right inverse of `S` in degree `1`**: `S Sᵀ (1 − ¼ Wᵀ W) = 1` on vector `2`-forms. -/
 theorem crossL2_crossAdj_one (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (1 + 1)))) :
     crossL2 1 (crossAdj 1 (w - (4 : ℝ)⁻¹ • wsL2Adj (1 + 1) (wsL2 (1 + 1) w))) = w := by
   have h := crossL2_crossAdj (Ω := Ω) 1 (w - (4 : ℝ)⁻¹ • wsL2Adj (1 + 1) (wsL2 (1 + 1) w))
@@ -265,8 +214,6 @@ theorem crossL2_crossAdj_one (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3
   module
 
 omit hΩ in
-/-- **The right inverse of `S` in degree `2`**: `S (½ Sᵀ) = 1` on vector `3`-forms (`W = 0` on
-`3`-forms in `ℝ³`). -/
 theorem crossL2_crossAdj_two (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (2 + 1)))) :
     crossL2 2 ((2 : ℝ)⁻¹ • crossAdj 2 w) = w := by
   have h := crossL2_crossAdj (Ω := Ω) 2 w
@@ -280,10 +227,6 @@ theorem crossL2_crossAdj_two (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3
   rw [map_smul, h, smul_smul]
   norm_num
 
-/-- **The `L²` splittings of the elasticity diagram** from the `H¹`-regular decompositions of
-`HΛ(Ω)` from `1` on: `u = d p + w` with `w ∈ H¹` and `w = S R w` with the right inverses `R` of
-degrees `1` and `2` (`crossL2_crossAdj_one`, `crossL2_crossAdj_two`); above, the spaces are zero
-([ArnoldHu2021], §2, Theorem 3 and §4). -/
 theorem elasticityFormData_exists_add_eq (h : (deRham ℝ 3).HasRegularDecomposition Ω 1) {i : ℤ}
     (hi : 1 ≤ i) {u : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (i + 1)))}
     (hu : u ∈ ((vecRow 3 hΩ).d (i + 1) (i + 1 + 1)).domain) :
@@ -335,8 +278,7 @@ theorem elasticityFormData_exists_add_eq (h : (deRham ℝ 3).HasRegularDecomposi
     refine ⟨0, 0, ?_⟩
     rw [hu0, LinearPMap.map_zero, ZeroMemClass.coe_zero, map_zero, add_zero]
 
-/-- **The regular decompositions of the elasticity diagram**
-(`elasticityFormData_exists_add_eq`). -/
+/-- The regular decompositions of the elasticity diagram, from those of `HΛ(Ω)` from `1` on. -/
 theorem elasticityFormData_regularDecomposition
     (h : (deRham ℝ 3).HasRegularDecomposition Ω 1) :
     (elasticityFormData hΩ).RegularDecomposition 1 :=
@@ -345,11 +287,6 @@ theorem elasticityFormData_regularDecomposition
 
 /-! ### `S¹` is not onto between the `L²` domains -/
 
-/-- **`d̃¹` is unbounded on the `φ = S⁰ ψ`, `ψ` a rescaled gradient, of the elasticity
-diagram**: on every nonempty open `Ω ⊆ ℝ³`, for every `C` some vector `1`-form `φ = S⁰ ψ`, with
-`ψ` the vector `0`-form of `hessianFormData_exists_lt_norm`, has `d (S¹ φ) = 0` and
-`C ‖φ‖ < ‖d̃¹ φ‖`: `d (S¹ S⁰ ψ) = S² S¹ d̃⁰ψ = -D W d̃⁰ψ = D d (W ψ) = 0` (`crossL2_crossL2`,
-`W ψ` closed) and `‖d̃¹ φ‖ = ‖S¹ d̃⁰ ψ‖ ≥ ‖d̃⁰ ψ‖ / K`, `S¹` bounded below. -/
 theorem elasticityFormData_exists_lt_norm (hne : Ω.Nonempty) (C : ℝ) :
     ∃ φ : ((elasticityFormData hΩ).Ht.d (0 + 1) (0 + 1 + 1)).domain,
       (elasticityFormData hΩ).H.d (0 + 1 + 1) (0 + 1 + 1 + 1)
@@ -394,10 +331,8 @@ theorem elasticityFormData_exists_lt_norm (hne : Ω.Nonempty) (C : ℝ) :
         _ ≤ _ := h1
     exact hC.trans_lt (lt_of_mul_lt_mul_left key hK0)
 
-/-- **`S¹` is not onto between the `L²` domains of the elasticity diagram** on every nonempty
-open `Ω ⊆ ℝ³`: some `u ∈ HΛ²(Ω) ⊗ ℝ³` is `S¹ φ` for no `φ ∈ HΛ¹(Ω) ⊗ ℝ³` (in vector proxies,
-`S¹ u = uᵀ − tr(u) I` maps `H(curl; Ω; 𝕄)` onto a proper subspace of `H(div; Ω; 𝕄)`;
-`Feec.Domain.elasticityMaximalData_not_surjective`). -/
+/-- `S¹` is not onto between the `L²` domains of the elasticity diagram: on every nonempty open
+`Ω ⊆ ℝ³`, some `u ∈ HΛ²(Ω) ⊗ ℝ³` is `S¹ φ` for no `φ ∈ HΛ¹(Ω) ⊗ ℝ³`. -/
 theorem elasticityFormData_exists_forall_S_ne (hne : Ω.Nonempty) :
     ∃ u ∈ ((vecRow 3 hΩ).d (1 + 1) (1 + 1 + 1)).domain,
       ∀ φ ∈ ((vecRow 3 hΩ).d 1 (1 + 1)).domain, crossL2 1 φ ≠ u := by

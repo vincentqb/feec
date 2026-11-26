@@ -6,43 +6,20 @@ public import Feec.Models.StarShaped.PolySmoothing
 /-!
 # Smoothed-projection estimates for the higher-order families on the cube
 
-For every admissible sequence `S` (`Feec.FiniteElement.PolySeq`: `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in
-degree `k`) and the level-`(N + 1)` Freudenthal meshes `FEM.mesh n N` of `Q = (0, ½)ⁿ`
-(`h_N = 1 / (2 (N + 1))`), the smoothed canonical interpolants `Q_N = Π_h R_N` of the complexes
-`FEM.poly n S N ⊆ HΛ(Q)` and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs) satisfy the
-estimates of [AFW2010], §5.5 and [ChristiansenWinther2008], **for every `γ ∈ (0, γ₀]`**, `γ₀`
-depending only on `n` and `S` (`FEM.polySmoothingEstimates_pMax`,
-`FEM.polySmoothingEstimatesMin_pMin`): the parameters `pMax γ` (dilation factor `1 - γ h_N`) and
-`pMin γ` (factor `1 + γ h_N`) of `Feec.Models.Cube.SmoothingEstimates` give uniformly
-`L²`-bounded `Q_N` with `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ` (`FEM.PolySmoothingEstimates`,
-`FEM.PolySmoothingEstimatesMin`). The same "for all small `γ`" form holds for the Whitney family
-(`FEM.smoothingEstimates_pMax_forall`, `FEM.smoothingEstimatesMin_pMin_forall` of
-`Feec.Models.Cube.SmoothingEstimates`), so that one smoother serves finitely many
-families at once (`FEM.exists_common_gamma`).
+For every admissible sequence `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ`, the smoothed
+interpolants of the complexes `FEM.poly n S N ⊆ HΛ(Q)` and `FEM.polyMin n S N ⊆ H̊Λ(Q)` are bounded
+in `L²` uniformly in `N` and close to the identity, for every small enough smoothing scale `γ`
+([AFW2010], §5.5; [ChristiansenWinther2008]).
 
-**The proof is the star-shaped one** (`Feec.Models.StarShaped.PolySmoothing`), on the cube with
-its Freudenthal meshes as uniformly shape-regular quasi-uniform meshes of a domain star-shaped with
-respect to a ball (`FEM.meshData`, `FEM.IsAdm.starShaped`): `Poly.exists_gamma₀` gives, for every
-`γ ≤ γ₀`, the uniform `L²` bound and the closeness on `Vₕ` and `V̊ₕ`. The file also keeps the
-uniform constants of the higher-order families on the Kuhn simplices, used by the approximation
-results (`Poly.CoeffBound`, `Poly.abs_dof_le`, the DOF bound `h_Nᵏ ‖z‖ ≤ B Σ |ℓ(z)|`
-`Poly.DofBound`, the inverse estimates `Poly.InvBound`, and `Poly.sum_integral_sq_globalInterp_le`).
+## Main results
 
-## Main definitions
-
-* `FEM.poly n S N`, `FEM.polyMin n S N`: the complexes of `S` on the cube.
-* `FEM.polySmoothed`, `FEM.polySmoothedMin`: the smoothed interpolants as commuting maps.
-* `FEM.PolySmoothingEstimates`, `FEM.PolySmoothingEstimatesMin`.
+* `FEM.polySmoothingEstimates_pMax`, `FEM.polySmoothingEstimatesMin_pMin`: the estimates.
+* `FEM.exists_common_gamma`: one smoothing scale for finitely many families at once.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.5 (smoothed projections: the estimates for `ε ≈ h`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §4.5–4.6 (the moment degrees of freedom)
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
-* [H. W. Kuhn, *Some combinatorial lemmas in topology*][Kuhn1960]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -75,8 +52,7 @@ theorem abs_simplexMatrix_lexEnum_le {N : ℕ} {T : Affine.Simplex ℝ (Fin n �
   have h := norm_le_pi_norm (lexEnum g m l.succ - lexEnum g m 0) i
   rwa [Real.norm_eq_abs, Pi.sub_apply] at h
 
-/-- **The coefficient fields of the degrees of freedom are `O(h_Nᵏ)`** on the mesh simplices,
-with one constant. -/
+/-- The coefficient fields of the degrees of freedom of `S` are `O(h_Nᵏ)` on the mesh simplices. -/
 def CoeffBound (n k : ℕ) (D : ℝ) : Prop :=
   ∀ (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}, T ∈ (mesh n N).simplices →
     ∀ {g : Finset (Fin n → ℝ)}, g ⊆ vertexSet T → ∀ (i : S.DofIdx g k),
@@ -89,8 +65,6 @@ theorem exists_coeffBound (k : ℕ) : ∃ D, 0 ≤ D ∧ CoeffBound S n k D := b
   exact ⟨D, hD0, fun N T hT g hgT i => hD hgT i (hN_pos N).le
     (abs_simplexMatrix_lexEnum_le hT hgT (Nat.succ_pred_eq_of_pos (card_pos.2 i.2)).symm)⟩
 
-/-- **Stability of the degrees of freedom in the sup norm**: `|ℓ_{g,i}(ω)| ≤ D h_Nᵏ sup_T |ω|`
-for a face `g` of a mesh simplex `T` and a continuous form `ω`. -/
 theorem abs_dof_le {k : ℕ} {D : ℝ} (hD : CoeffBound S n k D) {N : ℕ}
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices)
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (i : S.DofIdx g k) (ω : contForms n)
@@ -98,8 +72,7 @@ theorem abs_dof_le {k : ℕ} {D : ℝ} (hD : CoeffBound S n k D) {N : ℕ}
     |S.dof g k i ω| ≤ D * hN N ^ k * B :=
   S.abs_dof_le_of_coeff_le hgT i ω (hD N hT hgT i) hB0 hB
 
-/-- **The local DOF estimate on the mesh simplices**, with one constant:
-`h_Nᵏ ‖z(x)‖ ≤ B Σ_{g ⊆ T, i} |ℓ_{g,i}(z)|` for `z ∈ P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`). -/
+/-- The local DOF estimate `h_Nᵏ ‖z(x)‖ ≤ B Σ |ℓ_{g,i}(z)|` on the mesh simplices. -/
 def DofBound (n k : ℕ) (B : ℝ) : Prop :=
   ∀ (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}, T ∈ (mesh n N).simplices →
     ∀ {z : FormField n} (hz : z ∈ S.space n k), ∀ x ∈ T.closedInterior,
@@ -113,8 +86,7 @@ theorem exists_dofBound (k : ℕ) : ∃ B, 0 ≤ B ∧ DofBound S n k B := by
   rw [cubeSimplex_eq] at hx ⊢
   exact hB σ (hN_pos N) _ hz x hx
 
-/-- **The local inverse estimates on the mesh simplices**, with one constant:
-`h_N^{n/2} ‖z(x)‖ ≤ A ‖z‖_{L²(T)}` and `h_N^{n/2} h_N ‖z(x) - z(x')‖ ≤ A ‖x - x'‖ ‖z‖_{L²(T)}`. -/
+/-- The local inverse estimates of the spaces of `S` on the mesh simplices, with constant `A`. -/
 def InvBound (n k : ℕ) (A : ℝ) : Prop :=
   ∀ (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}, T ∈ (mesh n N).simplices →
     ∀ z ∈ S.space n k,
@@ -143,8 +115,6 @@ theorem card_dofs_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
       Module.finrank ℝ (S.space n k) := by
   exact_mod_cast S.card_sigma_dofIdx T k
 
-/-- A bound on all the degrees of freedom bounds the local field:
-`|z(x)ₛ| ≤ B dim(P) D'` if `h_Nᵏ`-scaled DOFs are `≤ h_Nᵏ D'`. -/
 theorem abs_le_of_abs_dof_le {k : ℕ} {B : ℝ} (hB : DofBound S n k B) (hB0 : 0 ≤ B) {N : ℕ}
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) {z : FormField n}
     (hz : z ∈ S.space n k) {D' : ℝ}
@@ -168,9 +138,6 @@ theorem abs_le_of_abs_dof_le {k : ℕ} {B : ℝ} (hB : DofBound S n k B) (hB0 : 
         h1.trans (mul_le_mul_of_nonneg_left h2 hB0)
     _ = hN N ^ k * (B * Module.finrank ℝ (S.space n k) * D') := by ring
 
-/-- **Faces through nearby points** of the cube meshes: a point of a face `g` of `T` with
-barycentric weights `≥ θ` (lexicographic parametrization) within `θ h_N / 2` of a point of `T'`
-has `g ⊆ T'`. -/
 theorem subset_vertexSet_of_near_lex {N : ℕ} {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) (hT' : T' ∈ (mesh n N).simplices) {m : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : #g = m + 1) {θ : ℝ}
@@ -214,8 +181,6 @@ theorem subset_vertexSet_of_near_lex {N : ℕ} {T T' : Affine.Simplex ℝ (Fin n
   exact SimplicialMesh.subset_vertexSet_of_mem hT hT' hq hqT
     (fun a => hθ0.trans_le (hμ a)) hμ1 hx' a
 
-/-- **The local `L²` bound of the canonical interpolant** of a continuous form bounded by `A` on a
-mesh simplex: `‖Π_h w‖²_{L²(T)} ≤ 2ⁿ h_Nⁿ (B dim(P) D A)²`. -/
 theorem sum_integral_sq_globalInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBound S n k B)
     (hB0 : 0 ≤ B) (hD : CoeffBound S n k D) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {w : contForms n} {A : ℝ} (hA0 : 0 ≤ A)
@@ -246,20 +211,15 @@ theorem sum_integral_sq_globalInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBound S
   exact (sum_integral_sq_le_of_abs_le hT (PolyKind.contDiff_of_mem_space hz).continuous
     hzb).trans (le_of_eq (by ring))
 
-/-! ### The closeness estimate on `Vₕ` -/
-
 variable {γ : ℝ}
 
 /-! ### The smoothing scale, uniformly for all small `γ` -/
 
-/-- `K (x γ)² ≤ ¼` for every `0 ≤ γ ≤ 1 / (2 (1 + S K))` and `0 ≤ x ≤ S`. -/
 theorem sq_le_quarter_of_le {S K x γ : ℝ} (hS : 0 ≤ S) (hK : 1 ≤ K) (hx0 : 0 ≤ x) (hx : x ≤ S)
     (hγ0 : 0 ≤ γ) (hγ : γ ≤ 1 / (2 * (1 + S * K))) : K * (x * γ) ^ 2 ≤ 1 / 4 := by
   refine le_trans ?_ (sq_le_quarter hS hK hx0 hx)
   refine mul_le_mul_of_nonneg_left ?_ (by linarith)
   exact pow_le_pow_left₀ (mul_nonneg hx0 hγ0) (mul_le_mul_of_nonneg_left hγ hx0) 2
-
-/-! ### The sampling condition for both families -/
 
 end Poly
 
@@ -268,13 +228,6 @@ end Poly
 variable [NeZero n]
 
 variable (n) in
-/-- **The smoothed-projection estimates of an admissible sequence on the cube, for all small `γ`**:
-the instance of the estimates on shape-regular meshes of star-shaped domains
-(`StarShaped.exists_polyGamma`, `StarShaped.exists_norm_polySmoothedInterp_le`; `meshData`,
-`IsAdm.starShaped`). There is `γ₀ ∈ (0, ½]`, depending only on `n` and `S`, such that for every
-`γ ∈ (0, γ₀]` the smoothed interpolants `Q_N` of admissible parameters at scale `γ` are bounded in
-`L²` uniformly in `N`, with `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ` for the maximal family and on `V̊ₕ`
-for the minimal family. -/
 theorem Poly.exists_gamma₀ (S : PolySeq) :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ γ, 0 < γ → γ ≤ γ₀ → ∃ C, 0 ≤ C ∧
       ∀ (N k : ℕ) (p : SmoothingParam (Fin n → ℝ)), IsAdm γ N p →
@@ -323,9 +276,7 @@ theorem Poly.exists_gamma₀ (S : PolySeq) :
         hRx (by norm_num) hγ4 hθ hu)
 
 variable (n) in
-/-- **The finite element complex of the admissible sequence `S`** on the level-`(N + 1)`
-Freudenthal mesh of the cube (`P_{r_k}Λᵏ` / `P_{r_k}⁻Λᵏ` in degree `k`), as a subcomplex of
-`HΛ(Q)`. -/
+/-- The finite element complex of `S` on the level-`(N + 1)` Freudenthal mesh, in `HΛ(Q)`. -/
 def poly (S : PolySeq) (N : ℕ) : (complex n).Subcomplex :=
   (deRham ℝ n).maximalSubcomplexOfEq (mesh_domain n N) (isOpen_mesh_domain n N)
     (isOpen_cubeDomain n) (S.subcomplex (mesh n N) (isOpen_mesh_domain n N))
@@ -334,8 +285,7 @@ instance (S : PolySeq) (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((poly n S N)
   (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
 
 variable (n) in
-/-- **The finite element complex of `S` with vanishing boundary DOFs** on the level-`(N + 1)`
-Freudenthal mesh of the cube, as a subcomplex of `H̊Λ(Q)`. -/
+/-- The complex of `S` with vanishing boundary DOFs on the Freudenthal mesh, in `H̊Λ(Q)`. -/
 def polyMin (S : PolySeq) (N : ℕ) : (complexMin n).Subcomplex :=
   (deRham ℝ n).minimalSubcomplexOfEq (mesh_domain n N) (isOpen_mesh_domain n N)
     (isOpen_cubeDomain n)
@@ -345,8 +295,7 @@ instance (S : PolySeq) (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((polyMin n S
   (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
 
 variable (n) in
-/-- **The smoothed canonical interpolant** `Q_N = Π_h R` of the complex of `S` on the cube, for
-maximal-family smoothing parameters centred at the centre of the cube. -/
+/-- The smoothed canonical interpolant `Q_N = Π_h R` of the complex of `S`, maximal family. -/
 def polySmoothed (S : PolySeq) (N : ℕ) (p : SmoothingParam (Fin n → ℝ))
     (hp : p.IsMaximal (center n) (1 / 4)) : (poly n S N).CommutingMap :=
   (deRham ℝ n).commutingMapOfEq (mesh_domain n N) (isOpen_mesh_domain n N) (isOpen_cubeDomain n)
@@ -354,8 +303,7 @@ def polySmoothed (S : PolySeq) (N : ℕ) (p : SmoothingParam (Fin n → ℝ))
       (starBall_mesh n N) hp)
 
 variable (n) in
-/-- **The smoothed canonical interpolant with vanishing boundary DOFs** `Q̊_N = Π_h R` of the
-complex of `S` on the cube, for minimal-family smoothing parameters. -/
+/-- The smoothed canonical interpolant `Q̊_N` of the complex of `S`, minimal family. -/
 def polySmoothedMin (S : PolySeq) (N : ℕ) (p : SmoothingParam (Fin n → ℝ))
     (hp : p.IsMinimal (center n) (1 / 4)) : (polyMin n S N).CommutingMap :=
   (deRham ℝ n).commutingMapOfEqMin (mesh_domain n N) (isOpen_mesh_domain n N)
@@ -365,10 +313,7 @@ def polySmoothedMin (S : PolySeq) (N : ℕ) (p : SmoothingParam (Fin n → ℝ))
       (strictStar_mesh n N))
 
 variable (n) in
-/-- **The estimates of the smoothed interpolants of the complex of `S`** ([AFW2010], §5.5;
-[ChristiansenWinther2008]): for maximal-family parameters `p N`, uniform `L²` bounds of `Q_N`
-and `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ`, normalized by `½ ≤ C` (the analogue of
-`FEM.SmoothingEstimates` for the Whitney complex). -/
+/-- The smoothing estimates of the complex of `S` ([AFW2010], §5.5; [ChristiansenWinther2008]). -/
 structure PolySmoothingEstimates (S : PolySeq) (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) :
     Prop where
   isMaximal : ∀ N, (p N).IsMaximal (center n) (1 / 4)
@@ -378,8 +323,7 @@ structure PolySmoothingEstimates (S : PolySeq) (p : ℕ → SmoothingParam (Fin 
     ‖v - (polySmoothed n S N (p N) (isMaximal N)).Q i v‖ ≤ 1 / 2 * ‖v‖
 
 variable (n) in
-/-- **The estimates of the smoothed interpolants with vanishing boundary DOFs** of the complex of
-`S` (the analogue of `FEM.SmoothingEstimatesMin`). -/
+/-- The smoothing estimates of the complex of `S` with vanishing boundary DOFs. -/
 structure PolySmoothingEstimatesMin (S : PolySeq) (p : ℕ → SmoothingParam (Fin n → ℝ)) (C : ℝ) :
     Prop where
   isMinimal : ∀ N, (p N).IsMinimal (center n) (1 / 4)
@@ -388,11 +332,7 @@ structure PolySmoothingEstimatesMin (S : PolySeq) (p : ℕ → SmoothingParam (F
   close : ∀ N i, ∀ v ∈ (polyMin n S N).V i,
     ‖v - (polySmoothedMin n S N (p N) (isMinimal N)).Q i v‖ ≤ 1 / 2 * ‖v‖
 
-/-- **The smoothed-projection estimates hold for every admissible sequence, for all small `γ`**
-([AFW2010], §5.5; [ChristiansenWinther2008]): there is `γ₀ ∈ (0, ½]` depending only on `n` and
-`S` such that for **every** `γ ∈ (0, γ₀]` the parameters `pMax γ` (dilation factor
-`1 - γ h_N` about the centre, bump radii `γ h_N / 64 < γ h_N / 32`) satisfy the estimates, with
-a constant `C` depending on `γ`. -/
+/-- **`pMax γ` satisfies `PolySmoothingEstimates` for every small `γ`** ([AFW2010], §5.5). -/
 theorem polySmoothingEstimates_pMax (S : PolySeq) :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
       ∃ C, PolySmoothingEstimates n S (pMax γ hγ hγ1) C := by
@@ -420,9 +360,7 @@ theorem polySmoothingEstimates_pMax (S : PolySeq) :
   exact ⟨fun N => pMax_isMaximal N, le_max_right _ _, fun N => (hest N).1,
     fun N => (hest N).2⟩
 
-/-- **The smoothed-projection estimates with vanishing boundary DOFs hold for every admissible
-sequence, for all small `γ`**: as `polySmoothingEstimates_pMax`, for the parameters `pMin γ`
-(dilation factor `1 + γ h_N` towards the centre). -/
+/-- **`pMin γ` satisfies `PolySmoothingEstimatesMin` for every small `γ`.** -/
 theorem polySmoothingEstimatesMin_pMin (S : PolySeq) :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ), γ ≤ γ₀ →
       ∃ C, PolySmoothingEstimatesMin n S (pMin γ hγ) C := by
@@ -450,10 +388,7 @@ theorem polySmoothingEstimatesMin_pMin (S : PolySeq) :
   exact ⟨fun N => pMin_isMinimal N, le_max_right _ _, fun N => (hest N).1,
     fun N => (hest N).2⟩
 
-/-- **One smoother for finitely many families at once**: for a finite family of admissible
-sequences `S i` there is `γ₀ > 0` such that for every `γ ∈ (0, γ₀]` the same parameters `pMax γ`
-(resp. `pMin γ`) satisfy the smoothing estimates of the Whitney complex and of every complex
-`S i`, in both boundary-condition families. -/
+/-- **One smoothing scale serves the Whitney complex and finitely many sequences `S i`.** -/
 theorem exists_common_gamma {ι : Type*} [Finite ι] (S : ι → PolySeq) :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
       (∃ C, SmoothingEstimates n (pMax γ hγ hγ1) C) ∧

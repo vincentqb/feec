@@ -6,45 +6,13 @@ public import Mathlib.LinearAlgebra.Matrix.SchurComplement
 /-!
 # Runge–Kutta methods
 
-An `s`-stage **Runge–Kutta method** (`ButcherTableau`, coefficients `A ∈ ℝ^{s×s}`, `b ∈ ℝˢ`)
-applied to `u' = L u` is the one-step scheme `u ↦ R(τ L) u` of its **stability function**
-`R(z) = 1 + z bᵀ (1 - z A)⁻¹ 𝟙 = det(1 - z A + z 𝟙 bᵀ)/det(1 - z A)`
-(`ButcherTableau.stabilityFunction_eq`, the matrix determinant lemma; [HairerWanner1996],
-§IV.3, Prop 3.2): the real rational function with numerator `stabilityNum` and denominator
-`stabilityDen`. A method with `deg n ≤ deg d` whose denominator has no zero in the closed left
-half-plane is a rational scheme (`ButcherTableau.toRationalScheme`), so `Feec.TimeStepping.Rational`
-applies: A-stable methods are contractions for every m-dissipative generator (von Neumann's
-inequality) and converge at their order (Brenner–Thomée). For a bounded `L`, the stages
-`kᵢ = L (u + τ ∑ⱼ aᵢⱼ kⱼ)` exist and are unique when `d(τL)` is invertible, and the step
-`u + τ ∑ᵢ bᵢ kᵢ` is `n(τL) d(τL)⁻¹ u` (`ButcherTableau.existsUnique_isStage`,
-`ButcherTableau.IsStage.add_smul_sum_eq`, in `Feec.TimeStepping.RungeKuttaStages`).
-
-## Instances
-
-Each tableau below gives a rational scheme of the same name in `RationalScheme`, with its order
-(`HasOrder`; exact by `Feec.TimeStepping.AStableSchemes`) and A-stability (`IsAStable`, or
-`IsSymmetric` for the Gauss methods):
-
-* `implicitMidpoint` (one-stage Gauss): `R(z) = (1 + z/2)/(1 - z/2)`, order `2`, symmetric: the
-  Crank–Nicolson scheme (`implicitMidpoint_eq_theta`);
-* `gaussLegendre2`: `R(z) = (1 + z/2 + z²/12)/(1 - z/2 + z²/12)`, the `(2, 2)` Padé approximation,
-  order `4`, symmetric;
-* `radauIIA2`: `R(z) = (1 + z/3)/(1 - 2z/3 + z²/6)`, order `3`, L-stable (`IsLStable`);
-* `sdirk2` (`γ = 1 - √2/2`): `R(z) = (1 + (1 - 2γ) z)/(1 - γ z)²`, order `2`, L-stable.
-
-Implicit Euler, the one-stage Radau IIA method, is the θ-scheme `RationalScheme.theta 1`
-(`R(z) = 1/(1 - z)`, order `1`, A-stable).
-
-The symmetric (Gauss) methods are isometries for skew generators
-(`RationalScheme.IsSymmetric.norm_apply_apply`). Explicit methods (`A` strictly lower
-triangular, `R` a polynomial) are not bounded on the imaginary axis and are not rational schemes
-here; their stability under a CFL condition is not formalized.
+The stability function `det(1 - z A + z 𝟙 bᵀ)/det(1 - z A)` of a Runge–Kutta method, its rational
+scheme, and the midpoint rule and two-stage Gauss–Legendre, Radau IIA and SDIRK methods.
 
 ## References
 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (stability function, Prop 3.2), §IV.5 (Gauss and Radau IIA methods), §IV.6 (SDIRK
-  methods)
+  §IV.3, §IV.5, §IV.6
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -55,8 +23,7 @@ open Polynomial Matrix
 
 namespace Feec.TimeStepping
 
-/-- A **Butcher tableau** with `s` stages: the coefficients `A` and the weights `b` (the nodes do
-not enter linear autonomous problems). [HairerWanner1996], §IV.3 -/
+/-- A Butcher tableau: `s` stages, coefficients `A`, weights `b`. [HairerWanner1996], §IV.3 -/
 structure ButcherTableau (s : ℕ) where
   /-- the coefficients -/
   A : Matrix (Fin s) (Fin s) ℝ
@@ -102,8 +69,7 @@ theorem eval_stabilityNum (x : ℝ) :
   rw [← coe_aeval_eq_eval, aeval_stabilityNum]; simp
 
 /-- **The stability function**: `1 + z bᵀ (1 - z A)⁻¹ 𝟙 = det(1 - z A + z 𝟙 bᵀ)/det(1 - z A)`
-wherever `det(1 - z A) ≠ 0` (the matrix determinant lemma). [HairerWanner1996], §IV.3,
-Prop 3.2 -/
+wherever `det(1 - z A) ≠ 0`. [HairerWanner1996], §IV.3, Prop 3.2 -/
 theorem stabilityFunction_eq (z : ℂ) (hz : (1 - z • T.A.map (algebraMap ℝ ℂ)).det ≠ 0) :
     1 + z * ((fun i => (T.b i : ℂ)) ⬝ᵥ ((1 - z • T.A.map (algebraMap ℝ ℂ))⁻¹ *ᵥ fun _ => 1)) =
       aeval z T.stabilityNum / aeval z T.stabilityDen := by
@@ -123,15 +89,13 @@ theorem stabilityFunction_eq (z : ℂ) (hz : (1 - z • T.A.map (algebraMap ℝ 
   rw [Finset.sum_comm]
   simp only [mul_assoc]
 
-/-- A method whose stability function has `deg n ≤ deg d` and a denominator without zeros in the
-closed left half-plane is a **rational scheme**. -/
+/-- The rational scheme of a method with `deg n ≤ deg d` and no pole for `re z ≤ 0`. -/
 def toRationalScheme (hdeg : T.stabilityNum.natDegree ≤ T.stabilityDen.natDegree)
     (hden : ∀ z : ℂ, z.re ≤ 0 → aeval z T.stabilityDen ≠ 0) : RationalScheme :=
   ⟨T.stabilityNum, T.stabilityDen, hdeg, hden⟩
 
 /-! ### Auxiliary bounds for the instances -/
 
-/-- `1 - a z + b z² ≠ 0` on the closed left half-plane for `a > 0`, `b ≥ 0`. -/
 theorem quadratic_ne_zero {a b : ℝ} (ha : 0 < a) (hb : 0 ≤ b) {z : ℂ} (hz : z.re ≤ 0) :
     (1 : ℂ) - a * z + b * z ^ 2 ≠ 0 := fun h => by
   have h1 := congrArg Complex.re h
@@ -147,7 +111,6 @@ theorem quadratic_ne_zero {a b : ℝ} (ha : 0 < a) (hb : 0 ≤ b) {z : ℂ} (hz 
   rw [hy] at h1
   nlinarith
 
-/-- `‖1 + a z + b z²‖² = (1 - b y²)² + (a y)²` at `z = i y`. -/
 theorem norm_sq_quadratic (a b y : ℝ) :
     ‖(1 : ℂ) + a * (y * Complex.I) + b * (y * Complex.I) ^ 2‖ ^ 2 =
       (1 - b * y ^ 2) ^ 2 + (a * y) ^ 2 := by
@@ -155,8 +118,6 @@ theorem norm_sq_quadratic (a b y : ℝ) :
   simp [pow_two]
   ring
 
-/-- A quotient of quadratics is bounded by `1` on the imaginary axis when the squared norms are
-ordered. -/
 theorem norm_div_le_one_of_sq {n d : ℂ} (hd : d ≠ 0) (h : ‖n‖ ^ 2 ≤ ‖d‖ ^ 2) : ‖n / d‖ ≤ 1 := by
   rw [norm_div, div_le_one (norm_pos_iff.2 hd)]
   exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 h
@@ -176,7 +137,7 @@ theorem implicitMidpoint_stability :
 
 /-! ### The two-stage Gauss–Legendre method -/
 
-/-- **The two-stage Gauss–Legendre method** (order `4`). [HairerWanner1996], §IV.5 -/
+/-- **The two-stage Gauss–Legendre method.** [HairerWanner1996], §IV.5 -/
 def gaussLegendre2 : ButcherTableau 2 :=
   ⟨!![1 / 4, 1 / 4 - √3 / 6; 1 / 4 + √3 / 6, 1 / 4], ![1 / 2, 1 / 2]⟩
 
@@ -198,7 +159,7 @@ theorem gaussLegendre2_stabilityDen :
 
 /-! ### The two-stage Radau IIA method -/
 
-/-- **The two-stage Radau IIA method** (order `3`, L-stable). [HairerWanner1996], §IV.5 -/
+/-- **The two-stage Radau IIA method.** [HairerWanner1996], §IV.5 -/
 def radauIIA2 : ButcherTableau 2 := ⟨!![5 / 12, -1 / 12; 3 / 4, 1 / 4], ![3 / 4, 1 / 4]⟩
 
 theorem radauIIA2_stabilityNum : radauIIA2.stabilityNum = 1 + C (1 / 3) * X :=
@@ -235,8 +196,7 @@ theorem sdirk2Coeff_pos : 0 < sdirk2Coeff := by
     exact Real.sqrt_lt_sqrt (by norm_num) (by norm_num)
   unfold sdirk2Coeff; linarith
 
-/-- **The two-stage SDIRK method** of order `2` (Alexander), `γ = 1 - √2/2`, L-stable.
-[HairerWanner1996], §IV.6 -/
+/-- **The two-stage SDIRK method** with `γ = 1 - √2/2`. [HairerWanner1996], §IV.6 -/
 def sdirk2 : ButcherTableau 2 :=
   ⟨!![sdirk2Coeff, 0; 1 - sdirk2Coeff, sdirk2Coeff], ![1 - sdirk2Coeff, sdirk2Coeff]⟩
 
@@ -264,8 +224,7 @@ open ButcherTableau
 
 namespace RationalScheme
 
-/-- The rational scheme of the implicit midpoint rule, `r(z) = (1 + z/2)/(1 - z/2)`
-(Crank–Nicolson). -/
+/-- The rational scheme `(1 + z/2)/(1 - z/2)` of the implicit midpoint rule (Crank–Nicolson). -/
 def implicitMidpoint : RationalScheme :=
   ButcherTableau.implicitMidpoint.toRationalScheme
     (by rw [implicitMidpoint_stability.1, implicitMidpoint_stability.2]
@@ -276,8 +235,7 @@ def implicitMidpoint : RationalScheme :=
 theorem implicitMidpoint_eq_theta : implicitMidpoint = theta (1 / 2) (by norm_num) :=
   RationalScheme.ext implicitMidpoint_stability.1 implicitMidpoint_stability.2
 
-/-- The rational scheme of the two-stage Gauss–Legendre method,
-`r(z) = (1 + z/2 + z²/12)/(1 - z/2 + z²/12)`, the `(2, 2)` Padé approximation. -/
+/-- The rational scheme `(1 + z/2 + z²/12)/(1 - z/2 + z²/12)` of two-stage Gauss–Legendre. -/
 def gaussLegendre2 : RationalScheme :=
   ButcherTableau.gaussLegendre2.toRationalScheme
     (by
@@ -299,7 +257,6 @@ theorem isSymmetric_implicitMidpoint : implicitMidpoint.IsSymmetric := by
 theorem hasOrder_implicitMidpoint : implicitMidpoint.HasOrder 2 := by
   rw [implicitMidpoint_eq_theta]; exact hasOrder_theta_half
 
-/-- The Gauss–Legendre method is symmetric, hence A-stable and conservative. -/
 theorem isSymmetric_gaussLegendre2 : gaussLegendre2.IsSymmetric := by
   change ButcherTableau.gaussLegendre2.stabilityNum =
     ButcherTableau.gaussLegendre2.stabilityDen.comp (-X)
@@ -324,7 +281,6 @@ def radauIIA2 : RationalScheme :=
       convert quadratic_ne_zero (a := 2 / 3) (b := 1 / 6) (by norm_num) (by norm_num) hz using 1
       simp)
 
-/-- **The Radau IIA method is A-stable**. [HairerWanner1996], §IV.5 -/
 theorem isAStable_radauIIA2 : radauIIA2.IsAStable := fun y => by
   have hd := radauIIA2.aeval_den_ne_zero (y * Complex.I) (by simp)
   change ‖aeval _ ButcherTableau.radauIIA2.stabilityNum /
@@ -340,7 +296,6 @@ theorem isAStable_radauIIA2 : radauIIA2.IsAStable := fun y => by
   rw [e1, e2, norm_sq_quadratic, norm_sq_quadratic]
   nlinarith [sq_nonneg (y ^ 2)]
 
-/-- **The Radau IIA method is L-stable**: `r(∞) = 0`. [HairerWanner1996], §IV.3 -/
 theorem isLStable_radauIIA2 : radauIIA2.IsLStable := by
   refine ⟨isAStable_radauIIA2, degree_lt_degree ?_⟩
   change ButcherTableau.radauIIA2.stabilityNum.natDegree <
@@ -368,7 +323,6 @@ def sdirk2 : RationalScheme :=
         (by positivity) hz using 1
       simp)
 
-/-- **`sdirk2` is A-stable** (`γ² - 2γ + 1/2 = 0`). [HairerWanner1996], §IV.6 -/
 theorem isAStable_sdirk2 : sdirk2.IsAStable := fun y => by
   have hd := sdirk2.aeval_den_ne_zero (y * Complex.I) (by simp)
   change ‖aeval _ ButcherTableau.sdirk2.stabilityNum /
@@ -388,7 +342,6 @@ theorem isAStable_sdirk2 : sdirk2.IsAStable := fun y => by
   have hγ := sdirk2Coeff_sq
   nlinarith [sq_nonneg (sdirk2Coeff ^ 2 * y ^ 2)]
 
-/-- **`sdirk2` is L-stable**: `r(∞) = 0`. [HairerWanner1996], §IV.6 -/
 theorem isLStable_sdirk2 : sdirk2.IsLStable := by
   refine ⟨isAStable_sdirk2, degree_lt_degree ?_⟩
   change ButcherTableau.sdirk2.stabilityNum.natDegree < ButcherTableau.sdirk2.stabilityDen.natDegree

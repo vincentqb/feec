@@ -7,34 +7,9 @@ public import Mathlib.Analysis.Normed.Operator.Basic
 /-!
 # The complexification of a normed space
 
-For a vector space `V` over `𝕜 = ℝ` or `ℂ`, the **complexification** `V_ℂ = V × V`
-(`Complexification n 𝕜 V`, the pair `(x, y)` read as `x + i y`) is a complex vector space for
-`(a + i b) (x, y) = (a x - b y, b x + a y)`. Only the real scalars of `𝕜` enter, so for `𝕜 = ℂ`
-this is the complexification of the underlying real space.
-
-The tag `n : ComplexificationNorm` selects the norm: the Taylor norm on normed spaces
-(`NormedComplexification`, `Feec.ForMathlib.Analysis.NormedComplexification`) or the Hilbert norm
-on inner product spaces (`Feec.ForMathlib.InnerProductSpace.Complexification`). Both are
-`Complexification.NormCore`s: complex norms with `‖x + i 0‖ = ‖x‖`, `‖x‖ ≤ ‖x + i y‖` and
-`‖T x + i T y‖ ≤ ‖T‖ ‖x + i y‖` for bounded operators `T`. Everything else is proved here once:
-`‖y‖ ≤ ‖x + i y‖ ≤ ‖x‖ + ‖y‖`, completeness when `V` is complete, and for the complexification
-`T_ℂ (x + i y) = T x + i T y` of a bounded operator (`Complexification.map`, a ring homomorphism
-`Complexification.mapHom`):
-
-* `Complexification.norm_map`: `‖T_ℂ‖ = ‖T‖`;
-* `Complexification.map_aeval_map`: `p(T)_ℂ = p(T_ℂ)` for every real polynomial `p`;
-* `Complexification.isUnit_of_isUnit_map`: `T` is invertible when `T_ℂ` is, and
-  `Complexification.map_ringInverse`: then `(T⁻¹)_ℂ = T_ℂ⁻¹`.
-
-This is how statements about complex spaces (complex points of the spectrum, von Neumann's
-inequality) reach real ones.
-
-## References
-
-* [P. R. Halmos, *Finite-Dimensional Vector Spaces*][Halmos1974], §77 (complexification)
-* [G. Muñoz, Y. Sarantopoulos, A. Tonge, *Complexifications of real Banach spaces, polynomials and multilinear maps*][MunozSarantopoulosTonge1999]
-
-Bibliography: [references.bib](../../../docs/references.bib)
+The complexification `V × V` of a vector space `V` over `𝕜 = ℝ` or `ℂ`, with `(x, y)` read as
+`x + i y`, and of bounded operators: `‖T_ℂ‖ = ‖T‖`, `p(T)_ℂ = p(T_ℂ)` for real polynomials `p`, and
+`T` is invertible when `T_ℂ` is.
 -/
 
 @[expose] public noncomputable section
@@ -48,8 +23,7 @@ inductive ComplexificationNorm where
   /-- The Hilbert norm `(‖x‖² + ‖y‖²)^{1/2}`, on inner product spaces. -/
   | hilbert
 
-/-- The **complexification** `V × V` of a vector space `V` over `𝕜 = ℝ` or `ℂ`: the pair `(x, y)`
-is `x + i y`, and `ℂ` acts through the real scalars of `𝕜`; `n` selects the norm. -/
+/-- The complexification `V × V` of `V`, the pair `(x, y)` read as `x + i y`. -/
 def Complexification (_n : ComplexificationNorm) (_𝕜 V : Type*) : Type _ := V × V
 
 namespace Complexification
@@ -121,10 +95,7 @@ theorem im_ofReal_smul (a : ℝ) (p : Complexification n 𝕜 V) :
 
 end Module
 
-/-! ### Complexification norms -/
-
-/-- A **complexification norm**: a norm on `V_ℂ` with `‖z p‖ ≤ |z| ‖p‖`, `‖x + i 0‖ = ‖x‖`,
-`‖x‖ ≤ ‖x + i y‖` and `‖T x + i T y‖ ≤ ‖T‖ ‖x + i y‖` for bounded operators `T`. -/
+/-- A complexification norm, compatible with the scalars, the real part and bounded operators. -/
 class NormCore (n : ComplexificationNorm) (𝕜 V : Type*) [RCLike 𝕜] [NormedAddCommGroup V]
     [NormedSpace 𝕜 V] extends Norm (Complexification n 𝕜 V) where
   norm_add_le (p q : Complexification n 𝕜 V) : ‖p + q‖ ≤ ‖p‖ + ‖q‖
@@ -192,7 +163,6 @@ instance [CompleteSpace V] : CompleteSpace (Complexification n 𝕜 V) := by
     (fun n => norm_le_add _) ?_)⟩
   simpa using (tendsto_iff_norm_sub_tendsto_zero.1 hx).add (tendsto_iff_norm_sub_tendsto_zero.1 hy)
 
-/-- `x + i y` is jointly continuous in `x` and `y`. -/
 theorem continuous_mk : Continuous fun q : V × V => (mk q.1 q.2 : Complexification n 𝕜 V) :=
   (LipschitzWith.of_dist_le_mul (K := 2) fun q q' => by
     rw [dist_eq_norm, dist_eq_norm]
@@ -246,8 +216,6 @@ def ofRealCLM : V →L[ℝ] Complexification n 𝕜 V :=
 
 end RealCLM
 
-/-! ### Complexification of operators -/
-
 /-- The **complexification** `T_ℂ (x + i y) = T x + i T y` of a bounded operator. -/
 def map (T : V →L[𝕜] V) : Complexification n 𝕜 V →L[ℂ] Complexification n 𝕜 V :=
   LinearMap.mkContinuous
@@ -277,7 +245,6 @@ def mapHom : (V →L[𝕜] V) →+* (Complexification n 𝕜 V →L[ℂ] Complex
 
 @[simp] theorem mapHom_apply (T : V →L[𝕜] V) : mapHom T = map (n := n) T := rfl
 
-/-- Real scalars commute with complexification: `(a T)_ℂ = a T_ℂ`. -/
 theorem map_ofReal_smul (a : ℝ) (T : V →L[𝕜] V) :
     map (n := n) ((a : 𝕜) • T) = (a : ℂ) • map T := by
   ext p
@@ -286,7 +253,6 @@ theorem map_ofReal_smul (a : ℝ) (T : V →L[𝕜] V) :
   · change (a : 𝕜) • T p.im = ((a : ℂ) • map T p).im
     rw [im_ofReal_smul, im_map]
 
-/-- **Real polynomials commute with complexification**: `p(T)_ℂ = p(T_ℂ)`. -/
 theorem map_aeval_map (T : V →L[𝕜] V) (p : ℝ[X]) :
     map (n := n) (aeval T (p.map (algebraMap ℝ 𝕜))) = aeval (map T) (p.map (algebraMap ℝ ℂ)) := by
   rw [← mapHom_apply, aeval_def, eval₂_map, hom_eval₂, aeval_def, eval₂_map]
@@ -297,7 +263,6 @@ theorem map_aeval_map (T : V →L[𝕜] V) (p : ℝ[X]) :
   · change (r : 𝕜) • q.im = ((r : ℂ).im : 𝕜) • q.re + ((r : ℂ).re : 𝕜) • q.im
     simp
 
-/-- `‖T_ℂ‖ = ‖T‖`. -/
 theorem norm_map (T : V →L[𝕜] V) : ‖map (n := n) T‖ = ‖T‖ := by
   refine le_antisymm (LinearMap.mkContinuous_norm_le _ (norm_nonneg _) _)
     (T.opNorm_le_bound (norm_nonneg _) fun x => ?_)
@@ -306,8 +271,6 @@ theorem norm_map (T : V →L[𝕜] V) : ‖map (n := n) T‖ = ‖T‖ := by
     _ ≤ ‖map T (mk x 0 : Complexification n 𝕜 V)‖ := norm_re_le _
     _ ≤ ‖map (n := n) T‖ * ‖(mk x 0 : Complexification n 𝕜 V)‖ := (map T).le_opNorm _
 
-/-- **An operator is invertible when its complexification is**: the inverse is
-`x ↦ re (T_ℂ⁻¹ (x + i 0))`. -/
 theorem isUnit_of_isUnit_map {T : V →L[𝕜] V} (h : IsUnit (map (n := n) T)) : IsUnit T := by
   obtain ⟨u, hu⟩ := h
   have hl : ∀ p, u.inv (map T p) = p := fun p => by
@@ -330,7 +293,6 @@ theorem isUnit_of_isUnit_map {T : V →L[𝕜] V} (h : IsUnit (map (n := n) T)) 
     ‖u.inv‖ fun x => (norm_re_le _).trans ((u.inv.le_opNorm _).trans_eq (by rw [norm_mk_zero]))
   exact ⟨⟨T, S, ContinuousLinearMap.ext hTs, ContinuousLinearMap.ext hsT⟩, rfl⟩
 
-/-- The complexification of the inverse is the inverse of the complexification. -/
 theorem map_ringInverse {T : V →L[𝕜] V} (h : IsUnit T) :
     map (n := n) (Ring.inverse T) = Ring.inverse (map T) := by
   obtain ⟨u, rfl⟩ := h

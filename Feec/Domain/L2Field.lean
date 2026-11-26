@@ -8,34 +8,13 @@ public import Mathlib.MeasureTheory.SpecificCodomains.WithLp
 /-!
 # `L²` fields on an open subset of a finite-dimensional real space
 
-Let `E` be a finite-dimensional real normed space with an additive Haar measure `volume` (for
-instance `ℝⁿ = Fin n → ℝ` or `EuclideanSpace ℝ (Fin n)`), `Ω ⊆ E` open, and `𝕜 = ℝ` or `ℂ`.
+Test functions, `L²(Ω; 𝕜)` and the component model `L2F 𝕜 Ω ι` of `L²(Ω; 𝕜^ι)`, with pointwise
+real-linear maps and the identification with the Bochner space.
 
-* `Feec.Domain.IsTest Ω f`: `f ∈ C_c^∞(Ω; F)` (smooth, compact support inside `Ω`), for any
-  real normed codomain `F`; closed under sums, scalars, continuous linear maps and directional
-  derivatives (`IsTest.fderiv_apply`).
-* `Feec.Domain.L2 𝕜 Ω = L²(Ω; 𝕜)` and the component model `Feec.Domain.L2F 𝕜 Ω ι =
-  ⊕ₗ²_{i ∈ ι} L²(Ω; 𝕜)` of `L²(Ω; 𝕜^ι)` (`ι` a finite index set: vector, matrix, symmetric
-  matrix, … components).
-* `toL2`, `testField`: test functions and test fields as `L²` classes, with
-  `inner_testField : ⟪u, φ⟫ = Σᵢ ∫_Ω conj (uᵢ) φᵢ`.
-* `L2.eq_zero_of_forall_inner_toL2`, `L2F.eq_zero_of_forall_inner_testField` (fundamental lemma
-  of the calculus of variations, no boundedness of `Ω`) and `dense_testFieldSub` (test fields are
-  dense in `L²(Ω; 𝕜^ι)`).
-* `L2F.mapCLM L`: a real-linear `L : 𝕜₁ → 𝕜₂` acting pointwise, `L²(Ω; 𝕜₁^ι) → L²(Ω; 𝕜₂^ι)`;
-  the real and imaginary parts `L2F.reCLM`, `L2F.imCLM` and the cast `L2F.ofRealCLM`, with
-  `u = re u + i im u` (`L2F.ofRealCLM_re_add_im`) and `⟪ofReal a, ofReal b⟫_𝕜 = ⟪a, b⟫_ℝ`
-  (`L2F.inner_ofRealCLM`).
-* `memLp_of_continuous`: on a bounded `Ω`, continuous functions on `E` are in `L²(Ω)`.
-* **Bochner bridge** `piL2Equiv μ ι : L²(μ; EuclideanSpace 𝕜 ι) ≃ₗᵢ ⊕ₗ²_{i ∈ ι} L²(μ; 𝕜)`
-  (any measure, componentwise), so the component model is the Bochner space `L²(Ω; 𝕜^ι)`.
+## Main results
 
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §4.4 (density of `C_c^∞`), §9.1
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `L2F.eq_zero_of_forall_inner_testField`: a field orthogonal to every test field vanishes.
+* `dense_testFieldSub`: test fields are dense in `L²(Ω; 𝕜^ι)`.
 -/
 
 open scoped InnerProductSpace ContDiff ENNReal ComplexConjugate
@@ -106,7 +85,6 @@ theorem sum {α : Type*} (s : Finset α) {f : α → E → F} (hf : ∀ a ∈ s,
     exact (hf a (Finset.mem_insert_self a s)).add
       (ih fun b hb => hf b (Finset.mem_insert_of_mem hb))
 
-/-- The directional derivative `∂_v f` of a test function is a test function. -/
 theorem fderiv_apply (hf : IsTest Ω f) (v : E) : IsTest Ω (fun x => fderiv ℝ f x v) where
   contDiff := (hf.contDiff.fderiv_right (m := ∞) (by simp)).clm_apply contDiff_const
   hasCompactSupport := HasCompactSupport.fderiv_apply ℝ hf.hasCompactSupport _
@@ -115,12 +93,10 @@ theorem fderiv_apply (hf : IsTest Ω f) (v : E) : IsTest Ω (fun x => fderiv ℝ
 theorem mono {Ω' : Set E} (hf : IsTest Ω f) (h : Ω ⊆ Ω') : IsTest Ω' f :=
   ⟨hf.contDiff, hf.hasCompactSupport, hf.tsupport_subset.trans h⟩
 
-/-- A real test function, as a `𝕜`-valued one. -/
 theorem ofReal {𝕜 : Type*} [RCLike 𝕜] {g : E → ℝ} (hg : IsTest Ω g) :
     IsTest Ω (fun x => (g x : 𝕜)) :=
   hg.comp_clm (RCLike.ofRealCLM (K := 𝕜))
 
-/-- The complex conjugate of a test function. -/
 theorem conjugate {𝕜 : Type*} [RCLike 𝕜] {f : E → 𝕜} (hf : IsTest Ω f) :
     IsTest Ω (fun x => conj (f x)) :=
   hf.comp_clm (RCLike.conjCLE (K := 𝕜)).toContinuousLinearMap
@@ -171,14 +147,12 @@ variable (𝕜 Ω) in
 abbrev L2F (ι : Type*) := PiLp 2 (fun _ : ι => L2 𝕜 Ω)
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- A function vanishing off `Ω` has the same integral over `Ω` and over `E`. -/
 theorem integral_restrict_of_eq_zero {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
     {f : E → F} (hf : ∀ x, x ∉ Ω → f x = 0) :
     ∫ x, f x ∂volume.restrict Ω = ∫ x, f x :=
   setIntegral_eq_integral_of_forall_compl_eq_zero hf
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `⟪u, f⟫_{L²(Ω)} = ∫_Ω conj u · f` for a function `f ∈ L²(Ω)`. -/
 theorem inner_toLp (u : L2 𝕜 Ω) {f : E → 𝕜} (hf : MemLp f 2 (volume.restrict Ω)) :
     ⟪u, hf.toLp f⟫_𝕜 = ∫ x, conj (u x) * f x ∂volume.restrict Ω := by
   rw [L2.inner_def]
@@ -188,7 +162,6 @@ theorem inner_toLp (u : L2 𝕜 Ω) {f : E → 𝕜} (hf : MemLp f 2 (volume.res
   ring
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- Products `conj u · f`, `u, f ∈ L²(Ω)`, are integrable on `Ω`. -/
 theorem integrable_conj_mul (u : L2 𝕜 Ω) {f : E → 𝕜} (hf : MemLp f 2 (volume.restrict Ω)) :
     Integrable (fun x => conj (u x) * f x) (volume.restrict Ω) := by
   refine (L2.integrable_inner u (hf.toLp f)).congr ?_
@@ -197,7 +170,6 @@ theorem integrable_conj_mul (u : L2 𝕜 Ω) {f : E → 𝕜} (hf : MemLp f 2 (v
   ring
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `⟪u, v⟫ = Σᵢ ⟪uᵢ, vᵢ⟫` in `L²(Ω; 𝕜^ι)`. -/
 theorem L2F.inner_def {ι : Type*} [Fintype ι] (u v : L2F 𝕜 Ω ι) :
     ⟪u, v⟫_𝕜 = ∑ i, ⟪u i, v i⟫_𝕜 := PiLp.inner_apply u v
 
@@ -209,7 +181,6 @@ section Test
 
 variable [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)]
 
-/-- Test functions are in `L²(Ω)` (no boundedness of `Ω` needed). -/
 theorem IsTest.memLp {f : E → 𝕜} (hf : IsTest Ω f) : MemLp f 2 (volume.restrict Ω) :=
   (hf.continuous.memLp_of_hasCompactSupport hf.hasCompactSupport).restrict _
 
@@ -219,7 +190,6 @@ def toL2 {f : E → 𝕜} (hf : IsTest Ω f) : L2 𝕜 Ω := hf.memLp.toLp f
 theorem coeFn_toL2 {f : E → 𝕜} (hf : IsTest Ω f) :
     (toL2 hf : E → 𝕜) =ᵐ[volume.restrict Ω] f := hf.memLp.coeFn_toLp
 
-/-- `⟪u, f⟫_{L²(Ω)} = ∫_Ω conj u · f` for a test function `f`. -/
 theorem inner_toL2 (u : L2 𝕜 Ω) {f : E → 𝕜} (hf : IsTest Ω f) :
     ⟪u, toL2 hf⟫_𝕜 = ∫ x, conj (u x) * f x ∂volume.restrict Ω :=
   inner_toLp u hf.memLp
@@ -257,14 +227,12 @@ def testField {ι : Type*} {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) : 
 theorem coeFn_testField {ι : Type*} {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) (i : ι) :
     (testField hφ i : E → 𝕜) =ᵐ[volume.restrict Ω] φ i := coeFn_toL2 (hφ i)
 
-/-- `⟪u, φ⟫ = Σᵢ ∫_Ω conj uᵢ · φᵢ`. -/
 theorem inner_testField {ι : Type*} [Fintype ι] (u : L2F 𝕜 Ω ι) {φ : ι → E → 𝕜}
     (hφ : IsTestField Ω φ) :
     ⟪u, testField hφ⟫_𝕜 = ∑ i, ∫ x, conj (u i x) * φ i x ∂volume.restrict Ω := by
   rw [L2F.inner_def]
   exact Finset.sum_congr rfl fun i _ => inner_toL2 _ (hφ i)
 
-/-- An `L²` field equal a.e. on `Ω` to a test field is that test field. -/
 theorem eq_testField {ι : Type*} {φ : ι → E → 𝕜} (hφ : IsTestField Ω φ) {u : L2F 𝕜 Ω ι}
     (h : ∀ i, (u i : E → 𝕜) =ᵐ[volume.restrict Ω] φ i) : u = testField hφ :=
   (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ((h i).trans (coeFn_testField hφ i).symm))
@@ -331,7 +299,6 @@ variable (𝕜) in
 abbrev ofRealCLM : L2F ℝ Ω ι →L[ℝ] L2F 𝕜 Ω ι := mapCLM RCLike.ofRealCLM
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- The cast preserves the inner product: `⟪a, b⟫_𝕜 = ⟪a, b⟫_ℝ`. -/
 theorem inner_ofRealCLM [Fintype ι] (a b : L2F ℝ Ω ι) :
     ⟪ofRealCLM 𝕜 a, ofRealCLM 𝕜 b⟫_𝕜 = (⟪a, b⟫_ℝ : 𝕜) := by
   simp only [L2F.inner_def, RCLike.ofReal_sum]
@@ -344,7 +311,6 @@ theorem inner_ofRealCLM [Fintype ι] (a b : L2F ℝ Ω ι) :
   simp [mul_comm]
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- **A field is its real part plus `i` times its imaginary part.** -/
 theorem ofRealCLM_re_add_im (u : L2F 𝕜 Ω ι) :
     ofRealCLM 𝕜 (reCLM u) + (RCLike.I : 𝕜) • ofRealCLM 𝕜 (imCLM u) = u := by
   refine (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)
@@ -358,7 +324,6 @@ theorem ofRealCLM_re_add_im (u : L2F 𝕜 Ω ι) :
   exact RCLike.re_add_im _
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- The imaginary part is the real part of `-i u`. -/
 theorem imCLM_eq_reCLM (u : L2F 𝕜 Ω ι) : imCLM u = reCLM (-((RCLike.I : 𝕜) • u)) := by
   refine (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)
   change (imCLM u i : E → ℝ) =ᵐ[_] (reCLM (-((RCLike.I : 𝕜) • u)) i : E → ℝ)
@@ -369,7 +334,6 @@ theorem imCLM_eq_reCLM (u : L2F 𝕜 Ω ι) : imCLM u = reCLM (-((RCLike.I : �
   simp
 
 omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `⟪re v, b⟫_ℝ = re ⟪v, b⟫_𝕜` for a real field `b`. -/
 theorem inner_reCLM [Fintype ι] (v : L2F 𝕜 Ω ι) (b : L2F ℝ Ω ι) :
     ⟪reCLM v, b⟫_ℝ = RCLike.re ⟪v, ofRealCLM 𝕜 b⟫_𝕜 := by
   conv_rhs => rw [← ofRealCLM_re_add_im v]
@@ -379,7 +343,6 @@ section Test
 
 variable [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)]
 
-/-- A real-linear map of a test field is the test field `L ∘ φ`. -/
 theorem mapCLM_testField (L : 𝕜₁ →L[ℝ] 𝕜₂) {φ : ι → E → 𝕜₁} (hφ : IsTestField Ω φ) :
     mapCLM L (testField hφ) = testField (hφ.comp_clm L) :=
   eq_testField _ fun i => (coeFn_mapCLM L _ i).trans
@@ -398,8 +361,6 @@ section Density
 variable [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [IsFiniteMeasureOnCompacts (volume : Measure E)] {𝕜 : Type*} [RCLike 𝕜] {Ω : Set E}
 
-/-- **Fundamental lemma of the calculus of variations** in `L²(Ω)`, `Ω` open (bounded or not):
-`u = 0` if `∫_Ω conj u · g = 0` for every real test function `g`. -/
 theorem L2.eq_zero_of_forall_integral (hΩ : IsOpen Ω) (u : L2 𝕜 Ω)
     (h : ∀ g : E → ℝ, IsTest Ω g → ∫ x, conj (u x) * (g x : 𝕜) ∂volume.restrict Ω = 0) :
     u = 0 := by
@@ -419,7 +380,6 @@ theorem L2.eq_zero_of_forall_integral (hΩ : IsOpen Ω) (u : L2 𝕜 Ω)
     Lp.coeFn_zero 𝕜 2 (volume.restrict Ω)] with x hx h0
   rw [hx, h0, Pi.zero_apply]
 
-/-- `u = 0` if `u ⊥ C_c^∞(Ω)` (`Ω` open). -/
 theorem L2.eq_zero_of_forall_inner_toL2 (hΩ : IsOpen Ω) (u : L2 𝕜 Ω)
     (h : ∀ g : E → 𝕜, ∀ hg : IsTest Ω g, ⟪u, toL2 hg⟫_𝕜 = 0) : u = 0 :=
   L2.eq_zero_of_forall_integral hΩ u fun g hg => by
@@ -450,7 +410,7 @@ theorem L2F.ext_of_forall_inner_testField (hΩ : IsOpen Ω) {ι : Type*} [Fintyp
   sub_eq_zero.1 (L2F.eq_zero_of_forall_inner_testField hΩ _ fun φ hφ => by
     rw [inner_sub_left, h φ hφ, sub_self])
 
-/-- **`C_c^∞(Ω; 𝕜^ι)` is dense in `L²(Ω; 𝕜^ι)`** (`Ω` open, bounded or not). -/
+/-- **`C_c^∞(Ω; 𝕜^ι)` is dense in `L²(Ω; 𝕜^ι)`** (`Ω` open). -/
 theorem dense_testFieldSub (hΩ : IsOpen Ω) (ι : Type*) [Fintype ι] :
     Dense (testFieldSub 𝕜 Ω ι : Set (L2F 𝕜 Ω ι)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
@@ -468,7 +428,6 @@ section Bounded
 variable [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [IsFiniteMeasureOnCompacts (volume : Measure E)] {Ω : Set E}
 
-/-- On a bounded `Ω`, continuous functions on `E` are in `L²(Ω)`. -/
 theorem memLp_of_continuous (hΩ : MeasurableSet Ω) (hb : Bornology.IsBounded Ω)
     {F : Type*} [NormedAddCommGroup F] {f : E → F} (hf : Continuous f) :
     MemLp f 2 (volume.restrict Ω) := by

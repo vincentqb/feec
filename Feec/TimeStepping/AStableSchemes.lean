@@ -6,35 +6,14 @@ public import Mathlib.Analysis.Complex.PhragmenLindelof
 /-!
 # Which rational schemes are A-stable, and of which order
 
-A rational scheme `r = n/d` (`Feec.TimeStepping.RationalScheme`, `d` without zeros in the closed
-left half-plane) is A-stable (`RationalScheme.IsAStable`) if `|r(iy)| ≤ 1` on the imaginary axis. By
-the maximum principle this is the usual condition `|r(z)| ≤ 1` on the closed left half-plane
-([HairerWanner1996], §IV.3), so that the definition is the usual one.
-
-## Main results
-
-* `norm_div_le_of_re_nonpos`: **the maximum principle in the left half-plane**: a complex
-  rational function `p/q` without poles in the closed left half-plane and bounded by `C` on the
-  imaginary axis is bounded by `C` on the closed left half-plane (Phragmén–Lindelöf,
-  `PhragmenLindelof.right_half_plane_of_bounded_on_real`; `p/q` is bounded there since
-  `deg p ≤ deg q`, `natDegree_le_of_norm_div_imaginary_le`);
-* `RationalScheme.norm_eval_le_supNorm_of_re_nonpos`: `|r(z)| ≤ sup_y |r(iy)|` for `re z ≤ 0`, so
-  `r` is A-stable iff `|r| ≤ 1` on the closed left half-plane
-  (`RationalScheme.isAStable_iff_forall_re_nonpos`);
-* **the θ-schemes** `r_θ(z) = (1 + (1 - θ) z)/(1 - θ z)`, exactly: A-stable iff `θ ≥ 1/2`
-  (`RationalScheme.isAStable_theta_iff`; for `θ < 1/2`, `|r_θ(i)| > 1`,
-  `one_half_le_of_norm_theta_le`), and of order `m` iff `m ≤ 1`, or `m = 2` and `θ = 1/2`
-  (`RationalScheme.hasOrder_theta_iff`, from `X_pow_dvd_theta_iff` for every real `θ`:
-  `r_θ(z) - e^z = (θ - 1/2) z² + (θ² - 1/6) z³ + O(z⁴)`);
-* **the exact orders of the Runge–Kutta instances** of `Feec.TimeStepping.RungeKutta`: the
-  two-stage Gauss–Legendre, Radau IIA and SDIRK methods have orders exactly `4`, `3` and `2`
-  (`RationalScheme.not_hasOrder_gaussLegendre2`, `RationalScheme.not_hasOrder_radauIIA2`,
-  `RationalScheme.not_hasOrder_sdirk2`).
+A rational scheme is A-stable iff `|r| ≤ 1` on the closed left half-plane; the θ-schemes are
+A-stable iff `θ ≥ 1/2`, with exact orders; the two-stage Gauss–Legendre, Radau IIA and SDIRK
+methods do not have orders `5`, `4` and `3`.
 
 ## References
 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (A-stability, the maximum principle, the θ-methods), §IV.5, §IV.6
+  §IV.3
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -47,13 +26,6 @@ namespace Feec.TimeStepping
 
 /-! ### The maximum principle in the left half-plane -/
 
-/-- **The maximum principle in the left half-plane**: a complex rational function `p/q` without
-poles in the closed left half-plane, with `|p(iy)/q(iy)| ≤ C` on the imaginary axis, satisfies
-`|p(z)/q(z)| ≤ C` on the closed left half-plane. It is bounded there (`deg p ≤ deg q` by the
-bound on the axis, `natDegree_le_of_norm_div_imaginary_le`, then
-`exists_norm_div_le_of_isClosed`), so that Phragmén–Lindelöf
-(`PhragmenLindelof.right_half_plane_of_bounded_on_real`) applies to `w ↦ p(-w)/q(-w)` in the
-right half-plane. [HairerWanner1996], §IV.3 -/
 theorem norm_div_le_of_re_nonpos {p q : ℂ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {C : ℝ}
     (hC : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ C) {z : ℂ}
     (hz : z.re ≤ 0) : ‖p.eval z / q.eval z‖ ≤ C := by
@@ -90,8 +62,6 @@ namespace RationalScheme
 
 variable (r : RationalScheme)
 
-/-- **The maximum principle for a rational scheme**: `|r(z)| ≤ sup_y |r(iy)|` on the closed left
-half-plane (`norm_div_le_of_re_nonpos`). -/
 theorem norm_eval_le_supNorm_of_re_nonpos {z : ℂ} (hz : z.re ≤ 0) : ‖r.eval z‖ ≤ r.supNorm := by
   have h := norm_div_le_of_re_nonpos (p := r.num.map (algebraMap ℝ ℂ))
     (q := r.den.map (algebraMap ℝ ℂ))
@@ -110,8 +80,6 @@ end RationalScheme
 
 /-! ### The θ-schemes, exactly -/
 
-/-- **`|r_θ(i)| ≤ 1` only for `θ ≥ 1/2`**, for real `θ`: `|1 + (1 - θ) i|² = 1 + (1 - θ)²` and
-`|1 - θ i|² = 1 + θ²`. -/
 theorem one_half_le_of_norm_theta_le {θ : ℝ}
     (h : ‖aeval Complex.I (1 + C (1 - θ) * X : ℝ[X]) /
       aeval Complex.I (1 - C θ * X : ℝ[X])‖ ≤ 1) : 1 / 2 ≤ θ := by
@@ -124,14 +92,12 @@ theorem one_half_le_of_norm_theta_le {θ : ℝ}
   simp at h2
   nlinarith
 
-/-- The coefficients of the Taylor polynomial `Tₘ = ∑_{j ≤ m} Xʲ/j!` of the exponential. -/
 theorem coeff_expTaylor (m d : ℕ) :
     (expTaylor m).coeff d = if d ≤ m then 1 / (d.factorial : ℝ) else 0 := by
   simp only [expTaylor, finsetSum_coeff, coeff_C_mul_X_pow]
   rw [Finset.sum_ite_eq]
   simp [Finset.mem_range]
 
-/-- The coefficients of `(1 + (1 - θ) X) - (1 - θ X) Tₘ` from `X²` on. -/
 private theorem coeff_theta_sub_add_two (θ : ℝ) (m d : ℕ) :
     ((1 + C (1 - θ) * X) - (1 - C θ * X) * expTaylor m : ℝ[X]).coeff (d + 2) =
       θ * (expTaylor m).coeff (d + 1) - (expTaylor m).coeff (d + 2) := by
@@ -139,10 +105,6 @@ private theorem coeff_theta_sub_add_two (θ : ℝ) (m d : ℕ) :
     coeff_X_mul, coeff_one, coeff_X, ite_eq_right (by omega), ite_eq_right (by omega)]
   ring
 
-/-- **The orders of the θ-schemes**: for real `θ`, `X^{m+1}` divides
-`(1 + (1 - θ) X) - (1 - θ X) Tₘ` iff `m ≤ 1`, or `m = 2` and `θ = 1/2`. The coefficients of `1`
-and `X` vanish for `m ≥ 1`, those of `X²` and `X³` are `θ - 1/2` (for `m ≥ 2`) and `θ/2 - 1/6`
-(for `m ≥ 3`). -/
 theorem X_pow_dvd_theta_iff (θ : ℝ) (m : ℕ) :
     X ^ (m + 1) ∣ (1 + C (1 - θ) * X) - (1 - C θ * X) * expTaylor m ↔
       m ≤ 1 ∨ θ = 1 / 2 ∧ m = 2 := by
@@ -201,8 +163,7 @@ theorem hasOrder_theta_iff {θ : ℝ} (hθ : 0 < θ) {m : ℕ} :
 
 /-! ### The exact orders of the Runge–Kutta instances -/
 
-/-- **The two-stage Gauss–Legendre method has order exactly `4`**: the coefficient of `X⁵` in
-`n - d T₅` is `-1/720`. -/
+/-- **The two-stage Gauss–Legendre method does not have order `5`.** -/
 theorem not_hasOrder_gaussLegendre2 : ¬ gaussLegendre2.HasOrder 5 := by
   change ¬ X ^ 6 ∣ ButcherTableau.gaussLegendre2.stabilityNum -
     ButcherTableau.gaussLegendre2.stabilityDen * expTaylor 5
@@ -214,8 +175,7 @@ theorem not_hasOrder_gaussLegendre2 : ¬ gaussLegendre2.HasOrder 5 := by
     coeff_X_mul, coeff_X_pow_mul', coeff_one, coeff_X, coeff_expTaylor] at this
   norm_num [Nat.factorial] at this
 
-/-- **The two-stage Radau IIA method has order exactly `3`**: the coefficient of `X⁴` in
-`n - d T₄` is `-1/72`. -/
+/-- **The two-stage Radau IIA method does not have order `4`.** -/
 theorem not_hasOrder_radauIIA2 : ¬ radauIIA2.HasOrder 4 := by
   change ¬ X ^ 5 ∣ ButcherTableau.radauIIA2.stabilityNum -
     ButcherTableau.radauIIA2.stabilityDen * expTaylor 4
@@ -227,8 +187,7 @@ theorem not_hasOrder_radauIIA2 : ¬ radauIIA2.HasOrder 4 := by
     coeff_X_mul, coeff_X_pow_mul', coeff_one, coeff_X, coeff_expTaylor] at this
   norm_num [Nat.factorial] at this
 
-/-- **The two-stage SDIRK method has order exactly `2`**: the coefficient of `X³` in `n - d T₃`
-is `γ - γ² - 1/6 = √2/2 - 2/3 ≠ 0` (`γ² = 2γ - 1/2`). -/
+/-- **The two-stage SDIRK method does not have order `3`.** -/
 theorem not_hasOrder_sdirk2 : ¬ sdirk2.HasOrder 3 := by
   change ¬ X ^ 4 ∣ ButcherTableau.sdirk2.stabilityNum -
     ButcherTableau.sdirk2.stabilityDen * expTaylor 3

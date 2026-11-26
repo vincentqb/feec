@@ -5,39 +5,13 @@ public import Feec.TimeStepping.Convergence
 /-!
 # Forced one-step schemes and discrete liftings
 
-A one-step scheme `P` with a load `gₙ` produces the **forced iterates** `W₀ = v`,
-`Wₙ₊₁ = P Wₙ + gₙ` (`forcedIter`). By the discrete Duhamel formula they are the unforced
-iterates plus the propagated loads, `Wₙ = Pⁿ v + Σ_{j<n} Pʲ g_{n−1−j}` (`forcedIter_eq`), and
-stability plus consistency bounds their error against every comparison sequence
-(`norm_forcedIter_sub_le`, from `norm_sub_le_of_step`).
-
-## Prescribed boundary degrees of freedom are a discrete lifting
-
-The Crank–Nicolson step with prescribed boundary DOFs (`IsDirichletCNStep V₀ A s f g' u u'`, the
-scheme of `fem4gr` and of [QuennevilleBelair2015], Ch. 7) is the discrete counterpart of the
-reduction of inhomogeneous boundary data to a forcing (`Feec.Evolution.isBoundarySolution_iff`):
-write `uₙ = gₙ + Wₙ` with `gₙ` any field with the prescribed boundary DOFs (a **discrete lifting**,
-e.g. the interpolant of the exact solution) and `Wₙ ∈ V₀`. Then
-(`IsDirichletCNStep.sub_eq_cayley_add`, `eq_add_forcedIter_of_isDirichletCNStep`,
-`exists_eq_add_forcedIter_of_isDirichletCNStep`)
-
-`Wₙ₊₁ = cayley(A₀, s) Wₙ + bₙ`,
-
-the forced iterates of the Crank–Nicolson step `cayley(A₀, s)` (`compressCN`) of the
-**compression** `A₀ = P_{V₀} A|_{V₀}` (`compress`), the operator of the scheme on the fields with
-vanishing boundary DOFs, with the load `bₙ ∈ V₀` the interior part of the Dirichlet step taken from
-the lifting itself (`gₙ ↦ gₙ₊₁ + bₙ`; it exists by `existsUnique_isDirichletCNStep`). This has
-the form of the step `cayley(Lₕ, τ/2)` of `Feec.HilbertComplex.DissipFEEC.crankNicolson` with
-`A₀` in place of the discrete generator `Lₕ`; for the Whitney spaces of the thesis `A₀` should be
-`𝐝ₕ − 𝐝ₕ*` on the subcomplex `V̊ₕ`, but its identification with the generator of a conforming
-window is open.
+Forced iterates `Wₙ₊₁ = P Wₙ + gₙ`, and the Crank–Nicolson step with prescribed boundary DOFs of
+[QuennevilleBelair2015], Ch. 7, as a lifting plus forced iterates of the compressed operator.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (Crank–Nicolson with the boundary data of the exact solution)
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 8
-  (single step methods for the inhomogeneous equation: stability and consistency)
+  Ch. 7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -55,8 +29,7 @@ section Forced
 variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
   {P : X →L[𝕜] X} {v : X} {g : ℕ → X}
 
-/-- The **forced iterates** of the one-step scheme `P` with load `g`: `W₀ = v`,
-`Wₙ₊₁ = P Wₙ + gₙ`. -/
+/-- The forced iterates `W₀ = v`, `Wₙ₊₁ = P Wₙ + gₙ` of the one-step scheme `P` with load `g`. -/
 def forcedIter (P : X →L[𝕜] X) (v : X) (g : ℕ → X) : ℕ → X
   | 0 => v
   | n + 1 => P (forcedIter P v g n) + g n
@@ -70,7 +43,6 @@ theorem forcedIter_eq (n : ℕ) :
     forcedIter P v g n = (P ^ n) v + ∑ j ∈ range n, (P ^ j) (g (n - 1 - j)) := by
   simpa using sub_eq_sum_of_step (w := 0) (fun k => forcedIter_succ (P := P) (v := v) (g := g) k) n
 
-/-- Without load, the forced iterates are the iterates `Pⁿ v`. -/
 @[simp] theorem forcedIter_zero_load (n : ℕ) : forcedIter P v 0 n = (P ^ n) v := by
   simp [forcedIter_eq]
 
@@ -92,8 +64,7 @@ open scoped RealInnerProductSpace
 variable {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] [FiniteDimensional ℝ V]
   (V₀ : Submodule ℝ V) (A : V →ₗ[ℝ] V)
 
-/-- The **compression** `A₀ = P_{V₀} A|_{V₀}` of `A` to `V₀`: the operator of the scheme on the
-fields with vanishing boundary degrees of freedom. -/
+/-- The compression `A₀ = P_{V₀} A|_{V₀}` of `A` to the fields with vanishing boundary DOFs. -/
 def compress : V₀ →L[ℝ] V₀ :=
   LinearMap.toContinuousLinearMap (V₀.orthogonalProjectionOnto.toLinearMap ∘ₗ A ∘ₗ V₀.subtype)
 
@@ -105,20 +76,13 @@ variable {V₀ A}
   exact e
 
 variable (V₀ A) in
-/-- The **Crank–Nicolson step of the compression**, `cayley(A₀, s)` (`Feec.TimeStepping.cayley`):
-the step of the interior part of the Dirichlet CN scheme. -/
+/-- The **Crank–Nicolson step of the compression**, `cayley(A₀, s)`. -/
 def compressCN (s : ℝ) : V₀ →L[ℝ] V₀ := cayley ((compress V₀ A : V₀ →ₗ[ℝ] V₀).toPMap ⊤) s
 
-/-- A dissipative form on `V₀` has a dissipative compression. -/
 theorem re_inner_compress_self_nonpos (hA : ∀ w ∈ V₀, ⟪A w, w⟫ ≤ 0) (w : V₀) :
     RCLike.re ⟪compress V₀ A w, w⟫ ≤ 0 := by
   simpa [inner_compress] using hA w w.2
 
-/-- **Prescribed boundary degrees of freedom are a discrete lifting**: let `u'` be a Dirichlet CN
-step from `u` (`A` dissipative on `V₀`, `s > 0`), `g` a field with the boundary DOFs of `u`
-(`u − g ∈ V₀`), and `g' + b`, `b ∈ V₀`, the Dirichlet CN step from `g` with the same data. Then
-`u' − g' = cayley(A₀, s)(u − g) + b`: the interior part is advanced by the Crank–Nicolson step of
-the compression `A₀`, with the load `b`. -/
 theorem IsDirichletCNStep.sub_eq_cayley_add (hA : ∀ w ∈ V₀, ⟪A w, w⟫ ≤ 0) {s : ℝ} (hs : 0 < s)
     {f g g' u u' : V} {b : V₀} (h : IsDirichletCNStep V₀ A s f g' u u') (hu : u - g ∈ V₀)
     (hb : IsDirichletCNStep V₀ A s f g' g (g' + b)) :
@@ -144,11 +108,9 @@ theorem IsDirichletCNStep.sub_eq_cayley_add (hA : ∀ w ∈ V₀, ⟪A w, w⟫ �
   rw [compressCN, ← this]
   simp
 
-/-- **The Dirichlet CN iterates are lifted forced Crank–Nicolson iterates**: for Dirichlet CN
-iterates `uₙ` with boundary data `gₙ₊₁` and loads `fₙ` for `n < N`, `u₀ − g₀ ∈ V₀`, and the
-interior parts `bₙ ∈ V₀` of the Dirichlet steps from the lifting `gₙ ↦ gₙ₊₁ + bₙ`,
-`uₙ = gₙ + Wₙ` for `n ≤ N`, `Wₙ` the forced iterates of `cayley(A₀, s)` with load `b` from
-`u₀ − g₀`. -/
+/-- **The Dirichlet CN iterates are lifted forced Crank–Nicolson iterates** (`A` dissipative on
+`V₀`, `s > 0`): `uₙ = gₙ + Wₙ`, `Wₙ` the forced iterates of `cayley(A₀, s)` from `u₀ − g₀` with
+the interior loads of the lifting. -/
 theorem eq_add_forcedIter_of_isDirichletCNStep (hA : ∀ w ∈ V₀, ⟪A w, w⟫ ≤ 0) {s : ℝ}
     (hs : 0 < s) {N : ℕ} {f g u : ℕ → V} {b : ℕ → V₀}
     (h : ∀ n < N, IsDirichletCNStep V₀ A s (f n) (g (n + 1)) (u n) (u (n + 1)))
@@ -169,10 +131,6 @@ theorem eq_add_forcedIter_of_isDirichletCNStep (hA : ∀ w ∈ V₀, ⟪A w, w�
     rw [forcedIter_succ, Submodule.coe_add, ← e]
     abel
 
-/-- **The loads of the discrete lifting exist**: for Dirichlet CN iterates with `u₀ − g₀ ∈ V₀`
-(`A` dissipative on `V₀`, `s > 0`) there are loads `bₙ ∈ V₀` (the interior parts of the Dirichlet
-steps from the lifting, `existsUnique_isDirichletCNStep`) with `uₙ = gₙ + Wₙ`, `Wₙ` the forced
-Crank–Nicolson iterates of the compression from `u₀ − g₀`. -/
 theorem exists_eq_add_forcedIter_of_isDirichletCNStep (hA : ∀ w ∈ V₀, ⟪A w, w⟫ ≤ 0) {s : ℝ}
     (hs : 0 < s) {N : ℕ} {f g u : ℕ → V}
     (h : ∀ n < N, IsDirichletCNStep V₀ A s (f n) (g (n + 1)) (u n) (u (n + 1)))

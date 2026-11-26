@@ -6,30 +6,13 @@ public import Feec.HilbertComplex.Reducing
 /-!
 # Fibrewise reducing subspaces of a symbol complex
 
-A family of fibre subspaces `K i a ⊆ E i` that every symbol `m i j a` maps into `K j a`, and every
-adjoint symbol maps back into `K i a`, defines the fibrewise subspaces
-`L²(K i) = {u | u a ∈ K i a a.e.}` of `L²(μ; E i)`. This file proves that they form a reducing
-subcomplex of the symbol complex (`FibreReducing.toReducingSubcomplex`), so every propagation and
-existence theorem of `Feec.HilbertComplex.Reducing` applies, with no projection or density
-hypothesis left to check: the projection hypothesis `P_K D(d) ⊆ D(d)` and the commutation
-`d P_K = P_K d` are fibrewise matrix identities.
-
-## Main definitions and results
-
-* `Fourier.FibreReducing S K`: the fibre conditions `m i j a (K i a) ⊆ K j a`,
-  `(m i j a)† (K j a) ⊆ K i a`, and measurability of `a ↦ P_{K i a}`.
-* `FibreReducing.of_orthogonal`: the adjoint condition follows from `m (K i a)ᗮ ⊆ (K j a)ᗮ`.
-* `starProjection_comm_of_map`: at one fibre, `P_L T = T P_K` (the fibrewise commutation).
-* **`FibreReducing.toReducingSubcomplex`**: `L²(K)` is a reducing subcomplex.
-* `FibreReducing.propagates`, `FibreReducing.existsUnique_mem`: constraint propagation for the
-  Hodge wave equation of any finite symbol complex, with existence and uniqueness.
-* `FibreComplex.IsFibreReducing` and `IsFibreReducing.toFibreReducing`: the same conditions for a
-  frequency-dependent family, pulled back along a frequency map.
+Fibre subspaces `K i a ⊆ E i`, a.e. measurable in `a`, mapped into `K j a` by every symbol and
+back into `K i a` by every adjoint symbol form a reducing subcomplex `∏ L²(K i)` of the symbol
+complex, which the Hodge wave equation preserves.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10–4.11 (Props 4.17, 4.19: the fibrewise commutation of `P_TSD` with the curl symbol)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -43,14 +26,11 @@ namespace Feec.Fourier
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-! ### One fibre -/
-
 section Fibre
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F]
 
-/-- **Fibrewise commutation**: if `T K ⊆ L` and `T† L ⊆ K` then `P_L T = T P_K`. -/
 theorem starProjection_comm_of_map (T : E →L[𝕜] F) (K : Submodule 𝕜 E) (L : Submodule 𝕜 F)
     [K.HasOrthogonalProjection] [L.HasOrthogonalProjection]
     (hT : K.map (T : E →ₗ[𝕜] F) ≤ L)
@@ -61,7 +41,6 @@ theorem starProjection_comm_of_map (T : E →L[𝕜] F) (K : Submodule 𝕜 E) (
   rw [← _root_.map_sub, ← ContinuousLinearMap.adjoint_inner_right]
   exact K.inner_left_of_mem_orthogonal (hT' ⟨w, hw, rfl⟩) (K.sub_starProjection_mem_orthogonal x)
 
-/-- The adjoint condition from the orthogonal condition: `T Kᗮ ⊆ Lᗮ ⇒ T† L ⊆ K`. -/
 theorem map_adjoint_le_of_map_orthogonal (T : E →L[𝕜] F) (K : Submodule 𝕜 E) (L : Submodule 𝕜 F)
     [K.HasOrthogonalProjection] (hT : Kᗮ.map (T : E →ₗ[𝕜] F) ≤ Lᗮ) :
     L.map (ContinuousLinearMap.adjoint T : F →ₗ[𝕜] E) ≤ K := by
@@ -75,14 +54,11 @@ theorem map_adjoint_le_of_map_orthogonal (T : E →L[𝕜] F) (K : Submodule �
 
 end Fibre
 
-/-! ### Fibrewise reducing subspaces -/
-
 variable {α : Type*} [MeasurableSpace α] {μ : Measure α} {ι : Type*} {c : ComplexShape ι}
   {E : ι → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace 𝕜 (E i)]
   [∀ i, CompleteSpace (E i)]
 
-/-- **Fibrewise reducing subspaces** of a symbol complex: `m i j a (K i a) ⊆ K j a`,
-`(m i j a)† (K j a) ⊆ K i a`, and `a ↦ P_{K i a}` is a.e. strongly measurable. -/
+/-- Fibrewise reducing subspaces: `m (K i a) ⊆ K j a`, `m† (K j a) ⊆ K i a`, a.e. measurable. -/
 structure FibreReducing (S : SymbolComplex 𝕜 μ c E) (K : ∀ i, α → Submodule 𝕜 (E i))
     [∀ i a, (K i a).HasOrthogonalProjection] : Prop where
   map : ∀ i j a, (K i a).map (S.m i j a : E i →ₗ[𝕜] E j) ≤ K j a
@@ -94,7 +70,6 @@ namespace FibreReducing
 variable {S : SymbolComplex 𝕜 μ c E} {K : ∀ i, α → Submodule 𝕜 (E i)}
   [∀ i a, (K i a).HasOrthogonalProjection]
 
-/-- Only the arrows of the shape need checking. -/
 theorem of_rel (map : ∀ i j, c.Rel i j → ∀ a, (K i a).map (S.m i j a : E i →ₗ[𝕜] E j) ≤ K j a)
     (map_adj : ∀ i j, c.Rel i j → ∀ a,
       (K j a).map (ContinuousLinearMap.adjoint (S.m i j a) : E j →ₗ[𝕜] E i) ≤ K i a)
@@ -112,7 +87,6 @@ theorem of_rel (map : ∀ i j, c.Rel i j → ∀ a, (K i a).map (S.m i j a : E i
       rw [_root_.map_zero]; exact (K i a).zero_mem
   meas := meas
 
-/-- The adjoint condition from `m (K i a)ᗮ ⊆ (K j a)ᗮ`. -/
 theorem of_orthogonal (map : ∀ i j a, (K i a).map (S.m i j a : E i →ₗ[𝕜] E j) ≤ K j a)
     (map_orth : ∀ i j a, (K i a)ᗮ.map (S.m i j a : E i →ₗ[𝕜] E j) ≤ (K j a)ᗮ)
     (meas : ∀ i, AEStronglyMeasurable (fun a => (K i a).starProjection) μ) :
@@ -126,11 +100,10 @@ theorem comm (i j : ι) (a : α) (x : E i) :
     (K j a).starProjection (S.m i j a x) = S.m i j a ((K i a).starProjection x) :=
   starProjection_comm_of_map _ _ _ (h.map i j a) (h.map_adj i j a) x
 
-/-- The fibrewise subspaces are closed and admit orthogonal projections. -/
 theorem hasOrthogonalProjection (i : ι) : (Operator.fibreSub μ (K i)).HasOrthogonalProjection :=
   Operator.hasOrthogonalProjection_fibreSub (K i) (h.meas i)
 
-/-- **Fibrewise reducing subspaces form a reducing subcomplex** of the symbol complex. -/
+/-- Fibrewise reducing subspaces form a reducing subcomplex of the symbol complex. -/
 theorem toReducingSubcomplex [∀ i, (Operator.fibreSub μ (K i)).HasOrthogonalProjection] :
     S.toHilbertComplex.ReducingSubcomplex fun i => Operator.fibreSub μ (K i) := by
   refine ⟨fun i j => ?_⟩
@@ -153,9 +126,8 @@ theorem toReducingSubcomplex [∀ i, (Operator.fibreSub μ (K i)).HasOrthogonalP
 variable [Fintype ι] [∀ i, (Operator.fibreSub μ (K i)).HasOrthogonalProjection]
   [∀ i, NormedSpace ℝ (E i)] [∀ i, IsScalarTower ℝ 𝕜 (E i)]
 
-/-- **Constraint propagation for a symbol complex**: every strong solution of the Hodge wave
-equation `U' = L U + F` with data and forcing in the fibrewise constraint `∏ L²(K i)` stays in it.
-[QuennevilleBelair2015], Prop 4.17, Prop 4.19 -/
+/-- Constraint propagation: strong solutions of the Hodge wave equation with data and forcing in
+`∏ L²(K i)` stay in it ([QuennevilleBelair2015], Props 4.17, 4.19). -/
 theorem propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
     (hU : Evolution.IsStrongSolution S.toHilbertComplex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i))
@@ -163,7 +135,6 @@ theorem propagates {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i) :=
   h.toReducingSubcomplex.propagates hU h0 hF
 
-/-- Constraint propagation for `U' = -L U + F`. -/
 theorem propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
     (hU : Evolution.IsStrongSolution (-S.toHilbertComplex.wave) (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i))
@@ -171,10 +142,6 @@ theorem propagates_neg {a b : ℝ} {F U : ℝ → PiLp 2 fun i => Lp (E i) 2 μ}
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i) :=
   h.toReducingSubcomplex.propagates_neg hU h0 hF
 
-/-- **Existence, uniqueness and constraint propagation** for a symbol complex: for
-`U₀ ∈ D(L) ∩ ∏ L²(K i)` and admissible forcing valued in `∏ L²(K i)`, the Hodge wave equation has
-a classical solution, unique among strong solutions, and it stays in `∏ L²(K i)`.
-[QuennevilleBelair2015], Prop 4.17, Prop 4.19 -/
 theorem existsUnique_mem {U₀ : PiLp 2 fun i => Lp (E i) 2 μ}
     (hU₀ : U₀ ∈ S.toHilbertComplex.wave.domain)
     (hU₀S : U₀ ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i))
@@ -187,7 +154,6 @@ theorem existsUnique_mem {U₀ : PiLp 2 fun i => Lp (E i) 2 μ}
         EqOn V U (Icc a b) :=
   h.toReducingSubcomplex.existsUnique_mem hU₀ hU₀S hF hFS
 
-/-- The wave group preserves the fibrewise constraint, for all times. -/
 theorem waveGroup_mem (t : ℝ) {x : PiLp 2 fun i => Lp (E i) 2 μ}
     (hx : x ∈ HilbertComplex.totalSub fun i => Operator.fibreSub μ (K i)) :
     S.toHilbertComplex.waveGroup.S t x ∈
@@ -195,8 +161,6 @@ theorem waveGroup_mem (t : ℝ) {x : PiLp 2 fun i => Lp (E i) 2 μ}
   h.toReducingSubcomplex.waveGroup_mem t hx
 
 end FibreReducing
-
-/-! ### Frequency-dependent families -/
 
 namespace FibreComplex
 
@@ -208,7 +172,6 @@ structure IsFibreReducing (K : ∀ i, β → Submodule 𝕜 (E i)) : Prop where
   map_adj : ∀ i j ξ, (K j ξ).map (ContinuousLinearMap.adjoint (S.m i j ξ) : E j →ₗ[𝕜] E i) ≤ K i ξ
 
 variable {S} in
-/-- The adjoint condition from `m (K i ξ)ᗮ ⊆ (K j ξ)ᗮ`. -/
 theorem IsFibreReducing.of_orthogonal {K : ∀ i, β → Submodule 𝕜 (E i)}
     [∀ i ξ, (K i ξ).HasOrthogonalProjection]
     (map : ∀ i j ξ, (K i ξ).map (S.m i j ξ : E i →ₗ[𝕜] E j) ≤ K j ξ)
@@ -219,7 +182,6 @@ theorem IsFibreReducing.of_orthogonal {K : ∀ i, β → Submodule 𝕜 (E i)}
 variable [MeasurableSpace β] [OpensMeasurableSpace β] [∀ i, FiniteDimensional 𝕜 (E i)]
 
 variable {S} in
-/-- Pull-back of fibre reducing subspaces along a frequency map. -/
 theorem IsFibreReducing.toFibreReducing {K : ∀ i, β → Submodule 𝕜 (E i)}
     [∀ i ξ, (K i ξ).HasOrthogonalProjection] (h : S.IsFibreReducing K)
     (μ : Measure α) (f : α → β) (hf : AEMeasurable f μ)

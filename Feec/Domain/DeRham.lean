@@ -6,47 +6,15 @@ public import Feec.Algebra.ExteriorFibre
 /-!
 # The `L²` de Rham complex of `k`-forms on an open set `Ω ⊆ ℝⁿ`
 
-Coordinates on `ℝⁿ = Fin n → ℝ` as in `Feec.Domain.Operators`. A `k`-form is a field indexed
-by the `k`-subsets of `Fin n` (`Feec.Domain.formIdx n k`, empty unless `0 ≤ k ≤ n`), the
-coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the sign
-`ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of `Feec.ExteriorFibre.sgn`:
+The exterior derivative of `k`-forms on `ℝⁿ` is a constant-coefficient operator with `d ∘ d = 0`;
+the duals of its minimal and maximal realizations `H̊Λ(Ω)` and `HΛ(Ω)` are the maximal and minimal
+realizations of its formal adjoint.
 
-* the **exterior derivative** `Feec.Domain.extDerivOp n k`, a first-order constant-coefficient
-  operator, homogeneous of order `1` (`isHomogeneous_extDerivOp`),
-  `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` (`extDerivOp_apply`);
-* its **formal adjoint** is minus the codifferential,
-  `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}` (`formalAdj_extDerivOp_apply`);
-* `d ∘ d = 0` and `dᵗ ∘ dᵗ = 0` on smooth forms (Schwarz; `isComplexPair_extDerivOp`,
-  `isComplexPair_formalAdj_extDerivOp`);
-* the complex `Feec.Domain.deRham n` of constant-coefficient operators indexed by `ℤ`, whose
-  minimal realization on any open `Ω` is `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯` (the closure of `d` on
-  `C_c^∞(Ω)`; for Lipschitz `Ω` these are the forms with vanishing tangential trace), whose maximal realization is `HΛ⁰(Ω) → HΛ¹(Ω) → ⋯` (no boundary
-  condition), and each is the dual of the other through the codifferentials
-  (`deRham_dual_minimalComplex_d`, `deRham_dual_maximalComplex_d`).
-* the components in low degree: `(d f)_{j} = ∂_j f` (`extDerivOp_zero_apply`),
-  `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (`extDerivOp_one_apply_pair`) and
-  `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l`
-  (`extDerivOp_two_apply_triple`);
-* **a `1`-form that is not closed** on every nonempty bounded open `Ω ⊆ ℝⁿ`, `n ≥ 2`:
-  `d (x₀ dx₁) = dx₀ ∧ dx₁` (`maximalComplex_cycles_one_ne_top`);
-* sums over all subsets of `Fin n` of terms vanishing off degree `k` are sums over
-  `formIdx n k` (`sum_eq_sum_formIdx`).
+## Main results
 
-## Implementation notes
-
-In `ℝ³`, with the vector proxies of `Feec.Algebra.Proxy3` (`v = (w_0, w_1, w_2)` for a 1-form,
-`v = (w_{12}, -w_{02}, w_{01})` for a 2-form), the last three lemmas say that `d` is grad, curl
-and div componentwise.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (the de Rham complex, `HΛᵏ` and `H̊Λᵏ`)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4 (the `L²` de Rham complex and its dual)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `extDerivOp_apply`, `formalAdj_extDerivOp_apply`: `d` and its formal adjoint in coordinates.
+* `deRham_dual_minimalComplex_d`, `deRham_dual_maximalComplex_d`: the duals of `H̊Λ` and `HΛ`.
+* `maximalComplex_cycles_one_ne_top`: not every `1`-form is closed (`Ω ≠ ∅` bounded, `n ≥ 2`).
 -/
 
 open scoped InnerProductSpace ContDiff ComplexConjugate
@@ -63,7 +31,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {n : ℕ}
 /-- The index type of `k`-forms on `ℝⁿ`: the `k`-subsets of `Fin n` (empty unless `0 ≤ k ≤ n`). -/
 abbrev formIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (#s : ℤ) = k}
 
-/-- Sums over `Finset (Fin n)` of terms vanishing off degree `k` are sums over `formIdx n k`. -/
 theorem sum_eq_sum_formIdx {M : Type*} [AddCommMonoid M] {k : ℕ} {f : Finset (Fin n) → M}
     (hf : ∀ s, #s ≠ k → f s = 0) : ∑ s, f s = ∑ s : formIdx n k, f s.1 := by
   have h0 : ∑ s : {s : Finset (Fin n) // ¬ ((#s : ℤ) = (k : ℤ))}, f s = 0 :=
@@ -96,12 +63,10 @@ theorem contDiff_formExt {k : ℤ} {w : formIdx n k → (Fin n → ℝ) → 𝕜
 def extD (F : Finset (Fin n) → (Fin n → ℝ) → 𝕜) (s : Finset (Fin n)) (x : Fin n → ℝ) : 𝕜 :=
   ∑ j ∈ s, sgn j s * fderiv ℝ (F (s.erase j)) x (coordDir j)
 
-/-- `(δF)_s = -Σ_{j ∉ s} ε(j, s) ∂_j F_{s ∪ j}`: minus the codifferential, the formal adjoint of
-`extD`. -/
+/-- `(δF)_s = -Σ_{j ∉ s} ε(j, s) ∂_j F_{s ∪ j}`, minus the codifferential. -/
 def extDAdj (F : Finset (Fin n) → (Fin n → ℝ) → 𝕜) (s : Finset (Fin n)) (x : Fin n → ℝ) : 𝕜 :=
   -∑ j ∈ sᶜ, sgn j s * fderiv ℝ (F (insert j s)) x (coordDir j)
 
-/-- `∂_v (Σ_j c_j G_j) = Σ_j c_j ∂_v G_j` for smooth `G_j`. -/
 theorem fderiv_sum_const_mul {α : Type*} (t : Finset α) (c : α → 𝕜)
     {G : α → (Fin n → ℝ) → 𝕜} (hG : ∀ a, ContDiff ℝ ∞ (G a)) (x v : Fin n → ℝ) :
     fderiv ℝ (fun y => ∑ a ∈ t, c a * G a y) x v = ∑ a ∈ t, c a * fderiv ℝ (G a) x v := by
@@ -112,7 +77,6 @@ theorem fderiv_sum_const_mul {α : Type*} (t : Finset α) (c : α → 𝕜)
   rw [fderiv_const_mul (hd a)]
   simp
 
-/-- **`d ∘ d = 0`** on smooth families (Schwarz). -/
 theorem extD_extD {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : ∀ s, ContDiff ℝ ∞ (F s))
     (s : Finset (Fin n)) (x : Fin n → ℝ) : extD (extD F) s x = 0 := by
   have e : ∀ j, fderiv ℝ (extD F (s.erase j)) x (coordDir j) =
@@ -128,7 +92,6 @@ theorem extD_extD {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : ∀ s,
   linear_combination (sgn j s * sgn l s * fderiv ℝ (fun y => fderiv ℝ (F ((s.erase j).erase l))
     y (coordDir j)) x (coordDir l)) * this
 
-/-- **`δ ∘ δ = 0`** on smooth families (Schwarz). -/
 theorem extDAdj_extDAdj {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : ∀ s, ContDiff ℝ ∞ (F s))
     (s : Finset (Fin n)) (x : Fin n → ℝ) : extDAdj (extDAdj F) s x = 0 := by
   have hd : ∀ j, fderiv ℝ (extDAdj F (insert j s)) x (coordDir j) =
@@ -155,8 +118,7 @@ theorem extDAdj_extDAdj {F : Finset (Fin n) → (Fin n → ℝ) → 𝕜} (hF : 
 /-! ## The exterior derivative as a constant-coefficient operator -/
 
 variable (𝕜 n) in
-/-- The **exterior derivative** `d : Λᵏ → Λᵏ⁺¹` on `ℝⁿ` as a first-order constant-coefficient
-operator: `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
+/-- The **exterior derivative** `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` on `k`-forms. -/
 def extDerivOp (k : ℤ) : ConstCoeffOp (Fin n → ℝ) 𝕜 (formIdx n k) (formIdx n (k + 1)) where
   coeff t r := ({j ∈ t.1 | t.1.erase j = r.1}).toList.map fun j => ([coordDir j], sgn j t.1)
 
@@ -180,8 +142,7 @@ theorem applyEntry_extDerivOp_coeff {k : ℤ} (t : formIdx n (k + 1)) (r : formI
   rw [← Finset.sum_map_toList]
   rfl
 
-/-- **The exterior derivative in coordinates**: `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`, for any
-field `w` (no smoothness needed: `∂_j` is `fderiv`). -/
+/-- **The exterior derivative in coordinates**: `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
 theorem extDerivOp_apply {k : ℤ} (w : formIdx n k → (Fin n → ℝ) → 𝕜) (t : formIdx n (k + 1))
     (x : Fin n → ℝ) :
     (extDerivOp 𝕜 n k).apply w t x = extD (formExt w) t.1 x := by
@@ -194,8 +155,7 @@ theorem extDerivOp_apply {k : ℤ} (w : formIdx n k → (Fin n → ℝ) → 𝕜
   simp only [e, Finset.sum_ite_eq', Finset.mem_univ, ite_true]
   rw [formExt_of_card w (card_erase_of_formIdx t hj)]
 
-/-- **The formal adjoint of `d` is minus the codifferential**:
-`(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`. -/
+/-- **The formal adjoint of `d` is minus the codifferential.** -/
 theorem formalAdj_extDerivOp_apply {k : ℤ} (ψ : formIdx n (k + 1) → (Fin n → ℝ) → 𝕜)
     (r : formIdx n k) (x : Fin n → ℝ) :
     (extDerivOp 𝕜 n k).formalAdj.apply ψ r x = extDAdj (formExt ψ) r.1 x := by
@@ -242,14 +202,12 @@ theorem extDerivOp_isOrderLE (k : ℤ) : (extDerivOp 𝕜 n k).IsOrderLE 1 := by
 theorem formalAdj_extDerivOp_isOrderLE (k : ℤ) : (extDerivOp 𝕜 n k).formalAdj.IsOrderLE 1 :=
   (extDerivOp_isOrderLE k).formalAdj
 
-/-- The exterior derivative is homogeneous of order `1`. -/
 theorem isHomogeneous_extDerivOp (k : ℤ) : (extDerivOp 𝕜 n k).IsHomogeneous 1 := by
   intro t r p hp
   simp only [extDerivOp, List.mem_map] at hp
   obtain ⟨j, -, rfl⟩ := hp
   rfl
 
-/-- `d ω` extended by zero is `extD` of the extension of `ω`, in degree `k + 1`. -/
 theorem formExt_extDerivOp_apply {k : ℤ} (w : formIdx n k → (Fin n → ℝ) → 𝕜)
     {s : Finset (Fin n)} (hs : (#s : ℤ) = k + 1) :
     formExt ((extDerivOp 𝕜 n k).apply w) s = extD (formExt w) s := by
@@ -257,7 +215,6 @@ theorem formExt_extDerivOp_apply {k : ℤ} (w : formIdx n k → (Fin n → ℝ) 
   funext x
   exact extDerivOp_apply w ⟨s, hs⟩ x
 
-/-- `dᵗ ψ` extended by zero is `extDAdj` of the extension of `ψ`, in degree `k`. -/
 theorem formExt_formalAdj_extDerivOp_apply {k : ℤ} (w : formIdx n (k + 1) → (Fin n → ℝ) → 𝕜)
     {s : Finset (Fin n)} (hs : (#s : ℤ) = k) :
     formExt ((extDerivOp 𝕜 n k).formalAdj.apply w) s = extDAdj (formExt w) s := by
@@ -265,7 +222,6 @@ theorem formExt_formalAdj_extDerivOp_apply {k : ℤ} (w : formIdx n (k + 1) → 
   funext x
   exact formalAdj_extDerivOp_apply w ⟨s, hs⟩ x
 
-/-- **`d ∘ d = 0`** on smooth `k`-forms. -/
 theorem isComplexPair_extDerivOp (k : ℤ) :
     (extDerivOp 𝕜 n k).IsComplexPair (extDerivOp 𝕜 n (k + 1)) := by
   intro w hw
@@ -279,7 +235,6 @@ theorem isComplexPair_extDerivOp (k : ℤ) :
     exact Finset.sum_congr rfl fun j hj => by rw [e j hj]
   rw [this, extD_extD (contDiff_formExt hw)]
 
-/-- **`dᵗ ∘ dᵗ = 0`**: the codifferentials form a complex. -/
 theorem isComplexPair_formalAdj_extDerivOp (k : ℤ) :
     (extDerivOp 𝕜 n (k + 1)).formalAdj.IsComplexPair (extDerivOp 𝕜 n k).formalAdj := by
   intro w hw
@@ -294,7 +249,6 @@ theorem isComplexPair_formalAdj_extDerivOp (k : ℤ) :
     exact congrArg Neg.neg (Finset.sum_congr rfl fun j hj => by rw [e j hj])
   rw [this, extDAdj_extDAdj (contDiff_formExt hw)]
 
-/-- **In degree `0`, `d` is the gradient**: `(d f)_{{j}} = ∂_j f`. -/
 theorem extDerivOp_zero_apply (f : formIdx n 0 → (Fin n → ℝ) → 𝕜) (j : Fin n)
     (x : Fin n → ℝ) :
     (extDerivOp 𝕜 n 0).apply f ⟨{j}, by simp⟩ x =
@@ -307,8 +261,6 @@ theorem extDerivOp_zero_apply (f : formIdx n 0 → (Fin n → ℝ) → 𝕜) (j 
     rintro ⟨rfl, h⟩; exact lt_irrefl _ h
   simp [sgn, this]
 
-/-- **`d` on 1-forms**: `(d w)_{jl} = ∂_j w_l - ∂_l w_j` for `j < l` (in `ℝ³`, the curl of the
-proxy `(w_0, w_1, w_2)`). -/
 theorem extDerivOp_one_apply_pair (w : formIdx n 1 → (Fin n → ℝ) → 𝕜) {j l : Fin n}
     (hjl : j < l) (x : Fin n → ℝ) :
     (extDerivOp 𝕜 n 1).apply w ⟨{j, l}, by rw [card_pair hjl.ne]; norm_num⟩ x =
@@ -331,8 +283,6 @@ theorem extDerivOp_one_apply_pair (w : formIdx n 1 → (Fin n → ℝ) → 𝕜)
   simp [sgn, h1, h2]
   ring
 
-/-- **`d` on 2-forms**: `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l` (in
-`ℝ³`, the divergence of the proxy `(w_{12}, -w_{02}, w_{01})`). -/
 theorem extDerivOp_two_apply_triple (w : formIdx n 2 → (Fin n → ℝ) → 𝕜) {i j l : Fin n}
     (hij : i < j) (hjl : j < l) (x : Fin n → ℝ) :
     (extDerivOp 𝕜 n 2).apply w ⟨{i, j, l}, by
@@ -375,8 +325,7 @@ theorem extDerivOp_two_apply_triple (w : formIdx n 2 → (Fin n → ℝ) → �
 /-! ## The de Rham complex and its two boundary-condition families -/
 
 variable (𝕜 n) in
-/-- **The de Rham complex of `ℝⁿ`** as a complex of constant-coefficient operators indexed by
-`ℤ`: `k`-forms in degree `k` (no components outside `0 ≤ k ≤ n`), `d = extDerivOp`. -/
+/-- **The de Rham complex of `ℝⁿ`**: `k`-forms in degree `k`, `d = extDerivOp`. -/
 def deRham : ConstCoeffComplex (Fin n → ℝ) 𝕜 where
   ι := formIdx n
   A := extDerivOp 𝕜 n
@@ -388,19 +337,15 @@ def deRham : ConstCoeffComplex (Fin n → ℝ) 𝕜 where
 
 variable {Ω : Set (Fin n → ℝ)}
 
-/-- The minimal complex `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → ⋯`: the closure of `d` on `C_c^∞(Ω)` (for Lipschitz
-`Ω`, `d` with vanishing tangential trace). -/
 theorem deRham_minimalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     ((deRham 𝕜 n).minimalComplex hΩ).d k (k + 1) = (extDerivOp 𝕜 n k).minimal Ω :=
   (deRham 𝕜 n).minimalComplex_d hΩ k
 
-/-- The maximal complex `HΛ⁰(Ω) → HΛ¹(Ω) → ⋯`: the weak `d`, no boundary condition. -/
 theorem deRham_maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     ((deRham 𝕜 n).maximalComplex hΩ).d k (k + 1) = (extDerivOp 𝕜 n k).maximal Ω :=
   (deRham 𝕜 n).maximalComplex_d hΩ k
 
-/-- **Duality**: the dual of `H̊Λ` is the maximal codifferential complex, `(d_min)† = (dᵗ)_max`
-with `dᵗ = -δ` (`formalAdj_extDerivOp_apply`). -/
+/-- **Duality**: the dual of `H̊Λ` is the maximal codifferential complex, `(d_min)† = (dᵗ)_max`. -/
 theorem deRham_dual_minimalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     ((deRham 𝕜 n).minimalComplex hΩ).dual.d (k + 1) k = (extDerivOp 𝕜 n k).formalAdj.maximal Ω :=
   (deRham 𝕜 n).dual_minimalComplex_d hΩ k
@@ -410,13 +355,10 @@ theorem deRham_dual_maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     ((deRham 𝕜 n).maximalComplex hΩ).dual.d (k + 1) k = (extDerivOp 𝕜 n k).formalAdj.minimal Ω :=
   (deRham 𝕜 n).dual_maximalComplex_d hΩ k
 
-/-- `H̊Λᵏ(Ω) ⊆ HΛᵏ(Ω)`: `d_min ≤ d_max`. -/
 theorem extDerivOp_minimal_le_maximal (hΩ : IsOpen Ω) (k : ℤ) :
     (extDerivOp 𝕜 n k).minimal Ω ≤ (extDerivOp 𝕜 n k).maximal Ω :=
   (extDerivOp 𝕜 n k).minimal_le_maximal hΩ
 
-/-- Smooth forms with `ω, dω ∈ L²(Ω)` lie in `HΛᵏ(Ω)`, where the weak `d` is the classical
-one, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` (`extDerivOp_apply`). -/
 theorem extDerivOp_smooth_mem_maximal_domain (hΩ : IsOpen Ω) {k : ℤ}
     {w : formIdx n k → (Fin n → ℝ) → 𝕜} (hws : ∀ s, ContDiff ℝ 1 (w s))
     (hw : ∀ s, MemLp (w s) 2 (volume.restrict Ω))
@@ -425,9 +367,7 @@ theorem extDerivOp_smooth_mem_maximal_domain (hΩ : IsOpen Ω) {k : ℤ}
       (extDerivOp 𝕜 n k).maximal Ω ⟨_, h⟩ = toL2F hdw :=
   (extDerivOp 𝕜 n k).smooth_mem_maximal_domain hΩ (extDerivOp_isOrderLE k) hws hw hdw
 
-/-- **A `1`-form that is not closed**: on a nonempty bounded open `Ω ⊆ ℝⁿ`, `n ≥ 2`, the form
-`x₀ dx₁ ∈ HΛ¹(Ω)` has `d (x₀ dx₁) = dx₀ ∧ dx₁ ≠ 0`, so the cycles of `HΛ¹(Ω)` are a proper
-subspace of `L²Λ¹(Ω)`. -/
+/-- **The cycles of `HΛ¹(Ω)` are a proper subspace** for nonempty bounded open `Ω ⊆ ℝⁿ`, `n ≥ 2`. -/
 theorem maximalComplex_cycles_one_ne_top (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (hn : 2 ≤ n) : ((deRham ℝ n).maximalComplex hΩ).cycles 1 ≠ ⊤ := by
   set i₀ : Fin n := ⟨0, by omega⟩

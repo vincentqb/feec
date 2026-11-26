@@ -6,20 +6,13 @@ public import Feec.Domain.H1Lipschitz
 /-!
 # `C²` forms with vanishing tangential traces are of class `H¹`
 
-A form of the class `Feec.Models.Cube.FEM.IsCsFormTr 0 j L` on the cube `Q = (0, ½)ⁿ` (a `C²` form
-on `ℝⁿ` whose tangential components vanish on `∂Q`, the values and first derivatives of the form
-and of its exterior derivative bounded by `L` on `cl Q`) has `H¹(ℝⁿ)` data with bound `c L`, and
-so has its minimal exterior derivative (`IsCsFormTr.exists_h1Data`, from
-`Feec.Domain.exists_h1Data_closedBall` applied to the coefficients on `cl Q`, the closed ball of
-radius `¼` about the centre); `c` depends only on `n`. So the `C²` classes of the rates of the
-methods on the cube lie in their `H¹` classes, and the `C²` rates are corollaries of the `H¹`
-ones.
+A `C²` form on `Q = (0, ½)ⁿ` with vanishing tangential traces and derivatives bounded by `L`, and
+its minimal exterior derivative, are restrictions of `H¹(ℝⁿ)` fields of norm at most `c L`.
 
-## References
+## Main results
 
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `exists_h1Data_formL2`: a `C¹` form bounded with its derivative on `cl Q` has `H¹(ℝⁿ)` data.
+* `IsCsFormTr.exists_h1Data`: the class `IsCsFormTr 0 k L` and its `d_min` have `H¹(ℝⁿ)` data.
 -/
 
 open MeasureTheory Set
@@ -32,8 +25,6 @@ open Feec.Domain Feec.FiniteElement
 
 variable {n : ℕ}
 
-/-- The closed cube `[0, ½]ⁿ` is the closed ball of radius `¼` of the sup norm about the
-centre. -/
 theorem closure_cubeDomain_eq_closedBall :
     closure (cubeDomain n) = Metric.closedBall (center n) (1 / 4) := by
   rw [closure_cubeDomain]
@@ -46,7 +37,6 @@ theorem closure_cubeDomain_eq_closedBall :
     rw [Real.dist_eq, abs_le] at this; simp only [center] at this
     exact ⟨by linarith [this.1], by linarith [this.2]⟩
 
-/-- The coefficient bounds of a form field from the bounds of `w` and `Dw` on `cl Q`. -/
 theorem coeff_bounds {w : FormField n} (hw : ContDiff ℝ 1 w) {L : ℝ}
     (h0 : ∀ y ∈ closure (cubeDomain n), ‖w y‖ ≤ L)
     (h1 : ∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) (t : Finset (Fin n)) :

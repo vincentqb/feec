@@ -9,40 +9,13 @@ public import Feec.Domain.Operators
 /-!
 # Maxwell's equations: the Gauss laws propagate
 
-Maxwell's equations are the Hodge wave equation of a short window `V a → V (a+1) → V (a+2)` of a
-Hilbert complex: `U = (σ, E, B)` with the gauge field `σ`, the electric field `E` and the
-magnetic field `B`, and `U' = L U` reads `σ' = -d†E`, `E' = dσ - d†B`, `B' = dE`. The constraints
-are the **Gauss laws**: `σ = 0`, `d†E = 0` (`div E = 0`) and `dB = 0` (`div B = 0`). They form a
-reducing subcomplex of the window, for **every** complex and **every** degree, with no closed
-range, density or exactness hypothesis (`ShortHilbertComplex.divFree_propagates`, thesis
-Prop 4.16), so every strong solution with constraint-satisfying data and forcing stays
-constrained.
-
-## Main definitions
-
-* `Maxwell.window H a`: the short complex `V a → V (a+1) → V (a+2)` of a complex on `up α`
-  (`α = ℕ, ℤ`);
-  `Maxwell.gauss H a`: the constraint family `{0} × N(d†) × N(d)`.
-* On an open `Ω ⊆ ℝ³`: `Maxwell.pec Ω` (perfect electric conductor: `H̊¹ → H̊(curl) → L²`, the
-  minimal complex) and `Maxwell.pmc Ω` (perfect magnetic conductor: `H¹ → H(curl) → L²`, the
-  maximal complex), with the magnetic constraints `N(div_min)`, `N(div_max)`.
-
-## Main results
-
-* `gauss_propagates`, `gauss_existsUnique`: for every Hilbert complex on `up α` and every
-  degree; instances `torus_gauss_propagates` (`𝕋ᵈ`, any `d`, any degree) and
-  `euclidean_gauss_propagates` (`ℝᵈ`, any `d`, any degree).
-* `pec_gauss_propagates`, `pmc_gauss_propagates`: on every open `Ω ⊆ ℝ³` (bounded or not; cubes
-  included), for both boundary conditions.
+The Gauss laws `σ = 0`, `d†E = 0`, `dB = 0` of Maxwell's equations, the Hodge wave equation of a
+window of a Hilbert complex, propagate for every complex and degree, on `𝕋ᵈ`, on `ℝᵈ` and on
+every open `Ω ⊆ ℝ³` with either conductor ([QuennevilleBelair2015], Prop 4.16).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.9 (Prop 4.16: the vector wave equation and its divergence constraint, both boundary
-  conditions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
-  (the de Rham complex)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018] (the de Rham complex)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -73,7 +46,6 @@ abbrev closedSub : Submodule 𝕜 (V (a + ((2 : Fin 3) : α))) :=
 instance : (closedSub H a).HasOrthogonalProjection :=
   hasOrthogonalProjection_ker _ (H.closed _ _)
 
-/-- `R(d) ⊆ N(d)`: the curl of an electric field satisfies the magnetic Gauss law. -/
 theorem d_mem_closedSub (x : (window H a).d₁.domain) : (window H a).d₁ x ∈ closedSub H a :=
   LinearPMap.mem_ker_iff.2 ⟨⟨_, H.mapsTo _ _ (a + ((2 : Fin 3) : α) + 1) x⟩, rfl,
     H.d_comp_d _ _ _ x⟩
@@ -87,9 +59,8 @@ abbrev gauss := (window H a).divFreeSub (closedSub H a)
 
 variable [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
 
-/-- **The Gauss laws propagate** for Maxwell's equations in degree `a` of any Hilbert complex:
-strong solutions of `U' = L U + F` with `U(t₀)` and `F` satisfying `σ = 0`, `d†E = 0`, `dB = 0`
-satisfy them for all times. [QuennevilleBelair2015], Prop 4.16 -/
+/-- The Gauss laws `σ = 0`, `d†E = 0`, `dB = 0` propagate for strong solutions of Maxwell's
+equations in degree `a` of any Hilbert complex. [QuennevilleBelair2015], Prop 4.16 -/
 theorem gauss_propagates {t₀ t₁ : ℝ} {F U : ℝ → Space a (V := V)}
     (hU : Evolution.IsStrongSolution (window H a).wave (Icc t₀ t₁) F U)
     (h0 : U t₀ ∈ HilbertComplex.totalSub (gauss H a))
@@ -97,17 +68,14 @@ theorem gauss_propagates {t₀ t₁ : ℝ} {F U : ℝ → Space a (V := V)}
     ∀ t ∈ Icc t₀ t₁, U t ∈ HilbertComplex.totalSub (gauss H a) :=
   (window H a).divFree_propagates (closedSub H a) (d_mem_closedSub H a) hU h0 hF
 
-/-- The Gauss laws reduce the Maxwell operator, so its isometric group preserves them for all
-times. [QuennevilleBelair2015], Prop 4.16 -/
 theorem waveGroup_mem (t : ℝ) {x : Space a (V := V)}
     (hx : x ∈ HilbertComplex.totalSub (gauss H a)) :
     (window H a).toHilbertComplex.waveGroup.S t x ∈ HilbertComplex.totalSub (gauss H a) :=
   ((window H a).reducingSubcomplex_divFreeSub (closedSub H a) (d_mem_closedSub H a)).waveGroup_mem
     t hx
 
-/-- **Maxwell's equations are well posed in the Gauss-law subspace**: for data in the domain
-satisfying the Gauss laws and admissible forcing satisfying them, there is a unique classical
-solution, and it satisfies the Gauss laws for all times. [QuennevilleBelair2015], Prop 4.16, Thm 4.3 -/
+/-- Data in the domain and admissible forcing satisfying the Gauss laws give a classical solution,
+unique among strong ones, which satisfies them. [QuennevilleBelair2015], Prop 4.16, Thm 4.3 -/
 theorem gauss_existsUnique {U₀ : Space a (V := V)} (hU₀ : U₀ ∈ (window H a).wave.domain)
     (hU₀S : U₀ ∈ HilbertComplex.totalSub (gauss H a)) {F : ℝ → Space a (V := V)} {t₀ t₁ : ℝ}
     (hF : Evolution.ForcingClass.admissible (window H a).wave t₀ t₁ F)
@@ -127,8 +95,8 @@ section Models
 
 variable (d : Type) [Fintype d] [LinearOrder d] (a : ℤ)
 
-/-- **Maxwell on the torus `𝕋ᵈ`** (any `d`, any degree `a`; `a = 0`, `d = 3` is the classical
-system): the Gauss laws propagate. [QuennevilleBelair2015], Prop 4.16 -/
+/-- On the torus `𝕋ᵈ`, in every dimension and degree, the Gauss laws propagate.
+[QuennevilleBelair2015], Prop 4.16 -/
 theorem torus_gauss_propagates {t₀ t₁ : ℝ}
     {F U : ℝ → Space a (V := Models.Torus.DeRham.L2Form d)}
     (hU : Evolution.IsStrongSolution (window (Models.Torus.DeRham.complex d) a).wave
@@ -138,8 +106,8 @@ theorem torus_gauss_propagates {t₀ t₁ : ℝ}
     ∀ t ∈ Icc t₀ t₁, U t ∈ HilbertComplex.totalSub (gauss (Models.Torus.DeRham.complex d) a) :=
   gauss_propagates _ a hU h0 hF
 
-/-- **Maxwell on `ℝᵈ`** (any `d`, any degree): the Gauss laws propagate (no closed range is
-needed: the whole-space de Rham complex has none). [QuennevilleBelair2015], Prop 4.16 -/
+/-- On `ℝᵈ`, in every dimension and degree, the Gauss laws propagate.
+[QuennevilleBelair2015], Prop 4.16 -/
 theorem euclidean_gauss_propagates {t₀ t₁ : ℝ}
     {F U : ℝ → Space a (V := Models.Euclidean.DeRham.L2Form d)}
     (hU : Evolution.IsStrongSolution (window (Models.Euclidean.DeRham.complex d) a).wave
@@ -161,28 +129,24 @@ open Feec.Domain
 variable {𝕜 : Type*} [RCLike 𝕜] {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω)
 
 variable (𝕜) in
-/-- **Perfect electric conductor**: `H̊¹(Ω) --grad--> H̊(curl, Ω) --curl--> L²(Ω)` (`n × E = 0`),
-the minimal complex of `grad`, `curl` on an open `Ω ⊆ ℝ³`. -/
+/-- Perfect electric conductor: the minimal complex `H̊¹(Ω) → H̊(curl, Ω) → L²(Ω)`, `Ω ⊆ ℝ³`. -/
 def pec : ShortHilbertComplex 𝕜 (L2F 𝕜 Ω (Fin 1)) (L2F 𝕜 Ω (Fin 1 × Fin 3))
     (L2F 𝕜 Ω (Fin 1 × Fin 3)) :=
   ConstCoeffOp.shortMinimal (gradOp 3 1) (curlOp 1) hΩ isComplexPair_grad_curl
 
 variable (𝕜) in
-/-- **Perfect magnetic conductor** (no boundary condition on `E`):
-`H¹(Ω) --grad--> H(curl, Ω) --curl--> L²(Ω)`, the maximal complex. -/
+/-- Perfect magnetic conductor: the maximal complex `H¹(Ω) → H(curl, Ω) → L²(Ω)`. -/
 def pmc : ShortHilbertComplex 𝕜 (L2F 𝕜 Ω (Fin 1)) (L2F 𝕜 Ω (Fin 1 × Fin 3))
     (L2F 𝕜 Ω (Fin 1 × Fin 3)) :=
   ConstCoeffOp.shortMaximal (gradOp 3 1) (curlOp 1) hΩ isComplexPair_grad_curl
 
 variable (𝕜 Ω) in
-/-- The magnetic Gauss law for a perfect electric conductor: `div B = 0` with `B · n = 0`
-(the kernel of the minimal divergence). -/
+/-- The magnetic Gauss law for a perfect electric conductor: `div B = 0` with `B · n = 0`. -/
 abbrev magneticPEC : Submodule 𝕜 (L2F 𝕜 Ω (Fin 1 × Fin 3)) :=
   ((divOp 3 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).minimal Ω).ker
 
 variable (𝕜 Ω) in
-/-- The magnetic Gauss law for a perfect magnetic conductor: `div B = 0` (kernel of the maximal
-divergence). -/
+/-- The magnetic Gauss law for a perfect magnetic conductor: `div B = 0`. -/
 abbrev magneticPMC : Submodule 𝕜 (L2F 𝕜 Ω (Fin 1 × Fin 3)) :=
   ((divOp 3 1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).maximal Ω).ker
 
@@ -202,9 +166,8 @@ theorem curl_mem_magneticPMC (x : (pmc 𝕜 hΩ).d₁.domain) :
   LinearPMap.mem_ker_iff.2 ⟨⟨_, ConstCoeffOp.maximal_mapsTo hΩ isComplexPair_curl_div x⟩, rfl,
     ConstCoeffOp.maximal_comp hΩ isComplexPair_curl_div x⟩
 
-/-- **Maxwell with a perfect electric conductor** on any open `Ω ⊆ ℝ³` (bounded or not, e.g. a
-cube): the Gauss laws `σ = 0`, `div E = 0`, `div B = 0` (`B · n = 0`) propagate.
-[QuennevilleBelair2015], Prop 4.16 -/
+/-- With a perfect electric conductor on any open `Ω ⊆ ℝ³`, bounded or not, the Gauss laws
+`σ = 0`, `div E = 0`, `div B = 0` (`B · n = 0`) propagate. [QuennevilleBelair2015], Prop 4.16 -/
 theorem pec_gauss_propagates [Fact (IsOpen Ω)] {t₀ t₁ : ℝ}
     {F U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2F 𝕜 Ω (Fin 1)) (L2F 𝕜 Ω (Fin 1 × Fin 3))
       (L2F 𝕜 Ω (Fin 1 × Fin 3)))}
@@ -215,8 +178,8 @@ theorem pec_gauss_propagates [Fact (IsOpen Ω)] {t₀ t₁ : ℝ}
     ∀ t ∈ Icc t₀ t₁, U t ∈ HilbertComplex.totalSub ((pec 𝕜 hΩ).divFreeSub (magneticPEC 𝕜 Ω)) :=
   (pec 𝕜 hΩ).divFree_propagates _ (curl_mem_magneticPEC hΩ) hU h0 hF
 
-/-- **Maxwell with a perfect magnetic conductor** on any open `Ω ⊆ ℝ³`: the Gauss laws
-propagate. [QuennevilleBelair2015], Prop 4.16 -/
+/-- With a perfect magnetic conductor on any open `Ω ⊆ ℝ³`, the Gauss laws propagate.
+[QuennevilleBelair2015], Prop 4.16 -/
 theorem pmc_gauss_propagates [Fact (IsOpen Ω)] {t₀ t₁ : ℝ}
     {F U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2F 𝕜 Ω (Fin 1)) (L2F 𝕜 Ω (Fin 1 × Fin 3))
       (L2F 𝕜 Ω (Fin 1 × Fin 3)))}

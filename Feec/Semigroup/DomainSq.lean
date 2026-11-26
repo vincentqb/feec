@@ -6,28 +6,8 @@ public import Feec.Semigroup.Stone
 /-!
 # The domain of the square of an operator
 
-For `A : E →ₗ.[𝕜] E`, `LinearPMap.domainSq A = D(A²) = {x ∈ D(A) | A x ∈ D(A)}`, a subspace of
-`E`. For a skew-adjoint `A` on a Hilbert space it is dense, and dense in every reducing subspace.
-It is the natural core of orbit-consistency arguments for the wave group: for `x ∈ D(A²)`, the
-orbit `t ↦ e^{tA} x` is `C¹` with values in `D(A)` for the graph norm.
-
-## Main results
-
-* `LinearPMap.mem_domainSq`, `LinearPMap.domainSq_le_domain`.
-* `LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`: the resolvent means `J_n = c²(c² − A²)⁻¹`
-  of Stone's theorem map into `D(A²)` and converge strongly to `1`.
-* `LinearPMap.IsSkewAdjoint.dense_domainSq`: `D(A²)` is dense.
-* `LinearPMap.IsSkewAdjoint.subset_closure_domainSq_inf`: `D(A²) ∩ K` is dense in every reducing
-  `K` (`P_K` maps `D(A²)` into `D(A²) ∩ K`).
-
-## References
-
-* [K.-J. Engel, R. Nagel, *One-Parameter Semigroups for Linear Evolution Equations*][EngelNagel2000],
-  §II.1 (cores and powers of generators)
-* [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
-  Cor. 2.4.9 (Stone's theorem)
-
-Bibliography: [references.bib](../../docs/references.bib)
+The domain `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`; for a skew-adjoint `A` on a Hilbert space it is dense,
+and `D(A²) ∩ K` is dense in every reducing subspace `K`.
 -/
 
 open Set Filter Topology
@@ -52,7 +32,6 @@ theorem mem_domainSq {x : E} : x ∈ A.domainSq ↔ ∃ hx : x ∈ A.domain, A �
 
 theorem domainSq_le_domain : A.domainSq ≤ A.domain := fun _ hx => (mem_domainSq.1 hx).1
 
-/-- A reducing projection maps `D(A²)` into `D(A²)`. -/
 theorem IsReducing.starProjection_mem_domainSq {K : Submodule 𝕜 E} [K.HasOrthogonalProjection]
     (hK : A.IsReducing K) {y : E} (hy : y ∈ A.domainSq) : K.starProjection y ∈ A.domainSq := by
   obtain ⟨hy1, hy2⟩ := mem_domainSq.1 hy
@@ -63,9 +42,6 @@ theorem IsReducing.starProjection_mem_domainSq {K : Submodule 𝕜 E} [K.HasOrth
 
 variable [CompleteSpace E]
 
-/-- **`D(A²)` is dense** for a skew-adjoint `A`, quantitatively: the resolvent means
-`J_n = c²(c² − A²)⁻¹` of Stone's theorem map into `D(A²)` and converge strongly to `1`
-(`Feec.Stone.tendsto_approxJ`). -/
 theorem IsSkewAdjoint.exists_mem_domain_sq_lt (hA : A.IsSkewAdjoint) (x : E) {ε : ℝ}
     (hε : 0 < ε) : ∃ (y : E) (hy : y ∈ A.domain), A ⟨y, hy⟩ ∈ A.domain ∧ ‖x - y‖ < ε := by
   obtain ⟨n, hn⟩ := ((Feec.Stone.tendsto_approxJ hA x).eventually
@@ -110,8 +86,7 @@ theorem IsSkewAdjoint.dense_domainSq (hA : A.IsSkewAdjoint) : Dense (A.domainSq 
   rw [Metric.mem_ball, dist_comm, dist_eq_norm]
   exact hxy
 
-/-- **`D(A²) ∩ K` is dense in a reducing `K`**: the projection `P_K` maps the dense `D(A²)` into
-`D(A²) ∩ K` and fixes `K`. -/
+/-- **`D(A²) ∩ K` is dense in a reducing `K`** for a skew-adjoint `A`. -/
 theorem IsSkewAdjoint.subset_closure_domainSq_inf (hA : A.IsSkewAdjoint) {K : Submodule 𝕜 E}
     [K.HasOrthogonalProjection] (hK : A.IsReducing K) :
     (K : Set E) ⊆ _root_.closure ((A.domainSq ⊓ K : Submodule 𝕜 E) : Set E) := by

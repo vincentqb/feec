@@ -7,19 +7,9 @@ public import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 /-!
 # Interval integrals: Fubini on a triangle, primitives on `[a,b]`, the Laplace identity
 
-* `integral_integral_triangle_swap`: `∫ₐᵗ ∫ₐˢ k s r dr ds = ∫ₐᵗ ∫ᵣᵗ k s r ds dr` for `k` dominated
-  by an integrable function of `r`.
-* `hasDerivWithinAt_integral_of_continuousOn`: the primitive of a function continuous on `[a,b]`
-  has derivative within `[a,b]`.
-* `integral_exp_neg_smul_sub_eq`: the Laplace identity on `[0,T]`,
-  `∫₀ᵀ e⁻ˢ (u s - u' s) ds = u 0 - e⁻ᵀ u T`.
-
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §4.1 (Fubini's theorem)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+Fubini's theorem on a triangle, `∫ₐᵗ ∫ₐˢ k s r dr ds = ∫ₐᵗ ∫ᵣᵗ k s r ds dr` for `k` dominated by an
+integrable function of `r`, derivatives of primitives within `[a,b]`, and
+`∫₀ᵀ e⁻ˢ (u s - u' s) ds = u 0 - e⁻ᵀ u T` for `u`, `u'` continuous on `[0, T]`.
 -/
 
 open Set MeasureTheory
@@ -28,9 +18,6 @@ open Set MeasureTheory
 
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
 
-/-- **Fubini on a triangle**: for `a ≤ t` and `k` a.e.-measurable on `(a,t]²` with
-`‖k s r‖ ≤ g r`, `g` integrable,
-`∫ₐᵗ ∫ₐˢ k s r dr ds = ∫ₐᵗ ∫ᵣᵗ k s r ds dr`. -/
 theorem integral_integral_triangle_swap {k : ℝ → ℝ → E} {g : ℝ → ℝ} {a t : ℝ} (hat : a ≤ t)
     (hk : AEStronglyMeasurable (Function.uncurry k)
       ((volume.restrict (Ioc a t)).prod (volume.restrict (Ioc a t))))
@@ -72,7 +59,6 @@ theorem integral_integral_triangle_swap {k : ℝ → ℝ → E} {g : ℝ → ℝ
 
 variable [CompleteSpace E]
 
-/-- The primitive of a function continuous on `[a,b]` has derivative within `[a,b]`. -/
 theorem hasDerivWithinAt_integral_of_continuousOn {W : ℝ → E} {a b t : ℝ}
     (hW : ContinuousOn W (Icc a b)) (ht : t ∈ Icc a b) :
     HasDerivWithinAt (fun τ => ∫ s in a..τ, W s) (W t) (Icc a b) t := by
@@ -81,9 +67,6 @@ theorem hasDerivWithinAt_integral_of_continuousOn {W : ℝ → E} {a b t : ℝ}
     ((hW.mono (Icc_subset_Icc_right ht.2)).intervalIntegrable_of_Icc ht.1)
     (hW.stronglyMeasurableAtFilter_nhdsWithin measurableSet_Icc t) (hW t ht)
 
-/-- **The Laplace identity on `[0, T]`**: for `u` continuous on `[0, T]` with continuous right
-derivative `w`, `∫₀ᵀ e⁻ˢ (u s - w s) ds = u 0 - e⁻ᵀ u T` (`e⁻ˢ u` has derivative
-`-e⁻ˢ (u - w)`). -/
 theorem integral_exp_neg_smul_sub_eq {u w : ℝ → E} {T : ℝ} (hT : 0 ≤ T)
     (hu : ContinuousOn u (Icc 0 T)) (hw : ContinuousOn w (Icc 0 T))
     (hd : ∀ s ∈ Ico 0 T, HasDerivWithinAt u (w s) (Ici s) s) :

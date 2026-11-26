@@ -5,52 +5,13 @@ public import Feec.TimeStepping.RationalBanach
 /-!
 # Rational approximations of semigroups with unbounded generators
 
-Let `A` be an m-dissipative, possibly unbounded, operator of a Hilbert space over `𝕜 = ℝ` or `ℂ`,
-`S(t)` the contraction semigroup it generates (Lumer–Phillips,
-`LinearPMap.IsMDissipative.semigroup`), and `r` an A-stable rational scheme of order `p`. Then
-**Brenner–Thomée's error bound** holds with the constant of the bounded case
-([BrennerThomee1979]; [Thomee2006], Ch. 9):
-
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖A^{p+1} x‖`, `K = sup_y |ρ(iy)| + 1/(p+1)!`,
-
-for every `τ > 0`, `n` and `x ∈ D(A^{p+1})`, with `r(τA)` the operator of `Feec.TimeStepping.Rational`
-(through the Cayley transform, equivalently the resolvent). `x ∈ D(A^k)` with `Aᵏ x = y` is a
-chain `u₀ = x, …, u_k = y` with `(u_j, u_{j+1})` in the graph of `A`.
-
-## Main results
-
-* **`RationalScheme.norm_step_pow_sub_semigroup_le`**: real `r`, Hilbert spaces over `𝕜`;
-* **`norm_resolventEval_mul_inverse_pow_sub_semigroup_le`**: complex `r = p/q` on complex Hilbert
-  spaces, `r(τA) = P(R) Q(R)⁻¹` at the resolvent `R = (1 - τA)⁻¹`;
-* **`norm_thetaStep_pow_sub_semigroup_le`** (θ-schemes, `θ ≥ 1/2`: `K = θ + 1/2`, order `1`) and
-  **`norm_cayley_pow_sub_semigroup_le`** (Crank–Nicolson: `K = 5/12`, order `2`).
-
-## Proof
-
-For real `r`, directly from Brenner–Thomée on Banach spaces
-(`Feec.TimeStepping.RationalScheme.norm_step_pow_sub_S_le`): von Neumann's inequality gives the
-stability `‖r(τA)‖ ≤ 1`, the remainder bound `‖ρ(τA)‖ ≤ sup_y |ρ(iy)|` and the invertibility of
-`Q(R)` (`RationalScheme.norm_step_le`, `RationalScheme.isUnit_resolventEval_den`), and `S` is a
-contraction semigroup.
-
-For complex `r`, the θ-schemes and Crank–Nicolson, through the Yosida approximations
-`A_m = c_m A (c_m - A)⁻¹` (`Feec.LumerPhillips.yosida`), bounded
-and dissipative: the bounded theorem holds for each
-`A_m` with the same constant, `A_m^k x = J_mᵏ Aᵏ x` on `D(Aᵏ)` with the contractions
-`J_m = c_m (c_m - A)⁻¹` (`Feec.LumerPhillips.yosida_pow_apply`), and both sides converge: `exp(t A_m) x → S(t) x` by
-construction of `S`, and `r(τ A_m) → r(τ A)` strongly. For the latter, the resolvents converge
-strongly (`Feec.LumerPhillips.tendsto_resolvent_yosida`: `(z - A_m)⁻¹ y - (z - A)⁻¹ y = (z - A_m)⁻¹ (A_m x - A x)` at
-`x = (z - A)⁻¹ y`), hence the Cayley transforms; polynomials in uniformly bounded, strongly
-convergent operators converge strongly (`ContinuousLinearMap.tendsto_aeval_apply`), and so do
-the inverses `q̃(C_m)⁻¹` (`ContinuousLinearMap.tendsto_inverse_apply`), uniformly bounded by
-von Neumann's inequality for `1/q̃` (`ContinuousLinearMap.exists_norm_inverse_aeval_le`).
+For m-dissipative, possibly unbounded, `A` and A-stable `r` of order `p`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖A^{p+1} x‖` for `τ > 0`.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.3 (the Yosida approximation), §1.4
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -65,14 +26,10 @@ namespace Feec.LumerPhillips
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-/-- The Yosida approximation `A_m`, everywhere defined, is m-dissipative. -/
 theorem isMDissipative_yosida (hA : A.IsMDissipative) (m : ℕ) :
     ((yosida A m : E →ₗ[𝕜] E).toPMap ⊤).IsMDissipative :=
   (yosida A m).isMDissipative_toPMap_top (re_inner_yosida_le hA m)
 
-/-- **The resolvents of the Yosida approximations converge strongly**: for `re z > 0`,
-`(z - A_m)⁻¹ y → (z - A)⁻¹ y`, since `(z - A_m)⁻¹ y - x = (z - A_m)⁻¹ (A_m x - A x)` at
-`x = (z - A)⁻¹ y ∈ D(A)`, `‖(z - A_m)⁻¹‖ ≤ 1/re z` and `A_m x → A x`. -/
 theorem tendsto_resolvent_yosida (hA : A.IsMDissipative) {z : 𝕜} (hz : 0 < RCLike.re z)
     (y : E) :
     Tendsto (fun m => resolvent ((yosida A m : E →ₗ[𝕜] E).toPMap ⊤) z y) atTop
@@ -111,7 +68,6 @@ section Yosida
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-/-- The Cayley transforms of the Yosida approximations converge strongly. -/
 theorem tendsto_cayley_yosida (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) (y : E) :
     Tendsto (fun m => cayley ((yosida A m : E →ₗ[𝕜] E).toPMap ⊤) τ y) atTop
       (𝓝 (cayley A τ y)) := by
@@ -121,7 +77,6 @@ theorem tendsto_cayley_yosida (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) 
     one_apply_eq_self]
   exact ((tendsto_resolvent_yosida hA hz y).const_smul _).sub_const _
 
-/-- The θ-steps of the Yosida approximations converge strongly (`re θ > 0`, `τ > 0`). -/
 theorem tendsto_thetaStep_yosida (hA : A.IsMDissipative) {θ : 𝕜} (hθ : 0 < RCLike.re θ)
     {τ : ℝ} (hτ : 0 < τ) (y : E) :
     Tendsto (fun m => thetaStep ((yosida A m : E →ₗ[𝕜] E).toPMap ⊤) θ τ y) atTop
@@ -131,9 +86,6 @@ theorem tendsto_thetaStep_yosida (hA : A.IsMDissipative) {θ : 𝕜} (hθ : 0 < 
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **Error bounds pass to the limit of the Yosida approximations**: if `Pₘ → P` strongly with
-`‖Pₘ‖ ≤ 1`, and `‖Pₘⁿ u₀ - exp(t A_m) u₀‖ ≤ C ‖A_mᵏ u₀‖` for every `m`, then
-`‖Pⁿ u₀ - S(t) u₀‖ ≤ C ‖Aᵏ u₀‖` for the Lumer–Phillips semigroup `S` and `u₀ ∈ D(Aᵏ)`. -/
 theorem norm_pow_apply_sub_semigroup_le (hA : A.IsMDissipative) {P : E →L[𝕜] E}
     {Pm : ℕ → E →L[𝕜] E} (hPm : ∀ m, ‖Pm m‖ ≤ 1)
     (hP : ∀ y, Tendsto (fun m => Pm m y) atTop (𝓝 (P y))) (n : ℕ) {t : ℝ} (ht : 0 ≤ t) {k : ℕ}
@@ -156,11 +108,9 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **Brenner–Thomée for unbounded generators**: for an A-stable rational scheme `r` of order `p`,
-every m-dissipative `A` with semigroup `S`, `τ > 0`, `n` and `u₀ ∈ D(A^{p+1})` (a chain
-`u₀, …, u_{p+1}` in the graph of `A`, `A^{p+1} u₀ = u_{p+1}`),
-`‖r(τA)ⁿ u₀ - S(nτ) u₀‖ ≤ K nτ τᵖ ‖A^{p+1} u₀‖` with `K = sup_y |ρ(iy)| + 1/(p+1)!` (`ρ` the
-remainder), the constant of the bounded case. [BrennerThomee1979]; [Thomee2006], Ch. 9 -/
+/-- **Brenner–Thomée for unbounded generators** ([BrennerThomee1979]): for m-dissipative `A`,
+A-stable `r` of order `p` and `τ > 0`, `‖r(τA)ⁿ u₀ - S(nτ) u₀‖ ≤ K nτ τᵖ ‖A^{p+1} u₀‖`,
+`K = sup_y |ρ(iy)| + 1/(p+1)!`. -/
 theorem RationalScheme.norm_step_pow_sub_semigroup_le (r : RationalScheme) (hA : A.IsMDissipative)
     (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E}
     (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ A.graph) :
@@ -175,8 +125,7 @@ theorem RationalScheme.norm_step_pow_sub_semigroup_le (r : RationalScheme) (hA :
   simpa using h
 
 /-- **Brenner–Thomée for the θ-schemes** (`θ ≥ 1/2`): for every m-dissipative `A`, `τ > 0`, `n`
-and `u₀ ∈ D(A²)`, `‖r_θ(τA)ⁿ u₀ - S(nτ) u₀‖ ≤ (θ + 1/2) nτ τ ‖A² u₀‖`; `θ = 1` is implicit
-Euler. [Thomee2006], Ch. 7 -/
+and `u₀ ∈ D(A²)`, `‖r_θ(τA)ⁿ u₀ - S(nτ) u₀‖ ≤ (θ + 1/2) nτ τ ‖A² u₀‖`. [Thomee2006], Ch. 7 -/
 theorem norm_thetaStep_pow_sub_semigroup_le (hA : A.IsMDissipative) {θ : ℝ} (hθ : 1 / 2 ≤ θ)
     {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} (hu : ∀ j < 2, (u j, u (j + 1)) ∈ A.graph) :
     ‖(thetaStep A θ τ ^ n) (u 0) - hA.semigroup.S (n * τ) (u 0)‖ ≤
@@ -187,8 +136,7 @@ theorem norm_thetaStep_pow_sub_semigroup_le (hA : A.IsMDissipative) {θ : ℝ} (
     (tendsto_thetaStep_yosida hA (by linarith) hτ) n (by positivity) hu (by positivity)
     fun m => norm_thetaStep_pow_sub_exp_le (re_inner_yosida_le hA m) hθ hτ n (u 0)
 
-/-- **Brenner–Thomée for Crank–Nicolson** (the Cayley transform with half step `τ/2`): for every
-m-dissipative `A`, `τ > 0`, `n` and `u₀ ∈ D(A³)`,
+/-- **Brenner–Thomée for Crank–Nicolson**: for every m-dissipative `A`, `τ > 0` and `u₀ ∈ D(A³)`,
 `‖C_{τ/2}ⁿ u₀ - S(nτ) u₀‖ ≤ 5/12 nτ τ² ‖A³ u₀‖`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem norm_cayley_pow_sub_semigroup_le (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) (n : ℕ)
     {u : ℕ → E} (hu : ∀ j < 3, (u j, u (j + 1)) ∈ A.graph) :
@@ -207,13 +155,6 @@ section Complex
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
   {A : E →ₗ.[ℂ] E}
 
-/-- **Brenner–Thomée for unbounded generators, complex coefficients**: let `r = p/q` be complex,
-without poles for `re z ≤ 0`, A-stable (`|r(iy)| ≤ 1`) and of order `m`
-(`X^{m+1} ∣ p - q Tₘ`). For every m-dissipative `A` of a complex Hilbert space with semigroup
-`S`, `τ > 0`, `n` and `u₀ ∈ D(A^{m+1})` (a chain in the graph of `A`), with
-`r(τA) = P(R) Q(R)⁻¹` at the resolvent `R = (1 - τA)⁻¹` (`resolventEval`, `N = deg q`),
-`‖r(τA)ⁿ u₀ - S(nτ) u₀‖ ≤ K nτ τᵐ ‖A^{m+1} u₀‖` with `K = sup_y |ρ(iy)/q(iy)| + 1/(m+1)!`,
-`ρ = (p - q Tₘ)/X^{m+1}`. [BrennerThomee1979] -/
 theorem norm_resolventEval_mul_inverse_pow_sub_semigroup_le (hA : A.IsMDissipative) {p q : ℂ[X]}
     (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0)
     (hr : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ 1) {m : ℕ}

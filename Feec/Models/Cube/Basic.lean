@@ -8,48 +8,14 @@ public import Feec.Semigroup.Spectral
 /-!
 # Shared infrastructure of the cube models
 
-The cube `Q = (0, ½)³` is a fundamental domain of the reflection group `(ℤ/2)³` of the torus
-`𝕋³ = ℝ³/ℤ³`, and the cube models (`Feec.Models.Cube.Parity`, `Feec.Models.Cube.Static` for the
-thesis' row-wise boundary conditions; `Feec.Models.Cube.Mirror`, `MirrorSym`, `MirrorBGG` for the
-mirror conditions) are compressions of torus complexes. This file holds what both families share
-and does not depend on either.
+The cube `Q = (0, ½)ᵈ` as a fundamental domain of the reflections of `𝕋ᵈ`: restriction,
+periodization and parity extension, the tiling of `𝕋ᵈ` by reflected boxes, and compressions.
 
-## Main definitions and results
+## Main results
 
-* `halfArc`, `boxSet`: the box `(0, ½)ᵈ` in `𝕋ᵈ` (any dimension); `ZeroOnBox f`: the function
-  with Fourier coefficients `f` vanishes a.e. on the box; **`eq_zero_of_zeroOnBox_of_finite`**: a trigonometric polynomial vanishing a.e. on the box is
-  zero (`Feec.Fourier.TorusWeak.eq_zero_of_ae_eq_zero_of_finite`).
-* (namespace `Geometry`) `Q d = (0, ½)ᵈ`, `openCube b s = ∏ (bᵢ, bᵢ + s)`; **`measurePreserving_proj_Q`**: the covering
-  map `proj : ℝᵈ → 𝕋ᵈ` is measure preserving from `Q` onto the box; `setIntegral_boxSet`.
-* `resQ`, `resQF`: restriction of torus fields to `Q`; `per`, `isSmooth_per`, `partialT_per`,
-  `integral_mul_per`: periodization of test functions supported in `Q`; **`resQ_isWeakFO`**: weak
-  first-order operators on `𝕋ᵈ` restrict to weak first-order operators on `Q`.
-* `reflB ε`, `piece ε`: the reflections of `𝕋ᵈ` and the `2ᵈ` reflected boxes; `single j`: the
-  single reflection `R_j` (`reflB_single_proj_of_face`, `flipB_single`, `sign_single`);
-  **`integral_eq_sum_box`** (the tiling, up to the null set `faceSet`);
-  `mFourierCoeff_comp_reflB`: `(g ∘ R_ε)^ = ĝ ∘ flip_ε`; `trigPoly_reflB`: parity of a
-  trigonometric polynomial with reflection-symmetric coefficients.
-* **`norm_sq_eq_two_pow`**: `‖f‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖f|_Q‖²` for parity fields;
-  **`eq_zero_of_resQ_eq_zero`**: parity fields are determined by their restriction to `Q`
-  (`norm_comp_reflB_ae`: the Fourier-side parity criterion).
-* `ext c Φ`: the parity extension of a test function for a sign vector `c`; `ext_reflB`,
-  `isSmooth_ext`, **`resQ_toL2_ext`** (`(ext Φ)|_Q = Φ`), **`norm_sq_toL2_ext`**
-  (`‖ext Φ‖² = 2ᵈ ‖Φ‖²`, the factor `8` for the cube), **`partialT_ext`** (`∂_k ∘ ext_c = ext_{c'} ∘ ∂_k`
-  with the parity of `x_k` reversed).
-* `compSub`, `mem_invariantCore_compSub_iff`, `mem_stationary_compSub_iff`,
-  `forward_compSub_iff`, `mem_wave_domain_compress_iff`: invariant cores, stationary vectors and
-  wave domains of a compression are those of the big complex.
-* **`reducingSubcomplex_compSub_fixed`**: a reducing subcomplex invariant under a finite unitary
-  action descends to the fixed (method-of-images) complex.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17 on the cube)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `Geometry.integral_eq_sum_box`: `∫_{𝕋ᵈ} g = Σ_ε ∫_{box} g ∘ R_ε`.
+* `Geometry.norm_sq_eq_two_pow`: `‖f‖² = 2ᵈ ‖f|_Q‖²` for parity fields.
+* `reducingSubcomplex_compSub_fixed`: invariant reducing subcomplexes descend to the fixed complex.
 -/
 
 open scoped InnerProductSpace ENNReal Topology
@@ -73,7 +39,7 @@ section Box
 
 open UnitAddTorus Feec.Fourier.TorusWeak
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 variable {d : Type*} [Fintype d]
@@ -92,7 +58,6 @@ theorem isOpen_boxSet [Finite d] : IsOpen (boxSet d) :=
 theorem measurableSet_boxSet : MeasurableSet (boxSet d) := isOpen_boxSet.measurableSet
 
 omit [Fintype d] in
-/-- Points of `(0, ½)ᵈ ⊂ ℝᵈ` project into the box. -/
 theorem proj_mem_boxSet {y : d → ℝ} (hy : ∀ i, y i ∈ Ioo (0 : ℝ) (1 / 2)) : proj y ∈ boxSet d :=
   fun i _ => ⟨y i, hy i, rfl⟩
 
@@ -100,21 +65,17 @@ omit [Fintype d] in
 theorem boxSet_nonempty : (boxSet d).Nonempty :=
   ⟨proj fun _ => 1 / 4, proj_mem_boxSet fun _ => ⟨by norm_num, by norm_num⟩⟩
 
-/-- `ZeroOnBox f`: the `L²(𝕋ᵈ)` function with Fourier coefficients `f` vanishes almost
-everywhere on the box `(0, ½)ᵈ`. -/
+/-- The function with Fourier coefficients `f` vanishes a.e. on the box `(0, ½)ᵈ`. -/
 def ZeroOnBox (f : lp (fun _ : d → ℤ => ℂ) 2) : Prop :=
   (ofCoeff f : UnitAddTorus d → ℂ) =ᵐ[volume.restrict (boxSet d)] 0
 
-/-- **A trigonometric polynomial vanishing a.e. on the box is zero.** -/
 theorem eq_zero_of_zeroOnBox_of_finite {f : lp (fun _ : d → ℤ => ℂ) 2} (S : Finset (d → ℤ))
     (hS : ∀ k ∉ S, f k = 0) (hf : ZeroOnBox f) : f = 0 :=
   eq_zero_of_ae_eq_zero_of_finite S hS isOpen_boxSet boxSet_nonempty hf
 
 end Box
 
-/-! ### The cube `Q = (0, ½)ᵈ ⊂ ℝᵈ`, open cubes, and the covering map
-
-In the namespace `Feec.Models.Cube.Geometry`, apart from the Fourier-side cube models. -/
+/-! ### The cube `Q = (0, ½)ᵈ ⊂ ℝᵈ`, open cubes, and the covering map -/
 
 namespace Geometry
 
@@ -122,7 +83,7 @@ section Covering
 
 open UnitAddTorus Feec.Fourier.TorusWeak
 
-/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+/-- The normalised Haar measure on `ℝ/ℤ`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
 local instance : Measure.IsAddHaarMeasure (volume : Measure UnitAddCircle) :=
@@ -164,8 +125,6 @@ theorem Q_subset_unitCube : Q d ⊆ unitCube d := fun y hy i hi => by
   rw [mem_Q] at hy
   exact ⟨(hy i).1, (hy i).2.le.trans (by norm_num)⟩
 
-/-- The covering map `ℝ → ℝ/ℤ` is measure preserving from `(0, 1]` to the normalized Haar
-measure. -/
 theorem measurePreserving_coe_Ioc :
     MeasurePreserving ((↑) : ℝ → UnitAddCircle) (volume.restrict (Ioc (0 : ℝ) 1))
       (volume : Measure UnitAddCircle) := by
@@ -176,7 +135,6 @@ theorem measurePreserving_coe_Ioc :
     rw [AddCircle.volume_eq_smul_haarAddCircle, ENNReal.ofReal_one, one_smul]; rfl
   exact e ▸ h
 
-/-- `proj : ℝᵈ → 𝕋ᵈ` is measure preserving from the unit cube `(0, 1]ᵈ`. -/
 theorem measurePreserving_proj_unitCube :
     MeasurePreserving proj (volume.restrict (unitCube d)) (volume : Measure (UnitAddTorus d)) := by
   have h := measurePreserving_pi (fun _ : d => volume.restrict (Ioc (0 : ℝ) 1))
@@ -185,7 +143,6 @@ theorem measurePreserving_proj_unitCube :
   rw [← Measure.restrict_pi_pi, ← volume_pi] at h
   exact h
 
-/-- A point of `(0, 1]` whose class lies in the arc `(0, ½)` lies in `(0, ½)`. -/
 theorem mem_Ioo_of_coe_mem_halfArc {t : ℝ} (ht : t ∈ Ioc (0 : ℝ) 1)
     (h : ((t : ℝ) : UnitAddCircle) ∈ halfArc) : t ∈ Ioo (0 : ℝ) (1 / 2) := by
   obtain ⟨s, hs, e⟩ := h
@@ -195,7 +152,6 @@ theorem mem_Ioo_of_coe_mem_halfArc {t : ℝ} (ht : t ∈ Ioc (0 : ℝ) 1)
   exact this ▸ hs
 
 omit [Fintype d] in
-/-- `proj⁻¹(box) ∩ (0, 1]ᵈ = Q`. -/
 theorem preimage_boxSet_inter_unitCube : proj ⁻¹' boxSet d ∩ unitCube d = Q d := by
   ext y
   rw [mem_Q]
@@ -212,28 +168,24 @@ theorem measurePreserving_proj_Q :
   rwa [Measure.restrict_restrict (measurableSet_boxSet.preimage
     measurePreserving_proj_unitCube.measurable), preimage_boxSet_inter_unitCube] at h
 
-/-- **Change of variables between the box of `𝕋ᵈ` and `Q ⊂ ℝᵈ`.** -/
 theorem setIntegral_boxSet {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     (g : UnitAddTorus d → E) (hg : AEStronglyMeasurable g (volume.restrict (boxSet d))) :
     ∫ x in boxSet d, g x = ∫ y in Q d, g (proj y) := by
   rw [← measurePreserving_proj_Q.map_eq] at hg ⊢
   exact integral_map measurePreserving_proj_Q.measurable.aemeasurable hg
 
-/-- Functions vanishing off the box integrate over `𝕋ᵈ` as over `Q`. -/
 theorem integral_eq_setIntegral_Q {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
     {g : UnitAddTorus d → E} (hg : AEStronglyMeasurable g volume)
     (h0 : ∀ x, x ∉ boxSet d → g x = 0) : ∫ x, g x = ∫ y in Q d, g (proj y) := by
   rw [← setIntegral_boxSet g hg.restrict, setIntegral_eq_integral_of_forall_compl_eq_zero h0]
 
-/-- Almost-everywhere statements on the box pull back to `Q`. -/
 theorem ae_Q_of_ae_boxSet {p : UnitAddTorus d → Prop}
     (h : ∀ᵐ x ∂volume.restrict (boxSet d), p x) : ∀ᵐ y ∂volume.restrict (Q d), p (proj y) :=
   measurePreserving_proj_Q.quasiMeasurePreserving.ae h
 
 /-! #### Restriction of torus fields to `Q` -/
 
-/-- **Restriction to `Q`**: `f ↦ (f ∘ proj)|_Q`, a continuous linear map
-`L²(𝕋ᵈ) → L²(Q)`. -/
+/-- **Restriction to `Q`**: `f ↦ (f ∘ proj)|_Q`, `L²(𝕋ᵈ) → L²(Q)`. -/
 def resQ : Lp ℂ 2 (volume : Measure (UnitAddTorus d)) →L[ℂ] Domain.L2 ℂ (Q d) :=
   ((Lp.compMeasurePreservingₗᵢ ℂ proj measurePreserving_proj_Q).toContinuousLinearMap).comp
     (LpToLpRestrictCLM (UnitAddTorus d) ℂ ℂ volume 2 (boxSet d))
@@ -274,12 +226,10 @@ theorem proj_rep (x : UnitAddTorus d) : proj (rep x) = x := by
   funext i
   simp [proj, rep]
 
-/-- **Periodization** of a function supported in `Q`: `per Φ (x) = Φ(rep x)`, the
-`ℤᵈ`-periodic extension of `Φ` as a function on `𝕋ᵈ`. -/
+/-- **Periodization** of a function supported in `Q`: `per Φ (x) = Φ(rep x)`. -/
 def per (Φ : (d → ℝ) → ℂ) (x : UnitAddTorus d) : ℂ := Φ (rep x)
 
-/-- The integer vector `⌊y + ¼⌋`: near `y`, the only translate of `Q` meeting the neighbourhood
-is `Q + ⌊y + ¼⌋`. -/
+/-- The integer vector `⌊y + ¼⌋`. -/
 def nvec (y : d → ℝ) (i : d) : ℝ := (⌊y i + 1 / 4⌋ : ℤ)
 
 section Per
@@ -314,7 +264,6 @@ theorem per_proj (y : d → ℝ) : per Φ (proj y) = Φ (fun i => y i - (⌊y i�
   funext i
   exact rep_proj y i
 
-/-- **Local form of the periodization**: near `y`, `per Φ ∘ proj = Φ(· - ⌊y + ¼⌋)`. -/
 theorem per_eventuallyEq (hΦ : Domain.IsTest (Q d) Φ) (y : d → ℝ) :
     (per Φ ∘ proj) =ᶠ[𝓝 y] fun z => Φ (z - nvec y) := by
   filter_upwards [Metric.ball_mem_nhds y (by norm_num : (0 : ℝ) < 1 / 8)] with z hz
@@ -336,7 +285,6 @@ theorem per_eventuallyEq (hΦ : Domain.IsTest (Q d) Φ) (y : d → ℝ) :
       exact hdn (funext fun i => eq_floor_self_of_ne_zero hΦ h i)
     exact h1.trans h2.symm
 
-/-- The periodization of a test function is smooth on `𝕋ᵈ`. -/
 theorem isSmooth_per (hΦ : Domain.IsTest (Q d) Φ) : IsSmooth (per Φ) := by
   unfold IsSmooth
   rw [contDiff_iff_contDiffAt]
@@ -346,7 +294,6 @@ theorem isSmooth_per (hΦ : Domain.IsTest (Q d) Φ) : IsSmooth (per Φ) := by
   exact hs.contDiffAt.congr_of_eventuallyEq (per_eventuallyEq hΦ y)
 
 omit [Fintype d] in
-/-- On `Q`, `per Φ ∘ proj = Φ`. -/
 theorem per_proj_of_mem {y : d → ℝ} (hy : y ∈ Q d) : per Φ (proj y) = Φ y := by
   rw [per_proj]
   congr 1
@@ -357,7 +304,6 @@ theorem per_proj_of_mem {y : d → ℝ} (hy : y ∈ Q d) : per Φ (proj y) = Φ 
     constructor <;> norm_num <;> linarith [this.1, this.2]
   simp [this]
 
-/-- The periodization is supported in the box. -/
 theorem tsupport_per_subset (hΦ : Domain.IsTest (Q d) Φ) : tsupport (per Φ) ⊆ boxSet d := by
   have hK : IsCompact (proj '' tsupport Φ) :=
     hΦ.hasCompactSupport.isCompact.image isOpenQuotientMap_proj.continuous
@@ -375,7 +321,6 @@ theorem per_eq_zero_of_notMem (hΦ : Domain.IsTest (Q d) Φ) {x : UnitAddTorus d
 
 variable [DecidableEq d]
 
-/-- **Derivatives of the periodization**: `∂_c (per Φ) = per (∂_c Φ)`. -/
 theorem partialT_per (hΦ : Domain.IsTest (Q d) Φ) (c : d) :
     partialT c (per Φ) = per fun y => fderiv ℝ Φ y (Pi.single c 1) := by
   funext x
@@ -392,8 +337,6 @@ theorem partialT_per (hΦ : Domain.IsTest (Q d) Φ) (c : d) :
   rw [hf.fderiv]
 
 omit [DecidableEq d] in
-/-- **Transfer of pairings**: `∫_{𝕋ᵈ} f · per Φ = ∫_Q (f|_Q) Φ` for test functions `Φ` supported
-in `Q`. -/
 theorem integral_mul_per (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
     (hΦ : Domain.IsTest (Q d) Φ) :
     ∫ x, (f : UnitAddTorus d → ℂ) x * per Φ x = ∫ y, resQ f y * Φ y ∂volume.restrict (Q d) := by
@@ -405,8 +348,7 @@ theorem integral_mul_per (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d)))
   filter_upwards [coeFn_resQ f, ae_restrict_mem measurableSet_Q] with y h1 h2
   rw [per_proj_of_mem h2, h1]
 
-/-- **Restriction of weak first-order operators**: if `g = Σ α_{cp} ∂_c f_p` weakly on `𝕋ᵈ`,
-then `g|_Q = Σ α_{cp} ∂_c (f_p|_Q)` weakly on `Q` (tested against `C_c^∞(Q)`). -/
+/-- **Weak first-order operators on `𝕋ᵈ` restrict to weak first-order operators on `Q`.** -/
 theorem resQ_isWeakFO {P : Type*} [Fintype P] {α : d → P → ℂ}
     {f : P → Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
     {g : Lp ℂ 2 (volume : Measure (UnitAddTorus d))} (h : IsWeakFO α f g)
@@ -445,7 +387,6 @@ omit [Fintype d] in
 def single [DecidableEq d] (j : d) : d → Bool := fun i => decide (i = j)
 
 omit [Fintype d] in
-/-- **The single reflections fix the faces**: if `y_j ∈ {0, ½}` then `R_j (proj y) = proj y`. -/
 theorem reflB_single_proj_of_face [DecidableEq d] {j : d} {y : d → ℝ}
     (h : y j = 0 ∨ y j = 1 / 2) : reflB (single j) (proj y) = proj y := by
   funext i
@@ -479,7 +420,6 @@ def reflBE (ε : d → Bool) : UnitAddTorus d ≃ᵐ UnitAddTorus d where
   measurable_toFun := (measurePreserving_reflB ε).measurable
   measurable_invFun := (measurePreserving_reflB ε).measurable
 
-/-- The arc `(0, ½)` and its reflection are disjoint. -/
 theorem neg_notMem_halfArc {t : UnitAddCircle} (ht : t ∈ halfArc) : -t ∉ halfArc := by
   obtain ⟨s, hs, rfl⟩ := ht
   rintro ⟨u, hu, e⟩
@@ -508,7 +448,6 @@ theorem disjoint_piece {ε ε' : d → Bool} (h : ε ≠ ε') : Disjoint (piece 
   · exact neg_notMem_halfArc a b
   · exact neg_notMem_halfArc b a
 
-/-- Points of `ℝ/ℤ` have measure zero. -/
 theorem volume_singleton_circle (t : UnitAddCircle) : volume ({t} : Set UnitAddCircle) = 0 := by
   obtain ⟨r, rfl⟩ := QuotientAddGroup.mk_surjective t
   have hsub : ((↑) : ℝ → UnitAddCircle) ⁻¹' {((r : ℝ) : UnitAddCircle)} ⊆
@@ -537,7 +476,6 @@ theorem volume_faceSet : volume (faceSet d) = 0 := by
   · exact Measure.pi_eval_preimage_null (μ := fun _ => (volume : Measure UnitAddCircle))
       (i := j) (s := {((1 / 2 : ℝ) : UnitAddCircle)}) (volume_singleton_circle _)
 
-/-- Off `0` and `½`, a point of `ℝ/ℤ` or its negative lies in `(0, ½)`. -/
 theorem mem_halfArc_or_neg {t : UnitAddCircle} (h0 : t ≠ 0)
     (h1 : t ≠ ((1 / 2 : ℝ) : UnitAddCircle)) : t ∈ halfArc ∨ -t ∈ halfArc := by
   obtain ⟨r, hr, rfl⟩ : ∃ r ∈ Ico (0 : ℝ) 1, (r : UnitAddCircle) = t := by
@@ -564,7 +502,6 @@ theorem mem_iUnion_piece {x : UnitAddTorus d} (hx : x ∉ faceSet d) : x ∈ ⋃
   · simp only [h, not_false_eq_true, decide_true, ↓reduceIte]
     exact (mem_halfArc_or_neg (hx j).1 (hx j).2).resolve_left h
 
-/-- **The `2ᵈ` reflected boxes tile `𝕋ᵈ`** up to the null set of their faces. -/
 theorem iUnion_piece_ae_eq_univ :
     (⋃ ε, piece ε : Set (UnitAddTorus d)) =ᵐ[volume] (univ : Set (UnitAddTorus d)) := by
   refine (ae_eq_univ).2 (measure_mono_null ?_ volume_faceSet)
@@ -598,7 +535,6 @@ theorem flipB_neg (ε : d → Bool) (n : d → ℤ) : flipB ε (-n) = -flipB ε 
   funext j; by_cases h : ε j <;> simp [flipB, h]
 
 omit [Fintype d] in
-/-- One variable reflected: `flipB (single k) = flipAt k`. -/
 theorem flipB_single [DecidableEq d] (k : d) (n : d → ℤ) :
     flipB (single k) n = Fourier.Torus.flipAt k n := by
   funext j; by_cases h : j = k <;> simp [flipB, single, h]
@@ -615,8 +551,6 @@ theorem mFourier_reflB (ε : d → Bool) (n : d → ℤ) (x : UnitAddTorus d) :
     exact fourier_neg_arg _ _
   · simp only [reflB, flipB, hj, ↓reduceIte, Bool.false_eq_true]
 
-/-- **Parity of a trigonometric polynomial**: if `f(flip_ε m) = s f(m)` on a reflection-invariant
-support, then `P(R_ε x) = s P(x)`. -/
 theorem trigPoly_reflB [DecidableEq d] {ε : d → Bool} {f : lp (fun _ : d → ℤ => ℂ) 2}
     {S : Finset (d → ℤ)} (hSr : ∀ m ∈ S, flipB ε m ∈ S) {s : ℂ}
     (hf : ∀ m, f (flipB ε m) = s * f m) (x : UnitAddTorus d) :
@@ -629,9 +563,6 @@ theorem trigPoly_reflB [DecidableEq d] {ε : d → Bool} {f : lp (fun _ : d → 
   rw [e]
   ring
 
-/-- **Fourier coefficients of a reflected function**: `(g ∘ R_ε)^(n) = ĝ(flip_ε n)`; the
-physical reflections of `𝕋ᵈ` are the frequency reflections of the Fourier side
-(`Feec.Fourier.Torus.flipAt`). -/
 theorem mFourierCoeff_comp_reflB (ε : d → Bool) (g : UnitAddTorus d → ℂ) (n : d → ℤ) :
     mFourierCoeff (fun x => g (reflB ε x)) n = mFourierCoeff g (flipB ε n) := by
   simp only [mFourierCoeff]
@@ -643,7 +574,6 @@ theorem mFourierCoeff_comp_reflB (ε : d → Bool) (g : UnitAddTorus d → ℂ) 
   exact (measurePreserving_reflB ε).integral_comp' (f := reflBE ε)
     (fun y => mFourier (-flipB ε n) y • g y)
 
-/-- The squared `L²(𝕋ᵈ)` norm is the integral of the squared modulus. -/
 theorem norm_sq_eq_integral (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) :
     ‖f‖ ^ 2 = ∫ x, ‖(f : UnitAddTorus d → ℂ) x‖ ^ 2 := by
   have e : ⟪f, f⟫_ℂ = ((∫ x, ‖(f : UnitAddTorus d → ℂ) x‖ ^ 2 : ℝ) : ℂ) := by
@@ -664,8 +594,7 @@ theorem norm_sq_eq_integral_Q (g : Domain.L2 ℂ (Q d)) :
   rw [norm_sq_eq_re_inner (𝕜 := ℂ), e]
   exact Complex.ofReal_re _
 
-/-- **The norm of a parity field**: if `|f ∘ R_ε| = |f|` a.e. for every reflection (e.g. `f`
-even or odd in each variable), then `‖f‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖f|_Q‖²_{L²(Q)}`. -/
+/-- **The norm of a parity field**: `‖f‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖f|_Q‖²_{L²(Q)}`. -/
 theorem norm_sq_eq_two_pow [DecidableEq d] {f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
     (hf : ∀ ε, (fun x => ‖(f : UnitAddTorus d → ℂ) (reflB ε x)‖) =ᵐ[volume]
       fun x => ‖(f : UnitAddTorus d → ℂ) x‖) :
@@ -686,7 +615,6 @@ theorem norm_sq_eq_two_pow [DecidableEq d] {f : Lp ℂ 2 (volume : Measure (Unit
     filter_upwards [coeFn_resQ f] with y h
     rw [h]
 
-/-- **Parity fields are determined by their restriction to `Q`.** -/
 theorem eq_zero_of_resQ_eq_zero [DecidableEq d] {f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))}
     (hf : ∀ ε, (fun x => ‖(f : UnitAddTorus d → ℂ) (reflB ε x)‖) =ᵐ[volume]
       fun x => ‖(f : UnitAddTorus d → ℂ) x‖) (h0 : resQ f = 0) : f = 0 := by
@@ -694,8 +622,6 @@ theorem eq_zero_of_resQ_eq_zero [DecidableEq d] {f : Lp ℂ 2 (volume : Measure 
   rw [h0, norm_zero] at this
   simpa using this
 
-/-- A parity relation on Fourier coefficients (`f̂ ∘ flip_ε = s · f̂`, `|s| = 1`) gives the
-parity relation `|f ∘ R_ε| = |f|` a.e. -/
 theorem norm_comp_reflB_ae {f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))} {ε : d → Bool}
     {s : ℂ} (hs : ‖s‖ = 1)
     (h : ∀ n, mFourierCoeff (f : UnitAddTorus d → ℂ) (flipB ε n) =
@@ -754,13 +680,10 @@ theorem norm_sign {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (ε : d → Bool) 
     exact (pow_eq_one_iff_of_nonneg (norm_nonneg _) two_ne_zero).1 h
   · exact norm_one
 
-/-- **Extension by parity** of a test function `Φ ∈ C_c^∞(Q)`: the function on `𝕋ᵈ` equal to `Φ`
-on the box, with `ext Φ ∘ R_ε = sign_c(ε) · ext Φ` (odd in `x_j` for `c_j = -1`, even for
-`c_j = 1`). -/
+/-- **Extension by parity** of `Φ ∈ C_c^∞(Q)`: `Φ` on the box, `ext Φ ∘ R_ε = sign_c(ε) · ext Φ`. -/
 def ext (c : d → ℂ) (Φ : (d → ℝ) → ℂ) (x : UnitAddTorus d) : ℂ :=
   ∑ ε : d → Bool, sign c ε * per Φ (reflB ε x)
 
-/-- **Parity of the extension.** -/
 theorem ext_reflB {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (Φ : (d → ℝ) → ℂ) (η : d → Bool)
     (x : UnitAddTorus d) : ext c Φ (reflB η x) = sign c η * ext c Φ x := by
   rw [ext, ext, Finset.mul_sum]
@@ -791,7 +714,6 @@ theorem reflB_mem_boxSet_iff {ε : d → Bool} {x : UnitAddTorus d} (hx : x ∈ 
     have : reflB ε x = x := funext fun j => by simp [reflB, h j]
     rwa [this]
 
-/-- **The extension equals the function on the box.** -/
 theorem ext_of_mem_boxSet {c : d → ℂ} {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ)
     {x : UnitAddTorus d} (hx : x ∈ boxSet d) : ext c Φ x = per Φ x := by
   rw [ext, Finset.sum_eq_single (fun _ => false)]
@@ -803,7 +725,6 @@ theorem ext_of_mem_boxSet {c : d → ℂ} {Φ : (d → ℝ) → ℂ} (hΦ : Doma
   · intro h; exact absurd (Finset.mem_univ _) h
 
 omit [Fintype d] [DecidableEq d] in
-/-- The reflection of `ℝᵈ` lifting `reflB ε`. -/
 theorem proj_reflR (ε : d → Bool) (y : d → ℝ) :
     proj (fun j => if ε j then -y j else y j) = reflB ε (proj y) := by
   funext j; by_cases h : ε j <;> simp [proj, reflB, h]
@@ -821,7 +742,6 @@ theorem isSmooth_comp_reflB {φ : UnitAddTorus d → ℂ} (hφ : IsSmooth φ) (�
   · simp only [h, ↓reduceIte]; exact (contDiff_apply ℝ (fun _ : d => ℝ) j).neg
   · simp only [h, Bool.false_eq_true, ↓reduceIte]; exact contDiff_apply ℝ (fun _ : d => ℝ) j
 
-/-- The extension of a test function is smooth on `𝕋ᵈ`. -/
 theorem isSmooth_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ) :
     IsSmooth (ext c Φ) := by
   unfold IsSmooth
@@ -833,7 +753,6 @@ theorem isSmooth_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.Is
 theorem continuous_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ) :
     Continuous (ext c Φ) := (isSmooth_ext c hΦ).continuous
 
-/-- **The extension restricts back to the test function**: `(ext Φ)|_Q = Φ`. -/
 theorem resQ_toL2_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ) :
     resQ (toL2 (continuous_ext c hΦ)) = Domain.toL2 hΦ := by
   refine Lp.ext ?_
@@ -842,7 +761,6 @@ theorem resQ_toL2_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.I
     Domain.coeFn_toL2 hΦ, ae_restrict_mem measurableSet_Q] with y h1 h2 h3 h4
   rw [h1, h2, h3, ext_of_mem_boxSet hΦ (proj_mem_boxSet (mem_Q.1 h4)), per_proj_of_mem h4]
 
-/-- **The norm of the extension**: `‖ext Φ‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖Φ‖²_{L²(Q)}` (`8` for the cube). -/
 theorem norm_sq_toL2_ext {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {Φ : (d → ℝ) → ℂ}
     (hΦ : Domain.IsTest (Q d) Φ) :
     ‖toL2 (continuous_ext c hΦ)‖ ^ 2 = 2 ^ Fintype.card d * ‖Domain.toL2 hΦ‖ ^ 2 := by
@@ -854,7 +772,6 @@ theorem norm_sq_toL2_ext {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {Φ : (d �
   rw [show (toL2 (continuous_ext c hΦ) : UnitAddTorus d → ℂ) (reflB η x) = ext c Φ (reflB η x)
     from h2, h1, ext_reflB hc, norm_mul, norm_sign hc, one_mul]
 
-/-- `∂_k (φ ∘ R_ε) = ±(∂_k φ) ∘ R_ε`. -/
 theorem partialT_comp_reflB {φ : UnitAddTorus d → ℂ} (hφ : Differentiable ℝ (φ ∘ proj))
     (ε : d → Bool) (k : d) (x : UnitAddTorus d) :
     partialT k (fun x => φ (reflB ε x)) x =
@@ -882,8 +799,7 @@ theorem partialT_comp_reflB {φ : UnitAddTorus d → ℂ} (hφ : Differentiable 
   · simp only [h, Bool.false_eq_true, ↓reduceIte]
     rw [hd.deriv, one_mul]
 
-/-- **Weak derivatives of the extension**: `∂_k (ext_c Φ) = ext_{c'} (∂_k Φ)`, with the parity of
-`x_k` reversed (`c'_k = -c_k`): differentiation in `x_k` exchanges odd and even. -/
+/-- **Weak derivatives of the extension**: `∂_k (ext_c Φ) = ext_{c'} (∂_k Φ)`, `c'_k = -c_k`. -/
 theorem partialT_ext (c : d → ℂ) {Φ : (d → ℝ) → ℂ} (hΦ : Domain.IsTest (Q d) Φ) (k : d) :
     partialT k (ext c Φ) =
       ext (Function.update c k (-c k)) fun y => fderiv ℝ Φ y (Pi.single k 1) := by
@@ -967,10 +883,8 @@ theorem mem_totalSub_compSub {K : ∀ i, Submodule ℝ (W i)} {y : PiLp 2 fun i 
       HilbertComplex.ReducingSubcomplex.totalIncl S y ∈ HilbertComplex.totalSub K :=
   Iff.rfl
 
-/-- **Invariant cores of a compression are invariant cores of the big complex**: for a reducing
-subcomplex `S` of `H` and any family `K`, `y` lies in the invariant core of `∏ (K i ∩ S i)` for
-the compressed wave group iff its inclusion lies in the invariant core of `∏ K i` for the wave
-group of `H`. -/
+/-- **Invariant cores of a compression are invariant cores of the big complex**: `y ∈ K*` for the
+compressed wave group iff its inclusion lies in `K*` for the wave group of `H`. -/
 theorem mem_invariantCore_compSub_iff (h : H.ReducingSubcomplex S) (K : ∀ i, Submodule ℝ (W i))
     (y : PiLp 2 fun i => S i) :
     y ∈ h.toHilbertComplex.waveGroup.invariantCore (HilbertComplex.totalSub (compSub S K)) ↔
@@ -978,7 +892,6 @@ theorem mem_invariantCore_compSub_iff (h : H.ReducingSubcomplex S) (K : ∀ i, S
         H.waveGroup.invariantCore (HilbertComplex.totalSub K) := by
   simp only [C0Group.mem_invariantCore, mem_totalSub_compSub, h.waveGroup_toHilbertComplex]
 
-/-- Stationary vectors of a compression are the stationary vectors of the big complex. -/
 theorem mem_stationary_compSub_iff (h : H.ReducingSubcomplex S) (y : PiLp 2 fun i => S i) :
     y ∈ h.toHilbertComplex.waveGroup.stationary ↔
       HilbertComplex.ReducingSubcomplex.totalIncl S y ∈ H.waveGroup.stationary := by
@@ -986,7 +899,6 @@ theorem mem_stationary_compSub_iff (h : H.ReducingSubcomplex S) (y : PiLp 2 fun 
   refine forall_congr' fun t => ?_
   rw [← h.waveGroup_toHilbertComplex, (totalIncl_injective S).eq_iff]
 
-/-- Forward orbits of a compression are the forward orbits of the big complex. -/
 theorem forward_compSub_iff (h : H.ReducingSubcomplex S) (K : ∀ i, Submodule ℝ (W i))
     (y : PiLp 2 fun i => S i) :
     (∀ t, 0 ≤ t → h.toHilbertComplex.waveGroup.S t y ∈ HilbertComplex.totalSub (compSub S K)) ↔
@@ -994,7 +906,6 @@ theorem forward_compSub_iff (h : H.ReducingSubcomplex S) (K : ∀ i, Submodule �
         HilbertComplex.totalSub K := by
   simp only [mem_totalSub_compSub, h.waveGroup_toHilbertComplex]
 
-/-- The domain of the wave operator of a compression. -/
 theorem mem_wave_domain_compress_iff (h : H.ReducingSubcomplex S) (y : PiLp 2 fun i => S i) :
     y ∈ h.toHilbertComplex.wave.domain ↔
       HilbertComplex.ReducingSubcomplex.totalIncl S y ∈ H.wave.domain := by
@@ -1004,7 +915,6 @@ theorem mem_wave_domain_compress_iff (h : H.ReducingSubcomplex S) (y : PiLp 2 fu
   rw [HilbertComplex.ReducingSubcomplex.dual_toHilbertComplex_d]
   exact Iff.rfl
 
-/-- A unitary preserving a closed subspace `K` and its inverse commutes with `P_K`. -/
 theorem starProjection_comm_of_invariant {E : Type*} [NormedAddCommGroup E]
     [InnerProductSpace ℝ E] (U : E ≃ₗᵢ[ℝ] E) (K : Submodule ℝ E) [K.HasOrthogonalProjection]
     (hU : ∀ x ∈ K, U x ∈ K) (hU' : ∀ x ∈ K, U.symm x ∈ K) (x : E) :
@@ -1034,9 +944,8 @@ instance instHasOrthogonalProjectionCompSub (S : ∀ i, Submodule ℝ (W i))
   infer_instance
 
 omit [Fintype ι] in
-/-- **Invariant constraints descend to the fixed complex**: if `K` is a reducing subcomplex of `H`
-whose spaces are preserved by a finite unitary action, then `K ∩ Fix` is a reducing subcomplex
-of the fixed (method-of-images) complex. -/
+/-- **Invariant constraints descend to the fixed complex**: a reducing subcomplex `K` preserved by
+a finite unitary action gives the reducing subcomplex `K ∩ Fix` of the fixed complex. -/
 theorem reducingSubcomplex_compSub_fixed (A : H.Action Γ) {K : ∀ i, Submodule ℝ (W i)}
     [∀ i, (K i).HasOrthogonalProjection] (hK : H.ReducingSubcomplex K)
     (hA : ∀ g i, ∀ x ∈ K i, A.act g i x ∈ K i) :

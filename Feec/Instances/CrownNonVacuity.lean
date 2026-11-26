@@ -13,95 +13,14 @@ public import Feec.Models.Cube.MaxNormNeumann
 /-!
 # Non-vacuity of the crown
 
-The FEEC theorem with rates (`Feec.HilbertComplex.ConformingFamily.feec_rated`) on a genuine
-conforming family, with nonzero data where the clauses can be exercised, collected with the
-non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
-
-* **The crown on the cube** (`cube_nonvacuous`): the de Rham complex `HΛ(Q)` of the cube
-  `Q = (0, ½)ⁿ`, `n ≥ 2` (infinite-dimensional `L²` spaces), with the lowest-order Whitney forms
-  of the Freudenthal meshes and the smoothed projections (`FEM.whitneyFamily`, a refining family
-  `h_N → 0`) and their Jackson estimate (`FEM.whitneyJackson`): the rated verdict
-  `ConformingFamily.Verdict.Rated` holds; the static clause applies in every degree (closed
-  range, `FEM.closedRangeAt`) with nonzero harmonic forms (`ℌ⁰ = ℝ · 1`); on the window
-  `HΛ¹ → HΛ² → HΛ³` the vanishing-field constraint `E = 0`, `B = 0` (`Maxwell.potential`) does
-  not reduce `L`, and the departure clause `leaves_symm` of `Verdict.constrained` fires: a datum
-  of `D(L) ∩ K` leaves `K`; the heat clause applies on the window `HΛ⁰ → ⋯ → HΛⁿ` with a nonzero
-  datum of its core.
-* **The heat clause, fully discrete** (`Corollaries.Cube.FEM.heat_crankNicolson`): Crank–Nicolson
-  and the θ-schemes for every admissible sequence on the cube, with a nonzero datum of the core.
-* **The wave clause with a non-reducing constraint** (`Maxwell.torus_potential_approxFEEC`): the
-  spectral Galerkin family of `𝕋ᵈ`.
-* **Closed range and finite-dimensional harmonic forms in infinite dimension**: the compactness
-  property, which gives both, holds on `ℓ²`
-  (`Feec.Counterexamples.hasCompactProperty_infiniteDimensional`).
-* **The layers, beyond conforming families** (not crown instances: finite-dimensional complexes
-  and bounded generators): variational crimes with nonzero defects instantiate the approximating
-  FEEC theorem, with rates and both residual branches (`ApproxFEEC.perturbed_nonvacuous`,
-  `ApproxFEEC.projPerturbed_nonvacuous`, `ApproxComplex.scaled_nonvacuous`,
-  `ApproxComplexCrime.shifted_nonvacuous`, `ApproxComplexCrime.mixed_nonvacuous`), and the
-  cochain case with nonzero harmonic forms and non-isometric reading maps
-  (`ApproxComplexCrime.shear_nonvacuous`: static convergence, a positive harmonic gap, the
-  eventual isomorphism on a nonzero cohomology, the heat theorem); a Hodge wave
-  equation with `L ≠ 0` (`Feec.Examples.idComplex_nonvacuous`) and a nonzero skew generator
-  (`Feec.Examples.rotGen_standing_hypotheses`).
-* **The Banach layer in a norm that is not Hilbert-contractive** (`maxNorm`,
-  `Feec.Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous`): lumped-mass `P₁` elements for the heat
-  equation on the Freudenthal meshes of every cube, Dirichlet data, in the maximum norm at the
-  nodes: non-obtuse meshes, the difference stencil, the discrete maximum principle (`M = 1`),
-  consistency `n B₄ h² / 12`, and the errors of the semidiscrete equation, of backward Euler and
-  of every A-stable rational scheme against every classical solution, through
-  `Feec.TimeStepping.stableFamily`, also in `L^∞(Q)` for the finite element function (the
-  scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰`, the `P₁` functions with vanishing
-  boundary DOFs); the first eigenmode
-  `e^{-λt} ∏ᵢ sin(π(xᵢ - bᵢ)/s)` is such a solution, nonzero, with bounded second derivatives
-  (`Feec.Models.Cube.MaxNormHeat.sineSolution`).
-* **Natural boundary conditions in the maximum norm** (`neumann`,
-  `Feec.Models.Cube.MaxNormNeumann.maxNormNeumann_nonvacuous`): lumped-mass `P₁` elements on all
-  nodes of the Freudenthal meshes, the discrete maximum principle (`Lₕ 𝟙 = 0`), consistency
-  `O(h²)` at the interior and `O(1)` at the boundary nodes, and the errors `O(h)` of the
-  semidiscrete equation, `O(τ + h)` of backward Euler and those of every A-stable rational scheme
-  in the maximum norm at the nodes (barrier `|x - c|²`), also in `L^∞(Q)` for the finite element
-  function; the first Neumann eigenmode `e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)` is a nonzero classical
-  solution with bounded second derivatives (`Feec.Models.Cube.MaxNormNeumann.cosSolution`).
-* **The classical finite difference scheme in the maximum norm** (`finiteDifference`,
-  `Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat_nonvacuous`): the `(2n + 1)`-point
-  difference Laplacian on the uniform grid of the cube, Dirichlet data, is the lumped-mass `P₁`
-  Laplacian (the same iterates for every rational scheme), so the maximum-norm errors of the
-  semidiscrete equation, of backward Euler and of every A-stable rational scheme hold for it,
-  with the first eigenmode as a nonzero classical solution.
-* **The explicit map of the BGG layer on smooth fields (algebraic layer)**
-  (`Feec.Domain.smoothBGGVerdict`): the cochain map (30) of Theorem 7 of [ArnoldHu2021] is a
-  quasi-isomorphism on the smooth Hessian, elasticity and div-div complexes, with the Koszul
-  null-homotopies and explicit right inverses, and the image of the constant pairs represents
-  their degree-`0` cohomology (informally `[c + K⁰ c̃]`: the affine functions, the infinitesimal
-  rigid motions, the lowest-order Raviart–Thomas fields). The explicit-map fields of the analytic
-  `Feec.BGG.HilbertData.BGGVerdict` remain vacuous for these complexes on `L²`: their hypothesis
-  fails there (`Feec.Domain.hessianMaximalData_not_injSurjWith`, recorded in
-  `Feec.Counterexamples.CrownSharpness`).
-
-Not exercised here: a nonzero datum of a Jackson rate class with a non-stationary orbit (the zero
-datum lies in every Whitney class, `Maxwell.zero_mem_cubePMC_ofJackson`).
-
-## Main definitions
-
-* `cubePotential`; `CrownNonVacuity`.
+The FEEC theorem with rates holds on the Whitney forms of the cube of dimension `n ≥ 2`, with
+nonzero data exercising its clauses; this file collects it with the non-vacuity witnesses of the
+layers of the crown.
 
 ## Main results
 
-* **`cube_nonvacuous`**, **`crownNonVacuity`**; `cube_exists_d_ne_zero`,
-  `cube_not_isReducing_potential`.
-
-## References
-
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3, §5
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], Theorem 7, Corollary 1
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.4, §4.6, §4.10, Prop. 4.17
-
-Bibliography: [references.bib](../../docs/references.bib)
+* `cube_nonvacuous`: the crown on the cube, not vacuously.
+* `crownNonVacuity`: the crown is not vacuous.
 -/
 
 open scoped InnerProductSpace
@@ -118,9 +37,6 @@ open Feec.Domain (L2F formIdx)
 
 variable {n : ℕ}
 
-/-- **`d : HΛ¹(Q) → HΛ²(Q)` is not zero** (`n ≥ 2`): the closed `1`-forms are a proper closed
-subspace (`Feec.Domain.maximalComplex_cycles_one_ne_top`), so some form of `D(d)` orthogonal to
-them is not closed. -/
 theorem cube_exists_d_ne_zero (hn : 2 ≤ n) :
     ∃ σ : (((complex n).window 1 3).d 0 1).domain, ((complex n).window 1 3).d 0 1 σ ≠ 0 := by
   set W := (complex n).window 1 3
@@ -140,24 +56,14 @@ abbrev cubePotential :
     Submodule ℝ (PiLp 2 fun i : Fin 3 => L2F ℝ (cubeDomain n) (formIdx n (1 + i))) :=
   Maxwell.potential ℝ _
 
-/-- **The vanishing-field constraint does not reduce the wave operator of `HΛ¹ → HΛ² → HΛ³`** on
-the cube (`n ≥ 2`, `Maxwell.not_isReducing_potential`). -/
 theorem cube_not_isReducing_potential (hn : 2 ≤ n) :
     ¬ ((complex n).window 1 3).wave.IsReducing (cubePotential n) :=
   Maxwell.not_isReducing_potential _ (cube_exists_d_ne_zero hn)
 
 variable [NeZero n]
 
-/-- **The crown on the cube, not vacuously** (`n ≥ 2`). For the Whitney forms of the Freudenthal
-meshes (`FEM.whitneyFamily`) with their Jackson estimate (`FEM.whitneyJackson`):
-
-* the rated FEEC theorem holds (`ConformingFamily.feec_rated`);
-* `static`: closed range in every degree, and `ℌ⁰ ≠ 0` (the constants);
-* `constrained`: on `HΛ¹ → HΛ² → HΛ³` the vanishing-field constraint does not reduce `L`, and
-  the departure clause of the crown gives, for every `T > 0`, a datum of `D(L) ∩ K` that leaves
-  `K` at some `t ∈ [-T, T]`;
-* `heat`: on `HΛ⁰ → ⋯ → HΛⁿ` (closed range, finite-dimensional harmonic forms) the core has a
-  nonzero datum. -/
+/-- **The crown on the cube, not vacuously** (`n ≥ 2`): the rated FEEC verdict of the Whitney forms,
+with closed ranges, `ℌ⁰ ≠ 0`, a constraint left by some datum, and a nonzero heat datum. -/
 theorem cube_nonvacuous (hn : 2 ≤ n) :
     ConformingFamily.Verdict.Rated (whitneyFamily n) (whitneyJackson n) ∧
       (∀ j, (complex n).ClosedRangeAt j) ∧ (complex n).harmonic 0 ≠ ⊥ ∧
@@ -182,54 +88,42 @@ theorem cube_nonvacuous (hn : 2 ≤ n) :
 
 universe u
 
-/-- **The non-vacuity of the crown**: the rated crown on the Whitney forms of the cube with its
-clauses exercised by nonzero data, the fully discrete heat clause and the non-reducing wave clause
-on genuine families, and the non-vacuity witnesses of its layers. Each field is the statement of
-the named theorem. -/
+/-- **The non-vacuity of the crown**: the statements of the non-vacuity witnesses. -/
 structure CrownNonVacuity : Prop where
-  /-- the rated crown on the Whitney forms of the cube, with nonzero data -/
+  /-- the crown on the cube, with nonzero data -/
   cube : type_of% @cube_nonvacuous
-  /-- the fully discrete heat clause on the cube, every admissible sequence, nonzero datum -/
+  /-- the fully discrete heat clause on the cube -/
   full : type_of% @Corollaries.Cube.FEM.heat_crankNicolson
-  /-- the wave clause on `𝕋ᵈ` with a constraint that does not reduce `L` -/
+  /-- a non-reducing wave clause on `𝕋ᵈ` -/
   torus : type_of% @Maxwell.torus_potential_approxFEEC.{u}
-  /-- closed range and finite-dimensional harmonic forms (the compactness property) on `ℓ²` -/
+  /-- the compactness property on `ℓ²` -/
   compact : type_of% @Counterexamples.hasCompactProperty_infiniteDimensional.{u}
-  /-- the approximating layer: inner-product and differential crimes, nonzero defect -/
+  /-- inner-product and differential crimes -/
   perturbed : type_of% @ApproxFEEC.perturbed_nonvacuous.{u}
-  /-- the approximating layer: a non-scalar reading map, nonzero commutator defect -/
+  /-- a non-scalar reading map -/
   projPerturbed : type_of% @ApproxFEEC.projPerturbed_nonvacuous.{u}
-  /-- the approximating layer: a non-conforming discrete complex -/
+  /-- a non-conforming discrete complex -/
   scaled : type_of% @ApproxComplex.scaled_nonvacuous.{u}
-  /-- the approximating layer: a reading map that is not a cochain map -/
+  /-- a reading map that is not a cochain map -/
   shifted : type_of% @ApproxComplexCrime.shifted_nonvacuous.{u}
-  /-- the approximating layer: both crimes, rate `min(α, β, γ)` -/
+  /-- both crimes -/
   mixed : type_of% @ApproxComplexCrime.mixed_nonvacuous.{u}
-  /-- the Hodge wave equation of `𝕜 --id--> 𝕜 → 0`: `L ≠ 0`, well posed -/
+  /-- a Hodge wave equation with `L ≠ 0` -/
   idComplex : type_of% @Examples.idComplex_nonvacuous.{u}
   /-- a nonzero bounded skew generator -/
   rotGen : type_of% @Examples.rotGen_standing_hypotheses.{u}
-  /-- the explicit cochain map (30) of the BGG layer (Theorem 7, Corollary 1 in degree `0`) on
-  smooth fields (algebraic layer) of the Hessian, elasticity and div-div complexes; the `L²`
-  explicit-map fields remain vacuous for these complexes -/
+  /-- the explicit BGG cochain map on smooth fields -/
   bgg : type_of% @Domain.smoothBGGVerdict.{u}
-  /-- the Banach layer in the maximum norm at the nodes: the lumped-mass `P₁` heat equation on
-  Freudenthal meshes, with a nonzero classical solution -/
+  /-- the lumped-mass `P₁` heat equation in the maximum norm -/
   maxNorm : type_of% @Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous
-  /-- the Banach layer in the maximum norm with natural boundary conditions: the lumped-mass
-  `P₁` heat equation on all nodes of the Freudenthal meshes, first order in `h`, with time
-  stepping, with a nonzero classical solution -/
+  /-- the same with natural boundary conditions -/
   neumann : type_of% @Models.Cube.MaxNormNeumann.maxNormNeumann_nonvacuous
-  /-- the Banach layer in the maximum norm for the classical `(2n + 1)`-point finite difference
-  scheme of the heat equation (the lumped-mass `P₁` Laplacian), with a nonzero classical
-  solution -/
+  /-- the finite difference heat scheme in the maximum norm -/
   finiteDifference : type_of% @Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat_nonvacuous
-  /-- the static theory with crimes in the cochain case on a complex with nonzero harmonic forms:
-  non-isometric cochain reading maps, static convergence, a positive harmonic gap, eventually
-  bijective maps on a nonzero cohomology, and the heat theorem with crimes -/
+  /-- the static theory with crimes in the cochain case -/
   shear : type_of% @ApproxComplexCrime.shear_nonvacuous.{u}
 
-/-- **The crown is not vacuous** (`CrownNonVacuity`). -/
+/-- **The crown is not vacuous.** -/
 theorem crownNonVacuity : CrownNonVacuity.{u} :=
   ⟨@cube_nonvacuous, @Corollaries.Cube.FEM.heat_crankNicolson,
     @Maxwell.torus_potential_approxFEEC, Counterexamples.hasCompactProperty_infiniteDimensional,

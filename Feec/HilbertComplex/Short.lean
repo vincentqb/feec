@@ -5,31 +5,12 @@ public import Feec.HilbertComplex.Dirac
 /-!
 # Short Hilbert complexes `W₀ → W₁ → W₂`
 
-A short Hilbert complex is the window of length three most of the thesis works with. It embeds
-as a Hilbert complex on `ComplexShape.fin3` over the `match`-defined family
-`ShortHilbertComplex.W3 W₀ W₁ W₂ : Fin 3 → Type u` (`W3 … 1 = W₁` by `rfl`), so the Dirac and
-wave operators of `Feec.HilbertComplex.Dirac` apply to it. Zero padding uses `PUnit`
-(`ShortHilbertComplex.ofOp`: one operator `T` as the complex `E → F → 0`).
-
-## Main definitions
-
-* `Feec.ShortHilbertComplex 𝕜 W₀ W₁ W₂`: closed densely defined `d₀ : W₀ → W₁`, `d₁ : W₁ → W₂`
-  with `R(d₀) ⊆ D(d₁)` and `d₁ d₀ = 0`.
-* `ShortHilbertComplex.toHilbertComplex`: the complex on `ComplexShape.fin3`;
-  `HilbertComplex.toShort`: the converse.
-* `ShortHilbertComplex.wave`: the wave operator `(x₀, x₁, x₂) ↦ (−d₀† x₁, d₀ x₀ − d₁† x₂, d₁ x₁)`
-  on `PiLp 2 (W3 W₀ W₁ W₂)`; `ShortHilbertComplex.ofOp`, `ShortHilbertComplex.ofBounded`.
-
-## Main results
-
-* `ShortHilbertComplex.isSkewAdjoint_wave`.
-* `ShortHilbertComplex.wave_apply_zero`, `wave_apply_one`, `wave_apply_two`, and
-  `ShortHilbertComplex.mem_wave_domain` (`D(L) = V₀ × (V₁ ∩ V₁*) × V₂*`).
+Short Hilbert complexes `W₀ --d₀--> W₁ --d₁--> W₂` of closed densely defined operators, as Hilbert
+complexes on `ComplexShape.fin3`, with their skew-adjoint wave operator.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.4, (4.5) and Thm 4.6
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -44,7 +25,7 @@ universe u
 namespace Feec
 
 /-- A short Hilbert complex `W₀ --d₀--> W₁ --d₁--> W₂` of closed densely defined operators.
-Closed range is not assumed. [QuennevilleBelair2015], §4.4 -/
+[QuennevilleBelair2015], §4.4 -/
 structure ShortHilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W₀ W₁ W₂ : Type*)
     [NormedAddCommGroup W₀] [InnerProductSpace 𝕜 W₀] [CompleteSpace W₀]
     [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁] [CompleteSpace W₁]
@@ -118,12 +99,12 @@ def toHilbertComplex : HilbertComplex 𝕜 ComplexShape.fin3 (W3 W₀ W₁ W₂)
 /-- The Dirac operator `d + d†` of a short complex, on `PiLp 2 (W3 W₀ W₁ W₂)`. -/
 abbrev dirac : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) := S.toHilbertComplex.dirac
 
-/-- The wave operator `d − d†` of a short complex: `(x₀, x₁, x₂) ↦ (−d₀† x₁, d₀ x₀ − d₁† x₂,
-d₁ x₁)` on `D(L) = V₀ × (V₁ ∩ V₁*) × V₂*`. [QuennevilleBelair2015], (4.5) -/
+/-- The wave operator `(x₀, x₁, x₂) ↦ (−d₀† x₁, d₀ x₀ − d₁† x₂, d₁ x₁)`.
+[QuennevilleBelair2015], (4.5) -/
 abbrev wave : PiLp 2 (W3 W₀ W₁ W₂) →ₗ.[𝕜] PiLp 2 (W3 W₀ W₁ W₂) := S.toHilbertComplex.wave
 
-/-- The wave operator of a short complex is skew-adjoint (no closed range needed).
-[QuennevilleBelair2015], Thm 4.6 -/
+/-- The wave operator of a short complex is skew-adjoint. [QuennevilleBelair2015], Thm 4.6
+(adapted) -/
 theorem isSkewAdjoint_wave : S.wave.IsSkewAdjoint := S.toHilbertComplex.isSkewAdjoint_wave
 
 end ShortHilbertComplex
@@ -155,7 +136,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   [NormedAddCommGroup W₂] [InnerProductSpace 𝕜 W₂] [CompleteSpace W₂]
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
 
-/-- `D(L) = V₀ × (V₁ ∩ V₁*) × V₂*`. -/
 theorem mem_wave_domain {x : PiLp 2 (W3 W₀ W₁ W₂)} : x ∈ S.wave.domain ↔
     (x 0 : W₀) ∈ S.d₀.domain ∧ (x 1 : W₁) ∈ S.d₁.domain ∧ (x 1 : W₁) ∈ S.d₀†.domain ∧
       (x 2 : W₂) ∈ S.d₁†.domain := by
@@ -171,7 +151,6 @@ theorem mem_wave_domain {x : PiLp 2 (W3 W₀ W₁ W₂)} : x ∈ S.wave.domain �
           exact (show ((0 : W3 W₀ W₁ W₂ _ →ₗ.[𝕜] W3 W₀ W₁ W₂ _)†).domain = ⊤ by
             rw [adjoint_zero]; rfl) ▸ Submodule.mem_top
 
-/-- `(L x)₀ = −d₀† x₁`. -/
 theorem wave_apply_zero (x : S.wave.domain) :
     ((S.wave x : PiLp 2 (W3 W₀ W₁ W₂)) 0 : W₀) =
       -(S.d₀† ⟨(x : PiLp 2 (W3 W₀ W₁ W₂)) 1, x.2.2 1 0⟩) := by
@@ -184,7 +163,6 @@ theorem wave_apply_zero (x : S.wave.domain) :
   simp
   rfl
 
-/-- `(L x)₁ = d₀ x₀ − d₁† x₂`. -/
 theorem wave_apply_one (x : S.wave.domain) :
     ((S.wave x : PiLp 2 (W3 W₀ W₁ W₂)) 1 : W₁) =
       S.d₀ ⟨(x : PiLp 2 (W3 W₀ W₁ W₂)) 0, x.2.1 0 1⟩ -
@@ -197,7 +175,6 @@ theorem wave_apply_one (x : S.wave.domain) :
   simp
   rfl
 
-/-- `(L x)₂ = d₁ x₁`. -/
 theorem wave_apply_two (x : S.wave.domain) :
     ((S.wave x : PiLp 2 (W3 W₀ W₁ W₂)) 2 : W₂) =
       S.d₁ ⟨(x : PiLp 2 (W3 W₀ W₁ W₂)) 1, x.2.1 1 2⟩ := by
@@ -218,8 +195,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {E F : Type*}
   [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F]
 
-/-- One closed densely defined operator `T : E → F` as the short complex `E → F → 0`, padded
-with `PUnit`. -/
+/-- One closed densely defined `T : E → F` as the short complex `E → F → 0`. -/
 def ofOp (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClosed) :
     ShortHilbertComplex 𝕜 E F PUnit where
   d₀ := T
@@ -233,8 +209,8 @@ def ofOp (T : E →ₗ.[𝕜] F) (hT : Dense (T.domain : Set E)) (hc : T.IsClose
 
 variable {G : Type*} [NormedAddCommGroup G] [InnerProductSpace 𝕜 G] [CompleteSpace G]
 
-/-- A bounded complex `E --A--> F --B--> G` (`B A = 0`) as a short Hilbert complex of
-everywhere-defined operators. See [QuennevilleBelair2015], §4.2. -/
+/-- A bounded complex `E --A--> F --B--> G` as a short Hilbert complex.
+[QuennevilleBelair2015], §4.2 -/
 def ofBounded (A : E →L[𝕜] F) (B : F →L[𝕜] G) (hBA : ∀ x, B (A x) = 0) :
     ShortHilbertComplex 𝕜 E F G where
   d₀ := (A : E →ₗ[𝕜] F).toPMap ⊤

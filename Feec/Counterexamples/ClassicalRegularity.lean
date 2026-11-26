@@ -10,32 +10,19 @@ public import Feec.HilbertComplex.Approximation.Convergence
 /-!
 # The semi-discrete error estimate needs `C¹` regularity in the graph space
 
-The semi-discrete error estimate for the Hodge wave equation (thesis Thm 4.14,
-`Feec.HodgeWave.norm_sub_le_of_semidiscrete`) assumes the exact solution to be `C¹` with values in
-the graph space `Γ(𝐝)` of the total differential, i.e. `ξ ∈ C¹([0,T]; V)`. For data in `D(L)`
-(the class of the thesis' existence theorem, Thm 4.6) this can fail at `t = 0`:
+On `ℓ² --A⁻¹--> ℓ² → 0`, `A⁻¹ = diag(n+1)`, some datum `U₀ ∈ D(L) \ D(L²)` has no strong
+solution that is `C¹` into the graph space at `t = 0`, as [QuennevilleBelair2015], Thm 4.14
+assumes, yet its semi-discrete solutions in the coordinate truncations converge.
 
-* `apply_add_mem_domain_of_lift`: if a strong solution of `U' = A U + F` on `[0, T]`, `T > 0`, is
-  the `E`-trace of a map into `Γ(S)` that is right-differentiable at `0` in `Γ(S)`, then
-  `A U(0) + F(0) ∈ D(S)`;
-* on the short complex `ℓ² --A⁻¹--> ℓ² → 0`, `A⁻¹ = diag(n+1)`
-  (`Feec.Counterexamples.Fredholm.invComplex`), the datum `U₀ = (0, A h, 0)`,
-  `h = (1/(n+1))ₙ`, lies in `D(L)`, but `L U₀ = (-h, 0, 0) ∉ D(𝐝)` (`h ∉ R(A) = D(A⁻¹)`), so no
-  strong solution from `U₀` is `C¹` into `Γ(𝐝)` at `0`, on any interval `[0, T]`, `T > 0`
-  (`not_C1_graphSpace`). In particular `U₀ ∉ D(L²)`.
-* the coordinate truncations `span{e₀, …, e_{N-1}}` (`trunc`; the truncation `truncSum` is the
-  orthogonal projection on them and commutes with `A⁻¹`, `starProjection_trunc`,
-  `truncSum_invDiag`) form a dense family of subcomplexes
-  (`truncSub`, `eventually_exists_mem_graphSub`), and the semi-discrete solutions for this datum
-  converge anyway (`tendstoUniformlyOn_truncSub_datum`): convergence holds for `D(L)` data
-  without the regularity Thm 4.14 needs.
+## Main results
+
+* `exists_datum_not_C1`: some `U₀ ∈ D(L) \ D(L²)` has no solution `C¹` into `Γ(𝐝)` at `0`.
+* `tendstoUniformlyOn_truncSub_datum`: the semi-discrete solutions from `U₀` converge.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.4 (Thm 4.6), §4.6 (Thm 4.14 and the remark after it)
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2 (regularity of orbits)
+  §4.6
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -47,16 +34,15 @@ open Set Filter Topology
 
 namespace Feec.Counterexamples.ClassicalRegularity
 
-/-! ### Right-differentiability in the graph space forces `A U(0) + F(0) ∈ D(S)` -/
+/-! ### Right-differentiability in the graph space -/
 
 section General
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- If a strong solution `U` of `U' = A U + F` on `[0, T]`, `T > 0`, is the first component of a
-map `ξ` into the graph space `Γ(S)` that is right-differentiable at `0` in `Γ(S)`, then
-`A U(0) + F(0) = ξ'(0)` lies in `D(S)`. -/
+/-- If a strong solution of `U' = A U + F` on `[0, T]`, `T > 0`, is the first component of a map
+into `Γ(S)` right-differentiable at `0`, then `A U(0) + F(0) ∈ D(S)`. -/
 theorem apply_add_mem_domain_of_lift {A S : E →ₗ.[𝕜] E} {F U : ℝ → E} {T : ℝ} (hT : 0 < T)
     (hU : Evolution.IsStrongSolution A (Icc 0 T) F U) {ξ : ℝ → S.GraphSpace} {ξ' : S.GraphSpace}
     (hξ : ∀ t ∈ Icc 0 T, S.graphFst (ξ t) = U t) (hd : HasDerivWithinAt ξ ξ' (Ici 0) 0) :
@@ -110,7 +96,6 @@ theorem datum_mem : datum 𝕜 ∈ (invShort 𝕜).wave.domain := by
   · rw [show (invShort 𝕜).d₁ = 0 from rfl, LinearPMap.adjoint_zero]
     trivial
 
-/-- `(L U₀)₀ = -A⁻¹ (A h) = -h`. -/
 theorem wave_datum_zero :
     (((invShort 𝕜).wave ⟨datum 𝕜, datum_mem⟩ : PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)) 0 : L2 𝕜) =
       -harm := by
@@ -122,7 +107,6 @@ theorem wave_datum_zero :
     exact invDiag_diag harm h
   exact key _ adjoint_invDiag _
 
-/-- `L U₀ ∉ D(𝐝)`: its first component `-h` is not in `R(A) = D(A⁻¹)`. -/
 theorem wave_datum_not_mem :
     ((invShort 𝕜).wave ⟨datum 𝕜, datum_mem⟩ : PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)) ∉
       (invComplex 𝕜).totalD.domain := by
@@ -135,11 +119,6 @@ theorem wave_datum_not_mem :
   rw [neg_neg] at this
   exact harm_not_mem_range this
 
-/-- **No strong solution from `U₀ ∈ D(L)` is `C¹` into the graph space at `t = 0`**: on
-`ℓ² --A⁻¹--> ℓ² → 0`, for every `T > 0` and every strong solution `U` of `U' = L U` on `[0, T]`
-with `U(0) = U₀`, no lift `ξ` of `U` to `Γ(𝐝)` is right-differentiable at `0`. Hence the
-regularity hypothesis of the semi-discrete error estimate fails for this datum.
-[QuennevilleBelair2015], Thm 4.14 (refuted for `D(L)` data) -/
 theorem not_C1_graphSpace {T : ℝ} (hT : 0 < T) {U : ℝ → PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)}
     (hU0 : U 0 = datum 𝕜) (hU : Evolution.IsStrongSolution (invShort 𝕜).wave (Icc 0 T) 0 U) :
     ¬ ∃ (ξ : ℝ → (invComplex 𝕜).totalD.GraphSpace) (ξ' : (invComplex 𝕜).totalD.GraphSpace),
@@ -153,16 +132,12 @@ theorem not_C1_graphSpace {T : ℝ} (hT : 0 < T) {U : ℝ → PiLp 2 (W3 (L2 �
     congr 2
   exact wave_datum_not_mem (e ▸ hmem)
 
-/-- `U₀ ∈ D(L) \ D(L²)`. -/
 theorem datum_not_mem_domain_sq :
     ((invShort 𝕜).wave ⟨datum 𝕜, datum_mem⟩ : PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)) ∉
       (invShort 𝕜).wave.domain := fun h => wave_datum_not_mem h.1
 
-/-- **Thm 4.14's regularity hypothesis fails for some `D(L)` data** (headline): on
-`ℓ² --A⁻¹--> ℓ² → 0` there is `U₀ ∈ D(L) \ D(L²)` whose Hodge wave equation has a classical
-solution on every `[0, T]` (Thm 4.6), while no strong solution from `U₀` on `[0, T]`, `T > 0`,
-lifts to a map into `Γ(𝐝)` that is right-differentiable at `0`. [QuennevilleBelair2015], Thm 4.14 (refuted for
-`D(L)` data) -/
+/-- Some `U₀ ∈ D(L) \ D(L²)` has classical solutions, but no strong solution from it lifts to a map
+into `Γ(𝐝)` right-differentiable at `0`. Cf. [QuennevilleBelair2015], Thm 4.14 -/
 theorem exists_datum_not_C1 :
     ∃ (U₀ : PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)) (h : U₀ ∈ (invShort 𝕜).wave.domain),
       ((invShort 𝕜).wave ⟨U₀, h⟩ : PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)) ∉ (invShort 𝕜).wave.domain ∧
@@ -178,7 +153,7 @@ theorem exists_datum_not_C1 :
     HilbertComplex.HodgeWave.existsUnique_hom (invShort 𝕜).toHilbertComplex datum_mem 0 T
   exact ⟨U, h0, hU⟩
 
-/-! ### Coordinate truncations: convergence without `C¹` regularity -/
+/-! ### Coordinate truncations -/
 
 section Truncation
 
@@ -217,7 +192,6 @@ theorem truncSum_eq_self {N : ℕ} {x : L2 𝕜} (hx : x ∈ trunc 𝕜 N) : tru
     · rfl
     · exact (hx m (not_lt.1 h)).symm
 
-/-- `P_N x → x` in `ℓ²`. -/
 theorem tendsto_truncSum (x : L2 𝕜) : Tendsto (fun N => truncSum 𝕜 N x) atTop (𝓝 x) :=
   (lp.hasSum_single (by norm_num) x).tendsto_sum_nat
 
@@ -237,11 +211,9 @@ instance (N : ℕ) : FiniteDimensional 𝕜 (trunc 𝕜 N) := by
   rw [e]
   exact Submodule.smul_mem _ _ (Submodule.subset_span ⟨⟨n, Finset.mem_range.1 hn⟩, rfl⟩)
 
-/-- `A` preserves `trunc N`. -/
 theorem diag_mem_trunc {N : ℕ} {x : L2 𝕜} (hx : x ∈ trunc 𝕜 N) : diag 𝕜 x ∈ trunc 𝕜 N :=
   fun n hn => by rw [diag_apply, hx n hn, zero_div]
 
-/-- `trunc N ⊆ D(A⁻¹) = R(A)`. -/
 theorem trunc_le_domain (N : ℕ) : trunc 𝕜 N ≤ (invDiag 𝕜).domain := by
   intro x hx
   rw [invDiag_domain]
@@ -260,7 +232,6 @@ theorem trunc_le_domain (N : ℕ) : trunc 𝕜 N ≤ (invDiag 𝕜).domain := by
     have : m ≠ b := fun e => h (e ▸ Finset.mem_range.1 hb)
     simp [Pi.single_eq_of_ne this]
 
-/-- `A⁻¹` preserves `trunc N`. -/
 theorem invDiag_mem_trunc {N : ℕ} (u : (invDiag 𝕜).domain) (hu : (u : L2 𝕜) ∈ trunc 𝕜 N) :
     invDiag 𝕜 u ∈ trunc 𝕜 N := fun n hn => by
   have h := congrArg (fun y : L2 𝕜 => y n) (diag_invDiag u)
@@ -268,7 +239,6 @@ theorem invDiag_mem_trunc {N : ℕ} (u : (invDiag 𝕜).domain) (hu : (u : L2 �
   rw [hu n hn] at h
   simpa [div_eq_zero_iff, natCast_add_one_ne_zero (𝕜 := 𝕜) n] using h
 
-/-- The truncation `P_N` is the orthogonal projection onto `span{e₀, …, e_{N-1}}`. -/
 theorem starProjection_trunc (N : ℕ) (x : L2 𝕜) :
     (trunc 𝕜 N).starProjection x = truncSum 𝕜 N x := by
   refine Submodule.eq_starProjection_of_mem_orthogonal (truncSum_mem N x)
@@ -280,7 +250,6 @@ theorem starProjection_trunc (N : ℕ) (x : L2 𝕜) :
   · rw [sub_self, inner_zero_right]
   · rw [hy m (not_lt.1 h), inner_zero_left]
 
-/-- **The truncations commute with `A⁻¹`**: `P_N A⁻¹ u = A⁻¹ P_N u`. -/
 theorem truncSum_invDiag (N : ℕ) (u : (invDiag 𝕜).domain) :
     truncSum 𝕜 N (invDiag 𝕜 u) =
       invDiag 𝕜 ⟨truncSum 𝕜 N u, trunc_le_domain N (truncSum_mem N (u : L2 𝕜))⟩ :=
@@ -296,8 +265,7 @@ def truncFamily (N : ℕ) : ∀ i : Fin 3, Submodule 𝕜 (W3 (L2 𝕜) (L2 𝕜
   | 2 => (⊤ : Submodule 𝕜 PUnit)
 
 variable (𝕜) in
-/-- **The truncation subcomplexes** `span{e₀, …, e_{N-1}}` in both copies of `ℓ²` (the spectral
-Galerkin spaces of `A⁻¹ = diag(n+1)`). -/
+/-- The truncation subcomplexes `span{e₀, …, e_{N-1}}` in both copies of `ℓ²`. -/
 def truncSub (N : ℕ) : (invShort 𝕜).toHilbertComplex.Subcomplex where
   V := truncFamily 𝕜 N
   le_domain i j := by
@@ -341,7 +309,6 @@ theorem totalD_invShort_apply_one (x : (invShort 𝕜).toHilbertComplex.totalD.d
   simp only [add_zero]
   rfl
 
-/-- The total differential of `ℓ² --A⁻¹--> ℓ² → 0`: `𝐝 (x₀, x₁, x₂) = (0, A⁻¹ x₀, 0)`. -/
 theorem totalD_invShort_apply (x : (invShort 𝕜).toHilbertComplex.totalD.domain) :
     ((invShort 𝕜).toHilbertComplex.totalD x : PiLp 2 (W3 (L2 𝕜) (L2 𝕜) PUnit)) =
       ShortHilbertComplex.mk3 0 (invDiag 𝕜 (fstDomain x)) PUnit.unit := by
@@ -351,8 +318,7 @@ theorem totalD_invShort_apply (x : (invShort 𝕜).toHilbertComplex.totalD.domai
   · exact totalD_invShort_apply_one x
   · exact Subsingleton.elim (α := PUnit) _ _
 
-/-- **The truncation subcomplexes are dense** in the graph space of the total differential: for
-`ζ = (x, 𝐝 x)` the approximant `(A P_N A⁻¹ x₀, P_N x₁, x₂)` converges to `ζ` in `Γ(𝐝)`. -/
+/-- The truncation subcomplexes are dense in the graph space of the total differential. -/
 theorem eventually_exists_mem_graphSub (ζ : (invShort 𝕜).toHilbertComplex.totalD.GraphSpace)
     {δ : ℝ} (hδ : 0 < δ) :
     ∀ᶠ N in atTop, ∃ w ∈ (truncSub 𝕜 N).graphSub, ‖ζ - w‖ < δ := by
@@ -413,12 +379,8 @@ theorem eventually_exists_mem_graphSub (ζ : (invShort 𝕜).toHilbertComplex.to
       norm_nonneg (x1 - truncSum 𝕜 N x1)]
   exact (pow_lt_pow_iff_left₀ (norm_nonneg _) hδ.le two_ne_zero).1 hn
 
-/-- **Convergence without `C¹` regularity** (a concrete, infinite-dimensional instance of the
-thesis' convergence remark outside the reach of Thm 4.14): on `ℓ² --A⁻¹--> ℓ² → 0` the datum
-`U₀ = (0, A h, 0) ∈ D(L) \ D(L²)` has no strong solution that is `C¹` into `Γ(𝐝)` at `0`, yet the
-semi-discrete solutions in the truncation subcomplexes with `ξ_N(0) = P_N U₀` converge to the
-solution `e^{tL} U₀`, uniformly on every `[0, T]`.
-See [QuennevilleBelair2015], Thm 4.14 and the remark after it. -/
+/-- The semi-discrete solutions in the truncation subcomplexes started at the elliptic projections
+of `U₀` converge to `e^{tL} U₀`, uniformly on every `[0, T]`. -/
 theorem tendstoUniformlyOn_truncSub_datum (T : ℝ) :
     ∃ ξh ξh' : ℕ → ℝ → (invShort 𝕜).toHilbertComplex.totalD.GraphSpace,
       (∀ N, HodgeWave.IsSemidiscreteSolution (truncSub 𝕜 N).graphSub (Icc 0 T) (ξh N) (ξh' N)) ∧

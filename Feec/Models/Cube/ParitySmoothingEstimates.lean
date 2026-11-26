@@ -6,41 +6,22 @@ public import Feec.Models.Cube.DeRhamPartialFEM
 /-!
 # Parity smoothing estimates on the Freudenthal meshes of the cube
 
-The parity smoother `R^J_ρ` (`Feec.Models.Cube.ParitySmoother`) composed with the canonical
-interpolant `Π_h` of the polynomial families `S` gives commuting maps `Q_N = Π_h R^J` of the
-discrete partially-homogeneous complexes `V_{h,Γ_J} = polyPartial n S N J ⊆ HΛ_J(Q)`. For kernels
-of radius `γ h_N / 32` they are bounded uniformly in `N` and close to the identity on
-`V_{h,Γ_J}`, hence yield uniformly bounded cochain projections `π_N = J_N⁻¹ Q_N`
-([AFW2010], §5.5; [ChristiansenWinther2008]) for every class `J`, without dilations.
-
-## Main definitions
-
-* `FEM.paritySmoothForm`: the smoothed form field `ρ ⋆ ext_J u`;
-  `LocalElement.paritySmoothedCommutingMap`, `FEM.paritySmoothed n S N J ρ`: the commuting maps.
-* `FEM.parKernel n γ`: the product kernels of radius `γ h_N / 32`.
-* `FEM.ParitySmoothingEstimates n J S ρ C`: uniform `L²` bound and closeness `½` on `V_{h,Γ_J}`;
-  `ParitySmoothingEstimates.proj`: the smoothed projections.
+The parity smoother composed with the canonical interpolant of an admissible sequence gives
+commuting maps of the complexes `V_{h,Γ_J} ⊆ HΛ_J(Q)`, bounded uniformly in `N` and close to the
+identity for every class `J` ([AFW2010], §5.5; [ChristiansenWinther2008]).
 
 ## Main results
 
-* `FEM.paritySmoothingEstimates_parKernel`, `FEM.paritySmoothing_exists`: the estimates hold for
-  every class `J` and every admissible sequence `S`.
-* `FEM.exists_uniform_cochainProjection_part`: uniformly bounded (`L²` and graph norms) cochain
-  projections onto `V_{h,Γ_J}`; the homogeneous classes `J = ∅` and `J = univ` are alternatives
-  to the dilation smoothers `pMax`, `pMin`.
-* `FEM.ParitySmoothingEstimates.norm_sub_proj_le_grad`: `‖y - π_N y‖ ≤ C h_N Σₛ ‖∇ yₛ‖` when
-  `ext_J y` has `H¹` coefficients.
-* `FEM.ParitySmoothingEstimates.norm_sub_proj_le_smooth`: the high-order rate
-  `‖w - π_N w‖ ≤ (1 + 2C) A_k h_N^{s+1} sup_{cl Q} ‖D^{s+1} w‖` for `C^{s+1}` forms whose tangential
-  components vanish on the faces normal to `J` (`FEM.exists_mem_polyPartial_le_smooth`: the
-  canonical interpolant lies in `V_{h,Γ_J}`), up to the polynomial order.
-  The `L²`-based form `‖y - π_N y‖ ≲ h_N^m ‖Dᵐ ext_J y‖_{L²}` for `m ≥ 2` is not formalized.
+* `FEM.paritySmoothingEstimates_parKernel`: the estimates for every class `J` and every `S`.
+* `FEM.exists_uniform_cochainProjection_part`: uniformly bounded cochain projections.
+* `FEM.ParitySmoothingEstimates.norm_sub_proj_le_grad`: the rate `h_N` for `H¹_J(Q)` data.
+* `FEM.ParitySmoothingEstimates.norm_sub_proj_le_smooth`: `h_N^{s+1}` for smooth `J`-class data.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §5.5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -76,8 +57,7 @@ theorem contDiff_parCoeff (hΩ : Ω = Geometry.Q (Fin n)) {k : ℤ} (u : L2F ℝ
     (s : formIdx n k) : ContDiff ℝ ∞ (parCoeff ρ J u s) :=
   contDiff_smoothFun ρ _ (integrableOn_Q_of_eq hΩ _)
 
-/-- **The parity-smoothed `k`-form** `x ↦ Σₛ (ρ ⋆ ext_{c(J,s)} uₛ)(x) dxₛ`, a smooth form field on
-`ℝⁿ`, as a linear map `L²(Ω; Λᵏ) → C¹Λᵏ` (for `Ω = Q`). -/
+/-- The parity-smoothed `k`-form `Σₛ (ρ ⋆ ext_{c(J,s)} uₛ) dxₛ`, as a map `L²(Q; Λᵏ) → C¹Λᵏ`. -/
 def paritySmoothForm (hΩ : Ω = Geometry.Q (Fin n)) (k : ℤ) :
     L2F ℝ Ω (formIdx n k) →ₗ[ℝ] c1Forms n where
   toFun u := ⟨fun x t => formExt (parCoeff ρ J u) t x,
@@ -134,8 +114,6 @@ theorem coord_mem_Icc_of_mem_closure {x : Fin n → ℝ} (hx : x ∈ closure (Ge
       (isClosed_set_pi fun _ _ => isClosed_Icc)
   exact hsub hx j (mem_univ j)
 
-/-- **`d` of the parity-smoothed form is the parity-smoothed form of `d_J u`** at every point of
-`cl Ω` (`Feec.Models.Cube.ParitySmoother.extD_smoothFun_eq`). -/
 theorem extDeriv_paritySmoothForm (hΩ : Ω = Geometry.Q (Fin n)) (k : ℕ)
     (u : (dPart Ω J (k : ℤ)).domain) {x : Fin n → ℝ} (hx : x ∈ closure Ω) :
     extDeriv (paritySmoothForm ρ J hΩ k u : FormField n) x =
@@ -155,7 +133,6 @@ theorem extDeriv_paritySmoothForm (hΩ : Ω = Geometry.Q (Fin n)) (k : ℕ)
     rw [h0, paritySmoothForm_apply]
     simp [formExt, ht]
 
-/-- **The tangential components of the parity-smoothed form vanish on the faces normal to `J`.** -/
 theorem paritySmoothForm_eq_zero_of_face (hΩ : Ω = Geometry.Q (Fin n)) {k : ℤ}
     (u : L2F ℝ Ω (formIdx n k)) {j : Fin n} (hjJ : j ∈ J) {x : Fin n → ℝ}
     (hx : x j = 0 ∨ x j = 1 / 2) {t : Finset (Fin n)} (ht : j ∉ t) :
@@ -170,8 +147,6 @@ end SmoothForm
 
 /-! ### The smoothed canonical interpolant -/
 
-/-- **Tangential traces on a face inside a hyperplane** `{x_j = c}`: a form whose components not
-containing `j` vanish on the hyperplane has zero tangential trace on the simplex of `g`. -/
 theorem tangentialTraceEq_zero_of_hyperplane {k : ℕ} {w : FormField n}
     {g : Finset (Fin n → ℝ)} {j : Fin n} {c : ℝ} (hg : ∀ v ∈ g, v j = c)
     (hw : ∀ x : Fin n → ℝ, x j = c → ∀ t, j ∉ t → w x t = 0) :
@@ -207,8 +182,6 @@ open Feec.Models.Cube.DeRhamIdent (dPart HQpartZ)
 variable {n : ℕ}
 variable (E : LocalElement n) (M : SimplicialMesh n) (ρ : ReflKernel n) (J : Finset (Fin n))
 
-/-- **The parity-smoothed interpolant has vanishing DOFs on the faces normal to `J`**:
-`Π_h R u ∈ Λ_{h,Γ_J}ᵏ`. -/
 theorem globalInterp_paritySmoothForm_mem (hM : M.domain = Geometry.Q (Fin n)) (k : ℕ)
     (u : L2F ℝ M.domain (formIdx n k)) :
     (E.globalInterp M k (Submodule.inclusion c1Forms_le_contForms
@@ -227,8 +200,7 @@ theorem globalInterp_paritySmoothForm_mem (hM : M.domain = Geometry.Q (Fin n)) (
       paritySmoothForm_eq_zero_of_face ρ J hM u hjJ (by rw [hx]; exact hc) ht)
   rw [h0, map_zero]
 
-/-- **The parity-smoothed canonical interpolant** `Q = Π_h R : L²(Ω; Λᵏ) → V_{h,Γ_J}ᵏ`; zero in
-negative degrees. -/
+/-- The parity-smoothed canonical interpolant `Q = Π_h R`, zero in negative degrees. -/
 def paritySmoothedInterp (hM : M.domain = Geometry.Q (Fin n)) :
     ∀ k : ℤ, L2F ℝ M.domain (formIdx n k) →ₗ[ℝ] L2F ℝ M.domain (formIdx n k)
   | Int.ofNat k => E.glue M k ∘ₗ (E.globalSpace M k).subtype ∘ₗ E.globalInterp M k ∘ₗ
@@ -248,9 +220,6 @@ theorem paritySmoothedInterp_mem (hM : M.domain = Geometry.Q (Fin n)) (k : ℤ)
   · exact ⟨⟨_, E.globalInterp_paritySmoothForm_mem M ρ J hM k u⟩, rfl⟩
   · exact Submodule.zero_mem _
 
-/-- **`d_J Q u = Q d_J u`**: the canonical interpolant commutes with `d` on smooth forms
-(`globalInterp_extDeriv`), sees only `cl Ω` (`globalInterp_congr`), and the parity smoother
-commutes with `d_J` there (`extDeriv_paritySmoothForm`). -/
 theorem dPart_paritySmoothedInterp [NeZero n] (hM : M.domain = Geometry.Q (Fin n)) (k : ℕ)
     (u : (dPart M.domain J (k : ℤ)).domain) :
     ∃ h : E.paritySmoothedInterp M ρ J hM k u ∈ (dPart M.domain J (k : ℤ)).domain,
@@ -274,8 +243,7 @@ theorem dPart_paritySmoothedInterp [NeZero n] (hM : M.domain = Geometry.Q (Fin n
   rw [h2]
   rfl
 
-/-- **The parity-smoothed interpolant as a commuting map** into the finite element subcomplex
-`V_{h,Γ_J} ⊆ HΛ_J(Ω)` (`Ω = Q`): `d Q = Q d` in every degree. -/
+/-- The parity-smoothed interpolant as a commuting map into `V_{h,Γ_J} ⊆ HΛ_J(Ω)`. -/
 def paritySmoothedCommutingMap [NeZero n] (hM : M.domain = Geometry.Q (Fin n)) :
     (subcomplexPart E M hM J).CommutingMap where
   Q := E.paritySmoothedInterp M ρ J hM
@@ -321,8 +289,7 @@ theorem parRadius_lt {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ) : γ 
   nlinarith
 
 variable (n) in
-/-- **The parity mollifier on the level-`(N + 1)` mesh**: the product kernel of radius
-`ε_N = γ h_N / 32`. -/
+/-- The product kernel of radius `γ h_N / 32` on the level-`(N + 1)` mesh. -/
 def parKernel (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1) (N : ℕ) : ReflKernel n :=
   prodKernel (γ * hN N / 32) (parRadius_pos hγ N) (parRadius_lt hγ hγ1 N)
 
@@ -347,8 +314,6 @@ theorem integrableOn_sq_Q_of_eq {Ω : Set (Fin n → ℝ)} (hΩ : Ω = Geometry.
     IntegrableOn (fun z => (f : (Fin n → ℝ) → ℝ) z ^ 2) (Geometry.Q (Fin n)) := by
   subst hΩ; exact integrableOn_sq_L2 f
 
-/-- **The pointwise bound of the parity-smoothed field by the local mass** on a mesh simplex:
-`|R x (y)ₛ|² ≤ 3ⁿ (32 / (γ h_N))ⁿ m_T(x)`. -/
 theorem abs_paritySmoothForm_le (J : Finset (Fin n)) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
     {N : ℕ} {k : ℤ} (x : L2F ℝ (mesh n N).domain (formIdx n k))
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) {y : Fin n → ℝ}
@@ -393,9 +358,6 @@ theorem abs_paritySmoothForm_le (J : Finset (Fin n)) {γ : ℝ} (hγ : 0 < γ) (
     exact mul_le_mul_of_nonneg_left h2 (by positivity)
   · simp only [Pi.zero_apply, abs_zero]; exact Real.sqrt_nonneg _
 
-/-- **The uniform `L²` bound of the parity-smoothed interpolants** `Q_N = Π_h R_N` of an
-admissible sequence, every class `J`: `‖Q_N x‖ ≤ C ‖x‖` for all `N`, all degrees and all `x`,
-with `C` depending only on `n`, `S` and `γ`. -/
 theorem exists_norm_paritySmoothedInterp_le (S : PolySeq) (J : Finset (Fin n)) {γ : ℝ}
     (hγ : 0 < γ) (hγ1 : γ ≤ 1) :
     ∃ C, 0 ≤ C ∧ ∀ (N k : ℕ) (x : L2F ℝ (mesh n N).domain (formIdx n k)),
@@ -421,9 +383,6 @@ theorem exists_norm_paritySmoothedInterp_le (S : PolySeq) (J : Finset (Fin n)) {
 
 /-! ### Faces of the mesh near the faces of the cube -/
 
-/-- **A good point of a face near `{y_i = 0}`**: if a point of a face `g` of a mesh simplex with
-barycentric weights `≥ γ` has `i`-th coordinate `< γ h_N / 2`, then the whole face lies in
-`{y_i = 0}` (`coord_eq_zero_of_near`). -/
 theorem face_coord_eq_zero {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) {m : ℕ}
     (hg : #g = m + 1) {γ : ℝ} (hγ : 0 < γ) (hγ2 : γ ≤ 1 / 2) {ξ : Fin m → ℝ}
@@ -434,7 +393,6 @@ theorem face_coord_eq_zero {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
   exact coord_eq_zero_of_near hT (fun a => hgT (lexEnum_mem hg a)) hγ hγ2 hμ (sum_refBary ξ)
     (by rw [← simplexMap_eq_sum]; exact hx) a
 
-/-- **A good point of a face near `{y_i = ½}`**: the upper analogue of `face_coord_eq_zero`. -/
 theorem face_coord_eq_half {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) {m : ℕ}
     (hg : #g = m + 1) {γ : ℝ} (hγ : 0 < γ) (hγ2 : γ ≤ 1 / 2) {ξ : Fin m → ℝ}
@@ -445,7 +403,6 @@ theorem face_coord_eq_half {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
   exact coord_eq_half_of_near hT (fun a => hgT (lexEnum_mem hg a)) hγ hγ2 hμ (sum_refBary ξ)
     (by rw [← simplexMap_eq_sum]; exact hx) a
 
-/-- A pullback only sees the components whose rows are nonzero. -/
 theorem pullback_congr_of_rows {ι κ : Type*} [LinearOrder ι] [Fintype ι] [LinearOrder κ]
     (B : ι → κ → ℝ) {α β : Finset ι → ℝ} (h : ∀ s, α s = β s ∨ ∃ i ∈ s, B i = 0) :
     pullback B α = pullback B β := by
@@ -461,13 +418,10 @@ section Integrand
 
 variable {Ω : Set (Fin n → ℝ)} (ρ : ReflKernel n) (J : Finset (Fin n))
 
-/-- The parity extensions of the components of an `L²` `k`-form at a point, indexed by all
-subsets. -/
+/-- The parity extensions of the components of an `L²` `k`-form at a point. -/
 def parField {k : ℤ} (v : L2F ℝ Ω (formIdx n k)) (t : Fin n → ℝ) : Finset (Fin n) → ℝ :=
   formExt fun r : formIdx n k => parExt (pvec J r.1) ((v r : L2 ℝ Ω) : (Fin n → ℝ) → ℝ) t
 
-/-- **The DOF integrand of `v - R v` as a mollified average**:
-`Σₛ (α - R v (x))ₛ cₛ = ∫ ρ(x - t) Σₛ (α - ext v (t))ₛ cₛ dt`. -/
 theorem sum_sub_paritySmoothForm_mul_eq (hΩ : Ω = Geometry.Q (Fin n)) {k : ℕ}
     (v : L2F ℝ Ω (formIdx n k)) (α c : Finset (Fin n) → ℝ) (x : Fin n → ℝ) :
     ∑ s, (α s - (paritySmoothForm ρ J hΩ k v : FormField n) x s) * c s =
@@ -565,16 +519,6 @@ namespace Poly
 variable (S : PolySeq) (J : Finset (Fin n))
 
 open Classical in
-/-- **The pointwise estimate of the DOF integrand of `v - Q_N v`** (`v ∈ V_{h,Γ_J}`) for the
-parity smoother: at a point `x = F_q(ξ)` of a face `g` of `T` and for any coefficient vector `c`
-that only sees the trace on `g`,
-`h^{n/2} |Σₛ (v_T - R v)(x)ₛ cₛ| ≤ (Σₛ |cₛ|) A m_T(v)^{1/2} · (2 or γ)`, with the factor `γ`
-when all barycentric coordinates of `ξ` are `≥ γ`. A sample `t` of the smoother at `x` is
-folded onto `z = fold t ∈ Q` (`‖x - z‖ ≤ ‖x - t‖`), which lies in a simplex `T'` containing
-`g`; on the reflected coordinates `g` lies in a face of the cube (`face_coord_eq_zero`,
-`face_coord_eq_half`), so the trace on `g` only sees the components unchanged up to a common
-sign `σ`; if `σ = -1` the face is normal to `J`, where the traces of `v` vanish. There is no
-dilation defect. -/
 theorem sqrt_mul_abs_integrand_par {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : InvBound S n k A)
     {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
     {u : (polyElement n S).Piecewise (mesh n N) k}
@@ -838,9 +782,6 @@ theorem sqrt_mul_abs_integrand_par {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : I
   exact hmain
 
 
-/-- **The DOF error of `Q_N` on `V_{h,Γ_J}`** for the parity smoother: for `v ∈ V_{h,Γ_J}`, a face
-`g` of `T` and a degree of freedom `i` of `g`,
-`h^{n/2} |ℓ_{g,i}(v_T - R v)| ≤ 3 (n + 1) D A γ hᵏ m_T(v)^{1/2}`. -/
 theorem sqrt_mul_abs_dof_err_par {N k : ℕ} {A D : ℝ} (hA0 : 0 ≤ A) (hA : InvBound S n k A)
     (hD : CoeffBound S n k D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
     {u : (polyElement n S).Piecewise (mesh n N) k}
@@ -919,8 +860,6 @@ theorem sqrt_mul_abs_dof_err_par {N k : ℕ} {A D : ℝ} (hA0 : 0 ≤ A) (hA : I
           mul_nonneg (mul_nonneg hc0 hγ.le) (Nat.cast_nonneg (α := ℝ) n)]
     _ = _ := by simp only [c, Mc]; ring
 
-/-- **The local `L²` error of `Q_N` on `V_{h,Γ_J}`** for the parity smoother:
-`‖v - Q_N v‖²_{L²(T)} ≲ γ² m_T(v)`. -/
 theorem sum_integral_sq_sub_interp_par {N k : ℕ} {A B D : ℝ} (hA0 : 0 ≤ A)
     (hA : InvBound S n k A) (hB0 : 0 ≤ B) (hB : DofBound S n k B) (hD0 : 0 ≤ D)
     (hD : CoeffBound S n k D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
@@ -990,8 +929,6 @@ theorem sum_integral_sq_sub_interp_par {N k : ℕ} {A B D : ℝ} (hA0 : 0 ≤ A)
         rw [hhn]; simp only [D']; field_simp
     _ = 2 ^ n * (B * P * C₁ * γ) ^ 2 * L := by rw [Real.sq_sqrt hL0]
 
-/-- **`Q_N` is close to the identity on `V_{h,Γ_J}`** for the parity smoother:
-`‖v - Q_N v‖² ≤ 2ⁿ (B dim(P) C₁ γ)² 6ⁿ n! ‖v‖²`, `C₁ = 3 (n + 1) D A`. -/
 theorem norm_sq_sub_paritySmoothedInterp_le {N k : ℕ} {A B D : ℝ} (hA0 : 0 ≤ A)
     (hA : InvBound S n k A) (hB0 : 0 ≤ B) (hB : DofBound S n k B) (hD0 : 0 ≤ D)
     (hD : CoeffBound S n k D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1) (hγ2 : γ ≤ 1 / 2)
@@ -1017,9 +954,6 @@ theorem norm_sq_sub_paritySmoothedInterp_le {N k : ℕ} {A B D : ℝ} (hA0 : 0 �
     fun T hT => sum_integral_sq_sub_interp_par S J hA0 hA hB0 hB hD0 hD hγ hγ1 hγ2 hu ⟨T, hT⟩
 
 variable (n) in
-/-- **The parity smoothing scale, for all small `γ`**: there is `γ₀ ∈ (0, ½]`, depending only on
-`n` and the sequence `S`, such that for every `γ ∈ (0, γ₀]`, every class `J` and every global
-field of `Λ_{h,Γ_J}`, `‖v - Q_N v‖ ≤ ½ ‖v‖`. -/
 theorem exists_gamma₀_par :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ γ : ℝ, ∀ (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
       ∀ (J : Finset (Fin n)) (N k : ℕ) (u : (polyElement n S).Piecewise (mesh n N) k),
@@ -1075,7 +1009,6 @@ def commutingMapOfEqPart {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : Is
     (partialSubcomplexOfEq h hΩ hΩQ hΩ' hΩQ' J S).CommutingMap := by
   subst h; exact Q
 
-/-- Estimates of a commuting map transport along an equality of domains. -/
 theorem commutingMapOfEqPart_estimates {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
     (hΩQ : Ω ⊆ Geometry.Q (Fin n)) (hΩ' : IsOpen Ω') (hΩQ' : Ω' ⊆ Geometry.Q (Fin n))
     (J : Finset (Fin n)) {S : (HQpartZ hΩ hΩQ J).Subcomplex} (Q : S.CommutingMap)
@@ -1089,18 +1022,14 @@ theorem commutingMapOfEqPart_estimates {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = 
 variable [NeZero n]
 
 variable (n) in
-/-- **The parity-smoothed interpolant** `Q_N = Π_h R^J` of the complex `polyPartial n S N J`, as a
-commuting map. -/
+/-- The parity-smoothed interpolant `Q_N = Π_h R^J` of `polyPartial n S N J`, a commuting map. -/
 def paritySmoothed (S : PolySeq) (N : ℕ) (J : Finset (Fin n)) (ρ : ReflKernel n) :
     (polyPartial n S N J).CommutingMap :=
   commutingMapOfEqPart (mesh_domain n N) _ _ (isOpen_cubeDomain n) (cubeDomain_subset_Q n) J
     ((polyElement n S).paritySmoothedCommutingMap (mesh n N) ρ J (mesh_domain_eq_Q N))
 
 variable (n) in
-/-- **The parity smoothing estimates** ([AFW2010], §5.5; [ChristiansenWinther2008]) for the class
-`J` and the admissible sequence `S`: for the kernels `ρ N`, the parity-smoothed interpolants
-`Q_N = Π_h R^J_{ρ N}` of `V_{h,Γ_J} = polyPartial n S N J` are bounded in `L²` uniformly in `N`, and
-`‖v - Q_N v‖ ≤ ½ ‖v‖` on `V_{h,Γ_J}`. -/
+/-- The parity smoothing estimates ([AFW2010], §5.5; [ChristiansenWinther2008]). -/
 structure ParitySmoothingEstimates (J : Finset (Fin n)) (S : PolySeq) (ρ : ℕ → ReflKernel n)
     (C : ℝ) : Prop where
   half_le : 1 / 2 ≤ C
@@ -1108,9 +1037,7 @@ structure ParitySmoothingEstimates (J : Finset (Fin n)) (S : PolySeq) (ρ : ℕ 
   close : ∀ N i, ∀ v ∈ (polyPartial n S N J).V i,
     ‖v - (paritySmoothed n S N J (ρ N)).Q i v‖ ≤ 1 / 2 * ‖v‖
 
-/-- **The parity smoothing estimates hold on the Freudenthal meshes of the cube, for every class
-`J` and every admissible sequence `S`**: for every `γ ∈ (0, γ₀]` (`γ₀` depending only on `n`
-and `S`) and the product kernels of radius `γ h_N / 32` (`parKernel`). -/
+/-- **The parity smoothing estimates hold for every class `J` and every `S`**, for small `γ`. -/
 theorem paritySmoothingEstimates_parKernel (S : PolySeq) :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
       ∀ J : Finset (Fin n), ∃ C, ParitySmoothingEstimates n J S (parKernel n γ hγ hγ1) C := by
@@ -1138,8 +1065,6 @@ theorem paritySmoothingEstimates_parKernel (S : PolySeq) :
       · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   exact ⟨le_max_right _ _, fun N => (hest N).1, fun N => (hest N).2⟩
 
-/-- **The parity smoothing estimates hold** for every class `J` and every admissible sequence `S`,
-as a bare existence statement over the kernels. -/
 theorem paritySmoothing_exists (J : Finset (Fin n)) (S : PolySeq) :
     ∃ (ρ : ℕ → ReflKernel n) (C : ℝ), ParitySmoothingEstimates n J S ρ C := by
   obtain ⟨γ₀, hγ₀, hγ₀2, h⟩ := paritySmoothingEstimates_parKernel (n := n) S
@@ -1150,7 +1075,7 @@ namespace ParitySmoothingEstimates
 
 variable {J : Finset (Fin n)} {S : PolySeq} {ρ : ℕ → ReflKernel n} {C : ℝ}
 
-/-- **The smoothed projection** `π_N = J_N⁻¹ Q_N` onto `V_{h,Γ_J}`. -/
+/-- The smoothed projection `π_N = J_N⁻¹ Q_N` onto `V_{h,Γ_J}`. -/
 def proj (hE : ParitySmoothingEstimates n J S ρ C) (N : ℕ) :
     (polyPartial n S N J).CochainProjection :=
   (paritySmoothed n S N J (ρ N)).toCochainProjection (θ := 1 / 2) (by norm_num) (hE.close N)
@@ -1161,14 +1086,11 @@ theorem two_mul_nonneg (hE : ParitySmoothingEstimates n J S ρ C) : 0 ≤ 2 * C 
 variable (hE : ParitySmoothingEstimates n J S ρ C)
 include hE
 
-/-- **Uniform `L²` bound**: `‖π_N x‖ ≤ 2 C ‖x‖` for every `N`. -/
 theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
     ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ :=
   (paritySmoothed n S N J (ρ N)).norm_toCochainProjection_le_two_mul (hE.close N)
     (hE.bound N i) x
 
-/-- **Uniform discrete Poincaré inequality** on `V_{h,Γ_J}`: `‖x‖ ≤ 2 C (2π)⁻¹ ‖d_J x‖` for
-`x ∈ V_{h,Γ_J}ⁱ ⊥ 𝔷ₕⁱ` ([AFW2010], Thm 3.6, with the Poincaré inequality of `HΛ_J(Q)`). -/
 theorem norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j) (N : ℕ)
     {x : L2F ℝ (cubeDomain n) (formIdx n i)} (hx : x ∈ (polyPartial n S N J).V i)
     (hxo : ∀ y ∈ (polyPartial n S N J).cyclesW i, inner ℝ y x = 0) :
@@ -1179,9 +1101,7 @@ theorem norm_le_of_forall_inner_eq_zero {i j : ℤ} (hij : (ComplexShape.up ℤ)
 
 end ParitySmoothingEstimates
 
-/-- **Uniformly bounded cochain projections onto `V_{h,Γ_J}`** (unconditionally, every class `J`,
-every admissible sequence): one constant bounds all of them in `L²` and in the graph norms of
-`HΛ_J(Q)`. -/
+/-- **Uniformly bounded cochain projections onto `V_{h,Γ_J}`**, in `L²` and in the graph norms. -/
 theorem exists_uniform_cochainProjection_part (S : PolySeq) (J : Finset (Fin n)) :
     ∃ C : ℝ, ∀ N, ∃ π : (polyPartial n S N J).CochainProjection,
       (∀ i x, ‖π.π i x‖ ≤ C * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j C := by
@@ -1189,16 +1109,11 @@ theorem exists_uniform_cochainProjection_part (S : PolySeq) (J : Finset (Fin n))
   exact ⟨2 * C, fun N => ⟨hE.proj N, hE.norm_proj_le N, fun i j =>
     (hE.proj N).isGraphBounded_of_norm_le (hE.norm_proj_le N i) (hE.norm_proj_le N j)⟩⟩
 
-/-! ### The homogeneous classes `J = ∅` and `J = univ` -/
-
-
 /-! ### The `H¹` approximation of the parity-smoothed projections -/
 
 section H1
 
 omit [NeZero n] in
-/-- The scalar `H¹` estimate on a domain equal to `Q`: if `w` represents `ρ ⋆ ext_{c(J', ∅)} f`
-on `Θ = Q`, then `‖f - w‖ ≤ r √(n 3ⁿ) ‖∇f‖`. -/
 theorem norm_sub_le_grad_of_eq_Q (ρ : ReflKernel n) (J' : Finset (Fin n)) {Θ : Set (Fin n → ℝ)}
     (hΘ : Θ = Geometry.Q (Fin n)) (f : L2 ℝ Θ)
     (hf : zeroForm f ∈ (dPart Θ J' ((0 : ℕ) : ℤ)).domain) (w : L2 ℝ Θ)
@@ -1212,9 +1127,6 @@ theorem norm_sub_le_grad_of_eq_Q (ρ : ReflKernel n) (J' : Finset (Fin n)) {Θ :
   exact norm_sub_scalarSmooth_le_grad ρ J' ⟨zeroForm f, hf⟩
 
 omit [NeZero n] in
-/-- **The parity smoother commutes with the gradient of the coefficients** at the points of
-`cl Ω`: `∂ⱼ (ρ ⋆ ext_{c(J,s)} yₛ) = ρ ⋆ ext_{c(J ∆ s, {j})} (∂ⱼ yₛ)` for `yₛ ∈ H¹_{J ∆ s}`
-(`extDeriv_paritySmoothForm` for the `0`-form `yₛ` in the class `J ∆ s`). -/
 theorem partialDeriv_parCoeff_eq (ρ : ReflKernel n) (J : Finset (Fin n)) {Ω : Set (Fin n → ℝ)}
     (hΩ : Ω = Geometry.Q (Fin n)) {k : ℤ} (y : L2F ℝ Ω (formIdx n k)) (s : formIdx n k)
     (hy : zeroForm (y s) ∈ (dPart Ω (symmDiff J s.1) ((0 : ℕ) : ℤ)).domain)
@@ -1238,11 +1150,6 @@ namespace Poly
 variable (S : PolySeq)
 
 omit [NeZero n] in
-/-- **The interpolation error of the parity-smoothed field in terms of a gradient**: if the
-partial derivatives of the smoothed coefficients are the parity-smoothed fields (of classes
-`Jg s`) of `L²` `1`-forms `g s`, then `‖R y - Π_h R y‖² ≲ h_N² Σₛ ‖g s‖²` (the pointwise
-interpolation error `h_N sup_T ‖D (R y)‖`, the local-mass bound of the smoothed field, bounded
-overlap). -/
 theorem sq_norm_formL2_sub_paritySmoothedInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBound S n k B)
     (hB0 : 0 ≤ B) (hD : CoeffBound S n k D) (hD0 : 0 ≤ D) {γ : ℝ} (hγ : 0 < γ) (hγ1 : γ ≤ 1)
     (J : Finset (Fin n)) (y : L2F ℝ (mesh n N).domain (formIdx n k))
@@ -1380,8 +1287,7 @@ end Poly
 
 
 variable (n) in
-/-- The constant of the `H¹` approximation of degree `k` of the sequence `S` by the parity
-smoother at scale `γ = 1`: `√(n 3ⁿ) / 32 + √K₂` (`Poly.sq_norm_formL2_sub_paritySmoothedInterp_le`). -/
+/-- The constant `√(n 3ⁿ) / 32 + √K₂` of the `H¹` approximation of degree `k` of `S`. -/
 def h1ConstPar (S : PolySeq) (k : ℕ) : ℝ :=
   √(n * 3 ^ n) / 32 + √(2 ^ n * (1 + dofConst n S k * Module.finrank ℝ (S.space n k) *
     coeffConst n S k) ^ 2 * n ^ 2 * 2 ^ n * 3 ^ n * (32 / 1) ^ n *
@@ -1392,10 +1298,6 @@ theorem h1ConstPar_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ h1ConstPar n S k := by
   unfold h1ConstPar; positivity
 
 omit [NeZero n] in
-/-- **`H¹` approximation by `V_{h,Γ_J}`, on the mesh domain**: for `y ∈ L²(Ω; Λᵏ)` whose
-coefficients `yₛ` lie in `H¹` with vanishing trace on the faces normal to `J ∆ s` (the parity
-extension `ext_J y` has `H¹` coefficients), the parity-smoothed interpolant `v = Π_h R y` satisfies
-`‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖`, `K = h1ConstPar` independent of `N`. -/
 theorem exists_mem_VPartial_near_grad (S : PolySeq) (J : Finset (Fin n)) (N k : ℕ)
     (y : L2F ℝ (mesh n N).domain (formIdx n k))
     (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
@@ -1451,8 +1353,6 @@ theorem exists_mem_VPartial_near_grad (S : PolySeq) (J : Finset (Fin n)) (N k : 
     _ ≤ h / 32 * √(n * 3 ^ n) * ∑ s, ‖g s‖ + √K₂ * h * ∑ s, ‖g s‖ := add_le_add hA hTB'
     _ = h1ConstPar n S k * h * ∑ s, ‖g s‖ := by simp only [h1ConstPar, K₂]; ring
 
-/-- **`H¹` approximation by `polyPartial`, on the cube**: for `y ∈ L²(Q; Λᵏ)` with
-`yₛ ∈ H¹_{J ∆ s}(Q)`, some `v ∈ V_{h,Γ_J}ᵏ` satisfies `‖y - v‖ ≤ K h_N Σₛ ‖∇ yₛ‖`. -/
 theorem exists_mem_polyPartial_near_grad (S : PolySeq) (J : Finset (Fin n)) (N k : ℕ)
     (y : L2F ℝ (cubeDomain n) (formIdx n k))
     (hy : ∀ s : formIdx n k, zeroForm (y s) ∈
@@ -1474,10 +1374,7 @@ theorem exists_mem_polyPartial_near_grad (S : PolySeq) (J : Finset (Fin n)) (N k
     exact exists_mem_VPartial_near_grad S J N k y hy
   exact key _ (mesh_domain n N) (isOpen_cubeDomain n) (cubeDomain_subset_Q n) y hy
 
-/-- **`H¹` approximation of the parity-smoothed projections** (the estimate needed by the BGG
-discretization, for every class `J`): under `ParitySmoothingEstimates`, for `y ∈ L²(Q; Λᵏ)` whose
-coefficients are `H¹` with vanishing traces on the faces normal to `J ∆ s` (i.e. `ext_J y` has
-`H¹` coefficients), `‖y - π_N y‖ ≤ (1 + 2C) K h_N Σₛ ‖∇ yₛ‖`, `K = h1ConstPar n S k`. -/
+/-- **The parity-smoothed projections approximate `H¹_J(Q)` data at order `h_N`.** -/
 theorem ParitySmoothingEstimates.norm_sub_proj_le_grad {J : Finset (Fin n)} {S : PolySeq}
     {ρ : ℕ → ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C) (N k : ℕ)
     (y : L2F ℝ (cubeDomain n) (formIdx n k))
@@ -1502,8 +1399,6 @@ end H1
 section HighOrder
 
 omit [NeZero n] in
-/-- **Interpolants of forms with vanishing tangential components on the faces normal to `J`** have
-vanishing DOFs there (any element family): `Π_h w ∈ Λ_{h,Γ_J}ᵏ`. -/
 theorem globalInterp_mem_globalSpacePartial_of_face (E : LocalElement n) (M : SimplicialMesh n)
     (J : Finset (Fin n)) (k : ℕ) (w : contForms n)
     (hw : ∀ x : Fin n → ℝ, ∀ j ∈ J, (x j = 0 ∨ x j = 1 / 2) → ∀ t : Finset (Fin n), j ∉ t →
@@ -1522,10 +1417,6 @@ theorem globalInterp_mem_globalSpacePartial_of_face (E : LocalElement n) (M : Si
   rw [h0, map_zero]
 
 omit [NeZero n] in
-/-- **High-order interpolation in `V_{h,Γ_J}`, on the mesh domain**: for a `C^{s+1}` degree-`k`
-form `w` whose tangential components vanish on the faces normal to `J`, with
-`‖D^{s+1} w‖ ≤ L` on `cl Q` and `P_sΛᵏ ⊆ P(T)ᵏ`, the canonical interpolant
-`v = Π_h w ∈ V_{h,Γ_J}ᵏ` satisfies `‖w - v‖ ≤ A_k h_N^{s+1} L` (`A_k = polyInterpConst`). -/
 theorem exists_mem_VPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k s : ℕ)
     (hs : polySpace n s k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
     (hdeg : ∀ x, IsDeg k (w x))
@@ -1551,8 +1442,6 @@ theorem exists_mem_VPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k s 
   refine h.trans (le_of_eq ?_)
   rw [polyInterpConst, mesh_domain n N]; ring
 
-/-- **High-order interpolation in `polyPartial`, on the cube**: the estimate of
-`exists_mem_VPartial_le_smooth` with `v ∈ V_{h,Γ_J}ᵏ = (polyPartial n S N J).V k`. -/
 theorem exists_mem_polyPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k s : ℕ)
     (hs : polySpace n s k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
     (hdeg : ∀ x, IsDeg k (w x))
@@ -1574,12 +1463,8 @@ theorem exists_mem_polyPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k
   exact key _ (mesh_domain n N) (isOpen_cubeDomain n) (cubeDomain_subset_Q n)
     (isBounded_cubeDomain n)
 
-/-- **The high-order rate of the parity-smoothed projections** ([AFW2010], §5.5; [Arnold2018],
-Ch. 7): under `ParitySmoothingEstimates`, for a `C^{s+1}` degree-`k` form `w` whose tangential
-components vanish on the faces normal to `J` (e.g. coefficients `wₜ` symmetric of the parity
-`c(J, t)` on `ℝⁿ`), with `‖D^{s+1} w‖ ≤ L` on `cl Q` and
-`P_sΛᵏ ⊆ P(T)ᵏ` (e.g. `s + 1 ≤ r_k`, `PolySeq.polySpace_le_space`),
-`‖w - π_N w‖ ≤ (1 + 2C) A_k h_N^{s+1} L`: the order `m = s + 1` up to the polynomial order. -/
+/-- **The rate `h_N^{s+1}` for `C^{s+1}` forms with vanishing tangential components on the faces
+normal to `J`** ([AFW2010], §5.5; [Arnold2018], Ch. 7). -/
 theorem ParitySmoothingEstimates.norm_sub_proj_le_smooth {J : Finset (Fin n)} {S : PolySeq}
     {ρ : ℕ → ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C) (N k s : ℕ)
     (hs : polySpace n s k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)

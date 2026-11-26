@@ -3,31 +3,15 @@ module
 public import Feec.Fourier.SymCurlSymbol
 
 /-!
-# The symbol of the BGG weak-symmetry complex (Thesis (5.1), §6.3)
+# The symbol of the BGG weak-symmetry complex
 
-The complex `H²(ℂ) --grad grad--> H(curl; ℂ³ˣ³) --(S₁, curl)--> L²(ℂ³) × L²(ℂ³ˣ³)` of the weakly
-symmetric formulation (Thesis Ch. 5–6, `S₀ = I`, `S₁ = 2 vskw`), whose first differential is the
-Hessian and whose second couples the skew part `S₁ A = axial A` (no derivative) to the row-wise
-curl. At a frequency `ξ` the symbols are `hess_ξ c = -c ξ ξᵀ` and `bgg_ξ A = (axial A, curl_ξ A)`.
-
-## Main results
-
-* `bgg ξ`, `bgg_hess` (`(S₁, curl) grad grad = 0`: Hessians are symmetric and curl-free).
-* `tsdB ξ = {0} × tsd ξ`, and **`isFibreReducing`**: `({0}, tsd ξ, {0} × tsd ξ)` reduces the
-  fibre complex at every frequency (`S₁` kills symmetric matrices; Lemma 3.5 for the curl).
-* `bggFamily : FibreComplex ℂ ℝ³ ComplexShape.fin3 (W3 ℂ ℂ³ˣ³ (ℂ³ × ℂ³ˣ³))`, with measurable
-  fibre projections `aestronglyMeasurable_starProjection_bggK`.
-* **`bgg_gap`**, `bgg_gap_zero`, **`bggFamily_gap`**: `‖v‖ ≤ 4 ‖m_ξ v‖` on `N(m_ξ)ᗮ` for every arrow
-  at `ξ = 0` and `|ξ| ≥ 2π` (symmetric part via the curl, skew part via `S₁`), giving closed range
-  on the torus.
+The symbols `hess_ξ c = -c ξ ξᵀ` and `bgg_ξ A = (S₁ A, curl_ξ A)`, `S₁ = 2 vskw`, at a frequency
+`ξ` of the weak-symmetry complex of [QuennevilleBelair2015], (5.1), §6.3; its constraint fibres
+reduce the fibre complex, which has fibre gaps at `ξ = 0` and `|ξ| ≥ 2π`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 5 (§5.1, (5.1)), Ch. 6 (§6.1, §6.3), §3.4 (Lemma 3.5)
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (the BGG construction)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
-  (weakly imposed symmetry)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -74,13 +58,11 @@ def bgg (ξ : Freq) : Mat →L[ℂ] VM :=
 
 theorem bgg_apply (ξ : Freq) (M : Mat) : bgg ξ M = WithLp.toLp 2 (axialL M, curl ξ M) := rfl
 
-/-- **`(S₁, curl_ξ) hess_ξ = 0`**. -/
 theorem bgg_hess (ξ : Freq) (c : ℂ) : bgg ξ (hessM ξ c) = 0 := by
   rw [bgg_apply, axialL_eq_zero_of_mem_symSub (hessM_mem_symSub ξ c)]
   change WithLp.toLp 2 (0, curl ξ (grad ξ _)) = 0
   rw [curl_grad]; rfl
 
-/-- `(S₁, curl_ξ)† (0, N) = curl_ξ N`. -/
 theorem adjoint_bgg_inr (ξ : Freq) (N : Mat) :
     ContinuousLinearMap.adjoint (bgg ξ) (WithLp.toLp 2 ((0 : Vec), N)) = curl ξ N := by
   refine ext_inner_left ℂ fun M => ?_
@@ -91,8 +73,6 @@ theorem inner_VM (v w : VM) :
     ⟪v, w⟫_ℂ = ⟪(WithLp.ofLp v).1, (WithLp.ofLp w).1⟫_ℂ + ⟪(WithLp.ofLp v).2, (WithLp.ofLp w).2⟫_ℂ :=
   WithLp.prod_inner_apply v w
 
-/-! ### The constraint fibres -/
-
 /-- The fibre `{0} × tsd ξ`. -/
 def tsdB (ξ : Freq) : Submodule ℂ VM :=
   ((⊥ : Submodule ℂ Vec).prod (tsd ξ)).comap (WithLp.linearEquiv 2 ℂ (Vec × Mat)).toLinearMap
@@ -101,7 +81,6 @@ theorem mem_tsdB {ξ : Freq} {w : VM} :
     w ∈ tsdB ξ ↔ (WithLp.ofLp w).1 = 0 ∧ (WithLp.ofLp w).2 ∈ tsd ξ := by
   simp [tsdB, Submodule.mem_prod]
 
-/-- The projection onto `{0} × tsd ξ` is `(v, M) ↦ (0, P_ξ M)`. -/
 theorem starProjection_tsdB (ξ : Freq) (w : VM) :
     (tsdB ξ).starProjection w = inr ((tsd ξ).starProjection (WithLp.ofLp w).2) := by
   apply Submodule.eq_starProjection_of_mem_of_inner_eq_zero
@@ -125,8 +104,6 @@ theorem bgg_mem_orthogonal {ξ : Freq} {N : Mat} (hN : N ∈ (tsd ξ)ᗮ) : bgg 
 theorem hessM_mem_orthogonal (ξ : Freq) (c : ℂ) : hessM ξ c ∈ (tsd ξ)ᗮ :=
   grad_mem_orthogonal ξ _
 
-/-! ### The fibre complex -/
-
 theorem continuous_bgg : Continuous bgg := by
   refine continuous_clm_apply.2 fun M => ?_
   have h : Continuous fun ξ : Freq => curl ξ M := continuous_curl.clm_apply continuous_const
@@ -141,7 +118,7 @@ def sym : ∀ i j : Fin 3, Freq → W3 ℂ Mat VM i →L[ℂ] W3 ℂ Mat VM j
   | _, _ => 0
 
 open ShortHilbertComplex in
-/-- **The BGG weak-symmetry family** `ℂ --hess_ξ--> ℂ³ˣ³ --(S₁, curl_ξ)--> ℂ³ × ℂ³ˣ³`. -/
+/-- The fibre complex `ℂ --hess_ξ--> ℂ³ˣ³ --(S₁, curl_ξ)--> ℂ³ × ℂ³ˣ³`. -/
 def bggFamily : FibreComplex ℂ Freq ComplexShape.fin3 (W3 ℂ Mat VM) where
   m := sym
   shape i j h := by
@@ -163,8 +140,7 @@ theorem bggFamily_isHomogeneous01 : bggFamily.IsHomogeneous 0 1 2 := fun t ξ _ 
   rw [bggFamily_m01, bggFamily_m01, hessM_smul]; rfl
 
 open ShortHilbertComplex in
-/-- **The constraint fibres** `({0}, tsd ξ, {0} × tsd ξ)`: `σ = 0`, `u` TSD, `(M, B) = (0, B)` with
-`B` TSD. -/
+/-- The constraint fibres `({0}, tsd ξ, {0} × tsd ξ)`. -/
 def bggK : ∀ i : Fin 3, Freq → Submodule ℂ (W3 ℂ Mat VM i)
   | 0 => fun _ => ⊥
   | 1 => tsd
@@ -173,7 +149,7 @@ def bggK : ∀ i : Fin 3, Freq → Submodule ℂ (W3 ℂ Mat VM i)
 instance (i : Fin 3) (ξ : Freq) : (bggK i ξ).HasOrthogonalProjection := by
   fin_cases i <;> infer_instance
 
-/-- **`({0}, tsd ξ, {0} × tsd ξ)` reduces the BGG fibre complex at every frequency.** -/
+/-- `({0}, tsd ξ, {0} × tsd ξ)` reduces the BGG fibre complex at every frequency. -/
 theorem isFibreReducing : bggFamily.IsFibreReducing bggK := by
   refine FibreComplex.IsFibreReducing.of_orthogonal (fun i j ξ => ?_) (fun i j ξ => ?_)
   · fin_cases i <;> fin_cases j
@@ -186,8 +162,6 @@ theorem isFibreReducing : bggFamily.IsFibreReducing bggK := by
       | (rintro _ ⟨v, -, rfl⟩; exact Submodule.zero_mem _)
       | (rintro _ ⟨v, hv, rfl⟩; exact bgg_mem_orthogonal hv)
       | (rintro _ ⟨v, -, rfl⟩; exact hessM_mem_orthogonal ξ v)
-
-/-! ### Measurability of the fibre projections -/
 
 theorem starProjection_tsdB_eq (ξ : Freq) :
     (tsdB ξ).starProjection = inr ∘L (tsd ξ).starProjection ∘L
@@ -214,8 +188,6 @@ theorem hessM_ne_zero : bggFamily.m 0 1 ≠ 0 := by
   have := congrArg (fun T : ℂ →L[ℂ] Mat => T 1 (0, 0)) h'
   simp [hessM_apply] at this
 
-/-! ### The fibre gap of `(S₁, curl)` -/
-
 /-- The symmetric part `(A + Aᵀ)/2`. -/
 def symPart (M : Mat) : Mat := WithLp.toLp 2 fun p => (M p + M (p.2, p.1)) / 2
 
@@ -241,9 +213,6 @@ theorem norm_bgg_sq (ξ : Freq) (M : Mat) :
     ‖bgg ξ M‖ ^ 2 = ‖axialL M‖ ^ 2 + ‖curl ξ M‖ ^ 2 := by
   rw [bgg_apply, WithLp.prod_norm_sq_eq_of_L2]; rfl
 
-/-- **The fibre gap of the BGG symbol** at the torus frequencies: `‖v‖ ≤ 4 ‖(S₁, curl_ξ) v‖` on
-`N(S₁, curl_ξ)ᗮ` for `|ξ| ≥ 2π` (split `v` into its symmetric part, controlled by the curl through
-`Feec.Fourier.SymCurl.mul_norm_le_two_norm_curl`, and its skew part, controlled by `S₁`). -/
 theorem bgg_gap {ξ : Freq} (hξ : 2 * Real.pi ≤ ‖ξ‖) :
     ∀ v ∈ (LinearMap.ker (bgg ξ : Mat →ₗ[ℂ] VM))ᗮ, ‖v‖ ≤ 4 * ‖bgg ξ v‖ := by
   intro v hv
@@ -285,8 +254,6 @@ theorem inner_symPart_sub (v : Mat) : ⟪symPart v, v - symPart v⟫_ℂ = 0 := 
   simp only [symPart, PiLp.sub_apply, WithLp.ofLp_toLp, map_div₀, map_add, Fin.sum_univ_three]
   ring
 
-/-- At `ξ = 0` the BGG symbol is `(S₁, 0)`, with gap `‖v‖ ≤ ‖S₁ v‖` on `N(S₁)ᗮ` (skew
-matrices). -/
 theorem bgg_gap_zero : ∀ v ∈ (LinearMap.ker (bgg 0 : Mat →ₗ[ℂ] VM))ᗮ, ‖v‖ ≤ 4 * ‖bgg 0 v‖ := by
   intro v hv
   have hker : symPart v ∈ LinearMap.ker (bgg 0 : Mat →ₗ[ℂ] VM) := by
@@ -309,8 +276,7 @@ theorem bgg_gap_zero : ∀ v ∈ (LinearMap.ker (bgg 0 : Mat →ₗ[ℂ] VM))ᗮ
   linarith [norm_nonneg (bgg 0 v)]
 
 open ShortHilbertComplex in
-/-- **The fibre gaps of the BGG complex at every torus frequency**: `‖v‖ ≤ 4 ‖m_ξ v‖` on
-`N(m_ξ)ᗮ` for `ξ = 0` or `|ξ| ≥ 2π`, for every arrow. -/
+/-- For every arrow, `‖v‖ ≤ 4 ‖m_ξ v‖` on `N(m_ξ)ᗮ` when `ξ = 0` or `|ξ| ≥ 2π`. -/
 theorem bggFamily_gap (i j : Fin 3) {ξ : Freq} (hξ : ξ = 0 ∨ 2 * Real.pi ≤ ‖ξ‖) :
     ∀ v ∈ (LinearMap.ker (bggFamily.m i j ξ : W3 ℂ Mat VM i →ₗ[ℂ] W3 ℂ Mat VM j))ᗮ,
       ‖v‖ ≤ 4 * ‖bggFamily.m i j ξ v‖ := by

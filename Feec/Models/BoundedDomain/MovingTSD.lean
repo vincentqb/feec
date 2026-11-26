@@ -7,71 +7,15 @@ public import Feec.HilbertComplex.Transport
 /-!
 # Moving data in `K*` on bounded domains: eigenfields with both boundary conditions vanish
 
-For the thesis' complex `H̊¹(Ω; ℝ³) → H̊(curl, Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` on a bounded open
-`Ω ⊆ ℝ³` and `K = {0} × L²(TSD) × L²(TSD)`, `Feec.Models.BoundedDomain.gradCurl_coreSub_spectral`
-reduces the existence of a moving datum in the invariant core `K*` (under a complete set of
-eigenvectors of `L²`) to the existence of a nonzero **TSD eigenfield**
-`u ∈ L²(TSD) ∩ H̊(curl)`, `curl† curl u = ξ² u`, `ξ > 0`. Here `curl†` is the maximal curl:
-the eigenproblem imposes the electric condition on `u` only.
-
-This file proves that such an eigenfield cannot satisfy the condition a second time: if moreover
-`curl u ∈ H̊(curl)`, then `u = 0`, on **every** bounded open `Ω` and with no symmetry or
-divergence condition (`eq_zero_of_isEigenfield_of_mem_minimal`). Proof:
-
-1. extension by zero (`Feec.Domain.ConstCoeffOp.extendL2F`): Green's formula for `H̊(curl)`
-   against smooth fields with no boundary condition (`Feec.Domain.ConstCoeffOp.minimal_green`)
-   gives `curl ũ = (curl u)~` and `curl (curl u)~ = ξ² ũ` weakly on `ℝ³`;
-2. mollification (`Feec.Domain.kconv`, `Feec.Domain.ConstCoeffOp.apply_kconv`): `V = ρ ⋆ ũ` is a
-   smooth compactly supported field with `curl curl V = ξ² V` pointwise;
-3. `div V = 0` (`div curl = 0`), so `ΔV = -ξ² V` (`curlM_curlM_eq`), and a **Pohozaev identity**
-   kills compactly supported solutions of the Helmholtz equation (`eq_zero_of_laplacian_eq`):
-   testing `ΔV = -ξ² V` against `V` and against the dilation field `x · ∇V` gives
-   `‖∇V‖² = ξ² ‖V‖²` and `½ ‖∇V‖² = (3/2) ξ² ‖V‖²`;
-4. `ρ_m ⋆ ũ → ũ` in `L²`, so `ũ = 0`.
-
-Consequently (`not_coreSub_le_stationary_iff`), a moving datum of `K*` comes from a TSD
-eigenfield whose magnetic field `curl u` violates the electric boundary condition, i.e. has a
-nonzero tangential trace (weakly: `curl u ∉ H̊(curl)`).
-
-## What remains open
-
-The extension-by-zero argument does not decide whether TSD eigenfields exist: for an eigenfield
-`u`, `(-Δ - ξ²) ũ` is the boundary layer `(n × curl u) δ_{∂Ω}` (row-wise), which need not vanish.
-For vector fields the corresponding claim is false (on the unit ball the toroidal fields
-`j_l(k r) (x × ∇ Y_l^m)`, `j_l(k) = 0`, lie in `H̊¹ ∩ ker div` and solve `curl curl u = k² u`), so
-the matrix structure must enter. Heuristically, for smooth `Ω` the layer is then a
-transverse-traceless tensor on `∂Ω` (symmetric, trace-free, divergence-free, orthogonal to the
-second fundamental form), hence zero when every boundary component is a sphere (no holomorphic
-quadratic differentials in genus `0`), which would make `K*` stationary on such domains; higher
-genus is not decided. None of this is formalized (it needs traces on curved boundaries and the
-Riemann–Roch count).
-
-The spectral hypothesis (`EigenDense`) is proved on cubes (`Feec.Models.Cube.EigenDense`) and on
-boxes with arbitrary, possibly unequal, sides (`Feec.Models.Box.eigenDense_gradCurl_box`); on both,
-no TSD eigenfield exists and `K*` is stationary (`Feec.Models.Cube.Ident.mem_invariantCore_tsd_iff`,
-`Feec.Models.Box.not_exists_tsd_eigenfield_box`, `Feec.Models.Box.mem_invariantCore_tsd_iff`).
-On a general bounded `Ω` (a ball, a Lipschitz domain) the question is **still open**: neither
-`EigenDense` nor the (non)existence of a TSD eigenfield with `curl u ∉ H̊(curl)` is proved, and
-`not_coreSub_le_stationary_iff` below is the strongest general statement.
+On a bounded open `Ω ⊆ ℝ³`, an eigenfield `u ∈ H̊(curl)` of `curl† curl` of nonzero frequency with
+`curl u ∈ H̊(curl)` vanishes; hence, under a complete set of eigenvectors, `K*` is not stationary
+iff some TSD eigenfield has its curl outside `H̊(curl)`.
 
 ## Main results
 
-* `eq_zero_of_laplacian_eq`: compactly supported smooth solutions of `Δf = -c f`, `c ≠ 0`,
-  vanish (Pohozaev).
-* `eq_zero_of_curlM_curlM_eq`: the same for `curl curl V = c V` (row-wise, matrix fields).
-* **`eq_zero_of_isEigenfield_of_mem_minimal`**: no nonzero electric eigenfield `u` with
-  `curl u ∈ H̊(curl)`, on any bounded open `Ω`.
-* **`not_coreSub_le_stationary_iff`**: `K*` is not stationary iff some nonzero TSD eigenfield has
-  `curl u ∉ H̊(curl)` (under the eigenvector hypothesis).
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §4.4 (mollification), §9.1 (weak derivatives)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `eq_zero_of_laplacian_eq`: compactly supported smooth solutions of `Δf = -c f`, `c ≠ 0`, vanish.
+* `eq_zero_of_isEigenfield_of_mem_minimal`: no eigenfield `u ≠ 0`, `ξ ≠ 0`, has `curl u ∈ H̊(curl)`.
+* `not_coreSub_le_stationary_iff`: the moving data of `K*` under a complete set of eigenvectors.
 -/
 
 @[expose] public noncomputable section
@@ -81,13 +25,10 @@ open MeasureTheory Set Filter Topology Feec.Domain
 
 namespace Feec.Models.BoundedDomain
 
-/-! ### A Pohozaev identity: compactly supported Helmholtz solutions vanish -/
-
 section Pohozaev
 
 variable {f g : R3 → ℝ}
 
-/-- Integration by parts on `ℝ³`: `∫ ∂_k g · h = -∫ g ∂_k h` for `g ∈ C_c^∞`, `h ∈ C¹`. -/
 theorem integral_pd_mul_univ (hg : ContDiff ℝ ∞ g) (hgc : HasCompactSupport g)
     {h : R3 → ℝ} (hh : ContDiff ℝ 1 h) (k : Fin 3) :
     ∫ x, partialDeriv k g x * h x = -∫ x, g x * partialDeriv k h x := by
@@ -104,7 +45,6 @@ theorem pd_coord_mul (hg : Differentiable ℝ g) (k j : Fin 3) (x : R3) :
   rw [partialDeriv_mul (differentiable_apply k x) (hg x), partialDeriv_apply_coord]
   split_ifs <;> ring
 
-/-- **The virial identity** `∫ g (x_k ∂_k g) = -½ ∫ g²` for `g ∈ C_c^∞(ℝ³)`. -/
 theorem integral_mul_coord_mul_pd (hg : ContDiff ℝ ∞ g) (hgc : HasCompactSupport g)
     (k : Fin 3) :
     ∫ x, g x * (x k * partialDeriv k g x) = -(1 / 2) * ∫ x, g x * g x := by
@@ -127,14 +67,12 @@ theorem integral_mul_coord_mul_pd (hg : ContDiff ℝ ∞ g) (hgc : HasCompactSup
   rw [e1, e2] at h1
   linarith
 
-/-- `∫ g Δg`-type identity: `∫ ∂_j ∂_j f · f = -∫ (∂_j f)²`. -/
 theorem integral_pd_pd_mul (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupport f) (j : Fin 3) :
     ∫ x, partialDeriv j (partialDeriv j f) x * f x =
       -∫ x, partialDeriv j f x * partialDeriv j f x :=
   integral_pd_mul_univ (hf.partialDeriv_infty j) (hfc.partialDeriv j)
     (hf.of_le (by simp)) j
 
-/-- `∫ ∂_j ∂_j f · (x_k ∂_k f) = ½ ∫ (∂_j f)² - δ_{jk} ∫ (∂_j f)²`. -/
 theorem integral_pd_pd_mul_coord (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupport f)
     (j k : Fin 3) :
     ∫ x, partialDeriv j (partialDeriv j f) x * (x k * partialDeriv k f x) =
@@ -171,9 +109,7 @@ theorem integral_pd_pd_mul_coord (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupp
   rw [h1]
   ring
 
-/-- **Compactly supported Helmholtz solutions vanish** (Pohozaev): if `f ∈ C_c^∞(ℝ³)` and
-`Δf = -c f` with `c ≠ 0`, then `f = 0`. Testing the equation against `f` gives
-`‖∇f‖² = c ‖f‖²`, against the dilation field `x · ∇f` gives `½ ‖∇f‖² = (3/2) c ‖f‖²`. -/
+/-- If `f ∈ C_c^∞(ℝ³)` and `Δf = -c f` with `c ≠ 0`, then `f = 0`. -/
 theorem eq_zero_of_laplacian_eq (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupport f) {c : ℝ}
     (hc : c ≠ 0) (h : ∀ x, laplacian f x = -c * f x) : f = 0 := by
   simp only [laplacian_apply] at h
@@ -240,8 +176,6 @@ theorem eq_zero_of_laplacian_eq (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSuppo
 
 end Pohozaev
 
-/-! ### Matrix fields with `curl curl V = c V` -/
-
 section CurlCurl
 
 private theorem sum_fin3_rot (k : Fin 3) (f : Fin 3 → ℝ) :
@@ -255,7 +189,6 @@ private theorem fin3_add_one_add_two (k : Fin 3) : k + 1 + 2 = k := by fin_cases
 
 variable {V : Ix → R3 → ℝ}
 
-/-- `div curl = 0` row-wise, for smooth matrix fields. -/
 theorem sum_pd_curlM (hV : ∀ ij, ContDiff ℝ ∞ (V ij)) (i : Fin 3) (x : R3) :
     ∑ k, partialDeriv k (curlM V (i, k)) x = 0 := by
   have hd : ∀ ij a, Differentiable ℝ (partialDeriv a (V ij)) := fun ij a =>
@@ -273,7 +206,6 @@ theorem sum_pd_curlM (hV : ∀ ij, ContDiff ℝ ∞ (V ij)) (i : Fin 3) (x : R3)
     show (2 : Fin 3) + 1 = 0 from rfl, show (2 : Fin 3) + 2 = 1 from rfl]
   linarith [hc (i, 2) 0 1, hc (i, 1) 0 2, hc (i, 0) 1 2]
 
-/-- `curl curl V = ∇ div V - ΔV` row-wise, for `C²` matrix fields. -/
 theorem curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ 2 (V ij)) (i k : Fin 3) (x : R3) :
     curlM (curlM V) (i, k) x =
       partialDeriv k (fun y => ∑ l, partialDeriv l (V (i, l)) y) x - laplacian (V (i, k)) x := by
@@ -298,8 +230,6 @@ theorem curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ 2 (V ij)) (i k : Fin 3) (x : R
   rw [e3, e1, e2, partialDeriv_sub (hd _ _ _) (hd _ _ _), partialDeriv_sub (hd _ _ _) (hd _ _ _)]
   linarith [hc (i, k + 1) (k + 1) k, hc (i, k + 2) (k + 2) k]
 
-/-- **Compactly supported smooth solutions of `curl curl V = c V`, `c ≠ 0`, vanish**: `div V = 0`
-(`div curl = 0`), so `ΔV = -c V` and each entry vanishes (`eq_zero_of_laplacian_eq`). -/
 theorem eq_zero_of_curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ ∞ (V ij))
     (hVc : ∀ ij, HasCompactSupport (V ij)) {c : ℝ} (hc : c ≠ 0)
     (h : ∀ ij x, curlM (curlM V) ij x = c * V ij x) : V = 0 := by
@@ -325,13 +255,10 @@ theorem eq_zero_of_curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ ∞ (V ij))
 
 end CurlCurl
 
-/-! ### Eigenfields with both boundary conditions -/
-
 section Eigenfield
 
 variable {Ω : Set R3}
 
-/-- Pairing the extension by zero with a test field of `ℝ³` is pairing on `Ω`. -/
 theorem sum_integral_extendL2F {ι : Type*} [Fintype ι] (hΩ : MeasurableSet Ω) (v : L2F ℝ Ω ι)
     {ψ : ι → R3 → ℝ} (hψ : IsTestField (univ : Set R3) ψ) :
     ∑ i, ∫ x, (starRingEnd ℝ) (ConstCoeffOp.extendL2F hΩ v i x) * ψ i x =
@@ -354,7 +281,6 @@ theorem extendL2F_smul {ι : Type*} [Fintype ι] (hΩ : MeasurableSet Ω) (c : �
   · rw [indicator_of_mem hx, indicator_of_mem hx, PiLp.smul_apply, h4 hx, Pi.smul_apply]
   · rw [indicator_of_notMem hx, indicator_of_notMem hx, smul_zero]
 
-/-- The kernel convolution commutes with multiplication by a constant. -/
 private theorem kconv_const_mul (k : R3 → ℝ) (c : ℝ) (f : R3 → ℝ) :
     kconv k (fun x => c * f x) = fun x => c * kconv k f x := by
   funext x
@@ -362,7 +288,6 @@ private theorem kconv_const_mul (k : R3 → ℝ) (c : ℝ) (f : R3 → ℝ) :
   rw [← integral_const_mul]
   exact integral_congr_ae (Eventually.of_forall fun t => by simp only; ring)
 
-/-- `curl_min w = curl† w` for `w ∈ H̊(curl)`: the row-wise curl is formally self-adjoint. -/
 theorem minimal_curl_eq_adjoint (hΩ : IsOpen Ω) (w : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
     (hw : (w : L2F ℝ Ω Ix) ∈ (gradCurl ℝ hΩ).d₁†.domain) :
     (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω w = (gradCurl ℝ hΩ).d₁† ⟨w, hw⟩ := by
@@ -382,12 +307,8 @@ theorem minimal_curl_eq_adjoint (hΩ : IsOpen Ω) (w : ((curlOp 3 : ConstCoeffOp
   congr 1
   exact testField_congr _ _ (curlOp_formalAdj_apply φ)
 
-/-- **No electric eigenfield satisfies both boundary conditions**: on a bounded open `Ω ⊆ ℝ³`,
-if `u ∈ H̊(curl)`, `curl† curl u = ξ² u` with `ξ ≠ 0`, and moreover `curl u ∈ H̊(curl)`, then
-`u = 0`. The extensions by zero `ũ`, `(curl u)~` satisfy `curl ũ = (curl u)~` and
-`curl (curl u)~ = ξ² ũ` weakly on `ℝ³` (both tangential traces vanish); their mollifications are
-compactly supported smooth solutions of `curl curl V = ξ² V`, hence zero
-(`eq_zero_of_curlM_curlM_eq`, a Pohozaev identity), and so is `ũ`. -/
+/-- On a bounded open `Ω ⊆ ℝ³`, if `u ∈ H̊(curl)`, `curl† curl u = ξ² u` with `ξ ≠ 0`, and
+`curl u ∈ H̊(curl)`, then `u = 0`. -/
 theorem eq_zero_of_isEigenfield_of_mem_minimal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     {ξ : ℝ} (hξ : ξ ≠ 0) {v : L2F ℝ Ω Ix} (hE : (gradCurl ℝ hΩ).IsEigenfield ξ v)
     (hm : ∀ h1 : v ∈ (gradCurl ℝ hΩ).d₁.domain,
@@ -473,8 +394,6 @@ theorem eq_zero_of_isEigenfield_of_mem_minimal (hΩ : IsOpen Ω) (hb : Bornology
 
 end Eigenfield
 
-/-! ### Moving data in `K*` -/
-
 section Moving
 
 -- Over `ℝ` the generic real structure on the window spaces duplicates the inner-product one.
@@ -483,13 +402,8 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 variable {Ω : Set R3}
 
-/-- **Moving data of `K*` violate the electric boundary condition in the magnetic slot**: on a
-bounded open `Ω ⊆ ℝ³`, for the thesis' complex `H̊¹ → H̊(curl) → L²` and
-`K = {0} × L²(TSD) × L²(TSD)`, under a complete set of eigenvectors of `L²` (`hD`), `K*`
-contains a non-stationary datum iff there are `ξ > 0` and a nonzero
-`u ∈ L²(TSD) ∩ H̊(curl)` with `curl† curl u = ξ² u` and `curl u ∉ H̊(curl)`. This refines the
-spectral reduction `gradCurl_coreSub_spectral` (whose TSD eigenfields give the non-stationary
-data): every such eigenfield has `curl u ∉ H̊(curl)` (`eq_zero_of_isEigenfield_of_mem_minimal`). -/
+/-- Under a complete set of eigenvectors, `K*` is not stationary iff some nonzero
+`u ∈ L²(TSD) ∩ H̊(curl)` has `curl† curl u = ξ² u`, `ξ > 0`, and `curl u ∉ H̊(curl)`. -/
 theorem not_coreSub_le_stationary_iff (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hD : (gradCurl ℝ hΩ).EigenDense) :
     ¬ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) ≤ (gradCurl ℝ hΩ).stationary ↔

@@ -6,37 +6,18 @@ public import Feec.Domain.ElasticityBGG
 /-!
 # The div-div complex as a BGG complex
 
-The de Rham complex of `ℝ³` with values in `𝕜³` (`deRhamVec 3`) stacked over the scalar de Rham
-complex (`deRhamVec 1`), linked by `S⁰ ψ = ψ I`, `S¹ = -mskw` and `S² = I`, is BGG data of
-constant-coefficient operators (`divDivBGG`): `S⁰` and `S¹` are one-to-one and `S²` is bijective,
-so the injectivity/surjectivity condition holds at `J = 2` with the explicit right inverse `divDivT`
-(**`injSurjWith_divDivBGG`**, `injSurj_divDivBGG`). Its BGG
-complex `bgg 2` eliminates `V³` against `S²` and `Ṽ⁰, Ṽ¹` against `S⁰, S¹`, and **is the div-div
-complex** `𝕜³ --dev grad--> T --sym curl--> Sym --div div--> 𝕜` of `Feec.Domain.DivDivComplex` on
-smooth fields (**`divDivBGGIso`**): in degree `1` the quotient `V¹ / R(S⁰) = 𝕜^{3×3} / 𝕜 I ≅ T`,
-`[σ] ↦ dev σ`, in degree `2` the quotient `V² / R(S¹) = 𝕜^{3×3} / skew ≅ Sym`, `[σ] ↦ sym σ`
-(the pairs `(σ, div σ)` modulo `(-S¹ψ, curl ψ)`), with differentials `u ↦ dev grad u`,
-`σ ↦ sym curl σ` and `σ ↦ div div σ`. Hence the smooth div-div complex has the cohomology of the
-twisted de Rham complex (`divDivSmoothComplexHomologyIso`).
-
-## Main definitions
-
-* `Feec.Domain.divDivBGG`: the BGG diagram of the div-div complex.
-* `Feec.Domain.divDivSmoothComplex`: the smooth div-div complex (`divDivOp`, `divDivMat`).
+The de Rham complex of `ℝ³` with values in `𝕜³` over the scalar one, linked by `ψ ↦ ψ I`, `-mskw`
+and `I`, is BGG data satisfying the injectivity/surjectivity condition at `J = 2`, whose BGG
+complex `bgg 2` is the smooth div-div complex.
 
 ## Main results
 
-* **`injSurjWith_divDivBGG`**, `injSurj_divDivBGG`, `divDivBGGHomologyIso`.
-* **`divDivBGGIso`**, `divDivSmoothComplexHomologyIso`.
+* `injSurjWith_divDivBGG`: the injectivity/surjectivity condition at `J = 2`.
+* `divDivBGGIso`: `bgg 2` is isomorphic to the smooth div-div complex.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1, (32) (the div-div complex,
-  `J = 2`)
-* [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
-  (the div-div complex)
-* [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
-  (BGG sequences)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -91,7 +72,6 @@ theorem ofMatrix_ddS2_apply (f : Fin 1 × Fin 3 → (Fin 3 → ℝ) → 𝕜) (i
   simp only [ofMatrix_apply, ddS2, Fintype.sum_prod_type, Fin.sum_univ_one]
   simp
 
-/-- `curl S⁰ = -S¹ grad`. -/
 theorem curlOp_ddS0 (f : Fin 1 → (Fin 3 → ℝ) → 𝕜) :
     (curlOp 3).apply ((ofMatrix ddS0).apply f) =
       -(ofMatrix ddS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply ((gradOp 3 1).apply f) := by
@@ -100,7 +80,6 @@ theorem curlOp_ddS0 (f : Fin 1 → (Fin 3 → ℝ) → 𝕜) :
     ofMatrix_ddS0_apply, ofMatrix_ddS0_apply]
   fin_cases i <;> fin_cases k <;> simp [gradOp_apply]
 
-/-- `div S¹ = -S² curl`. -/
 theorem divOp_ddS1 (f : Fin 1 × Fin 3 → (Fin 3 → ℝ) → 𝕜) :
     (divOp 3 3).apply ((ofMatrix ddS1).apply f) =
       -(ofMatrix ddS2 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply ((curlOp 1).apply f) := by
@@ -125,8 +104,7 @@ theorem divDivS_anticomm (k : ℤ) (f : vecIdx 1 k → (Fin 3 → ℝ) → 𝕜)
     exact funext fun j => isEmptyElim j
 
 variable (𝕜) in
-/-- **The BGG diagram of the div-div complex**: the de Rham complex with values in `𝕜³` over the
-scalar de Rham complex, linked by `ψ ↦ ψ I`, `-mskw`, `I`. [ArnoldHu2021], §4.1, (32) -/
+/-- **The BGG diagram of the div-div complex** ([ArnoldHu2021], §4.1, (32)). -/
 abbrev divDivBGG : ConstCoeffBGG (Fin 3 → ℝ) 𝕜 where
   top := deRhamVec 𝕜 3
   bot := deRhamVec 𝕜 1
@@ -170,9 +148,7 @@ def divDivT : ∀ k : ℤ, smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 (k + 1)) 
   | .ofNat 2 => (ofMatrix ddN2).smoothMap
   | _ => 0
 
-/-- **The div-div diagram satisfies the injectivity/surjectivity condition at `J = 2` with the
-right inverses `divDivT`**: `ψ ↦ ψ I`, `-mskw` and `I` are one-to-one, `I` is onto.
-[ArnoldHu2021], (23), §4.1 -/
+/-- **Injectivity/surjectivity at `J = 2`** for the div-div diagram ([ArnoldHu2021], (23)). -/
 theorem injSurjWith_divDivBGG :
     (divDivBGG 𝕜).smoothData.InjSurjWith 2 ((divDivBGG 𝕜).predMap (divDivT 𝕜)) := by
   refine ConstCoeffBGG.injSurjWith_predMap _ (fun k hk => ?_) fun k hk v => ?_
@@ -198,13 +174,10 @@ theorem injSurjWith_divDivBGG :
     | .ofNat 1, hk => exact absurd hk (by decide)
     | .negSucc n, hk => exact absurd hk (by simp only [not_le]; omega)
 
-/-- **The div-div diagram satisfies the injectivity/surjectivity condition at `J = 2`**
-(`injSurjWith_divDivBGG`). [ArnoldHu2021], (23), §4.1 -/
 theorem injSurj_divDivBGG : (divDivBGG 𝕜).smoothData.InjSurj 2 :=
   injSurjWith_divDivBGG.injSurj
 
-/-- **The div-div BGG complex has the cohomology of the twisted de Rham complex.**
-[ArnoldHu2021], §5.2 -/
+/-- The cohomology of `bgg 2` is that of the twisted de Rham complex ([ArnoldHu2021], §5.2). -/
 def divDivBGGHomologyIso (i : ℤ) :
     ((divDivBGG 𝕜).smoothData.bgg 2).homology i ≅
       (divDivBGG 𝕜).smoothData.twistComplex.homology i :=
@@ -213,8 +186,7 @@ def divDivBGGHomologyIso (i : ℤ) :
 /-! ### The BGG complex is the smooth div-div complex -/
 
 variable (𝕜) in
-/-- The smooth div-div complex `𝕜³ --dev grad--> T --sym curl--> Sym --div div--> 𝕜` of
-`Feec.Domain.DivDivComplex`. -/
+/-- The smooth div-div complex `𝕜³ --dev grad--> T --sym curl--> Sym --div div--> 𝕜`. -/
 abbrev divDivSmoothComplex : CochainComplex (ModuleCat 𝕜) ℤ :=
   (divDivConstCoeffComplex 𝕜).smoothComplex (divDivMat 𝕜) divDivOp_matMapsTo
 
@@ -254,7 +226,6 @@ def devSmoothMap : smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) →ₗ[�
 theorem devSmoothMap_surjective : Function.Surjective (devSmoothMap (𝕜 := 𝕜)) := fun s =>
   ⟨⟨s, s.2.1⟩, Subtype.ext s.2.2⟩
 
-/-- `dev (ψ I) = 0`. -/
 theorem matMulField_deviatoricMat_ddS0 (f : Fin 1 → (Fin 3 → ℝ) → 𝕜) :
     matMulField (deviatoricMat 3) ((ofMatrix ddS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply f) =
       0 := by
@@ -263,7 +234,6 @@ theorem matMulField_deviatoricMat_ddS0 (f : Fin 1 → (Fin 3 → ℝ) → 𝕜) 
   simp only [ofMatrix_ddS0_apply, Fin.sum_univ_three]
   fin_cases i <;> fin_cases j <;> simp <;> ring
 
-/-- The kernel of `dev` is the range of `S⁰ : ψ ↦ ψ I`. -/
 theorem ker_devSmoothMap :
     LinearMap.ker (devSmoothMap (𝕜 := 𝕜)) =
       LinearMap.range ((divDivBGG 𝕜).smoothData.S (1 - 1) 1) := by
@@ -300,7 +270,6 @@ def devQuotEquiv : (smoothFields (Fin 3 → ℝ) 𝕜 (Fin 3 × Fin 3) ⧸
   (Submodule.quotEquivOfEq _ _ ker_devSmoothMap.symm).trans
     (LinearMap.quotKerEquivOfSurjective _ devSmoothMap_surjective)
 
-/-- The range of `S¹ = -mskw` is that of `-mskw` on `𝕜³`-valued fields, the skew fields. -/
 theorem range_divDivBGG_S_one :
     LinearMap.range ((divDivBGG 𝕜).smoothData.S (2 - 1) 2) =
       LinearMap.range (ofMatrix elS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).smoothMap := by
@@ -369,7 +338,6 @@ def divDivBGGEquiv : ∀ k : ℤ, ((divDivBGG 𝕜).smoothData.bgg 2).X k ≃ₗ
         (divDivBGG_Δ_eq_bot (k := .negSucc n) (Or.inl (Int.negSucc_lt_zero n)))).trans
         (LinearEquiv.ofSubsingleton _ _)
 
-/-- `sym curl (dev σ) = sym curl σ`: `curl (g I)` is skew. -/
 theorem symCurl_dev {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hσ : ∀ i, ContDiff ℝ ∞ (σ i)) :
     matMulField (symMat 3) ((curlOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
       (matMulField (deviatoricMat 3) σ)) = matMulField (symMat 3) ((curlOp 3).apply σ) := by
@@ -394,7 +362,6 @@ theorem symCurl_dev {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hσ : �
       -(3 : 𝕜)⁻¹ * ∑ j, symMat 3 ij j * (curlOp 3).apply D j x by
     rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun _ _ => by ring, h0', mul_zero, add_zero]
 
-/-- `div div (sym σ) = div div σ`. -/
 theorem divdivOp_symMat {σ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → 𝕜} (hσ : ∀ i, ContDiff ℝ ∞ (σ i)) :
     (divdivOp 3 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply (matMulField (symMat 3) σ) =
       (divdivOp 3).apply σ := by
@@ -484,18 +451,14 @@ theorem divDivBGGEquiv_comm (i : ℤ) :
       subsingleton_divDivSmoothComplex_X (Or.inr (by omega))
     exact ModuleCat.hom_ext (LinearMap.ext fun _ => Subsingleton.elim _ _)
 
-/-- **The BGG complex of the div-div diagram is the div-div complex**: `bgg 2` of `divDivBGG`
-is isomorphic to the smooth div-div complex `dev grad → sym curl → div div` on trace-free and
-symmetric fields of `Feec.Domain.DivDivComplex` (`divDivOp`, `divDivMat`).
-[ArnoldHu2021], §4.1, (32) -/
+/-- **`bgg 2` of `divDivBGG` is the smooth div-div complex** ([ArnoldHu2021], §4.1). -/
 def divDivBGGIso : (divDivBGG 𝕜).smoothData.bgg 2 ≅ divDivSmoothComplex 𝕜 :=
   HomologicalComplex.Hom.isoOfComponents (fun k => (divDivBGGEquiv k).toModuleIso)
     fun i j hij => by
       obtain rfl : i + 1 = j := hij
       exact divDivBGGEquiv_comm i
 
-/-- **The cohomology of the smooth div-div complex is that of the twisted de Rham complex**
-of the div-div diagram. [ArnoldHu2021], §5.2 -/
+/-- The smooth div-div complex has the cohomology of the twisted complex ([ArnoldHu2021], §5.2). -/
 def divDivSmoothComplexHomologyIso (i : ℤ) :
     (divDivSmoothComplex 𝕜).homology i ≅
       (divDivBGG 𝕜).smoothData.twistComplex.homology i :=

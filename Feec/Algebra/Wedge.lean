@@ -6,39 +6,13 @@ public import Mathlib.Data.Finset.Powerset
 /-!
 # The exterior product of coefficient forms
 
-Forms on `R^d` (`d` a finite linearly ordered index type, `R` a commutative ring) in the basis
-`dx_s` are coefficient functions `ω : Finset d → R` (`Feec.ExteriorFibre`). Their exterior product
-is
-
-  `(ω ∧ η)_u = Σ_{s ⊆ u} ε(s, u ∖ s) ω_s η_{u ∖ s}`,
-
-with the shuffle sign `ε(s, t) = ∏_{a ∈ s} ε(a, t) = (-1)^{#{(a, b) ∈ s × t | b < a}}`, so that
-`dx_s ∧ dx_t = ε(s, t) dx_{s ∪ t}` for disjoint `s`, `t`. Taking `R = R'[x_d]` gives the exterior
-product of polynomial forms (`Feec.Koszul.PolyForm`), for which the exterior derivative is a
-graded derivation.
-
-## Main definitions
-
-* `Feec.ExteriorFibre.shuffleSgn s t`, `Feec.ExteriorFibre.wedgeForm ω η`;
-* `Feec.ExteriorFibre.oneForm ξ`: a covector as a `1`-form;
-* `Feec.Koszul.pderivForm j ω`: coefficientwise partial derivatives.
-
-## Main results
-
-* bilinearity, the unit `wedgeForm_one_left`, `wedgeForm_one_right` and degrees
-  (`IsDeg.wedgeForm`);
-* `wedgeForm_assoc`: **associativity** `(ω ∧ η) ∧ ζ = ω ∧ (η ∧ ζ)`;
-* `wedgeForm_comm`: **graded commutativity** `η ∧ ω = (-1)^{kl} ω ∧ η`;
-* `wedge_wedgeForm`, `wedge_wedgeForm_right`: associativity with a covector,
-  `ξ ∧ (ω ∧ η) = (ξ ∧ ω) ∧ η = (-1)^k ω ∧ (ξ ∧ η)`;
-* `Feec.Koszul.extDeriv_wedgeForm`: **the Leibniz rule** `d (ω ∧ η) = dω ∧ η + (-1)^k ω ∧ dη`
-  for polynomial forms.
+The exterior product `(ω ∧ η)_u = Σ_{s ⊆ u} ε(s, u ∖ s) ω_s η_{u ∖ s}` of coefficient forms on
+`R^d` ([AFW2006], §2): associative, graded commutative, and with the Leibniz rule
+`d (ω ∧ η) = dω ∧ η + (-1)^k ω ∧ dη` for polynomial forms.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §2 (the exterior algebra and the exterior derivative)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -51,10 +25,7 @@ namespace Feec.ExteriorFibre
 
 variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d]
 
-/-! ### Shuffle signs -/
-
-/-- The sign `ε(s, t) = ∏_{a ∈ s} ε(a, t) = (-1)^{#{(a, b) ∈ s × t | b < a}}` of the shuffle
-`dx_s ∧ dx_t = ε(s, t) dx_{s ∪ t}` (`s`, `t` disjoint). -/
+/-- The shuffle sign `ε(s, t) = (-1)^{#{(a, b) ∈ s × t | b < a}}` of `dx_s ∧ dx_t`. -/
 def shuffleSgn (s t : Finset d) : R := ∏ a ∈ s, sgn a t
 
 @[simp] theorem shuffleSgn_empty_left (t : Finset d) : (shuffleSgn ∅ t : R) = 1 := by
@@ -71,12 +42,10 @@ theorem shuffleSgn_mul_self (s t : Finset d) : (shuffleSgn s t : R) * shuffleSgn
   rw [shuffleSgn, ← prod_mul_distrib]
   exact prod_eq_one fun a _ => sgn_mul_self a t
 
-/-- `∏_{b ∈ t} (if a < b then -1 else 1) = (-1)^{#{b ∈ t | a < b}}`. -/
 theorem prod_ite_lt (a : d) (t : Finset d) :
     (∏ b ∈ t, (if a < b then -1 else 1 : R)) = (-1) ^ #({b ∈ t | a < b}) := by
   rw [prod_ite, prod_const_one, mul_one, prod_const]
 
-/-- For `a ∉ t`: `ε(a, t) ∏_{b ∈ t} (if a < b then -1 else 1) = (-1)^{#t}`. -/
 theorem sgn_mul_prod_ite_lt {a : d} {t : Finset d} (ha : a ∉ t) :
     (sgn a t : R) * ∏ b ∈ t, (if a < b then -1 else 1 : R) = (-1) ^ #t := by
   rw [prod_ite_lt, sgn, ← pow_add]
@@ -97,7 +66,6 @@ theorem shuffleSgn_insert_right {j : d} {t : Finset d} (hj : j ∉ t) (s : Finse
   rw [shuffleSgn, shuffleSgn, ← prod_mul_distrib]
   exact prod_congr rfl fun a _ => sgn_insert hj
 
-/-- **Graded commutativity of shuffles**: `ε(s, t) ε(t, s) = (-1)^{#s #t}` for disjoint `s`, `t`. -/
 theorem shuffleSgn_mul_shuffleSgn {s t : Finset d} (h : Disjoint s t) :
     (shuffleSgn s t : R) * shuffleSgn t s = (-1) ^ (#s * #t) := by
   induction s using Finset.induction_on with
@@ -113,16 +81,12 @@ theorem sgn_union {j : d} {s t : Finset d} (h : Disjoint s t) :
     (sgn j (s ∪ t) : R) = sgn j s * sgn j t := by
   rw [sgn, sgn, sgn, filter_union, card_union_of_disjoint (disjoint_filter_filter h), pow_add]
 
-/-- For `j ∉ s`: `(-1)^{#{i ∈ s | j < i}} = (-1)^{#s} ε(j, s)`. -/
 theorem prod_ite_lt_eq {j : d} {s : Finset d} (hj : j ∉ s) :
     (∏ i ∈ s, (if j < i then -1 else 1 : R)) = (-1) ^ #s * sgn j s := by
   have h := sgn_mul_prod_ite_lt (R := R) hj
   rw [← h, mul_comm (sgn j s : R), mul_assoc, sgn_mul_self, mul_one]
 
-/-! ### The exterior product -/
-
-/-- The **exterior product** of coefficient forms,
-`(ω ∧ η)_u = Σ_{s ⊆ u} ε(s, u ∖ s) ω_s η_{u ∖ s}`. -/
+/-- The exterior product `(ω ∧ η)_u = Σ_{s ⊆ u} ε(s, u ∖ s) ω_s η_{u ∖ s}`. -/
 def wedgeForm (ω η : Finset d → R) : Finset d → R :=
   fun u => ∑ s ∈ u.powerset, shuffleSgn s (u \ s) * ω s * η (u \ s)
 
@@ -163,13 +127,11 @@ theorem wedgeForm_sum_right {ι : Type*} (u : Finset ι) (ω : Finset d → R) (
   funext v; simp only [wedgeForm_apply, Finset.sum_apply, mul_sum]
   exact sum_comm
 
-/-- The unit `dx_∅ = 1` is a left identity. -/
 @[simp] theorem wedgeForm_one_left (ω : Finset d → R) : wedgeForm (Pi.single ∅ 1) ω = ω := by
   funext u
   rw [wedgeForm_apply, sum_eq_single ∅ (fun s _ hs => by simp [hs]) (by simp)]
   simp
 
-/-- The unit `dx_∅ = 1` is a right identity. -/
 @[simp] theorem wedgeForm_one_right (ω : Finset d → R) : wedgeForm ω (Pi.single ∅ 1) = ω := by
   funext u
   rw [wedgeForm_apply, sum_eq_single u (fun s hs hsu => by
@@ -178,7 +140,6 @@ theorem wedgeForm_sum_right {ι : Type*} (u : Finset ι) (ω : Finset d → R) (
     simp [this]) (by simp)]
   simp
 
-/-- Degrees add: the exterior product of a `k`-form and an `l`-form is a `(k + l)`-form. -/
 theorem IsDeg.wedgeForm {k l : ℕ} {ω η : Finset d → R} (hω : IsDeg k ω) (hη : IsDeg l η) :
     IsDeg (k + l) (wedgeForm ω η) := by
   intro u hu
@@ -190,8 +151,6 @@ theorem IsDeg.wedgeForm {k l : ℕ} {ω η : Finset d → R} (hω : IsDeg k ω) 
     rw [hη _ this, mul_zero]
   · rw [hω s hk, mul_zero, zero_mul]
 
-/-- **Graded commutativity** `η ∧ ω = (-1)^{kl} ω ∧ η` for a `k`-form `ω` and an `l`-form `η`.
-[AFW2006], §2 -/
 theorem wedgeForm_comm {k l : ℕ} {ω η : Finset d → R} (hω : IsDeg k ω) (hη : IsDeg l η) :
     wedgeForm η ω = (-1 : R) ^ (k * l) • wedgeForm ω η := by
   funext u
@@ -211,9 +170,6 @@ theorem wedgeForm_comm {k l : ℕ} {ω η : Finset d → R} (hω : IsDeg k ω) (
     · rw [hω _ hk]; ring
   · rw [hη _ hl]; ring
 
-/-! ### Exterior multiplication by a covector -/
-
-/-- Reindexing pairs `j ∈ s' ⊆ u` as `(j, s' ∖ j)`. -/
 theorem sum_powerset_sum_mem {M : Type*} [AddCommMonoid M] (u : Finset d)
     (F : Finset d → d → M) :
     ∑ s' ∈ u.powerset, ∑ j ∈ s', F s' j =
@@ -242,7 +198,6 @@ theorem sdiff_insert_eq_erase_sdiff (u s : Finset d) (j : d) :
     u \ insert j s = u.erase j \ s := by
   ext x; simp only [mem_sdiff, mem_insert, mem_erase, not_or]; tauto
 
-/-- **Associativity** `ξ ∧ (ω ∧ η) = (ξ ∧ ω) ∧ η` for a covector `ξ`. -/
 theorem wedge_wedgeForm (ξ : d → R) (ω η : Finset d → R) :
     wedge ξ (wedgeForm ω η) = wedgeForm (wedge ξ ω) η := by
   funext u
@@ -257,7 +212,6 @@ theorem wedge_wedgeForm (ξ : d → R) (ω η : Finset d → R) :
     ← union_sdiff_of_subset hsu, sgn_union disjoint_sdiff, union_sdiff_of_subset hsu]
   ring
 
-/-- Reindexing pairs `s ⊆ u`, `j ∈ u ∖ s` as `j ∈ u`, `s ⊆ u ∖ j`. -/
 theorem sum_powerset_sum_sdiff {M : Type*} [AddCommMonoid M] (u : Finset d)
     (F : Finset d → d → M) :
     ∑ s ∈ u.powerset, ∑ j ∈ u \ s, F s j = ∑ j ∈ u, ∑ s ∈ (u.erase j).powerset, F s j := by
@@ -267,8 +221,6 @@ theorem sum_powerset_sum_sdiff {M : Type*} [AddCommMonoid M] (u : Finset d)
   · rintro ⟨hs, hj, hjs⟩; exact ⟨⟨hs, hjs⟩, hj⟩
   · rintro ⟨⟨hs, hjs⟩, hj⟩; exact ⟨hs, hj, hjs⟩
 
-/-- **Associativity, graded**: `ξ ∧ (ω ∧ η) = (-1)^k ω ∧ (ξ ∧ η)` for a covector `ξ` and a
-`k`-form `ω`. -/
 theorem wedge_wedgeForm_right (ξ : d → R) {k : ℕ} {ω : Finset d → R} (hω : IsDeg k ω)
     (η : Finset d → R) :
     wedge ξ (wedgeForm ω η) = (-1 : R) ^ k • wedgeForm ω (wedge ξ η) := by
@@ -301,8 +253,6 @@ theorem wedge_wedgeForm_right (ξ : d → R) {k : ℕ} {ω : Finset d → R} (h�
       (shuffleSgn s (u.erase j \ s) * ω s * η (u.erase j \ s)))) * h1
   · rw [hω s hk]; ring
 
-/-! ### Associativity -/
-
 theorem shuffleSgn_union_left {s t : Finset d} (h : Disjoint s t) (v : Finset d) :
     (shuffleSgn (s ∪ t) v : R) = shuffleSgn s v * shuffleSgn t v := by
   rw [shuffleSgn, prod_union h]; rfl
@@ -312,7 +262,6 @@ theorem shuffleSgn_union_right (s : Finset d) {t v : Finset d} (h : Disjoint t v
   rw [shuffleSgn, shuffleSgn, shuffleSgn, ← prod_mul_distrib]
   exact prod_congr rfl fun a _ => sgn_union h
 
-/-- Reindexing pairs `s ⊆ a ⊆ u` as `s ⊆ u`, `t ⊆ u ∖ s` (with `a = s ∪ t`). -/
 theorem sum_powerset_sum_powerset {M : Type*} [AddCommMonoid M] (u : Finset d)
     (F : Finset d → Finset d → M) :
     ∑ a ∈ u.powerset, ∑ s ∈ a.powerset, F a s =
@@ -337,7 +286,6 @@ theorem sum_powerset_sum_powerset {M : Type*} [AddCommMonoid M] (u : Finset d)
     simp only [mem_powerset, mem_filter]
     exact ⟨fun h => ⟨⟨h.1, h.2⟩, h.2.trans h.1⟩, fun h => ⟨h.1.1, h.1.2⟩⟩
 
-/-- **Associativity** of the exterior product, `(ω ∧ η) ∧ ζ = ω ∧ (η ∧ ζ)`. -/
 theorem wedgeForm_assoc (ω η ζ : Finset d → R) :
     wedgeForm (wedgeForm ω η) ζ = wedgeForm ω (wedgeForm η ζ) := by
   funext u
@@ -377,12 +325,9 @@ open ExteriorFibre MvPolynomial
 
 variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d]
 
-/-! ### The Leibniz rule for polynomial forms -/
-
 /-- The coefficientwise partial derivative `∂ⱼ ω` of a polynomial form. -/
 def pderivForm (j : d) (ω : PolyForm R d) : PolyForm R d := fun s => pderiv j (ω s)
 
-/-- `d = Σⱼ dxⱼ ∧ ∂ⱼ` on polynomial forms. -/
 theorem extDeriv_eq_sum_wedge [Fintype d] (ω : PolyForm R d) :
     extDeriv ω = ∑ j, wedge (Pi.single j 1) (pderivForm j ω) := by
   funext s
@@ -396,7 +341,6 @@ theorem shuffleSgn_eq_C (s t : Finset d) :
     (shuffleSgn s t : MvPolynomial d R) = C (shuffleSgn s t) := by
   simp [shuffleSgn, sgn, map_prod]
 
-/-- `∂ⱼ` is a derivation of the exterior product. -/
 theorem pderivForm_wedgeForm (j : d) (ω η : PolyForm R d) :
     pderivForm j (wedgeForm ω η) = wedgeForm (pderivForm j ω) η + wedgeForm ω (pderivForm j η) := by
   funext u
@@ -405,8 +349,6 @@ theorem pderivForm_wedgeForm (j : d) (ω η : PolyForm R d) :
   rw [shuffleSgn_eq_C, mul_assoc, pderiv_C_mul, pderiv_mul]
   ring
 
-/-- **The Leibniz rule** `d (ω ∧ η) = dω ∧ η + (-1)^k ω ∧ dη` for a polynomial `k`-form `ω`.
-[AFW2006], §2 -/
 theorem extDeriv_wedgeForm [Fintype d] {k : ℕ} {ω : PolyForm R d} (hω : IsDeg k ω)
     (η : PolyForm R d) :
     extDeriv (wedgeForm ω η) =

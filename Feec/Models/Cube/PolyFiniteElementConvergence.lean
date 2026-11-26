@@ -8,52 +8,23 @@ public import Feec.FiniteElement.PolyOrder
 /-!
 # The higher-order finite element methods on the cube as conforming families
 
-For every admissible sequence `S` of `P_rΛᵏ` / `P_r⁻Λᵏ` families (`Feec.FiniteElement.PolySeq`) on
-the level-`(N + 1)` Freudenthal meshes of `Q = (0, ½)ⁿ`, with the complexes `FEM.poly n S N ⊆ HΛ(Q)`
-and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module proves the analogues of
-`Feec.Models.Cube.FiniteElementMethod`, `Feec.Models.Cube.WhitneyApprox` and
-`Feec.Models.Cube.FiniteElementConvergence`, with no hypothesis beyond the data:
+For every admissible sequence `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ`: interpolation errors,
+graph-norm density ([Arnold2018], Ch. 7) and the conforming families `FEM.polyFamily`,
+`FEM.polyFamilyMin` ([AFW2010], §5.5).
 
-* **Interpolation error of order `h^{s+1}`** ([Arnold2018], Ch. 7; [Ciarlet2002], Thm 3.1.4):
-  pointwise on each simplex by the Bramble–Hilbert argument with the DOF bound and the DOF
-  stability of `Feec.Models.Cube.PolySmoothingEstimates` (`Poly.abs_sub_globalInterp_le`: the
-  degree-`k` part of a Taylor polynomial lies in `P_sΛᵏ ⊆ P(T)ᵏ`, `Poly.exists_polySpace_near`), and
-  in `L²` and in the graph norm on the cube (`exists_mem_poly_le`, with `d Π_h = Π_h d`).
-* **Density** of the higher-order spaces in `HΛ(Q)`, `H̊Λ(Q)` and in the graph spaces of every
-  window (`eventually_exists_poly_graph`, `dense_window_poly`, and `Min` versions), so the
-  semi-discrete Hodge wave equation converges on every window for `D(L)` data
-  (`exists_tendstoUniformlyOn_window_poly`; [QuennevilleBelair2015], Thm 4.14).
-* Under the smoothing estimates (proved for all small `γ` in
-  `Feec.Models.Cube.PolySmoothingEstimates`): **uniformly bounded cochain projections**
-  `π_N = J_N⁻¹ Q_N` with `‖π_N‖ ≤ 2C` in `L²` (`PolySmoothingEstimates.proj`,
-  `PolySmoothingEstimates.norm_proj_le`), so the complexes of `S` are **conforming families**
-  (`PolySmoothingEstimates.family`, `ConformingFamily.ofSmoothing`; with the estimates of
-  `polySmoothingEstimates_exists`, `polyFamily`, `polyFamilyMin`). With the closed range of
-  `HΛ(Q)`, `H̊Λ(Q)` (`Feec.Models.Cube.DeRhamIdentFEM`) the static FEEC theorem
-  (`Feec.HilbertComplex.ConformingFamily.staticFEEC`) gives, unconditionally, the uniform discrete
-  Poincaré inequality ([AFW2010], Thm 3.6), uniform well-posedness and stability of the discrete
-  mixed Hodge Laplacian (Thm 3.8), the vanishing harmonic gap, the discrete cohomology,
-  quasi-optimality (Thm 3.9) and convergence; the rates are in `Feec.Models.Cube.PolyRate` (in
-  `H̊Λ(Q)`: `Feec.Models.Cube.TangentialRate`).
-* **The rows of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3) on `(0, ½)³` with
-  vanishing boundary DOFs, the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (`PolySeq.lowestOrder`, and the
-  Whitney complex) and the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` (`PolySeq.lagrangeP2`), **share
-  one smoother** (`tableRows_common_smoother`) and carry uniformly bounded cochain projections built
-  from the same smoothed fields (`tableRows_uniform_cochainProjection`).
+## Main results
+
+* `FEM.exists_mem_poly_le`: the interpolation error of order `h^{s+1}` in `L²` and for `d`.
+* `FEM.eventually_exists_poly_graph`, `FEM.eventually_exists_polyMin_graph`: graph-norm density.
+* `FEM.exists_tendstoUniformlyOn_window_poly`: the semi-discrete Hodge wave equation converges.
+* `FEM.tableRows_common_smoother`: one smoother for [QuennevilleBelair2015], Tables 5.1 and 6.1.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (discrete Poincaré inequality, Thm 3.6; cohomology, Thm 3.4), Thm 3.8 (stability),
-  Thm 3.9 (quasi-optimality), §5.5 (smoothed projections), §5.6 (cohomology of the finite element
-  de Rham complexes)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates, density)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Thm 3.1.4
-  (interpolation error)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation); §5.3, Table 5.1; §6.3,
-  Table 6.1
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -75,9 +46,6 @@ variable (S : PolySeq)
 
 /-! ### The local interpolation error of the higher-order families -/
 
-/-- **Taylor approximation on a mesh simplex**: for a `C^{s+1}` degree-`k` field `w` with
-`‖D^{s+1} w‖ ≤ M` on `T`, the degree-`k` part `P` of its Taylor polynomial of order `s` at a
-vertex is a polynomial form of degree `s` with `‖w - P‖ ≤ h_N^{s+1} M` on `T`. -/
 theorem exists_polySpace_near {N k s : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
     (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
@@ -101,10 +69,6 @@ theorem exists_polySpace_near {N k s : ℕ} {T : Affine.Simplex ℝ (Fin n → �
   rw [e]
   exact (norm_degPart_le k _).trans htay
 
-/-- **The local interpolation error of the higher-order families**, pointwise: for a mesh
-simplex `T`, a degree `s` with `P_sΛᵏ ⊆ P(T)ᵏ` and a `C^{s+1}` degree-`k` field `w` with
-`‖D^{s+1} w‖ ≤ M` on `T`, `|w - Π_T w| ≤ (1 + B dim D) h_N^{s+1} M` on `T` (Bramble–Hilbert
-through the DOF bound `DofBound` and the DOF stability `abs_dof_le`). -/
 theorem abs_sub_globalInterp_le {N k s : ℕ} (hs : polySpace n s k ≤ S.space n k) {B D : ℝ}
     (hB : DofBound S n k B) (hB0 : 0 ≤ B) (hD : CoeffBound S n k D)
     (T : (mesh n N).simplices) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
@@ -161,12 +125,11 @@ end Poly
 /-! ### Interpolation of smooth forms on the cube meshes -/
 
 variable (n) in
-/-- The DOF constant `B_k` of the sequence `S` (`Poly.DofBound`). -/
+/-- The constant `B_k` of `Poly.DofBound` for `S`. -/
 def dofConst (S : PolySeq) (k : ℕ) : ℝ := (Poly.exists_dofBound (n := n) S k).choose
 
 variable (n) in
-/-- The constant `D_k` of the coefficient fields of the degrees of freedom of `S`
-(`Poly.CoeffBound`). -/
+/-- The constant `D_k` of `Poly.CoeffBound` for `S`. -/
 def coeffConst (S : PolySeq) (k : ℕ) : ℝ := (Poly.exists_coeffBound (n := n) S k).choose
 
 theorem dofConst_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ dofConst n S k :=
@@ -182,8 +145,7 @@ theorem coeffBound_coeffConst (S : PolySeq) (k : ℕ) : Poly.CoeffBound S n k (c
   (Poly.exists_coeffBound (n := n) S k).choose_spec.2
 
 variable (n) in
-/-- The constant of the `L²` interpolation estimate of degree `k` of the sequence `S` on the cube
-meshes: `#Λᵏ |Q|^{1/2} (1 + B_k dim(P_{r_k}Λᵏ) D_k)`, independent of the mesh and of the order. -/
+/-- The constant `#Λᵏ |Q|^{1/2} (1 + B_k dim(P(T)ᵏ) D_k)` of the `L²` interpolation error. -/
 def polyInterpConst (S : PolySeq) (k : ℕ) : ℝ :=
   Fintype.card (formIdx n k) * (volume.real (cubeDomain n) ^ (1 / 2 : ℝ) *
     (1 + dofConst n S k * Module.finrank ℝ (S.space n k) * coeffConst n S k))
@@ -194,9 +156,6 @@ theorem polyInterpConst_nonneg (S : PolySeq) (k : ℕ) : 0 ≤ polyInterpConst n
   have := coeffConst_nonneg (n := n) S k
   positivity
 
-/-- **The pointwise interpolation error on the cube meshes**: for `w ∈ C^{s+1}` of degree `k`
-with `‖D^{s+1} w‖ ≤ L` on `cl Q` and `P_sΛᵏ ⊆ P(T)ᵏ`, on every closed simplex,
-`|w - Π_h w| ≤ (1 + B dim D) h_N^{s+1} L`. -/
 theorem abs_sub_globalInterp_le_cube (S : PolySeq) {N k s : ℕ}
     (hs : polySpace n s k ≤ S.space n k) {w : FormField n} (hw : ContDiff ℝ (s + 1) w)
     (hdeg : ∀ x, IsDeg k (w x)) {L : ℝ}
@@ -215,11 +174,7 @@ theorem abs_sub_globalInterp_le_cube (S : PolySeq) {N k s : ℕ}
 
 variable [NeZero n]
 
-/-- **The `L²` interpolation error of the higher-order families on the cube meshes** at order
-`s + 1` ([Arnold2018], Ch. 7; [Ciarlet2002], Thm 3.1.4): for a `C^{s+2}` degree-`k` form `w`
-with `‖D^{s+1} w‖ ≤ L` and `‖D^{s+1} dw‖ ≤ L'` on `cl Q`, and `P_sΛᵏ ⊆ P(T)ᵏ`,
-`P_sΛᵏ⁺¹ ⊆ P(T)ᵏ⁺¹` (e.g. `s + 1 ≤ r_k, r_{k+1}`), the canonical interpolant `v = Π_N w` of the
-complex of `S` satisfies `‖w - v‖ ≤ A_k h_N^{s+1} L` and `‖dw - dv‖ ≤ A_{k+1} h_N^{s+1} L'`. -/
+/-- **Interpolation error of order `h^{s+1}`** ([Arnold2018], Ch. 7; [Ciarlet2002], Thm 3.1.4). -/
 theorem exists_mem_poly_le (S : PolySeq) (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
     (hs' : polySpace n s (k + 1) ≤ S.space n (k + 1)) {w : FormField n}
     (hw : ContDiff ℝ (s + 2) w) (hdeg : ∀ x, IsDeg k (w x)) {L L' : ℝ}
@@ -269,15 +224,13 @@ theorem exists_mem_poly_le (S : PolySeq) (N k s : ℕ) (hs : polySpace n s k ≤
 /-! ### Density of the higher-order complexes -/
 
 omit [NeZero n] in
-/-- A `C^m` form has a bounded `m`-th derivative on the compact `cl Q`. -/
 theorem exists_bound_iteratedFDeriv {m : ℕ} {w : FormField n} (hw : ContDiff ℝ m w) :
     ∃ L, 0 ≤ L ∧ ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ m w y‖ ≤ L := by
   obtain ⟨L, hL⟩ := (isCompact_closure_cubeDomain n).exists_bound_of_continuousOn
     (hw.continuous_iteratedFDeriv le_rfl).continuousOn
   exact ⟨max L 0, le_max_right _ _, fun y hy => (hL y hy).trans (le_max_left _ _)⟩
 
-/-- **Graph-norm density of the higher-order spaces in `HΛᵏ(Q)`**: every `x ∈ D(d)` is the limit,
-in the graph norm, of points of the spaces `Vₕᵏ` of `S` on the Freudenthal meshes. -/
+/-- **Graph-norm density in `HΛᵏ(Q)`** of the spaces `Vₕᵏ` of `S`. -/
 theorem eventually_exists_poly_graph (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
     (hx : x ∈ ((complex n).d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (poly n S N).V k, ‖x - v‖ < ε ∧
@@ -303,13 +256,11 @@ theorem eventually_exists_poly_graph (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeD
       (mul_nonneg (polyInterpConst_nonneg S k) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)
         hL0)))⟩
 
-/-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Q; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
     {ε : ℝ} (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (poly n S N).V k, ‖x - v‖ < ε :=
   Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) k x hε
 
-/-- Degreewise approximation in every graph norm of `HΛ(Q)` by the higher-order spaces. -/
 theorem eventually_exists_poly_near (S : PolySeq) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i))
     {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (poly n S N).V i, ‖x - v‖ < ε ∧
@@ -319,7 +270,6 @@ theorem eventually_exists_poly_near (S : PolySeq) (i : ℤ) (x : L2F ℝ (cubeDo
   Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) i x hε
 
-/-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_poly (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((poly n S N).V j :
       Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
@@ -334,8 +284,6 @@ instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) :
     FiniteDimensional ℝ ((poly n S N).window a m).graphSub :=
   inferInstance
 
-/-- **The windows of the higher-order complexes approximate every point of the graph space** of
-the total differential of every window of `HΛ(Q)`. -/
 theorem dense_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) :
     ∀ ζ : ((complex n).window a m).totalD.GraphSpace, ∀ δ > 0, ∀ᶠ N in atTop,
       ∃ w ∈ ((poly n S N).window a m).graphSub, ‖ζ - w‖ < δ := fun ζ _ hδ =>
@@ -344,9 +292,7 @@ theorem dense_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) :
       obtain ⟨v, hv, h1, h2⟩ := hN
       exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
 
-/-- **Convergence of the semi-discrete Hodge wave equation for the higher-order complexes**, on
-every window of `HΛ(Q)` and for `D(L)` data, unconditionally ([QuennevilleBelair2015],
-Thm 4.14). -/
+/-- **Convergence of the semi-discrete Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14). -/
 theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
     (x : ((complex n).window a m).wave.domain) :
     ∃ ξh ξh' : ℕ → ℝ → ((complex n).window a m).totalD.GraphSpace,
@@ -362,8 +308,7 @@ theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) 
 
 /-! ### Density with vanishing boundary DOFs -/
 
-/-- **Graph-norm density of the higher-order spaces with vanishing boundary DOFs in
-`H̊Λᵏ(Q)`**. -/
+/-- **Graph-norm density in `H̊Λᵏ(Q)`** of the spaces of `S` with vanishing boundary DOFs. -/
 theorem eventually_exists_polyMin_graph (S : PolySeq) (k : ℤ)
     (x : L2F ℝ (cubeDomain n) (formIdx n k))
     (hx : x ∈ ((complexMin n).d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
@@ -412,14 +357,12 @@ theorem eventually_exists_polyMin_graph (S : PolySeq) (k : ℤ)
       (mul_nonneg (polyInterpConst_nonneg S k) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)
         hL0)))⟩
 
-/-- **`L²` density of the higher-order spaces with vanishing boundary DOFs**. -/
 theorem eventually_exists_polyMin_lt (S : PolySeq) (k : ℤ)
     (x : L2F ℝ (cubeDomain n) (formIdx n k)) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v ∈ (polyMin n S N).V k, ‖x - v‖ < ε :=
   Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => eventually_exists_polyMin_graph S k x hx hε) k x hε
 
-/-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((polyMin n S N).V j :
       Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
@@ -440,7 +383,7 @@ namespace PolySmoothingEstimates
 
 variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
 
-/-- **The smoothed projection** `π_N = J_N⁻¹ Q_N` onto the complex of `S` on the cube. -/
+/-- The smoothed projection `π_N = J_N⁻¹ Q_N` onto the complex of `S` on the cube. -/
 def proj (hE : PolySmoothingEstimates n S p C) (N : ℕ) : (poly n S N).CochainProjection :=
   (polySmoothed n S N (p N) (hE.isMaximal N)).toCochainProjection (θ := 1 / 2) (by norm_num)
     (hE.close N)
@@ -451,7 +394,6 @@ theorem two_mul_nonneg (hE : PolySmoothingEstimates n S p C) : 0 ≤ 2 * C := by
 variable (hE : PolySmoothingEstimates n S p C)
 include hE
 
-/-- **Uniform `L²` bound**: `‖π_N x‖ ≤ 2 C ‖x‖` for every `N`. -/
 theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
     ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ :=
   (polySmoothed n S N (p N) (hE.isMaximal N)).norm_toCochainProjection_le_two_mul (hE.close N)
@@ -463,8 +405,7 @@ namespace PolySmoothingEstimatesMin
 
 variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
 
-/-- **The smoothed projection** `π̊_N = J_N⁻¹ Q̊_N` onto the complex of `S` with vanishing
-boundary DOFs. -/
+/-- The smoothed projection `π̊_N = J_N⁻¹ Q̊_N` with vanishing boundary DOFs. -/
 def proj (hE : PolySmoothingEstimatesMin n S p C) (N : ℕ) : (polyMin n S N).CochainProjection :=
   (polySmoothedMin n S N (p N) (hE.isMinimal N)).toCochainProjection (θ := 1 / 2) (by norm_num)
     (hE.close N)
@@ -475,7 +416,6 @@ theorem two_mul_nonneg (hE : PolySmoothingEstimatesMin n S p C) : 0 ≤ 2 * C :=
 variable (hE : PolySmoothingEstimatesMin n S p C)
 include hE
 
-/-- **Uniform `L²` bound** `‖π̊_N x‖ ≤ 2 C ‖x‖`. -/
 theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
     ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ :=
   (polySmoothedMin n S N (p N) (hE.isMinimal N)).norm_toCochainProjection_le_two_mul
@@ -503,17 +443,13 @@ section Family
 
 variable {S : PolySeq} {p : ℕ → SmoothingParam (Fin n → ℝ)} {C : ℝ}
 
-/-- **The conforming family of the smoothing estimates `hE`** ([AFW2010], §5.5): the complexes of
-`S` on the Freudenthal meshes with the smoothed projections `π_N = J_N⁻¹ Q_N`
-(`PolySmoothingEstimates.proj`), a conforming family of `HΛ(Q)`
-(`ConformingFamily.ofSmoothing`). -/
+/-- The conforming family of `HΛ(Q)` of the smoothing estimates `hE` ([AFW2010], §5.5). -/
 def PolySmoothingEstimates.family (hE : PolySmoothingEstimates n S p C) :
     ConformingFamily (complex n) ℕ :=
   .ofSmoothing atTop (poly n S) (fun N => polySmoothed n S N (p N) (hE.isMaximal N))
     (by norm_num : (1 / 2 : ℝ) < 1) hE.close hE.bound (tendsto_infDist_poly S)
 
-/-- **The conforming family of the smoothing estimates `hE` with vanishing boundary DOFs**, a
-conforming family of `H̊Λ(Q)`. -/
+/-- The conforming family of `H̊Λ(Q)` of the smoothing estimates `hE`. -/
 def PolySmoothingEstimatesMin.family (hE : PolySmoothingEstimatesMin n S p C) :
     ConformingFamily (complexMin n) ℕ :=
   .ofSmoothing atTop (polyMin n S) (fun N => polySmoothedMin n S N (p N) (hE.isMinimal N))
@@ -521,14 +457,11 @@ def PolySmoothingEstimatesMin.family (hE : PolySmoothingEstimatesMin n S p C) :
 
 variable (n)
 
-/-- **The finite element complexes of an admissible sequence `S` on the Freudenthal meshes of the
-cube** (every `P_rΛ`, `P_r⁻Λ` and mixed sequence) with the smoothed projections
-(`polySmoothingEstimates_exists`), a conforming family of `HΛ(Q)`. -/
+/-- The finite element complexes of `S`, a conforming family of `HΛ(Q)`. -/
 def polyFamily (S : PolySeq) : ConformingFamily (complex n) ℕ :=
   (polySmoothingEstimates_exists (n := n) S).choose_spec.choose_spec.family
 
-/-- **The finite element complexes of `S` with vanishing boundary DOFs**, a conforming family of
-`H̊Λ(Q)`. -/
+/-- The complexes of `S` with vanishing boundary DOFs, a conforming family of `H̊Λ(Q)`. -/
 def polyFamilyMin (S : PolySeq) : ConformingFamily (complexMin n) ℕ :=
   (polySmoothingEstimatesMin_exists (n := n) S).choose_spec.choose_spec.family
 
@@ -558,12 +491,7 @@ theorem PolySmoothingEstimates.mono {S : PolySeq} {p : ℕ → SmoothingParam (F
   bound N i x := (hE.bound N i x).trans (mul_le_mul_of_nonneg_right hC (norm_nonneg _))
   close := hE.close
 
-/-- **The two rows of Tables 5.1 and 6.1 of [QuennevilleBelair2015] (§5.3, §6.3), with vanishing
-boundary DOFs on the cube `(0, ½)³`, share one smoother**: there is `γ₀ > 0` such that for
-every `γ ∈ (0, γ₀]` the same minimal-family parameters `pMin γ` satisfy the smoothing estimates of
-the Whitney complex (the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²`), of the lowest-order sequence
-`PolySeq.lowestOrder` (the same row) and of the bottom row `PolySeq.lagrangeP2`
-(`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`). -/
+/-- **The two rows of [QuennevilleBelair2015], Tables 5.1 and 6.1, share one smoother.** -/
 theorem tableRows_common_smoother :
     ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ), γ ≤ γ₀ →
       (∃ C, SmoothingEstimatesMin 3 (pMin γ hγ) C) ∧
@@ -575,11 +503,6 @@ theorem tableRows_common_smoother :
   obtain ⟨-, hW, hS⟩ := h γ hγ (by linarith) hγγ₀
   exact ⟨hW, (hS false).2, (hS true).2⟩
 
-/-- **Uniformly bounded smoothed cochain projections for both rows of Tables 5.1/6.1 from one
-smoother** (vanishing boundary DOFs, `(0, ½)³`): there are minimal-family parameters `p` and a
-constant `C` such that the projections `π̊_N` of the top row (`PolySeq.lowestOrder`) and of the
-bottom row (`PolySeq.lagrangeP2`), both built from the same smoothed fields `R_N u`, are bounded
-by `2C` in `L²` and in every graph norm, uniformly in `N`, with vanishing harmonic gaps. -/
 theorem tableRows_uniform_cochainProjection :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)

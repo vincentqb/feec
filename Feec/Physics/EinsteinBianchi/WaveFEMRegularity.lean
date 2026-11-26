@@ -7,77 +7,13 @@ public import Feec.Models.Cube.WeakSymmetrySobolevRate
 /-!
 # Regularity of the forms-model Hodge wave equation on the cube and an `O(h)` rate from `D(L³)`
 
-[QuennevilleBelair2015], §6.3: which powers of the domain of the forms-model Hodge wave operator
-`L` (`formsShort.wave`) give the regularity that the rate `cubeWave_rate_sobolev` of the scheme
-(6.5) needs, and an `O(h)` rate for data in `D(L³)`.
-
-**(a) Powers of the domain.** `MemDomainPow A k`: `x, A x, …, A^{k-1} x ∈ D(A)`. For a
-skew-adjoint `A` the group `e^{tA}` preserves `D(Aᵏ)`, commutes with `Aʲ` and conserves `‖Aʲ x‖`
-(`memDomainPow_group`, `norm_iterate_extOp_group`); kernel vectors are stationary and in every
-`D(Aᵏ)` (`group_S_eq_self`, `memDomainPow_of_mem_ker`).
-
-**(b) Degree-0 and degree-1 rows.** For `U ∈ D(L)`, `σ ∈ H¹_univ` with
-`‖σ‖_{1,univ} ≤ ‖U‖ + ‖L U‖` (Gaffney, `sobRel_σOf`), unconditionally. The rows of `dφ` are in
-`H¹_univ` (`sobRel_D0_φOf`) under further hypotheses: `L U ∈ D(L)`, an `L²`-bounded multiplier of
-`L U` and `M ∈ D(d¹*)`, with a constant involving those bounds. The rows `uₐ` are in `H¹_univ`
-iff `div uₐ ∈ L²` (`D(d⁰*)`), which `D(Lᵏ)` does not give for any `k` (`uₐ = ∇ψₐ` with `ψ`
-divergence-free in `H¹₀ \ H²`; argued, not formalized). An `L²`-bounded multiplier implies it
-(`rowu_mem_adjoint_of_mult`); the converse is not proved (it would need a right inverse of
-`(τ, ψ) ↦ dτ − S⁰ψ` bounded in `L²`), so the multiplier hypothesis of `cubeWave_rate_tr` is kept.
-The Hessian rows `d uₐ`, `d φ'ₐ` follow from `L U ∈ D(L)` and `M ∈ D(d¹*)`
-(`rowD1Ladj_mem_adjoint`).
-
-**(c) Top rows.** The rows of `ρ` are always in `D(d¹*)`, and `D(d²)` propagates along the orbit
-from `ρ(0)` (`compρL_waveOrbit_mem`). It is not implied by `D(L^∞)`: the stationary state with
-`ρ = (sawW2, 0, 0)` lies in `ker L` while `sawW2 ∉ H̊Λ²(Q)` and `∉ H^{1/2}_univ`
-(`exists_memDomainPow_compρL_not_mem`; the obstruction is the tangential trace, the field is
-smooth inside `Q`). The obstruction lives in `N(L)`: on `N(L)ᗮ = cl R(L)` the magnetic rows are in
-`N(d²)` (`compρL_mem_ker_of_mem_orthogonal`), hence in `H¹_univ` with norm
-`≤ (1 + √2) ‖U‖ + 2 ‖L U‖` for `U ∈ D(L) ∩ N(L)ᗮ` (`sobRel_compρL_of_mem_orthogonal`); for general
-`U₀` only the stationary part `P_{N(L)} U₀` needs a hypothesis (`compρL_mem_of_projKer`). The skew
-field `M` is assumed in `H¹_univ = D(d²) ∩ D(d¹*)`: `S¹` couples components of incompatible
-parities, and the corresponding coupled regularity is absent from Mathlib.
-
-**The rate.** `waveFEM_rate_of_mem_domain`: for `U₀ ∈ D(L³)`, the classical solution
-`orbitExact` along `e^{tL} U₀` and the solution of (6.5) from the elliptic projection satisfy
-`(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤
-K (Σ_{j≤3} ‖Lʲ U₀‖ + (1 + T) Λ)(1 + t) h_N` under hypotheses with bound `Λ`: on the datum, the
-multiplier of `U₀`, `M(U₀) ∈ H¹_univ` and the magnetic rows of `P_{N(L)} U₀` in `H¹_univ`; along
-the orbit, the multipliers of `L U(t)`, `L² U(t)` and `S¹u(t), S¹u'(t) ∈ H¹_univ`. This is not the
-purely datum-level statement `U₀ ∈ D(Lᵏ)`, `P_{N(L)} U₀ ∈ H¹`: the orbit hypotheses on the
-multiplier and on `S¹u` remain (see the docstring of `waveFEM_rate_of_mem_domain`). It replaces the
-`C²` orbit hypothesis of `waveFEM_rate_tr_cube`. `k = 3` is what the argument uses
-(`du' = (L² U)_ρ ∈ D(d¹*)` needs `L² U ∈ D(L)`); minimality is not shown.
-`waveFEM_rate_of_mem_domain_of_orbit` is the version with all hypotheses along the orbit.
-
-**Non-vacuity.** The standing wave `U(t) = cos(ωt) (0, u, 0) + ω⁻¹ sin(ωt) (0, 0, (0, du))`,
-`u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)`, `ω² = 8π²`, is the orbit of `(0, u, 0) ∈ D(L³)`
-(`waveOrbit_modeU`, by uniqueness of strong solutions), is not stationary, and satisfies the
-hypotheses with `Λ = 0` (`waveFEM_rate_of_mem_domain_nonvacuous`: zero multipliers, `M ≡ 0`,
-`P_{N(L)} U₀ = 0` since `U₀ ∈ R(L)`). It exercises the hypotheses on `M`, `S¹u` and the
-multipliers only trivially.
-
-## Main results
-
-* `memDomainPow_group`, `norm_iterate_extOp_group`, `group_S_eq_self`.
-* `isSobolevStateTr_of_mem`: the rate class of `cubeWave_rate_sobolev` at `s = 1` from `D(L³)`
-  and the hypotheses on multipliers, `M` and `ρ(0)`.
-* `compρL_mem_ker_of_mem_orthogonal`, `sobRel_compρL_of_mem_orthogonal`: the magnetic rows on
-  `N(L)ᗮ`; `projKer`, `projKer_waveOrbit`, `compρL_mem_of_projKer`: the stationary part.
-* `exists_mem_domain_of_hasDerivWithinAt`: domains of closed operators along trajectories.
-* **`waveFEM_rate_of_mem_domain`**: the `O(h)` rate of (6.5) for data in `D(L³)`;
-  `waveFEM_rate_of_mem_domain_cube`, with the smoothing estimates discharged;
-  `waveFEM_rate_of_mem_domain_of_orbit`, with the hypotheses along the orbit.
-* **`waveFEM_rate_of_mem_domain_nonvacuous`**: the hypotheses hold for a non-stationary solution.
-* **`exists_memDomainPow_compρL_not_mem`**: a state in every `D(Lᵏ)` whose `ρ` row is not in
-  `D(d²)` nor in `H^{1/2}_univ`.
+The powers `D(Lᵏ)` of the domain of the forms-model Hodge wave operator `L` of the scheme (6.5)
+of [QuennevilleBelair2015], §6.3, and, under further bounds, the `H¹` regularity of the fields of
+their points and an `O(h)` rate of (6.5) for data in `D(L³)` (`waveFEM_rate_of_mem_domain`).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 5.5, §6.1 ((6.1), (6.2)), §6.3 ((6.4), (6.5), Table 6.1)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9, §4.3 (Gaffney's inequality), §5.4
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -93,15 +29,11 @@ open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry Feec.Models.BoundedDomain Feec.EinsteinBianchi.MatrixModel
   Feec.EinsteinBianchi.BoundedFailure Feec.EinsteinBianchi.BoundedConvergence
 
-/-! ### Adjoint domains from bounded functionals -/
-
 section Adjoint
 
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
   [NormedAddCommGroup F] [InnerProductSpace ℝ F]
 
-/-- **A bounded functional gives a point of the adjoint domain, with the bound**: if
-`|⟪y, T x⟫| ≤ c ‖x‖` on `D(T)` (dense), then `y ∈ D(T*)` and `‖T* y‖ ≤ c`. -/
 theorem exists_mem_adjoint_of_abs_le (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E)) {y : F}
     {c : ℝ} (hc : 0 ≤ c) (h : ∀ x : T.domain, |⟪y, T x⟫| ≤ c * ‖(x : E)‖) :
     ∃ hy : y ∈ T†.domain, ‖T† ⟨y, hy⟩‖ ≤ c := by
@@ -128,8 +60,6 @@ theorem exists_mem_adjoint_of_abs_le (T : E →ₗ.[ℝ] F) (hT : Dense (T.domai
 
 variable [CompleteSpace F]
 
-/-- **The weak characterization of the domain of a closed operator** (von Neumann, `T†† = T`): if
-`|⟪x, T* y⟫| ≤ c ‖y‖` on `D(T*)`, then `x ∈ D(T)` and `‖T x‖ ≤ c`. -/
 theorem exists_mem_domain_of_abs_le (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain : Set E))
     (hTc : T.IsClosed) {x : E} {c : ℝ} (hc : 0 ≤ c)
     (h : ∀ y : T†.domain, |⟪x, T† y⟫| ≤ c * ‖(y : F)‖) :
@@ -138,10 +68,6 @@ theorem exists_mem_domain_of_abs_le (T : E →ₗ.[ℝ] F) (hT : Dense (T.domain
   have e := LinearPMap.adjoint_adjoint T hT hTc
   exact ⟨mem_domain_of_eq_op e.symm hx, by rw [norm_apply_of_eq_op e.symm hx]; exact hb⟩
 
-/-- **A trajectory whose right derivative stays in the domain of a closed operator, with a
-bound, stays in the domain**: if `f(0) ∈ D(A)` and `f'(r) ∈ D(A)` on `[0, T)`, with
-`‖A f(0)‖, ‖A f'(r)‖ ≤ Λ`, then `f(t) ∈ D(A)` with `‖A f(t)‖ ≤ (1 + t) Λ` (pair with `D(A*)`
-and apply the mean value inequality; `exists_mem_domain_of_abs_le`). -/
 theorem exists_mem_domain_of_hasDerivWithinAt (A : E →ₗ.[ℝ] F) (hA : Dense (A.domain : Set E))
     (hAc : A.IsClosed) {f f' : ℝ → E} {T Λ : ℝ} (hΛ : 0 ≤ Λ) (hc : ContinuousOn f (Icc 0 T))
     (hd : ∀ t ∈ Ico 0 T, HasDerivWithinAt f (f' t) (Ici t) t)
@@ -183,7 +109,7 @@ def extOp (A : E →ₗ.[ℝ] E) (x : E) : E := if h : x ∈ A.domain then A ⟨
 theorem extOp_eq {x : E} (h : x ∈ A.domain) : extOp A x = A ⟨x, h⟩ := by
   simp [extOp, h]
 
-/-- **`x ∈ D(Aᵏ)`**: `x, A x, …, A^{k-1} x ∈ D(A)`. -/
+/-- `x ∈ D(Aᵏ)`: `x, A x, …, A^{k-1} x ∈ D(A)`. -/
 def MemDomainPow (A : E →ₗ.[ℝ] E) : ℕ → E → Prop
   | 0, _ => True
   | k + 1, x => x ∈ A.domain ∧ MemDomainPow A k (extOp A x)
@@ -194,7 +120,6 @@ theorem MemDomainPow.mono : ∀ {k l : ℕ} {x : E}, l ≤ k → MemDomainPow A 
   | 0, l + 1, _, h, _ => absurd h (by omega)
   | k + 1, l + 1, _, h, hx => ⟨hx.1, MemDomainPow.mono (by omega) hx.2⟩
 
-/-- `Aʲ x ∈ D(A)` for `j < k` when `x ∈ D(Aᵏ)`. -/
 theorem MemDomainPow.iterate_mem : ∀ {k : ℕ} {x : E}, MemDomainPow A k x → ∀ j < k,
     (extOp A)^[j] x ∈ A.domain
   | 0, _, _, j, hj => absurd hj (by omega)
@@ -217,7 +142,6 @@ theorem extOp_add_smul (a b : ℝ) {x y : E} (hx : x ∈ A.domain) (hy : y ∈ A
   have e : (⟨a • x + b • y, h⟩ : A.domain) = a • ⟨x, hx⟩ + b • ⟨y, hy⟩ := rfl
   rw [e, LinearPMap.map_add, LinearPMap.map_smul, LinearPMap.map_smul]
 
-/-- A kernel vector of `A` lies in every `D(Aᵏ)`. -/
 theorem memDomainPow_of_mem_ker {x : E} (hx : x ∈ A.domain) (h0 : A ⟨x, hx⟩ = 0) :
     ∀ k, MemDomainPow A k x
   | 0 => trivial
@@ -229,7 +153,7 @@ theorem memDomainPow_of_mem_ker {x : E} (hx : x ∈ A.domain) (h0 : A ⟨x, hx�
 variable [CompleteSpace E] (hA : A.IsSkewAdjoint)
 include hA
 
-/-- **(a) `D(Aᵏ)` is invariant under the group, and `Aʲ e^{tA} = e^{tA} Aʲ`** for `j ≤ k`. -/
+/-- `D(Aᵏ)` is invariant under the group, and `Aʲ e^{tA} = e^{tA} Aʲ` for `j ≤ k`. -/
 theorem memDomainPow_group : ∀ (k : ℕ) {x : E}, MemDomainPow A k x → ∀ t : ℝ,
     MemDomainPow A k (hA.group.S t x) ∧
       ∀ j ≤ k, (extOp A)^[j] (hA.group.S t x) = hA.group.S t ((extOp A)^[j] x)
@@ -248,12 +172,11 @@ theorem memDomainPow_group : ∀ (k : ℕ) {x : E}, MemDomainPow A k x → ∀ t
       rw [hw]
       exact ih2 j (by omega)
 
-/-- **(a) The norms of the powers are conserved**: `‖Aʲ e^{tA} x‖ = ‖Aʲ x‖`, `j ≤ k`. -/
+/-- The norms of the powers are conserved: `‖Aʲ e^{tA} x‖ = ‖Aʲ x‖` for `j ≤ k`. -/
 theorem norm_iterate_extOp_group {k : ℕ} {x : E} (hx : MemDomainPow A k x) (t : ℝ) {j : ℕ}
     (hj : j ≤ k) : ‖(extOp A)^[j] (hA.group.S t x)‖ = ‖(extOp A)^[j] x‖ := by
   rw [(memDomainPow_group hA k hx t).2 j hj, hA.isIsometric_group]
 
-/-- **The kernel of `A` is fixed by the group.** -/
 theorem group_S_eq_self {z : E} (hz : z ∈ A.domain) (h0 : A ⟨z, hz⟩ = 0) (t : ℝ) :
     hA.group.S t z = z := by
   have hgen := hA.generator_group
@@ -267,13 +190,10 @@ theorem group_S_eq_self {z : E} (hz : z ∈ A.domain) (h0 : A ⟨z, hz⟩ = 0) (
   rw [this]
   simp
 
-/-- **Orthogonality to the kernel**: `⟪e^{tA} x − x, z⟫ = 0` for `z ∈ N(A)`. -/
 theorem inner_group_sub_self_ker (x : E) {z : E} (hz : z ∈ A.domain) (h0 : A ⟨z, hz⟩ = 0)
     (t : ℝ) : ⟪hA.group.S t x - x, z⟫ = 0 := by
   rw [inner_sub_left, hA.isIsometric_group.inner_S_left, group_S_eq_self hA hz h0, sub_self]
 
-/-- **`R(A)ᗮ ⊆ N(A)`**: a vector orthogonal to the range is in `D(A*) = D(A)` with
-`A x = −A* x = 0`. -/
 theorem mem_ker_of_forall_inner_eq_zero (hD : Dense (A.domain : Set E)) {z : E}
     (h : ∀ y : A.domain, ⟪z, A y⟫ = 0) : z ∈ A.ker := by
   obtain ⟨hz, hb⟩ := exists_mem_adjoint_of_abs_le A hD le_rfl (y := z) fun y => by
@@ -284,7 +204,6 @@ theorem mem_ker_of_forall_inner_eq_zero (hD : Dense (A.domain : Set E)) {z : E}
   rw [LinearPMap.neg_apply, norm_neg] at hn
   exact LinearPMap.mem_ker_iff.2 ⟨⟨z, hz'⟩, rfl, norm_le_zero_iff.1 (hn.trans_le hb)⟩
 
-/-- **`R(A) ⊆ N(A)ᗮ`** (skew-symmetry). -/
 theorem mem_orthogonal_ker (y : A.domain) : A y ∈ (A.ker)ᗮ := by
   rw [Submodule.mem_orthogonal]
   intro u hu
@@ -293,8 +212,6 @@ theorem mem_orthogonal_ker (y : A.domain) : A y ∈ (A.ker)ᗮ := by
   rw [hu0, inner_zero_left] at hs
   linarith
 
-/-- **`N(A)ᗮ = cl R(A)`, in the form used here**: a closed subspace containing `R(A)` contains
-`N(A)ᗮ`. -/
 theorem orthogonal_ker_le (hD : Dense (A.domain : Set E)) {K : Submodule ℝ E}
     (hK : IsClosed (K : Set E)) (hR : ∀ y : A.domain, A y ∈ K) : (A.ker)ᗮ ≤ K := by
   have : CompleteSpace K := hK.completeSpace_coe
@@ -304,7 +221,6 @@ theorem orthogonal_ker_le (hD : Dense (A.domain : Set E)) {K : Submodule ℝ E}
   have := Submodule.orthogonal_le hsub hz
   rwa [Submodule.orthogonal_orthogonal] at this
 
-/-- `orthogonal_ker_le` for the preimage of the kernel of a closed operator. -/
 theorem mem_ker_of_mem_orthogonal_ker {G H : Type*} [NormedAddCommGroup G]
     [InnerProductSpace ℝ G] [NormedAddCommGroup H] [InnerProductSpace ℝ H]
     (hD : Dense (A.domain : Set E)) (f : E →L[ℝ] G) (S : G →ₗ.[ℝ] H) (hS : S.IsClosed)
@@ -312,7 +228,7 @@ theorem mem_ker_of_mem_orthogonal_ker {G H : Type*} [NormedAddCommGroup G]
   orthogonal_ker_le hA hD (K := (S.ker).comap (f : E →ₗ[ℝ] G)) ((LinearPMap.isClosed_ker hS).preimage f.continuous)
     hR hz
 
-/-- **The orthogonal projection onto `N(A)`** (closed, `A` being closed). -/
+/-- The orthogonal projection onto `N(A)`. -/
 def projKerOf : E →L[ℝ] E :=
   haveI : CompleteSpace A.ker := (LinearPMap.isClosed_ker hA.isClosed).completeSpace_coe
   A.ker.starProjection
@@ -332,7 +248,6 @@ theorem projKerOf_eq_zero {x : E} (hx : x ∈ (A.ker)ᗮ) : projKerOf hA x = 0 :
 theorem projKerOf_smul_eq_zero (c : ℝ) (y : A.domain) : projKerOf hA (c • A y) = 0 :=
   projKerOf_eq_zero hA (Submodule.smul_mem _ c (mem_orthogonal_ker hA y))
 
-/-- **The stationary part is conserved by the group**: `P_{N(A)} e^{tA} x = P_{N(A)} x`. -/
 theorem projKerOf_group (x : E) (t : ℝ) : projKerOf hA (hA.group.S t x) = projKerOf hA x := by
   have h : hA.group.S t x - x ∈ (A.ker)ᗮ := by
     rw [Submodule.mem_orthogonal']
@@ -397,7 +312,6 @@ set_option maxHeartbeats 2000000
 variable {z : WS} (hz : z ∈ formsShort.wave.domain)
 include hz
 
-/-- **`d₁* x₂` against `Ṽ¹`**: `⟪d₁* (M, ρ), v⟫ = ⟪M, S¹v⟫ + ⟪ρ, dv⟫`. -/
 theorem inner_D1L_adjoint (v : Wv U1) :
     ⟪bggHilb.D1L† ⟨comp2 z, dom2 hz⟩, incl1 v⟫ =
       ⟪compML z, bggSegment.S1 v⟫ + ⟪compρL z, bggSegment.dt1 v⟫ := by
@@ -413,8 +327,6 @@ theorem inner_D1L_adjoint (v : Wv U1) :
   rw [hadj, compML_apply, compρL_apply]
   rfl
 
-/-- **(c) The magnetic rows of a point of `D(L)` are in `D(d¹*)`**: `ρₐ ∈ D((d¹)*)` with
-`‖(d¹)* ρₐ‖ ≤ ‖d₁* x₂‖ + √2 ‖M‖`. -/
 theorem rowρ_mem_adjoint (a : Fin 3) :
     ∃ h : compρL z a ∈ (D1†).domain, ‖D1† ⟨_, h⟩‖ ≤
       ‖bggHilb.D1L† ⟨comp2 z, dom2 hz⟩‖ + √2 * ‖compML z‖ := by
@@ -444,9 +356,6 @@ theorem rowρ_mem_adjoint (a : Fin 3) :
         |⟪compML z, bggSegment.S1 (single3 a w)⟫| := abs_sub _ _
     _ ≤ _ := by nlinarith [norm_nonneg (compML z), norm_nonneg (w : W1)]
 
-/-- **(b) An `L²`-bounded multiplier puts the rows of the electric field in `D(d⁰*)`** (one
-direction; the converse is not proved here): `|ℓ μ| ≤ Λ ‖μ‖` for the multiplier `ℓ = multOf σ' u` of the point gives
-`uₐ ∈ D((d⁰)*)` (`div uₐ ∈ L²`) with `‖(d⁰)* uₐ‖ ≤ Λ`. -/
 theorem rowu_mem_adjoint_of_mult {Λ : ℝ} (hΛ : 0 ≤ Λ)
     (hℓ : ∀ μ : U1, |multOf (aOf z) (bOf z) μ| ≤ Λ * ‖μ‖) (a : Fin 3) :
     ∃ h : comp1 z a ∈ (D0†).domain, ‖D0† ⟨_, h⟩‖ ≤ Λ := by
@@ -473,9 +382,6 @@ theorem rowu_mem_adjoint_of_mult {Λ : ℝ} (hΛ : 0 ≤ Λ)
   rw [norm_single3] at h
   exact h
 
-/-- **The coupling `d₁* x₂` is in `D(d⁰*)` row by row when `M ∈ D(d¹*)`**:
-`⟪(d₁* x₂)ₐ, dτ⟫ = ⟪M, S¹ d(τ eₐ)⟫ = −⟪M, d S⁰(τ eₐ)⟫ = −⟪(d¹)* M, S⁰(τ eₐ)⟫`
-(the anticommutation `d S⁰ = −S¹ d` and `d d = 0`), so `‖(d⁰)* (d₁* x₂)ₐ‖ ≤ ‖(d¹)* M‖`. -/
 theorem rowD1Ladj_mem_adjoint (hM : compML z ∈ (D1†).domain) (a : Fin 3) :
     ∃ h : (bggHilb.D1L† ⟨comp2 z, dom2 hz⟩) a ∈ (D0†).domain, ‖D0† ⟨_, h⟩‖ ≤ ‖D1† ⟨_, hM⟩‖ := by
   refine exists_mem_adjoint_of_abs_le D0 dense_D0_domain (norm_nonneg _) fun τ => ?_
@@ -513,8 +419,7 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 
 set_option maxHeartbeats 2000000
 
-/-- The inner product of the total space (`InnerProductSpace.toInner`; not found by instance
-search through the `PiLp` instances with the shortcut instances removed). -/
+/-- The inner product of the total space. -/
 local instance instInnerWS : Inner ℝ WS := InnerProductSpace.toInner
 
 theorem apply_eq_zero_of_coe_eq_zero {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
@@ -525,7 +430,6 @@ theorem apply_eq_zero_of_coe_eq_zero {E F : Type*} [AddCommGroup E] [Module ℝ 
 theorem complexMin_d23 : (complexMin 3).d 2 3 = D2min :=
   deRham_minimalComplex_d (isOpen_cubeDomain 3) 2
 
-/-- `d¹ w ∈ D(d²)` with `d² d¹ w = 0`. -/
 theorem D1_mem_D2min (w : U1) : D1 w ∈ D2min.domain := by
   have h := (complexMin 3).mapsTo 1 2 3 ⟨w, by rw [complexMin_d12]; exact w.2⟩
   rw [LinearPMap.apply_eq_of_eq complexMin_d12 _ w rfl] at h
@@ -539,8 +443,6 @@ theorem D2min_D1 (w : U1) : D2min ⟨D1 w, D1_mem_D2min w⟩ = 0 := by
     ⟨_, (complexMin 3).mapsTo 1 2 3 ⟨w, by rw [complexMin_d12]; exact w.2⟩⟩ _ e1]
   exact h
 
-/-- **The orthogonal of `N((d¹)*)` lies in `N(d²)`** (`HilbertComplex.orthogonal_ker_adjoint_le_ker`
-for `H̊Λ(Q)`): no closed range is needed. -/
 theorem mem_D2min_of_mem_orthogonal {y : W2} (hy : y ∈ ((D1†).ker)ᗮ) :
     ∃ h : y ∈ D2min.domain, D2min ⟨y, h⟩ = 0 := by
   have h := (complexMin 3).orthogonal_ker_adjoint_le_ker 1 2 3 (by rw [complexMin_d12]; exact hy)
@@ -551,8 +453,6 @@ theorem mem_D2min_of_mem_orthogonal {y : W2} (hy : y ∈ ((D1†).ker)ᗮ) :
   rw [← LinearPMap.apply_eq_of_eq complexMin_d23 y' ⟨y, hd⟩ hy'.symm]
   exact h0
 
-/-- The pairing of the magnetic slot with `D(d₁)`: every `y ∈ D(d₁)` is `ιt1 v'`, and
-`⟪w, d₁ y⟫ = ⟪w_M, S¹ v'⟫ + ⟪w_ρ, d v'⟫`. -/
 theorem inner_comp2_D1L (w : WithLp 2 (W2 × Wv W2)) (y : bggHilb.D1L.domain) :
     ∃ v' : Wv U1, (y : Wv W1) = incl1 v' ∧
       ⟪w, bggHilb.D1L y⟫ = ⟪(WithLp.ofLp w).1, bggSegment.S1 v'⟫ +
@@ -569,7 +469,7 @@ theorem inner_comp2_D1L (w : WithLp 2 (W2 × Wv W2)) (y : bggHilb.D1L.domain) :
   rw [WithLp.prod_inner_apply, hTL]
   rfl
 
-/-- **The kernel elements `(0, 0, (0, q eₐ))`**, `q ∈ N((d¹)*)`. -/
+/-- The state `(0, 0, (0, q eₐ))`. -/
 def kerRho (a : Fin 3) (q : W2) : WS :=
   ShortHilbertComplex.mk3 (0 : bggHilb.Γbar) (0 : Wv W1)
     (WithLp.toLp 2 ((0 : W2), single3 a q) : WithLp 2 (W2 × Wv W2))
@@ -587,8 +487,6 @@ theorem kerRho_comp2_mem {a : Fin 3} {q : W2} (hq : q ∈ (D1†).domain) (hq0 :
       rw [real_inner_comm, ← hadj, hq0, inner_zero_left, abs_zero, zero_mul]
   exact ⟨h, norm_le_zero_iff.1 hb⟩
 
-/-- **`(0, 0, (0, q eₐ)) ∈ N(L)`** for `q ∈ N((d¹)*)`: a stationary state of the Hodge wave
-equation (`d₁* (0, q eₐ) = 0`, `⟪q, d w⟫ = 0`). -/
 theorem kerRho_mem_ker {a : Fin 3} {q : W2} (hq : q ∈ (D1†).domain) (hq0 : D1† ⟨q, hq⟩ = 0) :
     kerRho a q ∈ formsShort.wave.domain ∧ waveOf (kerRho a q) = 0 := by
   obtain ⟨h2, h20⟩ := kerRho_comp2_mem hq hq0
@@ -653,7 +551,6 @@ omit hz in
 theorem norm_projK_comp1_le : ‖projK (comp1 (waveOf z))‖ ≤ ‖waveOf z‖ :=
   (Submodule.norm_starProjection_apply_le _ _).trans (norm_comp1_le _)
 
-/-- `‖d₁* x₂‖ ≤ 2 ‖L x‖` (`(L x)₁ = d₀ x₀ − d₁* x₂` and `d₀ x₀ = P (L x)₁`). -/
 theorem norm_D1Ladj_le : ‖bggHilb.D1L† ⟨comp2 z, dom2 hz⟩‖ ≤ 2 * ‖waveOf z‖ := by
   have e := comp1_waveOf hz
   have e2 : bggHilb.D1L† ⟨comp2 z, dom2 hz⟩ =
@@ -662,8 +559,6 @@ theorem norm_D1Ladj_le : ‖bggHilb.D1L† ⟨comp2 z, dom2 hz⟩‖ ≤ 2 * ‖
   refine (norm_sub_le _ _).trans ?_
   linarith [norm_projK_comp1_le (z := z), norm_comp1_le (waveOf z)]
 
-/-- **(b) `σ ∈ H¹_univ`** with `‖σ‖_{1,univ} ≤ ‖x‖ + ‖L x‖` (`σ ∈ H̊Λ⁰(Q)`, `dσ = S⁰φ`,
-`‖φ‖ ≤ (2π)⁻¹ ‖dφ‖` and `dφ = −P (L x)₁`). -/
 theorem sobRel_σOf : SobRel 1 (‖z‖ + ‖waveOf z‖) 0 ((D0.graphDom (σOf z) : U0) : W0) := by
   have h := sobRel_zero_of_mem (x := ((D0.graphDom (σOf z) : U0) : W0)) (D0.graphDom (σOf z)).2
   refine h.mono ?_
@@ -687,7 +582,6 @@ theorem sobRel_σOf : SobRel 1 (‖z‖ + ‖waveOf z‖) 0 ((D0.graphDom (σOf 
       _ ≤ ‖waveOf z‖ := by rw [one_mul]; exact norm_projK_comp1_le
   exact (sqrt_sq_add_sq_le (norm_nonneg _) (norm_nonneg _)).trans (add_le_add h1 h2)
 
-/-- The rows of `dφ` (the Hessian of `σ`): `d φₐ = −((L x)₁ₐ + (d₁* x₂)ₐ)`. -/
 theorem D0_rp_φOf (a : Fin 3) :
     D0 (rp (φOf z) a) = -((comp1 (waveOf z)) a + (bggHilb.D1L† ⟨comp2 z, dom2 hz⟩) a) := by
   have e1 := incl1_dt0_φOf hz
@@ -698,9 +592,6 @@ theorem D0_rp_φOf (a : Fin 3) :
   have := congrArg (fun y : Wv W1 => y a) e1
   exact this
 
-/-- **(b) The rows of `dφ` are in `H¹_univ`** when the multiplier of `L x` is `L²`-bounded and
-`M ∈ D(d¹*)`: `dφₐ ∈ D(d¹) ∩ D(d⁰*)` (`d dφₐ = 0`; `rowu_mem_adjoint_of_mult`,
-`rowD1Ladj_mem_adjoint`) and Gaffney. -/
 theorem sobRel_D0_φOf (hLz : waveOf z ∈ formsShort.wave.domain) {Λ : ℝ} (hΛ : 0 ≤ Λ)
     (hℓ' : ∀ μ : U1, |multOf (aOf (waveOf z)) (bOf (waveOf z)) μ| ≤ Λ * ‖μ‖)
     (hM : compML z ∈ (D1†).domain) (hMb : ‖D1† ⟨_, hM⟩‖ ≤ Λ) (a : Fin 3) :
@@ -729,8 +620,6 @@ theorem sobRel_D0_φOf (hLz : waveOf z ∈ formsShort.wave.domain) {Λ : ℝ} (h
   have := norm_add_le (D0† ⟨_, h1⟩) (D0† ⟨_, h2⟩)
   linarith
 
-/-- **(b) The rows of the electric field are in `H¹_univ`** when the multiplier is `L²`-bounded:
-`uₐ ∈ H̊(curl) ∩ H(div)` and Gaffney. -/
 theorem sobRel_uOf {Λ : ℝ} (hΛ : 0 ≤ Λ)
     (hℓ : ∀ μ : U1, |multOf (aOf z) (bOf z) μ| ≤ Λ * ‖μ‖) (a : Fin 3) :
     SobRel 1 (‖z‖ + ‖waveOf z‖ + Λ) 1 ((uOf z a : U1) : W1) := by
@@ -754,7 +643,6 @@ theorem sobRel_uOf {Λ : ℝ} (hΛ : 0 ≤ Λ)
   exact (sqrt_sq_add_sq_add_sq_le (norm_nonneg _) (norm_nonneg _) (norm_nonneg _)).trans
     (add_le_add (add_le_add hu hdu) hdiv)
 
-/-- **(c) The rows of `du` are in `H¹_univ`**: `duₐ = ρ'ₐ ∈ N(d²) ∩ D(d¹*)` for `L x ∈ D(L)`. -/
 theorem sobRel_D1_uOf (hLz : waveOf z ∈ formsShort.wave.domain) (a : Fin 3) :
     SobRel 1 (‖waveOf z‖ + 2 * ‖waveOf (waveOf z)‖ + √2 * ‖waveOf z‖) 2 (D1 (uOf z a)) := by
   have hrow : D1 (uOf z a) = compρL (waveOf z) a := by
@@ -778,8 +666,6 @@ theorem sobRel_D1_uOf (hLz : waveOf z ∈ formsShort.wave.domain) (a : Fin 3) :
   refine (by simpa using hs : _ ≤ _).trans ?_
   linarith
 
-/-- **(c) The magnetic rows are in `H¹_univ` once they are in `D(d²)`** (`ρₐ ∈ D(d¹*)` for every
-point of `D(L)`). -/
 theorem sobRel_compρL (a : Fin 3) {Λ : ℝ} (hρ : compρL z a ∈ D2min.domain)
     (hρb : ‖D2min ⟨_, hρ⟩‖ ≤ Λ) :
     SobRel 1 (‖z‖ + Λ + (2 * ‖waveOf z‖ + √2 * ‖z‖)) 2 (compρL z a) := by
@@ -793,7 +679,6 @@ theorem sobRel_compρL (a : Fin 3) {Λ : ℝ} (hρ : compρL z a ∈ D2min.domai
     (add_le_add (add_le_add ((norm_row_le _ a).trans (norm_compρL_le z)) hρb) hd)
 
 omit hz in
-/-- **The skew field is in `H¹_univ` once it is in `D(d²) ∩ D(d¹*)`** (Gaffney). -/
 theorem sobRel_compML {Λ : ℝ} (hM2 : compML z ∈ D2min.domain) (hM2b : ‖D2min ⟨_, hM2⟩‖ ≤ Λ)
     (hM1 : compML z ∈ (D1†).domain) (hM1b : ‖D1† ⟨_, hM1⟩‖ ≤ Λ) :
     SobRel 1 (‖z‖ + 2 * Λ) 2 (compML z) := by
@@ -806,11 +691,8 @@ omit hz in
 theorem sqrt_two_le_two : √2 ≤ 2 := by
   nlinarith [Real.sq_sqrt (show (0 : ℝ) ≤ 2 by norm_num), Real.sqrt_nonneg 2]
 
-/-- **The relative-class `H¹` regularity of the state of a point of `D(L)`** (the fields of
-`exactOfStrong`): `σ`, `dφₐ`, `uₐ`, `duₐ`, `M`, `ρₐ`, `S¹u` are in `H¹_univ` with norms
-`≤ 4 (‖x‖ + ‖Lx‖ + ‖L²x‖ + Λ)`, provided `L x ∈ D(L)`, the multipliers of `x` and `L x` are
-`L²`-bounded by `Λ`, the skew fields `M` of `x` and `L x` are in `D(d²) ∩ D(d¹*)` and the
-magnetic rows of `x` are in `D(d²)`, with bounds `Λ`. -/
+/-- The fields `σ`, `dφₐ`, `uₐ`, `duₐ`, `M`, `ρₐ`, `S¹u` of `x` with `x, L x ∈ D(L)` are in
+`H¹_univ` under `Λ`-bounds on the multipliers and `M` of `x`, `L x` and on the `ρ` rows of `x`. -/
 theorem isSobolevStateTr_of_mem (hLz : waveOf z ∈ formsShort.wave.domain) {Λ : ℝ}
     (hΛ : 0 ≤ Λ) (hℓ : ∀ μ : U1, |multOf (aOf z) (bOf z) μ| ≤ Λ * ‖μ‖)
     (hℓ' : ∀ μ : U1, |multOf (aOf (waveOf z)) (bOf (waveOf z)) μ| ≤ Λ * ‖μ‖)
@@ -837,14 +719,10 @@ theorem isSobolevStateTr_of_mem (hLz : waveOf z ∈ formsShort.wave.domain) {Λ 
 
 end State
 
-/-! ### Derivatives in a closed subspace -/
-
 section ClosedSub
 
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
 
-/-- **A trajectory whose right derivative lies in a closed subspace `K` moves inside `K`**:
-`f(t) − f(0) ∈ K` (project onto `Kᗮ`: the projection has zero right derivative). -/
 theorem sub_mem_of_hasDerivWithinAt (K : Submodule ℝ E) (hK : IsClosed (K : Set E)) {f f' : ℝ → E}
     {T : ℝ} (hc : ContinuousOn f (Icc 0 T))
     (hd : ∀ t ∈ Ico 0 T, HasDerivWithinAt f (f' t) (Ici t) t) (hK' : ∀ t ∈ Ico 0 T, f' t ∈ K) :
@@ -916,7 +794,7 @@ theorem continuousOn_waveOf_waveOf_waveOrbit (T : ℝ) :
     fun t _ => ?_
   exact waveOrbit_iterate hU₀ t (j := 2) (by norm_num)
 
-/-- **The classical solution of (6.2) of an orbit of `D(L³)`** (`exactOfStrong`). -/
+/-- The classical solution of (6.2) of an orbit of `D(L³)`. -/
 abbrev orbitExact (T : ℝ) : Feec.BGG.ExactWave bggSegment T (srcFun 0) :=
   exactOfStrong (isStrongSolution_waveOrbit hU₀ T) (isStrongSolution_waveOf_waveOrbit hU₀ T)
     (continuousOn_waveOf_waveOf_waveOrbit hU₀ T)
@@ -933,8 +811,6 @@ theorem orbitExact_M (T t : ℝ) : (orbitExact hU₀ T).M t = compML (waveOrbit 
 theorem orbitExact_M' (T t : ℝ) : (orbitExact hU₀ T).M' t = compML (waveOf (waveOrbit U₀ t)) :=
   rfl
 
-/-- **(c) The magnetic rows stay in `D(d²)` along the orbit, with `d²ρₐ(t) = d²ρₐ(0)`**:
-`ρ' = du ∈ N(d²)` (`sub_mem_of_hasDerivWithinAt`). -/
 theorem compρL_waveOrbit_mem {T : ℝ} {a : Fin 3} {Λ : ℝ}
     (hρ0 : ∃ h : compρL U₀ a ∈ D2min.domain, ‖D2min ⟨_, h⟩‖ ≤ Λ) :
     ∀ t ∈ Icc 0 T, ∃ h : compρL (waveOrbit U₀ t) a ∈ D2min.domain, ‖D2min ⟨_, h⟩‖ ≤ Λ := by
@@ -984,8 +860,6 @@ def rowρ (a : Fin 3) : WS →L[ℝ] W2 := (PiLp.proj (𝕜 := ℝ) 2 (fun _ : F
 
 theorem rowρ_apply (a : Fin 3) (z : WS) : rowρ a z = compρL z a := rfl
 
-/-- **The range of `L` has magnetic rows in `N(d²)`**: `(L y)_ρ = d u_y` row by row, and
-`d² d¹ = 0`. -/
 theorem rowρ_wave_mem_ker (a : Fin 3) (y : formsShort.wave.domain) :
     rowρ a (formsShort.wave y) ∈ D2min.ker := by
   rw [← waveOf_eq y.2, rowρ_apply]
@@ -994,9 +868,6 @@ theorem rowρ_wave_mem_ker (a : Fin 3) (y : formsShort.wave.domain) :
   rw [e]
   exact LinearPMap.mem_ker_iff.2 ⟨⟨_, D1_mem_D2min _⟩, rfl, D2min_D1 _⟩
 
-/-- **(c) On `N(L)ᗮ` the magnetic rows are in `N(d²)`**: `N(L)ᗮ = cl R(L)` and `R(L)` lies in the
-closed subspace of states whose `a`-th magnetic row is in `N(d²)` (`rowρ_wave_mem_ker`); no
-closed range is needed. -/
 theorem compρL_mem_ker_of_mem_orthogonal {z : WS} (hz : z ∈ (formsShort.wave.ker)ᗮ)
     (a : Fin 3) : ∃ h : compρL z a ∈ D2min.domain, D2min ⟨_, h⟩ = 0 := by
   have hmem := mem_ker_of_mem_orthogonal_ker formsShort.isSkewAdjoint_wave
@@ -1009,9 +880,6 @@ theorem compρL_mem_ker_of_mem_orthogonal {z : WS} (hz : z ∈ (formsShort.wave.
   rw [← h0]
   exact LinearPMap.apply_congr' _ _ _ hy
 
-/-- **(c) `H¹` on `N(L)ᗮ`**: for `z ∈ D(L) ∩ N(L)ᗮ` every magnetic row is in `H¹_univ`, with
-`‖ρₐ‖_{1,univ} ≤ (1 + √2) ‖z‖ + 2 ‖L z‖` (`ρₐ ∈ N(d²) ∩ D(d¹*)`, Gaffney). The obstruction of
-`exists_memDomainPow_compρL_not_mem` lives in `N(L)`. -/
 theorem sobRel_compρL_of_mem_orthogonal {z : WS} (hz : z ∈ formsShort.wave.domain)
     (hzo : z ∈ (formsShort.wave.ker)ᗮ) (a : Fin 3) :
     SobRel 1 ((1 + √2) * ‖z‖ + 2 * ‖waveOf z‖) 2 (compρL z a) := by
@@ -1019,7 +887,7 @@ theorem sobRel_compρL_of_mem_orthogonal {z : WS} (hz : z ∈ formsShort.wave.do
   refine (sobRel_compρL hz a h (Λ := 0) (by rw [h0, norm_zero])).mono (le_of_eq ?_)
   ring
 
-/-- **The stationary part `P_{N(L)} U`** of a state. -/
+/-- The stationary part `P_{N(L)} U` of a state. -/
 def projKer (U : WS) : WS := projKerOf formsShort.isSkewAdjoint_wave U
 
 theorem projKer_mem_ker (U : WS) : projKer U ∈ formsShort.wave.ker :=
@@ -1028,13 +896,9 @@ theorem projKer_mem_ker (U : WS) : projKer U ∈ formsShort.wave.ker :=
 theorem sub_projKer_mem_orthogonal (U : WS) : U - projKer U ∈ (formsShort.wave.ker)ᗮ :=
   sub_projKerOf_mem_orthogonal formsShort.isSkewAdjoint_wave U
 
-/-- **The stationary part is conserved**: `P_{N(L)} e^{tL} U = P_{N(L)} U`. -/
 theorem projKer_waveOrbit (U : WS) (t : ℝ) : projKer (waveOrbit U t) = projKer U :=
   projKerOf_group formsShort.isSkewAdjoint_wave U t
 
-/-- **(c) The magnetic rows of the datum from its stationary part**: if the rows of
-`P_{N(L)} U₀` are in `H¹_univ` with norm `≤ Λ`, the rows of `U₀` are in `D(d²)` with
-`‖d² ρₐ(U₀)‖ ≤ Λ` (the rows of `U₀ − P U₀ ∈ N(L)ᗮ` are in `N(d²)`). -/
 theorem compρL_mem_of_projKer {U₀ : WS} {Λ : ℝ}
     (h : ∀ a, SobRel 1 Λ 2 (compρL (projKer U₀) a)) (a : Fin 3) :
     ∃ h : compρL U₀ a ∈ D2min.domain, ‖D2min ⟨_, h⟩‖ ≤ Λ := by
@@ -1069,23 +933,6 @@ def domNorm3 (U₀ : WS) : ℝ :=
 theorem domNorm3_nonneg (U₀ : WS) : 0 ≤ domNorm3 U₀ := by unfold domNorm3; positivity
 
 set_option maxHeartbeats 8000000 in
-/-- **The `O(h)` rate of (6.5) along an orbit of `D(L³)`, with hypotheses along the orbit**
-([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, from the elliptic projection (6.4)): there is
-`K`, independent of `N`, `T` and the data, such that for every `U₀ ∈ D(L³)` and `Λ ≥ 0` with,
-along the orbit `U(t) = e^{tL} U₀`,
-* (multiplier) the multipliers of `U(t)`, `L U(t)`, `L² U(t)` are `L²`-bounded by `Λ`
-  (`|ℓ μ| ≤ Λ ‖μ‖`, the hypothesis of `cubeWave_rate_tr`; it implies `div uₐ ∈ L²` row by row,
-  `rowu_mem_adjoint_of_mult`; the converse is not proved here),
-* (skew field) the fields `M` of `U(t)`, `L U(t)`, `L² U(t)` are in `D(d²) ∩ D(d¹*)` with
-  `‖d M‖, ‖d* M‖ ≤ Λ` (`M ∈ H¹_univ` by Gaffney),
-* (magnetic datum) the rows of `ρ(0)` are in `D(d²)` with `‖d ρₐ(0)‖ ≤ Λ`,
-the classical solution `orbitExact` of (6.2) satisfies, for the solution of (6.5) from its elliptic
-projection, `(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤
-K (Σ_{j ≤ 3} ‖Lʲ U₀‖ + Λ) (1 + t) h_N`. Every other field of the rate class
-(`σ, dφ, u, du, ρ, S¹u` and their time derivatives in `H¹_univ`) is derived:
-`isSobolevStateTr_of_mem`, `compρL_waveOrbit_mem`, through `cubeWave_rate_sobolev` at `s = 1`.
-`k = 3` is what the argument needs: `du' = (L² U)ρ` in `D(d¹*)` uses `L² U(t) ∈ D(L)`.
-`waveFEM_rate_of_mem_domain` moves the `j = 0` hypotheses and the magnetic datum to `U₀`. -/
 theorem waveFEM_rate_of_mem_domain_of_orbit :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {U₀ : WS}
       (hU₀ : MemDomainPow formsShort.wave 3 U₀) {Λ : ℝ}, 0 ≤ Λ →
@@ -1194,33 +1041,9 @@ theorem waveFEM_rate_of_mem_domain_of_orbit :
   ring
 
 set_option maxHeartbeats 8000000 in
-/-- **The `O(h)` rate of the scheme (6.5) for data in `D(L³)`** ([QuennevilleBelair2015], §6.3,
-(6.5), Table 6.1, thesis' boundary conditions, from the elliptic projection (6.4); unconditional in
-the regularity hypothesis `curlPotential`). There is `K`, independent of `N`, `T` and the data,
-such that for every `U₀ ∈ D(L³)` and `Λ ≥ 0` with
-* (multiplier) `|ℓ_{U₀} μ| ≤ Λ ‖μ‖` for the multiplier of the datum, and the same for the
-  multipliers of `L U(t)`, `L² U(t)` along the orbit `U(t) = e^{tL} U₀`, `t ∈ [0, T]`;
-* (skew field) `M(U₀) ∈ H¹_univ` with `‖M(U₀)‖_{1,univ} ≤ Λ`, and the same for the skew fields
-  `M(L U(t)) = S¹u(t)` and `M(L² U(t)) = S¹u'(t)` along the orbit;
-* (stationary part) the magnetic rows of `P_{N(L)} U₀` are in `H¹_univ` with norm `≤ Λ`,
-the classical solution `orbitExact` of (6.2) and the solution of (6.5) from its elliptic projection
-satisfy `(‖σ − σₕ‖² + ‖u − uₕ‖² + ‖M − Mₕ‖² + ‖ρ − ρₕ‖²)^{1/2}(t) ≤
-K (Σ_{j ≤ 3} ‖Lʲ U₀‖ + (1 + T) Λ) (1 + t) h_N`.
-
-The datum-level hypotheses replace orbit-level ones: the multiplier and the skew field of `U(t)`
-are controlled by those of `U₀` and of `L U(t)` (mean value inequality,
-`exists_mem_domain_of_hasDerivWithinAt`; hence the factor `1 + T`), and the magnetic rows of `U₀`
-by its stationary part, since the rows of `U₀ − P_{N(L)} U₀ ∈ N(L)ᗮ` are in `N(d²)`
-(`compρL_mem_of_projKer`). The stationary hypothesis cannot be dropped: `N(L) ⊆ D(L^∞)` contains
-states whose magnetic row is not in `H^{1/2}` (`exists_memDomainPow_compρL_not_mem`).
-
-**What remains along the orbit**, explicitly: the `L²` bound of the multipliers of `L U(t)` and
-`L² U(t)` and the `H¹_univ` bound of `S¹u(t)` and `S¹u'(t)`. They are not implied by
-`U₀ ∈ D(Lᵏ)` for any `k` by the arguments available here: the multiplier bound would need a right
-inverse of `(τ, ψ) ↦ dτ − S⁰ψ` bounded in `L²` (`IsMultRep` gives only the graph norm), and the
-`H¹` regularity of `S¹u` couples components of incompatible parities (corner regularity of the
-coupled system, absent from Mathlib). `k = 3` is what the argument uses (`du' = (L² U)_ρ ∈ D(d¹*)`
-needs `L² U(t) ∈ D(L)`); minimality of `k` is not shown. -/
+/-- For `U₀ ∈ D(L³)`, under `Λ`-bounds on the multipliers and skew fields of `U₀`, `L U(t)`,
+`L² U(t)` and on the magnetic rows of `P_{N(L)} U₀`, the solution of (6.5) from the elliptic
+projection is within `K (Σ_{j ≤ 3} ‖Lʲ U₀‖ + (1 + T) Λ) (1 + t) h_N` of `orbitExact`. -/
 theorem waveFEM_rate_of_mem_domain :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {U₀ : WS}
       (hU₀ : MemDomainPow formsShort.wave 3 U₀) {Λ : ℝ}, 0 ≤ Λ →
@@ -1416,7 +1239,6 @@ theorem fderiv_gW2_two (y : Fin 3 → ℝ) :
   · funext t; simp
   · ring
 
-/-- The witness is `gW dx₀`. -/
 theorem normalWitness_eq (y : Fin 3 → ℝ) (s : Finset (Fin 3)) :
     normalWitness (n := 3) y s = if s = {0} then gW y else 0 := by
   simp only [normalWitness, gW]
@@ -1490,7 +1312,6 @@ theorem formExt_tangentialDψ_12 :
     formExt tangentialDψ ({1, 2} : Finset (Fin 3)) = fun _ => 0 := by
   rw [formExt_of_card _ (by decide)]; funext y; exact extDeriv_nW_12 y
 
-/-- **`δ d w = 8π² w`** for `w = (sin 2πy₁ sin 2πy₂) dx₀`, pointwise. -/
 theorem formalAdj_tangentialDψ (r : formIdx 3 1) (y : Fin 3 → ℝ) :
     (extDerivOp ℝ 3 1).formalAdj.apply tangentialDψ r y =
       8 * π ^ 2 * normalWitness (n := 3) y r.1 := by
@@ -1521,7 +1342,6 @@ theorem formalAdj_tangentialDψ (r : formIdx 3 1) (y : Fin 3 → ℝ) :
     simp
 
 
-/-- **`D1* D1 w = 8π² w`** in `L²`: the source of `waveTangential` is `8π²` times the witness. -/
 theorem toL2F_formalAdj_tangentialDψ :
     toL2F memLp_formalAdj_tangentialDψ = (8 * π ^ 2) • tangentialX := by
   refine PiLp.ext fun r => ?_
@@ -1684,7 +1504,6 @@ theorem comp1_modeComb (α β : ℝ) : comp1 (modeComb α β) = α • incl1 tan
   change α • incl1 tangentialU + β • (0 : Wv W1) = _
   simp
 
-/-- **The multiplier of every combination vanishes** (`div u = 0` row by row: `⟪u, dψ⟫ = 0`). -/
 theorem multOf_modeComb (α β : ℝ) (μ : U1) :
     multOf (aOf (modeComb α β)) (bOf (modeComb α β)) μ = 0 := by
   have ha : aOf (modeComb α β) = 0 := by
@@ -1701,7 +1520,7 @@ theorem modeFreq_sq : modeFreq ^ 2 = 8 * π ^ 2 := by
   unfold modeFreq
   rw [mul_pow, mul_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]; ring
 
-/-- **The explicit solution** `U(t) = cos(ωt) (0, u, 0) + sin(ωt) ω⁻¹ (0, 0, (0, du))`. -/
+/-- The explicit solution `U(t) = cos(ωt) (0, u, 0) + sin(ωt) ω⁻¹ (0, 0, (0, du))`. -/
 def modeG (t : ℝ) : WS := modeComb (Real.cos (modeFreq * t)) (Real.sin (modeFreq * t) / modeFreq)
 
 theorem isStrongSolution_modeG (I : Set ℝ) :
@@ -1754,7 +1573,6 @@ theorem dt1_tangentialU_ne_zero : bggSegment.dt1 tangentialU ≠ 0 := by
   · nlinarith
   · exact hn (pow_eq_zero_iff (by norm_num) |>.1 h1)
 
-/-- **The mode is not stationary**: `U(t) ≠ U(0)` as soon as `sin(ωt) ≠ 0`. -/
 theorem modeG_ne_modeU {t : ℝ} (ht : Real.sin (modeFreq * t) ≠ 0) : modeG t ≠ modeU := by
   intro h
   have h2 := congrArg comp2 h
@@ -1798,7 +1616,6 @@ theorem compML_waveOrbit_modeU {T t : ℝ} (ht : t ∈ Icc 0 T) (j : ℕ) :
 
 theorem compρL_modeU (a : Fin 3) : compρL modeU a = 0 := rfl
 
-/-- `ω t₀ ∈ (0, π/2]` for `t₀ = min T (π / (2ω))`. -/
 theorem sin_modeFreq_min_ne_zero {T : ℝ} (hT0 : 0 < T) :
     Real.sin (modeFreq * min T (π / (2 * modeFreq))) ≠ 0 := by
   have hω := modeFreq_pos
@@ -1813,11 +1630,8 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-/-- **Non-vacuity of `waveFEM_rate_of_mem_domain`**: the hypotheses hold, with `Λ = 0`, for the
-non-stationary standing wave `U(t) = cos(ωt) (0, u, 0) + ω⁻¹ sin(ωt) (0, 0, (0, du))`,
-`u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)` (`tangentialU`, `ω² = 8π²`), whose orbit is
-`waveOrbit_modeU`: the multipliers vanish (`div u = 0`), `M ≡ 0`, `ρ(0) = 0`; so the scheme (6.5)
-converges at `O(h)` to it, with a constant `K (Σ_{j ≤ 3} ‖Lʲ U₀‖)`. -/
+/-- For `U₀ = (0, u, 0)`, `u = ((sin 2πy₁ sin 2πy₂) dx₀, 0, 0)`, with non-stationary orbit, (6.5)
+from the elliptic projection is within `K (Σ_{j ≤ 3} ‖Lʲ U₀‖) (1 + t) h_N` of `orbitExact`. -/
 theorem waveFEM_rate_of_mem_domain_nonvacuous :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T),
       (∃ t ∈ Icc 0 T, waveOrbit modeU t ≠ modeU) ∧
@@ -1873,11 +1687,8 @@ theorem waveFEM_rate_of_mem_domain_nonvacuous :
     have h2 := hsh.2
     exact ⟨sh, h1, fun t ht => by simpa only [mul_zero, add_zero] using h2 t ht⟩
 
-/-- **(c) `D(L^∞)` does not control the top rows**: the stationary state `(0, 0, (0, (q, 0, 0)))`,
-`q` the sawtooth 2-form `sawW2` (`d¹* q = 0`), lies in the kernel of `L`, hence in every `D(Lᵏ)`,
-while its row `ρ₀ = q` is neither in `H̊Λ²(Q) = D(d²)` (nonzero tangential trace on `{y₀ = 0}`)
-nor in `H^{1/2}` of the relative class: the hypothesis on `ρ(0)` in
-`waveFEM_rate_of_mem_domain` is not implied by any power of the domain. -/
+/-- A stationary state in every `D(Lᵏ)` whose first magnetic row is neither in `H̊Λ²(Q) = D(d²)`
+nor in `H^{1/2}` of the relative class. -/
 theorem exists_memDomainPow_compρL_not_mem :
     ∃ U₀ : WS, (∀ k, MemDomainPow formsShort.wave k U₀) ∧ (∀ t, waveOrbit U₀ t = U₀) ∧
       compρL U₀ 0 ∉ D2min.domain ∧ ∀ L, ¬ SobRel (1 / 2) L 2 (compρL U₀ 0) := by
@@ -1893,8 +1704,7 @@ theorem exists_memDomainPow_compρL_not_mem :
   · rw [hρ]; exact not_sobRel_sawW2_half L
 
 set_option maxHeartbeats 8000000 in
-/-- **`waveFEM_rate_of_mem_domain` with the smoothing estimates discharged** (the common smoother of
-both rows of Table 6.1, `tableRows_uniform_cochainProjection`). -/
+/-- `waveFEM_rate_of_mem_domain` for some common smoother of both rows of Table 6.1. -/
 theorem waveFEM_rate_of_mem_domain_cube :
     ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C : ℝ)
       (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)

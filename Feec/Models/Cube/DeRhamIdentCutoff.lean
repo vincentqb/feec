@@ -5,33 +5,9 @@ public import Feec.Models.Cube.DeRhamIdentExt
 /-!
 # Cut-off approximation on `Q = (0, ½)ᵈ`: traces of smooth forms
 
-A smooth field on `ℝᵈ` (bounded, with bounded first derivatives) restricts to an element of the
-minimal domain of a first-order constant-coefficient operator `A` on `Q = (0, ½)ᵈ` as soon as the
-cut-offs `χ_m ψ` (`χ_m = ∏ᵢ η_m(yᵢ)`, equal to `1` at distance `≥ 1/m` from the faces) have
-uniformly bounded `A (χ_m ψ)` on `Q` (`mem_closure_testGraph_of_cutoff`): `χ_m ψ → ψ` and
-`A (χ_m ψ) → A ψ` pointwise on `Q`, dominated. The bound comes from the commutator estimate
-`|∂_c χ_m · f| ≤ 4 M₀ L` for `f` vanishing on the faces `{y_c ∈ {0, ½}}` (`abs_fderiv_chi_mul_le`;
-a function vanishing on two opposite faces is `O(dist)`, `abs_le_of_faces`, in
-`Feec.Models.Cube.RowWiseIdent`). For the exterior derivative this applies when the
-**tangential** components vanish on the faces
-(`Feec.Models.Cube.DeRhamIdent.mem_closure_extDerivOp_of_tangential`), for its formal adjoint
-(minus the codifferential) when the **normal** components vanish
-(`Feec.Models.Cube.DeRhamIdent.mem_closure_formalAdj_single1`).
-
-## Main results
-
-* `chi`, `isTest_chi_mul`, `eventually_chi_eq_one`, `abs_fderiv_chi_le`;
-  `abs_fderiv_chi_mul_le`, `tendsto_toLp_of_bdd`.
-* `apply_congr_of_eventuallyEq`; **`mem_closure_testGraph_of_cutoff`**.
-
-## References
-
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.4 (`W₀^{1,p}`, cut-off arguments)
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], §6.2 (vanishing tangential and
-  normal traces)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+A smooth field bounded on `Q = (0, ½)ᵈ` lies in the minimal domain of a first-order
+constant-coefficient operator `A` when its cut-offs have uniformly bounded `A (χ_m ψ)`
+(`mem_closure_testGraph_of_cutoff`).
 -/
 
 open scoped InnerProductSpace ContDiff Topology
@@ -59,7 +35,7 @@ theorem abs_chi_le_one (m : ℕ) (y : d → ℝ) : |chi m y| ≤ 1 := by
   rw [chi, Finset.abs_prod]
   exact Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun i _ => abs_eta_le_one m _
 
-/-- The closed box `[1/(2m), ½ - 1/(2m)]ᵈ` containing the support of `χ_m`. -/
+/-- The closed box `[1/(2(m+2)), ½ - 1/(2(m+2))]ᵈ` containing the support of `χ_m`. -/
 def chiBox (m : ℕ) : Set (d → ℝ) :=
   univ.pi fun _ => Icc (1 / (2 * mN m)) (1 / 2 - 1 / (2 * mN m))
 
@@ -82,7 +58,6 @@ theorem chiBox_subset_Q (m : ℕ) : chiBox (d := d) m ⊆ Q d := by
   have hp : 0 < 1 / (2 * mN m) := by positivity
   exact ⟨hp.trans_le h.1, h.2.trans_lt (by linarith)⟩
 
-/-- `χ_m f` is a test function on `Q` for every smooth `f`. -/
 theorem isTest_chi_mul {f : (d → ℝ) → ℝ} (hf : ContDiff ℝ (⊤ : ℕ∞) f) (m : ℕ) :
     Domain.IsTest (Q d) (fun y => chi m y * f y) := by
   have hsub : Function.support (fun y => chi m y * f y) ⊆ chiBox m :=
@@ -92,7 +67,6 @@ theorem isTest_chi_mul {f : (d → ℝ) → ℝ} (hf : ContDiff ℝ (⊤ : ℕ�
       Function.notMem_support.1 fun h => hy (hsub h)
   · exact (closure_minimal hsub (isCompact_chiBox m).isClosed).trans (chiBox_subset_Q m)
 
-/-- **Near each point of `Q`, `χ_m = 1` for all large `m`.** -/
 theorem eventually_chi_eq_one {y : d → ℝ} (hy : y ∈ Q d) :
     ∀ᶠ m in atTop, chi (d := d) m =ᶠ[𝓝 y] fun _ => 1 := by
   filter_upwards [eventually_eventually_mem_shrunk hy] with m hm
@@ -102,7 +76,6 @@ theorem eventually_chi_eq_one {y : d → ℝ} (hy : y ∈ Q d) :
 
 variable [DecidableEq d]
 
-/-- **The derivative of the cut-off**: `|∂_c χ_m(y)| ≤ |η_m'(y_c)|`. -/
 theorem abs_fderiv_chi_le (m : ℕ) (c : d) (y : d → ℝ) :
     |fderiv ℝ (chi m) y (Pi.single c 1)| ≤ |deriv (eta m) (y c)| := by
   have hd : ∀ s, HasDerivAt (eta m) (deriv (eta m) s) s := fun s =>
@@ -131,8 +104,6 @@ theorem abs_fderiv_chi_le (m : ℕ) (c : d) (y : d → ℝ) :
         mul_le_mul_of_nonneg_left hR (abs_nonneg _)
     _ = _ := mul_one _
 
-/-- **The commutator bound**: `|∂_c χ_m · f| ≤ 4 M₀ L` on `Q` for `f` vanishing on the faces
-`y_c ∈ {0, ½}` with `|∂_c f| ≤ L`. -/
 theorem abs_fderiv_chi_mul_le {M₀ : ℝ} (hM₀ : ∀ x, |deriv Real.smoothTransition x| ≤ M₀) (m : ℕ)
     {f : (d → ℝ) → ℝ} (hf : Differentiable ℝ f) {c : d} {L : ℝ}
     (hL : ∀ y, |fderiv ℝ f y (Pi.single c 1)| ≤ L)
@@ -150,7 +121,6 @@ theorem abs_fderiv_chi_mul_le {M₀ : ℝ} (hM₀ : ∀ x, |deriv Real.smoothTra
     _ = 4 * M₀ * L := by ring
 
 omit [DecidableEq d] in
-/-- **`L²(Q)`-convergence of uniformly bounded, pointwise convergent sequences.** -/
 theorem tendsto_toLp_of_bdd {g : ℕ → (d → ℝ) → ℝ} {h : (d → ℝ) → ℝ}
     (hg : ∀ m, MemLp (g m) 2 (volume.restrict (Q d))) (hh : MemLp h 2 (volume.restrict (Q d)))
     {K : ℝ} (hK : ∀ m, ∀ y ∈ Q d, |g m y| ≤ K)
@@ -171,7 +141,6 @@ theorem tendsto_toLp_of_bdd {g : ℕ → (d → ℝ) → ℝ} {h : (d → ℝ) �
     (by filter_upwards [ae_restrict_mem measurableSet_Q] with y hy; exact hlim y hy)
 
 omit [DecidableEq d] in
-/-- Convergence in `L²(Ω; ℝ^ι)` is componentwise. -/
 theorem tendsto_L2F_of_forall {Ω : Set (d → ℝ)} {ι : Type*} {u : ℕ → Domain.L2F ℝ Ω ι}
     {v : Domain.L2F ℝ Ω ι} (h : ∀ p, Tendsto (fun m => u m p) atTop (𝓝 (v p))) :
     Tendsto u atTop (𝓝 v) := by
@@ -181,7 +150,6 @@ theorem tendsto_L2F_of_forall {Ω : Set (d → ℝ)} {ι : Type*} {u : ℕ → D
 /-! ### The cut-off approximation for constant-coefficient operators -/
 
 omit [DecidableEq d] in
-/-- Iterated directional derivatives only see the germ. -/
 theorem iterDeriv_eventuallyEq {f g : (d → ℝ) → ℝ} {y : d → ℝ} (h : f =ᶠ[𝓝 y] g)
     (vs : List (d → ℝ)) : Domain.iterDeriv vs f =ᶠ[𝓝 y] Domain.iterDeriv vs g := by
   induction vs with
@@ -191,7 +159,6 @@ theorem iterDeriv_eventuallyEq {f g : (d → ℝ) → ℝ} {y : d → ℝ} (h : 
     simp only [Domain.iterDeriv_cons, hz]
 
 omit [DecidableEq d] in
-/-- **A constant-coefficient operator only sees the germ.** -/
 theorem apply_congr_of_eventuallyEq {ι κ : Type*} [Fintype ι]
     (A : Domain.ConstCoeffOp (d → ℝ) ℝ ι κ) {f g : ι → (d → ℝ) → ℝ} {y : d → ℝ}
     (h : ∀ p, f p =ᶠ[𝓝 y] g p) (q : κ) : A.apply f q y = A.apply g q y := by
@@ -202,9 +169,8 @@ theorem apply_congr_of_eventuallyEq {ι κ : Type*} [Fintype ι]
   rw [(iterDeriv_eventuallyEq (h p) t.1).eq_of_nhds]
 
 omit [DecidableEq d] in
-/-- **Cut-off approximation**: a smooth field `ψ` on `ℝᵈ`, bounded on `Q`, whose cut-offs
-`χ_m ψ` have `A (χ_m ψ)` uniformly bounded on `Q`, restricts to an element of the minimal domain
-of `A` on `Q`: `(ψ, A ψ)` lies in the closure of the graph of `A` on `C_c^∞(Q)`. -/
+/-- **Cut-off approximation**: a smooth field `ψ` bounded on `Q` whose cut-offs have `A (χ_m ψ)`
+uniformly bounded on `Q` lies in the closure of the graph of `A` on `C_c^∞(Q)`. -/
 theorem mem_closure_testGraph_of_cutoff {ι κ : Type*} [Fintype ι] [Fintype κ]
     (A : Domain.ConstCoeffOp (d → ℝ) ℝ ι κ) {ψ : ι → (d → ℝ) → ℝ}
     (hψ : ∀ p, ContDiff ℝ (⊤ : ℕ∞) (ψ p)) {M : ℝ} (hM : ∀ p, ∀ y ∈ Q d, |ψ p y| ≤ M)

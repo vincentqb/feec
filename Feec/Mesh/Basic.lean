@@ -11,45 +11,15 @@ public import Mathlib.Order.CompletePartialOrder
 /-!
 # Simplicial meshes
 
-A simplicial mesh of a set `Ω ⊆ ℝⁿ` (coordinates `Fin n → ℝ`, with Mathlib's sup norm) is a
-finite set of `n`-simplices, given as Mathlib's vertex tuples `Affine.Simplex ℝ (Fin n → ℝ) n`,
-whose closed simplices `T.closedInterior = conv {p₀, …, pₙ}` cover `closure Ω`, have pairwise
-disjoint interiors, and meet face to face: the intersection of two closed simplices is the
-convex hull of their common vertices ([Arnold2018], Ch. 7; [Ciarlet2002], Ch. 2).
-
-## Main definitions
-
-* `vertexSet T`: the vertex set of a simplex, as a `Finset`.
-* `refSimplex n`: the reference simplex `T̂ = conv {0, e₀, …, e_{n-1}}`.
-* `Affine.Simplex.linearPart T` (`B_T`, columns `pᵢ₊₁ - p₀`), `T.refMap` (`F_T x = B_T x + p₀`)
-  and `T.linearEquiv` (`B_T` as a continuous linear equivalence).
-* `SimplicialMesh n`: a conforming simplicial mesh of `closure Ω`.
-* `SimplicialMesh.faces M k` (vertex sets of the `k`-faces), `M.facets`, `M.cofaces F` (the
-  `n`-simplices containing a facet), `M.IsInteriorFacet F`, `M.IsBoundaryFacet F`.
-
-* `diam T` (`h_T`) and `SimplicialMesh.meshSize M` (`h = max_T h_T`).
-* `SimplicialMesh.map M e`: the image of a mesh under an affine equivalence;
-  `SimplicialMesh.Refines M₁ M₂`: every simplex of `M₁` lies in one of `M₂`.
-
-## Main results
-
-* `refMap_refPoints`, `map_refSimplex`, `closedInterior_eq_image_refMap`: every simplex is
-  `T = F_T(T̂)`; `mem_closedInterior_refSimplex`: `T̂ = {x ≥ 0, ∑ xᵢ ≤ 1}`.
-* `interior_closedInterior_nonempty`: an `n`-simplex of `ℝⁿ` has nonempty interior.
-* `disjoint_interior_of_inter_eq`: face-to-face meeting and distinct vertex sets give disjoint
-  interiors (`SimplicialMesh.ofConforming` builds a mesh from conformity alone).
-
-* `SimplicialMesh.sOppSide_of_mem_cofaces`: two distinct `n`-simplices sharing a facet `F` lie
-  strictly on opposite sides of `aff F` (they induce opposite orientations on `F`).
-* `SimplicialMesh.card_cofaces_le_two`, `isInteriorFacet_or_isBoundaryFacet`: every facet lies
-  in one or two `n`-simplices; `isInteriorFacet_iff`, `isBoundaryFacet_iff`: with two it is an
-  interior facet, with one its closed hull lies in the topological boundary of `closure Ω`.
+A simplicial mesh of `Ω ⊆ ℝⁿ` (with the sup norm) is a finite set of `n`-simplices whose closed
+simplices cover `closure Ω`, have pairwise disjoint interiors and meet face to face
+([Arnold2018], Ch. 7; [Ciarlet2002], Ch. 2); every facet is an interior facet, of two
+`n`-simplices with opposite vertices on opposite sides, or a boundary facet.
 
 ## References
 
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (simplicial meshes)
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], Ch. 2
-  (triangulations, affine families)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -103,7 +73,6 @@ theorem convex_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) k) :
     Convex ℝ T.closedInterior := by
   rw [← convexHull_vertexSet]; exact convex_convexHull ℝ _
 
-/-- An `n`-simplex of `ℝⁿ` has nonempty interior. -/
 theorem interior_closedInterior_nonempty (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     (interior T.closedInterior).Nonempty := by
   rw [← Affine.Simplex.convexHull_eq_closedInterior,
@@ -111,7 +80,6 @@ theorem interior_closedInterior_nonempty (T : Affine.Simplex ℝ (Fin n → ℝ)
     T.independent.affineSpan_eq_top_iff_card_eq_finrank_add_one]
   simp
 
-/-- The convex hull of at most `n` points of `ℝⁿ` has empty interior. -/
 theorem interior_convexHull_eq_empty_of_card_le {s : Finset (Fin n → ℝ)} (hs : s.card ≤ n) :
     interior (convexHull ℝ (s : Set (Fin n → ℝ))) = ∅ := by
   classical
@@ -127,8 +95,6 @@ theorem interior_convexHull_eq_empty_of_card_le {s : Finset (Fin n → ℝ)} (hs
       finrank_top, Module.finrank_fin_fun] at h1
     omega
 
-/-- If two `n`-simplices with distinct vertex sets meet face to face, their interiors are
-disjoint. -/
 theorem disjoint_interior_of_inter_eq {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
     (h : T.closedInterior ∩ T'.closedInterior =
       convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T'))
@@ -179,7 +145,6 @@ theorem sum_smul_refPoints (w : Fin (n + 1) → ℝ) :
   funext k
   simp [Finset.sum_apply, Pi.single_apply]
 
-/-- `T̂ = {x | x ≥ 0, ∑ xᵢ ≤ 1}`. -/
 theorem mem_closedInterior_refSimplex {x : Fin n → ℝ} :
     x ∈ (refSimplex n).closedInterior ↔ (∀ i, 0 ≤ x i) ∧ ∑ i, x i ≤ 1 := by
   constructor
@@ -206,8 +171,7 @@ open Feec.Mesh
 
 variable {n : ℕ}
 
-/-- The linear part `B_T` of the affine map `F_T : T̂ → T`: the matrix with columns
-`pᵢ₊₁ - p₀`. -/
+/-- The linear part `B_T` of the affine map `F_T : T̂ → T`, with columns `pᵢ₊₁ - p₀`. -/
 def linearPart (T : Affine.Simplex ℝ (Fin n → ℝ) n) : (Fin n → ℝ) →ₗ[ℝ] (Fin n → ℝ) :=
   Fintype.linearCombination ℝ fun i => T.points i.succ - T.points 0
 
@@ -308,10 +272,7 @@ theorem diam_nonneg (T : Affine.Simplex ℝ (Fin n → ℝ) k) : 0 ≤ diam T :=
 
 /-! ### Simplicial meshes -/
 
-/-- A conforming simplicial mesh of `closure domain ⊆ ℝⁿ`: a finite set of `n`-simplices whose
-closed simplices cover `closure domain`, have pairwise disjoint interiors, and meet face to face
-(the intersection of two closed simplices is the convex hull of their common vertices). Every
-`n`-simplex of `ℝⁿ` has nonempty interior (`interior_closedInterior_nonempty`). -/
+/-- A conforming simplicial mesh of `closure domain`: covering, disjoint interiors, face to face. -/
 structure SimplicialMesh (n : ℕ) where
   /-- The `n`-simplices of the mesh. -/
   simplices : Finset (Affine.Simplex ℝ (Fin n → ℝ) n)
@@ -329,8 +290,7 @@ namespace SimplicialMesh
 
 variable (M : SimplicialMesh n)
 
-/-- Build a mesh from a covering, face-to-face family of simplices with pairwise distinct vertex
-sets: disjointness of interiors follows (`disjoint_interior_of_inter_eq`). -/
+/-- The mesh of a covering, face-to-face family of simplices with pairwise distinct vertex sets. -/
 def ofConforming (simplices : Finset (Affine.Simplex ℝ (Fin n → ℝ) n))
     (domain : Set (Fin n → ℝ))
     (hcover : ⋃ T ∈ simplices, T.closedInterior = closure domain)
@@ -349,7 +309,6 @@ theorem closedInterior_subset_closure {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ M.simplices) : T.closedInterior ⊆ closure M.domain :=
   M.biUnion_closedInterior ▸ Set.subset_biUnion_of_mem (u := fun T => T.closedInterior) hT
 
-/-- Distinct simplices of a mesh have distinct vertex sets. -/
 theorem vertexSet_injOn :
     Set.InjOn vertexSet (M.simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) := by
   intro T hT T' hT' h
@@ -383,7 +342,6 @@ theorem meshSize_eq {h : ℝ} (hne : M.simplices.Nonempty) (hT : ∀ T ∈ M.sim
 def Refines (M₁ M₂ : SimplicialMesh n) : Prop :=
   ∀ T ∈ M₁.simplices, ∃ T' ∈ M₂.simplices, T.closedInterior ⊆ T'.closedInterior
 
-/-- An `n`-simplex of `ℝⁿ` is the closure of its interior. -/
 theorem closure_interior_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     closure (interior T.closedInterior) = T.closedInterior := by
   rw [(convex_closedInterior T).closure_interior_eq_closure_of_nonempty_interior
@@ -407,17 +365,14 @@ theorem mem_cofaces {F : Finset (Fin n → ℝ)} {T : Affine.Simplex ℝ (Fin n 
     T ∈ M.cofaces F ↔ T ∈ M.simplices ∧ F ⊆ vertexSet T := by
   simp [cofaces]
 
-/-- An interior facet: a facet shared by exactly two `n`-simplices of the mesh, which induce
-opposite orientations on it, i.e. whose opposite vertices lie strictly on opposite sides of
-the hyperplane `aff F` (`isInteriorFacet_iff`: the orientation condition is automatic). -/
+/-- A facet of exactly two `n`-simplices whose opposite vertices lie strictly on opposite sides. -/
 def IsInteriorFacet (F : Finset (Fin n → ℝ)) : Prop :=
   F ∈ M.facets ∧ (M.cofaces F).card = 2 ∧
     ∀ T ∈ M.cofaces F, ∀ T' ∈ M.cofaces F, T ≠ T' →
       ∀ a ∈ vertexSet T, a ∉ F → ∀ a' ∈ vertexSet T', a' ∉ F →
         (affineSpan ℝ (F : Set (Fin n → ℝ))).SOppSide a a'
 
-/-- A boundary facet: a facet of exactly one `n`-simplex of the mesh, whose closed hull lies in
-the topological boundary of `closure Ω = ⋃ T` (`isBoundaryFacet_iff`: this is automatic). -/
+/-- A facet of exactly one `n`-simplex, whose convex hull lies in the boundary of `closure Ω`. -/
 def IsBoundaryFacet (F : Finset (Fin n → ℝ)) : Prop :=
   F ∈ M.facets ∧ (M.cofaces F).card = 1 ∧
     convexHull ℝ (F : Set (Fin n → ℝ)) ⊆ frontier (closure M.domain)
@@ -494,7 +449,6 @@ theorem mem_map_simplices {e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)}
 @[simp] theorem map_domain (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
     (M.map e).domain = e '' M.domain := rfl
 
-/-- An affine equivalence maps distinct simplices to distinct simplices. -/
 theorem _root_.Feec.Mesh.mapEquiv_injective (e : (Fin n → ℝ) ≃ᵃ[ℝ] (Fin n → ℝ)) :
     Function.Injective (mapEquiv (k := k) e) := fun T T' h =>
   Affine.Simplex.ext fun i => e.injective (by
@@ -508,7 +462,6 @@ section Facets
 
 variable {F : Finset (Fin n → ℝ)}
 
-/-- A facet `F` of a simplex `T` misses exactly one vertex, the apex `T.points i`. -/
 theorem exists_apex {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hF : F ⊆ vertexSet T)
     (hc : F.card = n) : ∃ i, T.points i ∉ F ∧ ∀ j, j ≠ i → T.points j ∈ F := by
   classical
@@ -523,7 +476,6 @@ theorem exists_apex {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hF : F ⊆ verte
   rw [ha, Finset.mem_singleton] at this
   exact hj (T.independent.injective this)
 
-/-- A barycentric coordinate vanishes on the hull of vertices not containing its vertex. -/
 theorem coord_eq_zero_of_mem_convexHull (T : Affine.Simplex ℝ (Fin n → ℝ) n) {i : Fin (n + 1)}
     {S : Set (Fin n → ℝ)} (hS : S ⊆ Set.range T.points) (hi : T.points i ∉ S) {x : Fin n → ℝ}
     (hx : x ∈ convexHull ℝ S) : T.affineBasis.coord i x = 0 := by
@@ -546,7 +498,6 @@ theorem image_filter_points {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hF : F �
   obtain ⟨j, rfl⟩ := mem_vertexSet.1 (hF hv)
   exact ⟨j, hv, rfl⟩
 
-/-- The barycentric coordinates of the centroid of `F ⊆ vertexSet T`. -/
 theorem coord_centroid {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hF : F ⊆ vertexSet T)
     (hne : F.Nonempty) (j : Fin (n + 1)) :
     T.affineBasis.coord j (centroid F) = if T.points j ∈ F then (F.card : ℝ)⁻¹ else 0 := by
@@ -588,8 +539,6 @@ namespace SimplicialMesh
 
 variable (M : SimplicialMesh n)
 
-/-- Two `n`-simplices sharing a facet `F`: the apex coordinate of the second is a multiple of
-the apex coordinate of the first (both vanish exactly on `aff F`). -/
 theorem coord_apex_eq_mul {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (hF' : F ⊆ vertexSet T') {i i' : Fin (n + 1)} (hi : T.points i ∉ F)
     (hiF : ∀ j, j ≠ i → T.points j ∈ F) (hi' : T'.points i' ∉ F) (x : Fin n → ℝ) :
     T'.affineBasis.coord i' x =
@@ -610,8 +559,6 @@ theorem coord_apex_eq_mul {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (hF' : F
     have h2 : T.affineBasis.coord i (T.points j) = 0 := T.coord_points_ne (Ne.symm hj)
     simp [h1, h2, AffineMap.coe_smul]
 
-/-- **Opposite sides.** If two distinct `n`-simplices of a mesh share a facet `F`, the apex of the
-second has negative barycentric coordinate with respect to the apex of the first. -/
 theorem coord_apex_neg {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.cofaces F)
     (hT' : T' ∈ M.cofaces F) (hne : T ≠ T') (hc : F.card = n) {i i' : Fin (n + 1)}
     (hi : T.points i ∉ F) (hiF : ∀ j, j ≠ i → T.points j ∈ F) (hi' : T'.points i' ∉ F)
@@ -680,9 +627,6 @@ theorem affineSpan_eq_faceOpposite [NeZero n] {T : Affine.Simplex ℝ (Fin n →
   · rintro ⟨j, hj, rfl⟩
     exact hiF j hj
 
-/-- **Interior facets are oriented oppositely.** Two distinct `n`-simplices of a mesh sharing a
-facet `F` lie strictly on opposite sides of the hyperplane `aff F`; equivalently they induce
-opposite orientations on `F`. -/
 theorem sOppSide_of_mem_cofaces {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (hF : F ∈ M.facets)
     (hT : T ∈ M.cofaces F) (hT' : T' ∈ M.cofaces F) (hne : T ≠ T') {a a' : Fin n → ℝ}
     (ha : a ∈ vertexSet T) (haF : a ∉ F) (ha' : a' ∈ vertexSet T') (haF' : a' ∉ F) :
@@ -713,7 +657,6 @@ theorem sOppSide_of_mem_cofaces {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (h
   rw [e] at h
   exact h.2 hneg
 
-/-- A facet of a mesh lies in at most two `n`-simplices. -/
 theorem card_cofaces_le_two (hF : F ∈ M.facets) : (M.cofaces F).card ≤ 2 := by
   by_contra h
   obtain ⟨T₁, h₁, T₂, h₂, T₃, h₃, h12, h13, h23⟩ := Finset.two_lt_card.1 (not_le.1 h)
@@ -733,14 +676,11 @@ theorem one_le_card_cofaces (hF : F ∈ M.facets) : 1 ≤ (M.cofaces F).card := 
   obtain ⟨T, hT, hFT⟩ := hF.2
   exact Finset.card_pos.2 ⟨T, M.mem_cofaces.2 ⟨hT, hFT⟩⟩
 
-/-- A facet with two `n`-simplices is an interior facet: the orientation condition holds. -/
 theorem isInteriorFacet_iff :
     M.IsInteriorFacet F ↔ F ∈ M.facets ∧ (M.cofaces F).card = 2 :=
   ⟨fun h => ⟨h.1, h.2.1⟩, fun h => ⟨h.1, h.2, fun _ hT _ hT' hne _ ha haF _ ha' haF' =>
     M.sOppSide_of_mem_cofaces h.1 hT hT' hne ha haF ha' haF'⟩⟩
 
-/-- Points of the relative interior of a facet of exactly one `n`-simplex lie in the topological
-boundary of the mesh. -/
 theorem mem_frontier_of_card_cofaces_eq_one {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : M.cofaces F = {T}) {i : Fin (n + 1)} (hi : T.points i ∉ F)
     (hiF : ∀ j, j ≠ i → T.points j ∈ F) {y : Fin n → ℝ}
@@ -806,8 +746,6 @@ theorem mem_frontier_of_card_cofaces_eq_one {T : Affine.Simplex ℝ (Fin n → �
   rw [hT, Finset.mem_singleton] at this
   exact hne this
 
-/-- A facet of exactly one `n`-simplex is a boundary facet: its closed hull lies in the
-topological boundary of `closure Ω`. -/
 theorem isBoundaryFacet_iff :
     M.IsBoundaryFacet F ↔ F ∈ M.facets ∧ (M.cofaces F).card = 1 := by
   refine ⟨fun h => ⟨h.1, h.2.1⟩, fun ⟨hF, h1⟩ => ⟨hF, h1, ?_⟩⟩

@@ -5,27 +5,14 @@ public import Feec.HilbertComplex.Basic
 /-!
 # The dual Hilbert complex
 
-The adjoints `(d j i)† : W i →ₗ.[𝕜] W j` of a Hilbert complex on `c` form a Hilbert complex on
-the opposite shape `c.symm`, on the same spaces: no index transport is needed. By von Neumann's
-`T†† = T` for closed densely defined `T`, dualizing twice gives back the complex.
-
-## Main definitions
-
-* `Feec.HilbertComplex.dual`: the dual complex, `H.dual.d i j = (H.d j i)†`.
-
-## Main results
-
-* `LinearPMap.adjoint_zero`: `0† = 0`.
-* `HilbertComplex.dual_dual`: `H.dual.dual = H`.
-* `HilbertComplex.cycles_dual`: the cycles of the dual are the kernels of the adjoints.
+The adjoints `(d j i)†` of a Hilbert complex on `c` form a Hilbert complex on `c.symm`, on the same
+spaces, and dualizing twice gives back the complex.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.2 (dual complex, `V*_k`)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1.2 (dual complex)
-* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992], Lemma 2.1
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -40,7 +27,6 @@ namespace LinearPMap
 variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
 
-/-- The adjoint of the zero operator (domain `⊤`) is zero (domain `⊤`). -/
 theorem adjoint_zero : (0 : E →ₗ.[𝕜] F)† = 0 := by
   have hD : Dense (((0 : E →ₗ.[𝕜] F)).domain : Set E) := by simp [zero_domain]
   have hdom : (0 : E →ₗ.[𝕜] F)†.domain = ⊤ := by
@@ -53,7 +39,6 @@ theorem adjoint_zero : (0 : E →ₗ.[𝕜] F)† = 0 := by
     rw [inner_zero_left, apply_eq_zero_of_eq_zero rfl x, inner_zero_right]]
   rfl
 
-/-- The adjoint of a partial map equal to `0` vanishes on its domain. -/
 theorem adjoint_apply_eq_zero_of_eq_zero {T : E →ₗ.[𝕜] F} (h : T = 0) (y : T†.domain) :
     T† y = 0 := by
   subst h; exact apply_eq_zero_of_eq_zero adjoint_zero y
@@ -66,8 +51,8 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- The dual complex on `c.symm`: `d* i j = (d j i)†`. [QuennevilleBelair2015], §4.2; see
-[BruningLesch1992], Lemma 2.1 and [AFW2010], §3.1.2. -/
+/-- The dual complex on `c.symm`: `d* i j = (d j i)†`. [QuennevilleBelair2015], §4.2;
+[BruningLesch1992], Lemma 2.1; [AFW2010], §3.1.2 -/
 def dual : HilbertComplex 𝕜 c.symm W where
   d i j := (H.d j i)†
   shape i j h := by
@@ -80,7 +65,7 @@ def dual : HilbertComplex 𝕜 c.symm W where
 
 @[simp] theorem dual_d (i j : ι) : H.dual.d i j = (H.d j i)† := rfl
 
-/-- `H** = H` (von Neumann's `T†† = T` for each differential). -/
+/-- `H** = H`. -/
 theorem dual_dual : H.dual.dual = H := by
   cases H with
   | mk d shape dense closed mapsTo d_comp_d =>
@@ -96,7 +81,6 @@ theorem boundaries_dual (i : ι) :
     H.dual.boundaries i = LinearMap.range ((H.d i (c.next i))†).toFun := by
   rfl
 
-/-- At an index without successor the dual boundaries are `{0}`, so they are closed. -/
 theorem dual_closedRangeAt_of_forall_not_rel {i : ι} (h : ∀ j, ¬ c.Rel i j) :
     H.dual.ClosedRangeAt i := by
   rw [ClosedRangeAt, boundaries_dual, H.shape _ _ (h _), LinearPMap.adjoint_zero]

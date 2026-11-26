@@ -7,29 +7,12 @@ public import Feec.ForMathlib.Analysis.Fourier.Plancherel
 /-!
 # An `L¹` bound for functions with a geometric-sum Fourier transform
 
-Write `z = -2πiξ`. Let `q` and `w` be differentiable functions on `ℝ` with
-
-  `|q| ≤ 1`,  `q = 1 + z^{p+1} w`,  `|w| ≤ W₀`,  `|w'| ≤ W₁`,  `|q'| ≤ Q₁`,
-
-and let `ψ` be a function on `ℝ` with `ψ`, `t ψ` in `L¹ ∩ L²` and Fourier transform
-`𝓕 ψ = w Σ_{j<n} qʲ`. Then **`∫ |ψ| ≤ K n`**, with `K` depending only on `p`, `W₀`, `W₁`, `Q₁`
-(`MeasureTheory.Integrable.integral_norm_le_of_fourier_eq_geom_sum`, `K = geomSumConst`). This is
-the estimate behind Brenner–Thomée's smooth-data error bound: for a measure `μ` with
-`μ̂(ξ) = r(z)`, `e^{-z} (r(z)ⁿ - e^{nz}) / z^{p+1}` is of this form with `q = e^{-z} r(z)`.
-
-The proof is Carlson's inequality (`MeasureTheory.MemLp.integral_norm_pow_four_le`) through
-Plancherel's theorem: `(∫ |ψ|)⁴ ≤ ‖𝓕 ψ‖₂² ‖(𝓕 ψ)'‖₂²`. With `λ = n^{1/(p+1)}` and `t = λ |z|`,
-the pointwise bounds `(1 + t) |𝓕 ψ| ≤ B₀ n` and `(1 + t) |(𝓕 ψ)'| ≤ B₁ n λ` hold
-(`norm_geomSum_le`, `norm_deriv_geomSum_le`): for `t ≤ 1` from `|Σ qʲ| ≤ n` and
-`|q'| ≤ D |z|ᵖ`, and for `t ≥ 1` from `z^{p+1} 𝓕 ψ = qⁿ - 1`, which decays. Integrated against
-`∫ (1 + t²)⁻¹ dξ = 1/(2λ)`, they give `‖𝓕 ψ‖₂² ≤ B₀² n²/(2λ)` and `‖(𝓕 ψ)'‖₂² ≤ B₁² n² λ/2`:
-the powers of `λ` cancel in the product.
+If `ψ` and `t ψ` lie in `L¹ ∩ L²` and `𝓕 ψ = w Σ_{j<n} qʲ` with `|q| ≤ 1`, `q = 1 + z^{p+1} w`
+(`z = -2πiξ`) and bounds on `w`, `w'` and `q'`, then `∫ |ψ| ≤ K n` ([BrennerThomee1979]).
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [L. Larsson, L. Maligranda, J. Pečarić, L.-E. Persson, *Multiplicative Inequalities of Carlson Type and Interpolation*][LarssonMaligrandaPecaricPersson2006]
-  (Carlson's inequality)
 
 Bibliography: [references.bib](../../../../docs/references.bib)
 -/
@@ -43,7 +26,7 @@ namespace Feec
 
 namespace GeomSum
 
-/-- The symbol `z = -2πiξ` of the generator. -/
+/-- The symbol `z = -2πiξ`. -/
 def symb (ξ : ℝ) : ℂ := -(2 * π * ξ * Complex.I)
 
 theorem norm_symb (ξ : ℝ) : ‖symb ξ‖ = 2 * π * |ξ| := by
@@ -67,7 +50,6 @@ def derivBound (p : ℕ) (W₀ W₁ Q₁ : ℝ) : ℝ :=
 
 variable {p n : ℕ} {w q w' q' : ℝ → ℂ} {W₀ W₁ Q₁ : ℝ}
 
-/-- `|q'| ≤ D |z|ᵖ`: near `0` from `q = 1 + z^{p+1} w`, away from `0` from `|q'| ≤ Q₁`. -/
 theorem norm_deriv_le (hw : ∀ ξ, HasDerivAt w (w' ξ) ξ) (hq : ∀ ξ, HasDerivAt q (q' ξ) ξ)
     (hqw : ∀ ξ, q ξ = 1 + symb ξ ^ (p + 1) * w ξ) (hW₀ : ∀ ξ, ‖w ξ‖ ≤ W₀)
     (hW₁ : ∀ ξ, ‖w' ξ‖ ≤ W₁) (hQ₁ : ∀ ξ, ‖q' ξ‖ ≤ Q₁) (ξ : ℝ) :
@@ -113,7 +95,6 @@ theorem norm_deriv_le (hw : ∀ ξ, HasDerivAt w (w' ξ) ξ) (hq : ∀ ξ, HasDe
           have : 0 ≤ 2 * π * (p + 1) * W₀ := by positivity
           linarith
 
-/-- `|Σ_{j<n} qʲ| ≤ n` for `|q| ≤ 1`. -/
 theorem norm_sum_pow_le {x : ℂ} (hx : ‖x‖ ≤ 1) (n : ℕ) : ‖∑ j ∈ range n, x ^ j‖ ≤ n := by
   refine (norm_sum_le _ _).trans ?_
   calc ∑ j ∈ range n, ‖x ^ j‖ ≤ ∑ _j ∈ range n, (1 : ℝ) :=
@@ -122,12 +103,10 @@ theorem norm_sum_pow_le {x : ℂ} (hx : ‖x‖ ≤ 1) (n : ℕ) : ‖∑ j ∈ 
 
 variable {lam : ℝ}
 
-/-- `(λ |z|)^{p+1} = n |z|^{p+1}` for `λ^{p+1} = n`. -/
 theorem pow_lam_mul (hlam : lam ^ (p + 1) = n) (ξ : ℝ) :
     (lam * ‖symb ξ‖) ^ (p + 1) = n * ‖symb ξ‖ ^ (p + 1) := by
   rw [mul_pow, hlam]
 
-/-- **The pointwise bound on `F = w Σ_{j<n} qʲ`**: `(1 + λ|z|) |F| ≤ (2 W₀ + 4) n`. -/
 theorem norm_geomSum_le (hq1 : ∀ ξ, ‖q ξ‖ ≤ 1) (hqw : ∀ ξ, q ξ = 1 + symb ξ ^ (p + 1) * w ξ)
     (hW₀ : ∀ ξ, ‖w ξ‖ ≤ W₀) (hlam : lam ^ (p + 1) = n) (hlam1 : 1 ≤ lam) (ξ : ℝ) :
     (1 + lam * ‖symb ξ‖) * ‖w ξ * ∑ j ∈ range n, q ξ ^ j‖ ≤ (2 * W₀ + 4) * n := by
@@ -157,7 +136,6 @@ theorem norm_geomSum_le (hq1 : ∀ ξ, ‖q ξ‖ ≤ 1) (hqw : ∀ ξ, q ξ = 1
         (norm_nonneg _)).trans this
     nlinarith [norm_nonneg F, Nat.cast_nonneg (α := ℝ) n]
 
-/-- **The pointwise bound on `F'`**: `(1 + λ|z|) |F'| ≤ B₁ n λ` for `F = w Σ_{j<n} qʲ`. -/
 theorem norm_deriv_geomSum_le (hw : ∀ ξ, HasDerivAt w (w' ξ) ξ)
     (hq : ∀ ξ, HasDerivAt q (q' ξ) ξ) (hq1 : ∀ ξ, ‖q ξ‖ ≤ 1)
     (hqw : ∀ ξ, q ξ = 1 + symb ξ ^ (p + 1) * w ξ) (hW₀ : ∀ ξ, ‖w ξ‖ ≤ W₀)
@@ -303,7 +281,6 @@ theorem norm_deriv_geomSum_le (hw : ∀ ξ, HasDerivAt w (w' ξ) ξ)
           have : (0 : ℝ) ≤ W₁ + W₀ * D := by positivity
           nlinarith
 
-/-- `(1 + λ|z|) |G| ≤ B` for all `ξ` gives `∫ |G|² ≤ B²/(2λ)` (`∫ (1 + λ²|z|²)⁻¹ = 1/(2λ)`). -/
 theorem integral_norm_sq_le {G : ℝ → ℂ} {B : ℝ} (hlam : 0 < lam)
     (hG : ∀ ξ, (1 + lam * ‖symb ξ‖) * ‖G ξ‖ ≤ B) : ∫ ξ, ‖G ξ‖ ^ 2 ≤ B ^ 2 / (2 * lam) := by
   set T := (2 * π * lam)⁻¹
@@ -331,15 +308,14 @@ theorem integral_norm_sq_le {G : ℝ → ℂ} {B : ℝ} (hlam : 0 < lam)
 
 end GeomSum
 
-/-- **The constant of the geometric-sum bound**, `K = √((2W₀ + 4) B₁/2)`. -/
+/-- The constant `K = √((2W₀ + 4) B₁/2)` of the geometric-sum bound. -/
 def geomSumConst (p : ℕ) (W₀ W₁ Q₁ : ℝ) : ℝ :=
   √((2 * W₀ + 4) * GeomSum.derivBound p W₀ W₁ Q₁ / 2)
 
 open GeomSum in
-/-- **The `L¹` bound for a geometric-sum Fourier transform**: if `ψ` and `t ψ` lie in
-`L¹ ∩ L²` and `𝓕 ψ = w Σ_{j<n} qʲ`, with `|q| ≤ 1`, `q = 1 + z^{p+1} w` (`z = -2πiξ`),
-`|w| ≤ W₀`, `|w'| ≤ W₁` and `|q'| ≤ Q₁`, then `∫ |ψ| ≤ K n`, `K = geomSumConst p W₀ W₁ Q₁`.
-[BrennerThomee1979] -/
+/-- If `ψ` and `t ψ` lie in `L¹ ∩ L²` and `𝓕 ψ = w Σ_{j<n} qʲ` with `|q| ≤ 1`,
+`q = 1 + z^{p+1} w`, `|w| ≤ W₀`, `|w'| ≤ W₁` and `|q'| ≤ Q₁`, then `∫ |ψ| ≤ K n`,
+`K = geomSumConst p W₀ W₁ Q₁`. -/
 theorem _root_.MeasureTheory.Integrable.integral_norm_le_of_fourier_eq_geom_sum {ψ : ℝ → ℂ}
     (hψ : Integrable ψ) (hψ2 : MemLp ψ 2) (htψ : Integrable fun t : ℝ => t • ψ t)
     (htψ2 : MemLp (fun t : ℝ => t • ψ t) 2) {p n : ℕ} {w q w' q' : ℝ → ℂ} {W₀ W₁ Q₁ : ℝ}

@@ -10,90 +10,20 @@ public import Feec.Instances.EinsteinBianchi
 /-!
 # Frequency truncation on `ℝᵈ` as a reducing family
 
-On `ℝᵈ` a constant-coefficient complex is, after the `L²` Fourier transform (Plancherel,
-`Feec.Fourier.Euclidean.fourier`), a symbol complex on `L²(ℝᵈ)` with symbols `m(2πx)`
-(`Feec.Fourier.Euclidean.complex`). Its **frequency truncation** keeps the fields whose Fourier
-transforms vanish at frequencies `|ξ| > N` (`ξ = 2πx`): `B_N = ∏ L²_{|ξ| ≤ N}`. This module makes
-the frequency truncation a reducing family (`Feec.HilbertComplex.ReducingFamily`), for every
-constant-coefficient complex on `ℝᵈ`, so that the FEEC theorem for reducing families
-`Feec.HilbertComplex.ReducingFamily.feec` applies with every closed constraint, and reads it on
-the linearized Einstein–Bianchi system (`ℝ³`, TSD constraint) and on Maxwell's equations (`ℝᵈ`,
-every degree, Gauss laws).
+On `ℝᵈ` the frequency truncation `B_N = ∏ L²_{|ξ| ≤ N}` of a constant-coefficient complex is a
+reducing family, read on the linearized Einstein–Bianchi system on `ℝ³` and on Maxwell's equations
+on `ℝᵈ`.
 
-**Generic layer.** A symbol bounded on a measurable band acts boundedly on band-limited fields,
-and so does its fibrewise adjoint (`band_le_domain_d`, `norm_d_band_le`, `band_le_domain_adjoint`,
-`norm_adjoint_band_le`); on such fields `L = 𝐝 - 𝐝†` is bounded (`norm_wave_le`, `band_wave`).
-Hence every increasing exhausting sequence of measurable bands with bounded symbols is a reducing
-family (`bandFamily`; reducing by `Feec.Fourier.reducingSubcomplex_band`, `P_N → 1` by
-`Feec.Fourier.tendsto_totalProj_band`). On `ℝᵈ` the frequency balls
-`freqBall N = {x | |2πx| ≤ N}` are compact, so continuous symbols are bounded on them (`bands`).
-By `ReducingFamily.feec` the truncated solution is the truncation of the exact one, the error is
-the truncation error of the datum at every time, and a reducing constraint that `P_N` maps into
-itself is preserved exactly (identically zero residual). Fibrewise constraints
-(`starProjection_band_mem_fibreSub`) and kernels of reduced operators (`starProjection_mem_ker`)
-are such constraints.
+## Main results
 
-**Sobolev rates.** `sobolev 𝕜 E s` is the class `Hˢ` on the Fourier side: `(1 + |ξ|)ˢ x̂ ∈ L²`
-(`IsSobolevRep`, norm `sobolevNorm`; the weight `(1 + |ξ|)ˢ` is comparable to the Bessel weight
-`(1 + |ξ|²)^{s/2}`, which is not formalized here). For `s ≥ 0` the truncation error is
-`‖x - P_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` (`norm_sub_starProjection_le`,
-`norm_sub_starProjection_le_of_mem_sobolev`); with the error identity of `ReducingFamily.feec`
-this is the time-uniform rate `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}`.
-
-**Instances.**
-
-* **The EB system on `ℝ³`** (BGG complex (5.1), TSD constraint `{0} × L²(TSD) × ({0} × L²(TSD))`):
-  `ebBands`, `ebApprox`; `EuclideanEBVerdict` (`einsteinBianchi_euclidean_band`) extends the
-  verdict of `ReducingFamily.feec`: TSD reduces `L` and the truncations preserve it (so the
-  truncated solutions of TSD data are TSD), the truncation error on `Hˢ` is
-  `≤ (N + 1)^{-s} ‖ξ₀‖_{Hˢ}`, and the exponent `s` is sharp on TSD data
-  (`einsteinBianchi_euclidean_rate_optimal`, shell data `shellState N` with frequencies in
-  `[N + 1, N + 1 + π]`, `shellState_nonvacuous`). Non-vacuity: the TSD fields
-  `(1 + |ξ|)^r (a bᵀ + b aᵀ)(ξ)`, `a = (ξ₁, -ξ₀, 0)`, `b = ξ × a` (`ttMat`), `r < -9/2`, lie in
-  `Hˢ` for `s < -r - 9/2`, are not band-limited for any `N`, and their truncated solutions have a
-  positive error at every `N` and `t` (`decayState_nonvacuous`).
-* **Maxwell's equations on `ℝᵈ`** (window `Λᵃ → Λᵃ⁺¹ → Λᵃ⁺²` of the de Rham complex, the Gauss
-  laws `Feec.Instances.Maxwell.windowGauss`): `maxwellBands`, `maxwellApprox`;
-  `EuclideanMaxwellVerdict` (`maxwell_euclidean_band`) extends the verdict of
-  `ReducingFamily.feec`: the Gauss laws reduce `L` and the truncations preserve them, and the
-  truncation error on `Hˢ` is `≤ (N + 1)^{-s} ‖ξ₀‖_{Hˢ}`.
-  The vanishing-field constraint does not reduce `L`
-  (`maxwell_euclidean_not_isReducing_potential`, `0 ≤ a < d`, through a cut-off constant field `u`
-  with `d u ≠ 0`, `exists_band_d_ne_zero`), and its residuals along the truncated solutions tend
-  to a positive limit (`maxwell_euclidean_potential_residual`, item 4 of `approxFEEC`,
-  non-reducing branch).
-
-## Scope and limits
-
-* The bands `B_N` are reducing subcomplexes of `H` but **infinite-dimensional** (`L²` of a ball:
-  the spectrum of `ℝᵈ` is continuous; this is not proved here), so the frequency truncation is
-  not a `ConstrainedFEEC` discretization (finite-dimensional `Vₕ`) and `constrainedFEEC` does not
-  apply to it; it is an `ApproxFEEC` through `ReducingFamily.toApprox`. It is a
-  semi-discretization in frequency: a fully discrete method would also discretize the frequency
-  ball (sampling or quadrature), which is not formalized.
-* It commits no variational crime: `ι_N` is the inclusion and the consistency defect is `0`. The
-  instances with a nonzero defect are the abstract witnesses of
-  `Feec.HilbertComplex.Approximation.ApproxFEECWitness`. As `P_N` acts fibrewise and commutes
-  with `d` and `d†`, it preserves TSD and the Gauss laws, so their constraint residuals vanish
-  identically; only the non-reducing vanishing-field constraint of Maxwell's equations exercises
-  the residual branch of `approxFEEC`.
-* The sharpness of the exponent (`einsteinBianchi_euclidean_rate_optimal`) is uniform over the
-  `Hˢ` data, through the shell data `shellState N` (one for each `N`); for a single datum the
-  error is `o((N + 1)^{-s})`.
-* The Sobolev classes are defined on the Fourier side, with the weight `(1 + |2πx|)ˢ`; the
-  identification with the physical spaces `Hˢ(ℝᵈ)` (Plancherel and the equivalence of the
-  weights) is not formalized here.
-* The rate needs only `Hˢ` data for the order `s` (the truncation commutes with `L`); the spectral
-  rows of `𝕋³` and of the mirror cube use `H^{2+s}` for the graph-norm rate of `constrainedFEEC`.
+* `einsteinBianchi_euclidean_band`, `maxwell_euclidean_band`: the verdicts, with Sobolev rates.
+* `einsteinBianchi_euclidean_rate_optimal`: the exponent `s` is sharp on TSD data.
+* `maxwell_euclidean_potential_residual`: for `0 ≤ a < d`, some solution leaves the vanishing-field
+  constraint.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.9 (Prop. 4.16), §4.12–4.13 (Galerkin approximation of the Hodge wave equation), Ch. 6
-  (§6.3)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3 (approximation of Hilbert complexes)
-* Mathlib, `Mathlib.Analysis.Fourier.LpSpace` (the `L²` Fourier transform, Plancherel)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -115,7 +45,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [MeasurableSpace α] {μ : Me
   {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {m : α → E →L[𝕜] F} {A : Set α} {C : ℝ}
 
-/-- A symbol bounded by `C` on `A` acts on fields vanishing off `A` with bound `max C 0`. -/
 theorem ae_norm_apply_le (hC : ∀ᵐ a ∂μ, a ∈ A → ‖m a‖ ≤ C) {u : α → E}
     (hu : ∀ᵐ a ∂μ, a ∉ A → u a = 0) : ∀ᵐ a ∂μ, ‖m a (u a)‖ ≤ max C 0 * ‖u a‖ := by
   filter_upwards [hC, hu] with a h1 h2
@@ -123,7 +52,6 @@ theorem ae_norm_apply_le (hC : ∀ᵐ a ∂μ, a ∈ A → ‖m a‖ ≤ C) {u :
   · exact (m a).le_of_opNorm_le ((h1 ha).trans (le_max_left _ _)) _
   · rw [h2 ha, _root_.map_zero, norm_zero, norm_zero, mul_zero]
 
-/-- Fields vanishing off a set where the symbol is bounded lie in the domain of the multiplier. -/
 theorem mem_mulDomain_of_bound (hm : AEStronglyMeasurable m μ)
     (hC : ∀ᵐ a ∂μ, a ∈ A → ‖m a‖ ≤ C) {u : Lp E 2 μ} (hu : ∀ᵐ a ∂μ, a ∉ A → u a = 0) :
     u ∈ Operator.mulDomain μ m :=
@@ -131,7 +59,6 @@ theorem mem_mulDomain_of_bound (hm : AEStronglyMeasurable m μ)
     (Operator.aestronglyMeasurable_clm_apply hm (Lp.aestronglyMeasurable u))
     (ae_norm_apply_le hC hu)
 
-/-- The multiplier is bounded by `max C 0` on fields vanishing off `A`. -/
 theorem norm_mulOp_le (hC : ∀ᵐ a ∂μ, a ∈ A → ‖m a‖ ≤ C) (u : (Operator.mulOp μ m).domain)
     (hu : ∀ᵐ a ∂μ, a ∉ A → (u : Lp E 2 μ) a = 0) :
     ‖Operator.mulOp μ m u‖ ≤ max C 0 * ‖(u : Lp E 2 μ)‖ := by
@@ -154,7 +81,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [MeasurableSpace α] {μ : Me
   [∀ i, InnerProductSpace 𝕜 (E i)] [∀ i, CompleteSpace (E i)] (S : SymbolComplex 𝕜 μ c E)
   {A : Set α} {C : ℝ} {i j : ι}
 
-/-- **Band-limited fields lie in `D(d)`** where the symbol is bounded on the band. -/
 theorem band_le_domain_d (hC : ∀ᵐ a ∂μ, a ∈ A → ‖S.m i j a‖ ≤ C) :
     S.band A i ≤ (S.toHilbertComplex.d i j).domain := fun _ hu =>
   mem_mulDomain_of_bound (S.meas i j) hC (mem_band_iff.1 hu)
@@ -164,7 +90,6 @@ theorem norm_d_band_le (hC : ∀ᵐ a ∂μ, a ∈ A → ‖S.m i j a‖ ≤ C)
     ‖S.toHilbertComplex.d i j u‖ ≤ max C 0 * ‖(u : Lp (E i) 2 μ)‖ :=
   norm_mulOp_le hC u (mem_band_iff.1 hu)
 
-/-- **Band-limited fields lie in `D(d†)`** where the symbol is bounded on the band. -/
 theorem band_le_domain_adjoint (hC : ∀ᵐ a ∂μ, a ∈ A → ‖S.m i j a‖ ≤ C) :
     S.band A j ≤ ((S.toHilbertComplex.d i j)†).domain := fun _ hu => by
   rw [S.adjoint_d]
@@ -190,13 +115,10 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShap
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W) (B : ∀ i, Submodule 𝕜 (W i))
 
-/-- `∏ Bᵢ ⊆ D(L)` when every `Bᵢ` lies in the domains of the differentials and their adjoints. -/
 theorem totalSub_le_wave_domain (h1 : ∀ i j, B i ≤ (H.d i j).domain)
     (h2 : ∀ i j, B j ≤ ((H.d i j)†).domain) : totalSub B ≤ H.wave.domain := fun _ hx =>
   H.mem_wave_domain.2 ⟨fun i j => h1 i j (hx i), fun i j => h2 i j (hx j)⟩
 
-/-- **`L` is bounded on `∏ Bᵢ`** when the differentials and their adjoints are bounded by `C` on
-the `Bᵢ`: `‖L x‖ ≤ 2 n² C ‖x‖`, `n = #ι`. -/
 theorem norm_wave_le {C : ℝ} (hC : 0 ≤ C)
     (h1 : ∀ i j (u : (H.d i j).domain), (u : W i) ∈ B i → ‖H.d i j u‖ ≤ C * ‖(u : W i)‖)
     (h2 : ∀ i j (v : ((H.d i j)†).domain), (v : W j) ∈ B j →
@@ -247,7 +169,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [MeasurableSpace α] {μ : Me
   [∀ i, InnerProductSpace 𝕜 (E i)] [∀ i, CompleteSpace (E i)] (S : SymbolComplex 𝕜 μ c E)
 
 omit [∀ i, CompleteSpace (E i)] in
-/-- A uniform bound over the (finitely many) symbols on a band. -/
 theorem exists_bound_band {A : Set α} (hbd : ∀ i j, ∃ C, ∀ᵐ a ∂μ, a ∈ A → ‖S.m i j a‖ ≤ C) :
     ∃ C, 0 ≤ C ∧ ∀ i j, ∀ᵐ a ∂μ, a ∈ A → ‖S.m i j a‖ ≤ C := by
   choose C hC using hbd
@@ -259,8 +180,6 @@ theorem exists_bound_band {A : Set α} (hbd : ∀ i j, ∃ C, ∀ᵐ a ∂μ, a 
     (fun _ _ => Finset.sum_nonneg fun _ _ => le_max_right _ _) (Finset.mem_univ i)
 
 variable {S} in
-/-- On a band where all symbols are bounded, the band-limited fields lie in `D(L)` and `L` is
-bounded on them. -/
 theorem band_wave {A : Set α} (hbd : ∀ i j, ∃ C, ∀ᵐ a ∂μ, a ∈ A → ‖S.m i j a‖ ≤ C) :
     totalSub (S.band A) ≤ S.toHilbertComplex.wave.domain ∧
       ∃ C, ∀ x (hx : x ∈ S.toHilbertComplex.wave.domain), x ∈ totalSub (S.band A) →
@@ -274,10 +193,7 @@ theorem band_wave {A : Set α} (hbd : ∀ i j, ∃ C, ∀ᵐ a ∂μ, a ∈ A �
   · have := norm_adjoint_band_le S (hC i j) v hv
     rwa [max_eq_left hC0] at this
 
-/-- **The band-truncation family of a symbol complex**: for an increasing exhausting sequence of
-measurable bands `A N` on which all symbols are bounded, the band-limited fields
-`B_N = ∏ L²_{A N}` form a reducing family (closed reducing subspaces in `D(L)`, `L` bounded on
-them, truncations converging strongly to `1`). The bands need not be finite-dimensional. -/
+/-- The band-truncation family `B_N = ∏ L²_{A N}` of a symbol complex, a reducing family. -/
 def bandFamily (A : ℕ → Set α) (hA : ∀ N, MeasurableSet (A N)) (hmono : Monotone A)
     (hcov : ∀ a, ∃ N, a ∈ A N) (hbd : ∀ N i j, ∃ C, ∀ᵐ a ∂μ, a ∈ A N → ‖S.m i j a‖ ≤ C) :
     ReducingFamily S.toHilbertComplex ℕ :=
@@ -296,7 +212,6 @@ end BandFamily
 
 section Invariance
 
-/-- A reducing pair `(K, L)` of `T` maps `N(T)` into itself under `P_K`. -/
 theorem starProjection_mem_ker {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
     [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {T : E →ₗ.[𝕜] F}
     {K : Submodule 𝕜 E} {L : Submodule 𝕜 F} [K.HasOrthogonalProjection]
@@ -311,8 +226,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [MeasurableSpace α] {μ : Me
   {A : Set α} [∀ i, (S.band A i).HasOrthogonalProjection]
 
 omit [∀ i, CompleteSpace (E i)] in
-/-- **The band truncation preserves every fibrewise constraint**: `P_A` multiplies by `𝟙_A`
-fibrewise, and `𝟙_A(a) u(a) ∈ {u(a), 0} ⊆ V(a)`. -/
 theorem starProjection_band_mem_fibreSub (hA : MeasurableSet A) {i : ι}
     {V : α → Submodule 𝕜 (E i)} {u : Lp (E i) 2 μ} (hu : u ∈ Operator.fibreSub μ V) :
     (S.band A i).starProjection u ∈ Operator.fibreSub μ V := by
@@ -326,7 +239,6 @@ theorem starProjection_band_mem_fibreSub (hA : MeasurableSet A) {i : ι}
   · rw [Operator.cutoff_apply_of_notMem ha]; exact (V a).zero_mem
 
 omit [∀ i, CompleteSpace (E i)] in
-/-- The band truncation preserves a product constraint whose factors it preserves. -/
 theorem starProjection_totalSub_band_mem [Fintype ι] {F : ∀ i, Submodule 𝕜 (Lp (E i) 2 μ)}
     (hF : ∀ i, ∀ u ∈ F i, (S.band A i).starProjection u ∈ F i)
     {x : PiLp 2 fun i => Lp (E i) 2 μ} (hx : x ∈ totalSub F) :
@@ -341,8 +253,7 @@ section FreqBall
 
 variable {d : Type*} [Fintype d]
 
-/-- The **frequency ball** `{x | |2πx| ≤ N}` of the Fourier model (`2πx` is the frequency of the
-point `x` of Fourier space, `Feec.Fourier.Euclidean.scale`). -/
+/-- The frequency ball `{x | |2πx| ≤ N}` of Fourier space. -/
 def freqBall (N : ℕ) : Set (EuclideanSpace ℝ d) := {x | ‖Euclidean.scale x‖ ≤ N}
 
 theorem mem_freqBall {N : ℕ} {x : EuclideanSpace ℝ d} :
@@ -371,7 +282,6 @@ theorem isCompact_freqBall (N : ℕ) : IsCompact (freqBall (d := d) N) := by
   rw [mem_freqBall, norm_scale] at this
   linarith
 
-/-- Continuous functions are bounded on frequency balls. -/
 theorem exists_bound_freqBall {F : Type*} [SeminormedAddCommGroup F]
     {g : EuclideanSpace ℝ d → F} (hg : Continuous g) (N : ℕ) :
     ∃ C, ∀ x ∈ freqBall N, ‖g x‖ ≤ C :=
@@ -392,17 +302,13 @@ instance instHasOrthogonalProjectionBand
     (S.band (freqBall N) i).HasOrthogonalProjection :=
   hasOrthogonalProjection_band S (measurableSet_freqBall N) i
 
-/-- **The frequency-truncation family of a symbol complex on `ℝᵈ`** with continuous symbols:
-`B_N = ∏ L²_{|2πx| ≤ N}`, the fields whose Fourier transforms vanish at frequencies `|ξ| > N`.
-Each `B_N` is closed, reducing and infinite-dimensional (`L²` of a ball), `L` is bounded on it
-(continuous symbols are bounded on the compact frequency ball), and `P_N → 1` strongly. -/
+/-- The frequency-truncation family `B_N = ∏ L²_{|2πx| ≤ N}` of a symbol complex on `ℝᵈ`. -/
 def bands (S : SymbolComplex 𝕜 (volume : Measure (EuclideanSpace ℝ d)) c E)
     (hS : ∀ i j, Continuous (S.m i j)) : ReducingFamily S.toHilbertComplex ℕ :=
   bandFamily S freqBall measurableSet_freqBall freqBall_mono exists_mem_freqBall fun N i j =>
     (exists_bound_freqBall (hS i j) N).imp fun _ hC => ae_of_all _ fun x hx => hC x hx
 
 omit [Fintype ι] [∀ i, CompleteSpace (E i)] in
-/-- The symbols of the whole-space model of a continuous fibre complex are continuous. -/
 theorem continuous_symbolComplex_m [∀ i, FiniteDimensional 𝕜 (E i)]
     (S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E) (i j : ι) :
     Continuous ((Euclidean.symbolComplex S).m i j) :=
@@ -416,8 +322,7 @@ section Sobolev
 
 variable {d : Type*} [Fintype d]
 
-/-- The Bessel-type weight `(1 + |2πx|)ˢ`, `ξ = 2πx` (comparable to `(1 + |ξ|²)^{s/2}`; the
-comparison is not formalized). -/
+/-- The weight `(1 + |2πx|)ˢ`. -/
 def weight (s : ℝ) (x : EuclideanSpace ℝ d) : ℝ := (1 + ‖Euclidean.scale x‖) ^ s
 
 theorem one_le_one_add_norm (x : EuclideanSpace ℝ d) : 1 ≤ 1 + ‖Euclidean.scale x‖ :=
@@ -435,7 +340,6 @@ theorem weight_add (s s' : ℝ) (x : EuclideanSpace ℝ d) :
     weight (s + s') x = weight s x * weight s' x :=
   Real.rpow_add (by linarith [one_le_one_add_norm x]) s s'
 
-/-- Off the frequency ball `|ξ| ≤ N` the weight of order `-s ≤ 0` is at most `(N + 1)^{-s}`. -/
 theorem weight_neg_le {s : ℝ} (hs : 0 ≤ s) {N : ℕ} {x : EuclideanSpace ℝ d}
     (hx : x ∉ freqBall N) : weight (-s) x ≤ (1 / ((N : ℝ) + 1)) ^ s := by
   have hlt : (N : ℝ) < ‖Euclidean.scale x‖ := lt_of_not_ge hx
@@ -449,8 +353,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {E : ι → Type
   [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace 𝕜 (E i)]
 
 variable (𝕜) in
-/-- `y` represents `x` in the **Sobolev class `Hˢ`** (Fourier side): `x(ξ) = (1 + |2πξ|)^{-s} y(ξ)`
-with `y ∈ L²`, i.e. `(1 + |2πξ|)ˢ x ∈ L²`, with `‖x‖_{Hˢ} = ‖y‖`. -/
+/-- `y` represents `x` in the Sobolev class `Hˢ`: `x(ξ) = (1 + |2πξ|)^{-s} y(ξ)`, `y ∈ L²`. -/
 def IsSobolevRep (s : ℝ)
     (x y : PiLp 2 fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d))) : Prop :=
   ∀ i, ∀ᵐ ξ ∂(volume : Measure (EuclideanSpace ℝ d)),
@@ -467,13 +370,13 @@ theorem IsSobolevRep.unique {s : ℝ}
   exact smul_right_injective (E i) hw (h1.symm.trans h2)
 
 variable (𝕜 E) in
-/-- **The Sobolev class `Hˢ`** of fields `x` with `(1 + |2πξ|)ˢ x̂ ∈ L²` (Fourier side). -/
+/-- The Sobolev class `Hˢ` of fields `x` with `(1 + |2πξ|)ˢ x̂ ∈ L²`. -/
 def sobolev (s : ℝ) : Set (PiLp 2 fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d))) :=
   {x | ∃ y, IsSobolevRep 𝕜 s x y}
 
 variable (𝕜) in
 open Classical in
-/-- **The Sobolev norm** `‖x‖_{Hˢ} = ‖(1 + |2πξ|)ˢ x‖_{L²}` (`0` off the class). -/
+/-- The Sobolev norm `‖x‖_{Hˢ} = ‖(1 + |2πξ|)ˢ x‖_{L²}`, `0` off the class. -/
 def sobolevNorm (s : ℝ) (x : PiLp 2 fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d))) :
     ℝ :=
   if h : ∃ y, IsSobolevRep 𝕜 s x y then ‖h.choose‖ else 0
@@ -492,7 +395,6 @@ theorem sobolevNorm_nonneg (s : ℝ)
   unfold sobolevNorm; split_ifs <;> simp
 
 omit [Fintype ι] in
-/-- Sobolev representatives of single-component fields. -/
 theorem isSobolevRep_single [DecidableEq ι] {s : ℝ} {i : ι}
     {u v : Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d))}
     (h : ∀ᵐ ξ ∂(volume : Measure (EuclideanSpace ℝ d)),
@@ -507,8 +409,6 @@ theorem isSobolevRep_single [DecidableEq ι] {s : ℝ} {i : ι}
 variable [∀ i, CompleteSpace (E i)] {c : ComplexShape ι}
   (S : SymbolComplex 𝕜 (volume : Measure (EuclideanSpace ℝ d)) c E)
 
-/-- **The truncation estimate**: for `x ∈ Hˢ`, `s ≥ 0`,
-`‖x - P_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` (`P_N` the frequency truncation `|ξ| ≤ N`). -/
 theorem norm_sub_starProjection_le {s : ℝ} (hs : 0 ≤ s)
     {x y : PiLp 2 fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d))}
     (h : IsSobolevRep 𝕜 s x y) (N : ℕ) :
@@ -536,8 +436,7 @@ theorem norm_sub_starProjection_le {s : ℝ} (hs : 0 ≤ s)
   exact Finset.sum_le_sum fun i _ => by
     rw [← mul_pow]; exact pow_le_pow_left₀ (norm_nonneg _) (hi i) 2
 
-/-- **The truncation estimate on the Sobolev class**: `‖x - P_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` for
-`x ∈ Hˢ`, `s ≥ 0`. -/
+/-- **The truncation estimate**: `‖x - P_N x‖ ≤ (N + 1)^{-s} ‖x‖_{Hˢ}` for `x ∈ Hˢ`, `s ≥ 0`. -/
 theorem norm_sub_starProjection_le_of_mem_sobolev {s : ℝ} (hs : 0 ≤ s)
     {x : PiLp 2 fun i => Lp (E i) 2 (volume : Measure (EuclideanSpace ℝ d))}
     (hx : x ∈ sobolev 𝕜 E s) (N : ℕ) :
@@ -555,7 +454,6 @@ section Witness
 
 variable {d : Type*} [Fintype d] {F : Type*} [NormedAddCommGroup F]
 
-/-- A compact set of Fourier space lies in some frequency ball. -/
 theorem exists_subset_freqBall {U : Set (EuclideanSpace ℝ d)} (hU : IsCompact U) :
     ∃ N, U ⊆ freqBall N := by
   obtain ⟨C, hC⟩ := hU.exists_bound_of_continuousOn
@@ -563,7 +461,6 @@ theorem exists_subset_freqBall {U : Set (EuclideanSpace ℝ d)} (hU : IsCompact 
   obtain ⟨N, hN⟩ := exists_nat_ge C
   exact ⟨N, fun x hx => mem_freqBall.2 ((hC x hx).trans hN)⟩
 
-/-- A function that does not vanish at `x₀` does not vanish on a closed ball around it. -/
 theorem exists_closedBall_ne_zero {G : Type*} [TopologicalSpace G] [Zero G] [T2Space G]
     {g : EuclideanSpace ℝ d → G} (hg : Continuous g) {x₀ : EuclideanSpace ℝ d} (h : g x₀ ≠ 0) :
     ∃ r > 0, ∀ x ∈ closedBall x₀ r, g x ≠ 0 := by
@@ -591,8 +488,6 @@ theorem coeFn_indicatorField {U : Set (EuclideanSpace ℝ d)} (hU : IsCompact U)
     (indicatorField U hU g hg : EuclideanSpace ℝ d → F) =ᵐ[volume] U.indicator g :=
   (memLp_indicator_of_isCompact hU hg).coeFn_toLp
 
-/-- An `L²` field a.e. equal to a function not vanishing on a set of positive measure is not
-zero. -/
 theorem Lp_ne_zero_of_ae_eq {u : Lp F 2 (volume : Measure (EuclideanSpace ℝ d))}
     {g : EuclideanSpace ℝ d → F} (hug : (u : EuclideanSpace ℝ d → F) =ᵐ[volume] g)
     {U : Set (EuclideanSpace ℝ d)} (hpos : 0 < volume U) (hne : ∀ x ∈ U, g x ≠ 0) : u ≠ 0 := by
@@ -620,8 +515,6 @@ theorem indicatorField_mem_band {U : Set (EuclideanSpace ℝ d)} (hU : IsCompact
   filter_upwards [coeFn_indicatorField hU hg] with x hx hxN
   rw [hx, indicator_of_notMem fun h => hxN (hUN h)]
 
-/-- The differential of a band-limited field is not zero when the symbol does not annihilate it
-on a set of positive measure. -/
 theorem d_ne_zero_of_ae_eq {i j : ι} (u : (S.toHilbertComplex.d i j).domain)
     {g : EuclideanSpace ℝ d → E i}
     (hug : ((u : Lp (E i) 2 volume) : EuclideanSpace ℝ d → E i) =ᵐ[volume] g)
@@ -631,8 +524,6 @@ theorem d_ne_zero_of_ae_eq {i j : ι} (u : (S.toHilbertComplex.d i j).domain)
   filter_upwards [S.coeFn_d u, hug] with x h1 h2
   rw [h1, h2]
 
-/-- **Every nonzero continuous symbol acts nontrivially on band-limited fields**: if
-`m i j ≠ 0`, some band-limited `u` (a cut-off constant field) has `d u ≠ 0`. -/
 theorem exists_band_d_ne_zero (hS : ∀ i j, Continuous (S.m i j)) {i j : ι}
     (hne : S.m i j ≠ 0) :
     ∃ N, ∃ u ∈ S.band (freqBall N) i, ∃ hu : u ∈ (S.toHilbertComplex.d i j).domain,
@@ -662,16 +553,13 @@ section EinsteinBianchi
 open Feec.Models.Euclidean.BGG Feec.Fourier.BGG Feec.Fourier.GradCurl Feec.Fourier.SymCurl
   Feec.ShortHilbertComplex
 
-/-- **The frequency bands of the EB system on `ℝ³`**: the frequency truncation `|ξ| ≤ N` of the
-BGG complex (5.1) on `ℝ³` (Fourier side), a reducing family. -/
+/-- The frequency bands `|ξ| ≤ N` of the EB system on `ℝ³`, a reducing family. -/
 abbrev ebBands : ReducingFamily complex ℕ :=
   bands (Euclidean.symbolComplex bggFamily) (continuous_symbolComplex_m bggFamily)
 
-/-- **The frequency-truncation discretization of the EB system on `ℝ³`**, with the TSD constraint
-`K = {0} × L²(TSD) × ({0} × L²(TSD))`. -/
+/-- The frequency-truncation discretization of the EB system on `ℝ³`, with the TSD constraint. -/
 abbrev ebApprox : ApproxFEEC complex ℕ := ebBands.toApprox (totalSub constraint) isClosed_totalSub
 
-/-- The TSD constraint reduces `L` on `ℝ³`. [QuennevilleBelair2015], §6.3 -/
 theorem ebApprox_isReducing : complex.wave.IsReducing ebApprox.K :=
   reducingSubcomplex.isReducing_wave
 
@@ -683,8 +571,7 @@ def tvA (η : Freq) : Fin 3 → ℝ := ![η 1, -η 0, 0]
 /-- `b(η) = η × a(η) = (η₀η₂, η₁η₂, -(η₀² + η₁²)) ⊥ η, a(η)`. -/
 def tvB (η : Freq) : Fin 3 → ℝ := ![η 0 * η 2, η 1 * η 2, -(η 0 ^ 2 + η 1 ^ 2)]
 
-/-- **A transverse–traceless matrix field** `a bᵀ + b aᵀ`: symmetric, trace `2 a·b = 0`, and
-`(a bᵀ + b aᵀ) η = a (b·η) + b (a·η) = 0`. -/
+/-- The transverse–traceless matrix field `a bᵀ + b aᵀ`. -/
 def ttMat (η : Freq) : Mat :=
   WithLp.toLp 2 fun p => ((tvA η p.1 * tvB η p.2 + tvB η p.1 * tvA η p.2 : ℝ) : ℂ)
 
@@ -739,7 +626,6 @@ theorem ttMat_smul (t : ℝ) (η : Freq) : ttMat (t • η) = ((t ^ 3 : ℝ) : �
   congr 1
   fin_cases a <;> fin_cases b <;> simp [tvA, tvB] <;> ring
 
-/-- `‖a bᵀ + b aᵀ‖ ≤ C |η|³` (homogeneity of degree `3` and compactness of the sphere). -/
 theorem exists_norm_ttMat_le : ∃ C, 0 ≤ C ∧ ∀ η, ‖ttMat η‖ ≤ C * ‖η‖ ^ 3 := by
   obtain ⟨C, hC⟩ := (isCompact_sphere (0 : Freq) 1).exists_bound_of_continuousOn
     continuous_ttMat.continuousOn
@@ -788,7 +674,6 @@ theorem decayFun_ne_zero (r : ℝ) {ξ : EuclideanSpace ℝ (Fin 3)} (h : Euclid
     decayFun r ξ ≠ 0 :=
   smul_ne_zero (RCLike.ofReal_ne_zero.2 (weight_pos _ ξ).ne') (ttMat_ne_zero h)
 
-/-- **`(1 + |2πξ|)^r (a bᵀ + b aᵀ)(2πξ) ∈ L²(ℝ³)` for `r < -9/2`.** -/
 theorem memLp_decayFun {r : ℝ} (hr : r < -9 / 2) : MemLp (decayFun r) 2 volume := by
   obtain ⟨C, hC0, hC⟩ := exists_norm_ttMat_le
   have hm : AEStronglyMeasurable (decayFun r) volume :=
@@ -822,7 +707,7 @@ theorem memLp_decayFun {r : ℝ} (hr : r < -9 / 2) : MemLp (decayFun r) 2 volume
 /-- The TSD field `v_r = (1 + |2πξ|)^r (a bᵀ + b aᵀ)(2πξ)` (Fourier side), `r < -9/2`. -/
 def decayField (r : ℝ) (hr : r < -9 / 2) : Space 1 := (memLp_decayFun hr).toLp _
 
-/-- **The TSD datum `(0, v_r, 0)`**, `v_r = (1 + |2πξ|)^r (a bᵀ + b aᵀ)(2πξ)`, `r < -9/2`. -/
+/-- The TSD datum `(0, v_r, 0)`, `v_r = (1 + |2πξ|)^r (a bᵀ + b aᵀ)(2πξ)`, `r < -9/2`. -/
 def decayState (r : ℝ) (hr : r < -9 / 2) : PiLp 2 Space :=
   WithLp.toLp 2 (Pi.single 1 (decayField r hr))
 
@@ -840,10 +725,8 @@ theorem le_apply_zero {c : ℝ} {ξ : EuclideanSpace ℝ (Fin 3)}
     simpa [ebCentre, Real.norm_eq_abs] using this
   linarith [neg_abs_le (ξ 0 - c)]
 
-/-- **Non-vacuity of the Sobolev rate beyond band-limited data**: `decayState r` is TSD, lies in
-`Hˢ` for every `s < -r - 9/2`, is not band-limited for any `N`, and the truncated solutions have
-a positive error at every `N` and `t` (bounded by `(N + 1)^{-s} ‖ξ₀‖_{Hˢ}` for `s ≥ 0`,
-`einsteinBianchi_euclidean_band`). -/
+/-- **Non-vacuity beyond band-limited data**: `decayState r` is TSD, in `Hˢ` for `s < -r - 9/2`,
+not band-limited, with a positive error at every `N` and `t`. -/
 theorem decayState_nonvacuous (r : ℝ) (hr : r < -9 / 2) :
     decayState r hr ∈ totalSub constraint ∧
       (∀ s, s + r < -9 / 2 → decayState r hr ∈ sobolev ℂ (W3 ℂ Mat VM) s) ∧
@@ -912,8 +795,7 @@ theorem decayState_nonvacuous (r : ℝ) (hr : r < -9 / 2) :
 abbrev shellCentre (N : ℕ) : EuclideanSpace ℝ (Fin 3) :=
   (((N : ℝ) + 1) / (2 * Real.pi) + 1 / 4) • ebCentre
 
-/-- The support `B̄(shellCentre N, 1/4)` of the shell witness, in Fourier space: its frequencies
-`|2πξ|` lie in `[N + 1, N + 1 + π]` (`norm_scale_mem_shell`). -/
+/-- The support `B̄(shellCentre N, 1/4)` of the shell witness, in Fourier space. -/
 abbrev shellSupport (N : ℕ) : Set (EuclideanSpace ℝ (Fin 3)) := closedBall (shellCentre N) (1 / 4)
 
 theorem norm_scale_mem_shell {N : ℕ} {ξ : EuclideanSpace ℝ (Fin 3)} (hξ : ξ ∈ shellSupport N) :
@@ -951,8 +833,7 @@ theorem weight_le_of_mem_shell {s : ℝ} (hs : 0 ≤ s) {N : ℕ} {ξ : Euclidea
   have := (norm_scale_mem_shell hξ).2
   linarith [Real.pi_le_four, (Nat.cast_nonneg N : (0 : ℝ) ≤ N)]
 
-/-- The TSD field `𝟙_{U_N} (a bᵀ + b aᵀ)(2πξ)` supported in the frequency shell
-`N + 1 ≤ |ξ| ≤ N + 1 + π`. -/
+/-- The TSD field `𝟙_{U_N} (a bᵀ + b aᵀ)(2πξ)` with frequencies in `[N + 1, N + 1 + π]`. -/
 def shellField (N : ℕ) : Space 1 :=
   indicatorField (shellSupport N) (isCompact_closedBall _ _) (decayFun 0) (continuous_decayFun 0)
 
@@ -961,8 +842,7 @@ theorem coeFn_shellField (N : ℕ) :
       (shellSupport N).indicator (decayFun 0) :=
   coeFn_indicatorField _ _
 
-/-- **The shell datum** `(0, 𝟙_{U_N} (a bᵀ + b aᵀ), 0)`: TSD, with frequencies in
-`[N + 1, N + 1 + π]`. -/
+/-- The shell datum `(0, 𝟙_{U_N} (a bᵀ + b aᵀ), 0)`. -/
 def shellState (N : ℕ) : PiLp 2 Space := PiLp.single 2 1 (shellField N)
 
 theorem shellState_mem_constraint (N : ℕ) : shellState N ∈ totalSub constraint := fun i => by
@@ -977,7 +857,6 @@ theorem shellState_mem_constraint (N : ℕ) : shellState N ∈ totalSub constrai
     · rw [indicator_of_notMem hU]; exact Submodule.zero_mem _
   · rw [shellState, PiLp.single_eq_of_ne (p := 2) hi]; exact Submodule.zero_mem _
 
-/-- The shell datum is in every `Hˢ`, `s ≥ 0`, with `‖ξ₀‖_{Hˢ} ≤ (6 (N + 1))ˢ ‖ξ₀‖`. -/
 theorem shellState_sobolev {s : ℝ} (hs : 0 ≤ s) (N : ℕ) :
     shellState N ∈ sobolev ℂ (W3 ℂ Mat VM) s ∧
       sobolevNorm ℂ s (shellState N) ≤ (6 * ((N : ℝ) + 1)) ^ s * ‖shellState N‖ := by
@@ -1006,7 +885,6 @@ theorem shellState_sobolev {s : ℝ} (hs : 0 ≤ s) (N : ℕ) :
     exact mul_le_mul_of_nonneg_right (weight_le_of_mem_shell hs hU) (norm_nonneg _)
   · simp [indicator_of_notMem hU]
 
-/-- The frequency truncation `P_N` annihilates the shell datum. -/
 theorem starProjection_shellState (N : ℕ) :
     (totalSub ((Euclidean.symbolComplex bggFamily).band (freqBall N))).starProjection
       (shellState N) = 0 := by
@@ -1040,9 +918,7 @@ theorem shellState_ne_zero (N : ℕ) : shellState N ≠ 0 := fun h => by
     (Metric.measure_closedBall_pos volume _ (by norm_num))
     (fun ξ hξ => decayFun_ne_zero 0 (scale_zero_ne_zero_of_mem_shell hξ)) h1
 
-/-- **The shell data attain the rate**: `shellState N` is a nonzero TSD datum in `Hˢ` (`s ≥ 0`)
-cut off entirely by `P_N`, so the error of its truncated solution is `‖ξ₀‖` at every time, and
-`(N + 1)^{-s} ‖ξ₀‖_{Hˢ} ≤ 6ˢ · error`. -/
+/-- **The shell data attain the rate `(N + 1)^{-s}`**, up to the factor `6ˢ`. -/
 theorem shellState_nonvacuous {s : ℝ} (hs : 0 ≤ s) (N : ℕ) :
     shellState N ∈ totalSub constraint ∧ shellState N ∈ sobolev ℂ (W3 ℂ Mat VM) s ∧
       shellState N ≠ 0 ∧ ∀ t : ℝ,
@@ -1067,9 +943,8 @@ theorem shellState_nonvacuous {s : ℝ} (hs : 0 ≤ s) (N : ℕ) :
         rw [Real.mul_rpow (by norm_num) hN.le, one_div, Real.inv_rpow hN.le]
         field_simp
 
-/-- **The exponent is sharp**: for `0 ≤ s < s'` and every time `t`, no bound
-`‖e^{tL} ξ₀ - ι_N e^{tL_N} π_N ξ₀‖ ≤ C (N + 1)^{-s'} ‖ξ₀‖_{Hˢ}` holds for all `N` and all TSD
-data in `Hˢ` (the shell data `shellState N` violate it for large `N`). -/
+/-- **The exponent is sharp**: for `0 ≤ s < s'`, no bound `C (N + 1)^{-s'} ‖ξ₀‖_{Hˢ}` of the error
+holds for all `N` and all TSD data in `Hˢ`. -/
 theorem einsteinBianchi_euclidean_rate_optimal {s s' : ℝ} (hs : 0 ≤ s) (hss : s < s') (t : ℝ) :
     ¬ ∃ C : ℝ, ∀ (N : ℕ), ∀ x ∈ totalSub constraint, x ∈ sobolev ℂ (W3 ℂ Mat VM) s →
       ‖complex.waveGroup.S t x - ebApprox.sol N (ebApprox.proj N x) t‖ ≤
@@ -1108,7 +983,6 @@ theorem einsteinBianchi_euclidean_rate_optimal {s s' : ℝ} (hs : 0 ≤ s) (hss 
 
 /-! #### Exact TSD preservation -/
 
-/-- **The frequency truncation preserves TSD** (a fibrewise constraint). -/
 theorem starProjection_band_mem_constraint (N : ℕ) {x : PiLp 2 Space}
     (hx : x ∈ totalSub constraint) :
     (totalSub ((Euclidean.symbolComplex bggFamily).band (freqBall N))).starProjection x ∈
@@ -1118,21 +992,10 @@ theorem starProjection_band_mem_constraint (N : ℕ) {x : PiLp 2 Space}
 
 /-! #### The `ℝ³` verdict -/
 
-/-- **The verdict of the FEEC theorem for the EB system on `ℝ³`** (frequency truncation
-`|ξ| ≤ N`, TSD constraint): that of `ReducingFamily.feec` for `ebBands` (the full
-`ApproxFEEC.Verdict` on all data; the error is the truncation error of the datum at every time,
-`‖e^{tL} ξ₀ - ι_N e^{tL_N} π_N ξ₀‖ = ‖ξ₀ - P_N ξ₀‖`), and:
-1. the TSD constraint reduces `L` and the truncations preserve it, so the truncated solutions of
-   TSD data are TSD (`sol_mem`: constraint residual identically `0`);
-2. on `Hˢ`, `s ≥ 0`, the truncation error is `≤ (N + 1)^{-s} ‖ξ₀‖_{Hˢ}`, hence so is the error at
-   every time;
-3. the exponent is sharp: for `0 ≤ s < s'` no bound `C (N + 1)^{-s'} ‖ξ₀‖_{Hˢ}` holds on TSD
-   data, at any time. -/
+/-- **The verdict of the FEEC theorem for the EB system on `ℝ³`**, with the TSD clauses below. -/
 structure EuclideanEBVerdict : Prop
     extends toReducing : ebBands.Verdict (totalSub constraint) isClosed_totalSub where
-  /-- the TSD constraint reduces `L` -/
   isReducing : complex.wave.IsReducing (totalSub constraint)
-  /-- the truncations preserve TSD -/
   starProjection_mem (N : ℕ) {x : PiLp 2 Space} (hx : x ∈ totalSub constraint) :
     (ebBands.B N).starProjection x ∈ totalSub constraint
   /-- the truncation error on `Hˢ` -/
@@ -1162,7 +1025,6 @@ open Feec.Models.Euclidean.DeRham Feec.Instances.Maxwell Feec.Fourier.Exterior
 
 variable (d : Type*) [Fintype d] [LinearOrder d] (a : ℤ)
 
-/-- The index map `i ↦ a + i` of the window reflects the relation. -/
 theorem window_rel (i j : Fin 3)
     (h : (ComplexShape.up ℤ).Rel (a + ((i : ℕ) : ℤ)) (a + ((j : ℕ) : ℤ))) :
     (ComplexShape.window 3).Rel i j := by
@@ -1180,17 +1042,14 @@ abbrev maxwellSymbol :
 theorem continuous_maxwellSymbol_m (i j : Fin 3) : Continuous ((maxwellSymbol d a).m i j) :=
   continuous_symbolComplex_m (deRham d) _ _
 
-/-- **The frequency bands of Maxwell's equations on `ℝᵈ`** (degree `a`; `d = 3`, `a = 0` is the
-classical system): the frequency truncation `|ξ| ≤ N` of the window, a reducing family. -/
+/-- The frequency bands `|ξ| ≤ N` of Maxwell's equations on `ℝᵈ` in degree `a`. -/
 abbrev maxwellBands : ReducingFamily ((complex d).window a 3) ℕ :=
   bands (maxwellSymbol d a) (continuous_maxwellSymbol_m d a)
 
-/-- **The frequency-truncation discretization of Maxwell's equations on `ℝᵈ`**, with the Gauss
-laws `σ = 0`, `d†E = 0`, `dB = 0`. -/
+/-- The frequency truncation of Maxwell's equations on `ℝᵈ`, with the Gauss laws. -/
 abbrev maxwellApprox : ApproxFEEC ((complex d).window a 3) ℕ :=
   (maxwellBands d a).toApprox (windowGauss (complex d) a) (isClosed_gauss _ _)
 
-/-- The Gauss laws reduce the Maxwell operator of `ℝᵈ`. [QuennevilleBelair2015], Prop. 4.16 -/
 theorem maxwellApprox_isReducing :
     ((complex d).window a 3).wave.IsReducing (maxwellApprox d a).K :=
   isReducing_windowGauss _ a
@@ -1200,7 +1059,6 @@ theorem scale_inv_smul (ξ : EuclideanSpace ℝ d) :
     Euclidean.scale ((2 * Real.pi)⁻¹ • ξ) = ξ := by
   rw [Euclidean.scale, smul_smul, mul_inv_cancel₀ (by positivity), one_smul]
 
-/-- The electric arrow `Λᵃ → Λᵃ⁺¹` of the window is not zero for `0 ≤ a < d`. -/
 theorem maxwellSymbol_m01_ne_zero (h0 : 0 ≤ a) (h : a < Fintype.card d) :
     (maxwellSymbol d a).m 0 1 ≠ 0 := by
   intro hm
@@ -1213,9 +1071,6 @@ theorem maxwellSymbol_m01_ne_zero (h0 : 0 ≤ a) (h : a < Fintype.card d) :
 
 /-! #### Exact preservation of the Gauss laws -/
 
-/-- **The frequency truncation preserves the Gauss laws**: `σ = 0` trivially, and `d†E = 0`,
-`dB = 0` because `P_N` reduces `d` and `d†` (`starProjection_mem_ker`), including the arrow
-`Λᵃ⁺² → Λᵃ⁺³` outside the window. -/
 theorem starProjection_band_mem_windowGauss (N : ℕ)
     {x : PiLp 2 fun i : Fin 3 => L2Form d (a + i)} (hx : x ∈ windowGauss (complex d) a) :
     (totalSub ((maxwellSymbol d a).band (freqBall N))).starProjection x ∈
@@ -1232,20 +1087,11 @@ theorem starProjection_band_mem_windowGauss (N : ℕ)
   · exact starProjection_mem_ker (hR'.reduces (a + ((2 : Fin 3) : ℕ))
       (a + ((2 : Fin 3) : ℕ) + 1)) h2
 
-/-- **The verdict of the FEEC theorem for Maxwell's equations on `ℝᵈ`** (degree `a`, frequency
-truncation `|ξ| ≤ N`, Gauss laws): that of `ReducingFamily.feec` for `maxwellBands` (the full
-`ApproxFEEC.Verdict` on all data; the error is the truncation error of the datum at every time),
-and:
-1. the Gauss laws reduce `L` and the truncations preserve them, so the truncated solutions of
-   data satisfying the Gauss laws satisfy them (`sol_mem`: Gauss-law residual identically `0`);
-2. on `Hˢ`, `s ≥ 0`, the truncation error is `≤ (N + 1)^{-s} ‖ξ₀‖_{Hˢ}`, hence so is the error at
-   every time. -/
+/-- **The verdict of the FEEC theorem for Maxwell's equations on `ℝᵈ`**, with the clauses below. -/
 structure EuclideanMaxwellVerdict : Prop
     extends toReducing : (maxwellBands d a).Verdict (windowGauss (complex d) a)
       (isClosed_gauss _ _) where
-  /-- the Gauss laws reduce `L` -/
   isReducing : ((complex d).window a 3).wave.IsReducing (windowGauss (complex d) a)
-  /-- the truncations preserve the Gauss laws -/
   starProjection_mem (N : ℕ) {x : PiLp 2 fun i : Fin 3 => L2Form d (a + i)}
     (hx : x ∈ windowGauss (complex d) a) :
     ((maxwellBands d a).B N).starProjection x ∈ windowGauss (complex d) a
@@ -1263,23 +1109,20 @@ theorem maxwell_euclidean_band : EuclideanMaxwellVerdict d a :=
 
 /-! #### A non-reducing Maxwell constraint on `ℝᵈ` -/
 
-/-- The frequency-truncation discretization with the **vanishing-field constraint** `E = 0`,
-`B = 0` (`Feec.Instances.Maxwell.potential`), which does not reduce `L` (`a < d`). -/
+/-- The frequency truncation with the vanishing-field constraint `E = 0`, `B = 0`. -/
 abbrev maxwellPotentialApprox : ApproxFEEC ((complex d).window a 3) ℕ :=
   (maxwellBands d a).toApprox (potential ℂ fun i : Fin 3 => L2Form d (a + i)) isClosed_potential
 
-/-- **The vanishing-field constraint does not reduce Maxwell's operator on `ℝᵈ`**
-(`0 ≤ a < d`). -/
+/-- **The vanishing-field constraint does not reduce Maxwell's operator on `ℝᵈ`**, `0 ≤ a < d`. -/
 theorem maxwell_euclidean_not_isReducing_potential (h0 : 0 ≤ a) (h : a < Fintype.card d) :
     ¬ ((complex d).window a 3).wave.IsReducing (potential ℂ fun i : Fin 3 => L2Form d (a + i)) := by
   obtain ⟨N, u, -, hu, hdu⟩ := exists_band_d_ne_zero (maxwellSymbol d a)
     (continuous_maxwellSymbol_m d a) (maxwellSymbol_m01_ne_zero d a h0 h)
   exact not_isReducing_potential _ ⟨⟨u, hu⟩, hdu⟩
 
-/-- **Item 4 of `approxFEEC`, non-reducing branch, on `ℝᵈ`** (`0 ≤ a < d`): for the vanishing-field
-constraint, for every `T > 0` some datum of `D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the
-residuals of the truncated solutions `ι_N e^{tL_N} π_N ξ₀` tend to `dist(e^{tL} ξ₀, K) > 0`,
-eventually staying above half of it. -/
+/-- **The non-reducing branch on `ℝᵈ`**, `0 ≤ a < d`: some datum of `D(L) ∩ K` leaves the
+vanishing-field constraint `K`, and the residuals of the truncated solutions tend to a positive
+limit. -/
 theorem maxwell_euclidean_potential_residual (h0 : 0 ≤ a) (h : a < Fintype.card d) {T : ℝ}
     (hT : 0 < T) :
     ∃ x : ((complex d).window a 3).wave.domain,
@@ -1308,8 +1151,6 @@ theorem maxwell_euclidean_potential_residual (h0 : 0 ≤ a) (h : a < Fintype.car
   obtain ⟨hlim, hev⟩ := hdet hx _ (V.tendsto_incl_proj hx)
   rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at hout hpos hlim hev
   exact ⟨⟨x, hxD⟩, hxK, t, ht, hout, hpos, hlim, hev⟩
-
-/-! #### The classical system: `d = 3`, `a = 0` -/
 
 end Maxwell
 

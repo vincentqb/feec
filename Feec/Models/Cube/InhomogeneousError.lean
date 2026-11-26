@@ -8,75 +8,18 @@ public import Feec.TimeStepping.Trajectory
 /-!
 # `O(h + Δt²)` error of the Crank–Nicolson Whitney scheme with Dirichlet DOFs
 
-The fully discrete scheme of [QuennevilleBelair2015], Ch. 7 (as run by `fem4gr`) is the
-Crank–Nicolson step with prescribed boundary DOFs `TimeStepping.IsDirichletCNStep` on the
-three-row Whitney space `DState3 (whitneyRow N)` of the level-`(N + 1)` Freudenthal mesh of
-`Q = (0, ½)³` (`Feec.Models.Cube.Inhomogeneous`). This module proves its convergence at rate
-`O(h_N + Δt²)` for smooth solutions, the same rate for the five `fem4gr` constraint monitors
-when the solution is TSD, and `V̊ₕ ≠ 0`.
+The Crank–Nicolson scheme of [QuennevilleBelair2015], Ch. 7 with prescribed boundary DOFs on the
+Whitney spaces of `Q = (0, ½)³` converges at the rate `O(h_N + Δt²)`.
 
-## The error argument
+## Main results
 
-* **Abstract estimate** (`exists_comparison_consistency`, `norm_cn_error_le`,
-  `norm_cn_error_le_of_eq`): for an isometric embedding `emb : Vₕ → X`, a discrete differential `D`
-  with `D V̊ₕ ⊆ V̊ₕ`, `D D = 0`, the skew matrix `⟪A x, y⟫ = ⟪D x, y⟫ − ⟪x, D y⟫`, a solution
-  `U ∈ C³([0, T]; X)` of the weak form `⟪U', emb v⟫ = ⟪DU, emb v⟫ − ⟪U, emb (D v)⟫` on `V̊ₕ` and
-  approximants `wₙ` of `U(tₙ)` with `‖𝐝 (wₙ − U(tₙ))‖ ≤ a` and
-  `‖(wₙ₊₁ − U(tₙ₊₁)) − (wₙ − U(tₙ))‖ ≤ a Δt`, the comparison fields `ũₙ = wₙ − q (emb wₙ − U(tₙ))`
-  with the **boundary correction** `q = P_{D V̊ₕ}` (the `L²` projection onto the discrete
-  boundaries) keep the boundary DOFs of `wₙ`, do not increase the error, and are orthogonal to
-  `emb (D V̊ₕ)`, so the adjoint terms `⟪U − ũ, D v⟫` of the consistency error vanish: no inverse
-  estimate (which would lose `h⁻¹`) is needed. The canonical interpolant alone gives only
-  `|⟪U − Π U, D v⟫| ≤ ‖U − Π U‖ ‖D v‖`, which is `O(1) ‖v‖` after an inverse estimate; the
-  correction is a partial elliptic projection that only acts on `D V̊ₕ` (`D q = 0`). With the
-  trapezoidal remainder `Feec.TimeStepping.norm_trapezoid_le`, `‖τₙ‖ ≤ Δt (L₃ Δt² / 2 + 2 a)`, hence
-  `‖u_M − ũ_M‖ ≤ ‖u₀ − w₀‖ + a + T (L₃ Δt² / 2 + 2 a)`.
-* **The setting on a subcomplex** (`dEmb`, `discreteD_mem_interior`, `discreteD_discreteD`,
-  `inner_of_mem_graph_waveMax`, three rows: `dEmb3`, `discreteD3`, `inner3_of_mem_graph_waveMax`):
-  a strong solution of `U' = L_max U = 𝐝 U − 𝐝_min† U` solves the weak form, since
-  `⟪𝐝_min† U, v⟫ = ⟪U, 𝐝_min v⟫` on `V̊ₕ ⊆ D(𝐝_min)`.
-* **The linear canonical interpolant** (`FEMInterp.canonicalInterp`, `canonicalInterp_le`): the
-  glued Whitney interpolant `glue ∘ globalInterp` as a linear map with the `O(h)` estimates of `FEM.exists_mem_whitney_le`; linearity
-  gives the estimate for time differences.
-* **Smooth forms** (`formalAdjD`, `complex_d_formL2Q`, `adjoint_complexMin_d_formL2Q`): on `Q`,
-  `d` of a smooth form is the classical one, and the adjoint of `d_min` is the formal adjoint
-  `dᵗ = −δ` (`(d_min)† = (dᵗ)_max`).
-
-## The concrete statements
-
-* `RowSolution T L`: a smooth solution of one row of (4.14) on `[0, T] × cl Q` (Ch. 7 sign
-  convention `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E`, as the forms
-  `σ' = −dᵗE`, `E' = dσ − dᵗB`, `B' = dE`): `C²` in space, `C³` in time with jointly continuous
-  time derivatives, `‖Du‖, ‖D du‖ ≤ L` on `cl Q`, these `L`-Lipschitz in time (bounded mixed
-  derivatives `∂ₜ Du`), and `|∂ₜ³ u| ≤ L`. No boundary condition is imposed: the boundary DOFs
-  of the scheme are those of the interpolant of the exact solution.
-* **`whitney_cn_error_le`**: for three rows of such a solution, the iterates from `u₀ = Π_h U(0)`
-  with the boundary DOFs of `Π_h U(tₙ)` satisfy `‖u_M − ũ_M‖ ≤ C L (1 + T) (h_N + Δt²)` and
-  `‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)` for `M Δt ≤ T`, `C = cnConst` explicit and
-  independent of `N`, `Δt`, `T`.
-* **`whitney_cn_monitors_le`**: if the solution is TSD at `t_M` (`IsTSDAt`), the monitors
-  `½ (E − Eᵀ)`, `½ (B − Bᵀ)`, `tr E / √3`, `tr B / √3` and `σ` of `u_M` are
-  `≤ C L (1 + T) (h_N + Δt²)` (they vanish for `U`, `monitors_exactField_eq_zero`).
-* **`whitneyInterior3_ne_bot`**: `V̊ₕ ≠ 0` on every mesh (an interior edge function,
-  `whitneyMin_one_ne_bot`).
-* **Whole-space TSD solutions** (`WholeSpaceTSD.Smooth`, `WholeSpaceTSD.Smooth.row`,
-  `WholeSpaceTSD.Smooth.isTSDAt`, `WholeSpaceTSD.Smooth.whitney_cn_error_monitors_le`): every
-  whole-space TSD solution with bounded derivatives gives three row solutions
-  `(0, Σⱼ E_{rj} dxⱼ, Σⱼ (−1)ʲ B_{rj} dx_{{j}ᶜ})` (`oneForm`, `twoForm`, with
-  `d oneForm = twoForm curl`, `dᵗ twoForm = oneForm curl`, `dᵗ oneForm = −div`), TSD at every
-  time, so the error and all five monitors are `O(h_N + Δt²)`.
-* `cnStep`: the Crank–Nicolson step exists for every data (`whitney_existsUnique_cnStep3`).
-
-What the statements assume is only the smoothness of the exact solution (`RowSolution`,
-`WholeSpaceTSD.Smooth`), no theory absent from Mathlib. Not covered: the discrete divergence
-monitor (its constant depends on the mesh), rates for data of finite Sobolev regularity.
+* `whitney_cn_error_le`: `‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`.
+* `whitney_cn_monitors_le`: the same rate for the constraint monitors of TSD solutions.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7 (the Crank–Nicolson runs, the constraint monitors), §4.10 ((4.14))
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (interpolation
-  estimates)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -115,12 +58,10 @@ theorem inner_rieszMap (emb : V →ₗ[ℝ] X) (y : X) (x : V) : ⟪rieszMap emb
 
 variable (emb : V →ₗ[ℝ] X) (D : V →ₗ[ℝ] V) (V₀ : Submodule ℝ V)
 
-/-- The **discrete boundaries** `D V̊ₕ` (the range of the discrete differential on the fields with
-vanishing boundary DOFs). -/
+/-- The **discrete boundaries** `D V̊ₕ`. -/
 def bdrySub : Submodule ℝ V := V₀.map D
 
-/-- The **boundary correction** `q y = P_{D V̊ₕ} R y`: the `L²` projection of `y ∈ X` onto the
-discrete boundaries `D V̊ₕ`, as an element of `V`. -/
+/-- The **boundary correction** `q y`, the `L²` projection of `y` onto `D V̊ₕ`. -/
 def bdryCorr : X →ₗ[ℝ] V :=
   ((bdrySub D V₀).starProjection : V →ₗ[ℝ] V) ∘ₗ rieszMap emb
 
@@ -153,12 +94,10 @@ theorem norm_emb (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫) (x : V) : ‖
   rw [real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq] at h
   exact (pow_left_inj₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 h
 
-/-- `y − q y ⊥ emb (D V̊ₕ)`. -/
 theorem inner_sub_bdryCorr (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫) (y : X) {b : V}
     (hb : b ∈ bdrySub D V₀) : ⟪y - emb (bdryCorr emb D V₀ y), emb b⟫ = 0 := by
   rw [inner_sub_left, hemb, inner_bdryCorr y hb, sub_self]
 
-/-- **The correction does not increase the error**: `‖y − emb (q y)‖ ≤ ‖y‖` and `‖q y‖ ≤ ‖y‖`. -/
 theorem norm_sub_bdryCorr_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫) (y : X) :
     ‖y - emb (bdryCorr emb D V₀ y)‖ ≤ ‖y‖ ∧ ‖bdryCorr emb D V₀ y‖ ≤ ‖y‖ := by
   set z := emb (bdryCorr emb D V₀ y)
@@ -175,19 +114,8 @@ theorem norm_sub_bdryCorr_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫) (
     refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
     nlinarith [sq_nonneg ‖y - z‖]
 
-/-- **Comparison fields and consistency errors of the Dirichlet Crank–Nicolson scheme**, abstractly.
-Let `emb : V → X` be an isometric embedding of a finite-dimensional space `V` (the finite element
-space `Vₕ`, all DOFs) into an inner product space `X` (`L²`), `D` the discrete differential with
-`D V̊ₕ ⊆ V̊ₕ` and `D D = 0` on `V̊ₕ`, and `A` the scheme matrix with
-`⟪A x, y⟫ = ⟪D x, y⟫ − ⟪x, D y⟫`. Let `U ∈ C³([0, T]; X)` with `‖U'''‖ ≤ L₃` solve the continuous
-system weakly against `V̊ₕ`, `⟪U', emb v⟫ = ⟪DU, emb v⟫ − ⟪U, emb (D v)⟫`, and let `wₙ ∈ Vₕ` be
-approximants of `U(tₙ)` (`tₙ = n Δt`) with `‖emb (D wₙ) − DU(tₙ)‖ ≤ a` and
-`‖δₙ₊₁ − δₙ‖ ≤ a Δt` for `δₙ = emb wₙ − U(tₙ)` (interpolants of a smooth solution).
-Then the comparison fields `ũₙ = wₙ − q δₙ` (`q` the `L²` projection onto `D V̊ₕ`) have the
-boundary DOFs of `wₙ`, are no farther from `U(tₙ)` than `wₙ`, satisfy
-`⟪U(tₙ) − emb ũₙ, emb (D v)⟫ = 0` for `v ∈ V̊ₕ` (no inverse estimate is needed for the adjoint
-terms), and solve the scheme with step `Δt / 2` up to consistency errors `τₙ ∈ V̊ₕ` with
-`‖τₙ‖ ≤ Δt (L₃ Δt² / 2 + 2 a)`. -/
+/-- **Comparison fields and consistency errors of the Dirichlet Crank–Nicolson scheme**: some
+`ũₙ ∈ wₙ + V̊ₕ` solve the scheme up to `‖τₙ‖ ≤ Δt (L₃ Δt² / 2 + 2 a)`. -/
 theorem exists_comparison_consistency (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
     (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
     (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
@@ -334,13 +262,6 @@ theorem exists_comparison_consistency (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x
     positivity
   · nlinarith
 
-/-- **Error of the Dirichlet Crank–Nicolson scheme**, abstractly: in the setting of
-`exists_comparison_consistency`, if `uₙ` are the iterates of the scheme with step `Δt / 2`
-(`s = Δt / 2`), no load, boundary DOFs `gₙ₊₁` those of `wₙ₊₁` (`gₙ₊₁ − wₙ₊₁ ∈ V̊ₕ`) and initial
-value with the boundary DOFs of `w₀`, and `‖emb wₙ − U(tₙ)‖ ≤ a`, then for `M Δt ≤ T` there are
-comparison fields `ũₙ` with the boundary DOFs of `wₙ` and `‖emb ũₙ − U(tₙ)‖ ≤ a` such that
-`‖u_M − ũ_M‖ ≤ ‖u₀ − w₀‖ + a + T (L₃ Δt² / 2 + 2 a)` and
-`‖emb u_M − U(t_M)‖ ≤ ‖u₀ − w₀‖ + 2 a + T (L₃ Δt² / 2 + 2 a)`. -/
 theorem norm_cn_error_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
     (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
     (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
@@ -418,8 +339,6 @@ theorem norm_cn_error_le (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
   have := (hũe M).trans (hA1 M hM)
   linarith
 
-/-- `norm_cn_error_le` started from `u₀ = w₀`, in the form `K (1 + T) (h + Δt²)`: if `2 a ≤ K h`
-and `L₃ / 2 ≤ K`, then `‖u_M − ũ_M‖, ‖emb u_M − U(t_M)‖ ≤ K (1 + T) (h + Δt²)`. -/
 theorem norm_cn_error_le_of_eq (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
     (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
     (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a : ℝ} (hΔt : 0 < Δt)
@@ -487,7 +406,6 @@ omit [Fintype ι] in
 theorem dEmb_mem_totalDomain (x : DState S) : dEmb S x ∈ H.totalDomain := fun i j =>
   S.le_domain i j (x i).2
 
-/-- `𝐝 (emb x) = emb (𝐝ₕ x)`. -/
 theorem totalD_dEmb (x : DState S) :
     H.totalD ⟨dEmb S x, dEmb_mem_totalDomain S x⟩ = dEmb S (discreteD S x) := by
   refine PiLp.ext fun j => ?_
@@ -496,7 +414,6 @@ theorem totalD_dEmb (x : DState S) :
     Submodule.coe_sum, Subcomplex.coe_dLin_apply]
   rfl
 
-/-- `𝐝ₕ 𝐝ₕ = 0`. -/
 theorem discreteD_discreteD (x : DState S) : discreteD S (discreteD S x) = 0 := by
   refine PiLp.ext fun k => ?_
   simp only [discreteD, LinearMap.coe_mk, AddHom.coe_mk, PiLp.toLp_apply, map_sum,
@@ -507,8 +424,6 @@ theorem discreteD_discreteD (x : DState S) : discreteD S (discreteD S x) = 0 := 
 variable {Hmin : HilbertComplex ℝ c W} (hle : ∀ i j, Hmin.d i j ≤ H.d i j) (S₀ : Hmin.Subcomplex)
 
 include hle in
-/-- `𝐝ₕ V̊ₕ ⊆ V̊ₕ` when the fields with vanishing boundary DOFs form a subcomplex of the complex
-with boundary conditions. -/
 theorem discreteD_mem_interior {v : DState S} (hv : v ∈ interior S S₀.V) :
     discreteD S v ∈ interior S S₀.V := by
   intro j
@@ -525,7 +440,6 @@ theorem dEmb_mem_totalDomain_min {v : DState S} (hv : v ∈ interior S S₀.V) :
     dEmb S v ∈ Hmin.totalDomain := fun i j => S₀.le_domain i j (hv i)
 
 include hle in
-/-- On `V̊ₕ` the complex with boundary conditions acts as `𝐝ₕ`. -/
 theorem totalD_min_dEmb {v : DState S} (hv : v ∈ interior S S₀.V) :
     Hmin.totalD ⟨dEmb S v, dEmb_mem_totalDomain_min S S₀ hv⟩ = dEmb S (discreteD S v) := by
   rw [← totalD_dEmb]
@@ -534,9 +448,6 @@ theorem totalD_min_dEmb {v : DState S} (hv : v ∈ interior S S₀.V) :
   exact Finset.sum_congr rfl fun i _ => (hle i j).2 rfl
 
 include hle in
-/-- **A strong solution of `U' = L_max U` solves the scheme's weak form on `V̊ₕ`**: if
-`(U, U') ∈ graph (𝐝 − 𝐝_min†)` then `⟪U', emb v⟫ = ⟪𝐝 U, emb v⟫ − ⟪U, emb (𝐝ₕ v)⟫` for every
-`v ∈ V̊ₕ` (`⟪𝐝_min† U, v⟫ = ⟪U, 𝐝_min v⟫`). -/
 theorem inner_of_mem_graph_waveMax {U U' : PiLp 2 W}
     (hU : (U, U') ∈ (waveMax Hmin H).graph) {v : DState S} (hv : v ∈ interior S S₀.V) :
     ∃ hD : U ∈ H.totalDomain, ⟪U', dEmb S v⟫ =
@@ -595,8 +506,6 @@ theorem discreteD3_discreteD3 (v : DState3 S) : discreteD3 S (discreteD3 S v) = 
   PiLp.ext fun r => by simp [discreteD_discreteD]
 
 include hle in
-/-- The weak form for three rows, each a strong solution of `U' = L_max U`, with
-`DU = (𝐝 U_r)_r`. -/
 theorem inner3_of_mem_graph_waveMax {U U' : PiLp 2 fun _ : Fin 3 => PiLp 2 W}
     (hU : ∀ r, (U r, U' r) ∈ (waveMax Hmin H).graph) (hd : ∀ r, U r ∈ H.totalDomain)
     {v : DState3 S} (hv : v ∈ interior3 S S₀.V) :
@@ -625,8 +534,6 @@ def linearMapOfEq {Θ Θ' : Set (Fin n → ℝ)} (h : Θ = Θ') {j : ℤ}
   subst h; exact f
 
 omit [NeZero n] in
-/-- Any property of a subcomplex together with a linear map is transported by
-`maximalSubcomplexOfEq` and `linearMapOfEq`. -/
 theorem linearMapOfEq_induction {Θ Θ' : Set (Fin n → ℝ)} (h : Θ = Θ') (hΘ : IsOpen Θ)
     (hΘ' : IsOpen Θ') (S : ((deRham ℝ n).maximalComplex hΘ).Subcomplex) {j : ℤ}
     (f : contForms n →ₗ[ℝ] L2F ℝ Θ (formIdx n j))
@@ -636,10 +543,7 @@ theorem linearMapOfEq_induction {Θ Θ' : Set (Fin n → ℝ)} (h : Θ = Θ') (h
     P Θ' hΘ' ((deRham ℝ n).maximalSubcomplexOfEq h hΘ hΘ' S) (linearMapOfEq h f) := by
   subst h; exact hP
 
-/-- **The canonical Whitney interpolant** `Π_h : C⁰Λʲ → Vₕʲ` of the level-`(N + 1)` Freudenthal
-mesh of `Q = (0, ½)ⁿ` ([Arnold2018], Ch. 7): the glued global interpolant
-`glue ∘ globalInterp` (the degrees of freedom `∫_f w` on the `j`-faces `f`), as a linear map into
-`L²Λʲ(Q)` (transported along `mesh_domain`). -/
+/-- **The canonical Whitney interpolant** `Π_h : C⁰Λʲ → Vₕʲ`, a linear map ([Arnold2018], Ch. 7). -/
 def canonicalInterp (N : ℕ) (j : ℤ) : contForms n →ₗ[ℝ] L2F ℝ (cubeDomain n) (formIdx n j) :=
   linearMapOfEq (mesh_domain n N)
     ((whitneyElement n).glue (mesh n N) j ∘ₗ
@@ -653,11 +557,6 @@ theorem canonicalInterp_mem (N : ℕ) (j : ℤ) (w : contForms n) :
     (fun _ _ S f => ∀ w, f w ∈ S.V j)
     (fun w => ⟨(whitneyElement n).globalInterp (mesh n N) j.toNat w, rfl⟩) w
 
-/-- **The `O(h)` estimates of the canonical Whitney interpolant** ([Arnold2018], Ch. 7): for a
-`C²` form `w` of degree `j` with `‖Dw‖, ‖D dw‖ ≤ L` on `cl Q`, `‖w − Π_h w‖ ≤ B_j L h_N` and
-`‖d (w − Π_h w)‖ ≤ B_j L h_N` (`B_j = interpBound n j`). Unlike the existential
-`exists_mem_whitney_le`, `Π_h` is the linear map `canonicalInterp`, which the Crank–Nicolson
-consistency argument needs for time differences. -/
 theorem canonicalInterp_le (N : ℕ) (j : ℤ) :
       ∀ k : ℕ, (k : ℤ) = j → ∀ {w : FormField n} (hw : ContDiff ℝ 2 w), (∀ y, IsDeg k (w y)) →
         ∀ {L : ℝ}, 0 ≤ L → (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) →
@@ -759,8 +658,7 @@ open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre
 
 variable {n : ℕ}
 
-/-- The formal adjoint `dᵗ = −δ` of the exterior derivative on form fields,
-`(dᵗψ)_s = −Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}` (`Feec.Domain.extDAdj`). -/
+/-- The formal adjoint `dᵗ = −δ` of the exterior derivative on form fields. -/
 def formalAdjD (ψ : FormField n) : FormField n := fun x s =>
   extDAdj (𝕜 := ℝ) (fun s y => ψ y s) s x
 
@@ -785,7 +683,6 @@ theorem formL2Q_neg (k : ℤ) {w : FormField n} (hw : Continuous w) :
     -formL2Q k w hw = formL2Q k (-w) hw.neg := by
   rw [← map_neg]; rfl
 
-/-- `‖w|_Q‖ ≤ #Λᵏ |Q|^{1/2} B` if `|w| ≤ B` on `Q`. -/
 theorem norm_formL2Q_le (k : ℤ) {w : FormField n} (hw : Continuous w) {B : ℝ} (hB : 0 ≤ B)
     (h : ∀ x ∈ cubeDomain n, ∀ s, |w x s| ≤ B) :
     ‖formL2Q k w hw‖ ≤
@@ -803,8 +700,6 @@ theorem norm_formL2Q_le (k : ℤ) {w : FormField n} (hw : Continuous w) {B : ℝ
 
 variable [NeZero n]
 
-/-- **`d` of a smooth form in every pair of degrees**: for a `C¹` form `w` of degree `k = j`,
-`w|_Q ∈ D(d j j')` and `d j j' (w|_Q) = (dw)|_Q` if `j' = j + 1`, `0` otherwise. -/
 theorem complex_d_formL2Q {j : ℤ} (j' : ℤ) {k : ℕ} (hk : (k : ℤ) = j) {w : FormField n}
     (hw : ContDiff ℝ 1 w) (hdeg : ∀ y, IsDeg k (w y)) :
     formL2Q j w hw.continuous ∈ ((complex n).d j j').domain ∧
@@ -823,7 +718,6 @@ theorem complex_d_formL2Q {j : ℤ} (j' : ℤ) {k : ℕ} (hk : (k : ℤ) = j) {w
     exact HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj) _
 
 omit [NeZero n] in
-/-- `formExt (formComp ψ) = ψ` for a form of the right degree. -/
 theorem formExt_formComp {j : ℤ} {k : ℕ} (hk : (k : ℤ) = j) {ψ : FormField n}
     (hdeg : ∀ y, IsDeg k (ψ y)) :
     formExt (formComp (k := j) ψ) = fun s y => ψ y s := by
@@ -834,9 +728,6 @@ theorem formExt_formComp {j : ℤ} {k : ℕ} (hk : (k : ℤ) = j) {ψ : FormFiel
   · exact (hdeg y s (fun h' => h (by rw [← hk]; exact_mod_cast h'))).symm
 
 omit [NeZero n] in
-/-- **The adjoint of `d_min` on a smooth form is the formal adjoint** (integration by parts
-against `H̊Λ(Q)`, `(d_min)† = (dᵗ)_max`): for a `C¹` form `ψ` of degree `k = j'`,
-`ψ|_Q ∈ D((d_min j j')†)` and `(d_min j j')† (ψ|_Q) = (dᵗψ)|_Q` if `j' = j + 1`, `0` otherwise. -/
 theorem adjoint_complexMin_d_formL2Q (j : ℤ) {j' : ℤ} {k : ℕ} (hk : (k : ℤ) = j')
     {ψ : FormField n} (hψ : ContDiff ℝ 1 ψ) (hdeg : ∀ y, IsDeg k (ψ y)) :
     formL2Q j' ψ hψ.continuous ∈ ((complexMin n).d j j')†.domain ∧
@@ -879,7 +770,7 @@ theorem adjoint_complexMin_d_formL2Q (j : ℤ) {j' : ℤ} {k : ℕ} (hk : (k : �
 
 end SmoothForms
 
-/-! ## One row of (4.14) on the cube: the de Rham window `HΛ⁰ → HΛ¹ → L²Λ²` -/
+/-! ## One row on the cube: the de Rham window `HΛ⁰ → HΛ¹ → L²Λ²` -/
 
 section Row
 
@@ -916,10 +807,6 @@ def rowField (f : Fin 3 → FormField 3) (hf : ∀ i, Continuous (f i)) : RowSpa
 
 theorem degIdx (i : Fin 3) : (((i : ℕ) : ℕ) : ℤ) = (0 : ℤ) + ((i : ℕ) : ℤ) := (zero_add _).symm
 
-/-- **A smooth row solving the row of (4.14) pointwise solves `U' = L_max U`**: if the forms
-`f = (σ, E, B)` (degrees `0, 1, 2`, `C¹`) and `f₁` satisfy `f₁₀ = −dᵗf₁`, `f₁₁ = d f₀ − dᵗ f₂`,
-`f₁₂ = d f₁` (Ch. 7 sign convention: `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E`), then
-`(f|_Q, f₁|_Q) ∈ graph (𝐝_max − 𝐝_min†)` on the row window. -/
 theorem rowField_mem_graph_waveMax {f f₁ : Fin 3 → FormField 3} (hf : ∀ i, ContDiff ℝ 1 (f i))
     (hdeg : ∀ (i : Fin 3) y, IsDeg (i : ℕ) (f i y)) (hf₁ : ∀ i, Continuous (f₁ i))
     (h0 : f₁ 0 = -formalAdjD (f 1)) (h1 : f₁ 1 = extDeriv (f 0) - formalAdjD (f 2))
@@ -967,7 +854,6 @@ theorem hasDerivAt_toLp {ι : Type*} [Fintype ι] {β : ι → Type*} [∀ i, No
   have := (PiLp.continuousLinearEquiv 2 ℝ β).symm.hasFDerivAt.comp_hasDerivAt t h'
   simpa [Function.comp_def] using this
 
-/-- **Classical time derivatives of forms are `L²(Q)` time derivatives**. -/
 theorem hasDerivAt_formL2Q (k : ℤ) {u u₁ : ℝ → FormField 3} (hu : ∀ t, Continuous (u t))
     (hu₁ : ∀ s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₁ p.1 p.2 s)
     (hd : ∀ t y s, HasDerivAt (fun τ => u τ y s) (u₁ t y s) t) (t : ℝ) :
@@ -979,14 +865,8 @@ theorem hasDerivAt_formL2Q (k : ℤ) {u u₁ : ℝ → FormField 3} (hu : ∀ t,
     (fun τ s => continuous_formComp (hu τ) s) (fun s => hu₁ s.1)
     (fun τ s y => hd τ y s.1) t
 
-/-- A **smooth solution of one row of (4.14)** (Ch. 7 sign convention) on `[0, T] × cl Q`, as
-forms `u t i` of degree `i` (`σ_r`, the `1`-form `E_r`, the `2`-form `B_r`): `C²` in space, `C³`
-in time with jointly continuous time derivatives, solving `σ' = −dᵗE`, `E' = dσ − dᵗB`,
-`B' = dE` pointwise (`dᵗ = −δ`, so `σ' = div E`, `E' = grad σ − curl B`, `B' = curl E`), with
-the bounds `‖Du‖, ‖D du‖ ≤ L` on `cl Q`, `L`-Lipschitz dependence of `Du`, `D du` on `t ∈ [0, T]`
-(bounded mixed derivatives `∂ₜ Du`), and `|∂ₜ³ u| ≤ L` on `[0, T] × Q`. The fields and their
-time derivatives are defined for all `t ∈ ℝ` (whole-space solutions restrict to such rows,
-`WholeSpaceTSD.Smooth.row`); the bounds are only required on `[0, T]`. -/
+/-- A **smooth solution of one row** on `ℝ × ℝ³`, with the bound `L` on its derivatives on
+`[0, T] × cl Q`. -/
 structure RowSolution (T L : ℝ) where
   /-- the fields and their first three time derivatives -/
   u : ℝ → Fin 3 → FormField 3
@@ -1050,8 +930,6 @@ theorem hasDerivAt_field₂ (t : ℝ) : HasDerivAt X.field₂ (X.field₃ t) t :
   hasDerivAt_toLp fun i => hasDerivAt_formL2Q _ (fun τ => X.continuous_u₂ τ i)
     (fun s => X.continuous₃ i s) (fun τ y s => X.hasDerivAt₃ τ i y s) t
 
-/-- **The row is a strong solution of `U' = L_max U`** on the window `HΛ⁰ → HΛ¹ → L²Λ²` with
-the adjoint of the window with vanishing traces. -/
 theorem mem_graph_waveMax (t : ℝ) :
     (X.field t, X.field₁ t) ∈ (waveMax rowComplexMin rowComplex).graph :=
   rowField_mem_graph_waveMax (fun i => (X.contDiff t i).of_le (by norm_num)) (X.isDeg t)
@@ -1070,9 +948,7 @@ section RowInterp
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
 
-/-- The canonical Whitney interpolant into `Vₕ^{0 + i}` (`FEMInterp.canonicalInterp`: the
-glued interpolant `glue ∘ globalInterp` of the Freudenthal mesh, whose boundary DOFs are the
-integrals of the interpolated form over the boundary faces). -/
+/-- The canonical Whitney interpolant into `Vₕ^{0 + i}`. -/
 def rowInterp (N : ℕ) (i : Fin 3) :
     contForms 3 →ₗ[ℝ] L2F ℝ (cubeDomain 3) (formIdx 3 ((0 : ℤ) + ((i : ℕ) : ℤ))) :=
   FEMInterp.canonicalInterp (n := 3) N ((0 : ℤ) + ((i : ℕ) : ℤ))
@@ -1100,9 +976,6 @@ def rowBound : ℝ := ∑ i : Fin 3, interpBound 3 ((0 : ℤ) + ((i : ℕ) : ℤ
 theorem rowBound_nonneg : 0 ≤ rowBound :=
   Finset.sum_nonneg fun _ _ => interpBound_nonneg 3 _
 
-/-- **Row interpolation error** in `L²` and for `𝐝`: for `C²` forms `g` (degrees `0, 1, 2`) with
-`‖Dg‖, ‖D dg‖ ≤ L` on `cl Q`, `‖Π_h g − g‖ ≤ (Σᵢ Bᵢ) L h_N` and
-`‖𝐝 (Π_h g − g)‖ ≤ 3 (Σᵢ Bᵢ) L h_N`. -/
 theorem rowInterp_bounds (N : ℕ) {g : Fin 3 → FormField 3} (hg : ∀ i, ContDiff ℝ 2 (g i))
     (hdeg : ∀ (i : Fin 3) y, IsDeg (i : ℕ) (g i y)) {L : ℝ} (hL0 : 0 ≤ L)
     (hb : ∀ i, ∀ y ∈ closure (cubeDomain 3),
@@ -1202,12 +1075,10 @@ theorem norm_field₃_le {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
 def interp (N : ℕ) (t : ℝ) : DState (whitneyRow N) :=
   rowInterpL N fun i => ⟨X.u t i, X.continuous t i⟩
 
-/-- `‖Π_h U(t) − U(t)‖ ≤ (Σᵢ Bᵢ) L h_N` on `[0, T]`. -/
 theorem norm_interp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
     ‖dEmb (whitneyRow N) (X.interp N t) - X.field t‖ ≤ rowBound * L * meshSize N :=
   (rowInterp_bounds N (X.contDiff t) (X.isDeg t) hL0 (X.bound t ht)).1
 
-/-- `‖emb (𝐝ₕ Π_h U(t)) − 𝐝 U(t)‖ ≤ 3 (Σᵢ Bᵢ) L h_N` on `[0, T]`. -/
 theorem norm_d_interp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
     ‖dEmb (whitneyRow N) (discreteD (whitneyRow N) (X.interp N t)) -
         rowComplex.totalD ⟨X.field t, X.field_mem_totalDomain t⟩‖ ≤
@@ -1222,8 +1093,6 @@ theorem norm_d_interp_sub_le (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 �
   rw [e]
   exact (rowInterp_bounds N (X.contDiff t) (X.isDeg t) hL0 (X.bound t ht)).2 hx
 
-/-- **The interpolation error is `L`-Lipschitz in time, times `h_N`**:
-`‖(Π_h − I)(U(t') − U(t))‖ ≤ (Σᵢ Bᵢ) L |t' − t| h_N` (the interpolant is linear). -/
 theorem norm_interp_sub_sub_le (N : ℕ) {t t' : ℝ} (ht : t ∈ Icc 0 T) (ht' : t' ∈ Icc 0 T)
     (hL0 : 0 ≤ L) :
     ‖(dEmb (whitneyRow N) (X.interp N t') - X.field t') -
@@ -1278,8 +1147,7 @@ def exactField (X : Fin 3 → RowSolution T L) (t : ℝ) : PiLp 2 fun _ : Fin 3 
 def exactInterp (X : Fin 3 → RowSolution T L) (N : ℕ) (t : ℝ) : DState3 (whitneyRow N) :=
   WithLp.toLp 2 fun r => (X r).interp N t
 
-/-- The constant of `whitney_cn_error_le`: `18 Σᵢ Bᵢ + 3 Σᵢ #Λⁱ |Q|^{1/2}`, independent of `N`,
-`Δt`, `T` and the solution. -/
+/-- The constant of `whitney_cn_error_le`, independent of `N`, `Δt`, `T` and the solution. -/
 def cnConst : ℝ := 18 * rowBound + 3 * rowL2Const
 
 /-- `U'(t)` of the three rows. -/
@@ -1316,8 +1184,6 @@ theorem norm_exactField₃_le {t : ℝ} (ht : t ∈ Icc 0 T) (hL0 : 0 ≤ L) :
         Finset.sum_le_sum fun r _ => (X r).norm_field₃_le ht hL0
     _ = 3 * (rowL2Const * L) := by simp
 
-/-- **The exact solution solves the three-row scheme's weak form on `V̊ₕ`** (integration by parts
-against the fields with vanishing boundary DOFs). -/
 theorem inner_exactField₁ (N : ℕ) (t : ℝ) {v : DState3 (whitneyRow N)}
     (hv : v ∈ whitneyInterior3 N) :
     ⟪exactField₁ X t, dEmb3 (whitneyRow N) v⟫ = ⟪exactD X t, dEmb3 (whitneyRow N) v⟫ -
@@ -1357,15 +1223,7 @@ theorem norm_exactInterp_sub_sub_le (N : ℕ) {t t' : ℝ} (ht : t ∈ Icc 0 T) 
     _ = 3 * (rowBound * (L * |t' - t|) * meshSize N) := by simp
 
 /-- **`O(h + Δt²)` convergence of the Crank–Nicolson Whitney scheme with Dirichlet DOFs**
-([QuennevilleBelair2015], Ch. 7): let `U = (U_r)_r` be a smooth solution of (4.14) on
-`[0, T] × cl Q` (three `RowSolution`s with bound `L`, no boundary condition imposed), and let
-`uₙ` be the iterates of the three-row scheme `(P₁)³ × (P₁⁻Λ¹)³ × (P₁⁻Λ²)³` on the level-`(N + 1)`
-Freudenthal mesh with step `Δt` (`s = Δt / 2`), started from the canonical interpolant
-`u₀ = Π_h U(0)` and with the boundary DOFs of `Π_h U(tₙ)` prescribed at every step (any `gₙ` with
-`gₙ − Π_h U(tₙ) ∈ V̊ₕ`). Then for `M Δt ≤ T` the comparison fields `ũₙ` (with the boundary DOFs of
-`Π_h U(tₙ)`, `exists_comparison_consistency`) satisfy
-`‖u_M − ũ_M‖ ≤ C L (1 + T) (h_N + Δt²)` and the discrete solution satisfies
-`‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`, with `C = cnConst` independent of `N`, `Δt`, `T`. -/
+([QuennevilleBelair2015], Ch. 7): `‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)` for `M Δt ≤ T`. -/
 theorem whitney_cn_error_le (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) (hL0 : 0 ≤ L) {M : ℕ}
     (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → DState3 (whitneyRow N)}
     (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior3 N)
@@ -1416,11 +1274,6 @@ theorem whitney_cn_error_le (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) (hL0 : 0 ≤ 
     (by rw [cnConst]; nlinarith [mul_nonneg (mul_nonneg hR hL0) hh])
     (by rw [cnConst]; nlinarith [mul_nonneg hR hL0, mul_nonneg hB hL0])
 
-/-- **`O(h + Δt²)` convergence of the one-row Crank–Nicolson Whitney scheme with Dirichlet
-DOFs**: `whitney_cn_error_le` for a single row `P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` (the Hodge wave equation
-of the de Rham window `HΛ⁰ → HΛ¹ → L²Λ²`): for a smooth `RowSolution` with bound `L`, the
-iterates from `u₀ = Π_h U(0)` with the boundary DOFs of `Π_h U(tₙ)` satisfy
-`‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`, `C = cnConst`. -/
 theorem RowSolution.whitney_cn_error_le_row (X : RowSolution T L) (N : ℕ) {Δt : ℝ}
     (hΔt : 0 < Δt) (hL0 : 0 ≤ L) {M : ℕ} (hM : (M : ℝ) * Δt ≤ T)
     {u g : ℕ → DState (whitneyRow N)}
@@ -1488,9 +1341,6 @@ theorem finrank_whitneyMin_pos_of_mesh (N k : ℕ)
     (whitneySubcomplexMin (mesh 3 N) (isOpen_mesh_domain 3 N) (center 3) (strictStar_mesh 3 N))
     (fun _ _ S => 0 < Module.finrank ℝ (S.V (k : ℤ))) h
 
-/-- **The interior Nédélec spaces are nonzero**: `V̊ₕ¹ ≠ 0` on every Freudenthal mesh of the cube
-(an edge through the interior carries a degree of freedom,
-`Feec.FiniteElement.finrank_whitney_V₀_freudenthalMesh_pos`). -/
 theorem whitneyMin_one_ne_bot (N : ℕ) : (whitneyMin 3 N).V ((1 : ℕ) : ℤ) ≠ ⊥ := by
   intro h
   have := finrank_whitneyMin_pos_of_mesh N 1
@@ -1499,8 +1349,7 @@ theorem whitneyMin_one_ne_bot (N : ℕ) : (whitneyMin 3 N).V ((1 : ℕ) : ℤ) �
   rw [h, finrank_bot] at this
   exact lt_irrefl 0 this
 
-/-- **`V̊ₕ ≠ 0`** for the three-row Whitney space with vanishing boundary DOFs, on every mesh (a
-row with an interior edge function in its `E`-slot). -/
+/-- **`V̊ₕ ≠ 0`** for the three-row Whitney space with vanishing boundary DOFs, on every mesh. -/
 theorem whitneyInterior3_ne_bot (N : ℕ) : whitneyInterior3 N ≠ ⊥ := by
   obtain ⟨v, hv, hv0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot (whitneyMin_one_ne_bot N)
   have hvV : v ∈ (whitneyRow N).V 1 := whitneyMin_le_whitney N _ hv
@@ -1529,8 +1378,7 @@ section Monitors
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
 
-/-- The entry `E_{rj}` of a three-row field in `(L²Λ⁰ × L²Λ¹ × L²Λ²)³` (the ambient version of
-`entryE`). -/
+/-- The entry `E_{rj}` of a three-row field in `(L²Λ⁰ × L²Λ¹ × L²Λ²)³`. -/
 def entryE' (r j : Fin 3) : (PiLp 2 fun _ : Fin 3 => RowSpace) →ₗ[ℝ] L2 ℝ (cubeDomain 3) where
   toFun y := (y r 1 : L2F ℝ (cubeDomain 3) _) (edgeIdx j)
   map_add' _ _ := rfl
@@ -1581,9 +1429,7 @@ theorem norm_sigmaPart'_le (y : PiLp 2 fun _ : Fin 3 => RowSpace) : ‖sigmaPart
 
 variable {T L : ℝ}
 
-/-- **A TSD state of the three-row form model** at time `t`: `σ = 0`, and the matrices
-`E_{rj}` (component `dx_j` of the `1`-form of row `r`) and `B_{rj} = (−1)^j ω_{{j}ᶜ}` (vector
-proxy of the `2`-form of row `r`) are symmetric and trace-free, pointwise. -/
+/-- **A TSD state** of the three-row model at time `t`: `σ = 0`, `E`, `B` symmetric, trace-free. -/
 structure IsTSDAt (X : Fin 3 → RowSolution T L) (t : ℝ) : Prop where
   sigma : ∀ r y s, (X r).u t 0 y s = 0
   symm_E : ∀ r j y, (X r).u t 1 y {j} = (X j).u t 1 y {r}
@@ -1622,7 +1468,6 @@ theorem toLp_sum_three_eq_zero {f : Fin 3 → (Fin 3 → ℝ) → ℝ}
   rw [Fin.sum_univ_three] at this
   simpa using this
 
-/-- The five `fem4gr` monitors vanish on a TSD state. -/
 theorem monitors_exactField_eq_zero {t : ℝ} (hX : IsTSDAt X t) :
     skewPart entryE' (exactField X t) = 0 ∧ skewPart entryB' (exactField X t) = 0 ∧
       tracePart entryE' (exactField X t) = 0 ∧ tracePart entryB' (exactField X t) = 0 ∧
@@ -1670,7 +1515,6 @@ theorem norm_le_of_map_eq_zero {Y Z : Type*} [SeminormedAddCommGroup Y] [NormedS
   have : c x = c (x - U) := by rw [map_sub, hU, sub_zero]
   rw [this]; exact hc _
 
-/-- Each monitor of a discrete field is at most its distance to a TSD exact state. -/
 theorem norm_monitors_le_of_isTSDAt (N : ℕ) (u : DState3 (whitneyRow N)) {t : ℝ}
     (hX : IsTSDAt X t) :
     ‖skewPart (entryE N) u‖ ≤ ‖dEmb3 (whitneyRow N) u - exactField X t‖ ∧
@@ -1691,11 +1535,8 @@ theorem norm_monitors_le_of_isTSDAt (N : ℕ) (u : DState3 (whitneyRow N)) {t : 
   · rw [norm_sigmaPart_eq]
     exact norm_le_of_map_eq_zero norm_sigmaPart'_le h5
 
-/-- **The `fem4gr` constraint monitors are `O(h + Δt²)` for TSD exact solutions**
-([QuennevilleBelair2015], Ch. 7): in the setting of `whitney_cn_error_le`, if the exact solution
-is TSD at `t_M` (`σ = 0`, `E`, `B` symmetric and trace-free), then "Skew of E/B" `½ (E − Eᵀ)`,
-`½ (B − Bᵀ)`, "Trace of E/B" `tr E / √3`, `tr B / √3` and "Sigma Zero" `σ` of the discrete
-solution `u_M` are all at most `C L (1 + T) (h_N + Δt²)`. -/
+/-- **The constraint monitors are `O(h + Δt²)` for TSD exact solutions**
+([QuennevilleBelair2015], Ch. 7). -/
 theorem whitney_cn_monitors_le (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) (hL0 : 0 ≤ L) {M : ℕ}
     (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → DState3 (whitneyRow N)}
     (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior3 N)
@@ -1800,7 +1641,6 @@ theorem twoForm_apply_compl (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (y : Fin 3 �
 
 theorem abs_faceSign (j : Fin 3) : |faceSign j| = 1 := by simp [faceSign]
 
-/-- The component functions of `oneForm v`: `v j` at `{j}`, `0` elsewhere. -/
 theorem oneForm_comp (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (s : Finset (Fin 3)) :
     (∃ j, s = {j} ∧ (fun y => oneForm v y s) = v j) ∨ (fun y => oneForm v y s) = 0 := by
   by_cases h : ∃ j, s = {j}
@@ -1841,7 +1681,6 @@ theorem contDiff_twoForm {m : WithTop ℕ∞} {v : Fin 3 → (Fin 3 → ℝ) →
     · simpa [h] using contDiff_const.mul (hv j)
     · simpa [h] using (contDiff_const : ContDiff ℝ m fun _ : Fin 3 → ℝ => (0 : ℝ))
 
-/-- `‖D F‖ ≤ L` for a form field whose components have `‖D Fₛ‖ ≤ L`. -/
 theorem norm_fderiv_form_le {F : FormField 3} {y : Fin 3 → ℝ} {L : ℝ} (hL0 : 0 ≤ L)
     (hd : ∀ s, DifferentiableAt ℝ (fun z => F z s) y)
     (h : ∀ s, ‖fderiv ℝ (fun z => F z s) y‖ ≤ L) : ‖fderiv ℝ F y‖ ≤ L := by
@@ -1884,11 +1723,7 @@ section SmoothTSD
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre HilbertComplex
   Feec.Models.BoundedDomain
 
-/-- **Bounded higher derivatives of a whole-space TSD solution on `[0, T] × cl Q`**: `C²` in space,
-`C³` in time (the second and third time derivatives `E₂, E₃, B₂, B₃` jointly continuous), with
-`‖D E‖, ‖D curl E‖, ‖D B‖, ‖D curl B‖ ≤ L` on `cl Q`, these `L`-Lipschitz in `t ∈ [0, T]`, and
-`|∂ₜ³ E|, |∂ₜ³ B| ≤ L` on `Q`. (The plane wave of Ch. 7 has them,
-`Feec.Numerics.PlaneWaveCube`.) -/
+/-- **Bounded higher derivatives of a whole-space TSD solution** on `[0, T] × cl Q`. -/
 structure WholeSpaceTSD.Smooth (W : WholeSpaceTSD) (T L : ℝ) where
   /-- the second and third time derivatives -/
   E₂ : ℝ → Ix → (Fin 3 → ℝ) → ℝ
@@ -2032,8 +1867,7 @@ theorem abs_twoForm_le {v : Fin 3 → (Fin 3 → ℝ) → ℝ} {y : Fin 3 → �
     exact h j
   · rw [show twoForm v y s = 0 from congrFun h0 y, abs_zero]; exact hL0
 
-/-- **Row `r` of a whole-space TSD solution with bounded derivatives is a smooth row solution**
-on `[0, T] × cl Q`: `(σ_r, E_r, B_r) = (0, Σⱼ E_{rj} dxⱼ, Σⱼ (−1)ʲ B_{rj} dx_{{j}ᶜ})`. -/
+/-- **Row `r` of a whole-space TSD solution with bounded derivatives**, a smooth row solution. -/
 def row (hL0 : 0 ≤ L) (r : Fin 3) : RowSolution T L where
   u t := WholeSpaceTSD.rowForms (W.E t) (W.B t) r
   u₁ t := WholeSpaceTSD.rowForms (fun ij y => -curlM (W.B t) ij y) (curlM (W.E t)) r
@@ -2159,7 +1993,6 @@ def row (hL0 : 0 ≤ L) (r : Fin 3) : RowSolution T L where
 theorem faceSign_mul_self (j : Fin 3) : faceSign j * faceSign j = 1 := by
   simp only [faceSign, ← pow_add, ← two_mul, pow_mul]; norm_num
 
-/-- **The rows of a whole-space TSD solution are TSD at every time.** -/
 theorem isTSDAt (hL0 : 0 ≤ L) (t : ℝ) : IsTSDAt (fun r => S.row hL0 r) t where
   sigma r y s := rfl
   symm_E r j y := by
@@ -2179,12 +2012,8 @@ theorem isTSDAt (hL0 : 0 ≤ L) (t : ℝ) : IsTSDAt (fun r => S.row hL0 r) t whe
     simp only [twoForm_apply_compl, ← mul_assoc, faceSign_mul_self, one_mul]
     exact W.trace_B t y
 
-/-- **`O(h + Δt²)` convergence and `O(h + Δt²)` monitors for every whole-space TSD solution with
-bounded derivatives** ([QuennevilleBelair2015], Ch. 7): the Crank–Nicolson Whitney scheme on the
-level-`(N + 1)` mesh of `Q`, started from the canonical interpolant of `(0, E, B)(0)` and with the
-boundary DOFs of the interpolants prescribed, satisfies `‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`,
-and the five `fem4gr` monitors (skew and trace parts of `E` and `B`, and `σ`) of `u_M` obey the
-same bound (they vanish for the exact solution). -/
+/-- **`O(h + Δt²)` convergence and monitors for every whole-space TSD solution with bounded
+derivatives** ([QuennevilleBelair2015], Ch. 7). -/
 theorem whitney_cn_error_monitors_le (hL0 : 0 ≤ L) (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) {M : ℕ}
     (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → DState3 (whitneyRow N)}
     (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior3 N)

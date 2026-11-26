@@ -9,41 +9,13 @@ public import Mathlib.LinearAlgebra.TensorProduct.Pi
 /-!
 # Coefficient forms and Mathlib's exterior algebra
 
-The forms of `Feec` on `K^d` are coefficient functions `ω : Finset d → R` in the basis
-`dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (`Feec.ExteriorFibre`, `Feec.Koszul.PolyForm`). This module
-identifies them with Mathlib's exterior algebra: the constant forms with
-`ExteriorAlgebra K (Module.Dual K (d → K))`, and the polynomial forms with
-`P(K^d) ⊗ Λ(K^d)* = MvPolynomial d K ⊗[K] ExteriorAlgebra K (Module.Dual K (d → K))`, the model
-of [AFW2006], §3.1 (`dim P_rΛᵏ = dim P_r · dim Altᵏ`). Under the identification the exterior
-derivative `Σⱼ ∂ⱼ ⊗ (dx_j ∧ ·)` and the Koszul differential `Σⱼ xⱼ ⊗ ι_{∂ⱼ}` (Mathlib's
-contraction `CliffordAlgebra.contractLeft`) are `Feec.Koszul.extDeriv` and `Feec.Koszul.koszul`.
-
-## Main definitions
-
-* `Feec.ExteriorFibre.coeffs`: the coefficients `(ω_s)_s` of an element of the exterior algebra,
-  through the action `ExteriorAlgebra.lift` of the covectors by exterior multiplication;
-  `Feec.ExteriorFibre.coeffsEquiv`: it is a linear equivalence;
-* `Feec.Koszul.TensorForm K d`, `Feec.Koszul.formEquiv`: `P(K^d) ⊗ Λ(K^d)* ≃ PolyForm K d`;
-* `Feec.Koszul.tensorExtDeriv`, `Feec.Koszul.tensorKoszul`: `d` and `κ` on the tensor product.
-
-## Main results
-
-* `coeffs_ι_mul`, `coeffs_contractLeft`: exterior multiplication and contraction act on the
-  coefficients by `Feec.ExteriorFibre.wedge` and `Feec.ExteriorFibre.interior`;
-* `mem_map_coeffs_iff`: the coefficients of `⋀ᵏ(K^d)*` are the `k`-forms; `coeffs_ιMulti_proj`:
-  `coeffs (dx_{σ₁} ∧ ⋯ ∧ dx_{σ_k}) = dx_s` for increasing `σ` with image `s`;
-* `formEquiv_tensorExtDeriv`, `formEquiv_tensorKoszul`: the two models of `d` and `κ` agree;
-* `map_formEquiv_range_mapIncl`: `S ⊗ ⋀ᵏ(K^d)*` is `Feec.Koszul.coeffForm K k S`;
-  `map_formEquiv_iSup`: `⨁_σ restrictSupport (T σ) ⊗ dx_σ` is `Feec.Koszul.supportForm K d k T`;
-* `contractLeft_mul_of_mem`, `tensorKoszul_mul`: the Leibniz rules
-  `ψ ⌋ (x ∧ y) = (ψ ⌋ x) ∧ y + (-1)ᵏ x ∧ (ψ ⌋ y)` and `κ(ω ∧ η) = κω ∧ η + (-1)ᵏ ω ∧ κη`, the wedge
-  product of `P(K^d) ⊗ Λ(K^d)*` being the product of the algebra; `range_mapIncl_mul_le`:
-  `(S ⊗ ⋀ᵏ) ∧ (T ⊗ ⋀ˡ) ⊆ S T ⊗ ⋀^{k+l}`.
+The coefficient forms `ω : Finset d → K` are identified with the exterior algebra of `(K^d)*`, and
+the polynomial forms with `P(K^d) ⊗ Λ(K^d)*`, the model of [AFW2006], §3.1, in which `d` and `κ`
+are `Σⱼ ∂ⱼ ⊗ (dx_j ∧ ·)` and `Σⱼ xⱼ ⊗ ι_{∂ⱼ}`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.1–§3.2 (polynomial differential forms, the Koszul differential, (3.6))
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -73,13 +45,11 @@ def wedgeₗ : Module.Dual K (d → K) →ₗ[K] Module.End K (Finset d → K) w
   map_add' ξ η := LinearMap.ext fun ω => by simp [wedge_add_left]
   map_smul' c ξ := LinearMap.ext fun ω => by simp [wedge_smul_left]
 
-/-- The action of the exterior algebra of `(K^d)*` on the coefficient forms by exterior
-multiplication. -/
+/-- The action of the exterior algebra of `(K^d)*` on coefficient forms by exterior products. -/
 def wedgeAlgHom : ExteriorAlgebra K (Module.Dual K (d → K)) →ₐ[K] Module.End K (Finset d → K) :=
   ExteriorAlgebra.lift K ⟨wedgeₗ K d, fun _ => LinearMap.ext fun ω => wedge_wedge_self _ ω⟩
 
-/-- The coefficients `(ω_s)_s` of an element `ω = Σ_s ω_s dx_s` of the exterior algebra of
-`(K^d)*`, `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`. -/
+/-- The coefficients `(ω_s)_s` of `ω = Σ_s ω_s dx_s` in the exterior algebra of `(K^d)*`. -/
 def coeffs : ExteriorAlgebra K (Module.Dual K (d → K)) →ₗ[K] (Finset d → K) :=
   LinearMap.applyₗ (Pi.single ∅ 1) ∘ₗ (wedgeAlgHom K d).toLinearMap
 
@@ -105,8 +75,6 @@ theorem interior_single_empty [Fintype d] (ζ : d → K) :
   funext s
   exact sum_eq_zero fun j _ => by simp [insert_ne_empty]
 
-/-- Contraction with a vector `ψ` acts on the coefficients as interior multiplication by its
-coordinates `ψ(dx_j)`. -/
 theorem coeffs_contractLeft [Fintype d] (ψ : Module.Dual K (Module.Dual K (d → K)))
     (x : ExteriorAlgebra K (Module.Dual K (d → K))) :
     coeffs K d (CliffordAlgebra.contractLeft ψ x) =
@@ -141,7 +109,6 @@ theorem isDeg_coeffs_ιMulti (k : ℕ) (v : Fin k → Module.Dual K (d → K)) :
     rw [ExteriorAlgebra.ιMulti_succ_apply, coeffs_ι_mul]
     exact (ih _).wedge _
 
-/-- The coefficients of an element of `⋀ᵏ(K^d)*` form a `k`-form. -/
 theorem isDeg_coeffs {k : ℕ} {x : ExteriorAlgebra K (Module.Dual K (d → K))}
     (hx : x ∈ ⋀[K]^k (Module.Dual K (d → K))) : IsDeg k (coeffs K d x) := by
   rw [← ExteriorAlgebra.ιMulti_span_fixedDegree] at hx
@@ -168,7 +135,6 @@ theorem single_mem_map_coeffs (s : Finset d) :
     · simp only [map_smul, coeffs_ι_mul, hcx, coord_proj, wedge_single_single hj, smul_smul,
         sgn_mul_self, one_smul]
 
-/-- The coefficients `coeffs x` of `x ∈ ⋀ᵏ(K^d)*` are exactly the `k`-forms. -/
 theorem mem_map_coeffs_iff {k : ℕ} {c : Finset d → K} [Fintype d] :
     c ∈ (⋀[K]^k (Module.Dual K (d → K))).map (coeffs K d) ↔ IsDeg k c := by
   refine ⟨fun ⟨x, hx, h⟩ => h ▸ isDeg_coeffs hx, fun hc => ?_⟩
@@ -200,8 +166,6 @@ variable (K d) in
 def coeffsEquiv [Fintype d] : ExteriorAlgebra K (Module.Dual K (d → K)) ≃ₗ[K] (Finset d → K) :=
   LinearEquiv.ofBijective (coeffs K d) coeffs_bijective
 
-/-- **The Leibniz rule for the contraction**: `ψ ⌋ (x ∧ y) = (ψ ⌋ x) ∧ y + (-1)ᵏ x ∧ (ψ ⌋ y)` for
-`x ∈ ⋀ᵏM`. -/
 theorem contractLeft_mul_of_mem {R M : Type*} [CommRing R] [AddCommGroup M] [Module R M]
     (ψ : Module.Dual R M) {k : ℕ} {x : ExteriorAlgebra R M} (hx : x ∈ ⋀[R]^k M)
     (y : ExteriorAlgebra R M) :
@@ -299,7 +263,6 @@ theorem formEquiv_tmul_eq_single {p : MvPolynomial d K}
   · subst h; simp [hx]
   · simp [hx, Pi.single_eq_of_ne h]
 
-/-- **`S ⊗ ⋀ᵏ(K^d)*` is the space of `k`-forms with coefficients in `S`.** -/
 theorem map_formEquiv_range_mapIncl (S : Submodule K (MvPolynomial d K)) (k : ℕ) :
     (LinearMap.range (TensorProduct.mapIncl S (⋀[K]^k (Module.Dual K (d → K))))).map
       (formEquiv K d).toLinearMap = coeffForm K k S := by
@@ -324,7 +287,6 @@ theorem image_univ_fin_succ {k : ℕ} (σ : Fin (k + 1) → d) :
   ext x; simp [Fin.exists_fin_succ, eq_comm]
 
 omit [Fintype d] in
-/-- `dx_{σ₁} ∧ ⋯ ∧ dx_{σ_k}` for increasing `σ` is the basis form `dx_s`, `s = {σ₁, …, σ_k}`. -/
 theorem coeffs_ιMulti_proj {k : ℕ} {σ : Fin k → d} (hσ : StrictMono σ) :
     coeffs K d (ExteriorAlgebra.ιMulti K k fun i => LinearMap.proj (σ i)) =
       Pi.single (univ.image σ) 1 := by
@@ -344,8 +306,6 @@ theorem coeffs_ιMulti_proj {k : ℕ} {σ : Fin k → d} (hσ : StrictMono σ) :
     erw [ih (hσ.comp (Fin.strictMono_succ))]
     rw [coord_proj, wedge_single_single h0, hs, one_smul, image_univ_fin_succ]
 
-/-- **`⨁_σ restrictSupport (T σ) dx_σ` is the space of `k`-forms whose coefficient `ω_s` is
-supported on `T s`** (`σ` increasing, `s` its image). -/
 theorem map_formEquiv_iSup (T : Finset d → Set (d →₀ ℕ)) (k : ℕ) :
     (⨆ (σ : Fin k → d) (_ : StrictMono σ), (restrictSupport K (T (univ.image σ))).map
       ((TensorProduct.mk K _ _).flip (ExteriorAlgebra.ιMulti K k fun i =>
@@ -370,10 +330,7 @@ theorem map_formEquiv_iSup (T : Finset d → Set (d →₀ ℕ)) (k : ℕ) :
       TensorProduct.mk_apply, LinearEquiv.coe_coe]
     rw [formEquiv_tmul_eq_single (coeffs_ιMulti_proj σ.strictMono), hσ]
 
-/-! ### The wedge product -/
-
 omit [LinearOrder d] [Fintype d] in
-/-- `P_r P_s ⊆ P_{r+s}`. -/
 theorem restrictTotalDegree_mul_le (r s : ℕ) :
     restrictTotalDegree d K r * restrictTotalDegree d K s ≤ restrictTotalDegree d K (r + s) :=
   Submodule.mul_le.2 fun p hp q hq => by
@@ -381,8 +338,6 @@ theorem restrictTotalDegree_mul_le (r s : ℕ) :
     exact (totalDegree_mul p q).trans (add_le_add hp hq)
 
 omit [LinearOrder d] [Fintype d] in
-/-- `(S ⊗ ⋀ᵏ) ∧ (T ⊗ ⋀ˡ) ⊆ S T ⊗ ⋀^{k+l}`: the wedge product of `P(K^d) ⊗ Λ(K^d)*` is the
-product of the algebra. -/
 theorem range_mapIncl_mul_le (S T : Submodule K (MvPolynomial d K)) (k l : ℕ) :
     LinearMap.range (TensorProduct.mapIncl S (⋀[K]^k (Module.Dual K (d → K)))) *
         LinearMap.range (TensorProduct.mapIncl T (⋀[K]^l (Module.Dual K (d → K)))) ≤
@@ -403,8 +358,7 @@ theorem tensorKoszul_tmul (p : MvPolynomial d K) (x : ExteriorAlgebra K (Module.
       CliffordAlgebra.contractLeft (Module.Dual.eval K (d → K) (Pi.single j 1)) x := by
   simp [tensorKoszul]
 
-/-- **The Leibniz rule for `κ`**: `κ (ω ∧ η) = κω ∧ η + (-1)ᵏ ω ∧ κη` for a `k`-form `ω`.
-[AFW2006], (3.6) -/
+/-- The Leibniz rule `κ (ω ∧ η) = κω ∧ η + (-1)ᵏ ω ∧ κη` for a `k`-form `ω` ([AFW2006], (3.6)). -/
 theorem tensorKoszul_mul {k : ℕ} {ω : TensorForm K d}
     (hω : ω ∈ LinearMap.range (TensorProduct.mapIncl ⊤ (⋀[K]^k (Module.Dual K (d → K)))))
     (η : TensorForm K d) :

@@ -8,68 +8,17 @@ public import Mathlib.MeasureTheory.Function.UniformIntegrable
 /-!
 # The row-wise parity model is the bounded-domain complex on the cube
 
-`Feec.Models.Cube.Parity` models the cube `Q = (0, ½)³` with the thesis' boundary conditions by the
-fields of the real torus grad–curl complex with the row-wise parities (`rowAction`). This file
-proves that it **is** the bounded-domain complex `H̊¹(Q; ℝ³) → H̊(curl, Q; ℝ³ˣ³) → L²(Q; ℝ³ˣ³)`
-(`Feec.Models.BoundedDomain.gradCurl` on `Q`, the minimal realizations of `grad` and `curl`):
-the parity extension `J` is a **scaled embedding** (scale `8 = 2³`) of the bounded-domain complex
-into the torus complex whose range is the real parity fields, and the bounded-domain complex is
-the compression of the torus complex along it.
-
-## The parity extension
-
-For a parity vector `c ∈ {±1}³` the scalar extension `X_c f = Σ_ε sign_c(ε) · (E₀ f) ∘ R_ε`
-(`E₀ = resQ†` the extension by zero from `Q` to the box) is a bounded operator
-`L²(Q) → L²(𝕋³)` with `X_c Φ = ext_c Φ` on test functions (`Feec.Models.Cube.Geometry.ext`),
-`(X_c f)|_Q = f`, `X_c f ∘ R_ε = sign_c(ε) X_c f` and `‖X_c f‖² = 8 ‖f‖²`. On fields, the parity
-vectors of the three slots are those of the thesis' boundary conditions (`σ` odd in every
-variable, `E_{ab}` even in `x_b` only, `B_{ab}` odd in `x_b` only), and on the Fourier side the
-extension is `J`.
-
-## The boundary conditions
-
-The extension maps `H̊¹(Q)` and `H̊(curl, Q)` into the torus domains (`RowWise.J_mem_graph_grad`,
-`RowWise.J_mem_graph_curl`, from the test fields by closure), and conversely a field on `Q`
-whose extension lies in the torus domain satisfies the boundary condition
-(`RowWise.mem_minimal_grad_of_J`, `RowWise.mem_minimal_curl_of_J`): the Fourier truncations of
-the extension are trigonometric polynomials of the right parities, whose restrictions to `Q` are
-smooth fields that a cut-off `χ_n` (equal to `1` at distance `≥ 1/n` from the faces) turns into
-test fields; the parities bound the cut-off error near the faces.
-
-## Only stationary data propagate on `Q`
-
-The wave group on `Q` is the restriction of the torus wave group (`RowWise.waveGroup_J`), which
-has pure point spectrum. Forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces
-stationarity on `Q` (`RowWise.forward_iff`, `RowWise.mem_invariantCore_tsd_iff` in
-`Feec.Models.Cube.Ident`, the case `ℓ = (½, ½, ½)` of the box results of
-`Feec.Models.Box.EigenDense`).
-
-## Main definitions
-
-* `RowWise.X`, `RowWise.JR`, `RowWise.J` (slot by slot `J0`, `J1`, `J2`), `RowWise.Jr`;
-  `RowWise.cubeComplex`; `RowWise.scaledEmbedding`.
+The bounded-domain complex `RowWise.cubeComplex`, `H̊¹(Q; ℝ³) → H̊(curl, Q; ℝ³ˣ³) → L²(Q; ℝ³ˣ³)`
+on `Q = (0, ½)³`, is the compression of the real torus grad–curl complex along the parity
+extension `RowWise.J`, a scaled embedding whose range is the real fields with the row-wise parities.
 
 ## Main results
 
-* `RowWise.resQ_X`, `RowWise.X_reflB`, `RowWise.norm_sq_X`, `RowWise.X_toL2`; `RowWise.range_J`,
-  `RowWise.inner_J`.
-* `DeRhamIdent.abs_le_of_faces` (any dimension: a function vanishing
-  on two opposite faces of `Q` with a bounded normal derivative is `O(dist)`).
-* `RowWise.J_mem_graph_grad`, `RowWise.J_mem_graph_curl`, **`RowWise.mem_minimal_grad_of_J`**,
-  **`RowWise.mem_minimal_curl_of_J`**.
-* **`RowWise.cubeComplex_eq_compress`**: the complex on `Q` is the compression of the real torus
-  grad–curl complex along `J`; `RowWise.waveGroup_J`.
-* `RowWise.inj₂_mem_stationary_iff` (any short complex), `RowWise.J_one_mem_of_tsd`,
-  `RowWise.J_two_mem_of_tsd`.
-
-## References
-
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (the complex `H̊¹ → H̊(curl) → L²`, Prop 4.17)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (extension by reflection), §9.4 (`W₀^{1,p}`, cut-off arguments)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `RowWise.range_J`: the range of `J` is the real parity fields.
+* `RowWise.mem_minimal_grad_of_J`: a field whose extension lies in the torus `H¹` lies in `H̊¹(Q)`.
+* `RowWise.mem_minimal_curl_of_J`: likewise for the torus `H(curl)` and `H̊(curl, Q)`.
+* `RowWise.cubeComplex_eq_compress`: the cube complex is the compression of the torus complex.
+* `RowWise.waveGroup_J`: `J` intertwines the wave groups.
 -/
 
 open scoped InnerProductSpace ComplexConjugate ENNReal Topology
@@ -83,8 +32,6 @@ namespace Feec.Models.Cube.DeRhamIdent
 
 variable {d : Type*} [Fintype d] [DecidableEq d]
 
-/-- **Vanishing on two opposite faces with a bounded normal derivative**: if `f = 0` on
-`{y_c = 0}` and `{y_c = ½}` and `|∂_c f| ≤ L`, then `|f(y)| ≤ L min(y_c, ½ - y_c)` on `Q`. -/
 theorem abs_le_of_faces {f : (d → ℝ) → ℝ} (hf : Differentiable ℝ f) {c : d} {L : ℝ}
     (hL : ∀ y, |fderiv ℝ f y (Pi.single c 1)| ≤ L) (h0 : ∀ y : d → ℝ, y c = 0 → f y = 0)
     (h1 : ∀ y : d → ℝ, y c = 1 / 2 → f y = 0) {y : d → ℝ} (hy : y ∈ Geometry.Q d) :
@@ -139,7 +86,7 @@ abbrev L2T : Type := Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin 3)))
 
 section Scalar
 
-/-- **Extension by zero** from `Q` to the box: the adjoint of the restriction. -/
+/-- **Extension by zero** from `Q` to `𝕋³`: the adjoint of the restriction. -/
 def E₀ : Domain.L2 ℂ (Q (Fin 3)) →L[ℂ] L2T := ContinuousLinearMap.adjoint resQ
 
 /-- The reflection `f ↦ f ∘ R_ε` of `L²(𝕋³)`. -/
@@ -156,7 +103,6 @@ theorem coeFn_reflL (ε : Fin 3 → Bool) (f : L2T) :
 def X (c : Fin 3 → ℂ) : Domain.L2 ℂ (Q (Fin 3)) →L[ℂ] L2T :=
   ∑ ε : Fin 3 → Bool, sign c ε • (reflL ε).comp E₀
 
-/-- **The extension by zero of a test function is its periodization.** -/
 theorem E₀_toL2 {Φ : (Fin 3 → ℝ) → ℂ} (hΦ : Domain.IsTest (Q (Fin 3)) Φ) :
     E₀ (Domain.toL2 hΦ) = toL2 (Geometry.isSmooth_per hΦ).continuous := by
   refine ext_inner_right ℂ fun g => ?_
@@ -188,7 +134,6 @@ def testSub : Submodule ℂ (Domain.L2 ℂ Ω) where
     rintro c _ ⟨φ, hφ, rfl⟩
     exact ⟨c • φ, hφ.smul c, (Domain.toL2_smul c hφ).symm⟩
 
-/-- Test functions are dense in `L²(Ω; ℂ)`. -/
 theorem dense_testSub {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
     Dense (testSub Ω : Set (Domain.L2 ℂ Ω)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,
@@ -197,7 +142,6 @@ theorem dense_testSub {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) :
   refine Domain.L2.eq_zero_of_forall_inner_toL2 hΩ v fun g hg => ?_
   rw [← inner_conj_symm, (Submodule.mem_orthogonal _ _).1 hv _ ⟨g, hg, rfl⟩, _root_.map_zero]
 
-/-- **The parity extension of a test function is its extension `ext_c`.** -/
 theorem X_toL2 (c : Fin 3 → ℂ) {Φ : (Fin 3 → ℝ) → ℂ} (hΦ : Domain.IsTest (Q (Fin 3)) Φ) :
     X c (Domain.toL2 hΦ) = toL2 (Geometry.continuous_ext c hΦ) := by
   refine Lp.ext ?_
@@ -222,7 +166,6 @@ theorem X_toL2 (c : Fin 3 → ℂ) {Φ : (Fin 3 → ℝ) → ℂ} (hΦ : Domain.
   rw [h1, h3, Finset.sum_apply, Geometry.ext]
   exact Finset.sum_congr rfl fun ε _ => h2 ε
 
-/-- **The parity extension restricts back**: `(X_c f)|_Q = f`. -/
 theorem resQ_X (c : Fin 3 → ℂ) (f : Domain.L2 ℂ (Q (Fin 3))) : resQ (X c f) = f := by
   have h : resQ.comp (X c) = ContinuousLinearMap.id ℂ _ := by
     refine ContinuousLinearMap.ext_on (s := testSub (Q (Fin 3))) ?_ ?_
@@ -235,7 +178,6 @@ theorem resQ_X (c : Fin 3 → ℂ) (f : Domain.L2 ℂ (Q (Fin 3))) : resQ (X c f
 
 variable {c : Fin 3 → ℂ}
 
-/-- **Parity of the extension**: `X_c f ∘ R_η = sign_c(η) · X_c f`. -/
 theorem X_reflB (hc : ∀ j, c j * c j = 1) (η : Fin 3 → Bool) (f : Domain.L2 ℂ (Q (Fin 3))) :
     reflL η (X c f) = sign c η • X c f := by
   have h : (reflL η).comp (X c) = sign c η • X c := by
@@ -256,7 +198,6 @@ theorem X_reflB (hc : ∀ j, c j * c j = 1) (η : Fin 3 → Bool) (f : Domain.L2
         ext c Φ (reflB η x) from h2, Geometry.ext_reflB hc]
   exact congrArg (fun T : Domain.L2 ℂ (Q (Fin 3)) →L[ℂ] L2T => T f) h
 
-/-- **The norm of the extension**: `‖X_c f‖² = 8 ‖f‖²`. -/
 theorem norm_sq_X (hc : ∀ j, c j * c j = 1) (f : Domain.L2 ℂ (Q (Fin 3))) :
     ‖X c f‖ ^ 2 = 8 * ‖f‖ ^ 2 := by
   have h := Geometry.norm_sq_eq_two_pow (f := X c f) fun η => by
@@ -278,7 +219,6 @@ def Xiso (hc : ∀ j, c j * c j = 1) : Domain.L2 ℂ (Q (Fin 3)) →ₗᵢ[ℂ] 
         Real.sqrt_sq (norm_nonneg u)]
     rw [this, ← mul_assoc, inv_mul_cancel₀ h8.ne', one_mul]
 
-/-- `⟪X_c f, X_c g⟫ = 8 ⟪f, g⟫`. -/
 theorem inner_X (hc : ∀ j, c j * c j = 1) (f g : Domain.L2 ℂ (Q (Fin 3))) :
     ⟪X c f, X c g⟫_ℂ = 8 * ⟪f, g⟫_ℂ := by
   have h := (Xiso hc).inner_map_map f g
@@ -305,7 +245,6 @@ theorem conj_sign (hc : ∀ j, conj (c j) = c j) (ε : Fin 3 → Bool) : conj (s
   rw [sign, map_prod]
   exact Finset.prod_congr rfl fun j _ => by split_ifs <;> simp [hc j]
 
-/-- **The extension commutes with complex conjugation** (real parity vectors). -/
 theorem X_star (hc : ∀ j, conj (c j) = c j) (f : Domain.L2 ℂ (Q (Fin 3))) :
     star (X c f) = X c (star f) := by
   rw [← cjL_eq_star, ← cjL_eq_star]
@@ -353,7 +292,6 @@ theorem coeFn_ofRealL (f : Lp ℝ 2 μ) : (ofRealL μ f : α → ℂ) =ᵐ[μ] f
 theorem coeFn_reL (f : Lp ℂ 2 μ) : (reL μ f : α → ℝ) =ᵐ[μ] fun x => (f x).re :=
   Complex.reCLM.coeFn_compLpL f
 
-/-- **The real part is a contraction of `L²`**: `‖Re f‖ ≤ ‖f‖`. -/
 theorem norm_reL_le (f : Lp ℂ 2 μ) : ‖reL μ f‖ ≤ ‖f‖ :=
   Lp.norm_le_norm_of_ae_le (by
     filter_upwards [coeFn_reL f] with x hx
@@ -457,14 +395,12 @@ theorem coeff_JR (u : Domain.L2F ℝ (Q (Fin 3)) P) (n : Fin 3 → ℤ) (p : P) 
 
 variable {pc}
 
-/-- `Jinv` inverts `J`. -/
 theorem Jinv_JR (u : Domain.L2F ℝ (Q (Fin 3)) P) : Jinv (JR pc u) = u := by
   refine PiLp.ext fun p => ?_
   change reL _ (resQ ((Fourier.Torus.fieldFourier (Fin 3) P).symm
     (Fourier.Torus.fieldFourier (Fin 3) P (Xf pc (ofRealF u))) p)) = u p
   rw [LinearIsometryEquiv.symm_apply_apply, Xf_apply, resQ_X, ofRealF_apply, reL_ofRealL]
 
-/-- **`J` scales inner products by `8`.** -/
 theorem inner_JR (hc : ∀ p j, pc p j * pc p j = 1) (u v : Domain.L2F ℝ (Q (Fin 3)) P) :
     ⟪JR pc u, JR pc v⟫_ℝ = 8 * ⟪u, v⟫_ℝ := by
   rw [MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, JR_apply,
@@ -495,7 +431,6 @@ theorem mFourierCoeff_smul (a : ℂ) (f : L2T) (n : Fin 3 → ℤ) :
   rw [← integral_const_mul]
   congr 1; funext x; ring
 
-/-- The Fourier coefficients of a reflected `L²` function. -/
 theorem mFourierCoeff_reflL (ε : Fin 3 → Bool) (f : L2T) (n : Fin 3 → ℤ) :
     mFourierCoeff (reflL ε f : UnitAddTorus (Fin 3) → ℂ) n =
       mFourierCoeff (f : UnitAddTorus (Fin 3) → ℂ) (flipB ε n) := by
@@ -503,14 +438,12 @@ theorem mFourierCoeff_reflL (ε : Fin 3 → Bool) (f : L2T) (n : Fin 3 → ℤ) 
 
 variable {c : Fin 3 → ℂ}
 
-/-- **Fourier parity of the extension**: `(X_c f)^(flip_ε n) = sign_c(ε) (X_c f)^(n)`. -/
 theorem mFourierCoeff_X_flipB (hc : ∀ j, c j * c j = 1) (f : Domain.L2 ℂ (Q (Fin 3)))
     (ε : Fin 3 → Bool) (n : Fin 3 → ℤ) :
     mFourierCoeff (X c f : UnitAddTorus (Fin 3) → ℂ) (flipB ε n) =
       sign c ε * mFourierCoeff (X c f : UnitAddTorus (Fin 3) → ℂ) n := by
   rw [← mFourierCoeff_reflL, X_reflB hc, mFourierCoeff_smul]
 
-/-- **Reality of the extension of real functions**: `(X_c u)^(-n) = conj (X_c u)^(n)`. -/
 theorem mFourierCoeff_X_neg (hc : ∀ j, conj (c j) = c j)
     (u : Domain.L2 ℝ (Q (Fin 3))) (n : Fin 3 → ℤ) :
     mFourierCoeff (X c (ofRealL _ u) : UnitAddTorus (Fin 3) → ℂ) (-n) =
@@ -521,7 +454,6 @@ theorem flipB_xor (ε η : Fin 3 → Bool) (n : Fin 3 → ℤ) :
     flipB (fun j => xor (ε j) (η j)) n = flipB ε (flipB η n) := by
   funext j; by_cases h1 : ε j <;> by_cases h2 : η j <;> simp [flipB, h1, h2]
 
-/-- Every reflection is a product of single reflections. -/
 theorem forall_of_single {P : (Fin 3 → Bool) → Prop} (h0 : P fun _ => false)
     (hstep : ∀ ε k, P ε → P fun j => xor (ε j) (single k j)) (ε : Fin 3 → Bool) : P ε := by
   have key : ∀ s : Finset (Fin 3), P fun j => decide (j ∈ s) := by
@@ -537,8 +469,6 @@ theorem forall_of_single {P : (Fin 3 → Bool) → Prop} (h0 : P fun _ => false)
   convert key (Finset.univ.filter fun j => ε j = true) using 1
   funext j; simp
 
-/-- **Fourier parities from single reflections**: if `x(flip_k n) = c_k x(n)` for every single
-reflection, then `x(flip_ε n) = sign_c(ε) x(n)` for every reflection. -/
 theorem flipB_of_single (hc : ∀ j, c j * c j = 1) {g : (Fin 3 → ℤ) → ℂ}
     (h : ∀ k n, g (flipAt k n) = c k * g n) (ε : Fin 3 → Bool) (n : Fin 3 → ℤ) :
     g (flipB ε n) = sign c ε * g n := by
@@ -549,7 +479,6 @@ theorem flipB_of_single (hc : ∀ j, c j * c j = 1) {g : (Fin 3 → ℤ) → ℂ
     rw [this]; simp [sign]
   · rw [flipB_xor, hε, flipB_single, h, Geometry.sign_xor hc, sign_single]; ring
 
-/-- Restriction commutes with complex conjugation. -/
 theorem resQ_star (f : L2T) : star (resQ f) = resQ (star f) := by
   refine Lp.ext ?_
   filter_upwards [Lp.coeFn_star (resQ f), Geometry.coeFn_resQ f, Geometry.coeFn_resQ (star f),
@@ -557,9 +486,6 @@ theorem resQ_star (f : L2T) : star (resQ f) = resQ (star f) := by
   rw [h1, Pi.star_apply, h2, h3, h4]
   rfl
 
-/-- **Real parity fields are extensions**: a Fourier-side field `x` with real entries
-(`x(-n) = conj x(n)`) and the parities `pc` (`x(flip_ε n)_p = sign_{pc p}(ε) x(n)_p`) is the
-extension of its restriction to `Q`. -/
 theorem JR_Jinv {P : Type*} [Fintype P] {pc : P → Fin 3 → ℂ} (hc : ∀ p j, pc p j * pc p j = 1)
     {x : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (Fin 3 → ℤ))}
     (hreal : ∀ n p, (x : (Fin 3 → ℤ) → EuclideanSpace ℂ P) (-n) p =
@@ -811,7 +737,6 @@ theorem range_J (i : Fin 3) :
   ext x
   exact ⟨fun ⟨u, hu⟩ => hu ▸ J_mem i u, fun hx => ⟨Jr i x, J_Jr i hx⟩⟩
 
-/-- **The extension scales inner products by `8`.** -/
 theorem inner_J (i : Fin 3) (u v : WQ i) : ⟪J i u, J i v⟫_ℝ = ((8 : ℝ) : ℝ) * ⟪u, v⟫_ℝ := by
   fin_cases i
   · exact inner_JR (fun p j => pv_mul_self p j) u v
@@ -835,7 +760,6 @@ theorem ofRealL_toL2 {φ : (Fin 3 → ℝ) → ℝ} (hφ : Domain.IsTest (Q (Fin
   rw [h1, h2, h3]
   rfl
 
-/-- The coefficients of the extension of a real test function. -/
 theorem mFourierCoeff_X_toL2 (c : Fin 3 → ℂ) {φ : (Fin 3 → ℝ) → ℝ}
     (hφ : Domain.IsTest (Q (Fin 3)) φ) (n : Fin 3 → ℤ) :
     mFourierCoeff (X c (ofRealL _ (Domain.toL2 hφ)) : UnitAddTorus (Fin 3) → ℂ) n =
@@ -849,7 +773,6 @@ theorem fderiv_ofReal {φ : (Fin 3 → ℝ) → ℝ} (hφ : Differentiable ℝ �
   rw [show (fun y => (φ y : ℂ)) = Complex.ofRealCLM ∘ φ from rfl, h.fderiv]
   rfl
 
-/-- The coefficients of a partial derivative of an extension. -/
 theorem mFourierCoeff_ext_partial (c : Fin 3 → ℂ) {φ : (Fin 3 → ℝ) → ℝ}
     (hφ : Domain.IsTest (Q (Fin 3)) φ) (b : Fin 3) (n : Fin 3 → ℤ) :
     mFourierCoeff (ext (Function.update c b (-c b))
@@ -889,8 +812,6 @@ theorem mFourierCoeff_sub_of_continuous {f g : UnitAddTorus (Fin 3) → ℂ} (hf
   exact integral_sub (TorusWeak.integrable_of_continuous ((mFourier (-n)).continuous.smul hf))
     (TorusWeak.integrable_of_continuous ((mFourier (-n)).continuous.smul hg))
 
-/-- **The extension intertwines the gradients of test fields** (Fourier side): the coefficients of
-`J (∇φ)` are `grad_ξ` of those of `J φ`. -/
 theorem grad_J0_testField {φ : Fin 3 → (Fin 3 → ℝ) → ℝ} (hφ : Domain.IsTestField (Q (Fin 3)) φ)
     (n : Fin 3 → ℤ) :
     grad (Fourier.Torus.freq n) (cv (J0 (Domain.testField hφ)) n) =
@@ -906,7 +827,6 @@ theorem grad_J0_testField {φ : Fin 3 → (Fin 3 → ℝ) → ℝ} (hφ : Domain
   rw [e, ← update_pv, mFourierCoeff_ext_partial _ (hφ a), Fourier.Torus.freq_apply]
   push_cast; ring
 
-/-- **The extension intertwines the curls of test fields** (Fourier side). -/
 theorem curl_J1_testField {φ : Ix → (Fin 3 → ℝ) → ℝ} (hφ : Domain.IsTestField (Q (Fin 3)) φ)
     (n : Fin 3 → ℤ) :
     curl (Fourier.Torus.freq n) (c1 (J1 (Domain.testField hφ)) n) =
@@ -944,7 +864,6 @@ section Cutoff
 open Real
 open Models.BoundedDomain (R3 Ix curlM gradM smoothField)
 
-/-- A bound for the derivative of `Real.smoothTransition`. -/
 theorem exists_bound_deriv_smoothTransition :
     ∃ M : ℝ, 0 ≤ M ∧ ∀ x, |deriv smoothTransition x| ≤ M := by
   have hc : Continuous (deriv smoothTransition) :=
@@ -970,8 +889,7 @@ def mN (n : ℕ) : ℝ := (n : ℝ) + 2
 
 theorem mN_pos (n : ℕ) : 0 < mN n := by unfold mN; positivity
 
-/-- The one-dimensional cut-off `η_n(t) = s(2mt - 1) s(m - 2mt - 1)`: smooth, `1` on
-`[1/m, ½ - 1/m]`, `0` outside `(1/(2m), ½ - 1/(2m))`. -/
+/-- The one-dimensional cut-off `η_n(t) = s(2mt - 1) s(m - 2mt - 1)`, `m = n + 2`. -/
 def eta (n : ℕ) (t : ℝ) : ℝ :=
   smoothTransition (2 * mN n * t - 1) * smoothTransition (mN n - 2 * mN n * t - 1)
 
@@ -1070,8 +988,6 @@ theorem deriv_eta_eq_zero {n : ℕ} {t : ℝ} (h1 : 1 / mN n < t) (h2 : t < 1 / 
     Filter.mem_of_superset (Ioo_mem_nhds h1 h2) fun s hs => eta_eq_one hs.1.le hs.2.le
   rw [this.deriv_eq, deriv_const]
 
-/-- `|η_n'(t)| · min(t, ½ - t) ≤ 4M` on `(0, ½)`: the cut-off derivative is large only in a layer
-of width `1/m`. -/
 theorem abs_deriv_eta_mul_le {M : ℝ} (hM : ∀ x, |deriv smoothTransition x| ≤ M) (n : ℕ)
     {t : ℝ} (ht : t ∈ Ioo (0 : ℝ) (1 / 2)) :
     |deriv (eta n) t| * min t (1 / 2 - t) ≤ 4 * M := by
@@ -1130,7 +1046,6 @@ theorem chiBox_subset_Q (n : ℕ) : chiBox n ⊆ Q (Fin 3) := by
   have hp : 0 < 1 / (2 * mN n) := by positivity
   exact ⟨hp.trans_le h.1, h.2.trans_lt (by linarith)⟩
 
-/-- `χ_n f` is a test function on `Q` for every smooth `f`. -/
 theorem isTest_chi_mul {f : R3 → ℝ} (hf : ContDiff ℝ (⊤ : ℕ∞) f) (n : ℕ) :
     Domain.IsTest (Q (Fin 3)) (fun y => chi n y * f y) := by
   have hsub : Function.support (fun y => chi n y * f y) ⊆ chiBox n :=
@@ -1140,8 +1055,6 @@ theorem isTest_chi_mul {f : R3 → ℝ} (hf : ContDiff ℝ (⊤ : ℕ∞) f) (n 
       Function.notMem_support.1 fun h => hy (hsub h)
   · exact (closure_minimal hsub (isCompact_chiBox n).isClosed).trans (chiBox_subset_Q n)
 
-/-- **Points near an interior point lie in the shrunk cubes**: for `y ∈ Q = (0, ½)ᵈ`, eventually
-in `m`, every `z` near `y` satisfies `1/(m + 2) ≤ z_i ≤ ½ - 1/(m + 2)`. -/
 theorem eventually_eventually_mem_shrunk {d : Type*} [Fintype d] {y : d → ℝ} (hy : y ∈ Q d) :
     ∀ᶠ m in atTop, ∀ᶠ z in 𝓝 y, ∀ i, 1 / mN m ≤ z i ∧ z i ≤ 1 / 2 - 1 / mN m := by
   have hy' := Geometry.mem_Q.1 hy
@@ -1174,7 +1087,6 @@ theorem eventually_eventually_mem_shrunk {d : Type*} [Fintype d] {y : d → ℝ}
   have h2 := (hδi i).trans (min_le_right _ _)
   constructor <;> linarith
 
-/-- **Near each point of `Q`, `χ_n = 1` for all large `n`.** -/
 theorem eventually_chi_eq_one {y : R3} (hy : y ∈ Q (Fin 3)) :
     ∀ᶠ n in atTop, chi n =ᶠ[𝓝 y] fun _ => 1 := by
   filter_upwards [eventually_eventually_mem_shrunk hy] with n hn
@@ -1184,7 +1096,6 @@ theorem eventually_chi_eq_one {y : R3} (hy : y ∈ Q (Fin 3)) :
     eta_eq_one (hzi 2).1 (hzi 2).2]
   norm_num
 
-/-- `∂_k f = d/dt f(x + t e_k)|₀`. -/
 theorem pd_eq_deriv {f : R3 → ℝ} {x : R3} (hf : DifferentiableAt ℝ f x) (k : Fin 3) :
     partialDeriv k f x = deriv (fun t => f (x + Pi.single k t)) 0 := by
   have hl := (show DifferentiableAt ℝ f (x + Pi.single k 0) by simpa using hf
@@ -1192,7 +1103,6 @@ theorem pd_eq_deriv {f : R3 → ℝ} {x : R3} (hf : DifferentiableAt ℝ f x) (k
   rw [Pi.single_zero, add_zero] at hl
   exact hl.deriv.symm
 
-/-- **The derivative of the cut-off**: `|∂_c χ_n(y)| ≤ |η_n'(y_c)|`. -/
 theorem abs_pd_chi_le (n : ℕ) (c : Fin 3) (y : R3) :
     |partialDeriv c (chi n) y| ≤ |deriv (eta n) (y c)| := by
   have hd : ∀ s, HasDerivAt (eta n) (deriv (eta n) s) s := fun s =>
@@ -1244,7 +1154,6 @@ theorem abs_pd_chi_le (n : ℕ) (c : Fin 3) (y : R3) :
 
 theorem isBounded_Q : Bornology.IsBounded (Q (Fin 3)) := Geometry.isBounded_openCube _ _
 
-/-- **`L²(Q)`-convergence of uniformly bounded, pointwise convergent sequences.** -/
 theorem tendsto_toLp_of_bdd {g : ℕ → R3 → ℝ} {h : R3 → ℝ}
     (hg : ∀ n, MemLp (g n) 2 (volume.restrict (Q (Fin 3))))
     (hh : MemLp h 2 (volume.restrict (Q (Fin 3)))) {K : ℝ}
@@ -1266,7 +1175,6 @@ theorem tendsto_toLp_of_bdd {g : ℕ → R3 → ℝ} {h : R3 → ℝ}
     (fun n => (hg n).aestronglyMeasurable) hh hui
     (by filter_upwards [ae_restrict_mem Geometry.measurableSet_Q] with y hy; exact hlim y hy)
 
-/-- Convergence in `L²(Q; ℝ^ι)` is componentwise. -/
 theorem tendsto_L2F_of_forall {ι : Type*} {u : ℕ → Domain.L2F ℝ (Q (Fin 3)) ι}
     {v : Domain.L2F ℝ (Q (Fin 3)) ι} (h : ∀ p, Tendsto (fun n => u n p) atTop (𝓝 (v p))) :
     Tendsto u atTop (𝓝 v) := by
@@ -1274,12 +1182,6 @@ theorem tendsto_L2F_of_forall {ι : Type*} {u : ℕ → Domain.L2F ℝ (Q (Fin 3
     (WithLp.ofLp v)
   exact hc.comp (tendsto_pi_nhds.2 h)
 
-/-- **Cut-off approximation in `H(curl)`**: a smooth matrix field on `ℝ³`, bounded with bounded
-first derivatives, whose tangential components vanish on the faces of `Q`
-(`ψ_{ad} = 0` on `{y_c ∈ {0, ½}}` for `c ≠ d`), restricts to an element of `H̊(curl, Q)`:
-`(ψ, curl ψ)` lies in the closure of the curl on `C_c^∞(Q; ℝ³ˣ³)`. The approximants are `χ_n ψ`;
-the commutator `∇χ_n × ψ` stays bounded because `ψ_tan = O(dist to the face)`, and converges to
-`0` pointwise in `Q`. -/
 theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
     (hψ : ∀ p, ContDiff ℝ (⊤ : ℕ∞) (ψ p)) {M L : ℝ} (hM : ∀ p y, |ψ p y| ≤ M)
     (hMc : ∀ p y, |curlM ψ p y| ≤ M) (hL : ∀ p c y, |partialDeriv c (ψ p) y| ≤ L)
@@ -1365,8 +1267,6 @@ theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
       simp only [curlM, partialDeriv]
       rw [(hn _).fderiv_eq, (hn _).fderiv_eq]
 
-/-- **Cut-off approximation in `H¹`**: a smooth vector field on `ℝ³`, bounded with bounded first
-derivatives, vanishing on all faces of `Q`, restricts to an element of `H̊¹(Q; ℝ³)`. -/
 theorem mem_closure_grad_of_smooth {σ : Fin 3 → R3 → ℝ}
     (hσ : ∀ a, ContDiff ℝ (⊤ : ℕ∞) (σ a)) {M L : ℝ} (hM : ∀ a y, |σ a y| ≤ M)
     (hL : ∀ a c y, |partialDeriv c (σ a) y| ≤ L)
@@ -1447,8 +1347,6 @@ section Graphs
 open Fourier.GradCurl
 open Models.BoundedDomain (R3 Ix)
 
-/-- A field whose image under a torus symbol is (pointwise) an `L²` field is in the domain, with
-that image. -/
 theorem mem_domain_real_of_pointwise {i j : Fin 3} {x : Space i} {y : Space j}
     (h : ∀ n, gradCurl.m i j (Fourier.Torus.freq n) ((x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n) =
       (y : (Fin 3 → ℤ) → W3 Vec Mat Mat j) n) :
@@ -1461,21 +1359,18 @@ theorem mem_domain_real_of_pointwise {i j : Fin 3} {x : Space i} {y : Space j}
     (m := fun n => gradCurl.m i j (Fourier.Torus.freq n)) ⟨x, hm⟩ y).2
     (Filter.Eventually.of_forall h)
 
-/-- The torus gradient of the extension of a test field is the extension of its gradient. -/
 theorem J0_testField_mem {φ : Fin 3 → R3 → ℝ} (hφ : Domain.IsTestField (Q (Fin 3)) φ) :
     ∃ h : J0 (Domain.testField hφ) ∈ (RealTorus.gradCurl.d 0 1).domain,
       RealTorus.gradCurl.d 0 1 ⟨_, h⟩ = J1 (Domain.testField
         ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ)) :=
   mem_domain_real_of_pointwise fun n => grad_J0_testField hφ n
 
-/-- The torus curl of the extension of a test field is the extension of its curl. -/
 theorem J1_testField_mem {φ : Ix → R3 → ℝ} (hφ : Domain.IsTestField (Q (Fin 3)) φ) :
     ∃ h : J1 (Domain.testField hφ) ∈ (RealTorus.gradCurl.d 1 2).domain,
       RealTorus.gradCurl.d 1 2 ⟨_, h⟩ = J2 (Domain.testField
         ((Domain.curlOp 3 : Domain.ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ)) :=
   mem_domain_real_of_pointwise fun n => curl_J1_testField hφ n
 
-/-- **The extension maps the closure of the gradient on test fields into the torus graph.** -/
 theorem J_mem_graph_grad {p : Domain.L2F ℝ (Q (Fin 3)) (Fin 3) × Domain.L2F ℝ (Q (Fin 3)) Ix}
     (hp : p ∈ closure ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).testGraph
       (Q (Fin 3)) : Set (Domain.L2F ℝ (Q (Fin 3)) (Fin 3) × Domain.L2F ℝ (Q (Fin 3)) Ix))) :
@@ -1489,7 +1384,6 @@ theorem J_mem_graph_grad {p : Domain.L2F ℝ (Q (Fin 3)) (Fin 3) × Domain.L2F �
   obtain ⟨h, e⟩ := J0_testField_mem hφ
   exact (LinearPMap.mem_graph_iff _).2 ⟨⟨_, h⟩, rfl, e⟩
 
-/-- **The extension maps the closure of the curl on test fields into the torus graph.** -/
 theorem J_mem_graph_curl {p : Domain.L2F ℝ (Q (Fin 3)) Ix × Domain.L2F ℝ (Q (Fin 3)) Ix}
     (hp : p ∈ closure ((Domain.curlOp 3 : Domain.ConstCoeffOp R3 ℝ Ix Ix).testGraph
       (Q (Fin 3)) : Set (Domain.L2F ℝ (Q (Fin 3)) Ix × Domain.L2F ℝ (Q (Fin 3)) Ix))) :
@@ -1532,7 +1426,6 @@ theorem contDiff_reLift {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) :
     ContDiff ℝ (⊤ : ℕ∞) (reLift g) :=
   Complex.reCLM.contDiff.comp hg
 
-/-- `∂_c Re(g ∘ proj) = Re((∂_c g) ∘ proj)`. -/
 theorem pd_reLift {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c : Fin 3) (y : R3) :
     partialDeriv c (reLift g) y = (partialT c g (proj y)).re := by
   have hd : Differentiable ℝ (g ∘ proj) := hg.contDiff_one.differentiable one_ne_zero
@@ -1547,7 +1440,6 @@ theorem pd_reLift {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c : Fin 
 theorem abs_reLift_le (g : C(UnitAddTorus (Fin 3), ℂ)) (y : R3) : |reLift g y| ≤ ‖g‖ :=
   (Complex.abs_re_le_norm _).trans (g.norm_coe_le_norm _)
 
-/-- A smooth function on `𝕋³` has bounded partial derivatives. -/
 theorem abs_pd_reLift_le {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c : Fin 3) (y : R3) :
     |partialDeriv c (reLift g) y| ≤
       ‖(⟨partialT c g, TorusWeak.continuous_partialT hg.contDiff_one c⟩ :
@@ -1557,7 +1449,6 @@ theorem abs_pd_reLift_le {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c
     ((⟨partialT c g, TorusWeak.continuous_partialT hg.contDiff_one c⟩ :
       C(UnitAddTorus (Fin 3), ℂ)).norm_coe_le_norm _)
 
-/-- A trigonometric polynomial odd under `R_c` vanishes on the faces `y_c ∈ {0, ½}`. -/
 theorem reLift_eq_zero_of_odd {c : Fin 3} {f : lp (fun _ : Fin 3 → ℤ => ℂ) 2}
     {S : Finset (Fin 3 → ℤ)} (hSr : ∀ k ∈ S, flipAt c k ∈ S)
     (hf : ∀ k, f (flipAt c k) = -f k) {y : R3} (hy : y c = 0 ∨ y c = 1 / 2) :
@@ -1585,8 +1476,6 @@ theorem repr_physF (x : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (Fi
     mFourierBasis.repr (physF x p) n = (x : (Fin 3 → ℤ) → EuclideanSpace ℂ P) n p := by
   rw [mFourierBasis_repr, ← Fourier.Torus.fieldFourier_apply, LinearIsometryEquiv.apply_symm_apply]
 
-/-- **The restriction of a finitely supported field is the restriction of its trigonometric
-polynomials.** -/
 theorem Jinv_eq_smoothField {x : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Measure (Fin 3 → ℤ))}
     {S : Finset (Fin 3 → ℤ)} (hS : ∀ n ∉ S, (x : (Fin 3 → ℤ) → EuclideanSpace ℂ P) n = 0) :
     Jinv x = smoothField Geometry.isOpen_Q isBounded_Q
@@ -1610,10 +1499,6 @@ theorem Jinv_eq_smoothField {x : Lp (EuclideanSpace ℂ P) 2 (Measure.count : Me
   rw [h1, h2, h3, h4]
   rfl
 
-/-- **A trigonometric polynomial in the electric parity class restricts into `H̊(curl, Q)`**: for a
-real electric parity field `z` with finitely many modes, `(z|_Q, (curl z)|_Q)` is a graph-norm
-limit of test fields (cut-offs of its trigonometric polynomial, whose tangential components vanish
-on `∂Q`). -/
 theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
     {S : Finset (Fin 3 → ℤ)} (hS : ∀ n ∉ S, c1 z n = 0)
     (hSr : ∀ k, ∀ n ∈ S, flipAt k n ∈ S) (hd : z ∈ (RealTorus.gradCurl.d 1 2).domain) :
@@ -1672,7 +1557,6 @@ theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
   rw [hdz, heq]
   exact hcl
 
-/-- **A trigonometric polynomial in the Dirichlet parity class restricts into `H̊¹(Q)`.** -/
 theorem trig_closure_grad {z : Space 0} (hz : z ∈ Parity.realAction.fixed 0)
     {S : Finset (Fin 3 → ℤ)} (hS : ∀ n ∉ S, cv z n = 0)
     (hSr : ∀ k, ∀ n ∈ S, flipAt k n ∈ S) (hd : z ∈ (RealTorus.gradCurl.d 0 1).domain) :
@@ -1785,7 +1669,6 @@ theorem trunc_mem_one {N : ℕ} {x : Space 1} (hx : x ∈ Parity.realAction.fixe
     · simp [hn, (flipAt_mem_bandN k).2 hn, hf']
     · simp [hn, mt (flipAt_mem_bandN k).1 hn]
 
-/-- The truncation preserves the torus domains and commutes with the differentials. -/
 theorem trunc_mem_domain (N : ℕ) {i j : Fin 3} {x : Space i}
     (hx : x ∈ (RealTorus.gradCurl.d i j).domain) :
     ∃ h : trunc N i x ∈ (RealTorus.gradCurl.d i j).domain,
@@ -1800,9 +1683,7 @@ theorem tendsto_trunc (i : Fin 3) (x : Space i) :
     Fourier.Torus.bandN_mono Fourier.Torus.exists_mem_bandN i x
 
 open scoped Classical in
-/-- **`J⁻¹ (H(curl, 𝕋³) ∩ real parity fields) ⊆ H̊(curl, Q)`**: if the extension of `u` lies in the
-torus `H(curl)`, then `u` lies in the minimal curl domain (the truncations are trigonometric
-polynomials with vanishing tangential traces, `trig_closure_curl`). -/
+/-- **`J⁻¹ (H(curl, 𝕋³) ∩ real parity fields) ⊆ H̊(curl, Q)`.** -/
 theorem mem_minimal_curl_of_J {u : Domain.L2F ℝ (Q (Fin 3)) Ix}
     (h : J1 u ∈ (RealTorus.gradCurl.d 1 2).domain) :
     u ∈ ((Domain.curlOp 3 : Domain.ConstCoeffOp R3 ℝ Ix Ix).minimal (Q (Fin 3))).domain := by
@@ -1877,8 +1758,7 @@ section Embedding
 
 open Models.BoundedDomain (R3 Ix)
 
-/-- **The thesis' complex on the cube** `H̊¹(Q; ℝ³) → H̊(curl, Q; ℝ³ˣ³) → L²(Q; ℝ³ˣ³)`, the minimal
-grad–curl complex `Feec.Models.BoundedDomain.gradCurl` on `Q = (0, ½)³`, on the window `Fin 3`. -/
+/-- The cube complex `H̊¹(Q; ℝ³) → H̊(curl, Q; ℝ³ˣ³) → L²(Q; ℝ³ˣ³)`, minimal grad–curl on `Q`. -/
 abbrev cubeComplex : HilbertComplex ℝ ComplexShape.fin3 WQ :=
   (Models.BoundedDomain.gradCurl ℝ Geometry.isOpen_Q).toHilbertComplex
 
@@ -1889,8 +1769,6 @@ theorem torus_d_zero {i j : Fin 3} (h : ¬ ComplexShape.fin3.Rel i j) :
     RealTorus.gradCurl.d i j = 0 :=
   RealTorus.gradCurl.shape i j h
 
-/-- The extension maps the cube domains into the torus domains and intertwines the
-differentials. -/
 theorem J_mapsTo_comm (i j : Fin 3) (x : (cubeComplex.d i j).domain) :
     ∃ h : J i x ∈ (RealTorus.gradCurl.d i j).domain,
       RealTorus.gradCurl.d i j ⟨_, h⟩ = J j (cubeComplex.d i j x) := by
@@ -1916,8 +1794,6 @@ theorem J_mapsTo_comm (i j : Fin 3) (x : (cubeComplex.d i j).domain) :
       LinearPMap.apply_eq_zero_of_eq_zero (cube_d_zero hij),
       _root_.map_zero]
 
-/-- **The trace part**: if the extension lies in the torus domain, the field lies in the minimal
-(boundary-condition) domain on the cube. -/
 theorem mem_domain_of_J (i j : Fin 3) (x : WQ i) (h : J i x ∈ (RealTorus.gradCurl.d i j).domain) :
     x ∈ (cubeComplex.d i j).domain := by
   by_cases hij : ComplexShape.fin3.Rel i j
@@ -1926,10 +1802,7 @@ theorem mem_domain_of_J (i j : Fin 3) (x : WQ i) (h : J i x ∈ (RealTorus.gradC
     · exact mem_minimal_curl_of_J h
   · rw [cube_d_zero hij]; exact Submodule.mem_top
 
-/-- **The parity extension is a scaled embedding** of the thesis' complex on the cube into the real
-torus grad–curl complex: inner products are multiplied by `8 = 2³`, the differentials are
-intertwined, and the cube domains (with their boundary conditions) are exactly the preimages of
-the torus domains. -/
+/-- **The parity extension is a scaled embedding** of the cube complex into the torus complex. -/
 def scaledEmbedding : HilbertComplex.ScaledEmbedding cubeComplex RealTorus.gradCurl where
   J := J
   scale _ := 8
@@ -1944,8 +1817,6 @@ def scaledEmbedding : HilbertComplex.ScaledEmbedding cubeComplex RealTorus.gradC
 instance (i : Fin 3) : (LinearMap.range (J i : WQ i →ₗ[ℝ] Space i)).HasOrthogonalProjection := by
   rw [range_J]; infer_instance
 
-/-- The ranges of the extension form a reducing subcomplex of the torus complex (the real parity
-fields, fixed by a finite unitary action). -/
 theorem reducingSubcomplex_range :
     RealTorus.gradCurl.ReducingSubcomplex fun i => LinearMap.range (J i : WQ i →ₗ[ℝ] Space i) := by
   have h := Parity.realAction.reducingSubcomplex_fixed
@@ -1979,8 +1850,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}
   [∀ i, NormedSpace ℝ (W3 W₀ W₁ W₂ i)] [∀ i, IsScalarTower ℝ 𝕜 (W3 W₀ W₁ W₂ i)]
   (S : ShortHilbertComplex 𝕜 W₀ W₁ W₂)
 
-/-- **The stationary magnetic data** of a short complex: `(0, 0, B)` is stationary under the wave
-group iff `B ∈ D(d₁†)` and `d₁† B = 0`. -/
 theorem inj₂_mem_stationary_iff (B : W₂) :
     inj₂ (𝕜 := 𝕜) W₀ W₁ W₂ B ∈ S.toHilbertComplex.waveGroup.stationary ↔
       ∃ h : B ∈ (S.d₁†).domain, S.d₁† ⟨B, h⟩ = 0 := by
@@ -2026,7 +1895,6 @@ theorem waveGroup_J (t : ℝ) (y : PiLp 2 WQ) :
   rw [cubeComplex_eq_compress]
   exact HilbertComplex.waveGroup_compress _ _ _ t y
 
-/-- On `Q` the extension is the identity: `(J u)|_Q = u`. -/
 theorem resM_JR (pc : Ix → Fin 3 → ℂ) (u : Domain.L2F ℝ (Q (Fin 3)) Ix) :
     Parity.resM (JR pc u) = ofRealF u := by
   refine PiLp.ext fun p => ?_

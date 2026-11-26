@@ -9,33 +9,13 @@ public import Feec.Models.Cube.Mirror
 /-!
 # Constraint propagation for the linearized Einstein–Bianchi system: headline statements
 
-The linearized EB system (4.14) is the Hodge wave equation of the matrix grad–curl complex
-`H¹(·; ℂ³) --grad--> H(curl; ℂ³ˣ³) --curl--> L²(ℂ³ˣ³)`, with the constraint
-`{0} × L²(TSD) × L²(TSD)` (symmetric, trace-free, divergence-free `E` and `B`). Whether the
-constraints propagate depends on the domain and the boundary conditions:
-
-* **on `ℝ³`**, classically (`C²` fields with compact spatial support, the energy method):
-  `tsd_propagates_classical`; for the first variation of a family of solutions of the nonlinear EB
-  system through Minkowski space, `tsd_propagates_variation` (the frame data of vacuum metrics solve
-  the nonlinear system, `vacuum_nonlinearEB`; no nonzero such family is constructed here); and in
-  `L²` (any strong
-  solution, any forcing in the constraint): `euclidean_tsd_propagates`;
-* **on the torus `𝕋³`**: `torus_tsd_propagates`;
-* **on every open cube with tensorial mirror boundary conditions**: `cube_tsd_propagates`,
-  `cube_tsd_existsUnique`;
-* **on bounded domains with the thesis' boundary conditions** (`H̊(curl)` for the curl, i.e.
-  any complex with `d₁ ≤ curl_min`) the constraints do **not** propagate:
-  `Feec.Counterexamples.BoundedDomainTSD.tsd_not_propagates`.
-
-These are the physical readings of `Feec.HilbertComplex.ReducingSubcomplex.propagates` for the
-model complexes of `Feec.Models.*`; the proofs are one-line references.
+The TSD constraints of the linearized Einstein–Bianchi system propagate on `ℝ³`, on the torus
+`𝕋³` and on every open cube with mirror boundary conditions ([QuennevilleBelair2015], Prop 3.6,
+Prop 4.17).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Prop 3.6, §4.10 (Prop 4.17)
-* [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
-* [H. Friedrich, *Hyperbolic reductions for Einstein's equations*][Friedrich1996]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -46,8 +26,8 @@ open Set
 
 namespace Feec.EinsteinBianchi
 
-/-- **Prop 3.6 on `ℝ³`, classical form**: `C²` solutions of the linearized EB system with
-compact spatial support and TSD data stay TSD (`tsd_propagates`). [QuennevilleBelair2015], Prop 3.6 (corrected) -/
+/-- On `ℝ³`, `C²` solutions of the linearized system with compact spatial support, locally
+uniformly in time, and TSD data stay TSD for `t ≥ 0`. [QuennevilleBelair2015], Prop 3.6 (adapted) -/
 theorem tsd_propagates_classical {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
     (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j) (hBc : ∀ i j, ContDiff ℝ 2 fun Y => B Y i j)
     (hsupp : ∀ s : ℝ, ∃ K : Set (Fin 3 → ℝ), IsCompact K ∧
@@ -59,13 +39,9 @@ theorem tsd_propagates_classical {E B : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 
     TSDAt E (ev t x) ∧ TSDAt B (ev t x) :=
   tsd_propagates hEc hBc hsupp hEeq hBeq h0 t ht x
 
-/-- **Prop 3.6 for linearized gravity**: along a family of solutions of the nonlinear EB system
-through Minkowski space (`γ 0 = 0`, `E 0 = B 0 = 0`), the first variations `E'`, `B'`, whose jets
-are the variations of the jets, solve the linearized EB system at every point
-(`ebJet_of_nonlinearEB`); when they are `C²` with compact spatial support, TSD data stay TSD
-(`tsd_propagates_classical`). The frame data of vacuum metrics satisfy `hN` (`vacuum_nonlinearEB`);
-no nonzero family satisfying all the hypotheses is constructed here.
-[QuennevilleBelair2015], §3.4, Prop 3.6 (corrected) -/
+/-- `C²` first variations, with compact spatial support locally uniformly in time, of solutions of
+the nonlinear system through Minkowski space stay TSD if their data are.
+[QuennevilleBelair2015], Prop 3.6 (adapted) -/
 theorem tsd_propagates_variation {γ : ℝ → (Fin 4 → ℝ) → FrameConn}
     {E B : ℝ → (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ} {dE dB : ℝ → (Fin 4 → ℝ) → Jet4}
     {γ' : (Fin 4 → ℝ) → FrameConn} {E' B' : (Fin 4 → ℝ) → Matrix (Fin 3) (Fin 3) ℝ}
@@ -88,8 +64,8 @@ theorem tsd_propagates_variation {γ : ℝ → (Fin 4 → ℝ) → FrameConn}
     (fun Y _ => eq_neg_of_add_eq_zero_left (hJ Y).2.2.1) (fun Y _ => sub_eq_zero.1 (hJ Y).2.2.2)
     h0 t ht x
 
-/-- **EB constraints propagate on `ℝ³`** (`L²` strong solutions, with forcing).
-[QuennevilleBelair2015], Prop 4.17 -/
+/-- On `ℝ³`, strong `L²` solutions of the Hodge wave equation of the grad–curl complex with data
+and forcing in the constraint stay in the constraint. [QuennevilleBelair2015], Prop 4.17 -/
 theorem euclidean_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Euclidean.GradCurl.Space}
     (hU : Evolution.IsStrongSolution Models.Euclidean.GradCurl.complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub Models.Euclidean.GradCurl.constraint)
@@ -97,7 +73,8 @@ theorem euclidean_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Euclid
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub Models.Euclidean.GradCurl.constraint :=
   Models.Euclidean.GradCurl.tsd_propagates hU h0 hF
 
-/-- **EB constraints propagate on the torus `𝕋³`**. [QuennevilleBelair2015], Prop 4.17 -/
+/-- On the torus `𝕋³`, strong solutions of the Hodge wave equation of the grad–curl complex with
+data and forcing in the constraint stay in the constraint. [QuennevilleBelair2015], Prop 4.17 -/
 theorem torus_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Torus.GradCurl.Space}
     (hU : Evolution.IsStrongSolution Models.Torus.GradCurl.complex.wave (Icc a b) F U)
     (h0 : U a ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint)
@@ -105,11 +82,8 @@ theorem torus_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Models.Torus.Grad
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub Models.Torus.GradCurl.constraint :=
   Models.Torus.GradCurl.tsd_propagates hU h0 hF
 
-/-- **EB constraints propagate on every open cube `∏ (bᵢ, bᵢ + s)` with mirror boundary
-conditions** (the thesis' row-wise conditions only propagate stationary data,
-`Feec.Counterexamples.CubeStationary`): strong solutions of the Hodge wave equation of the mirror
-complex `Feec.Models.Cube.Mirror.complexCube` with data and forcing in the constraint
-`Feec.Models.Cube.Mirror.tsdCube` stay there. [QuennevilleBelair2015], Prop 4.17 (corrected) -/
+/-- On every open cube with mirror boundary conditions, strong solutions with data and forcing in
+the constraint stay there. [QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem cube_tsd_propagates {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s) {a c : ℝ}
     {F U : ℝ → PiLp 2 (Models.Cube.Mirror.SpaceCube b s)}
     (hU : Evolution.IsStrongSolution (Models.Cube.Mirror.complexCube b s hs).wave (Icc a c) F U)
@@ -118,10 +92,8 @@ theorem cube_tsd_propagates {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s)
     ∀ t ∈ Icc a c, U t ∈ HilbertComplex.totalSub (Models.Cube.Mirror.tsdCube b s hs) :=
   Models.Cube.Mirror.propagatesCube hs hU h0 hF
 
-/-- **The EB system on every open cube with mirror boundary conditions, with existence and
-uniqueness**: for TSD data in `D(L)` and admissible TSD forcing, the Hodge wave equation has a
-classical solution, unique among strong solutions, which stays TSD.
-[QuennevilleBelair2015], Prop 4.17 (corrected) -/
+/-- On every open cube with mirror boundary conditions, TSD data in `D(L)` and admissible TSD
+forcing give a unique solution, which stays TSD. [QuennevilleBelair2015], Prop 4.17 (adapted) -/
 theorem cube_tsd_existsUnique {b : Models.BoundedDomain.R3} {s : ℝ} (hs : 0 < s)
     {U₀ : PiLp 2 (Models.Cube.Mirror.SpaceCube b s)}
     (hU₀ : U₀ ∈ (Models.Cube.Mirror.complexCube b s hs).wave.domain)

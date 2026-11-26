@@ -8,26 +8,14 @@ public import Feec.Fourier.Reality
 /-!
 # The symbol of the row-wise grad–curl matrix complex
 
-The complex `H¹(ℂ³) --grad--> H(curl; ℂ³ˣ³) --curl--> L²(ℂ³ˣ³)` of the matrix Hodge wave
-equation (Thesis (4.14)), with the row-wise curl `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`, has at a
-frequency `ξ ∈ ℝ³` the symbols `grad_ξ u = i u ξᵀ` and `curl_ξ A = i curlSymbol ξ A`
-(`Feec.MatrixSymbol.curlSymbol`). This file proves the fibre algebra once, for every frequency:
-
-* `curl_grad`: `curl_ξ grad_ξ = 0`; `adjoint_curl`: `curl_ξ* = curl_ξ`; `adjoint_grad`:
-  `grad_ξ* = div_ξ`, `div_ξ A = -i A ξ`.
-* `tsd ξ`: the transverse–traceless fibre (symmetric, trace-free, `A ξ = 0`,
-  `Feec.TT.ttSub`), and **`isFibreReducing`**: `({0}, tsd ξ, tsd ξ)` reduces the fibre complex
-  (Lemma 3.5 on the symbol, `Feec.MatrixSymbol.curlSymbol_mem_ttSub`, and `grad_ξ u ⊥ tsd ξ`).
-* `norm_grad`: `‖grad_ξ u‖ = |ξ| ‖u‖`; `norm_curl_sq_add_norm_div_sq`:
-  `‖curl_ξ A‖² + ‖div_ξ A‖² = |ξ|² ‖A‖²` (Lagrange's identity row by row), hence the fibre gaps
-  `norm_curl_of_mem_orthogonal`.
-* `gradCurl : FibreComplex ℂ ℝ³ ComplexShape.fin3 (W3 ℂ³ ℂ³ˣ³ ℂ³ˣ³)`, homogeneous of degree `1`;
-  `measurable_starProjection_tsd` (the fibre projection is measurable in `ξ`).
+The symbols `grad_ξ u = i u ξᵀ` and `curl_ξ A = i curlSymbol ξ A` at a frequency `ξ ∈ ℝ³` of the
+complex `H¹(ℂ³) --grad--> H(curl; ℂ³ˣ³) --curl--> L²(ℂ³ˣ³)` of [QuennevilleBelair2015], (4.14),
+with the row-wise curl `(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`; the transverse–traceless fibres reduce
+it, and it has the fibre gaps `|ξ| ‖v‖ ≤ ‖m_ξ v‖`.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4 (Lemma 3.5), §4.10 (Prop 4.17, (4.14))
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -89,7 +77,7 @@ def ofMatrix : Matrix (Fin 3) (Fin 3) ℂ →ₗ[ℂ] Mat where
 /-- The complexified frequency. -/
 def cfreq (ξ : Freq) : Fin 3 → ℂ := fun j => (ξ j : ℂ)
 
-/-- **The transverse–traceless fibre** at `ξ`: symmetric, trace-free, `A ξ = 0`. -/
+/-- The transverse–traceless fibre at `ξ`: symmetric, trace-free, `A ξ = 0`. -/
 def tsd (ξ : Freq) : Submodule ℂ Mat := (TT.ttSub (cfreq ξ)).comap toMatrix
 
 theorem mem_tsd {ξ : Freq} {M : Mat} :
@@ -108,8 +96,7 @@ def grad (ξ : Freq) : Vec →L[ℂ] Mat :=
 theorem grad_apply (ξ : Freq) (u : Vec) (a b : Fin 3) :
     grad ξ u (a, b) = Complex.I * u a * (ξ b : ℂ) := rfl
 
-/-- The row-wise curl symbol `curl_ξ A = i curlSymbol ξ A`,
-`(curl A)_{ab} = ε_{bcd} ∂_c A_{ad}`. -/
+/-- The row-wise curl symbol `curl_ξ A = i curlSymbol ξ A`. -/
 def curl (ξ : Freq) : Mat →L[ℂ] Mat :=
   LinearMap.toContinuousLinearMap
     (ofMatrix ∘ₗ (Complex.I • MatrixSymbol.curlSymbolₗ (cfreq ξ)) ∘ₗ toMatrix)
@@ -119,7 +106,7 @@ theorem curl_apply (ξ : Freq) (M : Mat) (a b : Fin 3) :
   simp [curl, MatrixSymbol.curlSymbolₗ, MatrixSymbol.curlSymbol, MatrixSymbol.curl,
     MatrixSymbol.symbolJet, cfreq]
 
-/-- The divergence symbol `div_ξ A = -i A ξ` (the adjoint of `grad_ξ`). -/
+/-- The adjoint `div_ξ A = -i A ξ` of `grad_ξ`. -/
 def div (ξ : Freq) : Mat →L[ℂ] Vec :=
   LinearMap.toContinuousLinearMap
     { toFun := fun M => WithLp.toLp 2 fun a => -Complex.I * ∑ b, M (a, b) * (ξ b : ℂ)
@@ -137,14 +124,12 @@ theorem inner_vec (u v : Vec) : ⟪u, v⟫_ℂ = ∑ a, conj (u a) * v a := by
   rw [PiLp.inner_apply]
   simp [RCLike.inner_apply, mul_comm]
 
-/-- **`curl_ξ grad_ξ = 0`**. -/
 theorem curl_grad (ξ : Freq) (u : Vec) : curl ξ (grad ξ u) = 0 := by
   ext ⟨a, b⟩
   rw [curl_apply]
   simp only [grad_apply, PiLp.zero_apply]
   fin_cases b <;> simp [Fin.sum_univ_three, leviCivita3_apply] <;> ring
 
-/-- **`grad_ξ* = div_ξ`**. -/
 theorem adjoint_grad (ξ : Freq) : ContinuousLinearMap.adjoint (grad ξ) = div ξ := by
   refine ((ContinuousLinearMap.eq_adjoint_iff _ _).2 fun M u => ?_).symm
   rw [inner_vec, inner_mat]
@@ -152,11 +137,9 @@ theorem adjoint_grad (ξ : Freq) : ContinuousLinearMap.adjoint (grad ξ) = div �
     Complex.conj_ofReal, sum_mul, mul_sum]
   refine sum_congr rfl fun a _ => sum_congr rfl fun b _ => by ring
 
-/-- `conj` commutes with `ε`. -/
 theorem conj_leviCivita3 (i j k : Fin 3) : conj (leviCivita3 ℂ i j k) = leviCivita3 ℂ i j k :=
   map_leviCivita (starRingEnd ℂ) _
 
-/-- **`curl_ξ* = curl_ξ`**: the row-wise curl symbol is self-adjoint. -/
 theorem inner_curl (ξ : Freq) (M N : Mat) : ⟪curl ξ M, N⟫_ℂ = ⟪M, curl ξ N⟫_ℂ := by
   rw [inner_mat, inner_mat]
   simp only [curl_apply, map_mul, map_sum, Complex.conj_I, conj_leviCivita3, Complex.conj_ofReal]
@@ -173,7 +156,6 @@ theorem adjoint_curl (ξ : Freq) : ContinuousLinearMap.adjoint (curl ξ) = curl 
 theorem toMatrix_curl (ξ : Freq) (M : Mat) :
     toMatrix (curl ξ M) = Complex.I • MatrixSymbol.curlSymbol (cfreq ξ) (toMatrix M) := rfl
 
-/-- **Lemma 3.5 on the symbol**: `curl_ξ` maps `tsd ξ` to itself. [QuennevilleBelair2015], Lemma 3.5 -/
 theorem curl_mem_tsd {ξ : Freq} {M : Mat} (hM : M ∈ tsd ξ) : curl ξ M ∈ tsd ξ := by
   change toMatrix (curl ξ M) ∈ TT.ttSub (cfreq ξ)
   rw [toMatrix_curl]
@@ -184,7 +166,6 @@ theorem mulVec_apply_eq_zero {ξ : Freq} {M : Mat} (hM : M ∈ tsd ξ) (a : Fin 
   have := congrFun hM.2.2 a
   simpa [mulVec, dotProduct, cfreq] using this
 
-/-- Gradients are orthogonal to the transverse–traceless fibre. -/
 theorem inner_grad_eq_zero {ξ : Freq} {M : Mat} (hM : M ∈ tsd ξ) (u : Vec) :
     ⟪grad ξ u, M⟫_ℂ = 0 := by
   rw [inner_mat]
@@ -199,7 +180,6 @@ theorem grad_mem_orthogonal (ξ : Freq) (u : Vec) : grad ξ u ∈ (tsd ξ)ᗮ :=
   intro M hM
   rw [← inner_conj_symm, inner_grad_eq_zero hM, map_zero]
 
-/-- `curl_ξ` maps `(tsd ξ)ᗮ` to itself (it is self-adjoint and preserves `tsd ξ`). -/
 theorem curl_mem_orthogonal {ξ : Freq} {N : Mat} (hN : N ∈ (tsd ξ)ᗮ) : curl ξ N ∈ (tsd ξ)ᗮ := by
   rw [Submodule.mem_orthogonal] at hN ⊢
   intro M hM
@@ -218,7 +198,6 @@ theorem norm_grad (ξ : Freq) (u : Vec) : ‖grad ξ u‖ = ‖ξ‖ * ‖u‖ :
     ring
   exact (sq_eq_sq₀ (norm_nonneg _) (by positivity)).1 h
 
-/-- **The Lagrange identity for the curl symbol**: `‖curl_ξ A‖² + ‖div_ξ A‖² = |ξ|² ‖A‖²`. -/
 theorem norm_curl_sq_add_norm_div_sq (ξ : Freq) (M : Mat) :
     ‖curl ξ M‖ ^ 2 + ‖div ξ M‖ ^ 2 = ‖ξ‖ ^ 2 * ‖M‖ ^ 2 := by
   rw [EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq,
@@ -228,14 +207,12 @@ theorem norm_curl_sq_add_norm_div_sq (ξ : Freq) (M : Mat) :
   simp
   ring
 
-/-- `‖curl_ξ A‖ ≤ |ξ| ‖A‖`. -/
 theorem norm_curl_le (ξ : Freq) (M : Mat) : ‖curl ξ M‖ ≤ ‖ξ‖ * ‖M‖ := by
   have h := norm_curl_sq_add_norm_div_sq ξ M
   have : ‖curl ξ M‖ ^ 2 ≤ (‖ξ‖ * ‖M‖) ^ 2 := by
     rw [mul_pow, ← h]; nlinarith [sq_nonneg ‖div ξ M‖]
   exact (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 this
 
-/-- On `N(curl_ξ)ᗮ` the divergence symbol vanishes (it is orthogonal to `R(grad_ξ)`). -/
 theorem div_eq_zero_of_mem_orthogonal {ξ : Freq} {v : Mat}
     (hv : v ∈ (LinearMap.ker (curl ξ : Mat →ₗ[ℂ] Mat))ᗮ) : div ξ v = 0 := by
   have h : ∀ w : Vec, ⟪grad ξ w, v⟫_ℂ = 0 := fun w =>
@@ -245,7 +222,6 @@ theorem div_eq_zero_of_mem_orthogonal {ξ : Freq} {v : Mat}
   rw [← ContinuousLinearMap.adjoint_inner_right, adjoint_grad] at h2
   exact inner_self_eq_zero.1 h2
 
-/-- **The fibre gap of the curl symbol**: `‖curl_ξ v‖ = |ξ| ‖v‖` for `v ⊥ N(curl_ξ)`. -/
 theorem norm_curl_of_mem_orthogonal {ξ : Freq} {v : Mat}
     (hv : v ∈ (LinearMap.ker (curl ξ : Mat →ₗ[ℂ] Mat))ᗮ) : ‖curl ξ v‖ = ‖ξ‖ * ‖v‖ := by
   have h := norm_curl_sq_add_norm_div_sq ξ v
@@ -253,12 +229,10 @@ theorem norm_curl_of_mem_orthogonal {ξ : Freq} {v : Mat}
   exact (sq_eq_sq₀ (norm_nonneg _) (by positivity)).1 h
 
 
-/-- The divergence symbol vanishes on the TSD fibre. -/
 theorem div_eq_zero_of_mem_tsd {ξ : Freq} {M : Mat} (hM : M ∈ tsd ξ) : div ξ M = 0 := by
   ext a
   rw [div_apply, mulVec_apply_eq_zero hM a, mul_zero]; rfl
 
-/-- `div_ξ M = 0` iff `M ξ = 0`. -/
 theorem div_eq_zero_iff {ξ : Freq} {M : Mat} :
     div ξ M = 0 ↔ ∀ a, ∑ b, M (a, b) * (ξ b : ℂ) = 0 := by
   constructor
@@ -267,8 +241,6 @@ theorem div_eq_zero_iff {ξ : Freq} {M : Mat} :
     simpa [div_apply] using this
   · intro h; ext a; simp [div_apply, h a]
 
-/-- **The TSD fibre is the pointwise TSD condition plus the divergence constraint**:
-`M ∈ tsd ξ` iff `M` is symmetric and trace-free (`M ∈ tsd 0`) and `div_ξ M = 0`. -/
 theorem mem_tsd_iff_div {ξ : Freq} {M : Mat} : M ∈ tsd ξ ↔ M ∈ tsd 0 ∧ div ξ M = 0 := by
   rw [div_eq_zero_iff, mem_tsd, mem_tsd]
   have h0 : toMatrix M *ᵥ cfreq 0 = 0 := by ext a; simp [cfreq, mulVec, dotProduct]
@@ -279,7 +251,6 @@ theorem mem_tsd_iff_div {ξ : Freq} {M : Mat} : M ∈ tsd ξ ↔ M ∈ tsd 0 ∧
   rw [hv]
   exact ⟨fun h => ⟨⟨h.1, h.2.1, h0⟩, h.2.2⟩, fun h => ⟨h.1.1, h.1.2.1, h.2⟩⟩
 
-/-- On the TSD fibre the curl symbol is `|ξ|` times an isometry: `‖curl_ξ v‖ = |ξ| ‖v‖`. -/
 theorem norm_curl_of_mem_tsd {ξ : Freq} {v : Mat} (hv : v ∈ tsd ξ) :
     ‖curl ξ v‖ = ‖ξ‖ * ‖v‖ := by
   have h := norm_curl_sq_add_norm_div_sq ξ v
@@ -301,7 +272,6 @@ theorem curl_smul (t : ℝ) (ξ : Freq) : curl (t • ξ) = (t : ℂ) • curl �
     mul_sum]
   refine sum_congr rfl fun c _ => sum_congr rfl fun d _ => by ring
 
-/-- The gradient symbol is linear in the frequency. -/
 theorem grad_eq_sum (ξ : Freq) :
     grad ξ = ∑ j, ((ξ j : ℝ) : ℂ) • grad (EuclideanSpace.single j (1 : ℝ)) := by
   refine ContinuousLinearMap.ext fun u => ?_
@@ -313,7 +283,6 @@ theorem grad_eq_sum (ξ : Freq) :
   · intro j _ hj; simp [Ne.symm hj]
   · intro h; exact absurd (Finset.mem_univ b) h
 
-/-- The curl symbol is linear in the frequency. -/
 theorem curl_eq_sum (ξ : Freq) :
     curl ξ = ∑ j, ((ξ j : ℝ) : ℂ) • curl (EuclideanSpace.single j (1 : ℝ)) := by
   refine ContinuousLinearMap.ext fun M => ?_
@@ -345,7 +314,7 @@ def sym : ∀ i j : Fin 3, Freq → W3 Vec Mat Mat i →L[ℂ] W3 Vec Mat Mat j
   | _, _ => 0
 
 open ShortHilbertComplex in
-/-- **The grad–curl family of fibre complexes** `ℂ³ --grad_ξ--> ℂ³ˣ³ --curl_ξ--> ℂ³ˣ³`. -/
+/-- The grad–curl family of fibre complexes `ℂ³ --grad_ξ--> ℂ³ˣ³ --curl_ξ--> ℂ³ˣ³`. -/
 def gradCurl : FibreComplex ℂ Freq ComplexShape.fin3 (W3 Vec Mat Mat) where
   m := sym
   shape i j h := by
@@ -373,7 +342,7 @@ theorem gradCurl_isHomogeneous12 : gradCurl.IsHomogeneous 1 2 1 := fun t ξ _ =>
   rw [gradCurl_m12, gradCurl_m12, curl_smul, pow_one]; rfl
 
 open ShortHilbertComplex in
-/-- **The constraint fibres** `({0}, tsd ξ, tsd ξ)` (Thesis Prop 4.17: `σ = 0`, `E, B` TSD). -/
+/-- The constraint fibres `({0}, tsd ξ, tsd ξ)`. -/
 def tsdK : ∀ i : Fin 3, Freq → Submodule ℂ (W3 Vec Mat Mat i)
   | 0 => fun _ => ⊥
   | 1 => tsd
@@ -382,8 +351,8 @@ def tsdK : ∀ i : Fin 3, Freq → Submodule ℂ (W3 Vec Mat Mat i)
 instance (i : Fin 3) (ξ : Freq) : (tsdK i ξ).HasOrthogonalProjection := by
   fin_cases i <;> infer_instance
 
-/-- **`({0}, tsd ξ, tsd ξ)` reduces the grad–curl fibre complex at every frequency.**
-[QuennevilleBelair2015], Lemma 3.5, Prop 4.17 -/
+/-- `({0}, tsd ξ, tsd ξ)` reduces the grad–curl fibre complex at every frequency
+([QuennevilleBelair2015], Lemma 3.5, Prop 4.17). -/
 theorem isFibreReducing : gradCurl.IsFibreReducing tsdK := by
   refine FibreComplex.IsFibreReducing.of_orthogonal (fun i j ξ => ?_) (fun i j ξ => ?_)
   · fin_cases i <;> fin_cases j
@@ -451,8 +420,6 @@ theorem continuous_tsdMap : Continuous tsdMap := by
     exact continuous_finsetSum _ fun b _ =>
       continuous_const.mul (Complex.continuous_ofReal.comp (PiLp.continuous_apply 2 _ b))
 
-/-- **The transverse–traceless fibre projection is measurable in the frequency** (it is
-discontinuous at `ξ = 0`). -/
 theorem measurable_starProjection_tsd : Measurable fun ξ : Freq => (tsd ξ).starProjection := by
   have h := (stronglyMeasurable_starProjection_ker_clm (𝕜 := ℂ) (E := Mat)
     (F := EuclideanSpace ℂ ((Fin 3 × Fin 3) ⊕ (Unit ⊕ Fin 3)))).measurable.comp
@@ -503,8 +470,7 @@ theorem gap_of_zero {i j : Fin 3} {ξ : Freq} (h : gradCurl.m i j ξ = 0) :
   exact norm_nonneg _
 
 open ShortHilbertComplex in
-/-- **The fibre gaps of the grad–curl complex**: `|ξ| ‖v‖ ≤ ‖m_ξ v‖` on `N(m_ξ)ᗮ`, for every
-arrow. -/
+/-- `|ξ| ‖v‖ ≤ ‖m_ξ v‖` on `N(m_ξ)ᗮ`, for every arrow of the grad–curl complex. -/
 theorem gradCurl_gap (i j : Fin 3) (ξ : Freq) :
     ∀ v ∈ (LinearMap.ker (gradCurl.m i j ξ : W3 Vec Mat Mat i →ₗ[ℂ] W3 Vec Mat Mat j))ᗮ,
       ‖ξ‖ * ‖v‖ ≤ ‖gradCurl.m i j ξ v‖ := by
@@ -554,7 +520,6 @@ def cjW3 : ∀ i : Fin 3, W3 Vec Mat Mat i →L[ℝ] W3 Vec Mat Mat i
   | 2 => entryConj
 
 open ShortHilbertComplex in
-/-- **The grad–curl symbols are real**: `m (-ξ) (conj v) = conj (m ξ v)`. -/
 theorem gradCurl_neg_cj (i j : Fin 3) (ξ : Freq) (v : W3 Vec Mat Mat i) :
     gradCurl.m i j (-ξ) (cjW3 i v) = cjW3 j (gradCurl.m i j ξ v) := by
   fin_cases i <;> fin_cases j

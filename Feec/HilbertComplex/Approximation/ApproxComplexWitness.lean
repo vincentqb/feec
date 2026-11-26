@@ -6,31 +6,13 @@ public import Feec.HilbertComplex.Approximation.ApproxFEECWitness
 /-!
 # Non-vacuity of `ApproxFEEC.ofComplex`: a non-conforming discrete complex
 
-On the complex `𝕜 --id--> 𝕜 → 0` (`Feec.HilbertComplex.ConstrainedFEEC.idComplex`), the
-approximating family `Feec.HilbertComplex.ApproxComplex.scaled` has, at level `n` with
-`cₙ = 1 + 1/(n+1)`,
+On `𝕜 --id--> 𝕜 → 0`, the discrete complexes `𝕜 --cₙ·id--> 𝕜 → 0` read through the non-isometric
+cochain maps `diag(cₙ, 1, 1)` satisfy the approximating FEEC theorem, with a nonzero consistency
+defect and an inexact scheme.
 
-* the discrete complex `𝕜 --cₙ·id--> 𝕜 → 0` (`scaledShort`), with the standard inner product;
-* the cochain map `iₙ = diag(cₙ, 1, 1)` (`𝐝 iₙ = iₙ 𝐝ₙ`), not isometric and not a multiple of the
-  identity, with `πₙ = diag(cₙ⁻¹, 1, 1) = iₙ⁻¹`, which commutes with `𝐝`: the graph-norm
-  approximation is exact (`scaled_graphIncl_projL`).
+## Main results
 
-`iₙ` is a cochain isomorphism onto `W` (so `𝐝ₙ = cₙ·id` is `𝐝` in other coordinates): the
-variational crime is the **inner product** alone, in the sense of [HolstStern2012], §3:
-`Jₙ = iₙ* iₙ = diag(cₙ², 1, 1)` and the inner-product defect satisfies
-`0 < ‖1 - Jₙ‖ ≤ cₙ² - 1 → 0` (`scaled_innerDefect_pos`, `scaled_innerDefect_le`). Through
-`Feec.HilbertComplex.ApproxFEEC.ofComplex`, the approximating FEEC theorem applies, the consistency
-defect of the comparison (the modified elliptic projection of the exact orbit) is nonzero along
-`(1, 0, 0)` at every level (`scaled_defect_ne_zero`), and the scheme is inexact
-(`scaled_exists_sol_ne`); the bundle is `scaled_nonvacuous`. The defect is not assumed: it is
-derived by `ofComplexCore` from the inner-product defect and the approximation property.
-
-## References
-
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (an inner-product crime: cochain maps that are not isometric)
-
-Bibliography: [references.bib](../../../docs/references.bib)
+* `ApproxComplex.scaled_nonvacuous`: the verdict, `0 < ‖1 - Jₙ‖ ≤ cₙ² - 1`, a nonzero defect.
 -/
 
 open scoped InnerProductSpace
@@ -87,9 +69,7 @@ theorem inv_mul_sc (n : ℕ) : (sc (𝕜 := 𝕜) n)⁻¹ * sc n = 1 :=
   inv_mul_cancel₀ (perturbScale_ne_zero n)
 
 variable (𝕜) in
-/-- **A family of discrete complexes with an inner-product crime** for `𝕜 --id--> 𝕜 → 0`: at
-level `n`, the discrete complex `𝕜 --cₙ·id--> 𝕜 → 0`, read in `W` through the non-isometric
-cochain map `iₙ = diag(cₙ, 1, 1)` (`𝐝 iₙ = iₙ 𝐝ₙ`: `cₙ = 1 · cₙ`), with `πₙ = diag(cₙ⁻¹, 1, 1)`. -/
+/-- **An inner-product crime**: `𝕜 --cₙ·id--> 𝕜 → 0` read by `iₙ = diag(cₙ, 1, 1)`. -/
 abbrev scaledFamily : ApproxComplex.Family (idComplex 𝕜) ℕ where
   V _ := W3 𝕜 𝕜 PUnit
   cpx n := (scaledShort 𝕜 (sc n)).toHilbertComplex
@@ -162,14 +142,12 @@ theorem sc_sq_ne_one (n : ℕ) : sc (𝕜 := 𝕜) n ^ 2 ≠ 1 := fun h => by
   rw [norm_pow, norm_one] at this
   nlinarith [one_lt_norm_sc (𝕜 := 𝕜) n]
 
-/-- `iₙ` on components: `(iₙ v)₀ = cₙ v₀`, `(iₙ v)₁ = v₁`. -/
 theorem c0_scaled_inclL (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     c0 ((scaledFamily 𝕜).inclL n v) = sc n * c0 v := rfl
 
 theorem c1_scaled_inclL (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     c1 ((scaledFamily 𝕜).inclL n v) = c1 v := rfl
 
-/-- `Jₙ = diag(cₙ², 1, 1)`. -/
 theorem inner_scaled_J (n : ℕ) (v w : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     ⟪(scaledFamily 𝕜).J n v, w⟫_𝕜 =
       sc n ^ 2 * (starRingEnd 𝕜 (c0 v) * c0 w) + starRingEnd 𝕜 (c1 v) * c1 w := by
@@ -177,7 +155,6 @@ theorem inner_scaled_J (n : ℕ) (v w : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     c1_scaled_inclL, c1_scaled_inclL, map_mul, sc_conj]
   ring
 
-/-- `(1 - Jₙ) v = ((1 - cₙ²) v₀, 0, 0)`. -/
 theorem scaled_one_sub_J (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (1 - (scaledFamily 𝕜).J n) v = vec3 ((1 - sc n ^ 2) * c0 v) 0 := by
   refine ext_inner_right 𝕜 fun w => ?_
@@ -198,8 +175,6 @@ theorem norm_scaled_one_sub_J_apply_le (n : ℕ) (v : PiLp 2 (W3 𝕜 𝕜 PUnit
     RCLike.norm_ofReal, abs_of_nonpos (by linarith)]
   ring
 
-/-- **The inner-product defect is nonzero at every level**: `‖1 - Jₙ‖ > 0` (`iₙ` is not
-isometric). -/
 theorem scaled_innerDefect_pos (n : ℕ) : 0 < ‖1 - (scaledFamily 𝕜).J n‖ := by
   refine norm_pos_iff.2 fun h0 => ?_
   have e := congrArg c0 (scaled_one_sub_J (𝕜 := 𝕜) n (firstDatum 𝕜))
@@ -222,8 +197,6 @@ theorem tendsto_perturbScale_sq_sub_one :
   refine this.congr fun n => ?_
   unfold perturbScale; ring
 
-/-- `iₙ πₙ = 1`: the lifts `(iₙ πₙ ζ₁, 𝐝 iₙ πₙ ζ₁)` reproduce every `ζ ∈ Γ(𝐝)` (`πₙ` commutes
-with `𝐝`). -/
 theorem scaled_graphIncl_projL (n : ℕ) (ζ : (idComplex 𝕜).totalD.GraphSpace) :
     (scaledFamily 𝕜).graphIncl n ((scaledFamily 𝕜).projL n ((idComplex 𝕜).totalD.graphFst ζ)) =
       ζ :=
@@ -231,9 +204,7 @@ theorem scaled_graphIncl_projL (n : ℕ) (ζ : (idComplex 𝕜).totalD.GraphSpac
     scaleMap_scaleMap (sc_mul_inv n) i _)
 
 variable (𝕜) in
-/-- **The non-conforming approximating family**: `scaledFamily` with a closed constraint `K`;
-inner-product defect `‖1 - Jₙ‖ ≤ cₙ² - 1 → 0` (so also in the graph norm,
-`ContinuousLinearMap.graphOpNorm_le`), exact graph-norm approximation. -/
+/-- **The non-conforming approximating family**: `scaledFamily` with a closed constraint `K`. -/
 abbrev scaled (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
     (hK : IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) : ApproxComplex (idComplex 𝕜) ℕ where
   toFamily := scaledFamily 𝕜
@@ -325,9 +296,6 @@ theorem waveOrbit_zero {x : PiLp 2 (W3 𝕜 𝕜 PUnit)} (hx : x ∈ (idComplex 
   rw [waveOrbit_of_mem _ hx]
   exact congrArg (waveLift (idComplex 𝕜)) (Subtype.ext (C0Group.S_zero_apply _ _))
 
-/-- **The consistency defect of the comparison (the modified elliptic projection) is nonzero**
-along `(1, 0, 0)` at `t = 0`, at every level (if it vanished, `iₙ*` would intertwine `L` and
-`Lₙ` on `x - L x`; testing against `(0, 1, 0)` gives `1 = cₙ²`). -/
 theorem scaled_defect_ne_zero (T : ℝ) (n : ℕ) :
     ((ofComplexCore (scaled 𝕜 Q hQ)).cmp T).defect (firstDatum 𝕜) n 0 ≠ 0 := by
   set S := scaledFamily 𝕜
@@ -371,8 +339,6 @@ theorem scaled_defect_ne_zero (T : ℝ) (n : ℕ) :
   rw [h1, h2, map_mul, sc_conj, map_one] at hL
   exact sc_sq_ne_one (𝕜 := 𝕜) n (by rw [_root_.sq]; exact hL.symm)
 
-/-- **The scheme is inexact**: from `πₙ (0, 1, 0)` the discrete solution differs from the exact
-one at some time (`(iₙ Lₙ πₙ x)₀ = -cₙ² ≠ -1 = (L x)₀`). -/
 theorem scaled_exists_sol_ne (n : ℕ) :
     ∃ t, (ofComplex (scaled 𝕜 Q hQ)).sol n ((ofComplex (scaled 𝕜 Q hQ)).proj n (secondDatum 𝕜))
       t ≠ (idComplex 𝕜).waveGroup.S t (secondDatum 𝕜) := by
@@ -398,12 +364,8 @@ theorem scaled_exists_sol_ne (n : ℕ) :
   rw [a1, a2, mul_neg, neg_inj, ← _root_.sq] at he0
   exact sc_sq_ne_one n he0
 
-/-- **Non-vacuity of `ApproxFEEC.ofComplex` for a genuinely non-conforming discrete complex.**
-On `𝕜 --id--> 𝕜 → 0` the family `scaled` (discrete complex `𝕜 --cₙ·id--> 𝕜 → 0`, cochain map
-`iₙ = diag(cₙ, 1, 1)`, `cₙ = 1 + 1/(n+1)`) goes through `ofComplex`: the approximating FEEC
-theorem applies; the inner-product defect is positive and at most `cₙ² - 1` at every level; the
-consistency defect of the comparison along `(1, 0, 0)` is nonzero at every level; the scheme is
-inexact. -/
+/-- **Non-vacuity of `ApproxFEEC.ofComplex`**: for `scaled`, the verdict holds,
+`0 < ‖1 - Jₙ‖ ≤ cₙ² - 1`, the consistency defect is nonzero and the scheme is inexact. -/
 theorem scaled_nonvacuous :
     (ofComplex (scaled 𝕜 Q hQ)).Verdict (ofComplexCore (scaled 𝕜 Q hQ)) ∧
     (∀ n, 0 < ‖1 - (scaledFamily 𝕜).J n‖ ∧ ‖1 - (scaledFamily 𝕜).J n‖ ≤ perturbScale n ^ 2 - 1) ∧

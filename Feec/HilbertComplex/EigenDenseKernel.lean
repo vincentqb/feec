@@ -6,55 +6,19 @@ public import Feec.Semigroup.Spectral
 /-!
 # A complete set of eigenvectors from compactness below the top degree
 
-The compact-resolvent criterion `HilbertComplex.HasCompactProperty.eigenDense_wave` needs the
-compactness property in **every** degree. It cannot apply as soon as the wave operator `L` has an
-infinite-dimensional kernel: `(1 - L)⁻¹` is the identity on `N(L)`, so it is not compact. This
-happens for `H̊¹ → H̊(curl) → L²` on a bounded domain, where `N(L)` contains the top-degree
-harmonic fields `N(d₁†)` (all `curl`-free fields of `L²`). This file replaces compactness of the
-resolvent by compactness **off the kernel**:
+A skew-adjoint `A` whose unit box of `D(A) ∩ N(A)ᗮ` lies in a compact set has a dense span of
+eigenvectors of `A²`; for the wave operator of a finite Hilbert complex this follows from the same
+compactness of `D(dⁱ) ∩ (𝔷ⁱ)ᗮ` in every degree.
 
-* `Operator.HasCompactPerp T`: the unit box of `D(T) ∩ N(T)ᗮ` in the graph norm lies in a
-  compact set ("`T⁻¹ : R(T) → N(T)ᗮ` is compact"); `Operator.HasCompactBall T`: the whole unit
-  box of `D(T)` does (a compact embedding of `D(T)`); it passes to operators acting component
-  by component on finitely many copies (`Operator.HasCompactBall.of_components`).
-* **Duality** (`Operator.HasCompactPerp.adjoint`): `HasCompactPerp T ⇒ HasCompactPerp T†` for
-  closed densely defined `T` (Schauder's theorem in this form: `R(T)` is closed, every
-  `v ∈ D(T†) ∩ N(T†)ᗮ` is `T u` with `u ∈ N(T)ᗮ`, `‖u‖ ≤ C ‖v‖`, and
-  `‖v - v'‖² = ⟪T† (v - v'), u - u'⟫ ≤ 2 ‖u - u'‖`).
-* **The spectral theorem off the kernel**
-  (`LinearPMap.IsSkewAdjoint.dense_span_isEigenSq_of_hasCompactPerp`): if `A` is skew-adjoint
-  and `HasCompactPerp A`, the eigenvectors of `A²` are dense. With `N = N(A)` and
-  `R = (1 - A)⁻¹`, `R = 1` on `N` and `R`, `R†` preserve `Nᗮ`; `P_{Nᗮ} R` is compact, so
-  `T = P_{Nᗮ} R R† P_{Nᗮ}` is compact and self-adjoint; its eigenvectors with eigenvalue `0`
-  lie in `N` (eigenvalue `0` of `A²`), the others are eigenvectors of `R R†`, hence of `A²`.
-* **Hilbert complexes** (`HilbertComplex.HasCompactCyclePerpAt i`: the box of
-  `D(dⁱ) ∩ (𝔷ⁱ)ᗮ` is precompact). The compactness property implies it
-  (`HasCompactPropertyAt.hasCompactCyclePerpAt`), and it holds trivially at an index with no
-  outgoing arrow (`hasCompactCyclePerpAt_of_not_rel`). If it holds at every index, the wave
-  operator has `HasCompactPerp` (`hasCompactPerp_wave`): a field of `D(L) ∩ N(L)ᗮ` is
-  orthogonal to the harmonic fields in each degree, and each component splits into a part in
-  `D(d) ∩ (𝔷)ᗮ` and a part in `D(d†) ∩ N(d†)ᗮ`. Hence **`eigenDense_wave_of_compact_perp`**:
-  the wave group has a dense set of eigenvectors. On `ComplexShape.fin3` compactness at `0` and
-  `1` suffices and nothing is needed in the top degree (`eigenDense_wave_fin3`).
-* **Weber's lemma, abstract form** (`Operator.HasCompactPair.exists_isCompact_coeff`): for a
-  pair `T, S` with `S T = 0`, `HasCompactPerp T` and the compactness of the middle space of
-  `(T, S)`, the box `u ∈ D(S)`, `ε u ∈ D(T†)`, `‖u‖, ‖S u‖, ‖T† (ε u)‖ ≤ 1` is precompact for
-  every bounded coercive `ε` (no symmetry needed): with `P` the projection onto `R(T)`,
-  `u = T r + v`, `v = (1 - P) u` lies in the unweighted box and `r` in the box of `T`, and
-  `λ ‖T (r - r')‖² ≤ 2 ‖r - r'‖ + 2 ‖ε‖ ‖v - v'‖`. This is the Helmholtz argument of
-  [Hiptmair2002]; Lax–Milgram is not needed.
+## Main results
+
+* `Operator.HasCompactPair.exists_isCompact_coeff`: Weber's lemma, abstract form.
+* `IsSkewAdjoint.dense_span_isEigenSq_of_hasCompactPerp`: spectral theorem off the kernel.
+* `eigenDense_wave_of_compact_perp`, `eigenDense_wave_fin3`: the wave group is `EigenDense`.
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1.3 (compactness property)
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], §4
-  (compact embeddings of `H̊(curl) ∩ ε⁻¹ H(div)`, regular decompositions)
-* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
-  Ch. I (Helmholtz decompositions)
-* [M. Reed, B. Simon, *Methods of Modern Mathematical Physics. I: Functional Analysis*][ReedSimon1980],
-  Thm VI.16
-  (Hilbert–Schmidt theorem)
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -68,9 +32,6 @@ namespace Feec.Operator
 
 /-! ### Total boundedness along maps with a modulus -/
 
-/-- **Total boundedness pulls back along a map with a uniform modulus**: if `f` maps `s` into a
-totally bounded set and `dist (f x) (f y) < δ(ε) ⇒ dist x y < ε` on `s`, then `s` is totally
-bounded. -/
 theorem totallyBounded_of_modulus {X Y : Type*} [PseudoMetricSpace X] [PseudoMetricSpace Y]
     {s : Set X} {t : Set Y} (ht : TotallyBounded t) (f : X → Y) (hf : MapsTo f s t)
     (hmod : ∀ ε > 0, ∃ δ > 0, ∀ x ∈ s, ∀ y ∈ s, dist (f x) (f y) < δ → dist x y < ε) :
@@ -87,7 +48,6 @@ theorem totallyBounded_of_modulus {X Y : Type*} [PseudoMetricSpace X] [PseudoMet
   rw [Metric.mem_ball] at hxy ⊢
   exact h x hx _ (hg ⟨y, hy⟩).1 (by rw [(hg ⟨y, hy⟩).2]; exact hxy)
 
-/-- A totally bounded set of a complete space lies in a compact set (its closure). -/
 theorem exists_isCompact_of_totallyBounded {X : Type*} [MetricSpace X] [CompleteSpace X]
     {s : Set X} (hs : TotallyBounded s) : ∃ K : Set X, IsCompact K ∧ s ⊆ K :=
   ⟨closure s, hs.closure.isCompact_of_isClosed isClosed_closure, subset_closure⟩
@@ -99,15 +59,12 @@ variable {𝕜 E F G : Type*} [RCLike 𝕜]
 
 /-! ### Compact boxes of a partial map -/
 
-/-- **Compactness off the kernel**: the unit box of `D(T) ∩ N(T)ᗮ` in the graph norm
-`max (‖x‖, ‖T x‖)` lies in a compact set; equivalently (for closed `T`) `R(T)` is closed and
-`T⁻¹ : R(T) → D(T) ∩ N(T)ᗮ` is compact into `E`. -/
+/-- The unit box of `D(T) ∩ N(T)ᗮ`, in the graph norm, lies in a compact set. -/
 def HasCompactPerp (T : E →ₗ.[𝕜] F) : Prop :=
   ∃ K : Set E, IsCompact K ∧ ∀ x : T.domain, (x : E) ∈ T.kerᗮ → ‖(x : E)‖ ≤ 1 → ‖T x‖ ≤ 1 →
     (x : E) ∈ K
 
-/-- **Compact embedding of `D(T)`**: the whole unit box `‖x‖, ‖T x‖ ≤ 1` lies in a compact set
-(Rellich for `T = grad` on `H̊¹`). -/
+/-- The unit box `‖x‖, ‖T x‖ ≤ 1` of `D(T)` lies in a compact set. -/
 def HasCompactBall (T : E →ₗ.[𝕜] F) : Prop :=
   ∃ K : Set E, IsCompact K ∧ ∀ x : T.domain, ‖(x : E)‖ ≤ 1 → ‖T x‖ ≤ 1 → (x : E) ∈ K
 
@@ -122,7 +79,6 @@ theorem norm_ofReal_smul [NormedSpace 𝕜 E] {a : ℝ} (ha : 0 < a) (v : E) :
     ‖((a : ℝ) : 𝕜) • v‖ = a * ‖v‖ := by
   rw [norm_smul, RCLike.norm_ofReal, abs_of_pos ha]
 
-/-- `C t ≤ max C 1` for `0 ≤ t ≤ 1`. -/
 theorem mul_le_max_one (C : ℝ) {t : ℝ} (ht0 : 0 ≤ t) (ht : t ≤ 1) : C * t ≤ max C 1 := by
   rcases le_total 0 C with hC | hC
   · exact (mul_le_of_le_one_right hC ht).trans (le_max_left _ _)
@@ -159,14 +115,12 @@ theorem HasCompactBall.exists_isCompact (h : HasCompactBall T) (r : ℝ) :
   simp only [Submodule.coe_smul, smul_smul]
   rw [← RCLike.ofReal_mul, mul_inv_cancel₀ hs.ne', RCLike.ofReal_one, one_smul]
 
-/-- A compact box: the closure of the unit box of `D(T)` is compact. -/
 theorem HasCompactBall.isCompact_closure (h : HasCompactBall T) :
     IsCompact (closure {x : E | ∃ hx : x ∈ T.domain, ‖x‖ ≤ 1 ∧ ‖T ⟨x, hx⟩‖ ≤ 1}) := by
   obtain ⟨K, hK, hsub⟩ := h
   exact hK.of_isClosed_subset isClosed_closure
     (closure_minimal (fun x ⟨hx, h1, h2⟩ => hsub ⟨x, hx⟩ h1 h2) hK.isClosed)
 
-/-- An operator with `N(T) = ⊤` (e.g. `T = 0`) is trivially compact off its kernel. -/
 theorem hasCompactPerp_of_ker_eq_top (h : T.ker = ⊤) : HasCompactPerp T := by
   refine ⟨{0}, isCompact_singleton, fun x hx _ _ => ?_⟩
   rw [h, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at hx
@@ -176,8 +130,6 @@ theorem hasCompactPerp_zero : HasCompactPerp (0 : E →ₗ.[𝕜] F) := by
   refine hasCompactPerp_of_ker_eq_top (eq_top_iff.2 fun x _ => ?_)
   exact (LinearPMap.mem_ker_iff).2 ⟨⟨x, Submodule.mem_top⟩, rfl, rfl⟩
 
-/-- **The compact box pulls back along closed embeddings** with bounded distortion of the
-operators. -/
 theorem HasCompactBall.of_isClosedEmbedding {E' F' : Type*} [NormedAddCommGroup E']
     [InnerProductSpace 𝕜 E'] [NormedAddCommGroup F'] [InnerProductSpace 𝕜 F']
     {T' : E' →ₗ.[𝕜] F'} (h : HasCompactBall T') (J : E →L[𝕜] E')
@@ -192,9 +144,6 @@ theorem HasCompactBall.of_isClosedEmbedding {E' F' : Type*} [NormedAddCommGroup 
       (le_max_left _ _))
   · exact (mul_le_of_le_one_right hC h2).trans (le_max_right _ _)
 
-/-- **Compact boxes from components**: if finitely many bounded maps `P i` send `D(T)` into
-`D(T')` with `T' (P i x) = Q i (T x)`, `T'` has a compact box, and `x` is recovered continuously
-from `(P i x)ᵢ`, then `T` has a compact box (e.g. `H̊¹(Ω; ℝᵐ)` from `m` copies of `H̊¹(Ω)`). -/
 theorem HasCompactBall.of_components {E' F' : Type*} [NormedAddCommGroup E']
     [InnerProductSpace 𝕜 E'] [NormedAddCommGroup F'] [InnerProductSpace 𝕜 F']
     {T' : E' →ₗ.[𝕜] F'} (h : HasCompactBall T') {m : Type*} [Finite m] (P : m → E →L[𝕜] E')
@@ -215,13 +164,11 @@ theorem HasCompactBall.of_components {E' F' : Type*} [NormedAddCommGroup E']
 
 variable [CompleteSpace E] [CompleteSpace F]
 
-/-- **Compactness off the kernel ⇒ closed range.** -/
 theorem HasCompactPerp.isClosed_range (h : HasCompactPerp T) (hc : T.IsClosed) :
     _root_.IsClosed (LinearMap.range T.toFun : Set F) := by
   obtain ⟨K, hK, hsub⟩ := h
   exact isClosed_range_of_subset_isCompact hc hK hsub
 
-/-- **Duality** (Schauder): compactness off the kernel passes to the adjoint. -/
 theorem HasCompactPerp.adjoint (hT : Dense (T.domain : Set E)) (hc : T.IsClosed)
     (h : HasCompactPerp T) : HasCompactPerp T† := by
   classical
@@ -272,13 +219,8 @@ theorem HasCompactPerp.adjoint (hT : Dense (T.domain : Set E)) (hc : T.IsClosed)
 
 variable {S : F →ₗ.[𝕜] G}
 
-/-- **Weber's lemma, abstract form.** Let `T : E → F`, `S : F → G` be closed, densely defined,
-with `S T = 0`, `T` compact off its kernel (Rellich) and the middle space of `(T, S)` compact
-(`D(S) ∩ D(T†)` compactly embedded). Then for every bounded `ε : F → F` with
-`λ ‖y‖² ≤ re ⟪ε y, y⟫`, `λ > 0`, the weighted box
-`u ∈ D(S)`, `ε u ∈ D(T†)`, `‖u‖, ‖S u‖, ‖T† (ε u)‖ ≤ 1` lies in a compact set. For
-`T = grad`, `S = curl` on `H̊¹`, `H̊(curl)`: `H̊(curl) ∩ ε⁻¹ H(div)` embeds compactly in `L²`.
-[Hiptmair2002], §4; no symmetry of `ε` and no Lax–Milgram are needed. -/
+/-- **Weber's lemma**: if `S T = 0`, `HasCompactPerp T`, `HasCompactPair T S` and `ε` is bounded and
+coercive, the box `‖u‖, ‖S u‖, ‖T† (ε u)‖ ≤ 1` lies in a compact set. [Hiptmair2002], §4 -/
 theorem HasCompactPair.exists_isCompact_coeff (hT : Dense (T.domain : Set E)) (hc : T.IsClosed)
     (hmaps : ∀ x : T.domain, T x ∈ S.domain) (hcomp : ∀ x : T.domain, S ⟨T x, hmaps x⟩ = 0)
     (hTc : HasCompactPerp T) (hpair : HasCompactPair T S) (ε : F →L[𝕜] F) {lam : ℝ}
@@ -401,8 +343,6 @@ open Feec Feec.Operator
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-/-- An eigenvector of `R R†` (`R = (1 - A)⁻¹`) with eigenvalue `μ ≠ 0` is an eigenvector of `A²`
-(`A² v = (1 - μ⁻¹) v`), as in `IsSkewAdjoint.dense_span_isEigenSq`. -/
 theorem IsSkewAdjoint.exists_isEigenSq_of_resolvent (hA : A.IsSkewAdjoint) {μ : 𝕜} (hμ : μ ≠ 0)
     {v : E} (hv : resolvent A 1 (ContinuousLinearMap.adjoint (resolvent A 1) v) = μ • v) :
     ∃ ω, A.IsEigenSq ω v := by
@@ -435,7 +375,6 @@ theorem IsSkewAdjoint.exists_isEigenSq_of_resolvent (hA : A.IsSkewAdjoint) {μ :
   exact hA.isSkewSymmetric.exists_isEigenSq hvD hAvD hAAv
 
 omit [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] in
-/-- A vector of the kernel is an eigenvector of `A²` with eigenvalue `0`. -/
 theorem isEigenSq_zero_of_mem_ker {v : E} (hv : v ∈ A.ker) : A.IsEigenSq 0 v := by
   obtain ⟨x, rfl, hx0⟩ := (LinearPMap.mem_ker_iff).1 hv
   have h' : A x ∈ A.domain := by rw [hx0]; exact A.domain.zero_mem
@@ -444,9 +383,8 @@ theorem isEigenSq_zero_of_mem_ker {v : E} (hv : v ∈ A.ker) : A.IsEigenSq 0 v :
   rw [e, LinearPMap.map_zero]
   simp
 
-/-- **The spectral theorem off the kernel.** If `A` is skew-adjoint and compact off its kernel
-(`HasCompactPerp A`), the eigenvectors of `A²` span a dense subspace — with no compactness of
-the resolvent, which fails as soon as `N(A)` is infinite-dimensional. -/
+/-- **The spectral theorem off the kernel.** If `A` is skew-adjoint and compact off its kernel,
+the eigenvectors of `A²` span a dense subspace. -/
 theorem IsSkewAdjoint.dense_span_isEigenSq_of_hasCompactPerp (hA : A.IsSkewAdjoint)
     (h : HasCompactPerp A) :
     Dense (Submodule.span 𝕜 {v | ∃ ω, A.IsEigenSq ω v} : Set E) := by
@@ -569,8 +507,6 @@ open Feec.Operator
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-/-- **Compactness off the kernel ⇒ `EigenDense`** for the Stone group of a skew-adjoint
-operator. -/
 theorem eigenDense_of_hasCompactPerp (hA : A.IsSkewAdjoint) (h : HasCompactPerp A) :
     hA.group.EigenDense := by
   unfold EigenDense
@@ -589,14 +525,11 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   (H : HilbertComplex 𝕜 c W)
 
-/-- **Half compactness at `i`**: the unit box of `D(dⁱ) ∩ (𝔷ⁱ)ᗮ`, `dⁱ = d i (c.next i)`, in the
-graph norm lies in a compact set (`𝔷ⁱ = N(dⁱ)`, `HilbertComplex.cycles`). On a bounded domain:
-Rellich at `i = 0` (`H̊¹`), Weber at `i = 1`. -/
+/-- **Half compactness at `i`**: `HasCompactPerp` for `d i (c.next i)`. -/
 def HasCompactCyclePerpAt (i : ι) : Prop := HasCompactPerp (H.d i (c.next i))
 
 variable {H}
 
-/-- The compactness property implies half compactness: on `D(d) ∩ (𝔷)ᗮ ⊆ N(d†_{prev})`. -/
 theorem HasCompactPropertyAt.hasCompactCyclePerpAt {i : ι} (h : H.HasCompactPropertyAt i) :
     H.HasCompactCyclePerpAt i := by
   obtain ⟨K, hK, hsub⟩ := h
@@ -606,14 +539,11 @@ theorem HasCompactPropertyAt.hasCompactCyclePerpAt {i : ι} (h : H.HasCompactPro
   subst hyx
   exact hsub _ x.2 hy h1 h2 (by rw [hy0, norm_zero]; exact zero_le_one)
 
-/-- **Nothing is needed in the top degree**: at an index with no outgoing arrow `dⁱ = 0`. -/
 theorem hasCompactCyclePerpAt_of_not_rel {i : ι} (hi : ∀ j, ¬ c.Rel i j) :
     H.HasCompactCyclePerpAt i := by
   rw [HasCompactCyclePerpAt, H.shape i (c.next i) (hi _)]
   exact hasCompactPerp_zero
 
-/-- The adjoint `d†` into `i` is compact off its kernel when `d` out of `c.prev i` is
-(`HasCompactPerp.adjoint`); trivially when there is no arrow into `i`. -/
 theorem HasCompactCyclePerpAt.adjoint_prev {i : ι} (h : H.HasCompactCyclePerpAt (c.prev i)) :
     HasCompactPerp ((H.d (c.prev i) i)†) := by
   by_cases hrel : c.Rel (c.prev i) i
@@ -625,7 +555,6 @@ theorem HasCompactCyclePerpAt.adjoint_prev {i : ι} (h : H.HasCompactCyclePerpAt
 
 variable [Fintype ι]
 
-/-- A harmonic field in slot `i` lies in the kernel of the wave operator. -/
 theorem single_mem_ker_wave [DecidableEq ι] {i : ι} {h : W i} (hh : h ∈ H.harmonic i) :
     PiLp.single 2 i h ∈ H.wave.ker := by
   have hd : h ∈ (H.d i (c.next i)).domain := H.cycles_le_domain i hh.1
@@ -648,7 +577,6 @@ theorem single_mem_ker_wave [DecidableEq ι] {i : ι} {h : W i} (hh : h ∈ H.ha
   change H.totalD ⟨_, h1⟩ - H.dual.totalD ⟨_, h2⟩ = 0
   rw [hz1, hz2, sub_zero]
 
-/-- **The wave operator is compact off its kernel** when every degree is half compact. -/
 theorem hasCompactPerp_wave (h : ∀ i, H.HasCompactCyclePerpAt i) : HasCompactPerp H.wave := by
   classical
   choose Kb hKb hsubb using fun i => (h (c.prev i)).adjoint_prev
@@ -740,9 +668,7 @@ theorem hasCompactPerp_wave (h : ∀ i, H.HasCompactCyclePerpAt i) : HasCompactP
 
 variable [NormedSpace ℝ (PiLp 2 W)] [IsScalarTower ℝ 𝕜 (PiLp 2 W)]
 
-/-- **A dense set of eigenvectors from half compactness in every degree**: if the box of
-`D(dⁱ) ∩ (𝔷ⁱ)ᗮ` is precompact for every `i`, the eigenvectors of `L²` (`L` the wave operator)
-are dense, although `N(L) = ⊕ ℌⁱ` may be infinite-dimensional and `(1 - L)⁻¹` not compact. -/
+/-- **`EigenDense` from half compactness in every degree.** -/
 theorem eigenDense_wave_of_compact_perp (h : ∀ i, H.HasCompactCyclePerpAt i) :
     H.isSkewAdjoint_wave.group.EigenDense :=
   C0Group.eigenDense_of_hasCompactPerp _ (hasCompactPerp_wave h)
@@ -755,8 +681,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W : Fin 3 → Type*}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
   [NormedSpace ℝ (PiLp 2 W)] [IsScalarTower ℝ 𝕜 (PiLp 2 W)]
 
-/-- **Short complexes: compactness at `0` and `1` suffices**, nothing is needed in the top degree
-`2` (where `N(d₁†)` may be infinite-dimensional). -/
+/-- **Short complexes: half compactness at `0` and `1` suffices** for `EigenDense`. -/
 theorem eigenDense_wave_fin3 (H : HilbertComplex 𝕜 ComplexShape.fin3 W)
     (h0 : H.HasCompactCyclePerpAt 0) (h1 : H.HasCompactCyclePerpAt 1) :
     H.isSkewAdjoint_wave.group.EigenDense := by

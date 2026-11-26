@@ -13,37 +13,14 @@ public import Feec.ForMathlib.Analysis.Fourier.Plancherel
 /-!
 # The convolution algebra of the half-line
 
-A **kernel on the half-line** (`Feec.HalfLineKernel`) is a function `g : ℝ → ℂ` vanishing on
-`(-∞, 0)` with `g` and `t g` in `L¹ ∩ L^∞`; under convolution the kernels form a commutative
-non-unital `ℂ`-algebra (`L¹ ⋆ L^∞` convolutions exist everywhere, so the ring laws hold
-pointwise). Its unitization, the **half-line algebra** `Feec.HalfLineAlgebra = ℂ ⊕ K`, consists of
-the measures `a δ₀ + g(t) dt` on `[0, ∞)`; it carries the characters `μ ↦ μ̂(ξ) = a + 𝓕 g(ξ)`
-(`HalfLineAlgebra.fourier`, by `𝓕 (f ⋆ g) = 𝓕 f 𝓕 g`) and the total variation
-`‖μ‖ = |a| + ∫ |g|` (`HalfLineAlgebra.variation`). It is the domain of the Hille–Phillips
-functional calculus of a bounded semigroup (`Feec.C0Semigroup.hillePhillips`).
-
-The exponential kernels `e_ζ(t) = e^{-ζt}` (`re ζ > 0`, `HalfLineKernel.exp`) have
-`𝓕 e_ζ(ξ) = 1/(ζ + 2πiξ)` and satisfy the resolvent identity `(ζ - η) e_η ⋆ e_ζ = e_η - e_ζ`; in
-particular `ν = e^{-t} dt` (`HalfLineAlgebra.resolvent`) has `ν̂ = 1/(1 + 2πiξ)`, and `s - ν` is
-invertible whenever `re(1 - 1/s) > 0`, with inverse `s⁻¹ (1 + s⁻¹ e_{1 - 1/s})`.
-
-## Main results
-
-* `HalfLineKernel.instNonUnitalCommRing`, `HalfLineAlgebra`, `HalfLineAlgebra.fourier`;
-* `HalfLineAlgebra.isUnit_algebraMap_sub_resolvent`;
-* **`HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`** (Brenner–Thomée's power bound): if
-  `μ = a δ₀ + g` with `|a| < 1` and `|μ̂| ≤ 1`, the density `gₙ` of `μⁿ` satisfies
-  `(∫ |gₙ|)⁴ ≤ 4π² ‖g‖₂² ‖t g‖₂² n² / (1 - |a|)²`: the total variation of `μⁿ` grows at most like
-  `√n`. The proof is Fourier-analytic: `ĝₙ = μ̂ⁿ - aⁿ`, so `|ĝₙ| ≤ |ĝ|/(1 - |a|)` and
-  `|(ĝₙ)'| ≤ n |ĝ'|`; Plancherel (`MeasureTheory.MemLp.integral_norm_fourier_sq`) turns these
-  into `‖gₙ‖₂ ≤ ‖g‖₂/(1 - |a|)` and `‖t gₙ‖₂ ≤ n ‖t g‖₂` (`integral_norm_pow_snd_sq_le`), and
-  Carlson's inequality (`MeasureTheory.MemLp.integral_norm_pow_four_le`) bounds `∫ |gₙ|`.
+Kernels on the half-line, `g : ℝ → ℂ` vanishing on `(-∞, 0)` with `g` and `t g` in `L¹ ∩ L^∞`, form
+a commutative non-unital `ℂ`-algebra under convolution; its unitization `Feec.HalfLineAlgebra`,
+the measures `a δ₀ + g(t) dt` on `[0, ∞)`, carries the Fourier–Stieltjes characters and the total
+variation.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
-  (the operational calculus of a semigroup)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -78,7 +55,6 @@ theorem memLp_one_convolution (hf : MemLp f 1) (hg : MemLp g 1) : MemLp (f ⋆[L
   memLp_one_iff_integrable.2 ((memLp_one_iff_integrable.1 hf).integrable_convolution L
     (memLp_one_iff_integrable.1 hg))
 
-/-- A convolution of functions vanishing on `(-∞, 0)` vanishes there. -/
 theorem convolution_eq_zero_of_neg (hf : ∀ t < 0, f t = 0) (hg : ∀ t < 0, g t = 0) {x : ℝ}
     (hx : x < 0) : (f ⋆[L] g) x = 0 := by
   rw [convolution_def]
@@ -89,7 +65,6 @@ theorem convolution_eq_zero_of_neg (hf : ∀ t < 0, f t = 0) (hg : ∀ t < 0, g 
 
 end Conv
 
-/-- **The moment of a convolution**: `x (f ⋆ g)(x) = (t f ⋆ g)(x) + (f ⋆ t g)(x)`. -/
 theorem smul_convolution_apply {f g : ℝ → ℂ} {x : ℝ}
     (h1 : ConvolutionExistsAt (fun t : ℝ => t • f t) g x (mul ℂ ℂ))
     (h2 : ConvolutionExistsAt f (fun t : ℝ => t • g t) x (mul ℂ ℂ)) :
@@ -104,9 +79,7 @@ theorem smul_convolution_apply {f g : ℝ → ℂ} {x : ℝ}
 
 /-! ### Kernels on the half-line -/
 
-/-- A **kernel on the half-line**: `g : ℝ → ℂ` vanishing on `(-∞, 0)`, with `g` and its moment
-`t ↦ t g(t)` in `L¹ ∩ L^∞`. Under convolution these form a commutative non-unital `ℂ`-algebra
-(`HalfLineKernel.instNonUnitalCommRing`). -/
+/-- A kernel on the half-line: `g : ℝ → ℂ` vanishing on `(-∞, 0)`, with `g`, `t g` in `L¹ ∩ L^∞`. -/
 structure HalfLineKernel where
   /-- the kernel as a function -/
   toFun : ℝ → ℂ
@@ -131,7 +104,6 @@ theorem integrable (f : HalfLineKernel) : Integrable f := memLp_one_iff_integrab
 theorem integrable_smul (f : HalfLineKernel) : Integrable fun t : ℝ => t • f t :=
   memLp_one_iff_integrable.1 f.memLp_one_smul
 
-/-- `L¹ ∩ L^∞ ⊆ L²`. -/
 theorem _root_.MeasureTheory.MemLp.memLp_two_of_one_top {g : ℝ → ℂ} (h1 : MemLp g 1)
     (h2 : MemLp g ⊤) : MemLp g 2 := by
   have hC : ∀ᵐ t, ‖g t‖ ≤ (eLpNorm g ⊤ volume).toReal := by
@@ -260,8 +232,7 @@ instance : SMulCommClass ℂ HalfLineKernel HalfLineKernel where
     change c • conv f g x = conv f (c • (g : ℝ → ℂ)) x
     simp only [conv, convolution_smul]; rfl
 
-/-- **The Fourier transform at `ξ` is a character** of the kernel algebra:
-`𝓕 (f ⋆ g) = 𝓕 f 𝓕 g`. -/
+/-- The Fourier transform at `ξ`, a character of the kernel algebra. -/
 def fourierChar (ξ : ℝ) : HalfLineKernel →ₙₐ[ℂ] ℂ where
   toFun f := 𝓕 (f : ℝ → ℂ) ξ
   map_smul' c f := congrFun (VectorFourier.fourierIntegral_const_smul _ _ _ (f : ℝ → ℂ) c) ξ
@@ -313,7 +284,7 @@ theorem integrable_expFun {ζ : ℂ} (hζ : 0 < ζ.re) : Integrable (expFun ζ) 
   (integrable_indicator_iff measurableSet_Ioi).2
     (integrableOn_exp_mul_complex_Ioi (by simpa using hζ) 0)
 
-/-- **The exponential kernel** `e_ζ(t) = e^{-ζt}` (`t > 0`), for `re ζ > 0`. -/
+/-- The exponential kernel `e_ζ(t) = e^{-ζt}` (`t > 0`), for `re ζ > 0`. -/
 def exp (ζ : ℂ) (hζ : 0 < ζ.re) : HalfLineKernel where
   toFun := expFun ζ
   memLp_one := memLp_one_iff_integrable.2 (integrable_expFun hζ)
@@ -338,7 +309,6 @@ def exp (ζ : ℂ) (hζ : 0 < ζ.re) : HalfLineKernel where
 
 @[simp] theorem coe_exp {ζ : ℂ} (hζ : 0 < ζ.re) : (exp ζ hζ : ℝ → ℂ) = expFun ζ := rfl
 
-/-- `𝓕 e_ζ (ξ) = 1/(ζ + 2πiξ)`. -/
 theorem fourier_expFun {ζ : ℂ} (hζ : 0 < ζ.re) (ξ : ℝ) :
     𝓕 (expFun ζ) ξ = (ζ + 2 * Real.pi * ξ * Complex.I)⁻¹ := by
   have ha : (-(ζ + 2 * Real.pi * ξ * Complex.I)).re < 0 := by simpa using hζ
@@ -354,7 +324,6 @@ theorem fourier_expFun {ζ : ℂ} (hζ : 0 < ζ.re) (ξ : ℝ) :
   simp only [Complex.ofReal_zero, mul_zero, Complex.exp_zero]
   rw [div_neg, neg_div, neg_neg, one_div]
 
-/-- **The resolvent identity of exponential kernels**: `(ζ - η)(e_η ⋆ e_ζ) = e_η - e_ζ`. -/
 theorem sub_smul_conv_expFun {η ζ : ℂ} :
     (ζ - η) • conv (expFun η) (expFun ζ) = expFun η - expFun ζ := by
   ext x
@@ -391,7 +360,6 @@ theorem sub_smul_conv_expFun {η ζ : ℂ} :
         ((Continuous.intervalIntegrable (by fun_prop) _ _))]
     simp [φ, expFun, indicator_of_mem (mem_Ioi.2 hx)]
 
-/-- `e₁ ⋆ e_ζ = s (e_ζ - e₁)` for `ζ = 1 - 1/s`. -/
 theorem exp_one_mul_exp {s : ℂ} (hs : s ≠ 0) (hζ : 0 < (1 - s⁻¹).re) :
     exp 1 (by simp) * exp (1 - s⁻¹) hζ = s • (exp (1 - s⁻¹) hζ - exp 1 (by simp)) := by
   have h := sub_smul_conv_expFun (η := 1) (ζ := 1 - s⁻¹)
@@ -406,22 +374,21 @@ end HalfLineKernel
 
 /-! ### The half-line algebra -/
 
-/-- **The half-line algebra**: the unitization `ℂ ⊕ K` of the kernel algebra, the measures
-`a δ₀ + g(t) dt` on `[0, ∞)` under convolution. -/
+/-- The half-line algebra `ℂ ⊕ K`: the measures `a δ₀ + g(t) dt` on `[0, ∞)` under convolution. -/
 abbrev HalfLineAlgebra := Unitization ℂ HalfLineKernel
 
 namespace HalfLineAlgebra
 
 open Unitization
 
-/-- **The Fourier–Stieltjes transform** at `ξ`, a character: `a δ₀ + g ↦ a + 𝓕 g (ξ)`. -/
+/-- The Fourier–Stieltjes transform `a δ₀ + g ↦ a + 𝓕 g (ξ)`, a character. -/
 def fourier (ξ : ℝ) : HalfLineAlgebra →ₐ[ℂ] ℂ := lift (HalfLineKernel.fourierChar ξ)
 
 theorem fourier_apply (ξ : ℝ) (μ : HalfLineAlgebra) :
     fourier ξ μ = μ.fst + 𝓕 (μ.snd : ℝ → ℂ) ξ := by
   simp [fourier]
 
-/-- **The total variation** `|a| + ∫ |g|` of `a δ₀ + g`. -/
+/-- The total variation `|a| + ∫ |g|` of `a δ₀ + g`. -/
 def variation (μ : HalfLineAlgebra) : ℝ := ‖μ.fst‖ + ∫ t, ‖μ.snd t‖
 
 /-- The resolvent measure `ν = e^{-t} dt`, with Fourier–Stieltjes transform `1/(1 + 2πiξ)`. -/
@@ -431,8 +398,6 @@ theorem fourier_resolvent (ξ : ℝ) :
     fourier ξ resolvent = (1 + 2 * Real.pi * ξ * Complex.I)⁻¹ := by
   simp [fourier_apply, resolvent, HalfLineKernel.fourier_expFun]
 
-/-- **`s - ν` is invertible** when `ζ = 1 - 1/s` has positive real part, with inverse
-`s⁻¹ (1 + s⁻¹ e_ζ)`: the symbol `s - 1/(1 - z)` vanishes exactly at `z = ζ`. -/
 theorem isUnit_algebraMap_sub_resolvent {s : ℂ} (hs : s ≠ 0) (hζ : 0 < (1 - s⁻¹).re) :
     IsUnit (algebraMap ℂ HalfLineAlgebra s - resolvent) := by
   set E : HalfLineAlgebra := inr (HalfLineKernel.exp (1 - s⁻¹) hζ)
@@ -457,7 +422,6 @@ theorem fourier_neg_two_pi_smul (f : ℝ → ℂ) :
   rw [h]
   exact VectorFourier.fourierIntegral_const_smul _ _ _ _ _
 
-/-- `|σⁿ - aⁿ| ≤ |σ - a| / (1 - |a|)` for `|σ| ≤ 1`, `|a| < 1`. -/
 theorem norm_pow_sub_pow_le {σ a : ℂ} (hσ : ‖σ‖ ≤ 1) (ha : ‖a‖ < 1) (n : ℕ) :
     ‖σ ^ n - a ^ n‖ ≤ ‖σ - a‖ / (1 - ‖a‖) := by
   rw [← (Commute.all σ a).geom_sum₂_mul n, norm_mul, div_eq_mul_inv, mul_comm]
@@ -472,9 +436,6 @@ theorem norm_pow_sub_pow_le {σ a : ℂ} (hσ : ‖σ‖ ≤ 1) (ha : ‖a‖ < 
         rw [Finset.range_eq_Ico]; exact geom_sum_Ico_le_of_lt_one (norm_nonneg _) ha
     _ = (1 - ‖a‖)⁻¹ := by rw [pow_zero, one_div]
 
-/-- **The `L²` estimates behind Brenner–Thomée's bound**: for `μ = a δ₀ + g` with `|a| < 1` and
-`|μ̂| ≤ 1`, the density `gₙ` of `μⁿ` satisfies `‖gₙ‖₂ ≤ ‖g‖₂ / (1 - |a|)` and
-`‖t gₙ‖₂ ≤ n ‖t g‖₂`: through Plancherel, `ĝₙ = μ̂ⁿ - aⁿ` and `(ĝₙ)' = n μ̂ⁿ⁻¹ ĝ'`. -/
 theorem integral_norm_pow_snd_sq_le (μ : HalfLineAlgebra) (ha : ‖μ.fst‖ < 1)
     (hσ : ∀ ξ, ‖fourier ξ μ‖ ≤ 1) (n : ℕ) :
     ∫ t, ‖(μ ^ n).snd t‖ ^ 2 ≤ (∫ t, ‖μ.snd t‖ ^ 2) / (1 - ‖μ.fst‖) ^ 2 ∧
@@ -531,11 +492,8 @@ theorem integral_norm_pow_snd_sq_le (μ : HalfLineAlgebra) (ha : ‖μ.fst‖ < 
           exact pow_le_one₀ (by positivity) (pow_le_one₀ (norm_nonneg _) hσ')
       _ = _ := by ring
 
-/-- **Brenner–Thomée's bound on the powers of a measure**: for
-`μ = a δ₀ + g` with `|a| < 1` and `|μ̂(ξ)| ≤ 1` for all `ξ`, the density `gₙ` of `μⁿ` satisfies
-`(∫ |gₙ|)⁴ ≤ K n²`, `K = 4π² ‖g‖₂² ‖t g‖₂² / (1 - |a|)²`; so the total variation of `μⁿ` grows at
-most like `√n`. By Carlson's inequality (`MeasureTheory.MemLp.integral_norm_pow_four_le`) and the
-`L²` estimates `integral_norm_pow_snd_sq_le`. [BrennerThomee1979] -/
+/-- Brenner–Thomée's bound: for `μ = a δ₀ + g` with `|a| < 1` and `|μ̂| ≤ 1`, the density `gₙ` of
+`μⁿ` satisfies `(∫ |gₙ|)⁴ ≤ 4π² ‖g‖₂² ‖t g‖₂² n² / (1 - |a|)²` ([BrennerThomee1979]). -/
 theorem integral_norm_pow_snd_pow_four_le (μ : HalfLineAlgebra) (ha : ‖μ.fst‖ < 1)
     (hσ : ∀ ξ, ‖fourier ξ μ‖ ≤ 1) (n : ℕ) :
     (∫ t, ‖(μ ^ n).snd t‖) ^ 4 ≤ 4 * Real.pi ^ 2 * (∫ t, ‖μ.snd t‖ ^ 2) *

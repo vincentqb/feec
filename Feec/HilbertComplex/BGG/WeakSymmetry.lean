@@ -6,50 +6,22 @@ public import Feec.Variational.SaddlePoint
 /-!
 # Weak symmetry: the saddle point problem of the BGG complex
 
-For real analytic BGG data `D : Feec.BGG.Hilb ℝ …` (`Feec.HilbertComplex.BGG.ToComplex`), the
-mixed Hodge Laplacian of the complex with weak symmetries (5.1) is the saddle point problem
-(5.3) on `X × W̌¹`, `X = V⁰ × Ṽ⁰ × Ṽ¹`, where the constraint `dσ = Sφ` is imposed weakly by a
-multiplier `λ` in the space `W̌¹`, the completion of `W¹` in `|||λ||| = ‖B*λ‖`,
-`B(τ, ψ) = dτ - Sψ` (the mechanism of weakly imposed symmetry in elasticity, [AFW2007]).
-Replacing `H̊²(R)` by `H̊¹(R) × H̊¹(V)` through this multiplier is the device used for plate
-bending in [DuranLiberman1992] and [Falk2008] ([QuennevilleBelair2015], Ch. 5 intro).
-
-## Main definitions
-
-* `Psp`, `Xsp`, `mkX`: the trial/test spaces with the ℓ² product of graph norms.
-* `Hilb.aForm`, `Hilb.bForm`, `Hilb.Bs`: the forms of (5.3); `Hilb.Wcheck`: the multiplier space
-  `W̌¹` (closure of `R(B*)`); `Hilb.tripleNorm`, `Hilb.jW : W¹ → W̌¹`.
-* `Hilb.IsSaddle f x λ`: (5.3); `Hilb.IsReduced f x`: the reduced Hodge Laplacian (5.2);
-  `Hilb.IsSaddleW1`: (5.3) as written in the thesis, with `λ ∈ W¹`.
+For real analytic BGG data, the mixed Hodge Laplacian of the complex with weak symmetries (5.1) is
+the saddle point problem (5.3) of [QuennevilleBelair2015], §5.1, with the constraint `dσ = Sφ`
+imposed by a multiplier in the completion `W̌¹` of `W¹` for `|||λ||| = ‖B*λ‖`; it is equivalent to
+the reduced Hodge Laplacian (5.2), and well posed under `Hilb.Hyps` by Brezzi's theorem
+([Brezzi1974]).
 
 ## Main results
 
-* `Hilb.saddle_wellPosed`, `Hilb.existsUnique_isSaddle`: (5.3) is well posed on `X × W̌¹`
-  (thesis Prop 5.2, corrected), via Brezzi with `Hilb.infSup_b`, `Hilb.infSup_a` and the
-  transposed condition `Hilb.nondeg_a` (missing in the thesis).
-* `Hilb.tripleNorm_spec`, `Hilb.tripleNorm_definite`, `Hilb.jW_spec`: `W̌¹` is the completion of
-  `(W¹, |||·|||)` under the corrected density hypothesis.
-* `Hilb.existsUnique_isReduced`, `Hilb.existsUnique_multiplier`, `Hilb.isSaddle_iff_isReduced`:
-  (5.2) ⇔ (5.3).
-
-The scalars are real; Brezzi's theorem enters through `Feec.BGG.brezzi_wellPosed_real`, the
-bilinear form of `Feec.Variational.existsUnique_isSaddleSolution` with its stability bounds.
+* `Hilb.existsUnique_isSaddle`: under `Hyps`, (5.3) is well posed on `X × W̌¹`.
+* `Hilb.isSaddle_iff_isReduced`: `(x, λ)` solves (5.3) iff `x` solves (5.2) with multiplier `λ`.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (Prop 5.2, (5.2)–(5.3)); §4.5 (Brezzi's theorem, Thm 4.11)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
-  (weakly imposed symmetry)
-* [R. Durán, E. Liberman, *On mixed finite element methods for the Reissner–Mindlin plate model*][DuranLiberman1992]
-  (the norm `|||·|||`)
-* [R. S. Falk, *Finite elements for the Reissner–Mindlin plate*][Falk2008] (the norm `|||·|||`)
+  §5.1, §4.5
 * [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
-  (saddle point problems)
-* [D. Boffi, F. Brezzi, M. Fortin, *Mixed Finite Element Methods and Applications*][BoffiBrezziFortin2013]
-  (saddle point problems)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -66,11 +38,10 @@ section ProdSpaces
 variable {V0 Vt0 Vt1 : Type*} [NormedAddCommGroup V0] [InnerProductSpace ℝ V0]
   [NormedAddCommGroup Vt0] [InnerProductSpace ℝ Vt0] [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
 
-/-- `P = V⁰ × Ṽ⁰` with the ℓ² product norm (correction: the thesis' sum norm
-`‖τ‖_V + ‖ψ‖_V` gives an equivalent, non-Hilbertian norm). -/
+/-- `P = V⁰ × Ṽ⁰` with the `ℓ²` product norm. -/
 abbrev Psp (V0 Vt0 : Type*) := WithLp 2 (V0 × Vt0)
 
-/-- The trial/test space `X = V⁰ × Ṽ⁰ × Ṽ¹` of (5.3), with the ℓ² product of graph norms. -/
+/-- The trial/test space `X = V⁰ × Ṽ⁰ × Ṽ¹` of (5.3), with the `ℓ²` product of graph norms. -/
 abbrev Xsp (V0 Vt0 Vt1 : Type*) := WithLp 2 (Psp V0 Vt0 × Vt1)
 
 variable (V0 Vt0 Vt1) in
@@ -127,12 +98,8 @@ lemma norm_innerSLFlip_le (x : X) : ‖innerSLFlip ℝ x‖ ≤ ‖x‖ :=
   ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg x) fun v => by
     rw [innerSLFlip_apply_apply, mul_comm]; exact norm_inner_le_norm v x
 
-/-- **Brezzi's theorem for a real bilinear form** `a` and constraint `B`: inf-sup of `a` on
-`ker B` (attained form), its transposed condition, and inf-sup of `B` give unique solvability
-of `a(u, v) + ⟪Bv, p⟫ = ⟪F, v⟫`, `⟪Bu, q⟫ = ⟪G, q⟫` with `‖u‖ + ‖p‖ ≤ C (‖F‖ + ‖G‖)`.
-[QuennevilleBelair2015], Thm 4.11
-
-See [QuennevilleBelair2015], Thm 4.11; [Brezzi1974], [BoffiBrezziFortin2013]. -/
+/-- Brezzi's theorem for a real bilinear form and a constraint. [QuennevilleBelair2015], Thm 4.11;
+[Brezzi1974] -/
 theorem brezzi_wellPosed_real [CompleteSpace X] [CompleteSpace Y] (a : X →L[ℝ] X →L[ℝ] ℝ)
     (Bs : X →L[ℝ] Y)
     (hZ : ∃ γ > 0, ∀ z ∈ Bs.ker, ∃ z' ∈ Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ a z z')
@@ -222,10 +189,7 @@ variable {W0 W1 Wt0 Wt1 W2 Wt2 V0 V1 Vt0 Vt1 : Type*}
 
 /-! ### The saddle point problem (5.3) -/
 
-/-- The bilinear form `a` of (5.3):
-`a(σ,φ,u; τ,ψ,v) = (σ,τ) - (u, d̃ψ) + (d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v)` (all `W`-inner products).
-
-See [QuennevilleBelair2015], (5.3); symmetry imposed weakly as in [AFW2007]. -/
+/-- The bilinear form `a` of (5.3). -/
 def aForm : Xsp V0 Vt0 Vt1 →L[ℝ] Xsp V0 Vt0 Vt1 →L[ℝ] ℝ :=
   ip (D.ι0 ∘L pσ V0 Vt0 Vt1) (D.ι0 ∘L pσ V0 Vt0 Vt1)
     - ip (D.ιt1 ∘L pu V0 Vt0 Vt1) (D.ιt1 ∘L D.dt0 ∘L pφ V0 Vt0 Vt1)
@@ -258,29 +222,15 @@ lemma Bop_eq_zero_iff (q : Psp V0 Vt0) : D.Bop q = 0 ↔ (q.fst, q.snd) ∈ D.Γ
 
 local notation "adj" => ContinuousLinearMap.adjoint
 
-/-- **The multiplier space `W̌¹`**: the completion of `W¹` in
-`|||λ||| = sup_{(τ,ψ)} (λ, dτ - Sψ)/‖(τ,ψ)‖`, realised as the closure of `R(B*)` in `V⁰ × Ṽ⁰`
-(`|||λ||| = ‖B*λ‖`, see `tripleNorm_spec`, `jW`).
-
-See [QuennevilleBelair2015], §5.1, before Prop 5.2; analogous to the multiplier norm in the
-limiting case `t = 0` of the Reissner–Mindlin plate [Falk2008], cf. [DuranLiberman1992]. -/
+/-- The multiplier space `W̌¹`, the closure of `R(B*)` in `V⁰ × Ṽ⁰`. -/
 def Wcheck : Submodule ℝ (Psp V0 Vt0) := (adj D.Bop).range.topologicalClosure
 
 instance : CompleteSpace D.Wcheck :=
   (Submodule.isClosed_topologicalClosure _).completeSpace_coe
 
-/-- `|||λ|||` (thesis §5.1), with the ℓ² norm on `V⁰ × Ṽ⁰`.
-
-See [QuennevilleBelair2015], §5.1, before Prop 5.2; the multiplier norm of the plate-bending
-formulations [DuranLiberman1992], [Falk2008]. -/
+/-- `|||λ||| = ‖B*λ‖`, with the `ℓ²` norm on `V⁰ × Ṽ⁰`. -/
 def tripleNorm (l : W1) : ℝ := ‖adj D.Bop l‖
 
-/-- Thesis §5.1 (definition of `|||·|||`): `|||λ||| = ‖B*λ‖` is the thesis' supremum:
-`(λ, dτ - Sψ) ≤ |||λ||| ‖(τ,ψ)‖`, with equality attained
-on the unit ball.
-
-See [QuennevilleBelair2015], §5.1, before Prop 5.2; cf. the multiplier norm of
-[DuranLiberman1992] and of the Reissner–Mindlin plate at `t = 0` [Falk2008]. -/
 theorem tripleNorm_spec (l : W1) :
     (∀ q, ⟪l, D.Bop q⟫ ≤ D.tripleNorm l * ‖q‖) ∧
       ∃ q, ‖q‖ ≤ 1 ∧ ⟪l, D.Bop q⟫ = D.tripleNorm l := by
@@ -295,12 +245,6 @@ theorem tripleNorm_spec (l : W1) :
           real_inner_self_eq_norm_sq, tripleNorm]
         field_simp
 
-/-- **`|||·|||` is a norm** (thesis: "is actually a norm", no proof), under the corrected density
-hypothesis `d⁰V⁰ + S₀Ṽ⁰` dense in `W¹`.
-
-See [QuennevilleBelair2015], §5.1, before Prop 5.2. The thesis calls this analogous to the
-Reissner–Mindlin analysis at `t = 0` [Falk2008]; the proof here is a direct orthogonality
-argument and uses nothing from [Falk2008]. -/
 theorem tripleNorm_definite
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1))
@@ -319,17 +263,13 @@ theorem tripleNorm_definite
   simp only [ContinuousLinearMap.coe_coe, ContinuousLinearMap.comp_apply, inner_add_left]
   rw [h1, h2, add_zero]
 
-/-- The embedding `W¹ → W̌¹`, `λ ↦ B*λ`. -/
+/-- The map `W¹ → W̌¹`, `λ ↦ B*λ`. -/
 def jW : W1 →L[ℝ] D.Wcheck :=
   (adj D.Bop).codRestrict D.Wcheck fun l =>
     Submodule.le_topologicalClosure _ (LinearMap.mem_range_self _ l)
 
-/-- Thesis §5.1 / Prop 5.2: **`W̌¹` is the completion of `(W¹, |||·|||)`**: `jW` is isometric for
-`|||·|||`, has dense
-range, and is injective under the density hypothesis.
-
-See [QuennevilleBelair2015], §5.1, Prop 5.2; the completion is the analogue of the multiplier
-space of [Falk2008] (limiting case `t = 0`), cf. [DuranLiberman1992]. -/
+/-- When `d⁰V⁰ + S₀Ṽ⁰` is dense in `W¹`, `jW` is an injective isometry for `|||·|||` with dense
+range. -/
 theorem jW_spec
     (hdense : Dense ((LinearMap.range (D.ι1 ∘L D.d0 : V0 →ₗ[ℝ] W1) ⊔
       LinearMap.range (D.ι1 ∘L D.S0 : Vt0 →ₗ[ℝ] W1) : Submodule ℝ W1) : Set W1)) :
@@ -351,13 +291,12 @@ theorem jW_spec
 /-- The constraint operator: `b(y, μ) = ⟪Bs y, μ⟫`. -/
 def Bs : Xsp V0 Vt0 Vt1 →L[ℝ] D.Wcheck := -(D.Wcheck.orthogonalProjectionOnto ∘L pP V0 Vt0 Vt1)
 
-/-- The bilinear form `b` of (5.3), extended to `μ ∈ W̌¹`: `b(τ,ψ,v; μ) = -⟪(τ,ψ), μ⟫`. -/
+/-- The bilinear form `b` of (5.3), extended to `μ ∈ W̌¹`. -/
 def bForm (y : Xsp V0 Vt0 Vt1) (μ : D.Wcheck) : ℝ := -⟪pP V0 Vt0 Vt1 y, (μ : Psp V0 Vt0)⟫
 
 lemma inner_Bs (y : Xsp V0 Vt0 Vt1) (μ : D.Wcheck) : ⟪D.Bs y, μ⟫ = D.bForm y μ := by
   simp [Bs, bForm, inner_neg_left]
 
-/-- On `W¹ ⊂ W̌¹`, `b` is the thesis' `b(τ,ψ,v; λ) = -(λ, dτ - Sψ)`. -/
 lemma bForm_jW (y : Xsp V0 Vt0 Vt1) (l : W1) :
     D.bForm y (D.jW l) = -⟪l, D.ι1 (D.d0 (pσ V0 Vt0 Vt1 y) - D.S0 (pφ V0 Vt0 Vt1 y))⟫ := by
   rw [bForm, show ((D.jW l : D.Wcheck) : Psp V0 Vt0) = adj D.Bop l from rfl,
@@ -371,7 +310,6 @@ lemma mem_orth_Wcheck_iff (q : Psp V0 Vt0) : q ∈ D.Wcheckᗮ ↔ (q.fst, q.snd
   rw [this]
   rfl
 
-/-- The kernel of `b` is `Z = Γ × Ṽ¹` (thesis, proof of Prop 5.2). -/
 lemma mem_ker_Bs (y : Xsp V0 Vt0 Vt1) :
     y ∈ D.Bs.ker ↔ (pσ V0 Vt0 Vt1 y, pφ V0 Vt0 Vt1 y) ∈ D.Γ := by
   show D.Bs y = 0 ↔ _
@@ -383,10 +321,6 @@ lemma mem_ker_Bs (y : Xsp V0 Vt0 Vt1) :
 lemma mkX_mem_ker {σ : V0} {φ : Vt0} (u : Vt1) (h : (σ, φ) ∈ D.Γ) : mkX σ φ u ∈ D.Bs.ker :=
   (D.mem_ker_Bs _).2 h
 
-/-- Inf-sup of `b` with constant `1` (thesis: "holds by definition of the norm on `W̌¹`").
-
-See [QuennevilleBelair2015], proof of Prop 5.2; the inf-sup condition on `b` of Brezzi's theorem
-[QuennevilleBelair2015], Thm 4.11, [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem infSup_b : ∀ μ : D.Wcheck, 1 * ‖μ‖ ≤ ‖adj D.Bs μ‖ := by
   intro μ
   rw [one_mul]
@@ -415,7 +349,6 @@ lemma inner_ιt1_of_orth {e w : Vt1} (he : e ∈ D.Z1) (hw : w ∈ D.Z1ᗮ) :
   have h0 : ⟪w, e⟫ = 0 := Submodule.inner_left_of_mem_orthogonal he hw
   rwa [D.grapht1, (D.mem_Z1.1 he).2, inner_zero_right, add_zero] at h0
 
-/-- Real-arithmetic core of the inf-sup estimate (Young's inequality step). -/
 private lemma core_low {s r E P A B ε c : ℝ} (hε0 : 0 ≤ ε) (hε1 : ε ≤ 1) (hεc : ε * c ^ 2 = 1)
     (hr : r ≤ s * (c * E)) :
     ε / 2 * (E ^ 2 + P ^ 2 + A ^ 2 + B ^ 2) ≤ s ^ 2 - ε * r + ε * E ^ 2 + ε * P ^ 2 + A ^ 2 + B ^ 2 := by
@@ -442,15 +375,6 @@ private lemma sq3_eq_zero {a b c : ℝ} (h : a ^ 2 + b ^ 2 + c ^ 2 = 0) :
   exact ⟨pow_eq_zero_iff two_ne_zero |>.1 ha, pow_eq_zero_iff two_ne_zero |>.1 hb,
     pow_eq_zero_iff two_ne_zero |>.1 hc⟩
 
-/-- **Inf-sup condition for `a` on `Z = Γ × Ṽ¹`** (thesis, proof of Prop 5.2), with the thesis'
-test function restored: `(τ, ψ, v) = (σ - ερ, φ - εχ, u + ε d̃φ)` where `u = d̃χ + w`,
-`(ρ, χ) ∈ Γ`, `w ⊥ N(S₁) ∩ N(d̃¹)`, and `ε = 1/c²`.
-Thesis gaps: the ε's are lost in the text; the decomposition without harmonic part needs
-exactness of (5.1) at `Ṽ¹` (`hodge_Vt1`); the final step `a ≥ C ‖x‖ ‖y‖` needs the bounds
-`‖x‖², ‖y - x‖² ≤ 2c² Q`, written out below.
-
-See [QuennevilleBelair2015], proof of Prop 5.2; the inf-sup condition on the kernel of Brezzi's
-theorem [QuennevilleBelair2015], Thm 4.11, [Brezzi1974], [BoffiBrezziFortin2013]. -/
 theorem infSup_a (h : D.Hyps) :
     ∃ γ > 0, ∀ z ∈ D.Bs.ker, ∃ z' ∈ D.Bs.ker, ‖z'‖ ≤ 1 ∧ γ * ‖z‖ ≤ D.aForm z z' := by
   obtain ⟨C1, hC1, hP1⟩ := D.poincare_Γ h
@@ -576,14 +500,6 @@ theorem infSup_a (h : D.Hyps) :
       calc ‖y‖ * (ε / (8 * c ^ 2) * ‖z‖) = ε / (8 * c ^ 2) * ‖z‖ * ‖y‖ := by ring
         _ ≤ _ := hmain
 
-/-- **Transposed Brezzi condition on `Z`** (missing in the thesis): if `a(x, y) = 0` for all
-`x ∈ Z` then `y = 0`. Thesis gap: Brezzi's theorem for the non-symmetric `a` needs this second
-condition, which the thesis never checks. Proof: `a(y, y) = ‖τ‖² + ‖S₁v‖² + ‖d̃v‖²`; testing with
-`(0, 0, d̃ψ)` gives `ψ = 0`; then `v ∈ N(S₁) ∩ N(d̃¹) = R(0 d)` by exactness at `Ṽ¹`, and testing
-with `(ρ, χ, 0)`, `d̃χ = v`, gives `v = 0`. (Injectivity of `S₀` is not needed.)
-
-Cf. [QuennevilleBelair2015], proof of Prop 5.2; Brezzi's theorem for non-symmetric `a`:
-[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (proof) -/
 theorem nondeg_a (h : D.Hyps) :
     ∀ z' ∈ D.Bs.ker, (∀ z ∈ D.Bs.ker, D.aForm z z' = 0) → z' = 0 := by
   intro z' hz' hall
@@ -624,19 +540,8 @@ theorem nondeg_a (h : D.Hyps) :
   rw [← mkX_eta z', ← hτ, ← hψ, ← hv, hτ0, hψ0, hv0]
   rfl
 
-/-- **Thesis Prop 5.2** (corrected), general form: the saddle point problem
-`a(x, y) + b(y, λ) = ⟪F, y⟫ ∀ y ∈ X`, `b(x, μ) = ⟪G, μ⟫ ∀ μ ∈ W̌¹` on `X × W̌¹`
-(`X = V⁰ × Ṽ⁰ × Ṽ¹`) is well posed: unique solvability and `‖x‖ + ‖λ‖ ≤ C (‖F‖ + ‖G‖)`.
-
-Proof by Brezzi (`brezzi_wellPosed_real`): inf-sup of `b` (`infSup_b`), inf-sup of `a` on
-`Z = Γ × Ṽ¹` (`infSup_a`) and the transposed condition (`nondeg_a`, missing in the thesis).
-Correction: neither density of `S₀Ṽ⁰` nor injectivity of `S₀` is needed for well-posedness on
-`X × W̌¹`; density only serves to embed `W¹` into `W̌¹` (`jW_spec`).
-
-See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
-[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected). The symmetry
-is imposed weakly as in [AFW2007]; the multiplier space `W̌¹` is the analogue of [Falk2008]
-(`t = 0`). -/
+/-- The saddle point problem with forms `a`, `b` on `X × W̌¹` is well posed.
+[QuennevilleBelair2015], Prop 5.2 (adapted) -/
 theorem saddle_wellPosed (h : D.Hyps) :
     (∀ (F : Xsp V0 Vt0 Vt1) (G : D.Wcheck), ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck,
       (∀ y, D.aForm xl.1 y + D.bForm y xl.2 = ⟪F, y⟫) ∧ ∀ μ, D.bForm xl.1 μ = ⟪G, μ⟫) ∧
@@ -649,20 +554,12 @@ theorem saddle_wellPosed (h : D.Hyps) :
   simp only [inner_Bs] at hex hC
   exact ⟨hex, C, hC⟩
 
-/-- The system (5.3) with right-hand side `f ∈ W̃¹` and multiplier `λ ∈ W̌¹`:
-`a(σ,φ,u; τ,ψ,v) + b(τ,ψ,v; λ) = (f, v)` for all `(τ,ψ,v)`, and `b(σ,φ,u; μ) = 0` for all `μ`. -/
+/-- The system (5.3) with right-hand side `f ∈ W̃¹` and multiplier `λ ∈ W̌¹`. -/
 def IsSaddle (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) : Prop :=
   (∀ y, D.aForm x y + D.bForm y l = ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫) ∧ ∀ μ, D.bForm x μ = 0
 
-/-- **Thesis Prop 5.2**: (5.3) is well posed over `V⁰ × Ṽ⁰ × Ṽ¹ × W̌¹`: for every `f ∈ W̃¹` there
-is a unique solution, and `‖(σ,φ,u)‖_V + |||λ||| ≤ C ‖f‖`.
-
-Corrections: `λ ∈ W̌¹`, not `W¹` as (5.3) says; the density hypothesis of the thesis is not
-needed here (it is used in `jW_spec`); the transposed Brezzi condition is added and proved.
-
-See [QuennevilleBelair2015], Prop 5.2, via Brezzi's theorem [QuennevilleBelair2015], Thm 4.11,
-[Brezzi1974], [BoffiBrezziFortin2013]. [QuennevilleBelair2015], Prop 5.2 (corrected). Weak
-imposition of the constraint as in [AFW2007]; multiplier space as in [Falk2008] (`t = 0`). -/
+/-- (5.3) has a unique solution for every `f ∈ W̃¹`, with `‖(σ,φ,u)‖_V + |||λ||| ≤ C ‖f‖`.
+[QuennevilleBelair2015], Prop 5.2 (adapted) -/
 theorem existsUnique_isSaddle (h : D.Hyps) :
     (∀ f : Wt1, ∃! xl : Xsp V0 Vt0 Vt1 × D.Wcheck, D.IsSaddle f xl.1 xl.2) ∧
     ∃ C, ∀ (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck), D.IsSaddle f x l →
@@ -689,11 +586,7 @@ theorem existsUnique_isSaddle (h : D.Hyps) :
       _ ≤ max C 0 * (‖R‖ * ‖f‖) := by gcongr
       _ = _ := by ring
 
-/-- The reduced Hodge Laplacian (5.2): `(σ, φ) ∈ Γ`, `(σ, τ) - (u, d̃ψ) = 0` for `(τ, ψ) ∈ Γ`, and
-`(d̃φ, v) + (S₁u, S₁v) + (d̃u, d̃v) = (f, v)` for `v ∈ Ṽ¹`.
-
-See [QuennevilleBelair2015], (5.2); the mixed Hodge Laplacian of a closed Hilbert complex as in
-[AFW2010], [Arnold2018]. -/
+/-- The reduced Hodge Laplacian (5.2). -/
 def IsReduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) : Prop :=
   (pσ V0 Vt0 Vt1 x, pφ V0 Vt0 Vt1 x) ∈ D.Γ ∧
   (∀ τ ψ, (τ, ψ) ∈ D.Γ →
@@ -723,7 +616,6 @@ lemma forall_bForm_eq_zero_iff (x : Xsp V0 Vt0 Vt1) :
   · intro hb μ
     rw [← inner_Bs, hb, inner_zero_left]
 
-/-- Thesis §5.1 (after (5.3)): a solution of (5.3) gives a solution of (5.2). -/
 theorem isReduced_of_isSaddle {f : Wt1} {x : Xsp V0 Vt0 Vt1} {l : D.Wcheck}
     (hs : D.IsSaddle f x l) : D.IsReduced f x := by
   have hΓ := (D.forall_bForm_eq_zero_iff x).1 hs.2
@@ -735,12 +627,7 @@ theorem isReduced_of_isSaddle {f : Wt1} {x : Xsp V0 Vt0 Vt1} {l : D.Wcheck}
     rw [D.bForm_mkX_of_mem v (by simp [D.mem_Γ]), D.aForm_split] at e
     simpa using e
 
-/-- **(5.2) is a well-posed Hodge Laplacian** (thesis: asserted without proof): for every
-`f ∈ W̃¹` it has exactly one solution. Uniqueness is the inf-sup of `a` on `Z`; existence comes
-from (5.3).
-
-See [QuennevilleBelair2015], §5.1, (5.2); cf. well-posedness of the mixed Hodge Laplacian
-[AFW2010], [Arnold2018]. [QuennevilleBelair2015], Prop 5.2 -/
+/-- The reduced Hodge Laplacian (5.2) has exactly one solution for every `f ∈ W̃¹`. -/
 theorem existsUnique_isReduced (h : D.Hyps) (f : Wt1) : ∃! x, D.IsReduced f x := by
   obtain ⟨⟨xl, hxl, -⟩, -⟩ := (D.existsUnique_isSaddle h).1 f, ()
   refine ⟨xl.1, D.isReduced_of_isSaddle hxl, fun x' hx' => ?_⟩
@@ -762,11 +649,6 @@ theorem existsUnique_isReduced (h : D.Hyps) (f : Wt1) : ∃! x, D.IsReduced f x 
     le_antisymm (by nlinarith [norm_nonneg (x' - xl.1)]) (norm_nonneg _)
   exact sub_eq_zero.1 (norm_eq_zero.1 this)
 
-/-- Thesis §5.1 (after (5.3)), converse direction made precise: a solution of (5.2) extends to a
-solution of (5.3) with a **unique** multiplier `λ ∈ W̌¹`.
-
-See [QuennevilleBelair2015], §5.1, (5.2)–(5.3); the multiplier replaces `H̊²(R)` by
-`H̊¹(R) × H̊¹(V)` as for plate bending in [DuranLiberman1992], [Falk2008]. -/
 theorem existsUnique_multiplier (h : D.Hyps) {f : Wt1} {x : Xsp V0 Vt0 Vt1}
     (hx : D.IsReduced f x) : ∃! l : D.Wcheck, D.IsSaddle f x l := by
   obtain ⟨xl, hxl, huniq⟩ := (D.existsUnique_isSaddle h).1 f
@@ -776,11 +658,7 @@ theorem existsUnique_multiplier (h : D.Hyps) {f : Wt1} {x : Xsp V0 Vt0 Vt1}
   have := huniq (x, l) hl
   rw [← this]
 
-/-- Thesis §5.1, (5.3) ↔ (5.2) plus multiplier equation: `(x, λ)` solves (5.3) iff `x` solves (5.2)
-and `λ` is
-the (unique, `existsUnique_multiplier`) multiplier.
-
-See [QuennevilleBelair2015], §5.1, (5.2)–(5.3); weakly imposed constraint as in [AFW2007]. -/
+/-- `(x, λ)` solves (5.3) iff `x` solves (5.2) and `b(y, λ) = (f, v) - a(x, y)` for all `y`. -/
 theorem isSaddle_iff_isReduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) :
     D.IsSaddle f x l ↔ D.IsReduced f x ∧
       ∀ y, D.bForm y l = ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫ - D.aForm x y := by
@@ -790,9 +668,7 @@ theorem isSaddle_iff_isReduced (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : D.Wcheck) :
   · rintro ⟨hr, hm⟩
     exact ⟨fun y => by rw [hm y]; ring, (D.forall_bForm_eq_zero_iff x).2 hr.1⟩
 
-/-- The system (5.3) *as written in the thesis*, with `λ, μ ∈ W¹`.
-
-See [QuennevilleBelair2015], (5.3). -/
+/-- The system (5.3) with `λ, μ ∈ W¹`. -/
 def IsSaddleW1 (f : Wt1) (x : Xsp V0 Vt0 Vt1) (l : W1) : Prop :=
   (∀ y, D.aForm x y - ⟪l, D.ι1 (D.d0 (pσ V0 Vt0 Vt1 y) - D.S0 (pφ V0 Vt0 Vt1 y))⟫ =
     ⟪f, D.ιt1 (pu V0 Vt0 Vt1 y)⟫) ∧

@@ -7,30 +7,14 @@ public import Feec.Variational.InfSup
 /-!
 # Counterexamples on `ℓ²(ℕ, 𝕜)`
 
-Two thesis claims about operators and bounded forms are refuted on the sequence space
-`ℓ²(ℕ, 𝕜)`, `𝕜 = ℝ` or `ℂ`:
-
-* **Kernels of unbounded operators need not be closed** (thesis §4.3). The zero operator on the
-  dense, non-closed subspace `finSupp` of finitely supported sequences is densely defined, but
-  its kernel (its whole domain) is not closed: `exists_dense_not_isClosed_ker`. The kernel of a
-  *closed* operator is closed (`Feec.HilbertComplex.isClosed_ker`).
-* **The converse of Babuška–Nečas needs uniqueness** (thesis Thm 4.9). For the backward shift
-  `S`, the form `B u v = ⟪v, S u⟫` is solvable for every right-hand side and separating on the
-  second slot, yet has no inf-sup constant (`S e₀ = 0`): `surjective_not_infSup`. Hence
-  "for every `f` there exists `u`" in the converse must read "there exists a unique `u`"
-  (`Feec.Variational.babuskaNecas_iff`).
-
-## Main definitions
-
-* `Counterexamples.Ell2.L2 𝕜`: `ℓ²(ℕ, 𝕜)`.
-* `Counterexamples.Ell2.finSupp 𝕜`: the finitely supported sequences; `geom`: `(1/2)ⁿ`.
-* `Counterexamples.Ell2.shift 𝕜`: the backward shift `(S x)ₙ = xₙ₊₁`, a contraction.
+On `ℓ²(ℕ, 𝕜)`, a densely defined operator whose kernel is not closed (cf.
+[QuennevilleBelair2015], §4.3), and a bounded form solvable for every right-hand side that
+satisfies no inf-sup condition (cf. [QuennevilleBelair2015], Thm 4.9).
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.3 (closed kernels), Thm 4.9 (Babuška–Nečas)
-* [I. Babuška, *Error-bounds for finite element method*][Babuska1971]
+  §4.3, Thm 4.9
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -56,7 +40,6 @@ def finSupp : Submodule 𝕜 (L2 𝕜) :=
 
 variable {𝕜}
 
-/-- Finitely supported sequences vanish eventually. -/
 theorem finSupp_eventually_zero {f : L2 𝕜} (hf : f ∈ finSupp 𝕜) : ∃ N, ∀ n ≥ N, f n = 0 := by
   induction hf using Submodule.span_induction with
   | mem x hx =>
@@ -74,7 +57,6 @@ theorem finSupp_eventually_zero {f : L2 𝕜} (hf : f ∈ finSupp 𝕜) : ∃ N,
     obtain ⟨N, hN⟩ := hx
     exact ⟨N, fun n hn => by rw [lp.coeFn_smul, Pi.smul_apply, hN n hn, smul_zero]⟩
 
-/-- Finitely supported sequences are dense in `ℓ²`. -/
 theorem dense_finSupp : Dense (finSupp 𝕜 : Set (L2 𝕜)) := by
   intro f
   refine mem_closure_of_tendsto (lp.hasSum_single ENNReal.ofNat_ne_top f) ?_
@@ -82,7 +64,7 @@ theorem dense_finSupp : Dense (finSupp 𝕜 : Set (L2 𝕜)) := by
   exact Submodule.sum_mem _ fun i _ => Submodule.subset_span ⟨(i, f i), rfl⟩
 
 variable (𝕜) in
-/-- The geometric sequence `(1/2)ⁿ`, an element of `ℓ²` that is not finitely supported. -/
+/-- The geometric sequence `(1/2)ⁿ` in `ℓ²`. -/
 def geom : L2 𝕜 :=
   ⟨fun n => ((1 / 2 : ℝ) ^ n : ℝ), memℓp_gen <| by
     have h : ∀ n : ℕ, ‖(((1 / 2 : ℝ) ^ n : ℝ) : 𝕜)‖ ^ (2 : ENNReal).toReal = (1 / 4 : ℝ) ^ n := by
@@ -93,8 +75,6 @@ def geom : L2 𝕜 :=
     simp_rw [h]
     exact summable_geometric_of_lt_one (by norm_num) (by norm_num)⟩
 
-/-- Finitely supported sequences are not closed in `ℓ²`: `geom` is in the closure but not in the
-subspace. -/
 theorem not_isClosed_finSupp : ¬ IsClosed (finSupp 𝕜 : Set (L2 𝕜)) := by
   intro h
   have hg : geom 𝕜 ∈ finSupp 𝕜 := by
@@ -122,7 +102,6 @@ def shiftₗ : L2 𝕜 →ₗ[𝕜] L2 𝕜 where
 
 @[simp] theorem shiftₗ_apply (x : L2 𝕜) (n : ℕ) : shiftₗ 𝕜 x n = x (n + 1) := rfl
 
-/-- The backward shift is a contraction on `ℓ²`. -/
 theorem norm_shiftₗ_le (x : L2 𝕜) : ‖shiftₗ 𝕜 x‖ ≤ ‖x‖ := by
   refine lp.norm_le_of_forall_sum_le two_toReal_pos (norm_nonneg _) fun s => ?_
   have hs := ((lp.memℓp x).summable two_toReal_pos)
@@ -144,11 +123,9 @@ private theorem memℓp_unshift (f : L2 𝕜) :
   have hf := (memℓp_gen_iff two_toReal_pos).1 (lp.memℓp f)
   exact (memℓp_gen_iff two_toReal_pos).2 ((summable_nat_add_iff 1).1 hf)
 
-/-- The backward shift is onto (right inverse: the forward shift). -/
 theorem shift_surjective : Function.Surjective (shift 𝕜) := fun f =>
   ⟨⟨_, memℓp_unshift f⟩, by ext n; rfl⟩
 
-/-- The backward shift kills `e₀`, so it is not injective. -/
 theorem shift_single : shift 𝕜 (lp.single 2 0 (1 : 𝕜)) = 0 := by
   ext n
   simp
@@ -164,11 +141,7 @@ open Ell2
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-- **Kernels of unbounded operators need not be closed.** The zero operator on the dense,
-non-closed subspace of finitely supported sequences in `ℓ²(ℕ, 𝕜)` is densely defined (and
-bounded on its domain, hence closable), but its kernel, its whole domain, is not closed. The
-kernel of a closed operator is closed (`Feec.HilbertComplex.isClosed_ker`).
-[QuennevilleBelair2015], §4.3 (refuted) -/
+/-- Some densely defined operator on `ℓ²(ℕ, 𝕜)` vanishing on its domain has a non-closed kernel. -/
 theorem exists_dense_not_isClosed_ker :
     ∃ T : L2 𝕜 →ₗ.[𝕜] L2 𝕜, Dense (T.domain : Set (L2 𝕜)) ∧ (∀ x : T.domain, T x = 0) ∧
       ¬ IsClosed (T.ker : Set (L2 𝕜)) := by
@@ -180,7 +153,6 @@ theorem exists_dense_not_isClosed_ker :
   rw [hker]
   exact not_isClosed_finSupp
 
-/-- The kernel of a densely defined operator need not be closed. [QuennevilleBelair2015], §4.3 (refuted) -/
 theorem not_forall_isClosed_ker :
     ¬ ∀ T : L2 𝕜 →ₗ.[𝕜] L2 𝕜, Dense (T.domain : Set (L2 𝕜)) → IsClosed (T.ker : Set (L2 𝕜)) :=
   fun h => by
@@ -195,7 +167,6 @@ def shiftForm : L2 𝕜 →L[𝕜] L2 𝕜 →L⋆[𝕜] 𝕜 := (innerSLFlip �
 
 @[simp] theorem shiftForm_apply (u v : L2 𝕜) : shiftForm 𝕜 u v = ⟪v, shift 𝕜 u⟫_𝕜 := rfl
 
-/-- `B u = ⟪·, f⟫` is solvable for every `f`. -/
 theorem exists_shiftForm_eq (f : L2 𝕜) : ∃ u, ∀ v, shiftForm 𝕜 u v = ⟪v, f⟫_𝕜 := by
   obtain ⟨u, hu⟩ := shift_surjective (𝕜 := 𝕜) f
   exact ⟨u, fun v => by simp [hu]⟩
@@ -218,11 +189,8 @@ theorem not_injective_shiftForm : ¬ Function.Injective (shiftForm 𝕜) := fun 
 
 end Ell2
 
-/-- **The converse of Babuška–Nečas needs uniqueness.** With `S` the backward shift on
-`ℓ²(ℕ, 𝕜)`, the bounded sesquilinear form `B u v = ⟪v, S u⟫` (`Ell2.shiftForm`) is solvable for
-every right-hand side (`S` is onto) and separating on the second slot, yet it satisfies no
-inf-sup condition and is not injective (`S e₀ = 0`). So "for every `f` there exists `u`" in the
-converse of thesis Thm 4.9 must read "there exists a unique `u`". [QuennevilleBelair2015], Thm 4.9 (corrected) -/
+/-- Some bounded form on `ℓ²(ℕ, 𝕜)` is solvable for every right-hand side and separating in the
+second slot, but satisfies no inf-sup condition and is not injective. -/
 theorem surjective_not_infSup :
     ∃ B : L2 𝕜 →L[𝕜] L2 𝕜 →L⋆[𝕜] 𝕜, (∀ f : L2 𝕜, ∃ u, ∀ v, B u v = ⟪v, f⟫_𝕜) ∧
       Variational.SeparatingRight B ∧ (∀ γ, ¬ Variational.InfSup B γ) ∧

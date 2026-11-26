@@ -8,56 +8,22 @@ public import Feec.HilbertComplex.BGG.Twisted
 /-!
 # Analytic BGG data restricted to the domains
 
-Analytic BGG data `D : HilbertData 𝕜 c W Wt` (two Hilbert complexes and bounded connecting maps
-`S` with `S D(d̃) ⊆ D(d)` and `d S = -S d̃`) restricts to the domain complexes: the domain spaces
-`Vⁱ = D(dⁱ)`, `Ṽⁱ = D(d̃ⁱ)` (graph spaces), the bounded differentials and `S` form algebraic BGG
-data (`HilbertData.domainData`). This is the bounded setting of [ArnoldHu2021], §3 (bounded
-Hilbert complexes, e.g. the domain complexes, linked by bounded maps), so every algebraic result
-of `Feec.HilbertComplex.BGG.Derived` applies: the BGG complex of the domain complexes has the
-cohomology of their twisted complex (`HilbertData.domainBggHomologyIso`), and is exact when both
-domain complexes are.
-
-## Main definitions
-
-* `Feec.BGG.HilbertData.domainS`: `S` between the domain spaces, a bounded operator.
-* `Feec.BGG.HilbertData.domainData`: the bounded BGG data of the domain complexes.
+Two Hilbert complexes linked by bounded connecting maps restrict to bounded BGG data on their
+domain complexes. Where the two complexes have finite-dimensional cohomology, the derived complex
+(closed exact part, elimination hypotheses) and `bgg J` (`Sⁱ`, `i ≤ J`, bounded below, regular
+decompositions after `J`) have closed range and finite-dimensional cohomology
+([ArnoldHu2021], Theorems 6 and 7; [CapHu2024]).
 
 ## Main results
 
-* `HilbertData.domainIncl_domainS`: `ι (S v) = S (ι v)`.
-* `HilbertData.domainBggHomologyIso`, `HilbertData.domainBgg_acyclic`.
-* `HilbertData.DerivedVerdict`, **`HilbertData.derivedVerdict`**: the analytic BGG theorem for
-  Hilbert complexes (closed exact part, elimination hypotheses): closed range, the dimension
-  bound, the Hilbert quotient norm of `Γ / Δ` (`BoundedData.derivedQuotLEquiv`), and Theorem 7
-  and Corollary 1 of [ArnoldHu2021] (`Data.quasiIso_sumIso_comp`, `Data.derived_represents`).
-* `HilbertData.injective_domainS`, `HilbertData.antilipschitz_domainS`: `S` one-to-one (bounded
-  below) is one-to-one (bounded below) between the domains.
-* `HilbertData.exists_forall_S_ne`, `HilbertData.not_surjective_domainS`: `S` one-to-one is not
-  onto between the domains where `d̃` is unbounded on the `φ` with `d S φ = 0` (open mapping).
-* `HilbertData.isClosed_Δ_and_eliminates_bgg`, `HilbertData.BGGVerdict`,
-  **`HilbertData.bggVerdict`**: the analytic BGG theorem for the BGG complex `bgg J`, from the
-  connecting maps up to `J` bounded below and the regular decompositions after `J`
-  (`HilbertData.RegularDecomposition`; from splittings `u = dⁱ p + Sⁱ φ` in the full spaces,
-  `HilbertData.regularDecomposition_of_forall_exists`), with the explicit map (30) of Theorem 7
-  (`Data.quasiIso_bggSumMap`, `Data.bgg_represents`), also in its orthogonal form with the
-  Moore–Penrose inverses into the output complex `R(Sⁱ⁻¹)ᗮ` / `N(Sⁱ)`
-  (`BoundedData.quasiIso_orthSumMap`; the closed ranges up to `J` from `S` bounded below).
-* **`HilbertData.finrank_bgg_homology_eq_add`**: equality in the dimension bound of `bgg J`
-  ((27) of [ArnoldHu2021], Theorem 6) where, in every degree, the source or the target of `S` has
-  no cohomology (`Data.finrank_derived_homology_eq_add`); `HilbertData.finrank_bgg_homology_eq_ite`
-  for rows with the cohomology of a point.
-* `HilbertData.HomologyIs`, **`HilbertData.homologyIs_lowest`**: in the lowest degree of the rows,
-  `[(σ, φ)] ↦ ι σ` is an isomorphism of `Hⁱ(bgg J)` onto the `u ∈ D(dⁱ)` with `d u = S v` for some
-  `v ∈ N(d̃ⁱ)` (`Data.exists_bgg_homology_lowCycles`).
+* `HilbertData.derivedVerdict`: the analytic BGG theorem for the derived complex.
+* `HilbertData.bggVerdict`: the analytic BGG theorem for `bgg J`.
+* `HilbertData.homologyIs_lowest`: the cohomology of `bgg J` in the lowest degree of the rows.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
-  and linking maps, Theorems 6 and 7, Corollary 1), §2 (regular decompositions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.1.2 (domain complex)
-* [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024] (BGG
-  sequences of Sobolev spaces: closed range and cohomology)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2, §3
+* [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -83,8 +49,7 @@ theorem toLp_S_mem_graphL2 (i j : ι) (v : D.Ht.domainSpace i) :
   exact ⟨⟨_, D.S_mapsTo i j (c.next j) (D.Ht.domainCoord i j v)⟩, rfl,
     D.anticomm i j (c.next j) (D.Ht.domainCoord i j v)⟩
 
-/-- The connecting map `S i j` on the domains, `D(d̃ i ·) → D(d j ·)`, bounded in the graph norms
-since `d S = -S d̃`. -/
+/-- The connecting map `S i j` on the domains, `D(d̃ i ·) → D(d j ·)`. -/
 def domainS (i j : ι) : D.Ht.domainSpace i →L[𝕜] D.H.domainSpace j :=
   ContinuousLinearMap.codRestrict
     ((WithLp.prodContinuousLinearEquiv 2 𝕜 (W j) (W (c.next j))).symm.toContinuousLinearMap ∘L
@@ -95,17 +60,11 @@ def domainS (i j : ι) : D.Ht.domainSpace i →L[𝕜] D.H.domainSpace j :=
 @[simp] theorem domainIncl_domainS (i j : ι) (v : D.Ht.domainSpace i) :
     D.H.domainIncl j (D.domainS i j v) = D.S i j (D.Ht.domainIncl i v) := rfl
 
-/-- `S` one-to-one is one-to-one between the domains. -/
 theorem injective_domainS {i j : ι} (h : Function.Injective (D.S i j)) :
     Function.Injective (D.domainS i j) := fun φ ψ hφψ =>
   D.Ht.domainIncl_injective i (h (by
     rw [← domainIncl_domainS, ← domainIncl_domainS, hφψ]))
 
-/-- **`S` is not onto between the domains where `d̃` is unbounded on the `φ` with `d S φ = 0`.**
-If `S i j` is one-to-one and, for every `C`, some `φ ∈ D(d̃ i j)` with `d j k (S φ) = 0` has
-`C ‖φ‖ < ‖d̃ φ‖`, then some `u ∈ D(d j k)` is `S φ` for no `φ ∈ D(d̃ i j)`. Otherwise `S` would be
-a bounded bijection of the domain spaces, bounded below by the open mapping theorem, so that
-`‖d̃ φ‖ ≤ ‖φ‖_{D(d̃)} ≤ K ‖S φ‖_{D(d)} = K ‖S φ‖ ≤ K ‖S‖ ‖φ‖` whenever `d S φ = 0`. -/
 theorem exists_forall_S_ne {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     (hS : Function.Injective (D.S i j))
     (h : ∀ C : ℝ, ∃ φ : (D.Ht.d i j).domain,
@@ -135,8 +94,8 @@ theorem exists_forall_S_ne {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
   have hK0 : (0 : ℝ) ≤ K := K.2
   nlinarith [mul_le_mul_of_nonneg_left h4 hK0]
 
-/-- **`S` is not onto between the domain spaces**: `domainS i j` is not surjective under the
-hypotheses of `exists_forall_S_ne`. -/
+/-- If `S i j` is one-to-one and `d̃` is unbounded on the `φ` with `d S φ = 0`, then `domainS i j`
+is not surjective. -/
 theorem not_surjective_domainS {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
     (hS : Function.Injective (D.S i j))
     (h : ∀ C : ℝ, ∃ φ : (D.Ht.d i j).domain,
@@ -148,8 +107,7 @@ theorem not_surjective_domainS {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
   obtain ⟨v, hv⟩ := hs ((D.H.d (c.next i) (c.next (c.next i))).toGraphSpace ⟨u, hu⟩)
   exact hne _ (D.Ht.domainIncl_mem i v) (by rw [← domainIncl_domainS, hv]; rfl)
 
-/-- **Analytic BGG data on the domains**: the domain complexes of the two rows, with the
-connecting maps on the domains. -/
+/-- The bounded BGG data of the domain complexes of the two rows. -/
 def domainData : BoundedData 𝕜 c D.H.domainSpace D.Ht.domainSpace where
   d i j := D.H.domainD i j
   dt i j := D.Ht.domainD i j
@@ -170,9 +128,7 @@ def domainData : BoundedData 𝕜 c D.H.domainSpace D.Ht.domainSpace where
   continuous_dt i j := (D.Ht.domainD i j).continuous
   continuous_S i j := (D.domainS i j).continuous
 
-/-- **The BGG complex of the domain complexes has the cohomology of their twisted complex**,
-for analytic BGG data on `ℤ` satisfying the injectivity/surjectivity condition at `J` between
-the domains. [ArnoldHu2021], §5.2 -/
+/-- Under `InjSurj J` between the domains, `bgg J` has the cohomology of the twisted complex. -/
 def domainBggHomologyIso {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     [∀ i, NormedAddCommGroup (Wt i)] [∀ i, InnerProductSpace 𝕜 (Wt i)]
@@ -181,8 +137,6 @@ def domainBggHomologyIso {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i
     (D.domainData.bgg J).homology i ≅ D.domainData.twistComplex.homology i :=
   Data.bggHomologyIso h i
 
-/-- **The BGG complex of the domain complexes is exact when both domain complexes are.**
-[ArnoldHu2021], §5.2 -/
 theorem domainBgg_acyclic {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
     [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     [∀ i, NormedAddCommGroup (Wt i)] [∀ i, InnerProductSpace 𝕜 (Wt i)]
@@ -212,22 +166,15 @@ def domainRowBotHomologyEquiv (i : ι) :
   (D.domainData.rowBotCohomologyEquiv i).symm.trans (D.domainRowBotCohomologyEquiv i)
 
 variable (E F : ι → Prop) in
-/-- **The analytic BGG verdict at `i`**: the derived complex of the domain complexes has closed
-range at `i` and finite-dimensional cohomology, of dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`;
-the quotient norm of `Γⁱ / Δⁱ` is the Hilbert norm of `Υⁱ`, with the bounded differentials of the
-quotient; and, for null-homotopic connecting maps `S = dK - Kd̃`, every cochain map from the
-twisted complex to `Γ / Δ` extending the projection, composed with `(ω, μ) ↦ (ω + Kμ, μ)`, induces
-an isomorphism on cohomology (Theorem 7) and carries cohomology representatives of the rows to
-cohomology representatives (Corollary 1). -/
+/-- The conclusions of the analytic BGG theorem for the derived complex at `i`. -/
 structure DerivedVerdict (i : ι) : Prop where
   closedRangeAt : (D.domainData.derivedComplex E F).ClosedRangeAt i
   finiteDimensional : FiniteDimensional 𝕜 ((D.domainData.derivedComplex E F).cohomology i)
   finrank_le : Module.finrank 𝕜 ((D.domainData.derivedComplex E F).cohomology i) ≤
     Module.finrank 𝕜 (D.H.cohomology i) + Module.finrank 𝕜 (D.Ht.cohomology i)
-  /-- `Υⁱ → Γⁱ / Δⁱ`, an isometry for the quotient norm, is onto ([ArnoldHu2021], Theorem 6:
-  the output complex is a Hilbert space) -/
+  /-- `Υⁱ → Γⁱ / Δⁱ` is onto -/
   quotient_surjective : Function.Surjective (D.domainData.toDerivedQuotL E F i)
-  /-- it carries the differential of `Υ` to the bounded differential of `Γ / Δ` -/
+  /-- it intertwines the differentials -/
   quotient_d : ∀ y, D.domainData.derivedQuotD E F i (c.next i) (D.domainData.toDerivedQuotL E F i y)
     = D.domainData.toDerivedQuotL E F (c.next i) (D.domainData.derivedD E F i (c.next i) y)
   /-- [ArnoldHu2021], Theorem 7 -/
@@ -251,12 +198,8 @@ variable {E F : ι → Prop}
   [FiniteDimensional 𝕜 (D.Ht.cohomology i)]
 include hΔ h
 
-/-- **Analytic BGG for Hilbert complexes**: for two Hilbert complexes linked by bounded
-connecting maps, the derived complex of their domain complexes is a closed Hilbert complex with
-closed range and finite-dimensional cohomology, of dimension at most
-`dim Hⁱ(W) + dim Hⁱ(W̃)`, at every index where the two complexes have finite-dimensional
-cohomology, provided the exact part is closed and the elimination hypotheses hold.
-[ArnoldHu2021], Theorem 6; [CapHu2024] -/
+/-- With closed exact part and the elimination hypotheses, the derived complex of the domain
+complexes satisfies `DerivedVerdict` where both complexes have finite-dimensional cohomology. -/
 theorem derivedVerdict : D.DerivedVerdict E F i := by
   have := (D.domainRowTopCohomologyEquiv i).symm.finiteDimensional
   have := (D.domainRowBotCohomologyEquiv i).symm.finiteDimensional
@@ -271,9 +214,6 @@ theorem derivedVerdict : D.DerivedVerdict E F i := by
   exact D.domainData.finrank_derivedComplex_cohomology_le hΔ h i
 
 omit hΔ h in
-/-- **`S` bounded below is bounded below between the domains**: `‖φ‖ ≤ K₁ ‖Sⁱφ‖` on `W̃ⁱ` and
-`‖ψ‖ ≤ K₂ ‖Sʲψ‖` on `W̃ʲ` give `‖φ‖ ≤ max K₁ K₂ ‖Sⁱφ‖` in the graph norms, since
-`d Sⁱ φ = -Sʲ d̃ φ`. -/
 theorem antilipschitz_domainS {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k) {K₁ K₂ : NNReal}
     (h₁ : AntilipschitzWith K₁ (D.S i j)) (h₂ : AntilipschitzWith K₂ (D.S j k)) :
     AntilipschitzWith (max K₁ K₂) (D.domainS i j) := by
@@ -305,17 +245,11 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W Wt : ℤ → Type v} [∀ i, NormedAddC
   [∀ i, InnerProductSpace 𝕜 (Wt i)] [∀ i, CompleteSpace (Wt i)]
   (D : HilbertData 𝕜 (ComplexShape.up ℤ) W Wt)
 
-/-- **The regular decompositions after `J`**: `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` between the domains for
-`j > J`, the onto-modulo-`d` hypotheses of the BGG complex `bgg J` (`Data.eliminates_bgg`). For
-the `L²` de Rham complexes these are the regular decompositions of [ArnoldHu2021], §2,
-Theorem 3. -/
+/-- The regular decompositions `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` between the domains for `j > J`. -/
 def RegularDecomposition (J : ℤ) : Prop :=
   ∀ j, J < j → LinearMap.range (D.domainData.d (j - 1) j) ⊔
     LinearMap.range (D.domainData.S (j - 1) j) = ⊤
 
-/-- **The regular decompositions from splittings in `L²`**: if every `u ∈ D(dⁱ⁺¹)`, `i ≥ J`, is
-`dⁱ p + Sⁱ φ` with `p ∈ D(dⁱ)`, `φ ∈ D(d̃ⁱ)`, then `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` between the
-domains for `j > J`. -/
 theorem regularDecomposition_of_forall_exists {J : ℤ}
     (h : ∀ i, J ≤ i → ∀ u ∈ (D.H.d (i + 1) (i + 1 + 1)).domain,
       ∃ (p : (D.H.d i (i + 1)).domain) (φ : (D.Ht.d i (i + 1)).domain),
@@ -341,8 +275,6 @@ theorem regularDecomposition_of_forall_exists {J : ℤ}
   rw [map_add, ← e]
   rfl
 
-/-- `S` bounded below up to `J` is bounded below between the domains before `J`
-(`antilipschitz_domainS`). -/
 theorem exists_antilipschitz_domainData_S {J : ℤ}
     (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) {i : ℤ} (hi : i < J) :
     ∃ K, AntilipschitzWith K (D.domainData.S i (i + 1)) := by
@@ -350,10 +282,6 @@ theorem exists_antilipschitz_domainData_S {J : ℤ}
   obtain ⟨K₂, h₂⟩ := hS (i + 1) (by omega)
   exact ⟨_, D.antilipschitz_domainS rfl rfl h₁ h₂⟩
 
-/-- **The hypotheses of the analytic BGG theorem for `bgg J`**: if the connecting maps `Sⁱ`,
-`i ≤ J`, are bounded below and the regular decompositions after `J` hold, the exact part of the
-domain complexes is closed (`BoundedData.isClosed_bgg_Δ`, `S` bounded below between the domains
-by `antilipschitz_domainS`) and the elimination hypotheses hold (`Data.eliminates_bgg`). -/
 theorem isClosed_Δ_and_eliminates_bgg {J : ℤ}
     (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (htop : D.RegularDecomposition J) :
     (∀ i, IsClosed (D.domainData.Δ (· < J) i : Set (D.H.domainSpace i × D.Ht.domainSpace i))) ∧
@@ -362,14 +290,7 @@ theorem isClosed_Δ_and_eliminates_bgg {J : ℤ}
   exact ⟨D.domainData.isClosed_bgg_Δ hS',
     Data.eliminates_bgg (fun i hi => (hS' i hi).choose_spec.injective) htop⟩
 
-/-- **The analytic BGG verdict for `bgg J` at `i`**: the analytic BGG verdict (`DerivedVerdict`)
-and, for right inverses `t` of the connecting maps from `J` on (`Data.InjSurjWith`) and
-null-homotopic connecting maps `S = dK - Kd̃`, the explicit cochain map (30) from the sum complex
-(`Data.bggSumMap`) induces an isomorphism on cohomology (Theorem 7) and carries cohomology
-representatives `H × H̃` of the rows to cohomology representatives of `bgg J` (Corollary 1); and
-`Sᵏ` is one-to-one between the domains for `k ≤ J` and, where it is onto for `k ≥ J` (so that (23)
-holds), the map (30) in its orthogonal form, with the Moore–Penrose inverses, into the output
-complex of [ArnoldHu2021], (24)–(26) (`BoundedData.orthSumMap`), is a quasi-isomorphism. -/
+/-- The conclusions of the analytic BGG theorem for `bgg J` at `i`. -/
 structure BGGVerdict (J i : ℤ) : Prop extends D.DerivedVerdict (J < ·) (· < J) i where
   /-- [ArnoldHu2021], Theorem 7 -/
   quasiIso_bggSumMap : ∀ {t : ∀ i j, D.H.domainSpace j →ₗ[𝕜] D.Ht.domainSpace i}
@@ -382,28 +303,15 @@ structure BGGVerdict (J i : ℤ) : Prop extends D.DerivedVerdict (J < ·) (· < 
     {H : Submodule 𝕜 (D.H.domainSpace i)} {Ht : Submodule 𝕜 (D.Ht.domainSpace i)},
     D.domainData.rowTop.Represents i H → D.domainData.rowBot.Represents i Ht →
     (D.domainData.bgg J).Represents i ((H.prod Ht).map ((D.domainData.bggSumMap t hK ht).f i).hom)
-  /-- `Sᵏ` is one-to-one between the domains for `k ≤ J`, the first half of [ArnoldHu2021], (23) -/
+  /-- `Sᵏ` is one-to-one between the domains for `k ≤ J` -/
   injective_domainData_S : ∀ k ≤ J, Function.Injective (D.domainData.S k (k + 1))
-  /-- [ArnoldHu2021], Theorem 7 in its orthogonal form: where `Sᵏ` is onto between the domains
-  for `k ≥ J` (the second half of (23)), the map (30) with the Moore–Penrose inverses `(Sᵏ)†`,
-  into the output complex `R(Sⁱ⁻¹)ᗮ` / `N(Sⁱ)` with the differentials (26)
-  (`BoundedData.orthSumMap`), is a quasi-isomorphism -/
+  /-- [ArnoldHu2021], Theorem 7, with the Moore–Penrose inverses -/
   quasiIso_orthSumMap : ∀ (hsurj : ∀ k, J ≤ k → Function.Surjective (D.domainData.S k (k + 1)))
     {K : ∀ i, D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace i} (hK : D.domainData.IsNullHomotopy K),
     QuasiIso (D.domainData.orthSumMap J injective_domainData_S hsurj hK)
 
-/-- **Analytic BGG for the BGG complex of two Hilbert complexes**: if the connecting maps `Sⁱ`,
-`i ≤ J`, are bounded below and the regular decompositions after `J` hold, then wherever the two
-complexes have finite-dimensional cohomology the BGG complex `bgg J` of their domain complexes has
-closed range and finite-dimensional cohomology of dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`. The
-exact part is closed and the other elimination hypotheses hold by `S` bounded below
-(`BoundedData.isClosed_bgg_Δ`, `antilipschitz_domainS`). With right inverses of `S` from `J` on
-and null-homotopic connecting maps, the explicit map (30) is a quasi-isomorphism carrying
-cohomology representatives to cohomology representatives. `S` bounded below makes `Sᵏ`, `k ≤ J`,
-one-to-one between the domains with closed range, so where `Sᵏ`, `k ≥ J`, is onto between the
-domains, so is the orthogonal form of (30) with the Moore–Penrose inverses, into the output
-complex `R(Sⁱ⁻¹)ᗮ` / `N(Sⁱ)`. [ArnoldHu2021], Theorems 6 and 7,
-Corollary 1 -/
+/-- If the `Sⁱ`, `i ≤ J`, are bounded below and the regular decompositions after `J` hold, `bgg J`
+satisfies `BGGVerdict` where both complexes have finite-dimensional cohomology. -/
 theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
     (htop : D.RegularDecomposition J) (i : ℤ) [FiniteDimensional 𝕜 (D.H.cohomology i)]
     [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.BGGVerdict J i :=
@@ -419,11 +327,8 @@ theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S 
         rw [LinearMap.coe_range]
         exact hK.isClosed_range (D.domainData.SL (k - 1) k).uniformContinuous }
 
-/-- **Equality in the dimension bound of `bgg J`**: under the hypotheses of `bggVerdict`, if in
-every degree `i` the cohomology `Hⁱ(W̃)` of the source of `Sⁱ` or the cohomology `Hⁱ⁺¹(W)` of its
-target vanishes (e.g. when the cohomology of both rows is concentrated in one degree), then `S`
-induces the zero maps on cohomology and `dim Hⁱ(bgg J) = dim Hⁱ(W) + dim Hⁱ(W̃)` in every degree.
-[ArnoldHu2021], Theorem 6, (27) -/
+/-- Under the hypotheses of `bggVerdict` in every degree, if `Hⁱ(W̃) = 0` or `Hⁱ⁺¹(W) = 0` for all
+`i`, then `dim Hⁱ(bgg J) = dim Hⁱ(W) + dim Hⁱ(W̃)`. [ArnoldHu2021], Theorem 6, (27) -/
 theorem finrank_bgg_homology_eq_add {J : ℤ}
     (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (htop : D.RegularDecomposition J)
     [∀ i, FiniteDimensional 𝕜 (D.H.cohomology i)] [∀ i, FiniteDimensional 𝕜 (D.Ht.cohomology i)]
@@ -448,10 +353,6 @@ theorem finrank_bgg_homology_eq_add {J : ℤ}
       (D.isClosed_Δ_and_eliminates_bgg hS htop).2 h₁ (hz i),
     (D.domainRowTopHomologyEquiv i).finrank_eq, (D.domainRowBotHomologyEquiv i).finrank_eq]
 
-/-- **The cohomology of `bgg J` for rows with the cohomology of a point**: under the hypotheses of
-`bggVerdict`, if the cohomology of the rows is concentrated in degree `0`, of dimensions `m` and
-`m̃`, then `dim H⁰(bgg J) = m + m̃` and `Hⁱ(bgg J) = 0` for `i ≠ 0`
-(`finrank_bgg_homology_eq_add`). -/
 theorem finrank_bgg_homology_eq_ite {J : ℤ}
     (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (htop : D.RegularDecomposition J)
     [∀ i, FiniteDimensional 𝕜 (D.H.cohomology i)] [∀ i, FiniteDimensional 𝕜 (D.Ht.cohomology i)]
@@ -468,14 +369,11 @@ theorem finrank_bgg_homology_eq_ite {J : ℤ}
 
 /-! ### The cohomology in the lowest degree of the rows -/
 
-/-- Every `u ∈ D(dⁱ)` is `ι σ` for a point `σ` of the domain space `Vⁱ`. -/
 theorem _root_.Feec.HilbertComplex.exists_domainIncl_eq_of_mem
     (H : Feec.HilbertComplex 𝕜 (ComplexShape.up ℤ) W) {i : ℤ} {u : W i}
     (hu : u ∈ (H.d i (i + 1)).domain) : ∃ σ : H.domainSpace i, H.domainIncl i σ = u :=
   ⟨(H.d i ((ComplexShape.up ℤ).next i)).toGraphSpace ⟨u, by rwa [CochainComplex.next]⟩, rfl⟩
 
-/-- **The lowest cocycles of the domain complexes, in `L²`**: `σ ∈ D(dⁱ)` has `dσ ∈ S N(d̃ⁱ)` in
-the domain complexes iff `d (ι σ) = S v` for some `v ∈ N(d̃ⁱ)`. -/
 theorem mem_domainData_lowCycles {i : ℤ} {σ : D.H.domainSpace i} :
     σ ∈ D.domainData.lowCycles i ↔ ∃ v ∈ (D.Ht.d i (i + 1)).ker,
       D.S i (i + 1) v = D.H.d i (i + 1) (D.H.domainCoord i (i + 1) σ) := by
@@ -500,9 +398,7 @@ theorem mem_domainData_lowCycles {i : ℤ} {σ : D.H.domainSpace i} :
         D.H.domainIncl (i + 1) (D.H.domainD i (i + 1) σ)
       rw [domainIncl_domainS, D.H.domainIncl_domainD, hφ, hS]
 
-/-- **`Hⁱ` of the BGG complex `bgg J` of the domain complexes is `P ⊆ Wⁱ`**, through the top
-components: a linear injection `f` of `Hⁱ` into `Wⁱ` with range `P` maps the class of every
-cocycle `[(σ, φ)]` (`(σ, φ) ∈ Γⁱ`) to `ι σ`. -/
+/-- `[(σ, φ)] ↦ ι σ` maps `Hⁱ(bgg J)` linearly and injectively onto `P ⊆ Wⁱ`. -/
 def HomologyIs (J i : ℤ) (P : Set (W i)) : Prop :=
   ∃ f : (D.domainData.bgg J).homology i →ₗ[𝕜] W i, Function.Injective f ∧ Set.range f = P ∧
     ∀ (z : (D.domainData.bgg J).cycles i) (y : D.domainData.Γ (J < ·) i),
@@ -510,11 +406,8 @@ def HomologyIs (J i : ℤ) (P : Set (W i)) : Prop :=
         f ((D.domainData.bgg J).homologyπ i z) =
           D.H.domainIncl i (y : D.H.domainSpace i × D.Ht.domainSpace i).1
 
-/-- **The cohomology of the BGG complex of the domain complexes in the lowest degree of the rows**
-(`Feec.BGG.Data.exists_bgg_homology_lowCycles`): if the rows vanish in degree `i - 1` and
-`i ≤ J`, with `Sⁱ` one-to-one if `J = i` and `Sⁱ⁺¹` one-to-one if `i + 2 ≤ J`, then
-`[(σ, φ)] ↦ ι σ` is a linear isomorphism of `Hⁱ(bgg J)` onto the `u ∈ D(dⁱ)` with `d u = S v` for
-some `v ∈ N(d̃ⁱ)`. -/
+/-- If the rows vanish in degree `i - 1`, `i ≤ J`, and `Sⁱ`, `Sⁱ⁺¹` are one-to-one as required,
+then `Hⁱ(bgg J)` is the set of `u ∈ D(dⁱ)` with `d u = S v` for some `v ∈ N(d̃ⁱ)`. -/
 theorem homologyIs_lowest {i J : ℤ} (hiJ : i ≤ J) [Subsingleton (W (i - 1))]
     [Subsingleton (Wt (i - 1))] (hS : J = i → Function.Injective (D.S i (i + 1)))
     (hS' : i + 2 ≤ J → Function.Injective (D.S (i + 1) (i + 1 + 1))) :

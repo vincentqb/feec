@@ -5,58 +5,21 @@ public import Feec.Models.Cube.WhitneyApprox
 /-!
 # `O(h)` approximation of smooth forms by the Whitney forms of the cube
 
-On the Freudenthal meshes of `Q = (0, ½)ⁿ`, the rates of the finite element method follow from
-the approximation rates of the exact solution: the Jackson estimate of the Whitney forms
-(`FEM.whitneyJackson` in `Feec.Models.Cube.FiniteElementConvergence`) for the static problem, and
-`happ` of `FEM.norm_sub_le_meshSize_window` for the wave equation. This module proves them for
-smooth solutions, from the interpolation error of the Whitney interpolant
-(`FEM.exists_mem_whitney_le`, [Arnold2018], Ch. 7).
-
-* `FEM.IsC2Form j L x`: `x ∈ L²(Q; Λʲ)` is (the restriction of) a `C²` `j`-form `w` with
-  `‖Dw‖ ≤ L` and `‖D dw‖ ≤ L` on `cl Q`; trivially true in negative degrees, where
-  `L²(Q; Λʲ) = 0` (so the scalar Neumann problem `(i, j, k) = (-1, 0, 1)` and windows with `a < 0`
-  are covered).
-* **Degreewise rate**: such an `x` has `v ∈ Vₕʲ` with `‖x - v‖ ≤ B_j L h_N` and
-  `‖d (x - v)‖ ≤ B_j L h_N` (`IsC2Form.exists_mem_whitney_le`), and
-  `dist_V(σ, Vₕʲ) ≤ B_j L h_N` in the graph norm (`IsC2Form.infDist_domainSub_whitney_le`),
-  `B_j = interpBound n j = A_j + A_{j+1}` independent of `N`.
-* **Hodge–Laplace, mixed form** ([AFW2010], Thm 3.9): the degreewise rate is the Jackson estimate
-  of the Whitney forms (`FEM.whitneyJackson`), so if `σ`, `u`, `P_𝔅 u` and the harmonic part `p`
-  are `C²` forms the discrete mixed solutions converge at rate `h_N`
-  (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.rate`).
-* **Hodge wave equation** ([QuennevilleBelair2015], Thm 4.14): if every component of `ξ(s)` and
-  `ξ'(s)` is a `C²` form with bound `L` on `[t₀, t₁]`, the semi-discrete Whitney solutions converge
-  at rate `h_N` (`norm_sub_le_meshSize_window_smooth`), through the degreewise-to-total lemma
-  `Feec.HilbertComplex.Subcomplex.exists_mem_graphSub_le`.
-* **Vanishing traces** (`H̊Λ(Q)`, Whitney spaces `V̊ₕ` with vanishing boundary DOFs): the same
-  statements for `C²` forms vanishing outside `Q` (`FEM.IsC2FormMin`):
-  `IsC2FormMin.exists_mem_whitneyMin_le` (`FEM.whitneyJacksonMin`) and
-  `norm_sub_le_meshSize_windowMin_smooth`. The `d_min` of such a form is computed by
-  `complexMin_d_formL2` (`d_min ≤ d_max`). In the top degree `j = n` the harmonic forms of
-  `H̊Λⁿ(Q)` are the constants, which do not vanish outside `Q`; there the smooth class contains
-  only `p = 0`, and the quasi-optimal estimate with an explicit `dist(p, ℌ̊ₕ)` bound is the one to
-  use.
-
-## Main definitions
-
-* `Feec.Models.Cube.FEM.IsC2Form`, `Feec.Models.Cube.FEM.IsC2FormMin`,
-  `Feec.Models.Cube.FEM.interpBound`
+On the Freudenthal meshes of `Q = (0, ½)ⁿ`, `C²` forms are approximated at rate `h_N` by the
+Whitney forms ([Arnold2018], Ch. 7), so the semi-discrete Hodge wave equation converges at rate
+`h_N` for smooth solutions ([QuennevilleBelair2015], Thm 4.14).
 
 ## Main results
 
-* `Feec.Models.Cube.FEM.IsC2Form.exists_mem_whitney_le`,
-  `Feec.Models.Cube.FEM.IsC2FormMin.exists_mem_whitneyMin_le`
-* `Feec.Models.Cube.FEM.norm_sub_le_meshSize_window_smooth`
-* `Feec.Models.Cube.FEM.norm_sub_le_meshSize_windowMin_smooth`
+* `FEM.IsC2Form.exists_mem_whitney_le`: the degreewise interpolation error `B_j L h_N`.
+* `FEM.IsC2FormMin.exists_mem_whitneyMin_le`: the same with vanishing boundary DOFs.
+* `FEM.norm_sub_le_meshSize_window_smooth`: `O(h)` convergence of the Hodge wave equation.
+* `FEM.norm_sub_le_meshSize_windowMin_smooth`: the same in `H̊Λ(Q)` for forms vanishing outside `Q`.
 
 ## References
 
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (approximation
-  estimates, rates for smooth solutions)
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  Thm 3.9 (quasi-optimality of the mixed method)
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Thm 4.14 (convergence of the semi-discrete Hodge wave equation)
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -72,10 +35,7 @@ open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex Feec.ExteriorF
 
 variable {n : ℕ}
 
-/-- `x ∈ L²(Q; Λʲ)` is a `C²` form of degree `j` whose derivative and the derivative of its
-exterior derivative are bounded by `L` on `cl Q`. In a negative degree `L²(Q; Λʲ) = 0` and the
-condition holds trivially, so that the rate theorems cover the windows and Hodge Laplacians that
-reach below degree `0` (e.g. the scalar Neumann problem `(i, j, k) = (-1, 0, 1)`). -/
+/-- `x` is a `C²` `j`-form whose derivative and that of `dx` are bounded by `L` on `cl Q`. -/
 def IsC2Form (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n, ∃ hw : ContDiff ℝ 2 w, (∀ y, IsDeg k (w y)) ∧
     (∀ y ∈ closure (cubeDomain n), ‖fderiv ℝ w y‖ ≤ L) ∧
@@ -90,7 +50,6 @@ variable (n) in
 theorem interpBound_nonneg (j : ℤ) : 0 ≤ interpBound n j :=
   add_nonneg (interpConst_nonneg n _) (interpConst_nonneg n _)
 
-/-- `IsC2Form` is monotone in the bound. -/
 theorem IsC2Form.mono {j : ℤ} {L L' : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)}
     (hx : IsC2Form j L x) (hLL' : L ≤ L') : IsC2Form j L' x := by
   rcases hx with hj | ⟨k, hk, w, hw, hdeg, hL, hL', he⟩
@@ -100,8 +59,7 @@ theorem IsC2Form.mono {j : ℤ} {L L' : ℝ} {x : L2F ℝ (cubeDomain n) (formId
 
 variable [NeZero n]
 
-/-- **Degreewise interpolation error for `C²` forms**: `‖x - v‖ ≤ B_j L h_N` and
-`‖d (x - v)‖ ≤ B_j L h_N` for the Whitney interpolant `v ∈ Vₕʲ`. -/
+/-- **Degreewise interpolation error for `C²` forms**: `‖x - v‖, ‖d (x - v)‖ ≤ B_j L h_N`. -/
 theorem IsC2Form.exists_mem_whitney_le {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDomain n) (formIdx n j)}
     (hx : IsC2Form j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (whitney n N).V j, ‖x - v‖ ≤ interpBound n j * L * meshSize N ∧
@@ -125,7 +83,6 @@ theorem IsC2Form.exists_mem_whitney_le {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDom
   rw [hval, e]
   linarith
 
-/-- **Graph-norm distance of a `C²` form to the Whitney space**: `dist_V(σ, Vₕʲ) ≤ B_j L h_N`. -/
 theorem IsC2Form.infDist_domainSub_whitney_le {j : ℤ} {L : ℝ} {σ : (complex n).domainSpace j}
     (hσ : IsC2Form j L ((complex n).domainIncl j σ)) (hL0 : 0 ≤ L) (N : ℕ) :
     Metric.infDist σ ((whitney n N).domainSub j) ≤ interpBound n j * L * meshSize N := by
@@ -143,9 +100,6 @@ theorem IsC2Form.infDist_domainSub_whitney_le {j : ℤ} {L : ℝ} {σ : (complex
   refine (FEM.infDist_domainSub_whitney_le N k hw hdeg hL0 hL0 hL hL' σ he).trans (le_of_eq ?_)
   simp only [interpBound, Int.toNat_natCast]; ring
 
-/-- **Graph-norm rate in the total space of a window**: if every component of `ζ ∈ Γ(𝐝)` (the
-window `HΛᵃ(Q) → ⋯ → HΛ^{a+m-1}(Q)`) is a `C²` form with bound `L`, some point of the Whitney
-window is within `(m + m²) (Σᵢ B_{a+i}) L h_N` of `ζ`. -/
 theorem exists_mem_window_le (a : ℤ) (m : ℕ) (ζ : ((complex n).window a m).totalD.GraphSpace)
     {L : ℝ} (hL0 : 0 ≤ L)
     (hζ : ∀ i : Fin m, IsC2Form (a + i) L (((complex n).window a m).totalD.graphFst ζ i))
@@ -160,11 +114,7 @@ theorem exists_mem_window_le (a : ℤ) (m : ℕ) (ζ : ((complex n).window a m).
         fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
     fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
-/-- **`O(h)` convergence of the semi-discrete Hodge wave equation for smooth solutions**
-([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7): if every component of `ξ(s)` and
-`ξ'(s)` is a `C²` form with bound `L` for `s ∈ [t₀, t₁]`, then
-`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² K h_N` with `K = (m + m²) (Σᵢ B_{a+i}) L`, discharging the
-hypothesis `happ` of `norm_sub_le_meshSize_window`. -/
+/-- **`O(h)` convergence for `ξ`, `ξ'` in `IsC2Form`** ([QuennevilleBelair2015], Thm 4.14). -/
 theorem norm_sub_le_meshSize_window_smooth (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complex n).window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
@@ -190,9 +140,7 @@ theorem norm_sub_le_meshSize_window_smooth (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
 
 /-! ## The vanishing-trace family `H̊Λ(Q)` -/
 
-/-- `x ∈ L²(Q; Λʲ)` is a `C²` form of degree `j` **vanishing outside `Q`** (so with vanishing
-traces on `∂Q`), whose derivative and the derivative of its exterior derivative are bounded by `L`
-on `cl Q`; trivially true in negative degrees. -/
+/-- `IsC2Form` with a representative vanishing outside `Q`. -/
 def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n, ∃ hw : ContDiff ℝ 2 w, (∀ y, IsDeg k (w y)) ∧
     (∀ y ∉ cubeDomain n, w y = 0) ∧
@@ -201,8 +149,6 @@ def IsC2FormMin (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) :
     x = formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) j ⟨w, hw.continuous⟩
 
 omit [NeZero n] in
-/-- **`d_min` of a smooth form**: if `x ∈ H̊Λᵏ(Q)` is the class of a `C¹` `k`-form `w`, then
-`d x = (dw)|_Q` (`d_min ≤ d_max`, and `d_max (w|_Q) = (dw)|_Q`). -/
 theorem complexMin_d_formL2 [NeZero n] (k : ℕ) {w : FormField n} (hw : ContDiff ℝ 1 w)
     (hdeg : ∀ y, IsDeg k (w y)) (x : ((complexMin n).d k (k + 1)).domain)
     (hx : (x : L2F ℝ (cubeDomain n) (formIdx n k)) =
@@ -219,8 +165,7 @@ theorem complexMin_d_formL2 [NeZero n] (k : ℕ) {w : FormField n} (hw : ContDif
   rw [← hval]
   exact (LinearPMap.apply_eq_of_eq' hD ⟨_, h⟩).symm
 
-/-- **Degreewise interpolation error for `C²` forms vanishing outside `Q`**, in `H̊Λ(Q)`:
-`‖x - v‖ ≤ B_j L h_N` and `‖d (x - v)‖ ≤ B_j L h_N` for some `v ∈ V̊ₕʲ`. -/
+/-- **Degreewise interpolation error for `C²` forms vanishing outside `Q`**, in `H̊Λ(Q)`. -/
 theorem IsC2FormMin.exists_mem_whitneyMin_le {j : ℤ} {L : ℝ}
     {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsC2FormMin j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (whitneyMin n N).V j, ‖x - v‖ ≤ interpBound n j * L * meshSize N ∧
@@ -244,8 +189,6 @@ theorem IsC2FormMin.exists_mem_whitneyMin_le {j : ℤ} {L : ℝ}
   rw [complexMin_d_formL2 k (hw.of_le (by norm_num)) hdeg ⟨_, hxj⟩ rfl, e]
   linarith
 
-/-- **Graph-norm distance of a `C²` form vanishing outside `Q` to `V̊ₕʲ`**:
-`dist_V(σ, V̊ₕʲ) ≤ 2 B_j L h_N`. -/
 theorem IsC2FormMin.infDist_domainSub_whitneyMin_le {j : ℤ} {L : ℝ}
     {σ : (complexMin n).domainSpace j} (hσ : IsC2FormMin j L ((complexMin n).domainIncl j σ))
     (hL0 : 0 ≤ L) (N : ℕ) :
@@ -261,9 +204,6 @@ instance (N : ℕ) (a : ℤ) (m : ℕ) :
     FiniteDimensional ℝ ((whitneyMin n N).window a m).graphSub :=
   inferInstance
 
-/-- **Graph-norm rate in the total space of a window of `H̊Λ(Q)`**: if every component of `ζ` is
-a `C²` form vanishing outside `Q` with bound `L`, some point of the window of `V̊ₕ` is within
-`(m + m²) (Σᵢ B_{a+i}) L h_N` of `ζ`. -/
 theorem exists_mem_windowMin_le (a : ℤ) (m : ℕ)
     (ζ : ((complexMin n).window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
     (hζ : ∀ i : Fin m, IsC2FormMin (a + i) L (((complexMin n).window a m).totalD.graphFst ζ i))
@@ -278,10 +218,8 @@ theorem exists_mem_windowMin_le (a : ℤ) (m : ℕ)
         fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
     fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
-/-- **`O(h)` convergence of the semi-discrete Hodge wave equation with vanishing traces for
-smooth solutions** ([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7): as
-`norm_sub_le_meshSize_window_smooth`, for the windows of `H̊Λ(Q)` and of `V̊ₕ`, when every component
-of `ξ(s)` and `ξ'(s)` is a `C²` form vanishing outside `Q` with bound `L` on `[t₀, t₁]`. -/
+/-- **`O(h)` convergence in `H̊Λ(Q)` for `ξ`, `ξ'` in `IsC2FormMin`** ([QuennevilleBelair2015],
+Thm 4.14). -/
 theorem norm_sub_le_meshSize_windowMin_smooth (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → ((complexMin n).window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')

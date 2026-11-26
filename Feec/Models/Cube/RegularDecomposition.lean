@@ -7,65 +7,24 @@ public import Feec.Models.Cube.WeakSymmetryWave
 /-!
 # The regular decomposition on the cube: `CurlPotential` is a theorem
 
-The regularity hypothesis of [QuennevilleBelair2015], §5.3
-(`Feec.Models.Cube.WeakSymmetry.CurlPotential`) holds on `Q = (0, ½)³`: **every `d u`,
-`u ∈ H̊Λ¹(Q) = H̊(curl, Q)`, is `d (S⁰ φ)` for some `φ ∈ H̊Λ⁰(Q)³ = H̊¹(Q; ℝ³)`**
-(`Feec.Models.Cube.WeakSymmetry.curlPotential`), i.e.
-`curl H̊(curl) = curl H̊¹(Q; ℝ³)`, the regular decomposition
-`H̊(curl) = H̊¹(Q; ℝ³) + grad H̊¹(Q)` ([Hiptmair2002], Lemma 2.4; [HiptmairXu2007], §3) at the
-level of `curl`. Consequently the hypotheses (H1)–(H3), (H6) of §5.1, the constants of Prop 5.3,
-Props 5.1, 5.2, 5.4 and the rates of Thm 5.5 and of the scheme (6.5) on the cube hold
-unconditionally (`bggHilb_hyps`, `bggStability'`, `bggShort_closedRange_exact'`,
-`bgg_existsUnique_isSaddle'`, `cubeFEM_existsUnique'`, `cubeFEM_rate'`, `cubeFEM_rate_C2'`,
-`cubeWave_rate'`).
-
-**Proof.** The parity model of the cube alone does not give it: the potential must vanish on
-`∂Q` in every component, a parity class different from that of `H̊Λ¹`. The argument goes
-through a larger cell and an extension from the outside (as for the vector potentials of
-[GiraultRaviart1986], Ch. I, §3):
-
-1. (`Feec.Models.Cube.TorusHelmholtz.exists_helmholtz`) For a test `1`-form `u` on `Q`, on the
-   cell `(-¼, ¾]³ ⊇ Q̄`, `u = ∇q + w` with `q = p + c · x`, `‖q‖, ‖w‖ ≲ ‖u‖`,
-   `‖∇w‖ ≲ ‖u‖ + ‖curl u‖` (Fourier series on `𝕋³` and Gaffney's identity); on the shell
-   `S = (-¼, ¾)³ ∖ Q̄`, where `u = 0`, `∇q = -w`, so `‖q‖_{H²(S)} ≲ ‖u‖_{H(curl)}`.
-2. (`Feec.Models.Cube.ShellExtension.exists_n2_lift_le`) The Hestenes extension `s` of `q|_S`
-   into `Q` agrees with `q` to first order on the faces and `‖s‖_{H²(Q)} ≲ ‖q‖_{H²(S)}`.
-3. (`exists_fields`) `Φ = Θ (w + ∇s) = Θ (u - ∇r)`, `r = q - s`, `Θ` a cut-off equal to `1` near
-   `Q̄`, is smooth, compactly supported, vanishes on the faces, has `curl Φ = curl u` on `Q`
-   (`Φ = u - ∇r` near `Q̄`) and `‖Φ‖_{H¹(Q)} ≤ K ‖u‖_{H(curl)}`, `K` independent of `u`.
-4. (`exists_potential_test`) By the cut-off lemma
-   (`Feec.Models.Cube.DeRhamIdent.mem_closure_extDerivOp_of_tangential`), `Φ ∈ H̊Λ⁰(Q)³` and,
-   as a `1`-form, `Φ = S⁰Φ ∈ H̊Λ¹(Q)` with `d_min Φ = curl u` (`mem_graph_minimal`).
-5. (`exists_preimage_of_mem_closure`, `mem_closure_test`) Bounded preimages on the dense
-   subspace of test fields give preimages on all of `H̊Λ¹(Q)`: choose them in
-   `(ker (d ∘ S⁰))ᗮ`, where they are unique, so additive, so Cauchy along a sequence of test
-   fields converging in the graph norm.
-
-No hypothesis remains.
+On `Q = (0, ½)³`, every `d u`, `u ∈ H̊Λ¹(Q)`, is `d (S⁰ φ)` for some `φ ∈ H̊Λ⁰(Q)³` (the regular
+decomposition of [Hiptmair2002], Lemma 2.4 and [HiptmairXu2007], §3, at the level of `curl`): the
+regularity hypothesis of [QuennevilleBelair2015], §5.3, from which its Props 5.1, 5.2 and 5.4,
+Thm 5.5 and the rate of (6.5) follow on the cube.
 
 ## Main results
 
-* `exists_fields`, `mem_graph_minimal`, **`exists_potential_test`**.
-* `exists_preimage_of_mem_closure`, `mem_closure_test`.
-* **`Feec.Models.Cube.WeakSymmetry.curlPotential`**, `exists_curlPotential_bound`,
-  `bggHilb_hyps`, `bggStability'`, `bggShort_closedRange_exact'`, `bgg_existsUnique_isSaddle'`;
-  `cubeFEM_rate'`, `cubeFEM_rate_C2'`, `cubeFEM_existsUnique'`,
-  `cubeWave_rate'`; `curlPotentialConst`, `bggStability_curlPotentialConst`.
+* `Feec.Models.Cube.WeakSymmetry.curlPotential`: the regularity hypothesis holds on the cube.
+* `bggHilb_hyps`, `bggStability'`: the hypotheses of §5.1 and the constants of Prop 5.3.
+* `bggShort_closedRange_exact'`, `bgg_existsUnique_isSaddle'`: Props 5.1 and 5.2 on the cube.
+* `cubeFEM_existsUnique'`, `cubeFEM_rate'`, `cubeFEM_rate_C2'`: Prop 5.4 and Thm 5.5 on the cube.
+* `cubeWave_rate'`: the `O(h)` rate of the semi-discrete scheme (6.5) on the cube.
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.1 (Props 5.1–5.3), §5.3 (the regularity hypothesis, Prop 5.4, Thm 5.5), §6.3 ((6.5))
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-  (regular decomposition)
-* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007],
-  §3 (regular decomposition)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.4 (cut-off arguments in `W₀^{1,p}`)
-* [V. Girault, P.-A. Raviart, *Finite Element Methods for Navier–Stokes Equations*][GiraultRaviart1986],
-  Ch. I, §3 (vector potentials, extension from the outside)
-* [M. R. Hestenes, *Extension of the Range of a Differentiable Function*][Hestenes1941]
-  (the extension of step 2)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002]
+* [R. Hiptmair, J. Xu, *Nodal auxiliary space preconditioning in H(curl) and H(div) spaces*][HiptmairXu2007]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -205,16 +164,6 @@ theorem eLpNorm_congr_on {F G : (Fin 3 → ℝ) → ℝ} {B : Set (Fin 3 → ℝ
     (h : ∀ y ∈ B, F y = G y) : eLpNorm F 2 (volume.restrict B) = eLpNorm G 2 (volume.restrict B) :=
   eLpNorm_congr_ae ((ae_restrict_iff' hB).2 (Eventually.of_forall h))
 
-/-- **The potential of a test field** (the analytic core of the regular decomposition): for
-test functions `uₐ` on `Q` there are smooth, compactly supported `Φₐ`, vanishing on the faces
-`xᵢ ∈ {0, ½}`, with `Φ = u - ∇r` near `Q̄` (so `curl Φ = curl u` on `Q`) and
-`‖Φₐ‖, ‖∂ⱼ Φₐ‖ ≤ K ‖u‖_{H(curl)}` in `L²(Q)`,
-with a constant `K` independent of `u`.
-
-Construction: `u = ∇q + w` on the cell `(-¼, ¾]³` (`TorusHelmholtz.exists_helmholtz`,
-`q = p + c · x`), so `∇q = -w` on the shell; `s` is the shell extension of `q`
-(`ShellExtension.lift`) and `Φ = Θ (w + ∇s) = Θ (u - ∇r)`, `r = q - s`, with `Θ` a cut-off equal
-to `1` near `Q̄`. -/
 theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → ℝ},
     (∀ a, Domain.IsTest (Q (Fin 3)) (u a)) →
     ∃ Φ : Fin 3 → (Fin 3 → ℝ) → ℝ,
@@ -422,8 +371,6 @@ theorem exists_bound_family {ι : Type*} [Fintype ι] {f : ι → (Fin 3 → ℝ
     _ ≤ ∑ i, |M i| := Finset.single_le_sum (f := fun i => |M i|) (fun i _ => abs_nonneg _)
         (Finset.mem_univ i)
 
-/-- **Smooth compactly supported forms vanishing on the faces lie in `H̊Λᵏ(Q)`**, with `d_min`
-the classical exterior derivative ([Brezis2011], §9.4: cut-off). -/
 theorem mem_graph_minimal {k : ℤ} {ψ : formIdx 3 k → (Fin 3 → ℝ) → ℝ}
     (hψ : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s)) (hc : ∀ s, HasCompactSupport (ψ s))
     (hV : ∀ s y, OnFace y → ψ s y = 0) :
@@ -470,8 +417,6 @@ theorem toReal_le_of_eLpNorm_le {f : (Fin 3 → ℝ) → ℝ} {K : ℝ≥0} {S :
     _ = K * Real.sqrt S := by
         rw [ENNReal.toReal_mul, ENNReal.coe_toReal, ENNReal.toReal_ofReal (Real.sqrt_nonneg _)]
 
-/-- **The potential of a test `1`-form**: for every test `1`-form `u` on `Q` there is
-`Φ ∈ H̊Λ⁰(Q)³` with `curl S⁰Φ = curl u` and `‖Φ‖ ≤ C ‖u‖_{H(curl)}`, `C` independent of `u`. -/
 theorem exists_potential_test : ∃ C : ℝ, 0 ≤ C ∧ ∀ (φ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ)
     (hφ : IsTestField (cubeDomain 3) φ), ∃ Φ : Vt0,
       bggD1 (bggS0 Φ) = testField ((extDerivOp ℝ 3 1).isTestField_apply hφ) ∧
@@ -590,10 +535,6 @@ end Bridge
 
 /-! ### From test fields to `CurlPotential` -/
 
-/-- **Bounded preimages on a dense subspace give preimages on its closure** (Hilbert space
-`X`): if every `M z`, `z ∈ S`, has an `L`-preimage of norm `≤ C ‖z‖`, then so does every `M z`
-with `z ∈ cl S`. The preimages are taken in `(ker L)ᗮ`, where they are unique, hence additive
-in `z`, hence Cauchy along any sequence `zₙ → z` of `S`. -/
 theorem exists_preimage_of_mem_closure {X Y Z : Type*} [NormedAddCommGroup X]
     [InnerProductSpace ℝ X] [CompleteSpace X] [NormedAddCommGroup Y] [NormedSpace ℝ Y]
     [NormedAddCommGroup Z] [NormedSpace ℝ Z] (L : X →L[ℝ] Y) (M : Z →L[ℝ] Y) (S : Submodule ℝ Z)
@@ -654,7 +595,6 @@ theorem exists_preimage_of_mem_closure {X Y Z : Type*} [NormedAddCommGroup X]
   exact (M.continuous.tendsto z).comp hlim
 
 open Feec.Domain Feec.Models.Cube.FEM Feec.Models.Cube.WeakSymmetry in
-/-- **The test `1`-forms are dense in `H̊Λ¹(Q)`** (with the graph norm). -/
 theorem mem_closure_test (v : V1) :
     v ∈ closure ((testFieldSub ℝ (cubeDomain 3) (formIdx 3 1)).comap
       (D1.graphFst : V1 →ₗ[ℝ] W1) : Set V1) := by
@@ -699,7 +639,7 @@ theorem mem_closure_test (v : V1) :
 
 end Feec.Models.Cube.RegularDecomposition
 
-/-! ### `CurlPotential` and the unconditional theorems of Chapter 5 and §6.3 on the cube -/
+/-! ### `CurlPotential` and the theorems of Chapter 5 and §6.3 on the cube -/
 
 namespace Feec.Models.Cube.WeakSymmetry
 
@@ -707,10 +647,7 @@ open scoped InnerProductSpace RealInnerProductSpace
 open Feec.Domain Feec.HilbertComplex Feec.FiniteElement Feec.Models.Cube.FEM
   Feec.Models.Cube.RegularDecomposition
 
-/-- **The regularity hypothesis holds on the cube**: `curl H̊(curl, Q) = curl S⁰ H̊¹(Q; ℝ³)`, i.e.
-every `d u`, `u ∈ H̊Λ¹(Q)`, is `d (S⁰ φ)` for some `φ ∈ H̊Λ⁰(Q)³` (the regular decomposition
-`H̊(curl) = H̊¹(Q; ℝ³) + grad H̊¹(Q)` of [Hiptmair2002], Lemma 2.4 and [HiptmairXu2007], §3 at the
-level of `curl`; [GiraultRaviart1986], Ch. I, §3 for the extension argument). -/
+/-- **`CurlPotential` holds on the cube** ([Hiptmair2002], Lemma 2.4; [HiptmairXu2007], §3). -/
 theorem curlPotential : CurlPotential := by
   obtain ⟨C, -, hC⟩ := exists_potential_test
   set S : Submodule ℝ V1 :=
@@ -735,43 +672,33 @@ theorem curlPotential : CurlPotential := by
     (mem_closure_test v)
   exact ⟨Φ, hΦ⟩
 
-/-- **The constant of the regularity hypothesis**: a potential can be chosen with
-`‖φ‖_{H̊Λ⁰(Q)³} ≤ C_R ‖d u‖` (`CurlPotential.exists_bound` with `curlPotential`). -/
 theorem exists_curlPotential_bound :
     ∃ CR, 0 ≤ CR ∧ ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖ :=
   curlPotential.exists_bound
 
-/-- **A regularity constant `C_R` of the cube**, chosen from `exists_curlPotential_bound`; it lets
-callers of the constructions parameterized by `C_R` (`cubeFEMReg`, `bggStability_of`) use them
-without threading the constant (`bggStability_curlPotentialConst`). -/
+/-- A regularity constant `C_R` of the cube, chosen from `exists_curlPotential_bound`. -/
 def curlPotentialConst : ℝ := Classical.choose exists_curlPotential_bound
 
 theorem curlPotentialConst_nonneg : 0 ≤ curlPotentialConst :=
   (Classical.choose_spec exists_curlPotential_bound).1
 
-/-- Every `d u`, `u ∈ H̊Λ¹(Q)`, is `d (S⁰ φ)` with `‖φ‖ ≤ curlPotentialConst · ‖d u‖`. -/
 theorem exists_curlPotential_le (u : V1) :
     ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ curlPotentialConst * ‖bggD1 u‖ :=
   (Classical.choose_spec exists_curlPotential_bound).2 u
 
-/-- **The continuous constants of [QuennevilleBelair2015], Prop 5.3 on the cube** with the
-regularity constant `curlPotentialConst` (`bggStability_of` with `exists_curlPotential_le`). -/
 theorem bggStability_curlPotentialConst :
     Feec.BGG.Stability bggSegment (2 * Real.pi)⁻¹ curlPotentialConst (Real.sqrt 2) :=
   bggStability_of curlPotentialConst_nonneg exists_curlPotential_le
 
-/-- **The hypotheses (H1)–(H3), (H6) of [QuennevilleBelair2015], §5.1 on the cube hold**
-(`bggHyps` with `curlPotential`). -/
+/-- **The hypotheses (H1)–(H3), (H6) of [QuennevilleBelair2015], §5.1 hold on the cube.** -/
 theorem bggHilb_hyps : bggHilb.Hyps := bggHyps curlPotential
 
-/-- **The continuous constants of [QuennevilleBelair2015], Prop 5.3 on the cube**, `C_p = (2π)⁻¹`,
-`C_S = √2` and the regularity constant `C_R` (`bggStability` with `curlPotential`). -/
+/-- **The constants of [QuennevilleBelair2015], Prop 5.3, on the cube**: `C_p = (2π)⁻¹`,
+`C_S = √2` and some `C_R`. -/
 theorem bggStability' : ∃ CR, Feec.BGG.Stability bggSegment (2 * Real.pi)⁻¹ CR (Real.sqrt 2) :=
   bggStability curlPotential
 
-/-- **[QuennevilleBelair2015], Prop 5.1 on the cube, unconditionally**: the complex (5.1)
-`Γ̄ → W̃¹ → W² × W̃²` built from (4.16) is a closed, exact short Hilbert complex
-(`bggShort_closedRange_exact` with `curlPotential`). -/
+/-- **[QuennevilleBelair2015], Prop 5.1, on the cube**: the complex (5.1) is closed and exact. -/
 theorem bggShort_closedRange_exact' :
     IsClosed (LinearMap.range (bggHilb.toShort bggHilb_hyps bggS0_injective).d₀.toFun :
       Set (Wv W1)) ∧
@@ -782,8 +709,8 @@ theorem bggShort_closedRange_exact' :
     (bggHilb.toShort bggHilb_hyps bggS0_injective).d₀.ker = ⊥ :=
   bggShort_closedRange_exact curlPotential
 
-/-- **[QuennevilleBelair2015], Prop 5.2 on the cube, unconditionally**: the saddle point problem
-(5.3) for (4.16) is well posed (`bgg_existsUnique_isSaddle` with `curlPotential`). -/
+/-- **[QuennevilleBelair2015], Prop 5.2 (adapted), on the cube**: the saddle point problem is
+well posed. -/
 theorem bgg_existsUnique_isSaddle' :
     (∀ f : Wv W1, ∃! xl : Feec.BGG.Xsp V0 Vt0 Vt1 × bggHilb.Wcheck,
       bggHilb.IsSaddle f xl.1 xl.2) ∧
@@ -798,8 +725,8 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
-/-- **[QuennevilleBelair2015], Thm 5.5 on the cube with the elements of Table 5.1, with rate,
-unconditionally** (`cubeFEM_rate` with the constant of `curlPotential`). -/
+/-- **[QuennevilleBelair2015], Thm 5.5 (adapted), on the cube for Table 5.1**: the rate `K L h_N`
+for flat `C²` solutions. -/
 theorem cubeFEM_rate' :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
       {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
@@ -826,8 +753,7 @@ theorem cubeFEM_rate' :
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 :=
   exists_curlPotential_bound.elim fun _ h => cubeFEM_rate hT hB h.1 h.2
 
-/-- **[QuennevilleBelair2015], Thm 5.5 for `C²` solutions, unconditionally** (`cubeFEM_rate_C2`
-with the constant of `curlPotential`). -/
+/-- **[QuennevilleBelair2015], Thm 5.5 (adapted), for `C²` solutions vanishing outside `Q`.** -/
 theorem cubeFEM_rate_C2' :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
       {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
@@ -853,9 +779,8 @@ theorem cubeFEM_rate_C2' :
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 :=
   exists_curlPotential_bound.elim fun _ h => cubeFEM_rate_C2 hT hB h.1 h.2
 
-/-- **[QuennevilleBelair2015], Prop 5.4 for Table 5.1, unconditionally**: for every `N` and every
-datum `F` the discrete system (5.6) has exactly one solution (`cubeFEM_existsUnique` with the
-constant of `curlPotential`). -/
+/-- **[QuennevilleBelair2015], Prop 5.4 (adapted), for Table 5.1**: (5.6) has exactly one
+solution. -/
 theorem cubeFEM_existsUnique' (N : ℕ) (F : Wv U1 →ₗ[ℝ] ℝ) :
     ∃! x : (cubeFEM hT hB N).V0h × (cubeFEM hT hB N).Vt0h × (cubeFEM hT hB N).Vt1h ×
         (cubeFEM hT hB N).V1h,
@@ -868,8 +793,8 @@ theorem cubeFEM_existsUnique' (N : ℕ) (F : Wv U1 →ₗ[ℝ] ℝ) :
       (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 x.1 - (cubeFEM hT hB N).S0h x.2.1, μ⟫ = 0) :=
   exists_curlPotential_bound.elim fun _ h => cubeFEM_existsUnique hT hB h.1 h.2 N F
 
-/-- **The `O(h)` rate of the semi-discrete scheme (6.5), unconditionally** (`cubeWave_rate` with
-the constant of `curlPotential`; [QuennevilleBelair2015], §6.3, Table 6.1). -/
+/-- **The `O(h)` rate of the semi-discrete scheme (6.5)** of [QuennevilleBelair2015], §6.3, for
+flat `C²` states with `|ℓ μ| ≤ L ‖μ‖`. -/
 theorem cubeWave_rate' :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {T : ℝ} (_hT0 : 0 < T) {f : ℝ → Wv W1}
       (_hf : ContinuousOn f (Icc 0 T)) (s : Feec.BGG.ExactWave bggSegment T (srcFun f)) {L : ℝ},
